@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILENAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry
@@ -142,8 +143,8 @@ async def test_setup_integration_success(
     hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that an instance can be constructed."""
-    state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
-    assert state, hass.states.async_all()
+    state = hass.states.get("climate.system_1_zone_1")
+    assert state, (x.name() for x in hass.states.async_all())
     assert state.state == "cool"
     assert state.attributes["fan_mode"] == "auto"
     assert state.attributes["current_temperature"] == 75
@@ -187,7 +188,7 @@ async def test_setup_integration_client_returns_none(hass: HomeAssistant) -> Non
         mock_evolution_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_evolution_entry.entry_id)
         await hass.async_block_till_done()
-        state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
+        state = hass.states.get("climate.system_1_zone_1")
         assert state, hass.states.async_all()
 
 
@@ -214,14 +215,35 @@ async def test_setup_multiple_systems_zones(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_evolution_entry.entry_id)
         await hass.async_block_till_done()
 
-        for sz in clients:
-            system = sz[0]
-            zone = sz[1]
-            state = hass.states.get(
-                f"climate.bryant_evolution_system_{system}_zone_{zone}"
-            )
-            assert state, hass.states.async_all()
-            assert state.attributes["temperature"] == zone
+    # Check that each system and zone has the expected temperature value to
+    # verify that the initial setup flow worked as expected.
+    for sz in clients:  # Use clients keyset to enumerate systems and zones
+        system = sz[0]
+        zone = sz[1]
+        state = hass.states.get(f"climate.system_{system}_zone_{zone}")
+        assert state, hass.states.async_all()
+        assert state.attributes["temperature"] == zone
+
+    # Check that the created devices are wired to each other as expected.
+    device_registry = dr.async_get(hass)
+    _LOGGER.error("XXX mock entryid: %s", mock_evolution_entry.entry_id)
+
+    def find_device(name):
+        return next(filter(lambda x: x.name == name, device_registry.devices.values()))
+
+    sam = find_device("System Access Module")
+    s1 = find_device("System 1")
+    s2 = find_device("System 2")
+    s1z1 = find_device("System 1 Zone 1")
+    s1z2 = find_device("System 1 Zone 2")
+    s2z3 = find_device("System 2 Zone 3")
+
+    assert sam.via_device_id is None
+    assert s1.via_device_id == sam.id
+    assert s2.via_device_id == sam.id
+    assert s1z1.via_device_id == s1.id
+    assert s1z2.via_device_id == s1.id
+    assert s2z3.via_device_id == s2.id
 
 
 async def test_set_temperature(
@@ -249,16 +271,16 @@ async def test_set_temperature(
     for case in testcases:
         # Enter case.mode with a known setpoint.
         data = {"hvac_mode": case.mode}
-        data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+        data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         await hass.services.async_call(
             "climate", SERVICE_SET_HVAC_MODE, data, blocking=True
         )
         data = {"temperature": case.initial_temp}
-        data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+        data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         await hass.services.async_call(
             "climate", SERVICE_SET_TEMPERATURE, data, blocking=True
         )
-        state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
+        state = hass.states.get("climate.system_1_zone_1")
         assert state.attributes["temperature"] == case.initial_temp
         assert await case.temp_reader(client) == case.initial_temp
         assert await client.read_hvac_mode() == (case.mode.lower(), False)
@@ -267,16 +289,14 @@ async def test_set_temperature(
         # verify that changes are locally committed.
         await client.set_allow_reads(False)
         data = {"temperature": case.new_temp}
-        data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+        data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         await hass.services.async_call(
             "climate", SERVICE_SET_TEMPERATURE, data, blocking=False
         )
-        state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
+        state = hass.states.get("climate.system_1_zone_1")
         await _wait_for_cond(
             lambda case=case,
-            s=hass.states.get("climate.bryant_evolution_system_1_zone_1"): s.attributes[
-                "temperature"
-            ]
+            s=hass.states.get("climate.system_1_zone_1"): s.attributes["temperature"]
             == case.new_temp
         )
         await client.set_allow_reads(True)
@@ -291,16 +311,16 @@ async def test_set_temperature_mode_heat_cool(
     client = mock_evolution_entry.runtime_data[(1, 1)]
 
     data = {"hvac_mode": HVACMode.HEAT_COOL}
-    data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+    data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     await hass.services.async_call(
         "climate", SERVICE_SET_HVAC_MODE, data, blocking=True
     )
     data = {"target_temp_low": 50, "target_temp_high": 90}
-    data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+    data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     await hass.services.async_call(
         "climate", SERVICE_SET_TEMPERATURE, data, blocking=True
     )
-    state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
+    state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes["target_temp_low"] == 50
     assert state.attributes["target_temp_high"] == 90
     assert await client.read_cooling_setpoint() == 90
@@ -311,14 +331,15 @@ async def test_set_temperature_mode_heat_cool(
     # verify that changes are locally committed.
     await client.set_allow_reads(False)
     data = {"target_temp_low": 70, "target_temp_high": 80}
-    data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+    data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     await hass.services.async_call(
         "climate", SERVICE_SET_TEMPERATURE, data, blocking=False
     )
     await _wait_for_cond(
-        lambda s=hass.states.get(
-            "climate.bryant_evolution_system_1_zone_1"
-        ): s.attributes["target_temp_low"] == 70
+        lambda s=hass.states.get("climate.system_1_zone_1"): s.attributes[
+            "target_temp_low"
+        ]
+        == 70
         and s.attributes["target_temp_high"] == 80
     )
     await client.set_allow_reads(True)
@@ -336,15 +357,13 @@ async def test_set_fan_mode(
         # verify that changes are locally committed.
         await client.set_allow_reads(False)
         data = {ATTR_FAN_MODE: mode}
-        data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+        data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         await hass.services.async_call(
             "climate", SERVICE_SET_FAN_MODE, data, blocking=False
         )
         await _wait_for_cond(
             lambda mode=mode,
-            s=hass.states.get("climate.bryant_evolution_system_1_zone_1"): s.attributes[
-                ATTR_FAN_MODE
-            ]
+            s=hass.states.get("climate.system_1_zone_1"): s.attributes[ATTR_FAN_MODE]
             == mode
         )
         await client.set_allow_reads(True)
@@ -360,9 +379,7 @@ async def test_hvac_action(
 
     # Initial state should be no action.
     assert (
-        hass.states.get("climate.bryant_evolution_system_1_zone_1").attributes[
-            ATTR_HVAC_ACTION
-        ]
+        hass.states.get("climate.system_1_zone_1").attributes[ATTR_HVAC_ACTION]
         == HVACAction.OFF
     )
 
@@ -371,12 +388,13 @@ async def test_hvac_action(
     await client.set_is_active(True)
     assert await client.read_hvac_mode() == ("COOL", True)
     data = {ATTR_FAN_MODE: "auto"}
-    data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+    data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     await hass.services.async_call(
         "climate", SERVICE_SET_FAN_MODE, data, blocking=False
     )
     await _wait_for_cond(
-        lambda s=hass.states.get(
-            "climate.bryant_evolution_system_1_zone_1"
-        ): s.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
+        lambda s=hass.states.get("climate.system_1_zone_1"): s.attributes[
+            ATTR_HVAC_ACTION
+        ]
+        == HVACAction.COOLING
     )
