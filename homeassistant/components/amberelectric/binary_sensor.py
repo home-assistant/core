@@ -105,7 +105,8 @@ async def async_setup_entry(
         name=f"{entry.title} - Price Spike",
     )
     demand_window_description = BinarySensorEntityDescription(
-        key="deman_window", name=f"{entry.title} - Demand Window"
+        key="demand_window",
+        name=f"{entry.title} - Demand Window",
     )
     async_add_entities(
         [
