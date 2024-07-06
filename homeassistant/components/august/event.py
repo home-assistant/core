@@ -87,7 +87,7 @@ class AugustEventEntity(AugustDescriptionEntity, EventEntity):
 
     @callback
     def _update_from_data(self) -> None:
-        """Get the latest state of the sensor."""
+        """Update from data."""
         current_activity = self.entity_description.value_fn(self._data, self._detail)
         if not current_activity or current_activity == self._last_activity:
             return
