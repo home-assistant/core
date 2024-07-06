@@ -3,7 +3,6 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.feedreader.const import DOMAIN
 from homeassistant.components.feedreader.event import (
     ATTR_CONTENT,
     ATTR_LINK,
@@ -12,16 +11,17 @@ from homeassistant.components.feedreader.event import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
+from . import create_mock_entry
 from .const import VALID_CONFIG_DEFAULT
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
 async def test_event_entity(
     hass: HomeAssistant, feed_one_event, feed_two_event
 ) -> None:
     """Test feed event entity."""
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG_DEFAULT)
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.feedreader.coordinator.feedparser.http.get",
