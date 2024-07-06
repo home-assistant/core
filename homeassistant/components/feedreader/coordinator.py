@@ -25,7 +25,9 @@ STORAGE_VERSION = 1
 _LOGGER = getLogger(__name__)
 
 
-class FeedReaderCoordinator(DataUpdateCoordinator[None]):
+class FeedReaderCoordinator(
+    DataUpdateCoordinator[list[feedparser.FeedParserDict] | None]
+):
     """Abstraction over Feedparser module."""
 
     config_entry: ConfigEntry
@@ -49,9 +51,9 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self.feed_version: str | None = None
         self._max_entries = max_entries
         self._storage = storage
-        self._feed: feedparser.FeedParserDict | None = None
         self._last_entry_timestamp: struct_time | None = None
         self._event_type = EVENT_FEEDREADER
+        self._feed: feedparser.FeedParserDict | None = None
         self._feed_id = url
 
     @callback
@@ -103,7 +105,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self.feed_version = feedparser.api.SUPPORTED_VERSIONS.get(feed["version"])
         self._feed = feed
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> list[feedparser.FeedParserDict] | None:
         """Update the feed and publish new entries to the event bus."""
         assert self._feed is not None
         # _last_entry_timestamp is not set during async_setup, but we have already
@@ -118,7 +120,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
             len(self._feed.entries),
             self.url,
         )
-        if not self._feed.entries:
+        if not isinstance(self._feed.entries, list):
             self._log_no_entries()
             return None
 
@@ -129,6 +131,8 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
 
         if self._last_entry_timestamp:
             self._storage.async_put_timestamp(self._feed_id, self._last_entry_timestamp)
+
+        return self._feed.entries
 
     @callback
     def _filter_entries(self) -> None:

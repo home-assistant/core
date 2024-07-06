@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 
+from feedparser import FeedParserDict
+
 from homeassistant.components.event import EventEntity
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -59,21 +60,31 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         await super().async_added_to_hass()
-
-        @callback
-        def _filter(event: Mapping) -> bool:
-            return event.get("feed_url") == self.coordinator.url
-
-        self.hass.bus.async_listen(EVENT_FEEDREADER, self._async_handle_event, _filter)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._async_handle_update)
+        )
 
     @callback
-    def _async_handle_event(self, event: Event) -> None:
+    def _async_handle_update(self) -> None:
+        if (data := self.coordinator.data) is None or not data:
+            return
+
+        # RSS feeds are normally sorted reverse chronologically by published date
+        # so we always take the first entry in list, since we only care about the latest entry
+        feed_data: FeedParserDict = data[0]
+
+        if content := feed_data.get("content"):
+            if isinstance(content, list) and isinstance(content[0], dict):
+                content = content[0].get("value")
+        else:
+            content = feed_data.get("summary")
+
         self._trigger_event(
-            str(event.event_type),
+            EVENT_FEEDREADER,
             {
-                ATTR_TITLE: event.data["title"],
-                ATTR_LINK: event.data["link"],
-                ATTR_CONTENT: event.data["content"],
+                ATTR_TITLE: feed_data.get("title"),
+                ATTR_LINK: feed_data.get("link"),
+                ATTR_CONTENT: content,
             },
         )
         self.async_write_ha_state()

@@ -34,14 +34,7 @@ async def test_event_entity(
         assert state
         assert state.attributes[ATTR_TITLE] == "Title 1"
         assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
-        assert state.attributes[ATTR_CONTENT] == [
-            {
-                "type": "text/plain",
-                "language": None,
-                "base": "",
-                "value": "Content 1",
-            }
-        ]
+        assert state.attributes[ATTR_CONTENT] == "Content 1"
 
         future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
         async_fire_time_changed(hass, future)
@@ -51,11 +44,4 @@ async def test_event_entity(
         assert state
         assert state.attributes[ATTR_TITLE] == "Title 2"
         assert state.attributes[ATTR_LINK] == "http://www.example.com/link/2"
-        assert state.attributes[ATTR_CONTENT] == [
-            {
-                "type": "text/plain",
-                "language": None,
-                "base": "",
-                "value": "Content 2",
-            }
-        ]
+        assert state.attributes[ATTR_CONTENT] == "Content 2"
