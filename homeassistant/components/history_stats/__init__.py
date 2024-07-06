@@ -26,14 +26,9 @@ async def async_setup_entry(
     start: str | None = entry.options.get(CONF_START)
     end: str | None = entry.options.get(CONF_END)
 
-    duration = None
-    if duration := entry.options.get(CONF_DURATION):
-        duration = timedelta(
-            days=duration["days"],
-            hours=duration["hours"],
-            minutes=duration["minutes"],
-            seconds=duration["seconds"],
-        )
+    duration: timedelta | None = None
+    if duration_dict := entry.options.get(CONF_DURATION):
+        duration = timedelta(**duration_dict)
 
     history_stats = HistoryStats(
         hass,
