@@ -25,7 +25,7 @@ VEHICLE_REDACT = [
 ]
 
 ENERGY_LIVE_REDACT = ["vin"]
-ENERGY_INFO_REDACT = ["installation_date"]
+ENERGY_INFO_REDACT = ["installation_date", "serial_number"]
 
 
 async def async_get_config_entry_diagnostics(
