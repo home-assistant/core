@@ -1187,6 +1187,7 @@ jaraco.abode==5.1.2
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
+# homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath==0.82.2
 
