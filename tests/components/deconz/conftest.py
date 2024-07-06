@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -20,6 +20,9 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ConfigEntryFactoryType = Callable[[ConfigEntry | None], ConfigEntry]
+type WebsocketDataType = Callable[[dict[str, Any]], None]
+type WebsocketStateType = Callable[[str], None]
+type _WebsocketMock = Generator[Any, Any, Callable[[dict[str, Any] | None, str], None]]
 
 # Config entry fixtures
 
@@ -217,22 +220,52 @@ async def fixture_config_entry_setup(
 # Websocket fixtures
 
 
-@pytest.fixture(autouse=True)
-def mock_deconz_websocket():
+@pytest.fixture(autouse=True, name="_mock_websocket")
+def fixture_websocket() -> _WebsocketMock:
     """No real websocket allowed."""
     with patch("pydeconz.gateway.WSClient") as mock:
 
-        async def make_websocket_call(data: dict | None = None, state: str = ""):
+        async def make_websocket_call(
+            data: dict[str, Any] | None = None, state: str = ""
+        ) -> None:
             """Generate a websocket call."""
             pydeconz_gateway_session_handler = mock.call_args[0][3]
 
+            signal: Signal
             if data:
                 mock.return_value.data = data
-                await pydeconz_gateway_session_handler(signal=Signal.DATA)
+                signal = Signal.DATA
             elif state:
                 mock.return_value.state = state
-                await pydeconz_gateway_session_handler(signal=Signal.CONNECTION_STATE)
-            else:
-                raise NotImplementedError
+                signal = Signal.CONNECTION_STATE
+            await pydeconz_gateway_session_handler(signal)
 
         yield make_websocket_call
+
+
+@pytest.fixture(name="mock_websocket_data")
+def fixture_websocket_data(_mock_websocket: _WebsocketMock) -> WebsocketDataType:
+    """Fixture to send websocket data."""
+
+    async def change_websocket_data(data: dict[str, Any]) -> None:
+        """Provide new data on the websocket."""
+        if "t" not in data:
+            data["t"] = "event"
+        if "e" not in data:
+            data["e"] = "changed"
+        if "id" not in data:
+            data["id"] = "0"
+        await _mock_websocket(data=data)
+
+    return change_websocket_data
+
+
+@pytest.fixture(name="mock_websocket_state")
+def fixture_websocket_state(_mock_websocket: _WebsocketMock) -> WebsocketStateType:
+    """Fixture to set websocket state."""
+
+    async def change_websocket_state(state: str) -> None:
+        """Simulate a change to the websocket connection state."""
+        await _mock_websocket(state=state)
+
+    return change_websocket_state
