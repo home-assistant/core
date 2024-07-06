@@ -952,7 +952,7 @@ async def test_sensors(
 
     # Change state
 
-    event_changed_sensor = {"t": "event", "e": "changed", "r": "sensors", "id": "1"}
+    event_changed_sensor = {"r": "sensors", "id": "1"}
     event_changed_sensor |= expected["websocket_event"]
     await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
@@ -1063,7 +1063,6 @@ async def test_add_new_sensor(
 ) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
@@ -1183,7 +1182,6 @@ async def test_add_battery_later(
     assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "2",
@@ -1195,7 +1193,6 @@ async def test_add_battery_later(
     assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
