@@ -243,6 +243,61 @@ async def test_api_select_input(
     assert call.data["source"] == source_list[idx]
 
 
+@pytest.mark.parametrize(
+    (
+        "target_activity",
+        "activity_list",
+        "current_activity_index",
+        "target_activity_index",
+    ),
+    [
+        ("TV", ["TV", "MUSIC", "DVD"], 1, 0),
+        ("MUSIC", ["TV", "MUSIC", "DVD", 1000], 0, 1),
+        ("DVD", ["TV", "MUSIC", "DVD", None], 0, 2),
+        ("BAD DEVICE", ["TV", "MUSIC", "DVD"], 0, None),
+    ],
+)
+async def test_api_select_activity(
+    hass: HomeAssistant,
+    target_activity: str,
+    activity_list: list[str],
+    current_activity_index: int,
+    target_activity_index: int | None,
+) -> None:
+    """Test api set activity process."""
+    hass.states.async_set(
+        "remote.test",
+        "off",
+        {
+            "current_activity": activity_list[current_activity_index],
+            "activity_list": activity_list,
+        },
+    )
+    # test where no source matches
+    if target_activity_index is None:
+        await assert_request_fails(
+            "Alexa.ModeController",
+            "SetMode",
+            "remote#test",
+            "remote.turn_on",
+            hass,
+            payload={"mode": f"activity.{target_activity}"},
+            instance="remote.activity",
+        )
+        return
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "remote#test",
+        "remote.turn_on",
+        hass,
+        payload={"mode": f"activity.{target_activity}"},
+        instance="remote.activity",
+    )
+    assert call.data["activity"] == activity_list[target_activity_index]
+
+
 async def test_report_lock_state(hass: HomeAssistant) -> None:
     """Test LockController implements lockState property."""
     hass.states.async_set("lock.locked", STATE_LOCKED, {})
