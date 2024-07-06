@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 import fnmatch
 from functools import lru_cache
+from operator import or_, sub
 import re
-from typing import Final
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -60,16 +61,15 @@ class EntityFilter:
         exclude_entity_globs: list[str] | None = None,
     ) -> None:
         """Remove from the filter config."""
-        for key, values in (
-            ("include_entities", include_entities),
-            ("include_domains", include_domains),
-            ("include_entity_globs", include_entity_globs),
-            ("exclude_entities", exclude_entities),
-            ("exclude_domains", exclude_domains),
-            ("exclude_entity_globs", exclude_entity_globs),
-        ):
-            self.config[key] = list(set(self.config[key]) - set(values or []))
-        self._generate_filter()
+        self._alter_config(
+            sub,
+            include_entities=include_entities,
+            include_domains=include_domains,
+            include_entity_globs=include_entity_globs,
+            exclude_entities=exclude_entities,
+            exclude_domains=exclude_domains,
+            exclude_entity_globs=exclude_entity_globs,
+        )
 
     def add(
         self,
@@ -81,15 +81,22 @@ class EntityFilter:
         exclude_entity_globs: list[str] | None = None,
     ) -> None:
         """Add to the filter config."""
-        for key, values in (
-            ("include_entities", include_entities),
-            ("include_domains", include_domains),
-            ("include_entity_globs", include_entity_globs),
-            ("exclude_entities", exclude_entities),
-            ("exclude_domains", exclude_domains),
-            ("exclude_entity_globs", exclude_entity_globs),
-        ):
-            self.config[key] = list(set(self.config[key] + list(values or [])))
+        self._alter_config(
+            or_,
+            include_entities=include_entities,
+            include_domains=include_domains,
+            include_entity_globs=include_entity_globs,
+            exclude_entities=exclude_entities,
+            exclude_domains=exclude_domains,
+            exclude_entity_globs=exclude_entity_globs,
+        )
+
+    def _alter_config(
+        self, operator: Callable[[Any, Any], Any], **kwargs: list[str] | None
+    ) -> None:
+        """Alter the filter config."""
+        for key, values in kwargs.items():
+            self.config[key] = list(operator(set(self.config[key]), set(values or [])))
         self._generate_filter()
 
     def _generate_filter(self) -> None:
