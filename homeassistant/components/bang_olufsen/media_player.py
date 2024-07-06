@@ -383,7 +383,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Add the key to make the labels unique (As labels are not required to be unique on B&O devices)
         for sound_mode in sound_modes:
-            label = f"{sound_mode.name} - {sound_mode.id}"
+            label = f"{sound_mode.name} ({sound_mode.id})"
 
             self._sound_modes[label] = sound_mode.id
 
