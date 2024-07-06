@@ -76,4 +76,3 @@ class TelegramClientBinarySensorEntity(TelegramClientEntity, BinarySensorEntity)
         self._attr_is_on = self.entity_description.value_fn(
             self._device.data[self.entity_description.data_key]
         )
-        self.async_schedule_update_ha_state()
