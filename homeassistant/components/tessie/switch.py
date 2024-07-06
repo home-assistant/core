@@ -149,14 +149,14 @@ class TessieChargeSwitchEntity(TessieSwitchEntity):
         return self._value
 
 
-class TessieChargeFromGridSwitchEntity(TessieEnergyEntity, TessieSwitchEntity):
+class TessieChargeFromGridSwitchEntity(TessieEnergyEntity, SwitchEntity):
     """Entity class for Charge From Grid switch."""
 
     def __init__(
         self,
         data: TessieEnergyData,
     ) -> None:
-        """Initialize the Switch."""
+        """Initialize the switch."""
         super().__init__(
             data,
             data.info_coordinator,
@@ -190,14 +190,14 @@ class TessieChargeFromGridSwitchEntity(TessieEnergyEntity, TessieSwitchEntity):
         self.async_write_ha_state()
 
 
-class TessieStormModeSwitchEntity(TessieEnergyEntity, TessieSwitchEntity):
+class TessieStormModeSwitchEntity(TessieEnergyEntity, SwitchEntity):
     """Entity class for Storm Mode switch."""
 
     def __init__(
         self,
         data: TessieEnergyData,
     ) -> None:
-        """Initialize the Switch."""
+        """Initialize the switch."""
         super().__init__(
             data, data.info_coordinator, "user_settings_storm_mode_enabled"
         )
