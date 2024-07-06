@@ -28,7 +28,7 @@ async def async_setup_entry(
     entry: FeedReaderConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up EZVIZ cameras based on a config entry."""
+    """Set up event entities for feedreader."""
     coordinator: FeedReaderCoordinator = entry.runtime_data
 
     async_add_entities([FeedReaderEvent(coordinator)])
