@@ -195,7 +195,7 @@ aioambient==2024.01.0
 aioapcaccess==0.4.2
 
 # homeassistant.components.aquacell
-aioaquacell==0.1.7
+aioaquacell==0.1.8
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.1.1
@@ -282,7 +282,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.2
+aiolifx==1.0.4
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.4.1
+aiowebostv==0.4.2
 
 # homeassistant.components.withings
 aiowithings==3.0.2
@@ -449,7 +449,7 @@ androidtvremote2==0.1.1
 anel-pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova
-anova-wifi==0.15.0
+anova-wifi==0.17.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -1090,10 +1090,10 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.51
+holidays==0.52
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240703.0
+home-assistant-frontend==20240705.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.3
@@ -1187,6 +1187,7 @@ jaraco.abode==5.1.2
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
+# homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath==0.82.2
 
@@ -1224,7 +1225,7 @@ lacrosse-view==1.0.1
 lakeside==0.13
 
 # homeassistant.components.laundrify
-laundrify-aio==1.1.2
+laundrify-aio==1.2.2
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1392,7 +1393,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.2.0
+nettigo-air-monitor==3.3.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -2034,7 +2035,7 @@ pynuki==1.6.3
 pynws[retry]==1.8.2
 
 # homeassistant.components.nx584
-pynx584==0.5
+pynx584==0.8.2
 
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
@@ -2833,7 +2834,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.5.1
+velbus-aio==2024.7.5
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2882,7 +2883,7 @@ weatherflow4py==0.2.21
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.3
+webrtc-noise-gain==1.2.4
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8

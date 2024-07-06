@@ -49,6 +49,7 @@ base_platforms: &base_platforms
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
+  - homeassistant/components/valve/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
 
@@ -116,7 +117,6 @@ components: &components
 
 # Testing related files that affect the whole test/linting suite
 tests: &tests
-  - .coveragerc
   - codecov.yaml
   - pylint/**
   - requirements_test_pre_commit.txt
