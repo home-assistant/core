@@ -36,7 +36,6 @@ from .const import (
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
-    CONF_RETRIES,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -334,26 +333,6 @@ def validate_modbus(
     hub_name_inx: int,
 ) -> bool:
     """Validate modbus entries."""
-    if CONF_RETRIES in hub:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_retries",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_retries",
-            translation_placeholders={
-                "config_key": "retries",
-                "integration": DOMAIN,
-                "url": "https://www.home-assistant.io/integrations/modbus",
-            },
-        )
-        _LOGGER.warning(
-            "`retries`: is deprecated and will be removed in version 2024.7"
-        )
-    else:
-        hub[CONF_RETRIES] = 3
 
     host: str = (
         hub[CONF_PORT]

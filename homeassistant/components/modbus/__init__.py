@@ -96,7 +96,6 @@ from .const import (
     CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_RETRIES,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
@@ -395,7 +394,6 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRIES): cv.positive_int,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
