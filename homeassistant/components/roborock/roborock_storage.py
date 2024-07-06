@@ -37,8 +37,6 @@ class RoborockStorage:
         self._hass = hass
         self._data: dict[str, RoborockMapEntry] = {}
         self._entry_id = entry_id
-        # RoborockMapInfo is a type here - but only so that typing accepts it.
-        # The store will auto convert it to a dict.
         self._store: Store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{self._entry_id}")
         self._map_info: dict[str, dict[int, RoborockMapInfo]] = {}
 
