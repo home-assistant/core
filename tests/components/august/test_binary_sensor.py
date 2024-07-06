@@ -153,7 +153,7 @@ async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
     native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
     with patch(
-        "homeassistant.components.august.binary_sensor._native_datetime",
+        "homeassistant.components.august.util._native_datetime",
         return_value=native_time,
     ):
         async_fire_time_changed(hass, new_time)
@@ -252,7 +252,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
     native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
     with patch(
-        "homeassistant.components.august.binary_sensor._native_datetime",
+        "homeassistant.components.august.util._native_datetime",
         return_value=native_time,
     ):
         async_fire_time_changed(hass, new_time)
@@ -282,7 +282,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
     native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
     with patch(
-        "homeassistant.components.august.binary_sensor._native_datetime",
+        "homeassistant.components.august.util._native_datetime",
         return_value=native_time,
     ):
         async_fire_time_changed(hass, new_time)
