@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from elevenlabs.client import AsyncElevenLabs
@@ -53,41 +54,6 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    user_info: dict[str, Any] | None = None
-
-    # id -> name
-    voices: dict[str, str] = {}
-    models: dict[str, str] = {}
-
-    def _get_user_schema_authenticated(self) -> vol.Schema:
-        assert self.voices and self.models
-        first_voice_id = next(iter(self.voices))
-
-        return vol.Schema(
-            {
-                vol.Required(
-                    CONF_VOICE, description={"suggested_value": first_voice_id}
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            SelectOptionDict(label=voice_name, value=voice_id)
-                            for voice_id, voice_name in self.voices.items()
-                        ]
-                    )
-                ),
-                vol.Required(
-                    CONF_MODEL, description={"suggested_value": DEFAULT_MODEL}
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            SelectOptionDict(label=model_name, value=model_id)
-                            for model_id, model_name in self.models.items()
-                        ]
-                    )
-                ),
-            },
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -99,18 +65,16 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         # Validate auth, get voices
         try:
-            self.voices, self.models = await get_voices_models(user_input[CONF_API_KEY])
+            _, models = await get_voices_models(user_input[CONF_API_KEY])
         except ApiError:
             errors["base"] = "invalid_api_key"
         if errors:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA_NO_AUTH, errors=errors
             )
-        # Set model id
-        user_input.setdefault(CONF_MODEL, DEFAULT_MODEL)
-        self.user_info = user_input
+
         return self.async_create_entry(
-            title=f"{self.models[user_input[CONF_MODEL]]}", data=user_input
+            title=f"{models[DEFAULT_MODEL]}", data=user_input
         )
 
     @staticmethod
@@ -148,44 +112,40 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                 data=user_input,
             )
 
-        options: dict[str, str] = {
-            CONF_MODEL: self.config_entry.options.get(
-                CONF_MODEL, self.config_entry.data.get(CONF_MODEL)
-            ),
-            CONF_VOICE: self.config_entry.options.get(
-                CONF_VOICE, self.config_entry.data.get(CONF_VOICE)
-            ),
-        }
-
-        schema = self.elevenlabs_config_option_schema(options)
+        schema = self.elevenlabs_config_option_schema(self.config_entry.options)
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema),
+            data_schema=schema,
         )
 
-    def elevenlabs_config_option_schema(self, options: dict[str, str]) -> dict:
+    def elevenlabs_config_option_schema(
+        self, options: MappingProxyType[str, Any]
+    ) -> vol.Schema:
         """Elevenlabs options schema."""
-        return {
-            vol.Required(
-                CONF_MODEL,
-                description={"suggested_value": options[CONF_MODEL]},
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(label=model_name, value=model_id)
-                        for model_id, model_name in self.models.items()
-                    ]
-                )
+        return self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(label=model_name, value=model_id)
+                                for model_id, model_name in self.models.items()
+                            ]
+                        )
+                    ),
+                    vol.Required(
+                        CONF_VOICE,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(label=voice_name, value=voice_id)
+                                for voice_id, voice_name in self.voices.items()
+                            ]
+                        )
+                    ),
+                }
             ),
-            vol.Required(
-                CONF_VOICE,
-                description={"suggested_value": options[CONF_VOICE]},
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(label=voice_name, value=voice_id)
-                        for voice_id, voice_name in self.voices.items()
-                    ]
-                )
-            ),
-        }
+            options,
+        )

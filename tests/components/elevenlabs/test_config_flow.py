@@ -40,7 +40,6 @@ async def test_user_step(
     assert result["title"] == f"{DEFAULT_MODEL}"
     assert result["data"] == {
         "api_key": "api_key",
-        CONF_MODEL: DEFAULT_MODEL,
     }
 
     mock_setup_entry.assert_called_once()

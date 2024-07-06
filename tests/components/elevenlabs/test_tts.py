@@ -56,13 +56,14 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
 @pytest.fixture(name="setup")
 async def setup_fixture(
     hass: HomeAssistant,
-    config: dict[str, Any],
+    config_data: dict[str, Any],
+    config_options: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_async_client: AsyncMock,
 ) -> AsyncMock:
     """Set up the test environment."""
     if request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, config)
+        await mock_config_entry_setup(hass, config_data, config_options)
     else:
         raise RuntimeError("Invalid setup fixture")
 
@@ -70,23 +71,34 @@ async def setup_fixture(
     return mock_async_client
 
 
-@pytest.fixture(name="config")
-def config_fixture() -> dict[str, Any]:
-    """Return config."""
+@pytest.fixture(name="config_data")
+def config_data_fixture() -> dict[str, Any]:
+    """Return config data."""
+    return {}
+
+
+@pytest.fixture(name="config_options")
+def config_options_fixture() -> dict[str, Any]:
+    """Return config options."""
     return {}
 
 
 async def mock_config_entry_setup(
-    hass: HomeAssistant,
-    config: dict[str, Any],
+    hass: HomeAssistant, config_data: dict[str, Any], config_options: dict[str, Any]
 ) -> None:
     """Mock config entry setup."""
-    default_config = {
-        CONF_VOICE: "voice1",
-        CONF_MODEL: "model1",
+    default_config_data = {
         CONF_API_KEY: "api_key",
     }
-    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
+    default_config_options = {
+        CONF_VOICE: "voice1",
+        CONF_MODEL: "model1",
+    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=default_config_data | config_data,
+        options=default_config_options | config_options,
+    )
     config_entry.add_to_hass(hass)
     client_mock = AsyncMock()
     client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
@@ -98,8 +110,9 @@ async def mock_config_entry_setup(
 
 
 @pytest.mark.parametrize(
-    "config",
+    "config_data",
     [
+        {},
         {tts.CONF_LANG: "de"},
         {tts.CONF_LANG: "en"},
         {tts.CONF_LANG: "ja"},
@@ -163,6 +176,7 @@ async def test_tts_service_speak(
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
             },
         ),
         (
@@ -173,6 +187,7 @@ async def test_tts_service_speak(
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "es",
+                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
             },
         ),
     ],
@@ -218,6 +233,7 @@ async def test_tts_service_speak_lang_config(
                 ATTR_ENTITY_ID: "tts.mock_title",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
             },
         ),
     ],

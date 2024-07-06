@@ -36,20 +36,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
-    model_id = config_entry.options.get(CONF_MODEL, config_entry.data.get(CONF_MODEL))
-    default_voice_id = config_entry.options.get(
-        CONF_VOICE, config_entry.data.get(CONF_VOICE)
-    )
     client = config_entry.runtime_data.client
-
-    # Get model and voices
-    model_id = config_entry.options.get(CONF_MODEL, config_entry.data.get(CONF_MODEL))
-    # Fallback to default
-    model_id = model_id if model_id is not None else DEFAULT_MODEL
+    # Get model, fallback to default
+    model_id = config_entry.options.get(CONF_MODEL, DEFAULT_MODEL)
     model = await get_model_by_id(client, model_id)
     assert model is not None, "Model was not found in async_setup_entry"
     voices = (await client.voices.get_all()).voices
-
+    default_voice_id = config_entry.options.get(CONF_VOICE, voices[0].voice_id)
     async_add_entities(
         [ElevenLabsTTSEntity(config_entry, client, model, voices, default_voice_id)]
     )
@@ -64,7 +57,7 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
         client: AsyncElevenLabs,
         model: Model,
         voices: list[Voice],
-        default_voice_id: str | None,
+        default_voice_id: str,
     ) -> None:
         """Init ElevenLabs TTS service."""
         self._client = client
@@ -99,7 +92,7 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
         """Return a list of supported options."""
         return [tts.ATTR_VOICE]
 
-    def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
+    def async_get_supported_voices(self, language: str) -> list[tts.Voice]:
         """Return a list of supported voices for a language."""
         return self._voices
 
@@ -108,9 +101,7 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
     ) -> tts.TtsAudioType:
         """Load tts audio file from the engine."""
         _LOGGER.debug("Getting TTS audio for %s", message)
-        voice_id = options.get(tts.ATTR_VOICE, self._default_voice_id)
-        if voice_id is None:
-            voice_id = self._voices[0].voice_id
+        voice_id = options[tts.ATTR_VOICE]
         try:
             audio = await self._client.generate(
                 text=message,

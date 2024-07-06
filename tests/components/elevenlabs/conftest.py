@@ -7,6 +7,9 @@ from elevenlabs.core import ApiError
 from elevenlabs.types import GetVoicesResponse
 import pytest
 
+from homeassistant.components.elevenlabs.const import CONF_MODEL, CONF_VOICE
+from homeassistant.const import CONF_API_KEY
+
 from .const import MOCK_MODELS, MOCK_VOICES
 
 from tests.common import MockConfigEntry
@@ -47,10 +50,16 @@ def mock_async_client_fail() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_entry() -> MockConfigEntry:
     """Mock a config entry."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         domain="elevenlabs",
         data={
-            "api_key": "api_key",
-            "model": "model1",
+            CONF_API_KEY: "api_key",
         },
+        options={CONF_MODEL: "model1", CONF_VOICE: "voice1"},
     )
+    entry.models = {
+        "model1": "model1",
+    }
+
+    entry.voices = {"voice1": "voice1"}
+    return entry
