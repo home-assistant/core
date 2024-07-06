@@ -7,13 +7,12 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import TechnoVEDataUpdateCoordinator
 
-TO_REDACT = {CONF_HOST, CONF_MAC, "unique_id", "mac_address", "entry_id"}
+TO_REDACT = {"unique_id", "mac_address"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -21,7 +20,4 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: TechnoVEDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    return async_redact_data(
-        {"entry": entry.as_dict(), "technove-data": asdict(coordinator.data.info)},
-        TO_REDACT,
-    )
+    return async_redact_data(asdict(coordinator.data.info), TO_REDACT)
