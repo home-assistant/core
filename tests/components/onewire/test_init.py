@@ -80,6 +80,7 @@ async def test_update_options(
 @patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR])
 async def test_registry_cleanup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
     hass_ws_client: WebSocketGenerator,
@@ -88,7 +89,6 @@ async def test_registry_cleanup(
     assert await async_setup_component(hass, "config", {})
 
     entry_id = config_entry.entry_id
-    device_registry = dr.async_get(hass)
     live_id = "10.111111111111"
     dead_id = "28.111111111111"
 

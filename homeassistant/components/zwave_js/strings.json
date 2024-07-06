@@ -90,6 +90,27 @@
       "state.node_status": "Node status changed",
       "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
       "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value"
+    },
+    "extra_fields": {
+      "code_slot": "Code slot",
+      "command_class": "Command class",
+      "data_type": "Data type",
+      "endpoint": "Endpoint",
+      "event": "Event",
+      "event_label": "Event label",
+      "event_type": "Event type",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "from": "From",
+      "label": "Label",
+      "property": "Property",
+      "property_key": "Property key",
+      "refresh_all_values": "Refresh all values",
+      "status": "Status",
+      "to": "[%key:common::device_automation::extra_fields::to%]",
+      "type.": "Type",
+      "usercode": "Usercode",
+      "value": "Value",
+      "wait_for_result": "Wait for result"
     }
   },
   "entity": {

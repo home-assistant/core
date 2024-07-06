@@ -96,6 +96,7 @@ async def async_converse(
         conversation_id=conversation_id,
         device_id=device_id,
         language=language,
+        agent_id=agent_id,
     )
     with async_conversation_trace() as trace:
         trace.add_event(

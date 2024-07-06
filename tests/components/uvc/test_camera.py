@@ -18,7 +18,7 @@ from homeassistant.components.camera import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -111,7 +111,9 @@ def camera_v313_fixture():
         yield camera
 
 
-async def test_setup_full_config(hass: HomeAssistant, mock_remote, camera_info) -> None:
+async def test_setup_full_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_remote, camera_info
+) -> None:
     """Test the setup with full configuration."""
     config = {
         "platform": "uvc",
@@ -153,7 +155,6 @@ async def test_setup_full_config(hass: HomeAssistant, mock_remote, camera_info) 
     assert state
     assert state.name == "Back"
 
-    entity_registry = async_get_entity_registry(hass)
     entity_entry = entity_registry.async_get("camera.front")
 
     assert entity_entry.unique_id == "id1"
@@ -163,7 +164,9 @@ async def test_setup_full_config(hass: HomeAssistant, mock_remote, camera_info) 
     assert entity_entry.unique_id == "id2"
 
 
-async def test_setup_partial_config(hass: HomeAssistant, mock_remote) -> None:
+async def test_setup_partial_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_remote
+) -> None:
     """Test the setup with partial configuration."""
     config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
 
@@ -187,7 +190,6 @@ async def test_setup_partial_config(hass: HomeAssistant, mock_remote) -> None:
     assert state
     assert state.name == "Back"
 
-    entity_registry = async_get_entity_registry(hass)
     entity_entry = entity_registry.async_get("camera.front")
 
     assert entity_entry.unique_id == "id1"
@@ -197,7 +199,9 @@ async def test_setup_partial_config(hass: HomeAssistant, mock_remote) -> None:
     assert entity_entry.unique_id == "id2"
 
 
-async def test_setup_partial_config_v31x(hass: HomeAssistant, mock_remote) -> None:
+async def test_setup_partial_config_v31x(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_remote
+) -> None:
     """Test the setup with a v3.1.x server."""
     config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
     mock_remote.return_value.server_version = (3, 1, 3)
@@ -222,7 +226,6 @@ async def test_setup_partial_config_v31x(hass: HomeAssistant, mock_remote) -> No
     assert state
     assert state.name == "Back"
 
-    entity_registry = async_get_entity_registry(hass)
     entity_entry = entity_registry.async_get("camera.front")
 
     assert entity_entry.unique_id == "one"

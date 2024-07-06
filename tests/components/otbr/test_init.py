@@ -41,7 +41,9 @@ DATASET_NO_CHANNEL = bytes.fromhex(
 
 
 async def test_import_dataset(
-    hass: HomeAssistant, mock_async_zeroconf: None, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    mock_async_zeroconf: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the active dataset is imported at setup."""
     add_service_listener_called = asyncio.Event()

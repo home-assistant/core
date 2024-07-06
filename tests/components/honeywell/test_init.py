@@ -173,13 +173,12 @@ async def test_remove_stale_device(
         identifiers={("OtherDomain", 7654321)},
     )
 
+    config_entry.add_to_hass(hass)
     device_registry.async_update_device(
         device_entry_other.id,
         add_config_entry_id=config_entry.entry_id,
         merge_identifiers={(DOMAIN, 7654321)},
     )
-
-    config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

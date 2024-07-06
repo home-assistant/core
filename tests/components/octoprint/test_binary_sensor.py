@@ -7,7 +7,7 @@ from homeassistant.helpers import entity_registry as er
 from . import init_integration
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the underlying sensors."""
     printer = {
         "state": {
@@ -17,8 +17,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
         "temperature": [],
     }
     await init_integration(hass, "binary_sensor", printer=printer)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("binary_sensor.octoprint_printing")
     assert state is not None
@@ -35,11 +33,11 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry.unique_id == "Printing Error-uuid"
 
 
-async def test_sensors_printer_offline(hass: HomeAssistant) -> None:
+async def test_sensors_printer_offline(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the underlying sensors when the printer is offline."""
     await init_integration(hass, "binary_sensor", printer=None)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("binary_sensor.octoprint_printing")
     assert state is not None

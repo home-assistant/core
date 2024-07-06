@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import panel_custom
 from homeassistant.components.homeassistant import async_set_stop_handler
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -73,6 +74,7 @@ from .const import (
     DATA_HOST_INFO,
     DATA_INFO,
     DATA_KEY_SUPERVISOR_ISSUES,
+    DATA_NETWORK_INFO,
     DATA_OS_INFO,
     DATA_STORE,
     DATA_SUPERVISOR_INFO,
@@ -349,8 +351,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # This overrides the normal API call that would be forwarded
     development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)
     if development_repo is not None:
-        hass.http.register_static_path(
-            "/api/hassio/app", os.path.join(development_repo, "hassio/build"), False
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    "/api/hassio/app",
+                    os.path.join(development_repo, "hassio/build"),
+                    False,
+                )
+            ]
         )
 
     hass.http.register_view(HassIOView(host, websession))
@@ -429,6 +437,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass.data[DATA_CORE_INFO],
                 hass.data[DATA_SUPERVISOR_INFO],
                 hass.data[DATA_OS_INFO],
+                hass.data[DATA_NETWORK_INFO],
             ) = await asyncio.gather(
                 create_eager_task(hassio.get_info()),
                 create_eager_task(hassio.get_host_info()),
@@ -436,6 +445,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 create_eager_task(hassio.get_core_info()),
                 create_eager_task(hassio.get_supervisor_info()),
                 create_eager_task(hassio.get_os_info()),
+                create_eager_task(hassio.get_network_info()),
             )
 
         except HassioAPIError as err:

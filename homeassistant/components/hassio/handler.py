@@ -383,6 +383,14 @@ class HassIO:
         return self.send_command("/supervisor/info", method="get")
 
     @api_data
+    def get_network_info(self) -> Coroutine:
+        """Return data for the Host Network.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/network/info", method="get")
+
+    @api_data
     def get_addon_info(self, addon: str) -> Coroutine:
         """Return data for a Add-on.
 

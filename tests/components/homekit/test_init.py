@@ -26,9 +26,7 @@ from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_homekit_changed_event(
-    hass: HomeAssistant, hk_driver, mock_get_source_ip
-) -> None:
+async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) -> None:
     """Test humanifying HomeKit changed event."""
     hass.config.components.add("recorder")
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
@@ -72,10 +70,10 @@ async def test_humanify_homekit_changed_event(
     assert event2["entity_id"] == "cover.window"
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_bridge_with_triggers(
     hass: HomeAssistant,
     hk_driver,
-    mock_async_zeroconf: None,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

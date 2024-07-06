@@ -618,17 +618,22 @@ def _validate_item(
     hass: HomeAssistant,
     domain: str,
     platform: str,
-    unique_id: str | Hashable | UndefinedType | Any,
     *,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
+    report_non_string_unique_id: bool = True,
+    unique_id: str | Hashable | UndefinedType | Any,
 ) -> None:
     """Validate entity registry item."""
     if unique_id is not UNDEFINED and not isinstance(unique_id, Hashable):
         raise TypeError(f"unique_id must be a string, got {unique_id}")
-    if unique_id is not UNDEFINED and not isinstance(unique_id, str):
-        # In HA Core 2025.4, we should fail if unique_id is not a string
+    if (
+        report_non_string_unique_id
+        and unique_id is not UNDEFINED
+        and not isinstance(unique_id, str)
+    ):
+        # In HA Core 2025.10, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
             ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
@@ -1227,7 +1232,11 @@ class EntityRegistry(BaseRegistry):
                 try:
                     domain = split_entity_id(entity["entity_id"])[0]
                     _validate_item(
-                        self.hass, domain, entity["platform"], entity["unique_id"]
+                        self.hass,
+                        domain,
+                        entity["platform"],
+                        report_non_string_unique_id=False,
+                        unique_id=entity["unique_id"],
                     )
                 except (TypeError, ValueError) as err:
                     report_issue = async_suggest_report_issue(
@@ -1283,7 +1292,11 @@ class EntityRegistry(BaseRegistry):
                 try:
                     domain = split_entity_id(entity["entity_id"])[0]
                     _validate_item(
-                        self.hass, domain, entity["platform"], entity["unique_id"]
+                        self.hass,
+                        domain,
+                        entity["platform"],
+                        report_non_string_unique_id=False,
+                        unique_id=entity["unique_id"],
                     )
                 except (TypeError, ValueError):
                     continue

@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from async_upnp_client.profiles.igd import IgdDevice
 import pytest
 
 from homeassistant.components import ssdp
@@ -30,10 +31,10 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures(
-    "ssdp_instant_discovery", "mock_get_source_ip", "mock_mac_address_from_host"
-)
-async def test_async_setup_entry_default(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("ssdp_instant_discovery", "mock_mac_address_from_host")
+async def test_async_setup_entry_default(
+    hass: HomeAssistant, mock_igd_device: IgdDevice
+) -> None:
     """Test async_setup_entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -51,10 +52,10 @@ async def test_async_setup_entry_default(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is True
 
+    mock_igd_device.async_subscribe_services.assert_called()
 
-@pytest.mark.usefixtures(
-    "ssdp_instant_discovery", "mock_get_source_ip", "mock_no_mac_address_from_host"
-)
+
+@pytest.mark.usefixtures("ssdp_instant_discovery", "mock_no_mac_address_from_host")
 async def test_async_setup_entry_default_no_mac_address(hass: HomeAssistant) -> None:
     """Test async_setup_entry."""
     entry = MockConfigEntry(
@@ -76,7 +77,6 @@ async def test_async_setup_entry_default_no_mac_address(hass: HomeAssistant) -> 
 
 @pytest.mark.usefixtures(
     "ssdp_instant_discovery_multi_location",
-    "mock_get_source_ip",
     "mock_mac_address_from_host",
 )
 async def test_async_setup_entry_multi_location(
@@ -106,7 +106,7 @@ async def test_async_setup_entry_multi_location(
     mock_async_create_device.assert_called_once_with(TEST_LOCATION)
 
 
-@pytest.mark.usefixtures("mock_get_source_ip", "mock_mac_address_from_host")
+@pytest.mark.usefixtures("mock_mac_address_from_host")
 async def test_async_setup_udn_mismatch(
     hass: HomeAssistant, mock_async_create_device: AsyncMock
 ) -> None:

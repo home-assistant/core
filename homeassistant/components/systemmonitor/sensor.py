@@ -15,20 +15,15 @@ import time
 from typing import Any, Literal
 
 from psutil import NoSuchProcess
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    CONF_RESOURCES,
-    CONF_TYPE,
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
@@ -39,11 +34,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -410,20 +404,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
 }
 
 
-def check_required_arg(value: Any) -> Any:
-    """Validate that the required "arg" for the sensor types that need it are set."""
-    for sensor in value:
-        sensor_type = sensor[CONF_TYPE]
-        sensor_arg = sensor.get(CONF_ARG)
-
-        if sensor_arg is None and SENSOR_TYPES[sensor_type].mandatory_arg:
-            raise vol.RequiredFieldInvalid(
-                f"Mandatory 'arg' is missing for sensor type '{sensor_type}'."
-            )
-
-    return value
-
-
 def check_legacy_resource(resource: str, resources: set[str]) -> bool:
     """Return True if legacy resource was configured."""
     # This function to check legacy resources can be removed
@@ -435,23 +415,6 @@ def check_legacy_resource(resource: str, resources: set[str]) -> bool:
     return False
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_RESOURCES, default={CONF_TYPE: "disk_use"}): vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-                        vol.Optional(CONF_ARG): cv.string,
-                    }
-                )
-            ],
-            check_required_arg,
-        )
-    }
-)
-
 IO_COUNTER = {
     "network_out": 0,
     "network_in": 1,
@@ -461,44 +424,6 @@ IO_COUNTER = {
     "throughput_network_in": 1,
 }
 IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the system monitor sensors."""
-    processes = [
-        resource[CONF_ARG]
-        for resource in config[CONF_RESOURCES]
-        if resource[CONF_TYPE] == "process"
-    ]
-    legacy_config: list[dict[str, str]] = config[CONF_RESOURCES]
-    resources = []
-    for resource_conf in legacy_config:
-        if (_type := resource_conf[CONF_TYPE]).startswith("disk_"):
-            if (arg := resource_conf.get(CONF_ARG)) is None:
-                resources.append(f"{_type}_/")
-                continue
-            resources.append(f"{_type}_{arg}")
-            continue
-        resources.append(f"{_type}_{resource_conf.get(CONF_ARG, '')}")
-    _LOGGER.debug(
-        "Importing config with processes: %s, resources: %s", processes, resources
-    )
-
-    # With removal of the import also cleanup legacy_resources logic in setup_entry
-    # Also cleanup entry.options["resources"] which is only imported for legacy reasons
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"processes": processes, "legacy_resources": resources},
-        )
-    )
 
 
 async def async_setup_entry(

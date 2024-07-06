@@ -283,16 +283,13 @@ class KNXClimate(KnxEntity, ClimateEntity):
             )
             if knx_controller_mode in self._device.mode.controller_modes:
                 await self._device.mode.set_controller_mode(knx_controller_mode)
-                self.async_write_ha_state()
-                return
 
         if self._device.supports_on_off:
             if hvac_mode == HVACMode.OFF:
                 await self._device.turn_off()
             elif not self._device.is_on:
-                # for default hvac mode, otherwise above would have triggered
                 await self._device.turn_on()
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @property
     def preset_mode(self) -> str | None:

@@ -1,6 +1,6 @@
 """Event module."""
 
-from deebot_client.capabilities import Capabilities, CapabilityEvent
+from deebot_client.capabilities import CapabilityEvent
 from deebot_client.device import Device
 from deebot_client.events import CleanJobStatus, ReportStatsEvent
 
@@ -22,12 +22,12 @@ async def async_setup_entry(
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
     async_add_entities(
-        EcovacsLastJobEventEntity(device) for device in controller.devices(Capabilities)
+        EcovacsLastJobEventEntity(device) for device in controller.devices
     )
 
 
 class EcovacsLastJobEventEntity(
-    EcovacsEntity[Capabilities, CapabilityEvent[ReportStatsEvent]],
+    EcovacsEntity[CapabilityEvent[ReportStatsEvent]],
     EventEntity,
 ):
     """Ecovacs last job event entity."""
@@ -39,7 +39,7 @@ class EcovacsLastJobEventEntity(
         event_types=["finished", "finished_with_warnings", "manually_stopped"],
     )
 
-    def __init__(self, device: Device[Capabilities]) -> None:
+    def __init__(self, device: Device) -> None:
         """Initialize entity."""
         super().__init__(device, device.capabilities.stats.report)
 

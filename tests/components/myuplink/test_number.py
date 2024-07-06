@@ -74,16 +74,15 @@ async def test_api_failure(
 ) -> None:
     """Test handling of exception from API."""
 
+    mock_myuplink_client.async_set_device_points.side_effect = ClientError
     with pytest.raises(HomeAssistantError):
-        mock_myuplink_client.async_set_device_points.side_effect = ClientError
         await hass.services.async_call(
             TEST_PLATFORM,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: ENTITY_ID, "value": -125},
             blocking=True,
         )
-        await hass.async_block_till_done()
-        mock_myuplink_client.async_set_device_points.assert_called_once()
+    mock_myuplink_client.async_set_device_points.assert_called_once()
 
 
 @pytest.mark.parametrize(

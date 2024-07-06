@@ -1,10 +1,14 @@
 """Tests for the llm helpers."""
 
-from unittest.mock import Mock, patch
+from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.script.config import ScriptConfig
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -15,6 +19,7 @@ from homeassistant.helpers import (
     floor_registry as fr,
     intent,
     llm,
+    selector,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
@@ -22,90 +27,139 @@ from homeassistant.util import yaml
 from tests.common import MockConfigEntry
 
 
-async def test_get_api_no_existing(hass: HomeAssistant) -> None:
+@pytest.fixture
+def llm_context() -> llm.LLMContext:
+    """Return tool input context."""
+    return llm.LLMContext(
+        platform="",
+        context=None,
+        user_prompt=None,
+        language=None,
+        assistant=None,
+        device_id=None,
+    )
+
+
+async def test_get_api_no_existing(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
     """Test getting an llm api where no config exists."""
     with pytest.raises(HomeAssistantError):
-        llm.async_get_api(hass, "non-existing")
+        await llm.async_get_api(hass, "non-existing", llm_context)
 
 
-async def test_register_api(hass: HomeAssistant) -> None:
+async def test_register_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
     """Test registering an llm api."""
 
     class MyAPI(llm.API):
-        async def async_get_api_prompt(self, tool_input: llm.ToolInput) -> str:
-            """Return a prompt for the tool."""
-            return ""
-
-        def async_get_tools(self) -> list[llm.Tool]:
+        async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
             """Return a list of tools."""
-            return []
+            return llm.APIInstance(self, "", [], llm_context)
 
     api = MyAPI(hass=hass, id="test", name="Test")
     llm.async_register_api(hass, api)
 
-    assert llm.async_get_api(hass, "test") is api
+    instance = await llm.async_get_api(hass, "test", llm_context)
+    assert instance.api is api
     assert api in llm.async_get_apis(hass)
 
     with pytest.raises(HomeAssistantError):
         llm.async_register_api(hass, api)
 
 
-async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
+async def test_call_tool_no_existing(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
     """Test calling an llm tool where no config exists."""
+    instance = await llm.async_get_api(hass, "assist", llm_context)
     with pytest.raises(HomeAssistantError):
-        await llm.async_get_api(hass, "intent").async_call_tool(
-            llm.ToolInput(
-                "test_tool",
-                {},
-                "test_platform",
-                None,
-                None,
-                None,
-                None,
-                None,
-            ),
+        await instance.async_call_tool(
+            llm.ToolInput("test_tool", {}),
         )
 
 
-async def test_assist_api(hass: HomeAssistant) -> None:
+async def test_assist_api(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
     """Test Assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    entity_registry.async_get_or_create(
+        "light",
+        "kitchen",
+        "mock-id-kitchen",
+        original_name="Kitchen",
+        suggested_object_id="kitchen",
+    ).write_unavailable_state(hass)
+
+    test_context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=test_context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
     schema = {
         vol.Optional("area"): cv.string,
         vol.Optional("floor"): cv.string,
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
     }
 
     class MyIntentHandler(intent.IntentHandler):
         intent_type = "test_intent"
         slot_schema = schema
+        platforms = set()  # Match none
 
     intent_handler = MyIntentHandler()
 
     intent.async_register(hass, intent_handler)
 
     assert len(llm.async_get_apis(hass)) == 1
-    api = llm.async_get_api(hass, "assist")
-    tools = api.async_get_tools()
-    assert len(tools) == 1
-    tool = tools[0]
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert len(api.tools) == 0
+
+    # Match all
+    intent_handler.platforms = None
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert len(api.tools) == 1
+
+    # Match specific domain
+    intent_handler.platforms = {"light"}
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert len(api.tools) == 1
+    tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == vol.Schema(intent_handler.slot_schema)
+    assert tool.parameters == vol.Schema(
+        {
+            vol.Optional("area"): cv.string,
+            vol.Optional("floor"): cv.string,
+            # No preferred_area_id, preferred_floor_id
+        }
+    )
     assert str(tool) == "<IntentTool - test_intent>"
 
-    test_context = Context()
     assert test_context.json_fragment  # To reproduce an error case in tracing
     intent_response = intent.IntentResponse("*")
-    intent_response.matched_states = [State("light.matched", "on")]
-    intent_response.unmatched_states = [State("light.unmatched", "on")]
+    intent_response.async_set_states(
+        [State("light.matched", "on")], [State("light.unmatched", "on")]
+    )
+    intent_response.async_set_speech("Some speech")
+    intent_response.async_set_card("Card title", "card content")
+    intent_response.async_set_speech_slots({"hello": 1})
+    intent_response.async_set_reprompt("Do it again")
     tool_input = llm.ToolInput(
         tool_name="test_intent",
         tool_args={"area": "kitchen", "floor": "ground_floor"},
-        platform="test_platform",
-        context=test_context,
-        user_prompt="test_text",
-        language="*",
-        assistant="test_assistant",
-        device_id="test_device",
     )
 
     with patch(
@@ -114,33 +168,157 @@ async def test_assist_api(hass: HomeAssistant) -> None:
         response = await api.async_call_tool(tool_input)
 
     mock_intent_handle.assert_awaited_once_with(
-        hass,
-        "test_platform",
-        "test_intent",
-        {
+        hass=hass,
+        platform="test_platform",
+        intent_type="test_intent",
+        slots={
             "area": {"value": "kitchen"},
             "floor": {"value": "ground_floor"},
         },
-        "test_text",
-        test_context,
-        "*",
-        "test_assistant",
-        "test_device",
+        text_input="test_text",
+        context=test_context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
     )
     assert response == {
-        "card": {},
         "data": {
             "failed": [],
             "success": [],
             "targets": [],
         },
-        "language": "*",
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
         "response_type": "action_done",
-        "speech": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
+    }
+
+    # Call with a device/area/floor
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "1234")},
+        suggested_area="Test Area",
+    )
+    area = area_registry.async_get_area_by_name("Test Area")
+    floor = floor_registry.async_create("2")
+    area_registry.async_update(area.id, floor_id=floor.floor_id)
+    llm_context.device_id = device.id
+
+    with patch(
+        "homeassistant.helpers.intent.async_handle", return_value=intent_response
+    ) as mock_intent_handle:
+        response = await api.async_call_tool(tool_input)
+
+    mock_intent_handle.assert_awaited_once_with(
+        hass=hass,
+        platform="test_platform",
+        intent_type="test_intent",
+        slots={
+            "area": {"value": "kitchen"},
+            "floor": {"value": "ground_floor"},
+            "preferred_area_id": {"value": area.id},
+            "preferred_floor_id": {"value": floor.floor_id},
+        },
+        text_input="test_text",
+        context=test_context,
+        language="*",
+        assistant="conversation",
+        device_id=device.id,
+    )
+    assert response == {
+        "data": {
+            "failed": [],
+            "success": [],
+            "targets": [],
+        },
+        "response_type": "action_done",
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
     }
 
 
-async def test_assist_api_description(hass: HomeAssistant) -> None:
+async def test_assist_api_get_timer_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test getting timer tools with Assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    assert "HassStartTimer" not in [tool.name for tool in api.tools]
+
+    llm_context.device_id = "test_device"
+
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert "HassStartTimer" in [tool.name for tool in api.tools]
+
+
+async def test_assist_api_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test getting timer tools with Assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    llm_context.device_id = "test_device"
+
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "Super crazy intent with unique nåme"
+        description = "my intent handler"
+
+    intent.async_register(hass, MyIntentHandler())
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert [tool.name for tool in api.tools] == [
+        "HassTurnOn",
+        "HassTurnOff",
+        "HassSetPosition",
+        "HassStartTimer",
+        "HassCancelTimer",
+        "HassIncreaseTimer",
+        "HassDecreaseTimer",
+        "HassPauseTimer",
+        "HassUnpauseTimer",
+        "HassTimerStatus",
+        "Super_crazy_intent_with_unique_name",
+    ]
+
+
+async def test_assist_api_description(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
     """Test intent description with Assist API."""
 
     class MyIntentHandler(intent.IntentHandler):
@@ -150,10 +328,9 @@ async def test_assist_api_description(hass: HomeAssistant) -> None:
     intent.async_register(hass, MyIntentHandler())
 
     assert len(llm.async_get_apis(hass)) == 1
-    api = llm.async_get_api(hass, "assist")
-    tools = api.async_get_tools()
-    assert len(tools) == 1
-    tool = tools[0]
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert len(api.tools) == 1
+    tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
 
@@ -167,25 +344,43 @@ async def test_assist_api_prompt(
 ) -> None:
     """Test prompt for the assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
     context = Context()
-    tool_input = llm.ToolInput(
-        tool_name=None,
-        tool_args=None,
+    llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
         user_prompt="test_text",
         language="*",
         assistant="conversation",
-        device_id="test_device",
+        device_id=None,
     )
-    api = llm.async_get_api(hass, "assist")
-    prompt = await api.async_get_api_prompt(tool_input)
-    assert prompt == (
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.api_prompt == (
         "Only if the user wants to control a device, tell them to expose entities to their "
         "voice assistant in Home Assistant."
     )
 
     # Expose entities
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers"},
+                        "wine": {},
+                    },
+                }
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.test_script", True)
+
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -210,7 +405,11 @@ async def test_assist_api_prompt(
         suggested_object_id="living_room",
         device_id=device.id,
     )
-    hass.states.async_set(entry1.entity_id, "on", {"friendly_name": "Kitchen"})
+    hass.states.async_set(
+        entry1.entity_id,
+        "on",
+        {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
+    )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
     def create_entity(device: dr.DeviceEntry, write_state=True) -> None:
@@ -308,7 +507,7 @@ async def test_assist_api_prompt(
         )
     )
 
-    exposed_entities = llm._get_exposed_entities(hass, tool_input.assistant)
+    exposed_entities = llm._get_exposed_entities(hass, llm_context.assistant)
     assert exposed_entities == {
         "light.1": {
             "areas": "Test Area 2",
@@ -318,6 +517,7 @@ async def test_assist_api_prompt(
         entry1.entity_id: {
             "names": "Kitchen",
             "state": "on",
+            "attributes": {"temperature": "0.9", "humidity": "65"},
         },
         entry2.entity_id: {
             "areas": "Test Area, Alternative name",
@@ -370,46 +570,382 @@ async def test_assist_api_prompt(
         + yaml.dump(exposed_entities)
     )
     first_part_prompt = (
-        "Call the intent tools to control Home Assistant. "
-        "Just pass the name to the intent. "
-        "When controlling an area, prefer passing area name."
+        "When controlling Home Assistant always call the intent tools. "
+        "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
+        "When controlling a device, prefer passing just its name and its domain "
+        "(what comes before the dot in its entity id). "
+        "When controlling an area, prefer passing just area name and domain."
     )
+    no_timer_prompt = "This device is not able to start timers."
 
-    prompt = await api.async_get_api_prompt(tool_input)
-    assert prompt == (
+    area_prompt = (
+        "When a user asks to turn on all devices of a specific type, "
+        "ask user to specify an area, unless there is only one device of that type."
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.api_prompt == (
         f"""{first_part_prompt}
+{area_prompt}
+{no_timer_prompt}
 {exposed_entities_prompt}"""
     )
 
-    # Fake that request is made from a specific device ID
-    tool_input.device_id = device.id
-    prompt = await api.async_get_api_prompt(tool_input)
-    assert prompt == (
+    # Fake that request is made from a specific device ID with an area
+    llm_context.device_id = device.id
+    area_prompt = (
+        "You are in area Test Area and all generic commands like 'turn on the lights' "
+        "should target this area."
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.api_prompt == (
         f"""{first_part_prompt}
-You are in Test Area.
+{area_prompt}
+{no_timer_prompt}
 {exposed_entities_prompt}"""
     )
 
     # Add floor
-    floor = floor_registry.async_create("second floor")
+    floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
-    prompt = await api.async_get_api_prompt(tool_input)
-    assert prompt == (
+    area_prompt = (
+        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "should target this area."
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.api_prompt == (
         f"""{first_part_prompt}
-You are in Test Area (second floor).
+{area_prompt}
+{no_timer_prompt}
 {exposed_entities_prompt}"""
     )
 
-    # Add user
-    context.user_id = "12345"
-    mock_user = Mock()
-    mock_user.id = "12345"
-    mock_user.name = "Test User"
-    with patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user):
-        prompt = await api.async_get_api_prompt(tool_input)
-    assert prompt == (
+    # Register device for timers
+    async_register_timer_handler(hass, device.id, lambda *args: None)
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    # The no_timer_prompt is gone
+    assert api.api_prompt == (
         f"""{first_part_prompt}
-You are in Test Area (second floor).
-The user name is Test User.
+{area_prompt}
 {exposed_entities_prompt}"""
     )
+
+
+async def test_script_tool(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test ScriptTool for the assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers", "required": True},
+                        "wine": {"selector": {"number": {"min": 0, "max": 3}}},
+                        "where": {"selector": {"area": {}}},
+                        "area_list": {"selector": {"area": {"multiple": True}}},
+                        "floor": {"selector": {"floor": {}}},
+                        "floor_list": {"selector": {"floor": {"multiple": True}}},
+                        "extra_field": {"selector": {"area": {}}},
+                    },
+                },
+                "unexposed_script": {
+                    "sequence": [],
+                },
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.test_script", True)
+
+    area = area_registry.async_create("Living room")
+    floor = floor_registry.async_create("2")
+
+    assert llm.SCRIPT_PARAMETERS_CACHE not in hass.data
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    assert len(tools) == 1
+
+    tool = tools[0]
+    assert tool.name == "test_script"
+    assert tool.description == "This is a test script"
+    schema = {
+        vol.Required("beer", description="Number of beers"): cv.string,
+        vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
+        vol.Optional("where"): selector.AreaSelector(),
+        vol.Optional("area_list"): selector.AreaSelector({"multiple": True}),
+        vol.Optional("floor"): selector.FloorSelector(),
+        vol.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
+        vol.Optional("extra_field"): selector.AreaSelector(),
+    }
+    assert tool.parameters.schema == schema
+
+    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+        "test_script": ("This is a test script", vol.Schema(schema))
+    }
+
+    tool_input = llm.ToolInput(
+        tool_name="test_script",
+        tool_args={
+            "beer": "3",
+            "wine": 0,
+            "where": "Living room",
+            "area_list": ["Living room"],
+            "floor": "2",
+            "floor_list": ["2"],
+        },
+    )
+
+    with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
+        response = await api.async_call_tool(tool_input)
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "turn_on",
+        {
+            "entity_id": "script.test_script",
+            "variables": {
+                "beer": "3",
+                "wine": 0,
+                "where": area.id,
+                "area_list": [area.id],
+                "floor": floor.floor_id,
+                "floor_list": [floor.floor_id],
+            },
+        },
+        context=context,
+    )
+    assert response == {"success": True}
+
+    # Test reload script with new parameters
+    config = {
+        "script": {
+            "test_script": ScriptConfig(
+                {
+                    "description": "This is a new test script",
+                    "sequence": [],
+                    "mode": "single",
+                    "max": 2,
+                    "max_exceeded": "WARNING",
+                    "trace": {},
+                    "fields": {
+                        "beer": {"description": "Number of beers", "required": True},
+                    },
+                }
+            )
+        }
+    }
+
+    with patch(
+        "homeassistant.helpers.entity_component.EntityComponent.async_prepare_reload",
+        return_value=config,
+    ):
+        await hass.services.async_call("script", "reload", blocking=True)
+
+    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {}
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    assert len(tools) == 1
+
+    tool = tools[0]
+    assert tool.name == "test_script"
+    assert tool.description == "This is a new test script"
+    schema = {vol.Required("beer", description="Number of beers"): cv.string}
+    assert tool.parameters.schema == schema
+
+    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+        "test_script": ("This is a new test script", vol.Schema(schema))
+    }
+
+
+async def test_selector_serializer(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test serialization of Selectors in Open API format."""
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    selector_serializer = api.custom_serializer
+
+    assert selector_serializer(selector.ActionSelector()) == {"type": "string"}
+    assert selector_serializer(selector.AddonSelector()) == {"type": "string"}
+    assert selector_serializer(selector.AreaSelector()) == {"type": "string"}
+    assert selector_serializer(selector.AreaSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.AssistPipelineSelector()) == {"type": "string"}
+    assert selector_serializer(
+        selector.AttributeSelector({"entity_id": "sensor.test"})
+    ) == {"type": "string"}
+    assert selector_serializer(selector.BackupLocationSelector()) == {
+        "type": "string",
+        "pattern": "^(?:\\/backup|\\w+)$",
+    }
+    assert selector_serializer(selector.BooleanSelector()) == {"type": "boolean"}
+    assert selector_serializer(selector.ColorRGBSelector()) == {
+        "type": "array",
+        "items": {"type": "number"},
+        "maxItems": 3,
+        "minItems": 3,
+        "format": "RGB",
+    }
+    assert selector_serializer(selector.ColorTempSelector()) == {"type": "number"}
+    assert selector_serializer(selector.ColorTempSelector({"min": 0, "max": 1000})) == {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1000,
+    }
+    assert selector_serializer(
+        selector.ColorTempSelector({"min_mireds": 100, "max_mireds": 1000})
+    ) == {"type": "number", "minimum": 100, "maximum": 1000}
+    assert selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
+    assert selector_serializer(selector.ConstantSelector({"value": "test"})) == {
+        "enum": ["test"]
+    }
+    assert selector_serializer(selector.ConstantSelector({"value": 1})) == {"enum": [1]}
+    assert selector_serializer(selector.ConstantSelector({"value": True})) == {
+        "enum": [True]
+    }
+    assert selector_serializer(selector.QrCodeSelector({"data": "test"})) == {
+        "type": "string"
+    }
+    assert selector_serializer(selector.ConversationAgentSelector()) == {
+        "type": "string"
+    }
+    assert selector_serializer(selector.CountrySelector()) == {
+        "type": "string",
+        "format": "ISO 3166-1 alpha-2",
+    }
+    assert selector_serializer(
+        selector.CountrySelector({"countries": ["GB", "FR"]})
+    ) == {"type": "string", "enum": ["GB", "FR"]}
+    assert selector_serializer(selector.DateSelector()) == {
+        "type": "string",
+        "format": "date",
+    }
+    assert selector_serializer(selector.DateTimeSelector()) == {
+        "type": "string",
+        "format": "date-time",
+    }
+    assert selector_serializer(selector.DeviceSelector()) == {"type": "string"}
+    assert selector_serializer(selector.DeviceSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.EntitySelector()) == {
+        "type": "string",
+        "format": "entity_id",
+    }
+    assert selector_serializer(selector.EntitySelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string", "format": "entity_id"},
+    }
+    assert selector_serializer(selector.FloorSelector()) == {"type": "string"}
+    assert selector_serializer(selector.FloorSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.IconSelector()) == {"type": "string"}
+    assert selector_serializer(selector.LabelSelector()) == {"type": "string"}
+    assert selector_serializer(selector.LabelSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.LanguageSelector()) == {
+        "type": "string",
+        "format": "RFC 5646",
+    }
+    assert selector_serializer(
+        selector.LanguageSelector({"languages": ["en", "fr"]})
+    ) == {"type": "string", "enum": ["en", "fr"]}
+    assert selector_serializer(selector.LocationSelector()) == {
+        "type": "object",
+        "properties": {
+            "latitude": {"type": "number"},
+            "longitude": {"type": "number"},
+            "radius": {"type": "number"},
+        },
+        "required": ["latitude", "longitude"],
+    }
+    assert selector_serializer(selector.MediaSelector()) == {
+        "type": "object",
+        "properties": {
+            "entity_id": {"type": "string"},
+            "media_content_id": {"type": "string"},
+            "media_content_type": {"type": "string"},
+            "metadata": {"type": "object", "additionalProperties": True},
+        },
+        "required": ["entity_id", "media_content_id", "media_content_type"],
+    }
+    assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
+        "type": "number"
+    }
+    assert selector_serializer(selector.NumberSelector({"min": 30, "max": 100})) == {
+        "type": "number",
+        "minimum": 30,
+        "maximum": 100,
+    }
+    assert selector_serializer(selector.ObjectSelector()) == {"type": "object"}
+    assert selector_serializer(
+        selector.SelectSelector(
+            {
+                "options": [
+                    {"value": "A", "label": "Letter A"},
+                    {"value": "B", "label": "Letter B"},
+                    {"value": "C", "label": "Letter C"},
+                ]
+            }
+        )
+    ) == {"type": "string", "enum": ["A", "B", "C"]}
+    assert selector_serializer(
+        selector.SelectSelector({"options": ["A", "B", "C"], "multiple": True})
+    ) == {
+        "type": "array",
+        "items": {"type": "string", "enum": ["A", "B", "C"]},
+        "uniqueItems": True,
+    }
+    assert selector_serializer(
+        selector.StateSelector({"entity_id": "sensor.test"})
+    ) == {"type": "string"}
+    assert selector_serializer(selector.TemplateSelector()) == {
+        "type": "string",
+        "format": "jinja2",
+    }
+    assert selector_serializer(selector.TextSelector()) == {"type": "string"}
+    assert selector_serializer(selector.TextSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.ThemeSelector()) == {"type": "string"}
+    assert selector_serializer(selector.TimeSelector()) == {
+        "type": "string",
+        "format": "time",
+    }
+    assert selector_serializer(selector.TriggerSelector()) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.FileSelector({"accept": ".txt"})) == {
+        "type": "string"
+    }

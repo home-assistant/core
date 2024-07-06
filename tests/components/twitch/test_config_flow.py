@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from twitchAPI.object.api import TwitchUser
 
 from homeassistant.components.twitch.const import (
@@ -15,9 +16,9 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import get_generator, setup_integration
+from .conftest import CLIENT_ID, TITLE
 
 from tests.common import MockConfigEntry
-from tests.components.twitch.conftest import CLIENT_ID, TITLE
 from tests.typing import ClientSessionGenerator
 
 
@@ -47,10 +48,10 @@ async def _do_get_token(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     mock_setup_entry,
     twitch_mock: AsyncMock,
     scopes: list[str],
@@ -75,10 +76,10 @@ async def test_full_flow(
     assert result["options"] == {CONF_CHANNELS: ["internetofthings", "homeassistant"]}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
     twitch_mock: AsyncMock,
@@ -97,10 +98,10 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
     twitch_mock: AsyncMock,
@@ -129,10 +130,10 @@ async def test_reauth(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_from_import(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     mock_setup_entry,
     twitch_mock: AsyncMock,
     expires_at,
@@ -158,7 +159,6 @@ async def test_reauth_from_import(
     await test_reauth(
         hass,
         hass_client_no_auth,
-        current_request_with_host,
         config_entry,
         mock_setup_entry,
         twitch_mock,
@@ -170,10 +170,10 @@ async def test_reauth_from_import(
     assert entry.options == {CONF_CHANNELS: ["internetofthings", "homeassistant"]}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
     twitch_mock: AsyncMock,

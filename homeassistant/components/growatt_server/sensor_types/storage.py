@@ -75,6 +75,14 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
     ),
     GrowattSensorEntityDescription(
+        key="storage_solar_production_2",
+        translation_key="storage_solar_production_2",
+        api_key="ppv2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GrowattSensorEntityDescription(
         key="storage_battery_percentage",
         translation_key="storage_battery_percentage",
         api_key="capacity",
