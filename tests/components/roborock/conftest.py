@@ -1,7 +1,7 @@
 """Global fixtures for Roborock integration."""
 
-import shutil
 from copy import deepcopy
+import shutil
 from unittest.mock import patch
 import uuid
 
@@ -70,6 +70,9 @@ def bypass_api_fixture() -> None:
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
+        ),
         patch(
             "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
             return_value=HOME_DATA,

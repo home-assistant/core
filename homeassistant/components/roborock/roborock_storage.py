@@ -5,10 +5,13 @@ import logging
 import os
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .models import RoborockMapInfo
 
+STORAGE_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
 MAP_PATH = f"{DOMAIN}/maps"
 MAP_UPDATE_FREQUENCY = 3600  # Only save the map once every hour.
@@ -34,14 +37,18 @@ class RoborockStorage:
         self._hass = hass
         self._data: dict[str, RoborockMapEntry] = {}
         self._entry_id = entry_id
+        # RoborockMapInfo is a type here - but only so that typing accepts it.
+        # The store will auto convert it to a dict.
+        self._store: Store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{self._entry_id}")
+        self._map_info: dict[str, dict[int, RoborockMapInfo]] = {}
 
-    def _should_update(self, map_entry: RoborockMapEntry | None):
+    def _should_update(self, map_entry: RoborockMapEntry | None) -> bool:
         return (
             map_entry is None
             or dt_util.utcnow().timestamp() - map_entry.time > MAP_UPDATE_FREQUENCY
         )
 
-    def _get_map_filename(self, map_name: str):
+    def _get_map_filename(self, map_name: str) -> str:
         return self._hass.config.path(f"{MAP_PATH}/{self._entry_id}/{map_name}")
 
     def exec_load_maps(self, map_names: list[str]) -> list[bytes | None]:
@@ -104,17 +111,44 @@ class RoborockStorage:
 
         await self._hass.async_add_executor_job(save_maps, maps)
 
-    async def async_remove_maps(self, entry_id: str) -> None:
+    async def async_remove_maps(self) -> None:
         """Remove all maps associated with a config entry."""
 
-        def remove_maps(entry_id: str) -> None:
-            directory = self._hass.config.path(f"{MAP_PATH}/{entry_id}")
+        def remove_maps() -> None:
+            directory = self._hass.config.path(f"{MAP_PATH}/{self._entry_id}")
             try:
                 for filename in os.listdir(directory):
                     file_path = os.path.join(directory, filename)
                     _LOGGER.debug("Removing map from disk store: %s", file_path)
                     os.remove(file_path)
             except OSError as err:
-                _LOGGER.error("Unable to remove map files for: %s %s", entry_id, err)
+                _LOGGER.error(
+                    "Unable to remove map files for: %s %s", self._entry_id, err
+                )
 
-        await self._hass.async_add_executor_job(remove_maps, entry_id)
+        await self._hass.async_add_executor_job(remove_maps)
+
+    async def async_save_map_info(
+        self, coord_duid: str, map_info: dict[int, RoborockMapInfo]
+    ) -> None:
+        """Save the coordinator map info."""
+        self._map_info[coord_duid] = map_info
+        await self._store.async_save(self._map_info)
+
+    async def async_load_map_info(self, coord_duid: str) -> dict[int, RoborockMapInfo]:
+        """Load a coordinator's map info."""
+        map_info: dict[str, dict[str, dict]] | None = await self._store.async_load()
+        if map_info is None:
+            return {}
+        # Oddly enough the storage seems to turn the mapflag key into a str. This
+        # breaks logic downstream.
+        for stored_coord_duid in map_info:
+            self._map_info[stored_coord_duid] = {
+                int(key): RoborockMapInfo(**value)
+                for key, value in map_info[stored_coord_duid].items()
+            }
+        return self._map_info.get(coord_duid, {})
+
+    async def async_remove_map_info(self) -> None:
+        """Remove map info from the store."""
+        await self._store.async_remove()

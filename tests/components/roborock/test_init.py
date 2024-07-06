@@ -1,7 +1,7 @@
 """Test for Roborock init."""
 
-import os
 from copy import deepcopy
+import os
 from unittest.mock import patch
 
 import pytest
@@ -211,6 +211,8 @@ async def test_oserror_remove_image(
     ):
         await hass.config_entries.async_remove(setup_entry.entry_id)
     assert f"Unable to remove map files for: {setup_entry.entry_id}" in caplog.text
+
+
 async def test_not_supported_protocol(
     hass: HomeAssistant,
     bypass_api_fixture,

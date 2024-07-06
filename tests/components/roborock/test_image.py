@@ -162,7 +162,7 @@ async def test_fail_to_load_image(
     setup_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that we gracefully handle failing to load an image.."""
+    """Test that we gracefully handle failing to load an image."""
     with (
         patch(
             "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
