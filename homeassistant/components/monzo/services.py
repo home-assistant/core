@@ -42,18 +42,33 @@ async def register_services(hass: HomeAssistant) -> None:
 
     @callback
     async def handle_pot_transfer(call: ServiceCall) -> None:
-        device_registry = dr.async_get(hass)
-        api = _get_api(call, device_registry, hass)
-        amount = int(call.data.get(ATTR_AMOUNT, DEFAULT_AMOUNT) * 100)
+        await MonzoServiceHandler(call, hass).pot_transfer()
+
+    hass.services.async_register(DOMAIN, SERVICE_POT_TRANSFER, handle_pot_transfer)
+
+
+class MonzoServiceHandler:
+    """A class that handles the execution of Monzo service calls."""
+
+    def __init__(self, call: ServiceCall, hass: HomeAssistant) -> None:
+        """Create a MonzoServiceHandler."""
+        self.call = call
+        self.hass = hass
+        self.device_registry = dr.async_get(hass)
+
+    async def pot_transfer(self) -> None:
+        """Handle pot transfer."""
+        api = self._get_api()
+        amount = int(self.call.data.get(ATTR_AMOUNT, DEFAULT_AMOUNT) * 100)
         transfer_func: Callable[[str, str, int], Awaitable[bool]] = (
             api.user_account.pot_deposit
-            if call.data[TRANSFER_TYPE] == TRANSFER_TYPE_DEPOSIT
+            if self.call.data[TRANSFER_TYPE] == TRANSFER_TYPE_DEPOSIT
             else api.user_account.pot_withdraw
         )
 
         try:
-            account_id = await _get_account_id(call, api, device_registry)
-            pot_ids = await _get_pot_ids(call, device_registry)
+            account_id = await self._get_account_id(api)
+            pot_ids = await self._get_pot_ids()
         except (InvalidMonzoAPIResponseError, AuthorisationExpiredError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="external_transfer_failure"
@@ -70,84 +85,76 @@ async def register_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN, translation_key="external_transfer_failure"
             )
 
-    hass.services.async_register(DOMAIN, SERVICE_POT_TRANSFER, handle_pot_transfer)
+    def _get_api(self) -> AuthenticatedMonzoAPI:
+        """Get the API from the config entry associated with the chosen pot."""
+        first_pot = self.device_registry.async_get(self.call.data[TRANSFER_POTS][0])
+        if first_pot is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device",
+                translation_placeholders={
+                    "device_id": self.call.data[TRANSFER_POTS][0]
+                },
+            )
+        entry_id = next(iter(first_pot.config_entries))
+        coordinator: MonzoCoordinator = self.hass.data[DOMAIN][entry_id]
+        return coordinator.api
 
-
-def _get_api(
-    call: ServiceCall, device_registry: DeviceRegistry, hass: HomeAssistant
-) -> AuthenticatedMonzoAPI:
-    """Get the API from the config entry associated with the chosen pot."""
-    first_pot = device_registry.async_get(call.data[TRANSFER_POTS][0])
-    if first_pot is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device",
-            translation_placeholders={"device_id": call.data[TRANSFER_POTS][0]},
+    async def _get_account_id(self, api: AuthenticatedMonzoAPI) -> str:
+        """Get the Monzo account ID from the device, defaulting to current account."""
+        return (
+            await self._get_current_account_id(api)
+            if TRANSFER_ACCOUNT not in self.call.data
+            else await self._get_account_id_from_device(
+                self.call.data[TRANSFER_ACCOUNT], VALID_TRANSFER_ACCOUNTS
+            )
         )
-    entry_id = next(iter(first_pot.config_entries))
-    coordinator: MonzoCoordinator = hass.data[DOMAIN][entry_id]
-    return coordinator.api
 
-
-async def _get_account_id(
-    call: ServiceCall, api: AuthenticatedMonzoAPI, device_registry: DeviceRegistry
-) -> str:
-    """Get the Monzo account ID from the device, defaulting to current account."""
-    return (
-        await _get_current_account_id(api)
-        if TRANSFER_ACCOUNT not in call.data
-        else await _get_account_id_from_device(
-            device_registry, call.data[TRANSFER_ACCOUNT], VALID_TRANSFER_ACCOUNTS
+    async def _get_current_account_id(self, api: AuthenticatedMonzoAPI) -> str:
+        """Get the current account ID from the Monzo API."""
+        curent_account_id: str = next(
+            acc["id"]
+            for acc in (await api.user_account.accounts())
+            if acc["type"] == "uk_retail"
         )
-    )
 
+        return curent_account_id
 
-async def _get_current_account_id(api: AuthenticatedMonzoAPI) -> str:
-    """Get the current account ID from the Monzo API."""
-    curent_account_id: str = next(
-        acc["id"]
-        for acc in (await api.user_account.accounts())
-        if acc["type"] == "uk_retail"
-    )
+    async def _get_account_id_from_device(
+        self, device_id: str, valid_account_types: set[str]
+    ) -> str:
+        """Get the Monzo account ID for a given device."""
+        device = await self._get_device(self.device_registry, device_id)
+        if device.model not in valid_account_types:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device_model",
+                translation_placeholders={
+                    "device_name": device.name or device_id,
+                    "valid_types": str(valid_account_types),
+                },
+            )
+        _, account_id = next(iter(device.identifiers))
+        return account_id
 
-    return curent_account_id
-
-
-async def _get_account_id_from_device(
-    device_registry: DeviceRegistry, device_id: str, valid_account_types: set[str]
-) -> str:
-    """Get the Monzo account ID for a given device."""
-    device = await _get_device(device_registry, device_id)
-    if device.model not in valid_account_types:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_model",
-            translation_placeholders={
-                "device_name": device.name or device_id,
-                "valid_types": str(valid_account_types),
-            },
+    async def _get_pot_ids(self) -> list[str]:
+        """Get the Monzo account IDs for the selected pots in the ServiceCall."""
+        return await asyncio.gather(
+            *[
+                self._get_account_id_from_device(acc, VALID_POT_ACCOUNTS)
+                for acc in self.call.data.get(TRANSFER_POTS, "")
+            ]
         )
-    _, account_id = next(iter(device.identifiers))
-    return account_id
 
-
-async def _get_pot_ids(call: ServiceCall, device_registry: DeviceRegistry) -> list[str]:
-    """Get the Monzo account IDs for the selected pots in the ServiceCall."""
-    return await asyncio.gather(
-        *[
-            _get_account_id_from_device(device_registry, acc, VALID_POT_ACCOUNTS)
-            for acc in call.data.get(TRANSFER_POTS, "")
-        ]
-    )
-
-
-async def _get_device(device_registry: DeviceRegistry, device_id: str) -> DeviceEntry:
-    """Get a device from the DeviceRegistry or raise a ServiceValidationError."""
-    device = device_registry.async_get(device_id)
-    if not device:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device",
-            translation_placeholders={"device_id": device_id},
-        )
-    return device
+    async def _get_device(
+        self, device_registry: DeviceRegistry, device_id: str
+    ) -> DeviceEntry:
+        """Get a device from the DeviceRegistry or raise a ServiceValidationError."""
+        device = device_registry.async_get(device_id)
+        if not device:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device",
+                translation_placeholders={"device_id": device_id},
+            )
+        return device
