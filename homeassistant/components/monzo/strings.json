@@ -55,6 +55,14 @@
       }
     }
   },
+  "selector": {
+    "transfer_type": {
+      "options": {
+        "deposit": "Deposit to pot",
+        "withdraw": "Withdraw from pot"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "balance": {

@@ -23,10 +23,9 @@ pot_transfer:
       selector:
         select:
           options:
-            - label: Deposit to pot
-              value: deposit
-            - label: Withdraw from pot
-              value: withdraw
+            - deposit
+            - withdraw
+          translation_key: transfer_type
     amount:
       required: true
       advanced: false
