@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
 
     # we need to setup event entities before the first coordinator data fetch
     # so that the event entities can already fetch the events during the first fetch
-    await hass.config_entries.async_forward_entry_setup(entry, Platform.EVENT)
+    await hass.config_entries.async_forward_entry_setups(entry, Platform.EVENT)
 
     await coordinator.async_config_entry_first_refresh()
 
