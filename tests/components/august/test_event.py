@@ -1,4 +1,4 @@
-"""The binary_sensor tests for the august platform."""
+"""The event tests for the august."""
 
 import datetime
 import time
