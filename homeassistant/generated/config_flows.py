@@ -9,6 +9,7 @@ FLOWS = {
         "generic_hygrostat",
         "generic_thermostat",
         "group",
+        "history_stats",
         "integration",
         "min_max",
         "random",
