@@ -58,7 +58,7 @@
       "description": "Reauthentication is needed"
     },
     "integration_not_found": {
-      "title": "Could not find integration {domain}",
+      "title": "Integration {domain} not found",
       "fix_flow": {
         "step": {
           "remove_entries": {
