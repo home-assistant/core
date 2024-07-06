@@ -87,12 +87,11 @@ class TelegramClientSensorEntity(TelegramClientEntity, SensorEntity):
     ) -> None:
         """Init."""
         super().__init__(device, entity_description)
-        self._entity_description = entity_description
         device.sensors.append(self)
 
     def update_state(self):
         """Update the state of the sensor based on new data."""
-        self._attr_native_value = self._entity_description.value_fn(
-            self.device.data[self._entity_description.data_key]
+        self._attr_native_value = self.entity_description.value_fn(
+            self._device.data[self.entity_description.data_key]
         )
         self.async_schedule_update_ha_state()

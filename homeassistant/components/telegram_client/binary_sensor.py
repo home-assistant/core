@@ -34,6 +34,13 @@ BINARY_SENSORS: tuple[TelegramClientBinarySensorEntityDescription, ...] = (
         value_fn=lambda data: data.restricted,
         data_key="me",
     ),
+    TelegramClientBinarySensorEntityDescription(
+        key="premium",
+        translation_key="premium",
+        name="Premium",
+        value_fn=lambda data: data.premium,
+        data_key="me",
+    ),
 )
 
 
@@ -62,12 +69,11 @@ class TelegramClientBinarySensorEntity(TelegramClientEntity, BinarySensorEntity)
     ) -> None:
         """Init."""
         super().__init__(device, entity_description)
-        self._entity_description = entity_description
         device.binary_sensors.append(self)
 
     def update_state(self):
         """Update the state of the sensor based on new data."""
-        self._attr_is_on = self._entity_description.value_fn(
-            self.device.data[self._entity_description.data_key]
+        self._attr_is_on = self.entity_description.value_fn(
+            self._device.data[self.entity_description.data_key]
         )
         self.async_schedule_update_ha_state()
