@@ -127,7 +127,7 @@ class TessieEnergyEntity(TessieBaseEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie energy site entity."""
-
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
