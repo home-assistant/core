@@ -451,6 +451,9 @@
       }
     },
     "number": {
+      "backup_reserve_percent": {
+        "name": "Backup reserve"
+      },
       "charge_state_charge_current_request": {
         "name": "Charge current"
       },
@@ -459,6 +462,9 @@
       },
       "vehicle_state_speed_limit_mode_current_limit_mph": {
         "name": "Speed limit"
+      },
+      "off_grid_vehicle_charging_reserve_percent": {
+        "name": "Off grid reserve"
       }
     },
     "update": {
