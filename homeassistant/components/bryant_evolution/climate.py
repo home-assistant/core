@@ -94,9 +94,10 @@ class BryantEvolutionClimate(ClimateEntity):
     async def async_update(self) -> None:
         """Update the entity state."""
         self._attr_current_temperature = await self._client.read_current_temperature()
-        self._attr_fan_mode = await self._client.read_fan_mode()
-        if self._attr_fan_mode is not None:
-            self._attr_fan_mode = self._attr_fan_mode.lower()
+        if (fan_mode := await self._client.read_fan_mode()) is not None:
+            self._attr_fan_mode = fan_mode.lower()
+        else:
+            self._attr_fan_mode = None
         self._attr_target_temperature = None
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None
@@ -135,21 +136,19 @@ class BryantEvolutionClimate(ClimateEntity):
                 translation_domain=DOMAIN, translation_key="failed_to_read_hvac_mode"
             )
         mode = mode_and_active[0]
-        match mode.upper():
-            case "HEAT":
-                return HVACMode.HEAT
-            case "COOL":
-                return HVACMode.COOL
-            case "AUTO":
-                return HVACMode.HEAT_COOL
-            case "OFF":
-                return HVACMode.OFF
-
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="failed_to_parse_hvac_mode",
-            translation_placeholders={"mode": mode},
-        )
+        mode_enum = {
+            "HEAT": HVACMode.HEAT,
+            "COOL": HVACMode.COOL,
+            "AUTO": HVACMode.HEAT_COOL,
+            "OFF": HVACMode.OFF,
+        }.get(mode.upper())
+        if mode_enum is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_parse_hvac_mode",
+                translation_placeholders={"mode": mode},
+            )
+        return mode_enum
 
     async def _read_hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
