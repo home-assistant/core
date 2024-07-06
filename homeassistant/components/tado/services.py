@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import selector
 
 from .const import (
@@ -15,6 +15,7 @@ from .const import (
     DOMAIN,
     SERVICE_ADD_METER_READING,
 )
+from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 SCHEMA_ADD_METER_READING = vol.Schema(
@@ -40,7 +41,11 @@ def setup_services(hass: HomeAssistant) -> None:
         _LOGGER.debug("Add meter reading %s", reading)
 
         entry = hass.config_entries.async_get_entry(entry_id)
-        tadoconnector = entry.runtime_data.tadoconnector
+        if entry is None:
+            raise ConfigEntryNotReady("Config entry not found")
+
+        tadoconnector: TadoConnector = entry.runtime_data.tadoconnector
+
         response: dict = await hass.async_add_executor_job(
             tadoconnector.set_meter_reading, call.data[CONF_READING]
         )

@@ -2,12 +2,14 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
 
@@ -39,11 +41,11 @@ class TadoConnector:
         self._password = password
         self._fallback = fallback
 
-        self.home_id = None
+        self.home_id: int = 0
         self.home_name = None
         self.tado = None
-        self.zones = None
-        self.devices = None
+        self.zones: list[dict[Any, Any]] = []
+        self.devices: list[dict[Any, Any]] = []
         self.data: dict[str, dict] = {
             "device": {},
             "mobile_device": {},
@@ -318,13 +320,13 @@ class TadoConnector:
         except RequestException as exc:
             _LOGGER.error("Could not set temperature offset: %s", exc)
 
-    def set_meter_reading(self, reading: int) -> None:
+    def set_meter_reading(self, reading: int) -> dict[str, Any]:
         """Send meter reading to Tado."""
         dt: str = datetime.now().strftime("%Y-%m-%d")
         if self.tado is None:
-            _LOGGER.error("Tado client is not initialized")
-            return
+            raise HomeAssistantError("Tado client is not initialized")
+
         try:
-            self.tado.set_eiq_meter_readings(date=dt, reading=reading)
+            return self.tado.set_eiq_meter_readings(date=dt, reading=reading)
         except RequestException as exc:
-            _LOGGER.error("Could not set meter readeing: %s", exc)
+            raise HomeAssistantError("Could not set meter reading") from exc
