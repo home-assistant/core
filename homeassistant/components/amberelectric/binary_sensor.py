@@ -22,8 +22,6 @@ PRICE_SPIKE_ICONS = {
     "spike": "mdi:power-plug-off",
 }
 
-DEMAND_WINDOW_ICONS = {False: "mdi:meter-electric-outline", True: "mdi:meter-electric"}
-
 
 class AmberPriceGridSensor(
     CoordinatorEntity[AmberUpdateCoordinator], BinarySensorEntity
@@ -77,13 +75,6 @@ class AmberDemandWindowBinarySensor(AmberPriceGridSensor):
     """Sensor to show whether demand window is active."""
 
     @property
-    def icon(self) -> str:
-        """Return the sensor icon."""
-        if self.is_on:
-            return DEMAND_WINDOW_ICONS[True]
-        return DEMAND_WINDOW_ICONS[False]
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         grid = self.coordinator.data["grid"]
@@ -107,6 +98,7 @@ async def async_setup_entry(
     demand_window_description = BinarySensorEntityDescription(
         key="demand_window",
         name=f"{entry.title} - Demand Window",
+        translation_key="demand_window",
     )
     async_add_entities(
         [
