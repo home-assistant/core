@@ -1,7 +1,6 @@
 """The binary_sensor tests for the august platform."""
 
 import datetime
-import time
 from unittest.mock import Mock, patch
 
 from yalexs.pubnub_async import AugustPubNub
@@ -25,13 +24,10 @@ from .mocks import (
     _mock_doorbell_from_fixture,
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
+    _timetoken,
 )
 
 from tests.common import async_fire_time_changed
-
-
-def _timetoken():
-    return str(time.time_ns())[:-2]
 
 
 async def test_doorsense(hass: HomeAssistant) -> None:
