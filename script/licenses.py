@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+from pathlib import Path
 import sys
 
 from awesomeversion import AwesomeVersion
@@ -218,7 +219,7 @@ TODO = {
 
 def main() -> int:
     """Run the main script."""
-    raw_licenses = json.load(open("licenses.json"))
+    raw_licenses = json.loads(Path("licenses.json").read_text())
     package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     exit_code = 0
     for package in package_definitions:
@@ -232,25 +233,29 @@ def main() -> int:
             if previous_unapproved_version < package.version:
                 if approved:
                     print(
-                        f"Approved license detected for {package.name}@{package.version}: {package.license}"
+                        "Approved license detected for"
+                        f"{package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
                     print("")
                 else:
                     print(
-                        f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}"
+                        "We could not detect an OSI-approved license for "
+                        f"{package.name}@{package.version}: {package.license}"
                     )
                     print("")
                 exit_code = 1
         elif not approved and package.name not in EXCEPTIONS:
             print(
-                f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}"
+                "We could not detect an OSI-approved license for"
+                f"{package.name}@{package.version}: {package.license}"
             )
             print("")
             exit_code = 1
         elif approved and package.name in EXCEPTIONS:
             print(
-                f"Approved license detected for {package.name}@{package.version}: {package.license}"
+                "Approved license detected for"
+                f"{package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")
             print("")
@@ -259,7 +264,8 @@ def main() -> int:
     for package in [*TODO.keys(), *EXCEPTIONS]:
         if package not in current_packages:
             print(
-                f"Package {package} is tracked, but not used. Please remove from the licenses.py file."
+                f"Package {package} is tracked, but not used. Please remove from the licenses.py"
+                "file."
             )
             print("")
             exit_code = 1
