@@ -26,7 +26,7 @@
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC Input Voltage',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.DC_VOLTAGE: 'voltage'>,
@@ -48,108 +48,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.6',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_duration-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_duration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.UPTIME: 'uptime'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_uptime',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_duration-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pinecil Duration',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_duration',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1671',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_duration_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_duration_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.MOVEMENT_TIME: 'movement_time'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_movement_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_duration_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pinecil Duration',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_duration_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10000',
   })
 # ---
 # name: test_sensors[sensor.pinecil_estimated_power-entry]
@@ -179,7 +77,7 @@
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Estimated Power',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.ESTIMATED_POWER: 'estimated_power'>,
@@ -230,7 +128,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hall Effect Strength',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.HALL_SENSOR: 'hall_sensor'>,
@@ -279,7 +177,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Handle Temperature',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.HANDLETEMP: 'handle_temperature'>,
@@ -330,7 +228,7 @@
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Last Movement Time',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.MOVEMENT_TIME: 'movement_time'>,
@@ -379,7 +277,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Max Tip Temperature',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.MAX_TIP_TEMP_ABILITY: 'max_tip_temp_ability'>,
@@ -400,226 +298,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '460',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'dc',
-        'qc',
-        'pd_vbus',
-        'pd',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.POWER_SRC: 'power_source'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_power_source',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pinecil None',
-      'options': list([
-        'dc',
-        'qc',
-        'pd_vbus',
-        'pd',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'pd',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.TIP_RESISTANCE: 'tip_resistance'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_tip_resistance',
-    'unit_of_measurement': 'Ω',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil None',
-      'unit_of_measurement': 'Ω',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '6.2',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.HALL_SENSOR: 'hall_sensor'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_hall_sensor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'idle',
-        'soldering',
-        'boost',
-        'sleeping',
-        'settings',
-        'debug',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_none_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.OPERATING_MODE: 'operating_mode'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_operating_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_none_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pinecil None',
-      'options': list([
-        'idle',
-        'soldering',
-        'boost',
-        'sleeping',
-        'settings',
-        'debug',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'soldering',
   })
 # ---
 # name: test_sensors[sensor.pinecil_operating_mode-entry]
@@ -656,7 +334,7 @@
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Operating Mode',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.OPERATING_MODE: 'operating_mode'>,
@@ -684,111 +362,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'soldering',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.ESTIMATED_POWER: 'estimated_power'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_estimated_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Pinecil Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '24.8',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_power_factor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_power_factor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
-    'original_name': 'Power factor',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.PWMLEVEL: 'power_pwm_level'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_power_pwm_level',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_power_factor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Pinecil Power factor',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_power_factor',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '41',
   })
 # ---
 # name: test_sensors[sensor.pinecil_power_level-entry]
@@ -821,7 +394,7 @@
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power Level',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.PWMLEVEL: 'power_pwm_level'>,
@@ -877,7 +450,7 @@
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Power Source',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.POWER_SRC: 'power_source'>,
@@ -935,7 +508,7 @@
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Raw Tip Voltage',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_VOLTAGE: 'tip_voltage'>,
@@ -957,156 +530,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2212',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.LIVE_TEMP: 'live_temperature'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_live_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Pinecil Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '298',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_temperature_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_temperature_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.HANDLETEMP: 'handle_temperature'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_handle_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Pinecil Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '36.3',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_temperature_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_temperature_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.MAX_TIP_TEMP_ABILITY: 'max_tip_temp_ability'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_max_tip_temp_ability',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_temperature_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Pinecil Temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_temperature_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '460',
   })
 # ---
 # name: test_sensors[sensor.pinecil_tip_resistance-entry]
@@ -1134,7 +557,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tip resistance',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_RESISTANCE: 'tip_resistance'>,
@@ -1183,7 +606,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Tip temperature',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.LIVE_TEMP: 'live_temperature'>,
@@ -1234,7 +657,7 @@
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Uptime',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.UPTIME: 'uptime'>,
@@ -1256,111 +679,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1671',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.DC_VOLTAGE: 'voltage'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pinecil Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.6',
-  })
-# ---
-# name: test_sensors[sensor.pinecil_voltage_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_voltage_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.TIP_VOLTAGE: 'tip_voltage'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_tip_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
-  })
-# ---
-# name: test_sensors[sensor.pinecil_voltage_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pinecil Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_voltage_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2212',
   })
 # ---
 # name: test_sensors_unavailable[sensor.pinecil_dc_input_voltage-entry]
@@ -1390,7 +708,7 @@
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC Input Voltage',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.DC_VOLTAGE: 'voltage'>,
@@ -1408,108 +726,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pinecil_dc_input_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_duration-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_duration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.UPTIME: 'uptime'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_uptime',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_duration-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pinecil Duration',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_duration',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_duration_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_duration_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.MOVEMENT_TIME: 'movement_time'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_movement_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_duration_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pinecil Duration',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_duration_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1543,7 +759,7 @@
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Estimated Power',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.ESTIMATED_POWER: 'estimated_power'>,
@@ -1594,7 +810,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hall Effect Strength',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.HALL_SENSOR: 'hall_sensor'>,
@@ -1643,7 +859,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Handle Temperature',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.HANDLETEMP: 'handle_temperature'>,
@@ -1694,7 +910,7 @@
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Last Movement Time',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.MOVEMENT_TIME: 'movement_time'>,
@@ -1743,7 +959,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Max Tip Temperature',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.MAX_TIP_TEMP_ABILITY: 'max_tip_temp_ability'>,
@@ -1760,226 +976,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pinecil_max_tip_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'dc',
-        'qc',
-        'pd_vbus',
-        'pd',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.POWER_SRC: 'power_source'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_power_source',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pinecil None',
-      'options': list([
-        'dc',
-        'qc',
-        'pd_vbus',
-        'pd',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.TIP_RESISTANCE: 'tip_resistance'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_tip_resistance',
-    'unit_of_measurement': 'Ω',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil None',
-      'unit_of_measurement': 'Ω',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.HALL_SENSOR: 'hall_sensor'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_hall_sensor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'idle',
-        'soldering',
-        'boost',
-        'sleeping',
-        'settings',
-        'debug',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_none_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.OPERATING_MODE: 'operating_mode'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_operating_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_none_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pinecil None',
-      'options': list([
-        'idle',
-        'soldering',
-        'boost',
-        'sleeping',
-        'settings',
-        'debug',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2020,7 +1016,7 @@
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Operating Mode',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.OPERATING_MODE: 'operating_mode'>,
@@ -2044,111 +1040,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pinecil_operating_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.ESTIMATED_POWER: 'estimated_power'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_estimated_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Pinecil Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_power_factor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_power_factor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
-    'original_name': 'Power factor',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.PWMLEVEL: 'power_pwm_level'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_power_pwm_level',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_power_factor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Pinecil Power factor',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_power_factor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2185,7 +1076,7 @@
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power Level',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.PWMLEVEL: 'power_pwm_level'>,
@@ -2241,7 +1132,7 @@
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Power Source',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.POWER_SRC: 'power_source'>,
@@ -2299,7 +1190,7 @@
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Raw Tip Voltage',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_VOLTAGE: 'tip_voltage'>,
@@ -2317,156 +1208,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pinecil_raw_tip_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.LIVE_TEMP: 'live_temperature'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_live_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Pinecil Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_temperature_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pinecil_temperature_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.HANDLETEMP: 'handle_temperature'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_handle_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Pinecil Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_temperature_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_temperature_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.MAX_TIP_TEMP_ABILITY: 'max_tip_temp_ability'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_max_tip_temp_ability',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_temperature_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Pinecil Temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_temperature_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2498,7 +1239,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tip resistance',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_RESISTANCE: 'tip_resistance'>,
@@ -2547,7 +1288,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Tip temperature',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.LIVE_TEMP: 'live_temperature'>,
@@ -2598,7 +1339,7 @@
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Uptime',
-    'platform': 'pinecil',
+    'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.UPTIME: 'uptime'>,
@@ -2616,111 +1357,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pinecil_uptime',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.DC_VOLTAGE: 'voltage'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pinecil Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_voltage_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pinecil_voltage_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSensor.TIP_VOLTAGE: 'tip_voltage'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_tip_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
-  })
-# ---
-# name: test_sensors_unavailable[sensor.pinecil_voltage_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pinecil Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pinecil_voltage_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
