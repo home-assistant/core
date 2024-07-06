@@ -303,6 +303,9 @@
       }
     },
     "binary_sensor": {
+      "backup_capable": {
+        "name": "Backup capable"
+      },
       "state": {
         "name": "Status"
       },
@@ -344,6 +347,12 @@
       },
       "climate_state_cabin_overheat_protection_actively_cooling": {
         "name": "Cabin overheat protection actively cooling"
+      },
+      "components_grid_services_enabled": {
+        "name": "Grid services enabled"
+      },
+      "grid_services_active": {
+        "name": "Grid services active"
       },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
