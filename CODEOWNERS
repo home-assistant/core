@@ -989,8 +989,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
-/homeassistant/components/omnilogic/ @oliver84 @djtimca @gentoosu
-/tests/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /homeassistant/components/onboarding/ @home-assistant/core
 /tests/components/onboarding/ @home-assistant/core
 /homeassistant/components/oncue/ @bdraco @peterager
