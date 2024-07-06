@@ -50,16 +50,46 @@ class EntityFilter:
         self.config = {key: config.get(key, []) for key in _KEYS}
         self._generate_filter()
 
-    def remove(self, config: dict[str, list[str]]) -> None:
+    def remove(
+        self,
+        include_entities: list[str] | None = None,
+        include_domains: list[str] | None = None,
+        include_entity_globs: list[str] | None = None,
+        exclude_entities: list[str] | None = None,
+        exclude_domains: list[str] | None = None,
+        exclude_entity_globs: list[str] | None = None,
+    ) -> None:
         """Remove from the filter config."""
-        for key, values in config.items():
-            self.config[key] = list(set(self.config[key]) - set(values))
+        for key, values in (
+            ("include_entities", include_entities),
+            ("include_domains", include_domains),
+            ("include_entity_globs", include_entity_globs),
+            ("exclude_entities", exclude_entities),
+            ("exclude_domains", exclude_domains),
+            ("exclude_entity_globs", exclude_entity_globs),
+        ):
+            self.config[key] = list(set(self.config[key]) - set(values or []))
         self._generate_filter()
 
-    def add(self, config: dict[str, list[str]]) -> None:
+    def add(
+        self,
+        include_entities: list[str] | None = None,
+        include_domains: list[str] | None = None,
+        include_entity_globs: list[str] | None = None,
+        exclude_entities: list[str] | None = None,
+        exclude_domains: list[str] | None = None,
+        exclude_entity_globs: list[str] | None = None,
+    ) -> None:
         """Add to the filter config."""
-        for key, values in config.items():
-            self.config[key] = list(set(self.config[key] + list(values)))
+        for key, values in (
+            ("include_entities", include_entities),
+            ("include_domains", include_domains),
+            ("include_entity_globs", include_entity_globs),
+            ("exclude_entities", exclude_entities),
+            ("exclude_domains", exclude_domains),
+            ("exclude_entity_globs", exclude_entity_globs),
+        ):
+            self.config[key] = list(set(self.config[key] + list(values or [])))
         self._generate_filter()
 
     def _generate_filter(self) -> None:

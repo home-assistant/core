@@ -441,7 +441,7 @@ def test_add_to_filter() -> None:
     filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert not filt("sensor.any")
     filt.add(
-        {
+        **{
             CONF_INCLUDE_DOMAINS: ["include"],
             CONF_INCLUDE_ENTITIES: ["include.any"],
             CONF_INCLUDE_ENTITY_GLOBS: ["include.any_*"],
@@ -473,7 +473,7 @@ def test_remove_from_filter() -> None:
     filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert not filt("sensor.any")
     filt.remove(
-        {
+        **{
             CONF_INCLUDE_DOMAINS: ["light"],
             CONF_INCLUDE_ENTITIES: ["switch.kitchen"],
             CONF_INCLUDE_ENTITY_GLOBS: ["sensor.kitchen_*"],
