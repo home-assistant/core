@@ -210,7 +210,7 @@ async def test_general_actual_sensor(hass: HomeAssistant, setup_general: Mock) -
 @pytest.mark.usefixtures("setup_general_and_controlled_load")
 async def test_controlled_load_actual_sensor(hass: HomeAssistant) -> None:
     """Test the Controlled Load Actual sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_controlled_load_previous")
     assert price
     assert price.state == "0.08"
@@ -234,7 +234,7 @@ async def test_controlled_load_actual_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_general_and_feed_in")
 async def test_feed_in_actual_sensor(hass: HomeAssistant) -> None:
     """Test the Feed In Actual sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_feed_in_previous")
     assert price
     assert price.state == "-0.08"
@@ -259,7 +259,7 @@ async def test_general_forecast_sensor(
     hass: HomeAssistant, setup_general: Mock
 ) -> None:
     """Test the General Forecast sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_forecast")
     assert price
     assert price.state == "0.09"
@@ -349,7 +349,7 @@ async def test_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_general")
 def test_renewable_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     sensor = hass.states.get("sensor.mock_title_renewables")
     assert sensor
     assert sensor.state == "51"
@@ -358,7 +358,7 @@ def test_renewable_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_general")
 def test_general_price_descriptor_descriptor_sensor(hass: HomeAssistant) -> None:
     """Test the General Price Descriptor sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_price_descriptor")
     assert price
     assert price.state == "extremely_low"
