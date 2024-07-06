@@ -25,7 +25,7 @@
       'energy_session': 12.34,
       'energy_total': 1234,
       'high_charge_period_active': False,
-      'in_sharing_mode': True,
+      'in_sharing_mode': False,
       'is_battery_protected': False,
       'is_session_active': True,
       'is_static_ip': False,
