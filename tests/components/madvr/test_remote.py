@@ -2,31 +2,43 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
+
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
-from .const import MOCK_MAC
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_remote_setup(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup of the remote entity."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.madvr.PLATFORMS", [Platform.REMOTE]):
+        await setup_integration(hass, mock_config_entry)
 
-    entity_registry = er.async_get(hass)
-    remote_entity = entity_registry.async_get(f"{REMOTE_DOMAIN}.madvr_envy")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    # await setup_integration(hass, mock_config_entry)
 
-    assert remote_entity is not None
-    assert remote_entity.unique_id == MOCK_MAC
+    # entity_registry = er.async_get(hass)
+    # remote_entity = entity_registry.async_get(f"{REMOTE_DOMAIN}.madvr_envy")
+
+    # assert remote_entity is not None
+    # assert remote_entity.unique_id == MOCK_MAC
 
 
 async def test_remote_power(
