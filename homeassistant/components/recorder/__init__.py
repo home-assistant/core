@@ -79,6 +79,7 @@ ALLOW_IN_MEMORY_DB = False
 def update_entity_filter(
     hass: HomeAssistant,
     operation: UpdateOperation,
+    *,
     include_entities: list[str] | None = None,
     include_domains: list[str] | None = None,
     include_entity_globs: list[str] | None = None,
