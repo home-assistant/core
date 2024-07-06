@@ -31,24 +31,13 @@ CONF_EXCLUDE_ENTITIES: Final = "exclude_entities"
 
 CONF_ENTITY_GLOBS: Final = "entity_globs"
 
-_KEYS = frozenset(
-    [
-        CONF_INCLUDE_DOMAINS,
-        CONF_INCLUDE_ENTITY_GLOBS,
-        CONF_INCLUDE_ENTITIES,
-        CONF_EXCLUDE_DOMAINS,
-        CONF_EXCLUDE_ENTITY_GLOBS,
-        CONF_EXCLUDE_ENTITIES,
-    ]
-)
-
 
 class EntityFilter:
     """A entity filter."""
 
     def __init__(self, config: dict[str, list[str]]) -> None:
         """Init the filter."""
-        self.config = {key: config.get(key, []) for key in _KEYS}
+        self.config = config
         self._generate_filter()
 
     def remove(
