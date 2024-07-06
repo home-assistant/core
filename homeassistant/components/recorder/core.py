@@ -267,6 +267,7 @@ class Recorder(threading.Thread):
     def update_entity_filter(
         self,
         operation: UpdateOperation,
+        *,
         include_entities: list[str] | None,
         include_domains: list[str] | None,
         include_entity_globs: list[str] | None,
