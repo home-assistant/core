@@ -125,4 +125,4 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert type(error.value.__cause__) == UnsupportedVehicle
+    assert isinstance(error.value.__cause__, UnsupportedVehicle)
