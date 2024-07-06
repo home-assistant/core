@@ -250,9 +250,16 @@ async def test_if_fires_on_event(
 
     await hass.async_block_till_done()
 
-    # TODO: hide this level of introspection from Core
-    cluster_handler = zha_device.endpoints[1].client_cluster_handlers["1:0x0006"]
-    cluster_handler.zha_send_event(COMMAND_SINGLE, [])
+    zha_device.emit_zha_event(
+        {
+            "unique_id": f"{zha_device.ieee}:1:0x0006",
+            "endpoint_id": 1,
+            "cluster_id": 0x0006,
+            "command": COMMAND_SINGLE,
+            "args": [],
+            "params": {},
+        },
+    )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
