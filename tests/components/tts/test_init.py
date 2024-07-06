@@ -1054,9 +1054,7 @@ async def test_setup_legacy_cache_dir(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     await hass.services.async_call(
@@ -1090,9 +1088,7 @@ async def test_setup_cache_dir(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     await hass.services.async_call(
@@ -1195,9 +1191,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     client = await hass_client()
@@ -1221,9 +1215,7 @@ async def test_load_cache_retrieve_without_mem_cache(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     client = await hass_client()

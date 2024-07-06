@@ -18,7 +18,7 @@ def banned_function():
 
 
 @contextlib.contextmanager
-def patch_get_current_frame(stack: list[Mock]) -> Generator[None, None, None]:
+def patch_get_current_frame(stack: list[Mock]) -> Generator[None]:
     """Patch get_current_frame."""
     frames = extract_stack_to_frame(stack)
     with (

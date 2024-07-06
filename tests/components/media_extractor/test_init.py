@@ -290,16 +290,19 @@ async def test_cookiefile_detection(
     cookies_dir = os.path.join(hass.config.config_dir, "media_extractor")
     cookies_file = os.path.join(cookies_dir, "cookies.txt")
 
-    if not os.path.exists(cookies_dir):
-        os.makedirs(cookies_dir)
+    def _write_cookies_file() -> None:
+        if not os.path.exists(cookies_dir):
+            os.makedirs(cookies_dir)
 
-    with open(cookies_file, "w+", encoding="utf-8") as f:
-        f.write(
-            """# Netscape HTTP Cookie File
+        with open(cookies_file, "w+", encoding="utf-8") as f:
+            f.write(
+                """# Netscape HTTP Cookie File
 
-            .youtube.com TRUE / TRUE 1701708706 GPS 1
-            """
-        )
+                .youtube.com TRUE / TRUE 1701708706 GPS 1
+                """
+            )
+
+    await hass.async_add_executor_job(_write_cookies_file)
 
     await hass.services.async_call(
         DOMAIN,
@@ -314,7 +317,7 @@ async def test_cookiefile_detection(
 
     assert "Media extractor loaded cookies file" in caplog.text
 
-    os.remove(cookies_file)
+    await hass.async_add_executor_job(os.remove, cookies_file)
 
     await hass.services.async_call(
         DOMAIN,
