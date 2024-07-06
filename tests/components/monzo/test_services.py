@@ -20,6 +20,7 @@ from homeassistant.components.monzo.services import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, TEST_POTS
@@ -60,6 +61,7 @@ class ServicesTestData:
     """A collection of data set up by the test_data fixture."""
 
     hass: HomeAssistant
+    device_registry: DeviceRegistry
     account_id: str
     account_device_id: str
     pot_id: str
@@ -69,7 +71,7 @@ class ServicesTestData:
 @pytest.fixture(autouse=True)
 async def test_data(
     hass: HomeAssistant, polling_config_entry: MockConfigEntry, monzo: AsyncMock
-) -> ServicesTestData:
+) -> None:
     """Set up integration."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
@@ -80,7 +82,12 @@ async def test_data(
         device_registry, savings_pot_id
     )
     return ServicesTestData(
-        hass, account_id, account_device_id, savings_pot_id, savings_pot_device_id
+        hass,
+        device_registry,
+        account_id,
+        account_device_id,
+        savings_pot_id,
+        savings_pot_device_id,
     )
 
 
@@ -131,11 +138,11 @@ async def test_multiple_target_deposit(
     test_data: ServicesTestData, monzo: AsyncMock
 ) -> None:
     """Test pot_transfer with multiple target pots."""
-    device_registry = dr.async_get(test_data.hass)
 
     pot_ids = [pot["id"] for pot in TEST_POTS]
     pot_device_ids = [
-        _get_device_id_from_account_id(device_registry, pot_id) for pot_id in pot_ids
+        _get_device_id_from_account_id(test_data.device_registry, pot_id)
+        for pot_id in pot_ids
     ]
 
     await _make_transfer(test_data.hass, test_data.account_device_id, pot_device_ids)
@@ -149,11 +156,12 @@ async def test_transfer_raises_validation_error_if_pots_includes_account(
     test_data: ServicesTestData,
 ) -> None:
     """Test pot_transfer raises ServiceValidationError if selected pots includes an account."""
-    device_registry = dr.async_get(test_data.hass)
 
     not_pot = TEST_ACCOUNTS[1]
     not_pot_id = not_pot["id"]
-    not_pot_device_id = _get_device_id_from_account_id(device_registry, not_pot_id)
+    not_pot_device_id = _get_device_id_from_account_id(
+        test_data.device_registry, not_pot_id
+    )
 
     with pytest.raises(ServiceValidationError):
         await _make_transfer(
