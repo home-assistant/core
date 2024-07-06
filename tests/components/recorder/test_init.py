@@ -2718,3 +2718,7 @@ async def test_update_entity_filter(
         hass, UpdateOperation.REMOVE, exclude_entities=["sensor.exclude"]
     )
     assert instance.entity_filter is None
+    update_entity_filter(hass, UpdateOperation.ADD, include_domains=["sensor"])
+    assert instance.entity_filter is not None
+    assert instance.entity_filter("switch.not_mentioned") is False
+    assert instance.entity_filter("sensor.domain") is True
