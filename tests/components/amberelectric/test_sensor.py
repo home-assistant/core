@@ -105,7 +105,7 @@ async def setup_general_and_feed_in(hass: HomeAssistant) -> AsyncGenerator[Mock]
 
 async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) -> None:
     """Test the General Price sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     assert price.state == "0.08"
@@ -143,7 +143,7 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
 @pytest.mark.usefixtures("setup_general_and_controlled_load")
 async def test_general_and_controlled_load_price_sensor(hass: HomeAssistant) -> None:
     """Test the Controlled Price sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_controlled_load_price")
     assert price
     assert price.state == "0.08"
@@ -165,7 +165,7 @@ async def test_general_and_controlled_load_price_sensor(hass: HomeAssistant) -> 
 @pytest.mark.usefixtures("setup_general_and_feed_in")
 async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
     """Test the Feed In sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_feed_in_price")
     assert price
     assert price.state == "-0.08"
@@ -186,7 +186,7 @@ async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
 
 async def test_general_actual_sensor(hass: HomeAssistant, setup_general: Mock) -> None:
     """Test the General Previous sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_previous")
     assert price
     assert price.state == "0.08"
@@ -301,7 +301,7 @@ async def test_general_forecast_sensor(
 @pytest.mark.usefixtures("setup_general_and_controlled_load")
 async def test_controlled_load_forecast_sensor(hass: HomeAssistant) -> None:
     """Test the Controlled Load Forecast sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_controlled_load_forecast")
     assert price
     assert price.state == "0.09"
@@ -325,7 +325,7 @@ async def test_controlled_load_forecast_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_general_and_feed_in")
 async def test_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
     """Test the Feed In Forecast sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_feed_in_forecast")
     assert price
     assert price.state == "-0.09"
@@ -369,7 +369,7 @@ def test_general_and_controlled_load_price_descriptor_sensor(
     hass: HomeAssistant,
 ) -> None:
     """Test the Controlled Price Descriptor sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_controlled_load_price_descriptor")
     assert price
     assert price.state == "extremely_low"
@@ -378,7 +378,7 @@ def test_general_and_controlled_load_price_descriptor_sensor(
 @pytest.mark.usefixtures("setup_general_and_feed_in")
 def test_general_and_feed_in_price_descriptor_sensor(hass: HomeAssistant) -> None:
     """Test the Feed In Price Descriptor sensor."""
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 11
     price = hass.states.get("sensor.mock_title_feed_in_price_descriptor")
     assert price
     assert price.state == "extremely_low"
