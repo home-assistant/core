@@ -1,6 +1,10 @@
 """Tests for the for the BMW Connected Drive integration."""
 
-from bimmer_connected.const import REMOTE_SERVICE_BASE_URL, VEHICLE_CHARGING_BASE_URL
+from bimmer_connected.const import (
+    REMOTE_SERVICE_BASE_URL,
+    VEHICLE_CHARGING_BASE_URL,
+    VEHICLE_POI_URL,
+)
 import respx
 
 from homeassistant import config_entries
@@ -71,6 +75,7 @@ def check_remote_service_call(
             or c.request.url.path.startswith(
                 VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
             )
+            or c.request.url.path == VEHICLE_POI_URL
         )
         assert (
             first_remote_service_call.request.url.path.endswith(remote_service) is True
@@ -86,6 +91,10 @@ def check_remote_service_call(
                 dict(first_remote_service_call.request.url.params.items())
                 == remote_service_params
             )
+
+    # Send POI doesn't return a status response, so we can't check it
+    if remote_service == "send-to-car":
+        return
 
     # Now check final result
     last_event_status_call = next(
