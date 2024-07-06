@@ -298,6 +298,42 @@ async def test_api_select_activity(
     assert call.data["activity"] == activity_list[target_activity_index]
 
 
+@pytest.mark.parametrize(
+    (
+        "curr_state",
+        "target_name",
+        "target_service",
+    ),
+    [
+        ("on", "TurnOff", "turn_off"),
+        ("off", "TurnOn", "turn_on"),
+    ],
+)
+async def test_api_remote_set_power_state(
+    hass: HomeAssistant,
+    curr_state: str,
+    target_name: str,
+    target_service: str,
+) -> None:
+    """Test api remote set power state process."""
+    hass.states.async_set(
+        "remote.test",
+        curr_state,
+        {
+            "current_activity": ["TV", "MUSIC", "DVD"],
+            "activity_list": "TV",
+        },
+    )
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.PowerController",
+        target_name,
+        "remote#test",
+        f"remote.{target_service}",
+        hass,
+    )
+
+
 async def test_report_lock_state(hass: HomeAssistant) -> None:
     """Test LockController implements lockState property."""
     hass.states.async_set("lock.locked", STATE_LOCKED, {})
