@@ -22,6 +22,9 @@
       "climate_state_auto_steering_wheel_heat": {
         "default": "mdi:steering"
       },
+      "grid_services_power": {
+        "default": "mdi:transmission-tower"
+      },
       "vehicle_state_dashcam_state": {
         "default": "mdi:camera-off",
         "state": {

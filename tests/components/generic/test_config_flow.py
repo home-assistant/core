@@ -41,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -597,7 +598,46 @@ async def test_form_stream_timeout(
 
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+async def test_form_stream_not_set_up(hass: HomeAssistant, user_flow) -> None:
+    """Test we handle if stream has not been set up."""
+    TESTDATA_ONLY_STREAM = TESTDATA.copy()
+    TESTDATA_ONLY_STREAM.pop(CONF_STILL_IMAGE_URL)
+
+    with patch(
+        "homeassistant.components.generic.config_flow.create_stream",
+        side_effect=HomeAssistantError("Stream integration is not set up."),
+    ):
+        result1 = await hass.config_entries.flow.async_configure(
+            user_flow["flow_id"],
+            TESTDATA_ONLY_STREAM,
+        )
+    await hass.async_block_till_done()
+
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["errors"] == {"stream_source": "stream_not_set_up"}
+
+
+@respx.mock
+async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
+    """Test the unknown error for streams."""
+    TESTDATA_ONLY_STREAM = TESTDATA.copy()
+    TESTDATA_ONLY_STREAM.pop(CONF_STILL_IMAGE_URL)
+
+    with (
+        patch(
+            "homeassistant.components.generic.config_flow.create_stream",
+            side_effect=HomeAssistantError("Some other error."),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.config_entries.flow.async_configure(
+            user_flow["flow_id"],
+            TESTDATA_ONLY_STREAM,
+        )
+    await hass.async_block_till_done()
+
+
+@respx.mock
 async def test_form_stream_worker_error(
     hass: HomeAssistant, user_flow: ConfigFlowResult
 ) -> None:

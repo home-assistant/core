@@ -300,9 +300,28 @@
           "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
           "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
         }
+      },
+      "components_customer_preferred_export_rule": {
+        "name": "Allow export",
+        "state": {
+          "battery_ok": "Battery",
+          "never": "Never",
+          "pv_only": "Solar only"
+        }
+      },
+      "default_real_mode": {
+        "name": "Operation mode",
+        "state": {
+          "autonomous": "Autonomous",
+          "backup": "Backup",
+          "self_consumption": "Self consumption"
+        }
       }
     },
     "binary_sensor": {
+      "backup_capable": {
+        "name": "Backup capable"
+      },
       "state": {
         "name": "Status"
       },
@@ -344,6 +363,12 @@
       },
       "climate_state_cabin_overheat_protection_actively_cooling": {
         "name": "Cabin overheat protection actively cooling"
+      },
+      "components_grid_services_enabled": {
+        "name": "Grid services enabled"
+      },
+      "grid_services_active": {
+        "name": "Grid services active"
       },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
@@ -469,6 +494,9 @@
     },
     "no_cable": {
       "message": "Insert cable to lock"
+    },
+    "command_failed": {
+      "message": "Command failed, {message}"
     }
   },
   "issues": {
