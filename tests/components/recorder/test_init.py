@@ -23,7 +23,6 @@ from homeassistant.components.recorder import (
     CONF_DB_MAX_RETRIES,
     CONF_DB_RETRY_WAIT,
     CONF_DB_URL,
-    CONFIG_SCHEMA,
     DOMAIN,
     Recorder,
     db_schema,
@@ -77,6 +76,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
 )
+from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, convert_filter
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -133,7 +133,7 @@ def _default_recorder(hass):
         uri="sqlite://",
         db_max_retries=10,
         db_retry_wait=3,
-        entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
+        entity_filter=convert_filter(BASE_FILTER_SCHEMA({})),
         exclude_event_types=set(),
     )
 
