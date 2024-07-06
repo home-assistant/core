@@ -8,7 +8,7 @@ from pynecil import CommunicationError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.pinecil.coordinator import SCAN_INTERVAL
+from homeassistant.components.iron_os.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 async def sensor_only() -> AsyncGenerator[None, None]:
     """Enable only the sensor platform."""
     with patch(
-        "homeassistant.components.pinecil.PLATFORMS",
+        "homeassistant.components.iron_os.PLATFORMS",
         [Platform.SENSOR],
     ):
         yield

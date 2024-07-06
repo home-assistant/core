@@ -8,7 +8,7 @@ from habluetooth import BluetoothServiceInfoBleak
 from pynecil import DeviceInfoResponse, LiveDataResponse, OperatingMode, PowerSource
 import pytest
 
-from homeassistant.components.pinecil import DOMAIN
+from homeassistant.components.iron_os import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 
 from tests.common import MockConfigEntry
@@ -68,7 +68,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.pinecil.async_setup_entry", return_value=True
+        "homeassistant.components.iron_os.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -77,7 +77,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_async_discovered_service_info() -> Generator[MagicMock]:
     """Mock service discovery."""
     with patch(
-        "homeassistant.components.pinecil.config_flow.async_discovered_service_info",
+        "homeassistant.components.iron_os.config_flow.async_discovered_service_info",
         return_value=[PINECIL_SERVICE_INFO, UNKNOWN_SERVICE_INFO],
     ) as discovery:
         yield discovery
@@ -111,7 +111,7 @@ def mock_ble_device() -> Generator[MagicMock]:
 def mock_pynecil() -> Generator[AsyncMock, None, None]:
     """Mock Pynecil library."""
     with patch(
-        "homeassistant.components.pinecil.Pynecil", autospec=True
+        "homeassistant.components.iron_os.Pynecil", autospec=True
     ) as mock_client:
         client = mock_client.return_value
 

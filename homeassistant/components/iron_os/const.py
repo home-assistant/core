@@ -1,6 +1,6 @@
 """Constants for the Pinecil integration."""
 
-DOMAIN = "pinecil"
+DOMAIN = "iron_os"
 
 MANUFACTURER = "PINE64"
 MODEL = "Pinecil V2"
