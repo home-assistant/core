@@ -7,8 +7,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.madvr.config_flow import CannotConnect
 from homeassistant.components.madvr.const import DEFAULT_NAME, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .const import MOCK_CONFIG, MOCK_MAC
 
 
 @pytest.fixture(name="mock_madvr")
@@ -28,28 +31,29 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
     assert result["errors"] == {}
 
     mock_madvr.return_value.open_connection = MagicMock()
-    mock_mac = "00:11:22:33:44:55"
+    mock_mac = MOCK_MAC
 
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
         return_value=mock_mac,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        configFlowResult = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "192.168.1.100",
-                "port": 44077,
+                "host": MOCK_CONFIG[CONF_HOST],
+                "port": MOCK_CONFIG[CONF_PORT],
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == DEFAULT_NAME
-    assert result2["data"] == {
-        "host": "192.168.1.100",
-        "port": 44077,
-        "mac": mock_mac,
+    assert configFlowResult["type"] == FlowResultType.CREATE_ENTRY
+    assert configFlowResult["title"] == DEFAULT_NAME
+    assert configFlowResult["data"] == {
+        "host": MOCK_CONFIG[CONF_HOST],
+        "port": MOCK_CONFIG[CONF_PORT],
     }
+
+    assert configFlowResult["result"].unique_id == mock_mac
 
 
 async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None:
@@ -63,42 +67,42 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
         side_effect=CannotConnect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        errorFlowResult = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "192.168.1.100",
-                "port": 44077,
+                "host": MOCK_CONFIG[CONF_HOST],
+                "port": MOCK_CONFIG[CONF_PORT],
             },
         )
 
     # Check that we're still on the form step after the error
-    assert result2["type"] == FlowResultType.FORM
+    assert errorFlowResult["type"] == FlowResultType.FORM
     # Check that we're still on the user step
-    assert result2["step_id"] == "user"
+    assert errorFlowResult["step_id"] == "user"
     # Check that we have the correct error
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert errorFlowResult["errors"] == {"base": "cannot_connect"}
 
     # Test that we can retry the connection
-    mock_mac = "00:11:22:33:44:55"
+    mock_mac = MOCK_MAC
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
         return_value=mock_mac,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        retryFlowResult = await hass.config_entries.flow.async_configure(
+            errorFlowResult["flow_id"],
             {
-                "host": "192.168.1.100",
-                "port": 44077,
+                "host": MOCK_CONFIG[CONF_HOST],
+                "port": MOCK_CONFIG[CONF_PORT],
             },
         )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == DEFAULT_NAME
-    assert result3["data"] == {
-        "host": "192.168.1.100",
-        "port": 44077,
-        "mac": mock_mac,
+    assert retryFlowResult["type"] == FlowResultType.CREATE_ENTRY
+    assert retryFlowResult["title"] == DEFAULT_NAME
+    assert retryFlowResult["data"] == {
+        "host": MOCK_CONFIG[CONF_HOST],
+        "port": MOCK_CONFIG[CONF_PORT],
     }
+    assert retryFlowResult["result"].unique_id == mock_mac
 
 
 async def test_user_form_no_mac(hass: HomeAssistant, mock_madvr) -> None:
@@ -108,43 +112,42 @@ async def test_user_form_no_mac(hass: HomeAssistant, mock_madvr) -> None:
     )
 
     mock_madvr.return_value.open_connection = MagicMock()
-
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
         return_value="",  # Simulating no MAC returned
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        errorFlowResult = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "192.168.1.100",
-                "port": 44077,
+                "host": MOCK_CONFIG[CONF_HOST],
+                "port": MOCK_CONFIG[CONF_PORT],
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "no_mac"}
+    assert errorFlowResult["type"] == FlowResultType.FORM
+    assert errorFlowResult["step_id"] == "user"
+    assert errorFlowResult["errors"] == {"base": "no_mac"}
 
     # Test that we can retry and succeed if a MAC is returned on the second attempt
-    mock_mac = "00:11:22:33:44:55"
+    mock_mac = MOCK_MAC
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
         return_value=mock_mac,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        retryResult = await hass.config_entries.flow.async_configure(
+            errorFlowResult["flow_id"],
             {
-                "host": "192.168.1.100",
-                "port": 44077,
+                "host": MOCK_CONFIG[CONF_HOST],
+                "port": MOCK_CONFIG[CONF_PORT],
             },
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == DEFAULT_NAME
-    assert result3["data"] == {
-        "host": "192.168.1.100",
-        "port": 44077,
-        "mac": mock_mac,
+    assert retryResult["type"] == FlowResultType.CREATE_ENTRY
+    assert retryResult["title"] == DEFAULT_NAME
+    assert retryResult["data"] == {
+        "host": MOCK_CONFIG[CONF_HOST],
+        "port": MOCK_CONFIG[CONF_PORT],
     }
+    assert retryResult["result"].unique_id == mock_mac
