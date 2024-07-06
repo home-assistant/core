@@ -1,6 +1,12 @@
 """The tests for the EntityFilter component."""
 
 from homeassistant.helpers.entityfilter import (
+    CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES,
+    CONF_EXCLUDE_ENTITY_GLOBS,
+    CONF_INCLUDE_DOMAINS,
+    CONF_INCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITY_GLOBS,
     FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA,
     EntityFilter,
@@ -416,6 +422,67 @@ def test_get_filter() -> None:
     assert not underlying_filter("switch.other")
     assert underlying_filter("sensor.kitchen_4")
     assert underlying_filter("switch.kitchen")
+
+
+def test_add_to_filter() -> None:
+    """Test we can add to the filter."""
+    conf = {
+        "include": {
+            "domains": ["light"],
+            "entity_globs": ["sensor.kitchen_*"],
+            "entities": ["switch.kitchen"],
+        },
+        "exclude": {
+            "domains": ["cover"],
+            "entity_globs": ["sensor.weather_*"],
+            "entities": ["light.kitchen"],
+        },
+    }
+    filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
+    assert not filt("sensor.any")
+    filt.add(
+        {
+            CONF_INCLUDE_DOMAINS: ["include"],
+            CONF_INCLUDE_ENTITIES: ["include.any"],
+            CONF_INCLUDE_ENTITY_GLOBS: ["include.any_*"],
+            CONF_EXCLUDE_DOMAINS: ["exclude"],
+            CONF_EXCLUDE_ENTITIES: ["exclude.any"],
+            CONF_EXCLUDE_ENTITY_GLOBS: ["exclude.any_*"],
+        }
+    )
+    assert not filt("sensor.any")
+    assert filt("include.any")
+    assert filt("include.any_1")
+    assert not filt("exclude.any")
+
+
+def test_remove_from_filter() -> None:
+    """Test we can removefrom the filter."""
+    conf = {
+        "include": {
+            "domains": ["light"],
+            "entity_globs": ["sensor.kitchen_*"],
+            "entities": ["switch.kitchen"],
+        },
+        "exclude": {
+            "domains": ["cover"],
+            "entity_globs": ["sensor.weather_*"],
+            "entities": ["light.kitchen"],
+        },
+    }
+    filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
+    assert not filt("sensor.any")
+    filt.remove(
+        {
+            CONF_INCLUDE_DOMAINS: ["light"],
+            CONF_INCLUDE_ENTITIES: ["switch.kitchen"],
+            CONF_INCLUDE_ENTITY_GLOBS: ["sensor.kitchen_*"],
+            CONF_EXCLUDE_DOMAINS: ["cover"],
+            CONF_EXCLUDE_ENTITIES: ["light.kitchen"],
+            CONF_EXCLUDE_ENTITY_GLOBS: ["sensor.weather_*"],
+        }
+    )
+    assert filt.empty_filter is True
 
 
 def test_complex_include_exclude_filter() -> None:
