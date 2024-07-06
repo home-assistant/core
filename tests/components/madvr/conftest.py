@@ -32,7 +32,7 @@ def mock_madvr_client() -> Generator[AsyncMock, None, None]:
         client.host = MOCK_CONFIG[CONF_HOST]
         client.port = MOCK_CONFIG[CONF_PORT]
         client.mac_address = MOCK_MAC
-        client.connected = AsyncMock(return_value=True)
+        client.connected = MagicMock(return_value=True)
         client.open_connection = AsyncMock()
         client._reconnect = AsyncMock()
         client.close_connection = AsyncMock()
@@ -41,7 +41,11 @@ def mock_madvr_client() -> Generator[AsyncMock, None, None]:
         client.is_device_connectable = AsyncMock(return_value=True)
         client.send_command = AsyncMock()
         client.stop = MagicMock()
-        yield client
+        client.power_on = AsyncMock()
+        client.power_off = AsyncMock()
+        client.add_command_to_queue = AsyncMock()
+        with patch("madvr.madvr.send_magic_packet", return_value=True):
+            yield client
 
 
 @pytest.fixture
@@ -59,4 +63,5 @@ def mock_coordinator(mock_madvr_client) -> Generator[AsyncMock, None, None]:
     ) as mock_coordinator:
         mock_coordinator_instance = mock_coordinator.return_value
         mock_coordinator_instance.client = mock_madvr_client
+        mock_coordinator_instance.mac = MOCK_MAC
         yield mock_coordinator_instance
