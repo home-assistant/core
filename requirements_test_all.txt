@@ -413,7 +413,7 @@ androidtv[async]==0.0.73
 androidtvremote2==0.1.1
 
 # homeassistant.components.anova
-anova-wifi==0.15.0
+anova-wifi==0.17.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -898,7 +898,7 @@ hole==0.8.0
 holidays==0.52
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240703.0
+home-assistant-frontend==20240705.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.3
@@ -974,6 +974,7 @@ jaraco.abode==5.1.2
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
+# homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath==0.82.2
 
@@ -1278,7 +1279,7 @@ prometheus-client==0.17.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.8
+psutil==6.0.0
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
@@ -2247,7 +2248,7 @@ weatherflow4py==0.2.21
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.3
+webrtc-noise-gain==1.2.4
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8

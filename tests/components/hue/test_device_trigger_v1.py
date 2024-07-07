@@ -1,5 +1,7 @@
 """The tests for Philips Hue device triggers for V1 bridge."""
 
+from unittest.mock import Mock
+
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, hue
@@ -20,7 +22,7 @@ REMOTES_RESPONSE = {"7": HUE_TAP_REMOTE_1, "8": HUE_DIMMER_REMOTE_1}
 async def test_get_triggers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_bridge_v1,
+    mock_bridge_v1: Mock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected triggers from a hue remote."""
@@ -90,7 +92,7 @@ async def test_get_triggers(
 
 async def test_if_fires_on_state_change(
     hass: HomeAssistant,
-    mock_bridge_v1,
+    mock_bridge_v1: Mock,
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
 ) -> None:

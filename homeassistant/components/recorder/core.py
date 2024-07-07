@@ -1459,6 +1459,7 @@ class Recorder(threading.Thread):
         self.__dict__.pop("dialect_name", None)
         sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)
 
+        migration.pre_migrate_schema(self.engine)
         Base.metadata.create_all(self.engine)
         self._get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")

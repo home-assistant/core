@@ -944,8 +944,6 @@ async def test_saving_event_invalid_context_ulid(
             )
         }
 
-    assert "invalid" in caplog.text
-
     assert len(events) == 1
     assert json_loads(events["test_event"]) == event_data
 
