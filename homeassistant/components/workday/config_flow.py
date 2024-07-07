@@ -278,8 +278,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
                 CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
-                CONF_CATEGORY: combined_input.get(CONF_CATEGORY),
             }
+            if CONF_CATEGORY in combined_input:
+                abort_match[CONF_CATEGORY] = combined_input[CONF_CATEGORY]
             LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
 
@@ -338,19 +339,19 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 errors["remove_holidays"] = "remove_holiday_range_error"
             else:
                 LOGGER.debug("abort_check in options with %s", combined_input)
+                abort_match = {
+                    CONF_COUNTRY: self._config_entry.options.get(CONF_COUNTRY),
+                    CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
+                    CONF_OFFSET: combined_input[CONF_OFFSET],
+                    CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
+                    CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
+                    CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
+                    CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
+                }
+                if CONF_CATEGORY in combined_input:
+                    abort_match[CONF_CATEGORY] = combined_input[CONF_CATEGORY]
                 try:
-                    self._async_abort_entries_match(
-                        {
-                            CONF_COUNTRY: self._config_entry.options.get(CONF_COUNTRY),
-                            CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
-                            CONF_OFFSET: combined_input[CONF_OFFSET],
-                            CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
-                            CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
-                            CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
-                            CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
-                            CONF_CATEGORY: combined_input.get(CONF_CATEGORY),
-                        }
-                    )
+                    self._async_abort_entries_match(abort_match)
                 except AbortFlow as err:
                     errors = {"base": err.reason}
                 else:
