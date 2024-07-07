@@ -27,7 +27,7 @@ UPDATE_INTERVAL = timedelta(minutes=1)
 
 
 class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
-    """DataUpdateCoordinator to gather data for a specific TPLink device."""
+    """DataUpdateCoordinator for history stats."""
 
     def __init__(
         self,

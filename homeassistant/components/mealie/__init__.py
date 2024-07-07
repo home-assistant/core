@@ -7,14 +7,24 @@ from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionE
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import MealieConfigEntry, MealieCoordinator
+from .services import setup_services
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Mealie component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bool:

@@ -35,5 +35,36 @@
         "name": "Side"
       }
     }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "end_date_before_start_date": {
+      "message": "End date must be after start date."
+    }
+  },
+  "services": {
+    "get_mealplan": {
+      "name": "Get mealplan",
+      "description": "Get meaplan from Mealie",
+      "fields": {
+        "config_entry_id": {
+          "name": "Mealie instance",
+          "description": "Select the Mealie instance to get mealplan from"
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "The startdate of the data to get (default: today)."
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "The enddate of the data to get (default: today)."
+        }
+      }
+    }
   }
 }
