@@ -64,18 +64,19 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if entry.entry_id in hass.data[DOMAIN]:
-        device = hass.data[DOMAIN][entry.entry_id]
-        await device.async_disconnect()
+        coordinator = hass.data[DOMAIN][entry.entry_id]
+        await coordinator.async_client_disconnect()
 
     return True
 
 
-async def async_remove_entry(
-    hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
-) -> None:
-    """Handle removal of an entry."""
-    if entry.entry_id in hass.data[DOMAIN]:
-        coordinator: TelegramClientCoordinator = hass.data[DOMAIN][entry.entry_id]
-        await coordinator.async_client_disconnect()
-        del hass.data[DOMAIN][entry.entry_id]
+# async def async_remove_entry(
+#     hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
+# ) -> None:
+#     """Handle removal of an entry."""
+#     if entry.entry_id in hass.data[DOMAIN]:
+#         coordinator: TelegramClientCoordinator = hass.data[DOMAIN][entry.entry_id]
+#         await coordinator.async_client_disconnect()
+#         del hass.data[DOMAIN][entry.entry_id]

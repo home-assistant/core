@@ -57,7 +57,15 @@ class TelegramClientBinarySensorEntity(TelegramClientEntity, BinarySensorEntity)
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self.coordinator.data[self.entity_description.data_key][
-            self.entity_description.key
-        ]
+        if (
+            self.entity_description.data_key in self.coordinator.data
+            and self.entity_description.key
+            in self.coordinator.data[self.entity_description.data_key]
+        ):
+            self._attr_is_on = self.coordinator.data[self.entity_description.data_key][
+                self.entity_description.key
+            ]
+        else:
+            self._attr_is_on = None
+
         self.async_write_ha_state()

@@ -109,8 +109,8 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.connect()
             result = await client.send_code_request(self._phone)
             self._phone_code_hash = result.phone_code_hash
-        except (FloodWaitError, Exception) as ex:
-            return self.async_abort(reason=str(ex))
+        except (FloodWaitError, Exception) as err:
+            return self.async_abort(reason=str(err))
         finally:
             await client.disconnect()
 
@@ -144,15 +144,23 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_finish(self) -> ConfigFlowResult:
         """Handle entry creation."""
+        data = {
+            CONF_SESSION_ID: self._session,
+            CONF_API_ID: self._api_id,
+            CONF_API_HASH: self._api_hash,
+            CONF_PHONE: self._phone,
+            CONF_PASSWORD: self._password,
+        }
+        if self.context["source"] == "reauth":
+            if reauth_entry := self.hass.config_entries.async_get_entry(
+                self.context["entry_id"]
+            ):
+                self.hass.config_entries.async_update_entry(reauth_entry, data=data)
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(
             title=self._phone,
-            data={
-                CONF_SESSION_ID: self._session,
-                CONF_API_ID: self._api_id,
-                CONF_API_HASH: self._api_hash,
-                CONF_PHONE: self._phone,
-                CONF_PASSWORD: self._password,
-            },
+            data=data,
         )
 
     async def async_step_reauth(

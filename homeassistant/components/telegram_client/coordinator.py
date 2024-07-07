@@ -4,6 +4,7 @@ from asyncio import timeout
 from collections.abc import Coroutine
 from datetime import timedelta
 from pathlib import Path
+from sqlite3 import OperationalError
 from typing import Any
 
 from telethon import TelegramClient, __version__ as sw_version, events
@@ -12,7 +13,7 @@ from telethon.errors.rpcbaseerrors import AuthKeyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, IntegrationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -125,15 +126,37 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             }
         }
 
-    async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
+    async def async_client_call[_T](
+        self, coro: Coroutine[Any, Any, _T], retries: int = 1
+    ) -> _T:
         """Call a coro or raise exception."""
         try:
+            if not self._client.is_connected():
+                await self._client.connect()
+            if not await self._client.is_user_authorized():
+                raise ConfigEntryAuthFailed(f"User is not authorized for {self._phone}")
             async with timeout(10):
-                return await coro
-        except (AuthKeyError, AuthKeyNotFound) as ex:
+                result = await coro
+                if result is None:
+                    raise ConfigEntryAuthFailed(
+                        f"API call returned None for {self._phone}"
+                    )
+                return result
+        except (
+            AuthKeyError,
+            AuthKeyNotFound,
+            ConfigEntryAuthFailed,
+            OperationalError,
+        ) as err:
             raise ConfigEntryAuthFailed(
                 f"Credentials expired for {self._phone}"
-            ) from ex
+            ) from err
+        except ConnectionError as err:
+            if retries < 3:
+                raise IntegrationError(f"API call failed {retries} times.") from err
+            await self.async_client_start()
+            LOGGER.warning(f"API call raised an error {err} for {retries} time(s)")
+            return await self.async_client_call(coro, retries=retries + 1)
 
     async def async_client_start(self):
         """Start the client."""
@@ -141,4 +164,4 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     async def async_client_disconnect(self):
         """Disconnect the client."""
-        await self.async_client_call(self._client.disconnect())
+        await self._client.disconnect()
