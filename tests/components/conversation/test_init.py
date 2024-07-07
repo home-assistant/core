@@ -416,7 +416,7 @@ async def test_http_processing_intent_entity_exposed(
 
     # Now expose the entity
     expose_entity(hass, "light.kitchen", True)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on kitchen light"}
@@ -436,6 +436,7 @@ async def test_http_processing_intent_entity_exposed(
     data = await resp.json()
     assert data == snapshot
     assert data["response"]["response_type"] == "action_done"
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_http_processing_intent_conversion_not_expose_new(
