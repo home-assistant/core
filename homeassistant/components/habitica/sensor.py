@@ -8,8 +8,6 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, cast
 
-from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -33,6 +31,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import HabiticaConfigEntry
 from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import HabiticaDataUpdateCoordinator
+from .util import entity_used_in
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,13 +185,6 @@ async def async_setup_entry(
         for task_type in TASKS_TYPES
     )
     async_add_entities(entities, True)
-
-
-def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Get list of related automations and scripts."""
-    used_in = automations_with_entity(hass, entity_id)
-    used_in += scripts_with_entity(hass, entity_id)
-    return used_in
 
 
 class HabitipySensor(CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity):

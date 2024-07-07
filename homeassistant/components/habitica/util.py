@@ -5,6 +5,9 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 
@@ -30,3 +33,10 @@ def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:
             return None
     except IndexError:
         return None
+
+
+def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Get list of related automations and scripts."""
+    used_in = automations_with_entity(hass, entity_id)
+    used_in += scripts_with_entity(hass, entity_id)
+    return used_in
