@@ -43,7 +43,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_madvr_outgoing_hdr_flag-entry]
@@ -90,7 +90,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_madvr_power_state-entry]
@@ -184,6 +184,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
