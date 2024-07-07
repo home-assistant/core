@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from freezegun.api import FrozenDateTimeFactory
-from holidays import HALF_DAY
+from holidays import HALF_DAY, OPTIONAL
 import pytest
 
 from homeassistant import config_entries
@@ -356,13 +356,14 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
         hass,
         {
             "name": "Workday Sensor",
-            "country": "DE",
+            "country": "CH",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": None,
+            "province": "FR",
+            "category": [OPTIONAL],
         },
         entry_id="1",
     )
@@ -370,13 +371,14 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
         hass,
         {
             "name": "Workday Sensor2",
-            "country": "DE",
+            "country": "CH",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": ["2023-03-28"],
             "remove_holidays": [],
-            "province": None,
+            "province": "FR",
+            "category": [OPTIONAL],
         },
         entry_id="2",
     )
@@ -391,6 +393,8 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "province": "FR",
+            "category": [OPTIONAL],
         },
     )
 
