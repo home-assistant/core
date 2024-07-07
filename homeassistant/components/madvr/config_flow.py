@@ -28,6 +28,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+RETRY_INTERVAL = 1
+
 
 class madVRConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the integration."""
@@ -96,7 +98,7 @@ class madVRConfigFlow(ConfigFlow, domain=DOMAIN):
         # wait for client to capture device info
         retry_time = 15
         while not madvr_client.mac_address and retry_time > 0:
-            await asyncio.sleep(1)
+            await asyncio.sleep(RETRY_INTERVAL)
             retry_time -= 1
 
         mac_address = madvr_client.mac_address
