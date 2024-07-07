@@ -1440,9 +1440,9 @@ class AlexaModeController(AlexaCapability):
 
         # Remote Activity
         if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
-            mode = self.entity.attributes.get(remote.ATTR_CURRENT_ACTIVITY, None)
-            if mode in self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST, []):
-                return f"{remote.ATTR_ACTIVITY}.{mode}"
+            activity = self.entity.attributes.get(remote.ATTR_CURRENT_ACTIVITY, None)
+            if activity in self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST, []):
+                return f"{remote.ATTR_ACTIVITY}.{activity}"
 
         # Water heater operation mode
         if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
