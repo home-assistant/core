@@ -29,9 +29,6 @@
     "sensor": {
       "balance": {
         "name": "Balance"
-      },
-      "last_update": {
-        "name": "Last update"
       }
     }
   }
