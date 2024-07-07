@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -32,13 +33,6 @@ async def test_remote_setup(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-    # await setup_integration(hass, mock_config_entry)
-
-    # entity_registry = er.async_get(hass)
-    # remote_entity = entity_registry.async_get(f"{REMOTE_DOMAIN}.madvr_envy")
-
-    # assert remote_entity is not None
-    # assert remote_entity.unique_id == MOCK_MAC
 
 
 async def test_remote_power(
@@ -49,16 +43,14 @@ async def test_remote_power(
     """Test turning on the remote entity."""
 
     await setup_integration(hass, mock_config_entry)
-    await hass.async_block_till_done()
 
-    entity_id = f"{REMOTE_DOMAIN}.madvr_envy"
+    entity_id = "remote.madvr_envy"
     remote = hass.states.get(entity_id)
-    assert remote.state == "on"
+    assert remote.state == STATE_ON
 
     await hass.services.async_call(
         REMOTE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     mock_madvr_client.power_off.assert_called_once()
 
@@ -78,11 +70,10 @@ async def test_send_command(
     """Test sending command to the remote entity."""
 
     await setup_integration(hass, mock_config_entry)
-    await hass.async_block_till_done()
 
-    entity_id = f"{REMOTE_DOMAIN}.madvr_envy"
+    entity_id = "remote.madvr_envy"
     remote = hass.states.get(entity_id)
-    assert remote.state == "on"
+    assert remote.state == STATE_ON
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -90,6 +81,5 @@ async def test_send_command(
         {ATTR_ENTITY_ID: entity_id, "command": "test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_madvr_client.add_command_to_queue.assert_called_once_with(["test"])
