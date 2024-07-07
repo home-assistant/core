@@ -17,7 +17,7 @@ on:
       - "script/gen_requirements_all.py"
 
 env:
-  DEFAULT_PYTHON: "3.12.3"
+  DEFAULT_PYTHON: "3.12"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}

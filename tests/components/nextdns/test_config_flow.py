@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
+from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -57,6 +58,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     [
         (ApiError("API Error"), "cannot_connect"),
         (InvalidApiKeyError, "invalid_api_key"),
+        (RetryError("Retry Error"), "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],

@@ -12,7 +12,7 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.const import CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
@@ -321,9 +321,7 @@ async def test_config_entry_with_trigger_accessory(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    events,
     demo_cleanup,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test generating diagnostics for a bridge config entry with a trigger accessory."""

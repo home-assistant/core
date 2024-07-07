@@ -72,7 +72,7 @@ class FakeScanner(BaseHaRemoteScanner):
 class BaseFakeBleakClient:
     """Base class for fake bleak clients."""
 
-    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs):
+    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs) -> None:
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
         self._device = address_or_ble_device

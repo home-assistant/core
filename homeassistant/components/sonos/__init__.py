@@ -9,7 +9,7 @@ import datetime
 from functools import partial
 import logging
 import socket
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
@@ -372,12 +372,11 @@ class SonosDiscoveryManager:
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
             ):
-                if TYPE_CHECKING:
-                    coord_dict = cast(dict[str, Any], coord_dict)
-                if soco.household_id not in coord_dict:
+                c_dict: dict[str, Any] = coord_dict
+                if soco.household_id not in c_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
-                    coord_dict[soco.household_id] = new_coordinator
+                    c_dict[soco.household_id] = new_coordinator
             speaker.setup(self.entry)
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)

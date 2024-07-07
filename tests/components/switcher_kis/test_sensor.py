@@ -74,7 +74,9 @@ async def test_sensor_disabled(
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_sensor_update(hass: HomeAssistant, mock_bridge, monkeypatch) -> None:
+async def test_sensor_update(
+    hass: HomeAssistant, mock_bridge, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test sensor update."""
     await init_integration(hass)
     assert mock_bridge

@@ -120,6 +120,7 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     assert hass.config.currency == "EUR"
     assert hass.config.country != "SE"
     assert hass.config.language != "sv"
+    assert hass.config.radius != 150
 
     with (
         patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz,
@@ -142,6 +143,7 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
                 "currency": "USD",
                 "country": "SE",
                 "language": "sv",
+                "radius": 150,
             }
         )
 
@@ -162,6 +164,7 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     assert hass.config.currency == "USD"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+    assert hass.config.radius == 150
 
     assert len(mock_set_tz.mock_calls) == 1
     assert mock_set_tz.mock_calls[0][1][0] == dt_util.get_time_zone("America/New_York")

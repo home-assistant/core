@@ -19,7 +19,7 @@ from .helpers import PingDataICMPLib, PingDataSubProcess
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 

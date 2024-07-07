@@ -77,7 +77,7 @@ class HomeFactory:
         hass: HomeAssistant,
         mock_connection,
         hmip_config_entry: config_entries.ConfigEntry,
-    ):
+    ) -> None:
         """Initialize the Factory."""
         self.hass = hass
         self.mock_connection = mock_connection

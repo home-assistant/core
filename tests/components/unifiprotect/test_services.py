@@ -15,7 +15,6 @@ from homeassistant.components.unifiprotect.services import (
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
-    SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
@@ -123,24 +122,6 @@ async def test_remove_doorbell_text(
         blocking=True,
     )
     nvr.remove_custom_doorbell_message.assert_called_once_with("Test Message")
-
-
-async def test_set_default_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-) -> None:
-    """Test set_default_doorbell_text service."""
-
-    nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["set_default_doorbell_message"] = Mock(final=False)
-    nvr.set_default_doorbell_message = AsyncMock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_DEFAULT_DOORBELL_TEXT,
-        {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
-        blocking=True,
-    )
-    nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
 
 
 async def test_add_doorbell_text_disabled_config_entry(

@@ -22,6 +22,8 @@ from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeslemetrySwitchEntityDescription(SwitchEntityDescription):

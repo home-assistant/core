@@ -5,12 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from uiprotect.data import (
-    Camera,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-    StateType,
-)
+from uiprotect.data import Camera, ProtectAdoptableDeviceModel, StateType
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -28,10 +23,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+_SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
+    key="speaker", name="Speaker", device_class=MediaPlayerDeviceClass.SPEAKER
+)
 
 
 async def async_setup_entry(
@@ -51,7 +50,7 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
-        ProtectMediaPlayer(data, device)
+        ProtectMediaPlayer(data, device, _SPEAKER_DESCRIPTION)
         for device in data.get_cameras()
         if device.has_speaker or device.has_removable_speaker
     )
@@ -69,26 +68,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
-
-    def __init__(
-        self,
-        data: ProtectData,
-        camera: Camera,
-    ) -> None:
-        """Initialize an UniFi speaker."""
-        super().__init__(
-            data,
-            camera,
-            MediaPlayerEntityDescription(
-                key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
-            ),
-        )
-
-        self._attr_name = f"{self.device.display_name} Speaker"
-        self._attr_media_content_type = MediaType.MUSIC
+    _attr_media_content_type = MediaType.MUSIC
+    _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
         self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
@@ -106,16 +90,6 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_state, self._attr_volume_level)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

@@ -38,7 +38,6 @@ async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
         latitude=yaml_conf[DOMAIN][CONF_LATITUDE],
         longitude=yaml_conf[DOMAIN][CONF_LONGITUDE],
         timezone=hass.config.time_zone,
-        altitude=hass.config.elevation,
         diaspora=DEFAULT_DIASPORA,
     )
     old_prefix = get_unique_prefix(location, DEFAULT_LANGUAGE, 20, 50)

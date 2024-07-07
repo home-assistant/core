@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import serial.tools.list_ports
@@ -78,7 +78,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialise the config flow."""
         self.config = None
-        self._com_ports_list = None
+        self._com_ports_list: list[str] | None = None
         self._default_com_port = None
 
     async def async_step_user(
@@ -92,6 +92,8 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
             self._com_ports_list, self._default_com_port = result
             if self._default_com_port is None:
                 return self.async_abort(reason="no_serial_ports")
+            if TYPE_CHECKING:
+                assert isinstance(self._com_ports_list, list)
 
         # Handle the initial step.
         if user_input is not None:

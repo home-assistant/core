@@ -486,7 +486,8 @@ async def test_warn_when_cannot_connect(
     assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
-async def test_service_register(hassio_env, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("hassio_env")
+async def test_service_register(hass: HomeAssistant) -> None:
     """Check if service will be setup."""
     assert await async_setup_component(hass, "hassio", {})
     assert hass.services.has_service("hassio", "addon_start")
@@ -717,8 +718,9 @@ async def test_addon_service_call_with_complex_slug(
     await hass.services.async_call("hassio", "addon_start", {"addon": "test.a_1-2"})
 
 
+@pytest.mark.usefixtures("hassio_env")
 async def test_service_calls_core(
-    hassio_env, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Call core service and check the API calls behind that."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1116,8 +1118,9 @@ async def test_setup_hardware_integration(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("hassio_stubs")
 async def test_get_store_addon_info(
-    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test get store add-on info from Supervisor API."""
     aioclient_mock.clear_requests()

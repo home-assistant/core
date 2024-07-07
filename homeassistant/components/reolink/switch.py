@@ -330,8 +330,6 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         self.entity_description = entity_description
         super().__init__(reolink_data)
 
-        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""

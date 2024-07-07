@@ -79,3 +79,18 @@ TessieChargeStates = {
     "Disconnected": "disconnected",
     "NoPower": "no_power",
 }
+
+
+class TessieWallConnectorStates(IntEnum):
+    """Tessie Wall Connector states."""
+
+    BOOTING = 0
+    CHARGING = 1
+    DISCONNECTED = 2
+    CONNECTED = 4
+    SCHEDULED = 5
+    NEGOTIATING = 6
+    ERROR = 7
+    CHARGING_FINISHED = 8
+    WAITING_CAR = 9
+    CHARGING_REDUCED = 10

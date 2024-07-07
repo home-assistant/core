@@ -137,6 +137,17 @@
           "none": "Clear"
         }
       }
+    },
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      }
     }
   },
   "services": {
@@ -165,20 +176,6 @@
         "message": {
           "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::message::name%]",
           "description": "Existing custom message to remove for doorbells."
-        }
-      }
-    },
-    "set_default_doorbell_text": {
-      "name": "Set default doorbell text",
-      "description": "Sets the default doorbell message. This will be the message that is automatically selected when a message \"expires\".",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
-          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]"
-        },
-        "message": {
-          "name": "Default message",
-          "description": "The default message for your doorbell. Must be less than 30 characters."
         }
       }
     },
