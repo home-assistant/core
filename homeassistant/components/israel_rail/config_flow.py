@@ -4,17 +4,19 @@ import logging
 from typing import Any
 
 from israelrailapi import TrainSchedule
+from israelrailapi.stations import STATIONS
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_DESTINATION, CONF_START, DOMAIN
 
+STATIONS_NAMES = [station["Heb"] for station in STATIONS.values()]
+
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_START): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
+        vol.Required(CONF_START): vol.In(STATIONS_NAMES),
+        vol.Required(CONF_DESTINATION): vol.In(STATIONS_NAMES),
     }
 )
 
