@@ -22,9 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
-from . import setup_config_entry
-
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 @pytest.fixture(name="laundrify_sensor")
@@ -43,13 +41,12 @@ def laundrify_sensor_fixture() -> LaundrifyPowerSensor:
 
 
 async def test_laundrify_sensor_init(
-    laundrify_sensor: LaundrifyPowerSensor,
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    laundrify_sensor: LaundrifyPowerSensor,
+    laundrify_config_entry: MockConfigEntry,
 ) -> None:
     """Test Laundrify sensor default state."""
-    await setup_config_entry(hass)
-
     sensor = laundrify_sensor
     sensor_slug = slugify(sensor._device.name, separator="_")
 
@@ -67,11 +64,11 @@ async def test_laundrify_sensor_init(
 
 
 async def test_laundrify_sensor_update(
-    laundrify_sensor: LaundrifyPowerSensor, hass: HomeAssistant
+    hass: HomeAssistant,
+    laundrify_sensor: LaundrifyPowerSensor,
+    laundrify_config_entry: MockConfigEntry,
 ) -> None:
     """Test Laundrify sensor update."""
-    await setup_config_entry(hass)
-
     sensor = laundrify_sensor
     sensor_slug = slugify(sensor._device.name, separator="_")
 
@@ -89,15 +86,13 @@ async def test_laundrify_sensor_update(
 
 
 async def test_laundrify_sensor_update_failure(
-    laundrify_sensor: LaundrifyPowerSensor,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    laundrify_sensor: LaundrifyPowerSensor,
+    laundrify_config_entry: MockConfigEntry,
 ) -> None:
     """Test that update failures are logged."""
     caplog.set_level(logging.DEBUG)
-
-    await setup_config_entry(hass)
-
     sensor = laundrify_sensor
 
     # test get_power() returning None which should cause a LaundrifyDeviceException

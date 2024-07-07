@@ -6,18 +6,29 @@ from unittest.mock import patch
 from laundrify_aio import LaundrifyAPI, LaundrifyDevice
 import pytest
 
+from homeassistant.components.laundrify import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
+
 from .const import VALID_ACCESS_TOKEN, VALID_ACCOUNT_ID
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.fixture(name="laundrify_setup_entry")
-def laundrify_setup_entry_fixture():
-    """Mock laundrify setup entry function."""
-    with patch(
-        "homeassistant.components.laundrify.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+@pytest.fixture(name="laundrify_config_entry")
+async def laundrify_setup_config_entry(
+    hass: HomeAssistant, access_token: str = VALID_ACCESS_TOKEN
+) -> MockConfigEntry:
+    """Create laundrify entry in Home Assistant."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=VALID_ACCOUNT_ID,
+        data={CONF_ACCESS_TOKEN: access_token},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
 
 
 @pytest.fixture(name="laundrify_exchange_code")
