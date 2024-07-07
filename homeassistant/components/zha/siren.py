@@ -13,6 +13,7 @@ from zha.application.const import (
     WARNING_DEVICE_MODE_FIRE_PANIC,
     WARNING_DEVICE_MODE_POLICE_PANIC,
 )
+from zha.application.platforms.siren import SirenEntityFeature as ZHASirenEntityFeature
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -71,9 +72,24 @@ class ZHASiren(ZHAEntity, SirenEntity):
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
         super().__init__(entity_data, **kwargs)
-        self._attr_supported_features = SirenEntityFeature(
-            self.entity_data.entity._attr_supported_features.value  # noqa: SLF001
+
+        features: SirenEntityFeature = SirenEntityFeature(0)
+        zha_features: ZHASirenEntityFeature = (
+            self.entity_data.entity._attr_supported_features  # noqa: SLF001
         )
+
+        if ZHASirenEntityFeature.TURN_ON in zha_features:
+            features |= SirenEntityFeature.TURN_ON
+        if ZHASirenEntityFeature.TURN_OFF in zha_features:
+            features |= SirenEntityFeature.TURN_OFF
+        if ZHASirenEntityFeature.TONES in zha_features:
+            features |= SirenEntityFeature.TONES
+        if ZHASirenEntityFeature.VOLUME_SET in zha_features:
+            features |= SirenEntityFeature.VOLUME_SET
+        if ZHASirenEntityFeature.DURATION in zha_features:
+            features |= SirenEntityFeature.DURATION
+
+        self._attr_supported_features = features
 
     @property
     def is_on(self) -> bool:
