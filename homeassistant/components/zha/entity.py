@@ -8,7 +8,6 @@ import functools
 import logging
 from typing import Any
 
-from zha.application.platforms import EntityCategory as ZHAEntityCategory
 from zha.mixins import LogMixin
 
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
@@ -53,10 +52,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             # their translation_key will probably never be added to `zha/strings.json`.
             self._attr_name = meta.fallback_name
 
-        if meta.entity_category == ZHAEntityCategory.CONFIG:
-            self._attr_entity_category = EntityCategory.CONFIG
-        elif meta.entity_category == ZHAEntityCategory.DIAGNOSTIC:
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        if meta.entity_category is not None:
+            self._attr_entity_category = EntityCategory(meta.entity_category)
 
         self._attr_entity_registry_enabled_default = (
             meta.entity_registry_enabled_default
