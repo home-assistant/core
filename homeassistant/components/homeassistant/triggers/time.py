@@ -42,7 +42,7 @@ _TIME_TRIGGER_ENTITY_REFERENCE = vol.All(
 _TIME_TRIGGER_WITH_OFFSET_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(["sensor"]),
-        vol.Required(CONF_OFFSET): cv.time_period,
+        vol.Optional(CONF_OFFSET): cv.time_period,
     }
 )
 
@@ -50,7 +50,10 @@ _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
     _TIME_TRIGGER_ENTITY_REFERENCE,
     _TIME_TRIGGER_WITH_OFFSET_SCHEMA,
-    msg="Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'",
+    msg=(
+        "Expected HH:MM, HH:MM:SS, an Entity ID with domain 'input_datetime' or "
+        "'sensor', or a combined entry specifying an Entity ID and an offset."
+    ),
 )
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
