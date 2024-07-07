@@ -1,7 +1,7 @@
 """MadVR conftest for shared testing setup."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
@@ -40,6 +40,11 @@ def mock_madvr_client() -> Generator[AsyncMock, None, None]:
         client.is_device_connectable.return_value = True
         client.loop = AsyncMock()
         client.tasks = AsyncMock()
+
+        # mock the property to be off on startup (which it is)
+        is_on_mock = PropertyMock(return_value=True)
+        type(client).is_on = is_on_mock
+
         yield client
 
 
