@@ -18,6 +18,9 @@
       },
       "platform": {
         "default": "mdi:bus-stop-uncovered"
+      },
+      "train_number": {
+        "default": "mdi:train"
       }
     }
   }

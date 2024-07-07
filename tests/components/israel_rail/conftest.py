@@ -15,8 +15,6 @@ VALID_CONFIG = {
     CONF_DESTINATION: "destination",
 }
 
-INVALID_CONFIG = {"notusername": "israelrail", "notpassword": "test"}
-
 SOURCE_DEST = "Source1 Destination1"
 
 
@@ -57,72 +55,128 @@ def mock_israelrail():
             return_value=mock_israelrail_api,
         ) as mock_israelrail_api,
     ):
-        mock_israelrail_api.return_value.query.return_value = [
-            TrainRoute(
-                [
-                    {
-                        "orignStation": "3500",
-                        "destinationStation": "3700",
-                        "departureTime": "2021-10-10T10:10:10",
-                        "arrivalTime": "2021-10-10T10:10:10",
-                        "originPlatform": "1",
-                        "destPlatform": "2",
-                        "trainNumber": "1234",
-                    }
-                ]
-            ),
-            TrainRoute(
-                [
-                    {
-                        "orignStation": "3500",
-                        "destinationStation": "3700",
-                        "departureTime": "2021-10-10T10:10:10",
-                        "arrivalTime": "2021-10-10T10:10:10",
-                        "originPlatform": "1",
-                        "destPlatform": "2",
-                        "trainNumber": "1234",
-                    }
-                ]
-            ),
-            TrainRoute(
-                [
-                    {
-                        "orignStation": "3500",
-                        "destinationStation": "3700",
-                        "departureTime": "2021-10-10T10:10:10",
-                        "arrivalTime": "2021-10-10T10:10:10",
-                        "originPlatform": "1",
-                        "destPlatform": "2",
-                        "trainNumber": "1234",
-                    }
-                ]
-            ),
-            TrainRoute(
-                [
-                    {
-                        "orignStation": "3500",
-                        "destinationStation": "3700",
-                        "departureTime": "2021-10-10T10:10:10",
-                        "arrivalTime": "2021-10-10T10:10:10",
-                        "originPlatform": "1",
-                        "destPlatform": "2",
-                        "trainNumber": "1234",
-                    }
-                ]
-            ),
-            TrainRoute(
-                [
-                    {
-                        "orignStation": "3500",
-                        "destinationStation": "3700",
-                        "departureTime": "2021-10-10T10:10:10",
-                        "arrivalTime": "2021-10-10T10:10:10",
-                        "originPlatform": "1",
-                        "destPlatform": "2",
-                        "trainNumber": "1234",
-                    }
-                ]
-            ),
-        ]
+        mock_israelrail_api.return_value.query.return_value = trains[:]
 
         yield mock_israelrail_api
+
+
+def get_train_route(
+    train_number: str = "1234",
+    departure_time: str = "2021-10-10T10:10:10",
+    arrival_time: str = "2021-10-10T10:10:10",
+    origin_platform: str = "1",
+    dest_platform: str = "2",
+    origin_station: str = "3500",
+    destination_station: str = "3700",
+):
+    """Build a TrainRoute of the israelrail API."""
+    return TrainRoute(
+        [
+            {
+                "orignStation": origin_station,
+                "destinationStation": destination_station,
+                "departureTime": departure_time,
+                "arrivalTime": arrival_time,
+                "originPlatform": origin_platform,
+                "destPlatform": dest_platform,
+                "trainNumber": train_number,
+            }
+        ]
+    )
+
+
+trains = [
+    get_train_route(
+        train_number="1234",
+        departure_time="2021-10-10T10:10:10",
+        arrival_time="2021-10-10T10:30:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1235",
+        departure_time="2021-10-10T10:20:10",
+        arrival_time="2021-10-10T10:40:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1236",
+        departure_time="2021-10-10T10:30:10",
+        arrival_time="2021-10-10T10:50:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1237",
+        departure_time="2021-10-10T10:40:10",
+        arrival_time="2021-10-10T11:00:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1238",
+        departure_time="2021-10-10T10:50:10",
+        arrival_time="2021-10-10T11:10:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+]
+
+trains_wrong_format = [
+    get_train_route(
+        train_number="1234",
+        departure_time="2021-10-1010:10:10",
+        arrival_time="2021-10-10T10:30:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1235",
+        departure_time="2021-10-1010:20:10",
+        arrival_time="2021-10-10T10:40:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1236",
+        departure_time="2021-10-1010:30:10",
+        arrival_time="2021-10-10T10:50:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1237",
+        departure_time="2021-10-1010:40:10",
+        arrival_time="2021-10-10T11:00:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+    get_train_route(
+        train_number="1238",
+        departure_time="2021-10-1010:50:10",
+        arrival_time="2021-10-10T11:10:10",
+        origin_platform="1",
+        dest_platform="2",
+        origin_station="3500",
+        destination_station="3700",
+    ),
+]

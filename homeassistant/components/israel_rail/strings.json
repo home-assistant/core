@@ -1,12 +1,10 @@
 {
   "config": {
     "error": {
-      "too_many_via_stations": "Too many via stations, only up to 5 via stations are allowed per connection.",
-      "unknown": "An unknown error was raised by python-opendata-transport"
+      "unknown": "An unknown error was raised by israelrailapi"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "unknown": "An unknown error was raised by python-opendata-transport"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "step": {
       "user": {
@@ -38,15 +36,10 @@
       },
       "platform": {
         "name": "Platform"
+      },
+      "train_number": {
+        "name": "Train Number"
       }
-    }
-  },
-  "exceptions": {
-    "invalid_data": {
-      "message": "Setup failed for entry {config_title} with invalid data, check at the https://www.rail.co.il if your station names are valid.\n{error}"
-    },
-    "request_timeout": {
-      "message": "Timeout while connecting for entry {config_title}.\n{error}"
     }
   }
 }

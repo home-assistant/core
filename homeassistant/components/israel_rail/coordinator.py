@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, SENSOR_CONNECTIONS_COUNT
+from .const import DEFAULT_SCAN_INTERVAL, DEPARTURES_COUNT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +24,6 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
-    next_departure: datetime | None
-    next_on_departure: datetime | None
     duration: int | None
     platform: str
     remaining_time: str
@@ -81,6 +79,7 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         self._train_schedule = train_schedule
         self._start = start
         self._destination = destination
+        self.unique_id = f"{start} {destination}"
 
     async def _async_update_data(self) -> list[DataConnection]:
         try:
@@ -100,8 +99,6 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         return [
             DataConnection(
                 departure=departure_time(train_routes[i]),
-                next_departure=departure_time(train_routes[i + 1]),
-                next_on_departure=departure_time(train_routes[i + 2]),
                 train_number=train_routes[i].trains[0].data["trainNumber"],
                 platform=train_routes[i].trains[0].platform,
                 transfers=len(train_routes[i].trains) - 1,
@@ -112,6 +109,6 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
                 destination=station_name_to_id(train_routes[i].trains[-1].dst),
                 remaining_time=str(remaining_time(train_routes[i].trains[0].departure)),
             )
-            for i in range(SENSOR_CONNECTIONS_COUNT)
+            for i in range(DEPARTURES_COUNT)
             if len(train_routes) > i and train_routes[i] is not None
         ]
