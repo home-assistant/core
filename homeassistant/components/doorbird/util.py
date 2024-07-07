@@ -4,9 +4,9 @@ from typing import Any, cast
 
 from homeassistant.core import HomeAssistant, callback
 
-from . import DoorBirdConfigEntry
 from .const import DOMAIN
 from .device import ConfiguredDoorBird
+from .models import DoorBirdConfigEntry
 
 
 def get_mac_address_from_door_station_info(door_station_info: dict[str, Any]) -> str:

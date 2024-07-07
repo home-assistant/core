@@ -10,11 +10,10 @@ from homeassistant.components.event import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DoorBirdConfigEntry
 from .const import DOMAIN
 from .device import DoorbirdEvent
 from .entity import DoorBirdEntity
-from .models import DoorBirdData
+from .models import DoorBirdConfigEntry, DoorBirdData
 
 EVENT_DESCRIPTIONS = {
     "doorbell": EventEntityDescription(

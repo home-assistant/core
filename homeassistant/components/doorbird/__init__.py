@@ -10,7 +10,6 @@ from doorbirdpy import DoorBird
 import requests
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -25,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_EVENTS, DOMAIN, PLATFORMS
 from .device import ConfiguredDoorBird
-from .models import DoorBirdData
+from .models import DoorBirdConfigEntry, DoorBirdData
 from .view import DoorBirdRequestView
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,8 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CUSTOM_URL = "hass_url_override"
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
-type DoorBirdConfigEntry = ConfigEntry[DoorBirdData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

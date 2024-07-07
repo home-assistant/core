@@ -9,9 +9,8 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DoorBirdConfigEntry
 from .entity import DoorBirdEntity
-from .models import DoorBirdData
+from .models import DoorBirdConfigEntry, DoorBirdData
 
 IR_RELAY = "__ir_light__"
 

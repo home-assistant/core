@@ -14,9 +14,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import DoorBirdConfigEntry
 from .entity import DoorBirdEntity
-from .models import DoorBirdData
+from .models import DoorBirdConfigEntry, DoorBirdData
 
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
 _LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
