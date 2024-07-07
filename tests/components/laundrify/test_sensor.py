@@ -31,7 +31,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @pytest.fixture(name="laundrify_sensor")
-def laundrify_sensor_fixture():
+def laundrify_sensor_fixture() -> LaundrifyPowerSensor:
     """Return a default Laundrify power sensor mock."""
     # Load test data from machines.json
     machine_data = json.loads(load_fixture("laundrify/machines.json"))[0]
@@ -46,7 +46,9 @@ def laundrify_sensor_fixture():
 
 
 async def test_laundrify_sensor_init(
-    laundrify_sensor, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    laundrify_sensor: LaundrifyPowerSensor,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test Laundrify sensor default state."""
     await setup_config_entry(hass)
@@ -67,7 +69,9 @@ async def test_laundrify_sensor_init(
     assert device.sw_version == sensor._device.firmwareVersion
 
 
-async def test_laundrify_sensor_update(laundrify_sensor, hass: HomeAssistant) -> None:
+async def test_laundrify_sensor_update(
+    laundrify_sensor: LaundrifyPowerSensor, hass: HomeAssistant
+) -> None:
     """Test Laundrify sensor update."""
     await setup_config_entry(hass)
 
@@ -88,7 +92,9 @@ async def test_laundrify_sensor_update(laundrify_sensor, hass: HomeAssistant) ->
 
 
 async def test_laundrify_sensor_update_failure(
-    laundrify_sensor, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    laundrify_sensor: LaundrifyPowerSensor,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that update failures are logged."""
     caplog.set_level(logging.DEBUG)
