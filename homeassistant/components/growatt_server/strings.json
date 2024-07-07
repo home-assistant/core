@@ -200,7 +200,10 @@
         "name": "Lifetime stored charged"
       },
       "storage_solar_production": {
-        "name": "Solar power production"
+        "name": "Solar power production 1"
+      },
+      "storage_solar_production_2": {
+        "name": "Solar power production 2"
       },
       "storage_battery_percentage": {
         "name": "Battery percentage"

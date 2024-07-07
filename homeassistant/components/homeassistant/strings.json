@@ -56,6 +56,21 @@
     "config_entry_reauth": {
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"
+    },
+    "integration_not_found": {
+      "title": "Integration {domain} not found",
+      "fix_flow": {
+        "step": {
+          "remove_entries": {
+            "title": "[%key:component::homeassistant::issues::integration_not_found::title%]",
+            "description": "The integration `{domain}` could not be found. This happens when a (custom) integration was removed from Home Assistant, but there are still configurations for this `integration`. Please use the buttons below to either remove the previous configurations for `{domain}` or ignore this.",
+            "menu_options": {
+              "confirm": "Remove previous configurations",
+              "ignore": "Ignore"
+            }
+          }
+        }
+      }
     }
   },
   "system_health": {

@@ -353,6 +353,7 @@ FLOWS = {
         "motionblinds_ble",
         "motioneye",
         "motionmount",
+        "mpd",
         "mqtt",
         "mullvad",
         "mutesync",
