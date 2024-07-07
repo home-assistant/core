@@ -3,9 +3,9 @@
 from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
-from urllib3.exceptions import MaxRetryError
 import pytest
 import requests_mock
+from urllib3.exceptions import MaxRetryError
 
 from homeassistant.components.pushover.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
