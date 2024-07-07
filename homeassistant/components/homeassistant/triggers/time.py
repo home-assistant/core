@@ -222,10 +222,8 @@ async def async_attach_trigger(
                 )
             )
 
-        # Track state changes of entity.
-        removes.extend(
-            (async_track_state_change_event(hass, *entry)) for entry in to_track
-        )
+    # Track state changes of all entities
+    removes.extend((async_track_state_change_event(hass, *entry)) for entry in to_track)
 
     @callback
     def remove_track_time_changes() -> None:
