@@ -35,9 +35,7 @@
       "sea_level_pressure": {
         "name": "Pressure sea level"
       },
-      "station_pressure": {
-        "name": "Pressure station"
-      },
+
       "dew_point": {
         "name": "Dew point"
       },
@@ -54,7 +52,7 @@
         "name": "Lightning last distance"
       },
       "lightning_strike_last_epoch": {
-        "name": "Lightning last"
+        "name": "Lightning last strike"
       },
 
       "wind_chill": {

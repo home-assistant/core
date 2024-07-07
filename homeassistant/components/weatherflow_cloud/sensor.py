@@ -127,15 +127,6 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
-    WeatherFlowCloudSensorEntityDescription(
-        key="station_pressure",
-        translation_key="station_pressure",
-        value_fn=lambda data: data.observation.obs[0].station_pressure,
-        native_unit_of_measurement=UnitOfPressure.MBAR,
-        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=3,
-    ),
     # Lightning Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count",
