@@ -66,8 +66,6 @@ class Sensor(ZHAEntity, SensorEntity):
         if hasattr(entity.info_object, "unit") and entity.info_object.unit is not None:
             self._attr_native_unit_of_measurement = entity.info_object.unit
 
-        # TODO: In the future, do we migrate all zigpy/zha entities to use entity  # pylint: disable=fixme
-        # descriptions? Or do we keep them simple and always use `_attr_`*?
         if (
             hasattr(entity, "entity_description")
             and entity.entity_description is not None
