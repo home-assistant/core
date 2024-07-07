@@ -21,7 +21,7 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, sf_client: SimpleFin) -> None:
+    def __init__(self, hass: HomeAssistant, client: SimpleFin) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
@@ -29,12 +29,12 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
             name="simplefin",
             update_interval=timedelta(hours=4),
         )
-        self.sf_client = sf_client
+        self.client = client
 
     async def _async_update_data(self) -> Any:
         """Fetch data for all accounts."""
         try:
-            return await self.sf_client.fetch_data()
+            return await self.client.fetch_data()
         except SimpleFinAuthError as err:
             raise ConfigEntryError from err
 
