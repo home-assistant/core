@@ -1,6 +1,6 @@
 {
   "domain": "madvr",
-  "name": "MadVR Envy",
+  "name": "madVR Envy",
   "codeowners": ["@iloveicedgreentea"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/madvr",

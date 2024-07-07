@@ -3454,7 +3454,7 @@
       "supported_by": "motion_blinds"
     },
     "madvr": {
-      "name": "MadVR Envy",
+      "name": "madVR Envy",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"

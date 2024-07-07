@@ -1,4 +1,4 @@
-"""Support for MadVR remote control."""
+"""Support for madVR remote control."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 if TYPE_CHECKING:
     from . import MadVRConfigEntry
 from .const import DOMAIN
-from .coordinator import MadVRCoordinator
+from .coordinator import madVRCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
     entry: MadVRConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the MadVR remote."""
+    """Set up the madVR remote."""
     coordinator = entry.runtime_data
     async_add_entities(
         [
@@ -34,8 +34,8 @@ async def async_setup_entry(
     )
 
 
-class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
-    """Remote entity for the MadVR integration."""
+class MadvrRemote(CoordinatorEntity[madVRCoordinator], RemoteEntity):
+    """Remote entity for the madVR integration."""
 
     _attr_has_entity_name = True
     _attr_name = None
@@ -43,7 +43,7 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: MadVRCoordinator,
+        coordinator: madVRCoordinator,
         entry_id: str,
     ) -> None:
         """Initialize the remote entity."""
