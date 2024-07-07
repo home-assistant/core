@@ -15,8 +15,8 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 
-from . import MealieConfigEntry
 from .const import ATTR_CONFIG_ENTRY_ID, ATTR_END_DATE, ATTR_START_DATE, DOMAIN
+from .coordinator import MealieConfigEntry
 
 SERVICE_GET_MEALPLAN = "get_mealplan"
 SERVICE_GET_MEALPLAN_SCHEMA = vol.Schema(
