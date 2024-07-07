@@ -22,13 +22,10 @@ class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordin
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator)
-        # self.entity_description = description
         self.station_id = station_id
 
-        station_name = coordinator.data[station_id].station.name
-
         self._attr_device_info = DeviceInfo(
-            name=station_name,
+            name=self.station.station.name,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(station_id))},
             manufacturer=MANUFACTURER,

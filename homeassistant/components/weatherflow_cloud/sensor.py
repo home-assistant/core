@@ -41,7 +41,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         translation_key="air_density",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
-        value_fn=lambda data: data.observation.obs[0].air_density,
+        value_fn=lambda data: data.air_density,
         native_unit_of_measurement="kg/m³",
     ),
     # Temp Sensors
@@ -51,13 +51,13 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.observation.obs[0].air_temperature,
+        value_fn=lambda data: data.air_temperature,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="dew_point",
         translation_key="dew_point",
-        value_fn=lambda data: data.observation.obs[0].dew_point,
+        value_fn=lambda data: data.dew_point,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -69,7 +69,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.observation.obs[0].feels_like,
+        value_fn=lambda data: data.feels_like,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     WeatherFlowCloudSensorEntityDescription(
@@ -78,7 +78,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.observation.obs[0].heat_index,
+        value_fn=lambda data: data.heat_index,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     WeatherFlowCloudSensorEntityDescription(
@@ -87,7 +87,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.observation.obs[0].wind_chill,
+        value_fn=lambda data: data.wind_chill,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     WeatherFlowCloudSensorEntityDescription(
@@ -96,7 +96,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.observation.obs[0].wet_bulb_temperature,
+        value_fn=lambda data: data.wet_bulb_temperature,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     WeatherFlowCloudSensorEntityDescription(
@@ -105,14 +105,14 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.observation.obs[0].wet_bulb_globe_temperature,
+        value_fn=lambda data: data.wet_bulb_globe_temperature,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     # Pressure Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="barometric_pressure",
         translation_key="barometric_pressure",
-        value_fn=lambda data: data.observation.obs[0].barometric_pressure,
+        value_fn=lambda data: data.barometric_pressure,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -121,7 +121,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
     WeatherFlowCloudSensorEntityDescription(
         key="sea_level_pressure",
         translation_key="sea_level_pressure",
-        value_fn=lambda data: data.observation.obs[0].sea_level_pressure,
+        value_fn=lambda data: data.sea_level_pressure,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -132,19 +132,19 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         key="lightning_strike_count",
         translation_key="lightning_strike_count",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.observation.obs[0].lightning_strike_count,
+        value_fn=lambda data: data.lightning_strike_count,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count_last_1hr",
         translation_key="lightning_strike_count_last_1hr",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.observation.obs[0].lightning_strike_count_last_1hr,
+        value_fn=lambda data: data.lightning_strike_count_last_1hr,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count_last_3hr",
         translation_key="lightning_strike_count_last_3hr",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.observation.obs[0].lightning_strike_count_last_3hr,
+        value_fn=lambda data: data.lightning_strike_count_last_3hr,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_last_distance",
@@ -152,14 +152,14 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        value_fn=lambda data: data.observation.obs[0].lightning_strike_last_distance,
+        value_fn=lambda data: data.lightning_strike_last_distance,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_last_epoch",
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: datetime.fromtimestamp(
-            data.observation.obs[0].lightning_strike_last_epoch, tz=UTC
+            data.lightning_strike_last_epoch, tz=UTC
         ),
     ),
 )
@@ -196,22 +196,23 @@ class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
 
     entity_description: WeatherFlowCloudSensorEntityDescription
 
-    def __init__(self, coordinator, description, station_id):
+    def __init__(
+        self,
+        coordinator: WeatherFlowCloudDataUpdateCoordinator,
+        description: WeatherFlowCloudSensorEntityDescription,
+        station_id: int,
+    ) -> None:
         """Initialize the sensor."""
         # Initialize the Entity Class
-        super().__init__(
-            coordinator=coordinator,
-            station_id=station_id,
-        )
+        super().__init__(coordinator, station_id)
         self.entity_description = description
         self._attr_unique_id = (
-            f"{self.coordinator.data[station_id].station.name}_{description.key}"
+            f"{self.coordinator.data[station_id].station.station_id}_{description.key}"
         )
-        self._attr_has_entity_name = True
-
-        #
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self.station_id])
+        return self.entity_description.value_fn(
+            self.coordinator.data[self.station_id].observation.obs[0]
+        )
