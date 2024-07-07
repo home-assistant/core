@@ -6,11 +6,10 @@ from dataclasses import dataclass
 from doorbirdpy import DoorBird
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import DoorBirdConfigEntry
 from .entity import DoorBirdEntity
 from .models import DoorBirdData
 
@@ -38,12 +37,11 @@ IR_ENTITY_DESCRIPTION = DoorbirdButtonEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DoorBirdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DoorBird button platform."""
-    config_entry_id = config_entry.entry_id
-    door_bird_data: DoorBirdData = hass.data[DOMAIN][config_entry_id]
+    door_bird_data = config_entry.runtime_data
     relays = door_bird_data.door_station_info["RELAYS"]
 
     entities = [
