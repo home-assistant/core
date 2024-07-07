@@ -61,6 +61,25 @@
       "total_consumption": {
         "name": "Total consumption"
       }
+    },
+    "select": {
+      "day_of_week": {
+        "name": "Day of Week",
+        "state": {
+          "1": "Monday",
+          "2": "Tuesday",
+          "3": "Wednesday",
+          "4": "Thursday",
+          "5": "Friday",
+          "6": "Saturday",
+          "7": "Sunday"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "request_failed_device_not_connected": {
+      "message": "The device needs to be connected in order to send data to it."
     }
   }
 }
