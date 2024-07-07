@@ -42,9 +42,8 @@ async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict
 ) -> RepairsFlow:
     """Create flow."""
-    if data and (entry_id := data.get("entry_id")):
-        if entry_id and issue_id == f"deprecate_sensor_{entry_id}":
-            entry = hass.config_entries.async_get_entry(entry_id)
-            assert entry
-            return SensorDeprecationRepairFlow(entry)
+    if issue_id.startswith("deprecate_sensor_"):
+        entry = hass.config_entries.async_get_entry(data["entry_id"])
+        assert entry
+        return SensorDeprecationRepairFlow(entry)
     return ConfirmRepairFlow()
