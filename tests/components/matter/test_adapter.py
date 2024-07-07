@@ -224,6 +224,23 @@ async def test_device_registry_single_node_without_mac_address_has_no_mac_connec
         assert connection_type != dr.CONNECTION_NETWORK_MAC
 
 
+async def test_device_registry_node_with_EUI64_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test that a device with a mac address has a `zigbee` connection in the HA device entry."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "eve-energy-plug",
+        matter_client,
+    )
+
+    assert device_registry.async_get_device(
+        connections={("zigbee", "ca:6b:4a:23:f6:f8:bb:ee")}
+    )
+
+
 async def test_multi_endpoint_name(
     hass: HomeAssistant,
     matter_client: MagicMock,

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+import abc
+from dataclasses import dataclass
+import re
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters.Objects import GeneralDiagnostics
 from matter_server.client.models.device_types import BridgedDevice
-from matter_server.common.helpers.util import convert_mac_address
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,12 +26,101 @@ if TYPE_CHECKING:
     from matter_server.client.models.node import MatterEndpoint, MatterNode
 
 
+@dataclass(frozen=True, init=False)
+class HardwareAddress(abc.ABC):
+    """Abstract representation of a hardware address."""
+
+    address: bytes
+
+    @staticmethod
+    def from_string(address: str) -> HardwareAddress:
+        """Create a HardwareAddress from a string representation."""
+        address_bytes = bytes.fromhex(re.sub("[^0-9a-fA-F]", "", address))
+        return HardwareAddress.from_bytes(address_bytes)
+
+    @staticmethod
+    def from_bytes(address: bytes) -> HardwareAddress:
+        """Create a HardwareAddress from a bytes representation."""
+        if len(address) == 6:
+            return EUI48(address)
+        if len(address) == 8:
+            return EUI64(address)
+        raise ValueError(f"Invalid hardware address length: {len(address)}")
+
+    def is_NULL(self) -> bool:
+        """Check if the address is NULL value/should not be used.
+
+        See: https://standards.ieee.org/wp-content/uploads/import/documents/tutorials/eui.pdf
+        'Values based on a zero-valued OUI [...] shall not be used as identifiers.'
+        """
+        return self.address[:3] == b"\x00\x00\x00"
+
+    def is_individual(self) -> bool:
+        """Check if the address is an individual address, not a group address."""
+        return self.address[0] & 0x01 == 0
+
+    def __str__(self) -> str:
+        """Return the string representation of the address."""
+        return ":".join(f"{byte:02x}" for byte in self.address)
+
+    def _valid_connection(self) -> bool:
+        return self.is_individual() and not self.is_NULL()
+
+    @abc.abstractmethod
+    def connection(self) -> tuple[str, str] | None:
+        """Get a connection tuple or None if the address is invalid."""
+
+
+@dataclass(frozen=True)
+class EUI48(HardwareAddress):
+    """Representation of a EUI-48 address."""
+
+    @override
+    def connection(self) -> tuple[str, str] | None:
+        if self._valid_connection():
+            return (dr.CONNECTION_NETWORK_MAC, str(self))
+        return None
+
+
+@dataclass(frozen=True)
+class EUI64(HardwareAddress):
+    """Representation of a EUI-64 address."""
+
+    @override
+    def connection(self) -> tuple[str, str] | None:
+        if self._valid_connection():
+            return (dr.CONNECTION_ZIGBEE, str(self))
+        return None
+
+
 def get_clean_name(name: str | None) -> str | None:
     """Strip spaces and null char from the name."""
     if name is None:
         return name
     name = name.replace("\x00", "")
     return name.strip() or None
+
+
+def _get_connections(endpoint: MatterEndpoint) -> set[tuple[str, str]]:
+    """Get connections for device registry."""
+    network_interfaces: list[GeneralDiagnostics.Structs.NetworkInterface] = (
+        endpoint.get_attribute_value(
+            None, GeneralDiagnostics.Attributes.NetworkInterfaces
+        )
+        or []
+    )
+
+    connections: set[tuple[str, str]] = set()
+    for ni in network_interfaces:
+        if hardwareAddress := ni.hardwareAddress:
+            try:
+                if connection := HardwareAddress.from_bytes(
+                    address=hardwareAddress
+                ).connection():
+                    connections.add(connection)
+            except ValueError:
+                continue
+    return connections
 
 
 class MatterAdapter:
@@ -188,21 +279,7 @@ class MatterAdapter:
         )
         identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
 
-        network_interfaces: list[GeneralDiagnostics.Structs.NetworkInterface] = (
-            endpoint.get_attribute_value(
-                None, GeneralDiagnostics.Attributes.NetworkInterfaces
-            )
-            or []
-        )
-
-        connections = {
-            (
-                dr.CONNECTION_NETWORK_MAC,
-                convert_mac_address(network_interface.hardwareAddress),
-            )
-            for network_interface in network_interfaces
-            if network_interface.hardwareAddress
-        }
+        connections = _get_connections(endpoint)
 
         serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
