@@ -1,5 +1,6 @@
 """Offer time listening automation rules."""
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import partial
 
@@ -189,16 +190,13 @@ async def async_attach_trigger(
         if remove:
             entities[(entity_id, offset)] = remove
 
+    to_track: list[tuple[str, Callable]] = []
+
     for at_time in config[CONF_AT]:
         if isinstance(at_time, str):
             # entity
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
-            # Track state changes of entity.
-            removes.append(
-                async_track_state_change_event(
-                    hass, at_time, update_entity_trigger_event
-                )
-            )
+            to_track.append((at_time, update_entity_trigger_event))
         elif isinstance(at_time, dict) and CONF_OFFSET in at_time:
             # entity with offset
             entity_id: str = at_time.get(CONF_ENTITY_ID, "")
@@ -206,12 +204,8 @@ async def async_attach_trigger(
             update_entity_trigger(
                 entity_id, new_state=hass.states.get(entity_id), offset=offset
             )
-
-            # Track state changes of any entities.
-            removes.append(
-                async_track_state_change_event(
-                    hass, entity_id, partial(update_entity_trigger_event, offset=offset)
-                )
+            to_track.append(
+                (entity_id, partial(update_entity_trigger_event, offset=offset))
             )
         else:
             # datetime.time
@@ -224,6 +218,11 @@ async def async_attach_trigger(
                     second=at_time.second,
                 )
             )
+
+        # Track state changes of entity.
+        removes.extend(
+            (async_track_state_change_event(hass, *entry)) for entry in to_track
+        )
 
     @callback
     def remove_track_time_changes() -> None:
