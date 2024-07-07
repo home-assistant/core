@@ -29,6 +29,9 @@
       },
       "allocate_all_stat_points": {
         "name": "Allocate all stat points"
+      },
+      "revive": {
+        "name": "Revive from death"
       }
     },
     "sensor": {

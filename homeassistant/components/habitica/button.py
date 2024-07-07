@@ -37,6 +37,7 @@ class HabitipyButtonEntity(StrEnum):
     RUN_CRON = "run_cron"
     BUY_HEALTH_POTION = "buy_health_potion"
     ALLOCATE_ALL_STAT_POINTS = "allocate_all_stat_points"
+    REVIVE = "revive"
 
 
 BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
@@ -65,6 +66,12 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
             lambda data: data.user["preferences"].get("automaticAllocation") is True
             and data.user["stats"]["points"] > 0
         ),
+    ),
+    HabiticaButtonEntityDescription(
+        key=HabitipyButtonEntity.REVIVE,
+        translation_key=HabitipyButtonEntity.REVIVE,
+        press_fn=(lambda coordinator: coordinator.api["user"]["revive"].post()),
+        available_fn=(lambda data: data.user["stats"]["hp"] == 0),
     ),
 )
 
@@ -130,6 +137,8 @@ class HabiticaButton(CoordinatorEntity[HabiticaDataUpdateCoordinator], ButtonEnt
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
+        else:
+            await self.coordinator.async_refresh()
 
     @property
     def available(self) -> bool:

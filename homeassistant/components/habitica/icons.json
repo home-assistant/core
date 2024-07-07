@@ -17,6 +17,9 @@
       },
       "allocate_all_stat_points": {
         "default": "mdi:chart-box-outline"
+      },
+      "revive": {
+        "default": "mdi:grave-stone"
       }
     },
     "sensor": {
