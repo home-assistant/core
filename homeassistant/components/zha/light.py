@@ -37,6 +37,20 @@ from .helpers import (
     get_zha_data,
 )
 
+ZHA_TO_HA_COLOR_MODE = {
+    None: None,
+    ZhaColorMode.UNKNOWN: ColorMode.UNKNOWN,
+    ZhaColorMode.ONOFF: ColorMode.ONOFF,
+    ZhaColorMode.BRIGHTNESS: ColorMode.BRIGHTNESS,
+    ZhaColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+    ZhaColorMode.HS: ColorMode.HS,
+    ZhaColorMode.XY: ColorMode.XY,
+    ZhaColorMode.RGB: ColorMode.RGB,
+    ZhaColorMode.RGBW: ColorMode.RGBW,
+    ZhaColorMode.RGBWW: ColorMode.RGBWW,
+    ZhaColorMode.WHITE: ColorMode.WHITE,
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -129,9 +143,9 @@ class Light(LightEntity, ZHAEntity):
         return self.entity_data.entity.color_temp
 
     @property
-    def color_mode(self) -> ColorMode:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode."""
-        return ColorMode(self.entity_data.entity.color_mode)
+        return ZHA_TO_HA_COLOR_MODE[self.entity_data.entity.color_mode]
 
     @property
     def effect_list(self) -> list[str] | None:
@@ -177,7 +191,7 @@ class Light(LightEntity, ZHAEntity):
             xy_color=state.attributes.get("xy_color"),
             hs_color=state.attributes.get("hs_color"),
             color_mode=(
-                ZhaColorMode(state.attributes["color_mode"])
+                ZHA_TO_HA_COLOR_MODE[state.attributes["color_mode"]]
                 if state.attributes["color_mode"] is not None
                 else None
             ),
