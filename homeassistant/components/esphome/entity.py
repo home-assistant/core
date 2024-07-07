@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.esphome import establish_encrypted_connection, EncryptionError
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
-
+# Import config flow so that it's added to the registry
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     if discovery_info is None:
