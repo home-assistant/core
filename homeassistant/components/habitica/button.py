@@ -61,7 +61,7 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,
         translation_key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,
-        press_fn=(lambda coordinator: coordinator.api["user"]["allocate-now"].post()),
+        press_fn=lambda coordinator: coordinator.api["user"]["allocate-now"].post(),
         available_fn=(
             lambda data: data.user["preferences"].get("automaticAllocation") is True
             and data.user["stats"]["points"] > 0
@@ -70,8 +70,8 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.REVIVE,
         translation_key=HabitipyButtonEntity.REVIVE,
-        press_fn=(lambda coordinator: coordinator.api["user"]["revive"].post()),
-        available_fn=(lambda data: data.user["stats"]["hp"] == 0),
+        press_fn=lambda coordinator: coordinator.api["user"]["revive"].post(),
+        available_fn=lambda data: data.user["stats"]["hp"] == 0,
     ),
 )
 
@@ -143,6 +143,8 @@ class HabiticaButton(CoordinatorEntity[HabiticaDataUpdateCoordinator], ButtonEnt
     @property
     def available(self) -> bool:
         """Is entity available."""
+        if not super().available:
+            return False
         if self.entity_description.available_fn:
             return self.entity_description.available_fn(self.coordinator.data)
         return True
