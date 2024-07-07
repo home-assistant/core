@@ -1,4 +1,4 @@
-"""Test the Scrape config flow."""
+"""Test the History stats config flow."""
 
 from __future__ import annotations
 

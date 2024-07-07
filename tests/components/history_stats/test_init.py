@@ -1,4 +1,4 @@
-"""Test Statistics component setup process."""
+"""Test History stats component setup process."""
 
 from __future__ import annotations
 

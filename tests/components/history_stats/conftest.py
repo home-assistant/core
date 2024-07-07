@@ -1,4 +1,4 @@
-"""Fixtures for the Statistics integration."""
+"""Fixtures for the History stats integration."""
 
 from __future__ import annotations
 
