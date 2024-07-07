@@ -95,9 +95,9 @@ class BaseHabiticaListEntity(
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete Habitica tasks."""
-        for taskId in uids:
+        for task_id in uids:
             try:
-                await self.coordinator.api.tasks[taskId].delete()
+                await self.coordinator.api.tasks[task_id].delete()
             except ClientResponseError as e:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
