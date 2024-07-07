@@ -22,11 +22,13 @@ from .const import LOGGER
 
 WEEK = timedelta(days=7)
 
+type MealieConfigEntry = ConfigEntry[MealieCoordinator]
+
 
 class MealieCoordinator(DataUpdateCoordinator[dict[MealplanEntryType, list[Mealplan]]]):
     """Class to manage fetching Mealie data."""
 
-    config_entry: ConfigEntry
+    config_entry: MealieConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
         """Initialize coordinator."""
