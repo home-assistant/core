@@ -74,7 +74,6 @@ async def test_flow_errors(
         result["flow_id"],
         {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] is DEFAULT_NAME
