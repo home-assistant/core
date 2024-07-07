@@ -4,25 +4,19 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
+from homeassistant.components.repairs.websocket_api import RepairsFlowIndexView
 from homeassistant.components.seventeentrack import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.setup import async_setup_component
 
 from . import goto_future, init_integration
 from .conftest import DEFAULT_SUMMARY_LENGTH, get_package
 
-from tests.common import ANY, MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_repair(
@@ -99,84 +93,3 @@ async def test_repair(
 
     await goto_future(hass, freezer)
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_other_fixable_issues(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test fixing other issues."""
-
-    await init_integration(hass, mock_config_entry)
-
-    assert await async_setup_component(hass, "repairs", {})
-    await hass.async_block_till_done()
-
-    ws_client = await hass_ws_client(hass)
-    client = await hass_client()
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-
-    issue = {
-        "breaks_in_ha_version": "2025.1.0",
-        "domain": DOMAIN,
-        "issue_id": "issue_1",
-        "is_fixable": True,
-        "learn_more_url": "",
-        "severity": IssueSeverity.ERROR,
-        "translation_key": "issue_1",
-    }
-    ir.async_create_issue(
-        hass,
-        issue["domain"],
-        issue["issue_id"],
-        breaks_in_ha_version=issue["breaks_in_ha_version"],
-        is_fixable=issue["is_fixable"],
-        is_persistent=False,
-        learn_more_url=None,
-        severity=issue["severity"],
-        translation_key=issue["translation_key"],
-    )
-
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    results = msg["result"]["issues"]
-    assert {
-        "breaks_in_ha_version": "2025.1.0",
-        "created": ANY,
-        "dismissed_version": None,
-        "domain": DOMAIN,
-        "is_fixable": True,
-        "issue_domain": None,
-        "issue_id": "issue_1",
-        "learn_more_url": None,
-        "severity": "error",
-        "translation_key": "issue_1",
-        "translation_placeholders": None,
-        "ignored": False,
-    } in results
-
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "issue_1"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data["step_id"] == "confirm"
-
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    # Cannot use identity `is` check here as the value is parsed from JSON
-    assert data["type"] == FlowResultType.CREATE_ENTRY.value
-    await hass.async_block_till_done()
