@@ -97,13 +97,13 @@ class ConfiguredDoorBird:
 
         schedule: list[DoorBirdScheduleEntry] = self.device.schedule()
         http_fav: dict[str, dict[str, Any]] = favorites.get("http") or {}
-        events: list[DoorbirdEvent] = []
         favorite_input_type: dict[str, str] = {
             output.param: entry.input
             for entry in schedule
             for output in entry.output
             if output.event == "http"
         }
+        events: list[DoorbirdEvent] = []
         for identifier, data in http_fav.items():
             title: str | None = data.get("title")
             if not title or not title.startswith("Home Assistant"):
