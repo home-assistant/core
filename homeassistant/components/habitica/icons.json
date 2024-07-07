@@ -65,6 +65,14 @@
           "rogue": "mdi:ninja"
         }
       }
+    },
+    "switch": {
+      "sleep": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
+      }
     }
   },
   "services": {
