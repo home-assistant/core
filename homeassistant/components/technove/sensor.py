@@ -24,9 +24,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import TechnoVEConfigEntry
 from .coordinator import TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
-from .typing import TechnoVEConfigEntry
 
 STATUS_TYPE = [s.value for s in Status if s != Status.UNKNOWN]
 

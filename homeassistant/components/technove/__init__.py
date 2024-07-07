@@ -7,9 +7,10 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import TechnoVEDataUpdateCoordinator
-from .typing import TechnoVEConfigEntry
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+
+TechnoVEConfigEntry = ConfigEntry[TechnoVEDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TechnoVEConfigEntry) -> bool:

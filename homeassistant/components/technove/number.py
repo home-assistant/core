@@ -19,11 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TechnoVEConfigEntry
 from .const import DOMAIN
 from .coordinator import TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
-from .typing import TechnoVEConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
