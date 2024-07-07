@@ -1190,6 +1190,31 @@ async def test_get_pipeline(
         "wake_word_id": None,
     }
 
+    # Get conversation agent as pipeline
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+            "pipeline_id": "conversation.home_assistant",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "conversation.home_assistant",
+        "conversation_language": "en",
+        "id": ANY,
+        "language": "en",
+        "name": "Home Assistant",
+        # It found these defaults
+        "stt_engine": "test",
+        "stt_language": "en-US",
+        "tts_engine": "test",
+        "tts_language": "en-US",
+        "tts_voice": "james_earl_jones",
+        "wake_word_entity": None,
+        "wake_word_id": None,
+    }
+
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/get",
