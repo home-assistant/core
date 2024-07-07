@@ -4,14 +4,6 @@
       "wash_cycle": {
         "name": "Cycle"
       }
-    },
-    "sensor": {
-      "power_sensor": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
-      "energy_sensor": {
-        "name": "[%key:component::sensor::entity_component::energy::name%]"
-      }
     }
   },
   "config": {
