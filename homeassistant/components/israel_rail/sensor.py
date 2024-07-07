@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Literal, get_args
+from typing import TYPE_CHECKING
 
-from homeassistant import config_entries, core
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant import core
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTime
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -19,20 +26,74 @@ from .coordinator import DataConnection, IsraelRailDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSORS = Literal["duration", "platform", "transfers", "train_number"]
+
+@dataclass(kw_only=True, frozen=True)
+class IsraelRailSensorEntityDescription(SensorEntityDescription):
+    """Describes israel rail sensor entity."""
+
+    value_fn: Callable[[DataConnection], StateType | datetime]
+
+    index: int = 0
+
+
+DEPARTURE_SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
+    *[
+        IsraelRailSensorEntityDescription(
+            key=f"departure{i or ''}",
+            translation_key=f"departure{i}",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=lambda data_connection: data_connection.departure,
+            index=i,
+        )
+        for i in range(DEPARTURES_COUNT)
+    ],
+)
+
+SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
+    IsraelRailSensorEntityDescription(
+        key="duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=lambda data_connection: data_connection.duration,
+    ),
+    IsraelRailSensorEntityDescription(
+        key="platform",
+        translation_key="platform",
+        value_fn=lambda data_connection: data_connection.platform,
+    ),
+    IsraelRailSensorEntityDescription(
+        key="transfers",
+        translation_key="transfers",
+        value_fn=lambda data_connection: data_connection.transfers,
+    ),
+    IsraelRailSensorEntityDescription(
+        key="train_number",
+        translation_key="train_number",
+        value_fn=lambda data_connection: data_connection.train_number,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: core.HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
+
+    unique_id = config_entry.unique_id
+
+    if TYPE_CHECKING:
+        assert unique_id
 
     entities = [
-        IsraelRailDepartureSensor(coordinator, i) for i in range(DEPARTURES_COUNT)
-    ] + [IsraelRailSensor(coordinator, sensor) for sensor in get_args(SENSORS)]
+        IsraelRailDepartureSensor(coordinator, description, unique_id)
+        for description in DEPARTURE_SENSORS
+    ] + [
+        IsraelRailSensor(coordinator, description, unique_id) for description in SENSORS
+    ]
+
     async_add_entities(entities)
 
 
@@ -41,26 +102,30 @@ class IsraelRailEntitySensor(
 ):
     """Define a Israel Rail sensor."""
 
+    entity_description: IsraelRailSensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _index: int = 0
-    _value_fn: Callable[[DataConnection], StateType | datetime]
 
     def __init__(
         self,
         coordinator: IsraelRailDataUpdateCoordinator,
+        entity_description: IsraelRailSensorEntityDescription,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self._value_fn(self.coordinator.data[self._index])
+        return self.entity_description.value_fn(
+            self.coordinator.data[self.entity_description.index]
+        )
 
 
 class IsraelRailDepartureSensor(IsraelRailEntitySensor):
@@ -71,18 +136,16 @@ class IsraelRailDepartureSensor(IsraelRailEntitySensor):
     def __init__(
         self,
         coordinator: IsraelRailDataUpdateCoordinator,
-        index: int,
+        entity_description: IsraelRailSensorEntityDescription,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._index = index
-        self._attr_translation_key = f"departure{index}"
-        self._value_fn = lambda data_connection: data_connection["departure"]
-        self._attr_unique_id = f"{coordinator.unique_id}_departure{index}"
-        departure_data = self.coordinator.data[self._index]
+        super().__init__(coordinator, entity_description, unique_id)
+        self._attr_unique_id = f"{unique_id}_departure{self.entity_description.index}"
+        departure_data = self.coordinator.data[self.entity_description.index]
         self._attr_extra_state_attributes = {
-            "start": departure_data["start"],
-            "destination": departure_data["destination"],
+            "start": departure_data.start,
+            "destination": departure_data.destination,
         }
 
 
@@ -92,11 +155,10 @@ class IsraelRailSensor(IsraelRailEntitySensor):
     def __init__(
         self,
         coordinator: IsraelRailDataUpdateCoordinator,
-        other: SENSORS,
+        entity_description: IsraelRailSensorEntityDescription,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._attr_translation_key = other
-        self._other = other
-        self._attr_unique_id = f"{coordinator.unique_id}_{other}"
-        self._value_fn = lambda data_connection: data_connection[other]
+        super().__init__(coordinator, entity_description, unique_id)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"

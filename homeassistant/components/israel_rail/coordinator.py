@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TypedDict
 
 from israelrailapi import TrainSchedule
 from israelrailapi.api import TrainRoute
@@ -20,7 +20,8 @@ from .const import DEFAULT_SCAN_INTERVAL, DEPARTURES_COUNT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class DataConnection(TypedDict):
+@dataclass
+class DataConnection:
     """A connection data class."""
 
     departure: datetime | None
@@ -79,7 +80,6 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         self._train_schedule = train_schedule
         self._start = start
         self._destination = destination
-        self.unique_id = f"{start} {destination}"
 
     async def _async_update_data(self) -> list[DataConnection]:
         try:
