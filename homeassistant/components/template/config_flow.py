@@ -44,9 +44,6 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
 
-    SCHEMA_NAME = {
-        vol.Required(CONF_NAME): selector.TextSelector(),
-    }
     SCHEMA_STATE = {
         vol.Required(CONF_STATE): selector.TemplateSelector(),
     }
