@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
@@ -12,8 +12,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-if TYPE_CHECKING:
-    from . import MadVRConfigEntry
+from . import MadVRConfigEntry
 from .const import DOMAIN
 from .coordinator import madVRCoordinator
 
@@ -29,7 +28,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         [
-            MadvrRemote(hass, coordinator, entry.entry_id),
+            MadvrRemote(coordinator),
         ]
     )
 
@@ -42,20 +41,18 @@ class MadvrRemote(CoordinatorEntity[madVRCoordinator], RemoteEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator: madVRCoordinator,
-        entry_id: str,
     ) -> None:
         """Initialize the remote entity."""
         super().__init__(coordinator)
         self.madvr_client = coordinator.client
-        self._attr_unique_id = cast(str, coordinator.mac)
+        self._attr_unique_id = coordinator.mac
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cast(str, coordinator.mac))},
+            identifiers={(DOMAIN, coordinator.mac)},
             name="madVR Envy",
             manufacturer="madVR",
             model="Envy",
-            connections={(CONNECTION_NETWORK_MAC, cast(str, coordinator.mac))},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
         )
 
     @property

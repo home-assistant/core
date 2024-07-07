@@ -30,8 +30,8 @@ class madVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize madvr coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN)
+        assert self.config_entry.unique_id
         self.mac = self.config_entry.unique_id
-        assert self.mac
         self.client = client
         self.client.set_update_callback(self.handle_push_data)
         _LOGGER.debug("madVRCoordinator initialized with mac: %s", self.mac)
