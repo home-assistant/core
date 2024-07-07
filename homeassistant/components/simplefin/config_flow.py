@@ -43,12 +43,6 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
                 simple_fin = SimpleFin(access_url=access_url)
                 await simple_fin.fetch_data()
 
-                user_input[CONF_ACCESS_URL] = access_url
-
-                return self.async_create_entry(
-                    title="SimpleFIN",
-                    data={CONF_ACCESS_URL: user_input[CONF_ACCESS_URL]},
-                )
             except SimpleFinInvalidAccountURLError:
                 errors["base"] = "url_error"
             except SimpleFinInvalidClaimTokenError:
@@ -59,6 +53,14 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "payment_required"
             except SimpleFinAuthError:
                 errors["base"] = "invalid_auth"
+            else:
+                # We passed validation
+                user_input[CONF_ACCESS_URL] = access_url
+
+                return self.async_create_entry(
+                    title="SimpleFIN",
+                    data={CONF_ACCESS_URL: user_input[CONF_ACCESS_URL]},
+                )
 
         return self.async_show_form(
             step_id="user",

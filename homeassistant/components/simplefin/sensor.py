@@ -79,10 +79,9 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
     def icon(self) -> str | None:
         """Return the icon of this account."""
 
-        if not (icon_fn := getattr(self.entity_description, "icon_fn", None)):
-            return None
-
-        return icon_fn(self.coordinator.data.get_account_for_id(self._account_id))
+        if self.entity_description.icon_fn is not None:
+            return self.entity_description.icon_fn(self.account_data)
+        return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
