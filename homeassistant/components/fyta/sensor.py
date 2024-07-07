@@ -15,12 +15,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfConductivity,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import FytaConfigEntry
 from .coordinator import FytaCoordinator
 from .entity import FytaPlantEntity
 
@@ -105,7 +109,8 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="salinity",
         translation_key="salinity",
-        native_unit_of_measurement="mS/cm",
+        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS,
+        device_class=SensorDeviceClass.CONDUCTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FytaSensorEntityDescription(
@@ -124,10 +129,10 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: FytaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FYTA sensors."""
-    coordinator: FytaCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: FytaCoordinator = entry.runtime_data
 
     plant_entities = [
         FytaPlantSensor(coordinator, entry, sensor, plant_id)

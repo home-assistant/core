@@ -4,6 +4,7 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
+from collections.abc import Generator
 import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
@@ -149,7 +150,7 @@ def make_stream_url_response(
 
 
 @pytest.fixture
-async def mock_create_stream(hass) -> Mock:
+async def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Fixture to mock out the create stream call."""
     assert await async_setup_component(hass, "stream", {})
     with patch(

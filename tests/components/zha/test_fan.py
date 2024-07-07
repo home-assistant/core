@@ -238,7 +238,7 @@ async def async_turn_on(hass, entity_id, percentage=None):
     """Turn fan on."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage))
         if value is not None
     }
 
@@ -256,7 +256,7 @@ async def async_set_percentage(hass, entity_id, percentage=None):
     """Set percentage for specified fan."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage))
         if value is not None
     }
 
@@ -269,7 +269,7 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     """Set preset_mode for specified fan."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PRESET_MODE, preset_mode)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_PRESET_MODE, preset_mode))
         if value is not None
     }
 

@@ -12,14 +12,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, Platform, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DelugeEntity
-from .const import CURRENT_STATUS, DATA_KEYS, DOMAIN, DOWNLOAD_SPEED, UPLOAD_SPEED
+from . import DelugeConfigEntry, DelugeEntity
+from .const import CURRENT_STATUS, DATA_KEYS, DOWNLOAD_SPEED, UPLOAD_SPEED
 from .coordinator import DelugeDataUpdateCoordinator
 
 
@@ -74,12 +73,13 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DelugeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Deluge sensor."""
     async_add_entities(
-        DelugeSensor(hass.data[DOMAIN][entry.entry_id], description)
-        for description in SENSOR_TYPES
+        DelugeSensor(entry.runtime_data, description) for description in SENSOR_TYPES
     )
 
 

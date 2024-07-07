@@ -8,7 +8,10 @@ from typing import Any
 from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
+from homeassistant.components.lock import (
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
+    LockEntity,
+)
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LATITUDE,
@@ -32,7 +35,7 @@ ATTR_CAN_INVITE = "can_invite_others"
 
 UNLOCK_MAINTAIN_TIME = 5
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 

@@ -56,23 +56,38 @@
     "config_entry_reauth": {
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"
+    },
+    "integration_not_found": {
+      "title": "Integration {domain} not found",
+      "fix_flow": {
+        "step": {
+          "remove_entries": {
+            "title": "[%key:component::homeassistant::issues::integration_not_found::title%]",
+            "description": "The integration `{domain}` could not be found. This happens when a (custom) integration was removed from Home Assistant, but there are still configurations for this `integration`. Please use the buttons below to either remove the previous configurations for `domain` or ignore this.",
+            "menu_options": {
+              "confirm": "Remove previous configurations",
+              "ignore": "Ignore"
+            }
+          }
+        }
+      }
     }
   },
   "system_health": {
     "info": {
-      "arch": "CPU Architecture",
-      "config_dir": "Configuration Directory",
+      "arch": "CPU architecture",
+      "config_dir": "Configuration directory",
       "dev": "Development",
       "docker": "Docker",
       "hassio": "Supervisor",
-      "installation_type": "Installation Type",
-      "os_name": "Operating System Family",
-      "os_version": "Operating System Version",
-      "python_version": "Python Version",
+      "installation_type": "Installation type",
+      "os_name": "Operating system family",
+      "os_version": "Operating system version",
+      "python_version": "Python version",
       "timezone": "Timezone",
       "user": "User",
       "version": "Version",
-      "virtualenv": "Virtual Environment"
+      "virtualenv": "Virtual environment"
     }
   },
   "services": {

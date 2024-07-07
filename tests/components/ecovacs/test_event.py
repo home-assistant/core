@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.events import CleanJobStatus, ReportStatsEvent
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -44,7 +43,7 @@ async def test_last_job(
     assert entity_entry == snapshot(name=f"{entity_id}-entity_entry")
     assert entity_entry.device_id
 
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
 
     assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}

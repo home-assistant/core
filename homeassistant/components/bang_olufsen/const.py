@@ -54,6 +54,7 @@ class BangOlufsenMediaType(StrEnum):
     FAVOURITE = "favourite"
     DEEZER = "deezer"
     RADIO = "radio"
+    TIDAL = "tidal"
     TTS = "provider"
     OVERLAY_TTS = "overlay_tts"
 
@@ -61,6 +62,7 @@ class BangOlufsenMediaType(StrEnum):
 class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
+    BEOCONNECT_CORE = "Beoconnect Core"
     BEOLAB_8 = "BeoLab 8"
     BEOLAB_28 = "BeoLab 28"
     BEOSOUND_2 = "Beosound 2 3rd Gen"
@@ -118,6 +120,7 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     BangOlufsenMediaType.DEEZER,
     BangOlufsenMediaType.RADIO,
     BangOlufsenMediaType.TTS,
+    BangOlufsenMediaType.TIDAL,
     BangOlufsenMediaType.OVERLAY_TTS,
     MediaType.MUSIC,
     MediaType.URL,

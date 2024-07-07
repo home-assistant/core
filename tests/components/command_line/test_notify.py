@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import subprocess
 import tempfile
 from unittest.mock import patch
@@ -78,9 +79,7 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             NOTIFY_DOMAIN, "test3", {"message": message}, blocking=True
         )
-        with open(filename, encoding="UTF-8") as handle:
-            # the echo command adds a line break
-            assert message == handle.read()
+        assert message == await hass.async_add_executor_job(Path(filename).read_text)
 
 
 @pytest.mark.parametrize(

@@ -14,6 +14,7 @@ from homeassistant.components.zha.core.helpers import (
     async_get_zha_config_value,
     get_zha_gateway,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -102,7 +103,9 @@ def send_attribute_report(hass, cluster, attrid, value):
     return send_attributes_report(hass, cluster, {attrid: value})
 
 
-async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: dict):
+async def send_attributes_report(
+    hass: HomeAssistant, cluster: zigpy.zcl.Cluster, attributes: dict
+):
     """Cause the sensor to receive an attribute report from the network.
 
     This is to simulate the normal device communication that happens when a

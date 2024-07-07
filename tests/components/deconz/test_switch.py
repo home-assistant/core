@@ -1,6 +1,8 @@
 """deCONZ switch platform tests."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+
+import pytest
 
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -9,33 +11,20 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_switches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no switch entities are created."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_power_plugs(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Test that all supported switch entities are created."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "name": "On off switch",
                 "type": "On/Off plug-in unit",
@@ -61,10 +50,15 @@ async def test_power_plugs(
                 "uniqueid": "00:00:00:00:00:00:00:04-00",
             },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+async def test_power_plugs(
+    hass: HomeAssistant,
+    config_entry_setup: ConfigEntry,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Test that all supported switch entities are created."""
     assert len(hass.states.async_all()) == 4
     assert hass.states.get("switch.on_off_switch").state == STATE_ON
     assert hass.states.get("switch.smart_plug").state == STATE_OFF
@@ -72,20 +66,18 @@ async def test_power_plugs(
     assert hass.states.get("switch.unsupported_switch") is None
 
     event_changed_light = {
-        "t": "event",
-        "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"on": False},
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.on_off_switch").state == STATE_OFF
 
     # Verify service calls
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/1/state")
 
     # Service turn on power plug
 
@@ -107,44 +99,42 @@ async def test_power_plugs(
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
     states = hass.states.async_all()
     assert len(states) == 4
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_remove_legacy_on_off_output_as_light(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that switch platform cleans up legacy light entities."""
-    unique_id = "00:00:00:00:00:00:00:00-00"
-
-    switch_light_entity = entity_registry.async_get_or_create(
-        LIGHT_DOMAIN, DECONZ_DOMAIN, unique_id
-    )
-
-    assert switch_light_entity
-
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "name": "On Off output device",
                 "type": "On/Off output",
                 "state": {"on": True, "reachable": True},
-                "uniqueid": unique_id,
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
+    ],
+)
+async def test_remove_legacy_on_off_output_as_light(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test that switch platform cleans up legacy light entities."""
+    assert entity_registry.async_get_or_create(
+        LIGHT_DOMAIN, DECONZ_DOMAIN, "00:00:00:00:00:00:00:00-00"
+    )
+
+    await config_entry_factory()
 
     assert not entity_registry.async_get("light.on_off_output_device")
     assert entity_registry.async_get("switch.on_off_output_device")

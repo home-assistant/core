@@ -5643,6 +5643,6 @@ async def test_alexa_config(
     with patch.object(test_config, "_auth", AsyncMock()):
         test_config._auth.async_invalidate_access_token = MagicMock()
         test_config.async_invalidate_access_token()
-        assert len(test_config._auth.async_invalidate_access_token.mock_calls)
+        assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")

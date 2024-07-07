@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import (
     SetAdvancedMode,
@@ -140,7 +139,7 @@ async def test_switch_entities(
     tests: list[SwitchTestCase],
 ) -> None:
     """Test switch entities."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     event_bus = device.events
 
     assert hass.states.async_entity_ids() == [test.entity_id for test in tests]
