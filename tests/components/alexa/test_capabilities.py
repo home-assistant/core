@@ -48,6 +48,41 @@ from .test_common import (
 from tests.common import async_mock_service
 
 
+@pytest.mark.parametrize(
+    (
+        "curr_activity",
+        "activity_list",
+    ),
+    [
+        ("TV", ["TV", "MUSIC", "DVD"]),
+        ("TV", ["TV"]),
+    ],
+)
+async def test_discovery_remote(
+    hass: HomeAssistant, curr_activity: str, activity_list: list[str]
+) -> None:
+    """Test discory for a remote entity."""
+    request = get_new_request("Alexa.Discovery", "Discover")
+    # setup test device
+    hass.states.async_set(
+        "remote.test",
+        "off",
+        {
+            "current_activity": curr_activity,
+            "activity_list": activity_list,
+        },
+    )
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+    assert "event" in msg
+    msg = msg["event"]
+    assert len(msg["payload"]["endpoints"]) == 1
+    endpoint = msg["payload"]["endpoints"][0]
+    assert endpoint["endpointId"] == "remote#test"
+    interfaces = {capability["interface"] for capability in endpoint["capabilities"]}
+    assert "Alexa.PowerController" in interfaces
+    assert "Alexa.ModeController" in interfaces
+
+
 @pytest.mark.parametrize("adjust", ["-5", "5", "-80"])
 async def test_api_adjust_brightness(hass: HomeAssistant, adjust: str) -> None:
     """Test api adjust brightness process."""
