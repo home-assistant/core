@@ -141,7 +141,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._title: str | None = None
 
     @property
-    def hass(self):
+    def hass(self) -> HomeAssistant:
         """Return hass."""
         return self._hass
 
