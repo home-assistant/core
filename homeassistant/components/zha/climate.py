@@ -21,13 +21,14 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
+    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -61,6 +62,26 @@ class Thermostat(ZHAEntity, ClimateEntity):
     _attr_translation_key: str = "thermostat"
     _enable_turn_on_off_backwards_compatibility = False
 
+    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
+        """Initialize the ZHA thermostat entity."""
+        super().__init__(entity_data, **kwargs)
+        self._attr_hvac_modes = [
+            HVACMode(mode) for mode in self.entity_data.entity.hvac_modes
+        ]
+        self._attr_supported_features = ClimateEntityFeature(
+            self.entity_data.entity.supported_features.value
+        )
+        self._attr_hvac_mode = (
+            None
+            if self.entity_data.entity.hvac_mode is None
+            else HVACMode(self.entity_data.entity.hvac_mode)
+        )
+        self._attr_hvac_action = (
+            None
+            if self.entity_data.entity.hvac_action is None
+            else HVACAction(self.entity_data.entity.hvac_action)
+        )
+
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -77,25 +98,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
         return self.entity_data.entity.fan_modes
 
     @property
-    def hvac_action(self) -> HVACAction | None:
-        """Return the current HVAC action."""
-        if self.entity_data.entity.hvac_action is None:
-            return None
-        return HVACAction(self.entity_data.entity.hvac_action)
-
-    @property
-    def hvac_mode(self) -> HVACMode | None:
-        """Return HVAC operation mode."""
-        if self.entity_data.entity.hvac_mode is None:
-            return None
-        return HVACMode(self.entity_data.entity.hvac_mode)
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available HVAC operation modes."""
-        return [HVACMode(mode) for mode in self.entity_data.entity.hvac_modes]
-
-    @property
     def preset_mode(self) -> str:
         """Return current preset mode."""
         return self.entity_data.entity.preset_mode
@@ -104,11 +106,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
     def preset_modes(self) -> list[str] | None:
         """Return supported preset modes."""
         return self.entity_data.entity.preset_modes
-
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        return ClimateEntityFeature(self.entity_data.entity.supported_features.value)
 
     @property
     def target_temperature(self) -> float | None:
@@ -134,6 +131,21 @@ class Thermostat(ZHAEntity, ClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.entity_data.entity.min_temp
+
+    @callback
+    def _handle_entity_events(self, event: Any) -> None:
+        """Entity state changed."""
+        self._attr_hvac_mode = (
+            None
+            if self.entity_data.entity.hvac_mode is None
+            else HVACMode(self.entity_data.entity.hvac_mode)
+        )
+        self._attr_hvac_action = (
+            None
+            if self.entity_data.entity.hvac_action is None
+            else HVACAction(self.entity_data.entity.hvac_action)
+        )
+        super()._handle_entity_events(event)
 
     @convert_zha_error_to_ha_error
     async def async_set_fan_mode(self, fan_mode: str) -> None:
