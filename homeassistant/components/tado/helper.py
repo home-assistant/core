@@ -1,7 +1,5 @@
 """Helper methods for Tado."""
 
-from homeassistant.components.climate import FAN_OFF
-
 from . import TadoConnector
 from .const import (
     CONST_OVERLAY_TADO_DEFAULT,
@@ -62,5 +60,4 @@ def generate_supported_fanmodes(tado_to_ha_mapping: dict[str, str], options: lis
     ]
     if not supported_fanmodes:
         return None
-    supported_fanmodes.append(FAN_OFF)  # Tado does not have fan mode off
     return supported_fanmodes
