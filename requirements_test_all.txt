@@ -969,7 +969,7 @@ isal==1.6.1
 ismartgate==5.0.1
 
 # homeassistant.components.abode
-jaraco.abode==5.1.2
+jaraco.abode==5.2.1
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
@@ -1580,7 +1580,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.8
+pymodbus==3.6.9
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
