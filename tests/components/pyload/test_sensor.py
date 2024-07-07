@@ -1,6 +1,6 @@
 """Tests for the pyLoad Sensors."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.fixture(autouse=True)
-async def sensor_only() -> AsyncGenerator[None, None]:
+def sensor_only() -> Generator[None]:
     """Enable only the sensor platform."""
     with patch(
         "homeassistant.components.pyload.PLATFORMS",

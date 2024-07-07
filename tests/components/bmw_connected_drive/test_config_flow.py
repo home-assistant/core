@@ -159,7 +159,7 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
             CONF_READ_ONLY: True,
         }
 
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
@@ -210,4 +210,4 @@ async def test_reauth(hass: HomeAssistant) -> None:
         assert result2["reason"] == "reauth_successful"
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 2

@@ -48,7 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import UnknownFlow
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
@@ -291,6 +291,10 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
         if err.errno == EIO:  # input/output error
             return {CONF_STREAM_SOURCE: "stream_io_error"}
+        raise
+    except HomeAssistantError as err:
+        if "Stream integration is not set up" in str(err):
+            return {CONF_STREAM_SOURCE: "stream_not_set_up"}
         raise
     return {}
 
