@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from weatherflow4py.models.rest.unified import WeatherFlowDataREST
+from weatherflow4py.models.rest.observation import Observation
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,7 +32,7 @@ class WeatherFlowCloudSensorEntityDescription(
 ):
     """Describes a weatherflow sensor."""
 
-    value_fn: Callable[[WeatherFlowDataREST], int | str | datetime | None]
+    value_fn: Callable[[Observation], int | str | datetime | None]
 
 
 WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
