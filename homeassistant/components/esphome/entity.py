@@ -25,10 +25,35 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-# Import config flow so that it's added to the registry
+from homeassistant.components.esphome import establish_encrypted_connection, EncryptionError
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    if discovery_info is None:
+        return
+
+    entry = discovery_info.get("entry")
+
+    try:
+        await establish_encrypted_connection(entry)
+    except EncryptionError as e:
+        await prompt_for_reauthentication(hass, entry)
+
+    async_add_entities([ESPHomeEntity(entry)])
+
+async def prompt_for_reauthentication(hass, entry):
+    new_encryption_key = await hass.components.input_text.async_create({
+        'name': 'Enter new encryption key',
+        'initial': '',
+    })
+
+    if new_encryption_key:
+        await update_device_encryption_key(entry, new_encryption_key)
+
+async def update_device_encryption_key(entry, new_encryption_key):
+    entry.data['encryption_key'] = new_encryption_key
 
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
