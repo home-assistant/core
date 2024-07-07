@@ -41,7 +41,6 @@ from .helpers import (
 )
 
 ZHA_TO_HA_HVAC_MODE = {
-    None: None,
     ZHAHVACMode.OFF: HVACMode.OFF,
     ZHAHVACMode.AUTO: HVACMode.AUTO,
     ZHAHVACMode.HEAT: HVACMode.HEAT,
@@ -52,7 +51,6 @@ ZHA_TO_HA_HVAC_MODE = {
 }
 
 ZHA_TO_HA_HVAC_ACTION = {
-    None: None,
     ZHAHVACAction.OFF: HVACAction.OFF,
     ZHAHVACAction.HEATING: HVACAction.HEATING,
     ZHAHVACAction.COOLING: HVACAction.COOLING,
@@ -94,7 +92,7 @@ class Thermostat(ZHAEntity, ClimateEntity):
         """Initialize the ZHA thermostat entity."""
         super().__init__(entity_data, **kwargs)
         self._attr_hvac_modes = [
-            HVACMode(mode) for mode in self.entity_data.entity.hvac_modes
+            ZHA_TO_HA_HVAC_MODE[mode] for mode in self.entity_data.entity.hvac_modes
         ]
         self._attr_hvac_mode = ZHA_TO_HA_HVAC_MODE.get(
             self.entity_data.entity.hvac_mode
