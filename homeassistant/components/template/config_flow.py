@@ -106,7 +106,7 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
         }
 
     if flow_type == "config":
-        schema = SCHEMA_NAME | schema
+        schema = {vol.Required(CONF_NAME): selector.TextSelector()} | schema
 
     schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
 
