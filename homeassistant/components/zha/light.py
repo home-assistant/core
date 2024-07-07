@@ -6,7 +6,10 @@ import functools
 import logging
 from typing import Any
 
-from zha.application.platforms.light.const import ColorMode as ZhaColorMode
+from zha.application.platforms.light.const import (
+    ColorMode as ZhaColorMode,
+    LightEntityFeature as ZhaLightEntityFeature,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -78,9 +81,17 @@ class Light(LightEntity, ZHAEntity):
             color_modes.add(ColorMode.ONOFF)
             self._attr_supported_color_modes = color_modes
 
-        self._attr_supported_features = LightEntityFeature(
-            self.entity_data.entity.supported_features
-        )
+        features = LightEntityFeature(0)
+        zha_features: ZhaLightEntityFeature = self.entity_data.entity.supported_features
+
+        if ZhaLightEntityFeature.EFFECT in zha_features:
+            features |= LightEntityFeature.EFFECT
+        if ZhaLightEntityFeature.FLASH in zha_features:
+            features |= LightEntityFeature.FLASH
+        if ZhaLightEntityFeature.TRANSITION in zha_features:
+            features |= LightEntityFeature.TRANSITION
+
+        self._attr_supported_features = features
 
     @property
     def is_on(self) -> bool:
