@@ -9,7 +9,7 @@ forward exercising the triggers.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 import datetime
 import logging
@@ -19,7 +19,6 @@ import zoneinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import automation, calendar
 from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START

@@ -218,7 +218,9 @@ class SmhiWeather(WeatherEntity):
 
             data.append(
                 {
-                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
+                    ATTR_FORECAST_TIME: forecast.valid_time.replace(
+                        tzinfo=dt_util.UTC
+                    ).isoformat(),
                     ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
                     ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min,
                     ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.total_precipitation,

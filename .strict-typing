@@ -370,6 +370,7 @@ homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.ring.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
 homeassistant.components.rpi_power.*

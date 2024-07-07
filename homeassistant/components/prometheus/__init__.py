@@ -37,7 +37,7 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
 )
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
@@ -748,7 +748,7 @@ class PrometheusMetrics:
             fan_oscillating_metric = self._metric(
                 "fan_is_oscillating",
                 prometheus_client.Gauge,
-                "Fan oscillating attribute (0/1)",
+                "Whether the fan is oscillating (0/1)",
             )
             fan_oscillating_metric.labels(**self._labels(state)).set(
                 float(fan_is_oscillating)
@@ -825,7 +825,11 @@ class PrometheusView(HomeAssistantView):
         """Handle request for Prometheus metrics."""
         _LOGGER.debug("Received Prometheus metrics request")
 
+        hass = request.app[KEY_HASS]
+        body = await hass.async_add_executor_job(
+            prometheus_client.generate_latest, prometheus_client.REGISTRY
+        )
         return web.Response(
-            body=prometheus_client.generate_latest(prometheus_client.REGISTRY),
+            body=body,
             content_type=CONTENT_TYPE_TEXT_PLAIN,
         )

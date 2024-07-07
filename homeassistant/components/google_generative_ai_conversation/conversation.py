@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import codecs
+from collections.abc import Callable
 from typing import Any, Literal
 
-from google.api_core.exceptions import GoogleAPICallError
+from google.api_core.exceptions import GoogleAPIError
 import google.generativeai as genai
 from google.generativeai import protos
 import google.generativeai.types as genai_types
@@ -89,10 +90,17 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _format_tool(tool: llm.Tool) -> dict[str, Any]:
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> dict[str, Any]:
     """Format tool specification."""
 
-    parameters = _format_schema(convert(tool.parameters))
+    if tool.parameters.schema:
+        parameters = _format_schema(
+            convert(tool.parameters, custom_serializer=custom_serializer)
+        )
+    else:
+        parameters = None
 
     return protos.Tool(
         {
@@ -193,7 +201,9 @@ class GoogleGenerativeAIConversationEntity(
                     f"Error preparing LLM API: {err}",
                 )
                 return result
-            tools = [_format_tool(tool) for tool in llm_api.tools]
+            tools = [
+                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+            ]
 
         try:
             prompt = await self._async_render_prompt(user_input, llm_api, llm_context)
@@ -268,7 +278,7 @@ class GoogleGenerativeAIConversationEntity(
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
-                GoogleAPICallError,
+                GoogleAPIError,
                 ValueError,
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
@@ -349,27 +359,22 @@ class GoogleGenerativeAIConversationEntity(
         ):
             user_name = user.name
 
-        if llm_api:
-            api_prompt = llm_api.api_prompt
-        else:
-            api_prompt = llm.async_render_no_api_prompt(self.hass)
-
-        return "\n".join(
-            (
-                template.Template(
-                    llm.BASE_PROMPT
-                    + self.entry.options.get(
-                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                    ),
-                    self.hass,
-                ).async_render(
-                    {
-                        "ha_name": self.hass.config.location_name,
-                        "user_name": user_name,
-                        "llm_context": llm_context,
-                    },
-                    parse_result=False,
-                ),
-                api_prompt,
+        parts = [
+            template.Template(
+                llm.BASE_PROMPT
+                + self.entry.options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                self.hass,
+            ).async_render(
+                {
+                    "ha_name": self.hass.config.location_name,
+                    "user_name": user_name,
+                    "llm_context": llm_context,
+                },
+                parse_result=False,
             )
-        )
+        ]
+
+        if llm_api:
+            parts.append(llm_api.api_prompt)
+
+        return "\n".join(parts)

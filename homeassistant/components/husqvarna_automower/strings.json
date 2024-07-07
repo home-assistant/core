@@ -252,7 +252,8 @@
       "work_area": {
         "name": "Work area",
         "state": {
-          "my_lawn": "My lawn"
+          "my_lawn": "My lawn",
+          "no_work_area_active": "No work area active"
         }
       }
     },

@@ -125,6 +125,11 @@
         "name": "[%key:component::lock::title%]"
       }
     },
+    "select": {
+      "mode": {
+        "name": "Mode"
+      }
+    },
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
@@ -155,6 +160,16 @@
       "power": {
         "name": "Power"
       }
+    }
+  },
+  "issues": {
+    "server_version_version_too_old": {
+      "description": "The version of the Matter Server you are currently running is too old for this version of Home Assistant. Please update the Matter Server to the latest version to fix this issue.",
+      "title": "Newer version of Matter Server needed"
+    },
+    "server_version_version_too_new": {
+      "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
+      "title": "Older version of Matter Server needed"
     }
   },
   "services": {
