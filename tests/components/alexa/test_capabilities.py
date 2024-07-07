@@ -255,21 +255,26 @@ async def test_api_select_input(
         ("MUSIC", ["TV", "MUSIC", "DVD", 1000], 0, 1),
         ("DVD", ["TV", "MUSIC", "DVD", None], 0, 2),
         ("BAD DEVICE", ["TV", "MUSIC", "DVD"], 0, None),
+        ("TV", ["TV"], 0, 0),
+        ("BAD DEVICE", [], None, None),
     ],
 )
 async def test_api_select_activity(
     hass: HomeAssistant,
     target_activity: str,
     activity_list: list[str],
-    current_activity_index: int,
+    current_activity_index: int | None,
     target_activity_index: int | None,
 ) -> None:
     """Test api set activity process."""
+    curr_activty = (
+        activity_list[current_activity_index] if current_activity_index else "None"
+    )
     hass.states.async_set(
         "remote.test",
         "off",
         {
-            "current_activity": activity_list[current_activity_index],
+            "current_activity": curr_activty,
             "activity_list": activity_list,
         },
     )
