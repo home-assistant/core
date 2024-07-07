@@ -1,17 +1,12 @@
 """Telegram client sensor entity class."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from telethon import TelegramClient
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .device import TelegramClientDevice
 from .entity import TelegramClientEntity
 
 
@@ -19,7 +14,6 @@ from .entity import TelegramClientEntity
 class TelegramClientSensorEntityDescription(SensorEntityDescription):
     """Describes Telegram client sensor entity."""
 
-    value_fn: Callable[[TelegramClient], str | int]
     data_key: str
 
 
@@ -28,35 +22,30 @@ SENSORS: tuple[TelegramClientSensorEntityDescription, ...] = (
         key="user_id",
         translation_key="user_id",
         name="User ID",
-        value_fn=lambda data: data.id,
         data_key="me",
     ),
     TelegramClientSensorEntityDescription(
         key="username",
         translation_key="username",
         name="Username",
-        value_fn=lambda data: data.username,
         data_key="me",
     ),
     TelegramClientSensorEntityDescription(
         key="last_name",
         translation_key="last_name",
         name="Last name",
-        value_fn=lambda data: data.last_name,
         data_key="me",
     ),
     TelegramClientSensorEntityDescription(
         key="first_name",
         translation_key="first_name",
         name="First name",
-        value_fn=lambda data: data.first_name,
         data_key="me",
     ),
     TelegramClientSensorEntityDescription(
         key="phone",
         translation_key="phone",
         name="Phone",
-        value_fn=lambda data: data.phone,
         data_key="me",
     ),
 )
@@ -68,9 +57,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Telegram client sensor entity."""
-    device = hass.data[DOMAIN].get(entry.entry_id)
+    coordinator = entry.runtime_data
     async_add_entities(
-        TelegramClientSensorEntity(device, entity_description)
+        TelegramClientSensorEntity(coordinator, entity_description)
         for entity_description in SENSORS
     )
 
@@ -78,20 +67,12 @@ async def async_setup_entry(
 class TelegramClientSensorEntity(TelegramClientEntity, SensorEntity):
     """Telegram client sensor entity class."""
 
-    _attr_should_poll = False
+    entity_description: TelegramClientSensorEntityDescription
 
-    def __init__(
-        self,
-        device: TelegramClientDevice,
-        entity_description: TelegramClientSensorEntityDescription,
-    ) -> None:
-        """Init."""
-        super().__init__(device, entity_description)
-        device.sensors.append(self)
-
-    def update_state(self):
-        """Update the state of the sensor based on new data."""
-        self._attr_native_value = self.entity_description.value_fn(
-            self._device.data[self.entity_description.data_key]
-        )
-        self.async_schedule_update_ha_state()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = self.coordinator.data[
+            self.entity_description.data_key
+        ][self.entity_description.key]
+        self.async_write_ha_state()

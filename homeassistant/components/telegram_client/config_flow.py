@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from pathlib import Path
 from typing import Any
 
@@ -25,29 +24,11 @@ from .const import (
     CONF_SESSION_ID,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-STEP_API_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_ID): str,
-        vol.Required(CONF_API_HASH): str,
-    }
-)
-STEP_PHONE_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PHONE): str,
-    }
-)
-STEP_OTP_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_OTP): str,
-    }
-)
-STEP_PASSWORD_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): str,
-    }
+from .schemas import (
+    STEP_API_DATA_SCHEMA,
+    STEP_OTP_DATA_SCHEMA,
+    STEP_PASSWORD_DATA_SCHEMA,
+    STEP_PHONE_DATA_SCHEMA,
 )
 
 

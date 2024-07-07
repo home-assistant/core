@@ -1,10 +1,70 @@
 """Constants for the Telegram client integration."""
 
+import logging
 from typing import Final
+
+LOGGER = logging.getLogger(__name__)
 
 CONF_API_HASH: Final = "api_hash"
 CONF_API_ID: Final = "api_id"
 CONF_OTP: Final = "otp"
 CONF_PHONE: Final = "phone"
 CONF_SESSION_ID: Final = "session_id"
+
 DOMAIN: Final = "telegram_client"
+
+
+SERVICE_SEND_MESSAGE = "send_message"
+
+ATTR_DATA = "data"
+ATTR_DEVICE_ID = "device_id"
+ATTR_MESSAGE = "message"
+ATTR_TITLE = "title"
+
+ATTR_ARGS = "args"
+ATTR_AUTHENTICATION = "authentication"
+ATTR_CALLBACK_QUERY = "callback_query"
+ATTR_CALLBACK_QUERY_ID = "callback_query_id"
+ATTR_CAPTION = "caption"
+ATTR_CHAT_ID = "chat_id"
+ATTR_CHAT_INSTANCE = "chat_instance"
+ATTR_DATE = "date"
+ATTR_DISABLE_NOTIF = "disable_notification"
+ATTR_DISABLE_WEB_PREV = "disable_web_page_preview"
+ATTR_EDITED_MSG = "edited_message"
+ATTR_FILE = "file"
+ATTR_FROM_FIRST = "from_first"
+ATTR_FROM_LAST = "from_last"
+ATTR_KEYBOARD = "keyboard"
+ATTR_RESIZE_KEYBOARD = "resize_keyboard"
+ATTR_ONE_TIME_KEYBOARD = "one_time_keyboard"
+ATTR_KEYBOARD_INLINE = "inline_keyboard"
+ATTR_MESSAGEID = "message_id"
+ATTR_MSG = "message"
+ATTR_MSGID = "id"
+ATTR_PARSER = "parse_mode"
+ATTR_PASSWORD = "password"
+ATTR_REPLY_TO_MSGID = "reply_to_message_id"
+ATTR_REPLYMARKUP = "reply_markup"
+ATTR_SHOW_ALERT = "show_alert"
+ATTR_STICKER_ID = "sticker_id"
+ATTR_TARGET_USERNAME = "target_username"
+ATTR_TARGET_ID = "target_id"
+ATTR_TEXT = "text"
+ATTR_URL = "url"
+ATTR_USER_ID = "user_id"
+ATTR_USERNAME = "username"
+ATTR_VERIFY_SSL = "verify_ssl"
+ATTR_TIMEOUT = "timeout"
+ATTR_MESSAGE_TAG = "message_tag"
+ATTR_CHANNEL_POST = "channel_post"
+ATTR_SCHEDULE = "schedule"
+ATTR_QUESTION = "question"
+ATTR_OPTIONS = "options"
+ATTR_ANSWERS = "answers"
+ATTR_OPEN_PERIOD = "open_period"
+ATTR_IS_ANONYMOUS = "is_anonymous"
+ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
+ATTR_MESSAGE_THREAD_ID = "message_thread_id"
+
+UPDATE_INTERVAL = 10

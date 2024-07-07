@@ -1,20 +1,15 @@
 """Telegram client sensor entities."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from telethon import TelegramClient
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .device import TelegramClientDevice
 from .entity import TelegramClientEntity
 
 
@@ -22,7 +17,6 @@ from .entity import TelegramClientEntity
 class TelegramClientBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Telegram client sensor entity."""
 
-    value_fn: Callable[[TelegramClient], str | int]
     data_key: str
 
 
@@ -31,14 +25,12 @@ BINARY_SENSORS: tuple[TelegramClientBinarySensorEntityDescription, ...] = (
         key="restricted",
         translation_key="restricted",
         name="Restricted",
-        value_fn=lambda data: data.restricted,
         data_key="me",
     ),
     TelegramClientBinarySensorEntityDescription(
         key="premium",
         translation_key="premium",
         name="Premium",
-        value_fn=lambda data: data.premium,
         data_key="me",
     ),
 )
@@ -50,9 +42,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Telegram client binary sensor entity."""
-    device = hass.data[DOMAIN].get(entry.entry_id)
+    coordinator = entry.runtime_data
     async_add_entities(
-        TelegramClientBinarySensorEntity(device, entity_description)
+        TelegramClientBinarySensorEntity(coordinator, entity_description)
         for entity_description in BINARY_SENSORS
     )
 
@@ -60,19 +52,12 @@ async def async_setup_entry(
 class TelegramClientBinarySensorEntity(TelegramClientEntity, BinarySensorEntity):
     """Telegram client binary_sensor entity class."""
 
-    _attr_should_poll = False
+    entity_description: TelegramClientBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        device: TelegramClientDevice,
-        entity_description: TelegramClientBinarySensorEntityDescription,
-    ) -> None:
-        """Init."""
-        super().__init__(device, entity_description)
-        device.binary_sensors.append(self)
-
-    def update_state(self):
-        """Update the state of the sensor based on new data."""
-        self._attr_is_on = self.entity_description.value_fn(
-            self._device.data[self.entity_description.data_key]
-        )
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self.coordinator.data[self.entity_description.data_key][
+            self.entity_description.key
+        ]
+        self.async_write_ha_state()
