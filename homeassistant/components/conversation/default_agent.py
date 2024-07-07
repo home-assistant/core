@@ -649,6 +649,7 @@ class DefaultAgent(ConversationEntity):
             language_variant = lang_intents.language_variant
 
         supported_langs = set(get_languages())
+        intents_changed = False
 
         if not language_variant:
             # Choose a language variant upfront and commit to it for custom

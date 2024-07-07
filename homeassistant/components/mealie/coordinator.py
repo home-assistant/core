@@ -13,10 +13,8 @@ from aiomealie import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -32,16 +30,12 @@ class MealieCoordinator(DataUpdateCoordinator[dict[MealplanEntryType, list[Mealp
 
     config_entry: MealieConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass, logger=LOGGER, name="Mealie", update_interval=timedelta(hours=1)
         )
-        self.client = MealieClient(
-            self.config_entry.data[CONF_HOST],
-            token=self.config_entry.data[CONF_API_TOKEN],
-            session=async_get_clientsession(hass),
-        )
+        self.client = client
 
     async def _async_update_data(self) -> dict[MealplanEntryType, list[Mealplan]]:
         next_week = dt_util.now() + WEEK

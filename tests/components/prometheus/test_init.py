@@ -16,6 +16,7 @@ from homeassistant.components import (
     counter,
     cover,
     device_tracker,
+    fan,
     humidifier,
     input_boolean,
     input_number,
@@ -34,6 +35,15 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+)
+from homeassistant.components.fan import (
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
 )
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.sensor import SensorDeviceClass
@@ -559,6 +569,51 @@ async def test_lock(
         'lock_state{domain="lock",'
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_fan(
+    client: ClientSessionGenerator, fan_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for fan."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'fan_state{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 1.0' in body
+    )
+
+    assert (
+        'fan_speed_percent{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 33.0' in body
+    )
+
+    assert (
+        'fan_is_oscillating{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 1.0' in body
+    )
+
+    assert (
+        'fan_direction_reversed{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 0.0' in body
+    )
+
+    assert (
+        'fan_preset_mode{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1",'
+        'mode="LO"} 1.0' in body
+    )
+
+    assert (
+        'fan_direction_reversed{domain="fan",'
+        'entity="fan.fan_2",'
+        'friendly_name="Reverse Fan"} 1.0' in body
     )
 
 
@@ -1783,6 +1838,46 @@ async def switch_fixture(
     set_state_with_entry(hass, switch_2, STATE_OFF, switch_2_attributes)
     data["switch_2"] = switch_2
     data["switch_2_attributes"] = switch_2_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="fan_entities")
+async def fan_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate fan entities."""
+    data = {}
+    fan_1 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_1",
+        suggested_object_id="fan_1",
+        original_name="Fan 1",
+    )
+    fan_1_attributes = {
+        ATTR_DIRECTION: DIRECTION_FORWARD,
+        ATTR_OSCILLATING: True,
+        ATTR_PERCENTAGE: 33,
+        ATTR_PRESET_MODE: "LO",
+        ATTR_PRESET_MODES: ["LO", "OFF", "HI"],
+    }
+    set_state_with_entry(hass, fan_1, STATE_ON, fan_1_attributes)
+    data["fan_1"] = fan_1
+    data["fan_1_attributes"] = fan_1_attributes
+
+    fan_2 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_2",
+        suggested_object_id="fan_2",
+        original_name="Reverse Fan",
+    )
+    fan_2_attributes = {ATTR_DIRECTION: DIRECTION_REVERSE}
+    set_state_with_entry(hass, fan_2, STATE_ON, fan_2_attributes)
+    data["fan_2"] = fan_2
+    data["fan_2_attributes"] = fan_2_attributes
 
     await hass.async_block_till_done()
     return data

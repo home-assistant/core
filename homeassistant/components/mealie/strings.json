@@ -3,8 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "host": "[%key:common::config_flow::data::url%]",
           "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "host": "The URL of your Mealie instance."
         }
       }
     },

@@ -58,6 +58,10 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
+def _timetoken():
+    return str(time.time_ns())[:-2]
+
+
 @patch("yalexs.manager.gateway.ApiAsync")
 @patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
