@@ -31,8 +31,11 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
 )
@@ -404,6 +407,18 @@ async def test_climate(
         'climate_target_temperature_celsius{domain="climate",'
         'entity="climate.fritzdect",'
         'friendly_name="Fritz!DECT"} 0.0' in body
+    )
+    assert (
+        'climate_preset_mode{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"} 1.0' in body
+    )
+    assert (
+        'climate_fan_mode{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="auto"} 1.0' in body
     )
 
 
@@ -1414,6 +1429,11 @@ async def climate_fixture(
         ATTR_TARGET_TEMP_LOW: 21,
         ATTR_TARGET_TEMP_HIGH: 24,
         ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
+        ATTR_HVAC_MODES: ["off", "heat", "cool", "heat_cool"],
+        ATTR_PRESET_MODE: "away",
+        ATTR_PRESET_MODES: ["away", "home", "sleep"],
+        ATTR_FAN_MODE: "auto",
+        ATTR_FAN_MODES: ["auto", "on"],
     }
     set_state_with_entry(
         hass, climate_2, climate.HVACAction.HEATING, climate_2_attributes
