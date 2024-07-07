@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import (
@@ -42,7 +42,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry is None:
-            raise ConfigEntryNotReady("Config entry not found")
+            raise ServiceValidationError("Config entry not found")
 
         tadoconnector: TadoConnector = entry.runtime_data.tadoconnector
 
