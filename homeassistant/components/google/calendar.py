@@ -8,7 +8,7 @@ from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, Attendee, DateOrDatetime, Event
+from gcal_sync.model import AccessRole, DateOrDatetime, Event, ResponseStatus
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -232,12 +232,6 @@ async def async_setup_entry(
         )
 
 
-class GoogleCalendarEvent(CalendarEvent):
-    """A Google Calendar event."""
-
-    attendees: list[Attendee] = []
-
-
 class GoogleCalendarEntity(
     CoordinatorEntity[CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator],
     CalendarEntity,
@@ -260,7 +254,7 @@ class GoogleCalendarEntity(
         super().__init__(coordinator)
         self.calendar_id = calendar_id
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
-        self._event: GoogleCalendarEvent | None = None
+        self._event: CalendarEvent | None = None
         self._attr_name = data[CONF_NAME].capitalize()
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self.entity_id = entity_id
@@ -292,17 +286,12 @@ class GoogleCalendarEntity(
 
     def event_accepted(self, event: Event) -> bool:
         """Return True if the event is accepted by self."""
-        if not event.attendees:
-            return False
-        # for attendee in event.attendees:
-        #     # TODO: figure out where to get self email
-        #     if attendee.email == self.coordinator.sync.api.email:
-        #         return attendee.response_status == ResponseStatus.ACCEPTED
-        return True
-        # return False
+        return any(
+            attendee.is_self and attendee.response_status == ResponseStatus.ACCEPTED
+            for attendee in event.attendees
+        )
 
     def _event_filter(self, event: Event) -> bool:
-        # print(event)
         """Return True if the event is visible and accepted."""
         if self._ignore_availability:
             return self.event_accepted(event)
