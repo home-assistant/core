@@ -197,7 +197,8 @@ class DisplayCategory:
     # Indicates a device that prints.
     PRINTER = "PRINTER"
 
-    # Indicates a decive that support stateless events, such as remote switches and smart buttons.
+    # Indicates a decive that support stateless events,
+    # such as remote switches and smart buttons.
     REMOTE = "REMOTE"
 
     # Indicates a network router.

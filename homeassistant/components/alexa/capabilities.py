@@ -1560,7 +1560,8 @@ class AlexaModeController(AlexaCapability):
 
         # Remote Resource
         if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
-            # Use the mode controller for a remote because the input controller only allows a preset of names as an input.
+            # Use the mode controller for a remote because the input controller
+            # only allows a preset of names as an input.
             self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
             activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
             for activity in activities:
