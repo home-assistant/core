@@ -74,9 +74,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
         super().__init__(entity_data, **kwargs)
 
         features: SirenEntityFeature = SirenEntityFeature(0)
-        zha_features: ZHASirenEntityFeature = (
-            self.entity_data.entity._attr_supported_features  # noqa: SLF001
-        )
+        zha_features: ZHASirenEntityFeature = self.entity_data.entity.supported_features
 
         if ZHASirenEntityFeature.TURN_ON in zha_features:
             features |= SirenEntityFeature.TURN_ON

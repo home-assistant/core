@@ -68,9 +68,8 @@ class ZhaCover(ZHAEntity, CoverEntity):
             )
 
         features = CoverEntityFeature(0)
-        zha_features: ZHACoverEntityFeature = (
-            self.entity_data.entity._attr_supported_features  # noqa: SLF001
-        )
+        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
+
         if ZHACoverEntityFeature.OPEN in zha_features:
             features |= CoverEntityFeature.OPEN
         if ZHACoverEntityFeature.CLOSE in zha_features:
