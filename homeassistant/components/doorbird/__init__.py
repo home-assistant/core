@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -43,12 +43,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> bool:
     """Set up DoorBird from a config entry."""
-
-    _async_import_options_from_data_if_missing(hass, entry)
-
     door_station_config = entry.data
     config_entry_id = entry.entry_id
-
     device_ip = door_station_config[CONF_HOST]
     username = door_station_config[CONF_USERNAME]
     password = door_station_config[CONF_PASSWORD]
@@ -134,18 +130,3 @@ async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> N
     door_station.update_events(entry.options[CONF_EVENTS])
     # Subscribe to doorbell or motion events
     await _async_register_events(hass, door_station)
-
-
-@callback
-def _async_import_options_from_data_if_missing(
-    hass: HomeAssistant, entry: DoorBirdConfigEntry
-) -> None:
-    options = dict(entry.options)
-    modified = False
-    for importable_option in (CONF_EVENTS,):
-        if importable_option not in entry.options and importable_option in entry.data:
-            options[importable_option] = entry.data[importable_option]
-            modified = True
-
-    if modified:
-        hass.config_entries.async_update_entry(entry, options=options)

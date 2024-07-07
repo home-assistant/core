@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import cached_property
 import logging
-from typing import Any, cast
+from typing import Any
 
 from doorbirdpy import DoorBird, DoorBirdScheduleEntry
 
@@ -55,34 +55,34 @@ class ConfiguredDoorBird:
             self._get_event_name(event) for event in self.events
         ]
 
-    @property
+    @cached_property
     def name(self) -> str | None:
         """Get custom device name."""
         return self._name
 
-    @property
+    @cached_property
     def device(self) -> DoorBird:
         """Get the configured device."""
         return self._device
 
-    @property
+    @cached_property
     def custom_url(self) -> str | None:
         """Get custom url for device."""
         return self._custom_url
 
-    @property
+    @cached_property
     def token(self) -> str:
         """Get token for device."""
         return self._token
 
     def register_events(self, hass: HomeAssistant) -> None:
         """Register events on device."""
-        # Get the URL of this server
-        hass_url = get_url(hass, prefer_external=False)
-
         # Override url if another is specified in the configuration
-        if self.custom_url is not None:
-            hass_url = self.custom_url
+        if custom_url := self.custom_url:
+            hass_url = custom_url
+        else:
+            # Get the URL of this server
+            hass_url = get_url(hass, prefer_external=False)
 
         if not self.door_station_events:
             # User may not have permission to get the favorites
@@ -98,13 +98,12 @@ class ConfiguredDoorBird:
         schedule: list[DoorBirdScheduleEntry] = self.device.schedule()
         http_fav: dict[str, dict[str, Any]] = favorites.get("http") or {}
         events: list[DoorbirdEvent] = []
-        favorite_input_type: dict[str, str] = {}
-        for entry in schedule:
-            input_type = entry.input
-            for output in entry.output:
-                if output.event == "http":
-                    favorite_input_type[output.param] = input_type
-
+        favorite_input_type: dict[str, str] = {
+            output.param: entry.input
+            for entry in schedule
+            for output in entry.output
+            if output.event == "http"
+        }
         for identifier, data in http_fav.items():
             title: str | None = data.get("title")
             if not title or not title.startswith("Home Assistant"):
@@ -157,14 +156,10 @@ class ConfiguredDoorBird:
         The favorite must exist or there will be problems.
         """
         favs = favs if favs else self.device.favorites()
-
-        if "http" not in favs:
-            return None
-
-        for fav_id in favs["http"]:
-            if favs["http"][fav_id]["value"] == url:
-                return cast(str, fav_id)
-
+        http_fav: dict[str, dict[str, Any]] = favs.get("http") or {}
+        for fav_id, data in http_fav.items():
+            if data["value"] == url:
+                return fav_id
         return None
 
     def get_event_data(self, event: str) -> dict[str, str | None]:
