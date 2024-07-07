@@ -16,19 +16,17 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
     """Class to manage fetching TechnoVE data from single endpoint."""
 
-    config_entry: ConfigEntry
-
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize global TechnoVE data updater."""
+        self.technove = TechnoVE(
+            entry.data[CONF_HOST],
+            session=async_get_clientsession(hass),
+        )
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-        )
-        self.technove = TechnoVE(
-            self.config_entry.data[CONF_HOST],
-            session=async_get_clientsession(hass),
         )
 
     async def _async_update_data(self) -> TechnoVEStation:
