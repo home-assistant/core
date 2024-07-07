@@ -408,7 +408,7 @@ async def test_assist_api_prompt(
     hass.states.async_set(
         entry1.entity_id,
         "on",
-        {"friendly_name": "Kitchen", "temperature": Decimal("0.9")},
+        {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
@@ -517,9 +517,7 @@ async def test_assist_api_prompt(
         entry1.entity_id: {
             "names": "Kitchen",
             "state": "on",
-            "attributes": {
-                "temperature": "0.9",
-            },
+            "attributes": {"temperature": "0.9", "humidity": "65"},
         },
         entry2.entity_id: {
             "areas": "Test Area, Alternative name",

@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+from pathlib import Path
 import re
 from tempfile import TemporaryDirectory
 import threading
@@ -918,6 +919,14 @@ def test_event_repr() -> None:
         str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
         == "<Event TestEvent[R]: beer=nice>"
     )
+
+
+def test_event_origin_idx() -> None:
+    """Test the EventOrigin idx."""
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+    assert ha.EventOrigin.local.idx == 0
+    assert ha.EventOrigin.remote.idx == 1
 
 
 def test_event_as_dict() -> None:
@@ -2001,8 +2010,9 @@ async def test_config_is_allowed_path() -> None:
         config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
         test_file = os.path.join(tmp_dir, "test.jpg")
-        with open(test_file, "w", encoding="utf8") as tmp_file:
-            tmp_file.write("test")
+        await asyncio.get_running_loop().run_in_executor(
+            None, Path(test_file).write_text, "test"
+        )
 
         valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
         for path in valid:

@@ -1,10 +1,10 @@
 """Test the Lovelace Cast platform."""
 
+from collections.abc import Generator
 from time import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.lovelace import cast as lovelace_cast
 from homeassistant.components.media_player import MediaClass

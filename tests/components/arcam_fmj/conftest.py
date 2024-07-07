@@ -1,11 +1,11 @@
 """Tests for the arcam_fmj component."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from arcam.fmj.client import Client
 from arcam.fmj.state import State
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj

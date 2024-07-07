@@ -53,7 +53,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5.06',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_left-entry]
@@ -110,7 +110,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '38.8964736842105',
   })
 # ---
 # name: test_sensors[sensor.energy_site_generator_power-entry]
@@ -167,7 +167,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_power-entry]
@@ -224,7 +224,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_services_power-entry]
@@ -281,7 +281,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_load_power-entry]
@@ -338,7 +338,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '6.245',
   })
 # ---
 # name: test_sensors[sensor.energy_site_percentage_charged-entry]
@@ -392,7 +392,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '95.5053740373966',
   })
 # ---
 # name: test_sensors[sensor.energy_site_solar_power-entry]
@@ -449,7 +449,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.185',
   })
 # ---
 # name: test_sensors[sensor.energy_site_total_pack_energy-entry]
@@ -506,7 +506,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '40.727',
   })
 # ---
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-entry]
@@ -554,7 +554,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_battery_level-entry]
@@ -2120,7 +2120,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_power_2-entry]
@@ -2177,7 +2177,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_state-entry]
@@ -2249,7 +2249,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_state_2-entry]
@@ -2321,7 +2321,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle-entry]

@@ -1,6 +1,7 @@
 """Test the Z-Wave JS config flow."""
 
 import asyncio
+from collections.abc import Generator
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import DEFAULT, MagicMock, call, patch
@@ -8,7 +9,6 @@ from unittest.mock import DEFAULT, MagicMock, call, patch
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
-from typing_extensions import Generator
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries

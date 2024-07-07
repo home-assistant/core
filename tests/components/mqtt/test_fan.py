@@ -1932,11 +1932,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass,
-        mqtt_mock_entry,
-        fan.DOMAIN,
-        DEFAULT_CONFIG,
-        MQTT_FAN_ATTRIBUTES_BLOCKED,
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG, MQTT_FAN_ATTRIBUTES_BLOCKED
     )
 
 
@@ -1956,11 +1952,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        fan.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1971,11 +1963,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        fan.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
