@@ -78,9 +78,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.entity_data.entity.state[
-            "state"
-        ]  # TODO are we going to use info objects / state dicts or platform entity props? pylint: disable=fixme
+        return self.entity_data.entity.is_on
 
     @convert_zha_error_to_ha_error
     async def async_turn_on(self, **kwargs: Any) -> None:
