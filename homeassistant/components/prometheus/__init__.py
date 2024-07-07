@@ -26,6 +26,15 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
 )
+from homeassistant.components.fan import (
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+)
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.components.light import ATTR_BRIGHTNESS
@@ -683,6 +692,63 @@ class PrometheusMetrics:
             pass
 
         self._handle_attributes(state)
+
+    def _handle_fan(self, state: State) -> None:
+        metric = self._metric(
+            "fan_state", prometheus_client.Gauge, "State of the fan (0/1)"
+        )
+
+        try:
+            value = self.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
+        fan_speed_percent = state.attributes.get(ATTR_PERCENTAGE)
+        if fan_speed_percent is not None:
+            fan_speed_metric = self._metric(
+                "fan_speed_percent",
+                prometheus_client.Gauge,
+                "Fan speed percent (0-100)",
+            )
+            fan_speed_metric.labels(**self._labels(state)).set(float(fan_speed_percent))
+
+        fan_is_oscillating = state.attributes.get(ATTR_OSCILLATING)
+        if fan_is_oscillating is not None:
+            fan_oscillating_metric = self._metric(
+                "fan_is_oscillating",
+                prometheus_client.Gauge,
+                "Whether the fan is oscillating (0/1)",
+            )
+            fan_oscillating_metric.labels(**self._labels(state)).set(
+                float(fan_is_oscillating)
+            )
+
+        fan_preset_mode = state.attributes.get(ATTR_PRESET_MODE)
+        available_modes = state.attributes.get(ATTR_PRESET_MODES)
+        if fan_preset_mode and available_modes:
+            fan_preset_metric = self._metric(
+                "fan_preset_mode",
+                prometheus_client.Gauge,
+                "Fan preset mode enum",
+                ["mode"],
+            )
+            for mode in available_modes:
+                fan_preset_metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == fan_preset_mode)
+                )
+
+        fan_direction = state.attributes.get(ATTR_DIRECTION)
+        if fan_direction is not None:
+            fan_direction_metric = self._metric(
+                "fan_direction_reversed",
+                prometheus_client.Gauge,
+                "Fan direction reversed (bool)",
+            )
+            if fan_direction == DIRECTION_FORWARD:
+                fan_direction_metric.labels(**self._labels(state)).set(0)
+            elif fan_direction == DIRECTION_REVERSE:
+                fan_direction_metric.labels(**self._labels(state)).set(1)
 
     def _handle_zwave(self, state: State) -> None:
         self._battery(state)
