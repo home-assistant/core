@@ -146,7 +146,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         return self._hass
 
     @hass.setter
-    def hass(self, hass: HomeAssistant):
+    def hass(self, hass: HomeAssistant) -> None:
         """Set hass."""
         self._hass = hass
         self._radio_mgr.hass = hass
