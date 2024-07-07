@@ -49,13 +49,13 @@ class ZhaNumber(ZHAEntity, RestoreNumber):
     @property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the number entity."""
-        if (name := self.entity_data.entity.name) is None:
+        if (description := self.entity_data.entity.description) is None:
             return super().name
 
         # The name of this entity is reported by the device itself.
         # For backwards compatibility, we keep the same format as before. This
         # should probably be changed in the future to omit the prefix.
-        return f"{super().name} {name}"
+        return f"{super().name} {description}"
 
     @property
     def native_value(self) -> float | None:

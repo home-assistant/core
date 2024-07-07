@@ -24,7 +24,7 @@
   "requirements": [
     "universal-silabs-flasher==0.0.20",
     "pyserial-asyncio-fast==0.11",
-    "zha==0.0.17"
+    "zha==0.0.18"
   ],
   "usb": [
     {
