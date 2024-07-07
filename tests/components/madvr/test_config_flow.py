@@ -76,7 +76,7 @@ async def test_flow_errors(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] is DEFAULT_NAME
+    assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: MOCK_CONFIG[CONF_HOST],
         CONF_PORT: MOCK_CONFIG[CONF_PORT],
