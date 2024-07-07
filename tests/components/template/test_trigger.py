@@ -269,6 +269,26 @@ async def test_if_fires_on_change_bool(
             },
             [(0, "hello", False)],
         ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": '{{ states("test.entity") }}',
+                        "render": True,
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (1, "world", False),
+                (2, "home", False),
+                (3, "work", False),
+                (4, "not_home", False),
+                (4, "not_home", False),
+                (5, "home", False),
+            ],
+        ),
     ],
 )
 async def test_general(
@@ -854,3 +874,57 @@ async def test_if_fires_on_time_change(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(
+    ("config", "change", "value"),
+    [
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": '{{ states("test.entity") }}',
+                        "render": True,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"value": "{{ trigger.value }}"},
+                    },
+                }
+            },
+            {"new_state": "world"},
+            "world",
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": '{{ state_attr("test.entity", "value") }}',
+                        "render": True,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"value": "{{ trigger.value }}"},
+                    },
+                }
+            },
+            {"new_state": "world", "attributes": {"value": [1, 2, 3]}},
+            [1, 2, 3],
+        ),
+    ],
+)
+async def test_if_fires_on_change_with_template_advanced_render(
+    hass: HomeAssistant, change, value, start_ha, calls: list[ServiceCall]
+) -> None:
+    """Test for firing on change with template advanced."""
+    context = Context()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", context=context, **change)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+    assert calls[0].data["value"] == value
