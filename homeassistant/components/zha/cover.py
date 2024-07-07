@@ -7,6 +7,9 @@ import logging
 from typing import Any
 
 from zha.application.platforms.cover import Shade as ZhaShade
+from zha.application.platforms.cover.const import (
+    CoverEntityFeature as ZHACoverEntityFeature,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -63,9 +66,28 @@ class ZhaCover(ZHAEntity, CoverEntity):
                 self.entity_data.entity.info_object.device_class
             )
 
-        self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
+        features = CoverEntityFeature(0)
+        zha_features: ZHACoverEntityFeature = (
             self.entity_data.entity._attr_supported_features  # noqa: SLF001
         )
+        if ZHACoverEntityFeature.OPEN in zha_features:
+            features |= CoverEntityFeature.OPEN
+        if ZHACoverEntityFeature.CLOSE in zha_features:
+            features |= CoverEntityFeature.CLOSE
+        if ZHACoverEntityFeature.SET_POSITION in zha_features:
+            features |= CoverEntityFeature.SET_POSITION
+        if ZHACoverEntityFeature.STOP in zha_features:
+            features |= CoverEntityFeature.STOP
+        if ZHACoverEntityFeature.OPEN_TILT in zha_features:
+            features |= CoverEntityFeature.OPEN_TILT
+        if ZHACoverEntityFeature.CLOSE_TILT in zha_features:
+            features |= CoverEntityFeature.CLOSE_TILT
+        if ZHACoverEntityFeature.STOP_TILT in zha_features:
+            features |= CoverEntityFeature.STOP_TILT
+        if ZHACoverEntityFeature.SET_TILT_POSITION in zha_features:
+            features |= CoverEntityFeature.SET_TILT_POSITION
+
+        self._attr_supported_features = features
 
     @property
     def is_closed(self) -> bool | None:
