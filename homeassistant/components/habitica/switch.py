@@ -5,10 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
-
-from aiohttp import ClientResponseError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -17,7 +14,6 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -105,34 +101,10 @@ class HabiticaSwitch(CoordinatorEntity[HabiticaDataUpdateCoordinator], SwitchEnt
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        try:
-            await self.entity_description.turn_on_fn(self.coordinator)
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_rate_limit_exception",
-                ) from e
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="service_call_exception",
-            ) from e
-        else:
-            await self.coordinator.async_refresh()
+
+        await self.coordinator.execute(self.entity_description.turn_on_fn)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        try:
-            await self.entity_description.turn_off_fn(self.coordinator)
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_rate_limit_exception",
-                ) from e
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="service_call_exception",
-            ) from e
-        else:
-            await self.coordinator.async_refresh()
+
+        await self.coordinator.execute(self.entity_description.turn_off_fn)
