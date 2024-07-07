@@ -9,7 +9,7 @@ from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
 
@@ -324,7 +324,7 @@ class TadoConnector:
         """Send meter reading to Tado."""
         dt: str = datetime.now().strftime("%Y-%m-%d")
         if self.tado is None:
-            raise HomeAssistantError("Tado client is not initialized")
+            raise ServiceValidationError("Tado client is not initialized")
 
         try:
             return self.tado.set_eiq_meter_readings(date=dt, reading=reading)

@@ -58,7 +58,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 type TadoConfigEntry = ConfigEntry[TadoRuntimeData]
 
 
-# Needs to be at the bottom to find TadoConnector
 @dataclass
 class TadoRuntimeData:
     """Dataclass for Tado runtime data."""
