@@ -1568,7 +1568,7 @@ class AlexaModeController(AlexaCapability):
                     f"{remote.ATTR_ACTIVITY}.{activity}", [activity]
                 )
             # Remotes with a single activity completely break Alexa discovery, add a
-            # fake preset (see issue #53832).
+            # fake activity to the mode controller (see issue #53832).
             if len(activities) == 1:
                 self._resource.add_mode(
                     f"{remote.ATTR_ACTIVITY}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
