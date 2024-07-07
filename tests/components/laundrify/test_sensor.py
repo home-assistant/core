@@ -26,9 +26,6 @@ from . import setup_config_entry
 
 from tests.common import async_fire_time_changed, load_fixture
 
-# Add logging to trace the flow
-logging.basicConfig(level=logging.DEBUG)
-
 
 @pytest.fixture(name="laundrify_sensor")
 def laundrify_sensor_fixture() -> LaundrifyPowerSensor:
