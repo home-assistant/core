@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from aiomealie import About, Mealplan, MealplanResponse, UserInfo
+from aiomealie import About, Mealplan, MealplanResponse, Recipe, UserInfo
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
 
@@ -49,6 +49,9 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         )
         client.get_about.return_value = About.from_json(
             load_fixture("about.json", DOMAIN)
+        )
+        client.get_recipe.return_value = Recipe.from_json(
+            load_fixture("get_recipe.json", DOMAIN)
         )
         yield client
 
