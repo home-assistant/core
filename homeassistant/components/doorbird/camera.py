@@ -9,15 +9,13 @@ import logging
 import aiohttp
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
 from .entity import DoorBirdEntity
-from .models import DoorBirdData
+from .models import DoorBirdConfigEntry, DoorBirdData
 
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
 _LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
@@ -28,12 +26,11 @@ _TIMEOUT = 15  # seconds
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DoorBirdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DoorBird camera platform."""
-    config_entry_id = config_entry.entry_id
-    door_bird_data: DoorBirdData = hass.data[DOMAIN][config_entry_id]
+    door_bird_data = config_entry.runtime_data
     device = door_bird_data.door_station.device
 
     async_add_entities(

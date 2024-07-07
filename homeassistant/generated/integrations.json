@@ -3453,6 +3453,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "madvr": {
+      "name": "madVR Envy",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mailgun": {
       "name": "Mailgun",
       "integration_type": "hub",
@@ -3825,7 +3831,7 @@
     "mpd": {
       "name": "Music Player Daemon (MPD)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "mqtt": {
