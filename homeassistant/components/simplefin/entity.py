@@ -36,3 +36,8 @@ class SimpleFinEntity(CoordinatorEntity[SimpleFinDataUpdateCoordinator]):
             manufacturer=account.org.name,
             model=account.name,
         )
+
+    @property
+    def account_data(self) -> Account:
+        """Return the account data."""
+        return self.coordinator.data.get_account_for_id(self._account_id)

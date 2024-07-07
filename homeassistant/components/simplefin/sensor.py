@@ -71,11 +71,6 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
     entity_description: SimpleFinSensorEntityDescription
 
     @property
-    def account_data(self) -> Account:
-        """Return the account data."""
-        return self.coordinator.data.get_account_for_id(self._account_id)
-
-    @property
     def native_value(self) -> int | str | datetime | None:
         """Return the state."""
         return self.entity_description.value_fn(self.account_data)
