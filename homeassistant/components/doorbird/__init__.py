@@ -10,7 +10,6 @@ from doorbirdpy import DoorBird
 import requests
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -25,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_EVENTS, DOMAIN, PLATFORMS
 from .device import ConfiguredDoorBird
-from .models import DoorBirdData
+from .models import DoorBirdConfigEntry, DoorBirdData
 from .view import DoorBirdRequestView
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,13 +36,12 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
-    hass.data.setdefault(DOMAIN, {})
     # Provide an endpoint for the door stations to call to trigger events
     hass.http.register_view(DoorBirdRequestView)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> bool:
     """Set up DoorBird from a config entry."""
 
     _async_import_options_from_data_if_missing(hass, entry)
@@ -91,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
-    hass.data[DOMAIN][config_entry_id] = door_bird_data
+    entry.runtime_data = door_bird_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -102,12 +100,9 @@ def _init_door_bird_device(device: DoorBird) -> tuple[tuple[bool, int], dict[str
     return device.ready(), device.info()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> bool:
     """Unload a config entry."""
-    data: dict[str, DoorBirdData] = hass.data[DOMAIN]
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data.pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _async_register_events(
@@ -133,11 +128,9 @@ async def _async_register_events(
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Handle options update."""
-    config_entry_id = entry.entry_id
-    data: DoorBirdData = hass.data[DOMAIN][config_entry_id]
-    door_station = data.door_station
+    door_station = entry.runtime_data.door_station
     door_station.update_events(entry.options[CONF_EVENTS])
     # Subscribe to doorbell or motion events
     await _async_register_events(hass, door_station)
@@ -145,7 +138,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 @callback
 def _async_import_options_from_data_if_missing(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: DoorBirdConfigEntry
 ) -> None:
     options = dict(entry.options)
     modified = False
