@@ -1,6 +1,6 @@
 """Test configuration for the ZHA component."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import itertools
 import time
 from typing import Any
@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 import warnings
 
 import pytest
-from typing_extensions import Generator
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.backups

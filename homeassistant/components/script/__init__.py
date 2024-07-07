@@ -369,11 +369,11 @@ async def _async_process_config(
         config_matches: set[int] = set()
 
         for script_idx, script in enumerate(scripts):
-            for config_idx, config in enumerate(script_configs):
+            for config_idx, script_config in enumerate(script_configs):
                 if config_idx in config_matches:
                     # Only allow a script config to match at most once
                     continue
-                if script_matches_config(script, config):
+                if script_matches_config(script, script_config):
                     script_matches.add(script_idx)
                     config_matches.add(config_idx)
                     # Only allow a script to match at most once

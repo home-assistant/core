@@ -483,7 +483,7 @@ def _get_exposed_entities(
 
         if attributes := {
             attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal))
+            if isinstance(attr_value, (Enum, Decimal, int))
             else attr_value
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
