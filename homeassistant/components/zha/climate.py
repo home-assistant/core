@@ -6,6 +6,7 @@ at https://home-assistant.io/components/zha.climate/
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import functools
 from typing import Any
 
@@ -37,6 +38,7 @@ from .helpers import (
     EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
+    exclude_none_values,
     get_zha_data,
 )
 
@@ -126,6 +128,24 @@ class Thermostat(ZHAEntity, ClimateEntity):
             features |= ClimateEntityFeature.TURN_ON
 
         self._attr_supported_features = features
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        state = self.entity_data.entity.state
+
+        return exclude_none_values(
+            {
+                "occupancy": state.get("occupancy"),
+                "occupied_cooling_setpoint": state.get("occupied_cooling_setpoint"),
+                "occupied_heating_setpoint": state.get("occupied_heating_setpoint"),
+                "pi_cooling_demand": state.get("pi_cooling_demand"),
+                "pi_heating_demand": state.get("pi_heating_demand"),
+                "system_mode": state.get("system_mode"),
+                "unoccupied_cooling_setpoint": state.get("unoccupied_cooling_setpoint"),
+                "unoccupied_heating_setpoint": state.get("unoccupied_heating_setpoint"),
+            }
+        )
 
     @property
     def current_temperature(self) -> float | None:

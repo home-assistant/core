@@ -1,7 +1,9 @@
 """Tests for ZHA helpers."""
 
 import logging
+from typing import Any
 
+import pytest
 import voluptuous_serialize
 from zigpy.types.basic import uint16_t
 from zigpy.zcl.clusters import lighting
@@ -9,6 +11,7 @@ from zigpy.zcl.clusters import lighting
 from homeassistant.components.zha.helpers import (
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
+    exclude_none_values,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -156,3 +159,23 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
 
     # No flags are passed through
     assert converted_data["update_flags"] == 0
+
+
+@pytest.mark.parametrize(
+    ("obj", "expected_output"),
+    [
+        ({"a": 1, "b": 2, "c": None}, {"a": 1, "b": 2}),
+        ({"a": 1, "b": 2, "c": 0}, {"a": 1, "b": 2, "c": 0}),
+        ({"a": 1, "b": 2, "c": ""}, {"a": 1, "b": 2, "c": ""}),
+        ({"a": 1, "b": 2, "c": False}, {"a": 1, "b": 2, "c": False}),
+    ],
+)
+def test_exclude_none_values(
+    obj: dict[str, Any], expected_output: dict[str, Any]
+) -> None:
+    """Test exclude_none_values helper."""
+    result = exclude_none_values(obj)
+    assert result == expected_output
+
+    for key in expected_output:
+        assert expected_output[key] == obj[key]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import functools
 import logging
 from typing import Any
@@ -88,6 +89,15 @@ class ZhaCover(ZHAEntity, CoverEntity):
             features |= CoverEntityFeature.SET_TILT_POSITION
 
         self._attr_supported_features = features
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        state = self.entity_data.entity.state
+        return {
+            "target_lift_position": state.get("target_lift_position"),
+            "target_tilt_position": state.get("target_tilt_position"),
+        }
 
     @property
     def is_closed(self) -> bool | None:

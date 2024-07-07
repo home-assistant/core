@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import functools
 import logging
 from typing import Any
@@ -23,10 +24,48 @@ from .helpers import (
     SIGNAL_ADD_ENTITIES,
     EntityData,
     async_add_entities as zha_async_add_entities,
+    exclude_none_values,
     get_zha_data,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# For backwards compatibility and transparency, all expected extra state attributes are
+# explicitly listed below. These should have been sensors themselves but for whatever
+# reason were not created as such. They will be migrated to independent sensor entities
+# in a future release.
+_EXTRA_STATE_ATTRIBUTES: set[str] = {
+    # Battery
+    "battery_size",
+    "battery_quantity",
+    "battery_voltage",
+    # Power
+    "measurement_type",
+    "apparent_power_max",
+    "rms_current_max",
+    "rms_voltage_max",
+    "ac_frequency_max",
+    "power_factor_max",
+    # Smart Energy metering
+    "device_type",
+    "status",
+    "zcl_unit_of_measurement",
+    # Danfoss bitmaps
+    "In_progress",
+    "Valve_characteristic_found",
+    "Valve_characteristic_lost",
+    "Top_pcb_sensor_error",
+    "Side_pcb_sensor_error",
+    "Non_volatile_memory_error",
+    "Unknown_hw_error",
+    "Motor_error",
+    "Invalid_internal_communication",
+    "Invalid_clock_information",
+    "Radio_communication_error",
+    "Encoder_jammed",
+    "Low_battery",
+    "Critical_low_battery",
+}
 
 
 async def async_setup_entry(
@@ -94,3 +133,24 @@ class Sensor(ZHAEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self.entity_data.entity.native_value
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        entity = self.entity_data.entity
+        if entity.extra_state_attribute_names is None:
+            return None
+
+        if not entity.extra_state_attribute_names <= _EXTRA_STATE_ATTRIBUTES:
+            _LOGGER.warning(
+                "Unexpected extra state attributes found for sensor %s: %s",
+                entity,
+                entity.extra_state_attribute_names - _EXTRA_STATE_ATTRIBUTES,
+            )
+
+        return exclude_none_values(
+            {
+                name: entity.state.get(name)
+                for name in entity.extra_state_attribute_names
+            }
+        )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import functools
 import logging
 from typing import Any
@@ -79,18 +79,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             name=zha_device_info[ATTR_NAME],
             via_device=(DOMAIN, zha_gateway.state.node_info.ieee),
         )
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        if self.entity_data.entity.extra_state_attribute_names is not None:
-            state_data = self.entity_data.entity.state
-            extra_state_attributes = {}
-            for name in self.entity_data.entity.extra_state_attribute_names:
-                if name in state_data and state_data[name] is not None:
-                    extra_state_attributes[name] = state_data[name]
-            return extra_state_attributes
-        return None
 
     @callback
     def _handle_entity_events(self, event: Any) -> None:

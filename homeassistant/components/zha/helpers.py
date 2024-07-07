@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
 import copy
 import dataclasses
 import enum
@@ -1194,3 +1194,8 @@ def convert_zha_error_to_ha_error(
             raise HomeAssistantError(err) from err
 
     return handler
+
+
+def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a new dictionary excluding keys with None values."""
+    return {k: v for k, v in obj.items() if v is not None}

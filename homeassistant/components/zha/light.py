@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import functools
 import logging
 from typing import Any
@@ -105,6 +106,15 @@ class Light(LightEntity, ZHAEntity):
             features |= LightEntityFeature.TRANSITION
 
         self._attr_supported_features = features
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        state = self.entity_data.entity.state
+        return {
+            "off_with_transition": state.get("off_with_transition"),
+            "off_brightness": state.get("off_brightness"),
+        }
 
     @property
     def is_on(self) -> bool:
