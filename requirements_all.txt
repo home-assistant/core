@@ -294,7 +294,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.5.0
+aiomealie==0.6.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1780,7 +1780,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.11.1
+pydaikin==2.13.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2778,7 +2778,7 @@ transmission-rpc==7.0.3
 ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.0.0
+ttn_client==1.1.0
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
