@@ -43,7 +43,7 @@ class LutronFan(LutronDevice, FanEntity):
 
     _attr_name = None
     _attr_should_poll = False
-    _attr_speed_count = 3
+    _attr_speed_count = 4
     _attr_supported_features = FanEntityFeature.SET_SPEED
     _lutron_device: Output
     _prev_percentage: int | None = None
@@ -67,8 +67,8 @@ class LutronFan(LutronDevice, FanEntity):
         if percentage is not None:
             new_percentage = percentage
         elif not self._prev_percentage:
-            # Default to medium speed
-            new_percentage = 67
+            # Default to medium-high speed
+            new_percentage = 75
         else:
             new_percentage = self._prev_percentage
         self.set_percentage(new_percentage)
