@@ -9,6 +9,12 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+from zha.application.platforms.climate.const import (
+    ClimateEntityFeature as ZHAClimateEntityFeature,
+    HVACAction as ZHAHVACAction,
+    HVACMode as ZHAHVACMode,
+)
+
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -33,6 +39,28 @@ from .helpers import (
     convert_zha_error_to_ha_error,
     get_zha_data,
 )
+
+ZHA_TO_HA_HVAC_MODE = {
+    None: None,
+    ZHAHVACMode.OFF: HVACMode.OFF,
+    ZHAHVACMode.AUTO: HVACMode.AUTO,
+    ZHAHVACMode.HEAT: HVACMode.HEAT,
+    ZHAHVACMode.COOL: HVACMode.COOL,
+    ZHAHVACMode.HEAT_COOL: HVACMode.HEAT_COOL,
+    ZHAHVACMode.DRY: HVACMode.DRY,
+    ZHAHVACMode.FAN_ONLY: HVACMode.FAN_ONLY,
+}
+
+ZHA_TO_HA_HVAC_ACTION = {
+    None: None,
+    ZHAHVACAction.OFF: HVACAction.OFF,
+    ZHAHVACAction.HEATING: HVACAction.HEATING,
+    ZHAHVACAction.COOLING: HVACAction.COOLING,
+    ZHAHVACAction.DRYING: HVACAction.DRYING,
+    ZHAHVACAction.IDLE: HVACAction.IDLE,
+    ZHAHVACAction.FAN: HVACAction.FAN,
+    ZHAHVACAction.PREHEATING: HVACAction.PREHEATING,
+}
 
 
 async def async_setup_entry(
@@ -68,19 +96,38 @@ class Thermostat(ZHAEntity, ClimateEntity):
         self._attr_hvac_modes = [
             HVACMode(mode) for mode in self.entity_data.entity.hvac_modes
         ]
-        self._attr_supported_features = ClimateEntityFeature(
-            self.entity_data.entity.supported_features.value
+        self._attr_hvac_mode = ZHA_TO_HA_HVAC_MODE.get(
+            self.entity_data.entity.hvac_mode
         )
-        self._attr_hvac_mode = (
-            None
-            if self.entity_data.entity.hvac_mode is None
-            else HVACMode(self.entity_data.entity.hvac_mode)
+        self._attr_hvac_action = ZHA_TO_HA_HVAC_ACTION.get(
+            self.entity_data.entity.hvac_action
         )
-        self._attr_hvac_action = (
-            None
-            if self.entity_data.entity.hvac_action is None
-            else HVACAction(self.entity_data.entity.hvac_action)
+
+        features: ClimateEntityFeature = ClimateEntityFeature(0)
+        zha_features: ZHAClimateEntityFeature = (
+            self.entity_data.entity.supported_features
         )
+
+        if ZHAClimateEntityFeature.TARGET_TEMPERATURE in zha_features:
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        if ZHAClimateEntityFeature.TARGET_TEMPERATURE_RANGE in zha_features:
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        if ZHAClimateEntityFeature.TARGET_HUMIDITY in zha_features:
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
+        if ZHAClimateEntityFeature.PRESET_MODE in zha_features:
+            features |= ClimateEntityFeature.PRESET_MODE
+        if ZHAClimateEntityFeature.FAN_MODE in zha_features:
+            features |= ClimateEntityFeature.FAN_MODE
+        if ZHAClimateEntityFeature.SWING_MODE in zha_features:
+            features |= ClimateEntityFeature.SWING_MODE
+        if ZHAClimateEntityFeature.AUX_HEAT in zha_features:
+            features |= ClimateEntityFeature.AUX_HEAT
+        if ZHAClimateEntityFeature.TURN_OFF in zha_features:
+            features |= ClimateEntityFeature.TURN_OFF
+        if ZHAClimateEntityFeature.TURN_ON in zha_features:
+            features |= ClimateEntityFeature.TURN_ON
+
+        self._attr_supported_features = features
 
     @property
     def current_temperature(self) -> float | None:
@@ -135,15 +182,11 @@ class Thermostat(ZHAEntity, ClimateEntity):
     @callback
     def _handle_entity_events(self, event: Any) -> None:
         """Entity state changed."""
-        self._attr_hvac_mode = (
-            None
-            if self.entity_data.entity.hvac_mode is None
-            else HVACMode(self.entity_data.entity.hvac_mode)
+        self._attr_hvac_mode = self._attr_hvac_mode = ZHA_TO_HA_HVAC_MODE.get(
+            self.entity_data.entity.hvac_mode
         )
-        self._attr_hvac_action = (
-            None
-            if self.entity_data.entity.hvac_action is None
-            else HVACAction(self.entity_data.entity.hvac_action)
+        self._attr_hvac_action = ZHA_TO_HA_HVAC_ACTION.get(
+            self.entity_data.entity.hvac_action
         )
         super()._handle_entity_events(event)
 
