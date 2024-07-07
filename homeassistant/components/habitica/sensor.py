@@ -25,7 +25,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.typing import StateType
 
 from . import HabiticaConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, UNIT_TASKS
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .util import entity_used_in
@@ -45,7 +45,7 @@ class HabitipySensorEntityDescription(SensorEntityDescription):
 class HabitipyTaskSensorEntityDescription(SensorEntityDescription):
     """Habitipy Task Sensor Description."""
 
-    value_fn: Callable[[list[dict]], list]
+    value_fn: Callable[[list[dict[str, Any]]], list[dict[str, Any]]]
 
 
 class HabitipySensorEntity(StrEnum):
@@ -175,32 +175,28 @@ TASKS_MAP = {
 TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.HABITS,
-        name="Habits",
-        icon="mdi:clipboard-list-outline",
-        native_unit_of_measurement="n_of_tasks",
+        translation_key=HabitipySensorEntity.HABITS,
+        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "habit"],
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.DAILIES,
-        name="Dailys",
-        icon="mdi:clipboard-list-outline",
-        native_unit_of_measurement="n_of_tasks",
+        translation_key=HabitipySensorEntity.DAILIES,
+        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "daily"],
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.TODOS,
-        name="TODOs",
-        icon="mdi:clipboard-list-outline",
-        native_unit_of_measurement="n_of_tasks",
+        translation_key=HabitipySensorEntity.TODOS,
+        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [
             r for r in tasks if r.get("type") == "todo" and not r.get("completed")
         ],
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.REWARDS,
-        name="Rewards",
-        icon="mdi:clipboard-list-outline",
-        native_unit_of_measurement="n_of_tasks",
+        translation_key=HabitipySensorEntity.REWARDS,
+        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "reward"],
     ),
 )
