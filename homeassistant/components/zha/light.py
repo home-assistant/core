@@ -38,7 +38,6 @@ from .helpers import (
 )
 
 ZHA_TO_HA_COLOR_MODE = {
-    None: None,
     ZhaColorMode.UNKNOWN: ColorMode.UNKNOWN,
     ZhaColorMode.ONOFF: ColorMode.ONOFF,
     ZhaColorMode.BRIGHTNESS: ColorMode.BRIGHTNESS,
@@ -145,6 +144,8 @@ class Light(LightEntity, ZHAEntity):
     @property
     def color_mode(self) -> ColorMode | None:
         """Return the color mode."""
+        if self.entity_data.entity.color_mode is None:
+            return None
         return ZHA_TO_HA_COLOR_MODE[self.entity_data.entity.color_mode]
 
     @property
