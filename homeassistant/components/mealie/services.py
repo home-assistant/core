@@ -32,7 +32,7 @@ def setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mealie integration."""
 
     async def async_get_mealplan(call: ServiceCall) -> ServiceResponse:
-        """Get today's meal plan."""
+        """Get the mealplan for a specific range."""
         if not (
             entry := hass.config_entries.async_get_entry(
                 call.data[ATTR_CONFIG_ENTRY_ID]
