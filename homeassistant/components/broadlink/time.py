@@ -37,7 +37,7 @@ class BroadlinkTime(BroadlinkEntity, TimeEntity):
         """Initialize the sensor."""
         super().__init__(device)
 
-        self._attr_unique_id = f"{device.unique_id}-device-time"
+        self._attr_unique_id = f"{device.unique_id}-device_time"
 
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update the state of the entity."""
