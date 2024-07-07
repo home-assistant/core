@@ -303,16 +303,7 @@ def async_get_pipelines(hass: HomeAssistant) -> list[Pipeline]:
     """Get all pipelines."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
 
-    pipelines = list(pipeline_data.pipeline_store.data.values())
-
-    for entity_id in hass.states.async_entity_ids(conversation.DOMAIN):
-        if entity_id == conversation.HOME_ASSISTANT_AGENT:
-            continue
-
-        pipeline = _async_get_pipeline_from_conversation_entity(hass, entity_id)
-        pipelines.append(pipeline)
-
-    return pipelines
+    return list(pipeline_data.pipeline_store.data.values())
 
 
 async def async_update_pipeline(
