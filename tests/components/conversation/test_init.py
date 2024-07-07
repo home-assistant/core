@@ -341,9 +341,9 @@ async def test_http_processing_intent_entity_renamed(
     assert data["response"]["response_type"] == "error"
 
 
+@pytest.mark.usefixtures("init_components", "freezer")
 async def test_http_processing_intent_entity_exposed(
     hass: HomeAssistant,
-    init_components,
     hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
