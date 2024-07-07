@@ -7,13 +7,7 @@ import logging
 from madvr.madvr import Madvr
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .coordinator import MadVRCoordinator
@@ -38,11 +32,12 @@ async def async_handle_unload(coordinator: MadVRCoordinator) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bool:
     """Set up the integration from a config entry."""
+    assert entry.unique_id
     madVRClient = Madvr(
         host=entry.data[CONF_HOST],
         logger=_LOGGER,
         port=entry.data[CONF_PORT],
-        mac=entry.data[CONF_MAC],
+        mac=entry.unique_id,
         connect_timeout=10,
         loop=hass.loop,
     )
