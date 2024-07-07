@@ -1,7 +1,7 @@
 """MadVR conftest for shared testing setup."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -36,20 +36,10 @@ def mock_madvr_client() -> Generator[AsyncMock, None, None]:
         client.host = MOCK_CONFIG[CONF_HOST]
         client.port = MOCK_CONFIG[CONF_PORT]
         client.mac_address = MOCK_MAC
-        client.connected = MagicMock(return_value=True)
-        client.open_connection = AsyncMock()
-        client._reconnect = AsyncMock()
-        client.close_connection = AsyncMock()
-        client.async_add_tasks = AsyncMock()
-        client.async_cancel_tasks = AsyncMock()
-        client.is_device_connectable = AsyncMock(return_value=True)
-        client.send_command = AsyncMock()
-        client.stop = MagicMock()
-        client.power_on = AsyncMock()
-        client.power_off = AsyncMock()
-        client.add_command_to_queue = AsyncMock()
-        client.loop = MagicMock()
-        client.tasks = MagicMock()
+        client.connected.return_value = True
+        client.is_device_connectable.return_value = True
+        client.loop = AsyncMock()
+        client.tasks = AsyncMock()
         yield client
 
 
