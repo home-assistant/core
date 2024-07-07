@@ -76,7 +76,7 @@
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",
       "command": "python3 -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
-      "dependsOn": ["Compile English translations for a given integration"],
+      "dependsOn": ["Compile English translations"],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -134,16 +134,6 @@
       "detail": "In order to test changes to translation files, the translation strings must be compiled into Home Assistant's translation directories.",
       "type": "shell",
       "command": "python3 -m script.translations develop --all",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    },
-    {
-      "label": "Compile English translations for a given integration",
-      "detail": "In order to test changes to translation files, the translation strings must be compiled into the integrations translation directory.",
-      "type": "shell",
-      "command": "python3 -m script.translations develop --integration ${input:integrationName}",
       "group": {
         "kind": "build",
         "isDefault": true
