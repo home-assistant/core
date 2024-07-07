@@ -23,7 +23,7 @@ class SimpleFinEntity(CoordinatorEntity[SimpleFinDataUpdateCoordinator]):
         account: Account,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
         self._account_id = account.id
 
