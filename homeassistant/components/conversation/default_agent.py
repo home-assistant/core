@@ -235,14 +235,15 @@ class DefaultAgent(ConversationEntity):
         slot_lists = self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
 
-        return await self.hass.async_add_executor_job(
-            self._recognize,
-            user_input,
-            lang_intents,
-            slot_lists,
-            intent_context,
-            language,
-        )
+        async with self._lang_lock[language]:
+            return await self.hass.async_add_executor_job(
+                self._recognize,
+                user_input,
+                lang_intents,
+                slot_lists,
+                intent_context,
+                language,
+            )
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
