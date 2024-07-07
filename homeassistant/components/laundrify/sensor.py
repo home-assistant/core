@@ -35,8 +35,8 @@ async def async_setup_entry(
     for device in coordinator.data.values():
         sensor_entities.append(LaundrifyPowerSensor(device))
         sensor_entities.append(LaundrifyEnergySensor(coordinator, device))
-    if sensor_entities:
-        async_add_entities(sensor_entities)
+
+    async_add_entities(sensor_entities)
 
 
 class LaundrifyPowerSensor(SensorEntity):
@@ -80,7 +80,6 @@ class LaundrifyEnergySensor(
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL
-    _attr_last_reset = None
     _attr_suggested_display_precision = 2
 
     _attr_has_entity_name = True
@@ -104,5 +103,4 @@ class LaundrifyEnergySensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.data[self._device.id]
-        # self._device = next(m for m in self.coordinator.data if m.id == self._device.id)
         self.async_write_ha_state()
