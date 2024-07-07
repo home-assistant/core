@@ -267,7 +267,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.5.0
+aiomealie==0.6.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -969,11 +969,12 @@ isal==1.6.1
 ismartgate==5.0.1
 
 # homeassistant.components.abode
-jaraco.abode==5.1.2
+jaraco.abode==5.2.1
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
+# homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath==0.82.2
 
@@ -1278,7 +1279,7 @@ prometheus-client==0.17.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.8
+psutil==6.0.0
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
@@ -1309,6 +1310,9 @@ py-dormakaba-dkey==1.0.5
 
 # homeassistant.components.improv_ble
 py-improv-ble-client==1.0.3
+
+# homeassistant.components.madvr
+py-madvr2==1.6.27
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
@@ -1405,7 +1409,7 @@ pycoolmasternet-async==0.1.5
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.11.1
+pydaikin==2.13.1
 
 # homeassistant.components.deconz
 pydeconz==116
@@ -1579,7 +1583,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.8
+pymodbus==3.6.9
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2154,7 +2158,7 @@ transmission-rpc==7.0.3
 ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.0.0
+ttn_client==1.1.0
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
