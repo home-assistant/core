@@ -8,7 +8,6 @@ from typing import Any
 from homeassistant.components.time import TimeEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -53,12 +52,6 @@ class BroadlinkTime(BroadlinkEntity, TimeEntity):
 
     async def async_set_value(self, value: time) -> None:
         """Change the value."""
-        if self._coordinator.data is None or "dayofweek" not in self._coordinator.data:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="request_failed_device_not_connected",
-            )
-
         await self._device.async_request(
             self._device.api.set_time,
             hour=value.hour,

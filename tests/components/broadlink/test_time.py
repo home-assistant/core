@@ -1,7 +1,5 @@
 """Tests for Broadlink time."""
 
-import pytest
-
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.time import (
     ATTR_TIME,
@@ -10,7 +8,6 @@ from homeassistant.components.time import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -68,40 +65,3 @@ async def test_time(
         "second": 5,
         "day": 3,
     }
-
-
-async def test_time_fail(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test Broadlink time call failed."""
-    await hass.config.async_set_time_zone("UTC")
-
-    device = get_device("Guest room")
-    mock_setup = await device.setup_entry(hass)
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
-    )
-    entries = er.async_entries_for_device(entity_registry, device_entry.id)
-    times = [entry for entry in entries if entry.domain == Platform.TIME]
-    assert len(times) == 1
-
-    time = times[0]
-
-    mock_setup.api.get_full_status.return_value = {}
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="The device needs to be connected in order to send data to it",
-    ):
-        await hass.services.async_call(
-            TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {
-                ATTR_ENTITY_ID: time.entity_id,
-                ATTR_TIME: "03:04:05",
-            },
-            blocking=True,
-        )
