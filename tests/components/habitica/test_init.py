@@ -88,6 +88,19 @@ def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
             ]
         },
     )
+    aioclient_mock.get(
+        "https://habitica.com/api/v3/tasks/user?type=completedTodos",
+        json={
+            "data": [
+                {
+                    "text": "this is a mock todo #5",
+                    "id": 5,
+                    "type": "todo",
+                    "completed": True,
+                }
+            ]
+        },
+    )
 
     aioclient_mock.post(
         "https://habitica.com/api/v3/tasks/user",
