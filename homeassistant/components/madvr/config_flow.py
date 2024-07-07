@@ -29,7 +29,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class madVRConfigFlow(ConfigFlow, domain=DOMAIN):
+class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the integration."""
 
     VERSION = 1

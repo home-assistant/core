@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from . import MadVRConfigEntry
 
 
-class madVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Madvr coordinator for Envy (push-based API)."""
 
     config_entry: MadVRConfigEntry
@@ -34,7 +34,7 @@ class madVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.mac = self.config_entry.unique_id
         self.client = client
         self.client.set_update_callback(self.handle_push_data)
-        _LOGGER.debug("madVRCoordinator initialized with mac: %s", self.mac)
+        _LOGGER.debug("MadVRCoordinator initialized with mac: %s", self.mac)
 
     def handle_push_data(self, data: dict[str, Any]) -> None:
         """Handle new data pushed from the API."""

@@ -16,17 +16,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .coordinator import madVRCoordinator
+from .coordinator import MadVRCoordinator
 
 PLATFORMS: list[Platform] = [Platform.REMOTE]
 
 
-type MadVRConfigEntry = ConfigEntry[madVRCoordinator]
+type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_handle_unload(coordinator: madVRCoordinator) -> None:
+async def async_handle_unload(coordinator: MadVRCoordinator) -> None:
     """Handle unload."""
     _LOGGER.debug("Integration unloading")
     coordinator.client.stop()
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         connect_timeout=10,
         loop=hass.loop,
     )
-    coordinator = madVRCoordinator(hass, madVRClient)
+    coordinator = MadVRCoordinator(hass, madVRClient)
 
     entry.runtime_data = coordinator
 
@@ -69,7 +69,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bo
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        coordinator: madVRCoordinator = entry.runtime_data
+        coordinator: MadVRCoordinator = entry.runtime_data
         await async_handle_unload(coordinator=coordinator)
 
     return unload_ok

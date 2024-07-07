@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MadVRConfigEntry
 from .const import DOMAIN
-from .coordinator import madVRCoordinator
+from .coordinator import MadVRCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def async_setup_entry(
     )
 
 
-class MadvrRemote(CoordinatorEntity[madVRCoordinator], RemoteEntity):
+class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     """Remote entity for the madVR integration."""
 
     _attr_has_entity_name = True
@@ -41,7 +41,7 @@ class MadvrRemote(CoordinatorEntity[madVRCoordinator], RemoteEntity):
 
     def __init__(
         self,
-        coordinator: madVRCoordinator,
+        coordinator: MadVRCoordinator,
     ) -> None:
         """Initialize the remote entity."""
         super().__init__(coordinator)
