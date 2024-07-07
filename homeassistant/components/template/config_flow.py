@@ -39,19 +39,22 @@ from .const import DOMAIN
 from .sensor import async_create_preview_sensor
 from .template_entity import TemplateEntity
 
+_SCHEMA_STATE = {
+    vol.Required(CONF_STATE): selector.TemplateSelector(),
+}
 
-def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
+
+def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
 
-    SCHEMA_STATE = {
-        vol.Required(CONF_STATE): selector.TemplateSelector(),
-    }
+    if flow_type == "config":
+        schema = {vol.Required(CONF_NAME): selector.TextSelector()}
 
     if domain == Platform.BINARY_SENSOR:
-        schema = SCHEMA_STATE
+        schema |= _SCHEMA_STATE
         if flow_type == "config":
-            schema = schema | {
+            schema |= {
                 vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=[cls.value for cls in BinarySensorDeviceClass],
@@ -63,7 +66,7 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
             }
 
     if domain == Platform.SENSOR:
-        schema = SCHEMA_STATE | {
+        schema |= _SCHEMA_STATE | {
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=list(
@@ -102,26 +105,19 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
             ),
         }
 
-    if flow_type == "config":
-        schema = {vol.Required(CONF_NAME): selector.TextSelector()} | schema
-
     schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
 
-    return schema
+    return vol.Schema(schema)
 
 
 def options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
-    return vol.Schema(
-        generate_schema(domain, "option"),
-    )
+    return generate_schema(domain, "option")
 
 
 def config_schema(domain: str) -> vol.Schema:
     """Generate config schema."""
-    return vol.Schema(
-        generate_schema(domain, "config"),
-    )
+    return generate_schema(domain, "config")
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
