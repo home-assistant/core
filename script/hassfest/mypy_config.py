@@ -38,7 +38,6 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "follow_imports": "normal",
     "enable_incomplete_feature": ", ".join(  # noqa: FLY002
         [
-            "InlineTypedDict",
             "NewGenericSyntax",
         ]
     ),
