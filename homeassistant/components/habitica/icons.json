@@ -8,6 +8,17 @@
         "default": "mdi:calendar-month"
       }
     },
+    "button": {
+      "run_cron": {
+        "default": "mdi:weather-sunset"
+      },
+      "buy_health_potion": {
+        "default": "mdi:flask-round-bottom"
+      },
+      "allocate_all_stat_points": {
+        "default": "mdi:chart-box-outline"
+      }
+    },
     "sensor": {
       "display_name": {
         "default": "mdi:account-circle"
