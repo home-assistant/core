@@ -2243,7 +2243,7 @@ weatherflow4py==0.2.21
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.4
+webrtc-noise-gain==1.2.5
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
