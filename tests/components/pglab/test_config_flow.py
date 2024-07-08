@@ -49,11 +49,11 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["result"].data == {"discovery_prefix": "pglab/discovery"}
 
 
