@@ -5,8 +5,8 @@ from __future__ import annotations
 from http import HTTPStatus
 import logging
 
+from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
-import requests
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
@@ -52,8 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
     try:
         status = await device.ready()
         info = await device.info()
-    except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
+    except ClientResponseError as err:
+        if err.status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
@@ -102,7 +102,7 @@ async def _async_register_events(
     """Register events on device."""
     try:
         await door_station.async_register_events(hass)
-    except requests.exceptions.HTTPError:
+    except ClientResponseError:
         persistent_notification.async_create(
             hass,
             (

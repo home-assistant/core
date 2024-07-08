@@ -6,8 +6,8 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
+from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
-import requests
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -46,8 +46,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         status = await device.ready()
         info = await device.info()
-    except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
+    except ClientResponseError as err:
+        if err.code == HTTPStatus.UNAUTHORIZED:
             raise InvalidAuth from err
         raise CannotConnect from err
     except OSError as err:
@@ -67,8 +67,8 @@ async def async_verify_supported_device(hass: HomeAssistant, host: str) -> bool:
     device = DoorBird(host, "", "")
     try:
         await device.doorbell_state()
-    except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
+    except ClientResponseError as err:
+        if err.code == HTTPStatus.UNAUTHORIZED:
             return True
     except OSError:
         return False
