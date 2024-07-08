@@ -178,7 +178,7 @@ class PGLabDiscovery:
             try:
                 pglab_device = await self.__build_device(mqtt, msg)
             except PGLabDiscoveryError as err:
-                _LOGGER.info("Can't create PGLabDiscovery instance(%s) ", str(err))
+                _LOGGER.warning("Can't create PGLabDiscovery instance(%s) ", str(err))
 
                 # For some reason it's not possible to create the device with the discovery message,
                 # be sure that any previous device with the same topic is now destroyed.
@@ -215,7 +215,7 @@ class PGLabDiscovery:
                     # The device is still in the same configuration. Same name, same shutters, same relay etc.
                     return None
 
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Changed internal configuration of device(%s). Rebuilding all entities",
                     pglab_device.id,
                 )
