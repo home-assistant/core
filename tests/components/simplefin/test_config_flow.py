@@ -54,6 +54,8 @@ async def test_access_url(
         {CONF_ACCESS_URL: "http://user:password@string"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ACCESS_URL] == "http://user:password@string"
+    assert result["title"] == "SimpleFIN"
 
 
 @pytest.mark.parametrize(
