@@ -533,7 +533,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_assistant/ @home-assistant/cloud
 /homeassistant/components/google_assistant_sdk/ @tronikos
 /tests/components/google_assistant_sdk/ @tronikos
-/homeassistant/components/google_cloud/ @lufton
+/homeassistant/components/google_cloud/ @lufton @tronikos
+/tests/components/google_cloud/ @lufton @tronikos
 /homeassistant/components/google_generative_ai_conversation/ @tronikos
 /tests/components/google_generative_ai_conversation/ @tronikos
 /homeassistant/components/google_mail/ @tkdrob

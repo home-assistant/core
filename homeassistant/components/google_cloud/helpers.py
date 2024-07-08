@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import Any
 
 from google.cloud import texttospeech
+from google.oauth2.service_account import Credentials
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG
@@ -49,8 +50,8 @@ async def async_tts_voices(
 
 
 def tts_options_schema(
-    config_options: MappingProxyType[str, Any], voices: dict[str, list[str]]
-):
+    config_options: dict[str, Any], voices: dict[str, list[str]]
+) -> vol.Schema:
     """Return schema for TTS options with default values from config or constants."""
     return vol.Schema(
         {
@@ -135,7 +136,7 @@ def tts_options_schema(
     )
 
 
-def tts_platform_schema():
+def tts_platform_schema() -> vol.Schema:
     """Return schema for TTS platform."""
     return vol.Schema(
         {
@@ -149,3 +150,16 @@ def tts_platform_schema():
             ),
         }
     )
+
+
+def validate_service_account_info(info: Mapping[str, str]) -> None:
+    """Validate service account info.
+
+    Args:
+        info: The service account info in Google format.
+
+    Raises:
+        ValueError: If the info is not in the expected format.
+
+    """
+    Credentials.from_service_account_info(info)
