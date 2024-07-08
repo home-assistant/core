@@ -11,11 +11,13 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    CONF_TYPE,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -23,6 +25,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+
+from .const import (
+    CONF_EXCLUDE_VIAS,
+    CONF_STATION_FROM,
+    CONF_STATION_LIVE,
+    CONF_STATION_TO,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,11 +41,6 @@ DEFAULT_NAME = "NMBS"
 
 DEFAULT_ICON = "mdi:train"
 DEFAULT_ICON_ALERT = "mdi:alert-octagon"
-
-CONF_STATION_FROM = "station_from"
-CONF_STATION_TO = "station_to"
-CONF_STATION_LIVE = "station_live"
-CONF_EXCLUDE_VIAS = "exclude_vias"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -81,25 +85,34 @@ def setup_platform(
 ) -> None:
     """Set up the NMBS sensor with iRail API."""
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up NMBS sensor entities based on a config entry."""
     api_client = iRail()
 
-    name = config[CONF_NAME]
-    show_on_map = config[CONF_SHOW_ON_MAP]
-    station_from = config[CONF_STATION_FROM]
-    station_to = config[CONF_STATION_TO]
-    station_live = config.get(CONF_STATION_LIVE)
-    excl_vias = config[CONF_EXCLUDE_VIAS]
+    nmbs_type = config_entry.data[CONF_TYPE]
+    name = config_entry.data[CONF_NAME]
+    show_on_map = config_entry.data[CONF_SHOW_ON_MAP]
 
-    sensors: list[SensorEntity] = [
-        NMBSSensor(api_client, name, show_on_map, station_from, station_to, excl_vias)
-    ]
-
-    if station_live is not None:
-        sensors.append(
-            NMBSLiveBoard(api_client, station_live, station_from, station_to)
+    if nmbs_type == "connection":
+        station_from = config_entry.data[CONF_STATION_FROM]
+        station_to = config_entry.data[CONF_STATION_TO]
+        excl_vias = config_entry.data[CONF_EXCLUDE_VIAS]
+        async_add_entities(
+            [
+                NMBSSensor(
+                    api_client, name, show_on_map, station_from, station_to, excl_vias
+                )
+            ]
         )
 
-    add_entities(sensors, True)
+    if nmbs_type == "liveboard":
+        station_live = config_entry.data[CONF_STATION_LIVE]
+        async_add_entities([NMBSLiveBoard(api_client, station_live)])
 
 
 class NMBSLiveBoard(SensorEntity):
@@ -107,12 +120,10 @@ class NMBSLiveBoard(SensorEntity):
 
     _attr_attribution = "https://api.irail.be/"
 
-    def __init__(self, api_client, live_station, station_from, station_to):
+    def __init__(self, api_client, live_station):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
-        self._station_from = station_from
-        self._station_to = station_to
         self._attrs = {}
         self._state = None
 
@@ -124,7 +135,7 @@ class NMBSLiveBoard(SensorEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
+        unique_id = f"{self._station}"
 
         return f"nmbs_live_{unique_id}"
 
@@ -209,8 +220,17 @@ class NMBSSensor(SensorEntity):
         self._state = None
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        unique_id = f"{self._station_from}_{self._station_to}"
+
+        return f"nmbs_connection_{unique_id}"
+
+    @property
     def name(self):
         """Return the name of the sensor."""
+        if self._name == "":
+            return f"NMBS ({self._station_from} to {self._station_to})"
         return self._name
 
     @property
