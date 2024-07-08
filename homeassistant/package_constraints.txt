@@ -61,7 +61,7 @@ urllib3>=1.26.5,<2
 voluptuous-openapi==0.0.4
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-webrtc-noise-gain==1.2.5
+webrtc-noise-gain==1.2.3
 yarl==1.9.4
 zeroconf==0.132.2
 
