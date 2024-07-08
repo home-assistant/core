@@ -227,10 +227,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     websocket_api.async_unload_api(hass)
 
-    # our components don't have unload methods so no need to look at return values
-    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-    return True
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
