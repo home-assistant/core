@@ -629,37 +629,37 @@ class DefaultAgent(ConversationEntity):
         language_variant: str | None = None
         supported_langs = set(get_languages())
 
+        # Choose a language variant upfront and commit to it for custom
+        # sentences, etc.
+        all_language_variants = {lang.lower(): lang for lang in supported_langs}
+
+        # en-US, en_US, en, ...
+        for maybe_variant in _get_language_variations(language):
+            matching_variant = all_language_variants.get(maybe_variant.lower())
+            if matching_variant:
+                language_variant = matching_variant
+                break
+
         if not language_variant:
-            # Choose a language variant upfront and commit to it for custom
-            # sentences, etc.
-            all_language_variants = {lang.lower(): lang for lang in supported_langs}
+            _LOGGER.warning(
+                "Unable to find supported language variant for %s", language
+            )
+            return None
 
-            # en-US, en_US, en, ...
-            for maybe_variant in _get_language_variations(language):
-                matching_variant = all_language_variants.get(maybe_variant.lower())
-                if matching_variant:
-                    language_variant = matching_variant
-                    break
+        # Load intents for this language variant
+        lang_variant_intents = get_intents(language_variant, json_load=json_load)
 
-            if not language_variant:
-                _LOGGER.warning(
-                    "Unable to find supported language variant for %s", language
-                )
-                return None
+        if lang_variant_intents:
+            # Merge sentences into existing dictionary
+            # Overriding because source dict is empty
+            intents_dict = lang_variant_intents
 
-            # Load intents for this language variant
-            lang_variant_intents = get_intents(language_variant, json_load=json_load)
-
-            if lang_variant_intents:
-                # Merge sentences into existing dictionary
-                merge_dict(intents_dict, lang_variant_intents)
-
-                # Will need to recreate graph
-                _LOGGER.debug(
-                    "Loaded intents  language=%s (%s)",
-                    language,
-                    language_variant,
-                )
+            # Will need to recreate graph
+            _LOGGER.debug(
+                "Loaded intents  language=%s (%s)",
+                language,
+                language_variant,
+            )
 
         # Check for custom sentences in <config>/custom_sentences/<language>/
         custom_sentences_dir = Path(
@@ -671,30 +671,31 @@ class DefaultAgent(ConversationEntity):
                     encoding="utf-8"
                 ) as custom_sentences_file:
                     # Merge custom sentences
-                    if isinstance(
+                    if not isinstance(
                         custom_sentences_yaml := yaml.safe_load(custom_sentences_file),
                         dict,
                     ):
-                        # Add metadata so we can identify custom sentences in the debugger
-                        custom_intents_dict = custom_sentences_yaml.get("intents", {})
-                        for intent_dict in custom_intents_dict.values():
-                            intent_data_list = intent_dict.get("data", [])
-                            for intent_data in intent_data_list:
-                                sentence_metadata = intent_data.get("metadata", {})
-                                sentence_metadata[METADATA_CUSTOM_SENTENCE] = True
-                                sentence_metadata[METADATA_CUSTOM_FILE] = str(
-                                    custom_sentences_path.relative_to(
-                                        custom_sentences_dir.parent
-                                    )
-                                )
-                                intent_data["metadata"] = sentence_metadata
-
-                        merge_dict(intents_dict, custom_sentences_yaml)
-                    else:
                         _LOGGER.warning(
                             "Custom sentences file does not match expected format path=%s",
                             custom_sentences_file.name,
                         )
+                        continue
+
+                    # Add metadata so we can identify custom sentences in the debugger
+                    custom_intents_dict = custom_sentences_yaml.get("intents", {})
+                    for intent_dict in custom_intents_dict.values():
+                        intent_data_list = intent_dict.get("data", [])
+                        for intent_data in intent_data_list:
+                            sentence_metadata = intent_data.get("metadata", {})
+                            sentence_metadata[METADATA_CUSTOM_SENTENCE] = True
+                            sentence_metadata[METADATA_CUSTOM_FILE] = str(
+                                custom_sentences_path.relative_to(
+                                    custom_sentences_dir.parent
+                                )
+                            )
+                            intent_data["metadata"] = sentence_metadata
+
+                    merge_dict(intents_dict, custom_sentences_yaml)
 
                 # Will need to recreate graph
                 _LOGGER.debug(
