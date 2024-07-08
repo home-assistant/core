@@ -1,10 +1,10 @@
 """Tests for the Velbus config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import serial.tools.list_ports
-from typing_extensions import Generator
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components import usb

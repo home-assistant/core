@@ -15,13 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import AzureDevOpsConfigEntry
 from .coordinator import AzureDevOpsDataUpdateCoordinator
 from .entity import AzureDevOpsEntity
 
@@ -128,11 +127,11 @@ def parse_datetime(value: str | None) -> datetime | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AzureDevOpsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     initial_builds: list[Build] = coordinator.data.builds
 
     async_add_entities(
@@ -162,7 +161,12 @@ class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.item_key = item_key
-        self._attr_unique_id = f"{self.coordinator.data.organization}_{self.build.project.id}_{self.build.definition.build_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{self.coordinator.data.organization}_"
+            f"{self.build.project.id}_"
+            f"{self.build.definition.build_id}_"
+            f"{description.key}"
+        )
         self._attr_translation_placeholders = {
             "definition_name": self.build.definition.name
         }

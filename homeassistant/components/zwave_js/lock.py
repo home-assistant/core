@@ -196,15 +196,19 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     ) -> None:
         """Set the lock configuration."""
         params: dict[str, Any] = {"operation_type": operation_type}
-        for attr, val in (
-            ("lock_timeout_configuration", lock_timeout),
-            ("auto_relock_time", auto_relock_time),
-            ("hold_and_release_time", hold_and_release_time),
-            ("twist_assist", twist_assist),
-            ("block_to_block", block_to_block),
-        ):
-            if val is not None:
-                params[attr] = val
+        params.update(
+            {
+                attr: val
+                for attr, val in (
+                    ("lock_timeout_configuration", lock_timeout),
+                    ("auto_relock_time", auto_relock_time),
+                    ("hold_and_release_time", hold_and_release_time),
+                    ("twist_assist", twist_assist),
+                    ("block_to_block", block_to_block),
+                )
+                if val is not None
+            }
+        )
         configuration = DoorLockCCConfigurationSetOptions(**params)
         result = await set_configuration(
             self.info.node.endpoints[self.info.primary_value.endpoint or 0],

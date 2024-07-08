@@ -156,11 +156,15 @@ async def test_browsing(
     browse_resolution_id = f"RESs|{entry_id}|{TEST_CHANNEL}"
     browse_res_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|sub"
     browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
+    browse_res_AT_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_sub"
+    browse_res_AT_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_main"
     assert browse.domain == DOMAIN
     assert browse.title == TEST_NVR_NAME
     assert browse.identifier == browse_resolution_id
     assert browse.children[0].identifier == browse_res_sub_id
     assert browse.children[1].identifier == browse_res_main_id
+    assert browse.children[2].identifier == browse_res_AT_sub_id
+    assert browse.children[3].identifier == browse_res_AT_main_id
 
     # browse camera recording days
     mock_status = MagicMock()
@@ -168,6 +172,22 @@ async def test_browsing(
     mock_status.month = TEST_MONTH
     mock_status.days = (TEST_DAY, TEST_DAY2)
     reolink_connect.request_vod_files.return_value = ([mock_status], [])
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME} Low res."
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_sub_id}"
+    )
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME} Autotrack low res."
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_main_id}"
+    )
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME} Autotrack high res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_main_id}"
@@ -225,6 +245,7 @@ async def test_browsing_unsupported_encoding(
     reolink_connect.request_vod_files.return_value = ([mock_status], [])
     reolink_connect.time.return_value = None
     reolink_connect.get_encoding.return_value = "h265"
+    reolink_connect.supported.return_value = False
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 

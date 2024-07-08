@@ -1,8 +1,7 @@
 """Blueprints test helpers."""
 
+from collections.abc import Generator
 from unittest.mock import patch
-
-from typing_extensions import Generator
 
 
 def stub_blueprint_populate_fixture_helper() -> Generator[None]:

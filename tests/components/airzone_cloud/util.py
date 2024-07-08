@@ -6,6 +6,7 @@ from unittest.mock import patch
 from aioairzone_cloud.common import OperationMode
 from aioairzone_cloud.const import (
     API_ACTIVE,
+    API_AIR_ACTIVE,
     API_AQ_ACTIVE,
     API_AQ_MODE_CONF,
     API_AQ_MODE_VALUES,
@@ -42,6 +43,7 @@ from aioairzone_cloud.const import (
     API_OLD_ID,
     API_POWER,
     API_POWERFUL_MODE,
+    API_RAD_ACTIVE,
     API_RANGE_MAX_AIR,
     API_RANGE_MIN_AIR,
     API_RANGE_SP_MAX_ACS,
@@ -353,6 +355,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "zone1":
         return {
             API_ACTIVE: True,
+            API_AIR_ACTIVE: True,
             API_AQ_ACTIVE: False,
             API_AQ_MODE_CONF: "auto",
             API_AQ_MODE_VALUES: ["off", "on", "auto"],
@@ -370,6 +373,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
                 OperationMode.VENTILATION.value,
                 OperationMode.DRY.value,
             ],
+            API_RAD_ACTIVE: False,
             API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
             API_RANGE_SP_MAX_COOL_AIR: {API_FAH: 86, API_CELSIUS: 30},
             API_RANGE_SP_MAX_DRY_AIR: {API_FAH: 86, API_CELSIUS: 30},
@@ -398,6 +402,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "zone2":
         return {
             API_ACTIVE: False,
+            API_AIR_ACTIVE: False,
             API_AQ_ACTIVE: False,
             API_AQ_MODE_CONF: "auto",
             API_AQ_MODE_VALUES: ["off", "on", "auto"],
@@ -410,6 +415,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_HUMIDITY: 24,
             API_MODE: OperationMode.COOLING.value,
             API_MODE_AVAIL: [],
+            API_RAD_ACTIVE: False,
             API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
             API_RANGE_SP_MAX_COOL_AIR: {API_FAH: 86, API_CELSIUS: 30},
             API_RANGE_SP_MAX_DRY_AIR: {API_FAH: 86, API_CELSIUS: 30},

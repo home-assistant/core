@@ -1,5 +1,13 @@
 {
   "entity": {
+    "todo": {
+      "todos": {
+        "default": "mdi:checkbox-outline"
+      },
+      "dailys": {
+        "default": "mdi:calendar-month"
+      }
+    },
     "sensor": {
       "display_name": {
         "default": "mdi:account-circle"

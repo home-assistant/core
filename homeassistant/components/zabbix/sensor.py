@@ -12,7 +12,7 @@ from zabbix_utils import APIRequestError, ProcessingError, ZabbixAPI
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -44,7 +44,7 @@ _ZABBIX_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SENSOR_TRIGGERS): vol.Any(_ZABBIX_TRIGGER_SCHEMA, None)}
 )
 
