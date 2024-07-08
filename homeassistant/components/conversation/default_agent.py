@@ -9,7 +9,7 @@ import functools
 import logging
 from pathlib import Path
 import re
-from typing import IO, Any
+from typing import IO, Any, cast
 
 from hassil.expression import Expression, ListReference, Sequence
 from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
@@ -59,6 +59,7 @@ METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 
 DATA_DEFAULT_ENTITY = "conversation_default_entity"
+ERROR_SENTINEL = object()
 
 
 @core.callback
@@ -153,7 +154,7 @@ class DefaultAgent(ConversationEntity):
     ) -> None:
         """Initialize the default agent."""
         self.hass = hass
-        self._lang_intents: dict[str, LanguageIntents] = {}
+        self._lang_intents: dict[str, LanguageIntents | object] = {}
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = config_intents
@@ -619,7 +620,11 @@ class DefaultAgent(ConversationEntity):
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
         if lang_intents := self._lang_intents.get(language):
-            return lang_intents
+            return (
+                None
+                if lang_intents is ERROR_SENTINEL
+                else cast(LanguageIntents, lang_intents)
+            )
 
         return await self.hass.async_add_executor_job(self._load_intents, language)
 
@@ -644,6 +649,7 @@ class DefaultAgent(ConversationEntity):
             _LOGGER.warning(
                 "Unable to find supported language variant for %s", language
             )
+            self._lang_intents[language] = ERROR_SENTINEL
             return None
 
         # Load intents for this language variant
@@ -734,6 +740,7 @@ class DefaultAgent(ConversationEntity):
             )
 
         if not intents_dict:
+            self._lang_intents[language] = ERROR_SENTINEL
             return None
 
         intents = Intents.from_dict(intents_dict)

@@ -869,7 +869,7 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
     await agent.async_prepare("not-a-language")
 
     # Confirm no intents were loaded
-    assert not agent._lang_intents.get("not-a-language")
+    assert agent._lang_intents.get("not-a-language") is default_agent.ERROR_SENTINEL
 
 
 async def test_language_region(hass: HomeAssistant, init_components) -> None:
