@@ -6,7 +6,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import PyTado
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -320,7 +319,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_vertical_swing = TADO_SWING_OFF
         self._current_tado_horizontal_swing = TADO_SWING_OFF
 
-        self._tado_zone_data: PyTado.TadoZone = {}
+        self._tado_zone_data = {}  # TODO: place back in typing later on
         self._tado_geofence_data: dict[str, str] | None = None
 
         self._tado_zone_temp_offset: dict[str, Any] = {}

@@ -73,10 +73,8 @@ def add_tracked_entities(
         if device_key in tracked:
             continue
 
-        _LOGGER.debug(
-            "Adding Tado device %s with deviceID %s", device["name"], device_key
-        )
-        new_tracked.append(TadoDeviceTrackerEntity(device_key, device["name"], tado))
+        _LOGGER.debug("Adding Tado device %s with deviceID %s", device.name, device_key)
+        new_tracked.append(TadoDeviceTrackerEntity(device_key, device.name, tado))
         tracked.add(device_key)
 
     async_add_entities(new_tracked)

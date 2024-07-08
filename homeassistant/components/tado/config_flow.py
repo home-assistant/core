@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import PyTado
-from PyTado.interface import Tado
+import python_tado_async
+from python_tado_async import Tado
 import requests.exceptions
 import voluptuous as vol
 
@@ -46,10 +46,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
 
     try:
-        tado = await hass.async_add_executor_job(
-            Tado, data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
-        tado_me = await hass.async_add_executor_job(tado.getMe)
+        async with Tado(data[CONF_USERNAME], data[CONF_PASSWORD]) as tado:
+            tado_me = await tado.get_me()
+    # TODO: make it so, it catches to proper exceptions to display back to the frontend
     except KeyError as ex:
         raise InvalidAuth from ex
     except RuntimeError as ex:
@@ -59,14 +58,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             raise InvalidAuth from ex
         raise CannotConnect from ex
 
-    if "homes" not in tado_me or len(tado_me["homes"]) == 0:
+    if len(tado_me.homes) == 0 or tado_me.homes is None:
         raise NoHomes
 
-    home = tado_me["homes"][0]
-    unique_id = str(home["id"])
-    name = home["name"]
+    home = tado_me.homes[0]
+    unique_id = str(home.id)
 
-    return {"title": name, UNIQUE_ID: unique_id}
+    return {"title": home.name, UNIQUE_ID: unique_id}
 
 
 class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -138,7 +136,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except PyTado.exceptions.TadoWrongCredentialsException:
+            except python_tado_async.exceptions.TadoAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NoHomes:
                 errors["base"] = "no_homes"
