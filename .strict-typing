@@ -204,6 +204,7 @@ homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
+homeassistant.components.google_cloud.*
 homeassistant.components.google_sheets.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*

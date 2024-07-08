@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.cloud import texttospeech
@@ -49,7 +49,7 @@ async def async_get_engine(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> GoogleCloudTTSProvider | None:
     """Set up Google Cloud TTS component."""
     if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
@@ -162,7 +162,7 @@ class GoogleCloudTTSEntity(TextToSpeechEntity):
     @property
     def default_options(self) -> dict[str, Any]:
         """Return a dict including default options."""
-        return self._options_schema({})
+        return cast(dict[str, Any], self._options_schema({}))
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -223,7 +223,7 @@ class GoogleCloudTTSProvider(Provider):
     @property
     def default_options(self) -> dict[str, Any]:
         """Return a dict including default options."""
-        return self._options_schema({})
+        return cast(dict[str, Any], self._options_schema({}))
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -246,7 +246,11 @@ class GoogleCloudTTSProvider(Provider):
 
 
 async def _async_get_tts_audio(
-    message: str, language: str, options: dict[str, Any], client, options_schema
+    message: str,
+    language: str,
+    options: dict[str, Any],
+    client: texttospeech.TextToSpeechAsyncClient,
+    options_schema: vol.Schema,
 ) -> TtsAudioType:
     """Load TTS from Google Cloud."""
     try:

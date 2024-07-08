@@ -1,11 +1,11 @@
-"""Config flow for the Gogole Cloud integration."""
+"""Config flow for the Google Cloud integration."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from google.cloud import texttospeech
 import voluptuous as vol
@@ -70,11 +70,11 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self.entry: ConfigEntry | None = None
         self.abort_reason: str | None = None
 
-    def _parse_uploaded_file(self, uploaded_file_id: str) -> dict:
+    def _parse_uploaded_file(self, uploaded_file_id: str) -> dict[str, Any]:
         """Read and parse an uploaded JSON file."""
         with process_uploaded_file(self.hass, uploaded_file_id) as file_path:
             contents = file_path.read_text()
-        return json.loads(contents)
+        return cast(dict[str, Any], json.loads(contents))
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -142,11 +142,11 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import Google Cloud configuration from YAML."""
 
-        def _read_key_file():
+        def _read_key_file() -> dict[str, Any]:
             with open(
                 self.hass.config.path(import_data[CONF_KEY_FILE]), encoding="utf8"
             ) as f:
-                return json.load(f)
+                return cast(dict[str, Any], json.load(f))
 
         service_account_info = await self.hass.async_add_executor_job(_read_key_file)
         try:
