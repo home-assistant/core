@@ -6,7 +6,7 @@
     },
     "step": {
       "user": {
-        "description": "Add a filter sensor",
+        "description": "Add a filter sensor. Only one filter can be used with the UI configuration.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "Entity",
