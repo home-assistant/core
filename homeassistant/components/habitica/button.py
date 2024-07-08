@@ -6,21 +6,19 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp import ClientResponseError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HabiticaConfigEntry
-from .const import DOMAIN, MANUFACTURER, NAME
+from .const import DOMAIN
 from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
+from .entity import HabiticaBase
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -90,33 +88,10 @@ async def async_setup_entry(
     )
 
 
-class HabiticaButton(CoordinatorEntity[HabiticaDataUpdateCoordinator], ButtonEntity):
+class HabiticaButton(HabiticaBase, ButtonEntity):
     """Representation of a Habitica button."""
 
-    _attr_has_entity_name = True
     entity_description: HabiticaButtonEntityDescription
-
-    def __init__(
-        self,
-        coordinator: HabiticaDataUpdateCoordinator,
-        entity_description: HabiticaButtonEntityDescription,
-    ) -> None:
-        """Initialize a Habitica button."""
-        super().__init__(coordinator)
-        if TYPE_CHECKING:
-            assert coordinator.config_entry.unique_id
-        self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_{entity_description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer=MANUFACTURER,
-            model=NAME,
-            name=coordinator.config_entry.data[CONF_NAME],
-            configuration_url=coordinator.config_entry.data[CONF_URL],
-            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
-        )
 
     async def async_press(self) -> None:
         """Handle the button press."""

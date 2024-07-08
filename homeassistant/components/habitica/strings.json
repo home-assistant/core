@@ -70,6 +70,18 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
+      },
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
+      },
+      "habits": {
+        "name": "Habits"
+      },
+      "rewards": {
+        "name": "Rewards"
       }
     },
     "switch": {
