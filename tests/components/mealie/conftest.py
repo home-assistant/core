@@ -3,7 +3,15 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from aiomealie import About, Mealplan, MealplanResponse, Recipe, UserInfo
+from aiomealie import (
+    About,
+    Mealplan,
+    MealplanResponse,
+    MutateShoppingItem,
+    ShoppingItemsResponse,
+    ShoppingListsResponse,
+    UserInfo,
+)
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
 
@@ -12,6 +20,9 @@ from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.smhi.common import AsyncMock
+
+SHOPPING_LIST_ID = "list-id-1"
+SHOPPING_ITEM_NOTE = "Shopping Item 1"
 
 
 @pytest.fixture
@@ -50,6 +61,11 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_about.return_value = About.from_json(
             load_fixture("about.json", DOMAIN)
         )
+        client.get_shopping_lists.return_value = ShoppingListsResponse.from_json(
+            load_fixture("get_shopping_lists.json", DOMAIN)
+        )
+        client.get_shopping_items.return_value = ShoppingItemsResponse.from_json(
+            load_fixture("get_shopping_items.json", DOMAIN)
         client.get_recipe.return_value = Recipe.from_json(
             load_fixture("get_recipe.json", DOMAIN)
         )
@@ -65,4 +81,22 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
+    )
+
+
+def make_shopping_item(
+    item_id: str | None = None,
+    list_id: str | None = None,
+    note: str | None = None,
+    checked: bool = False,
+    position: int | None = None,
+) -> MutateShoppingItem:
+    """Mock a Mealie Mutate Shopping Item instance."""
+    return MutateShoppingItem(
+        item_id=item_id or 1,
+        list_id=list_id or SHOPPING_LIST_ID,
+        note=note or SHOPPING_ITEM_NOTE,
+        checked=checked or False,
+        position=position or 0,
+        is_food=False,
     )

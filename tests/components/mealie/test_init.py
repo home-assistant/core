@@ -55,7 +55,7 @@ async def test_load_unload_entry(
         (MealieAuthenticationError, ConfigEntryState.SETUP_ERROR),
     ],
 )
-async def test_initialization_failure(
+async def test_mealplan_initialization_failure(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -64,6 +64,28 @@ async def test_initialization_failure(
 ) -> None:
     """Test initialization failure."""
     mock_mealie_client.get_mealplans.side_effect = exc
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is state
+
+
+@pytest.mark.parametrize(
+    ("exc", "state"),
+    [
+        (MealieConnectionError, ConfigEntryState.SETUP_RETRY),
+        (MealieAuthenticationError, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_shoppingitems_initialization_failure(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exc: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test initialization failure."""
+    mock_mealie_client.get_shopping_items.side_effect = exc
 
     await setup_integration(hass, mock_config_entry)
 
