@@ -203,7 +203,7 @@ class Light(LightEntity, ZHAEntity):
             hs_color=state.attributes.get("hs_color"),
             color_mode=(
                 ZHA_TO_HA_COLOR_MODE[state.attributes["color_mode"]]
-                if state.attributes["color_mode"] is not None
+                if state.attributes.get("color_mode") is not None
                 else None
             ),
             effect=state.attributes.get("effect"),
