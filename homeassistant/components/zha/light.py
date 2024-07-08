@@ -14,6 +14,7 @@ from zha.application.platforms.light.const import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -33,6 +34,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
+    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -52,6 +54,9 @@ ZHA_TO_HA_COLOR_MODE = {
 }
 
 HA_TO_ZHA_COLOR_MODE = {v: k for k, v in ZHA_TO_HA_COLOR_MODE.items()}
+
+OFF_BRIGHTNESS = "off_brightness"
+OFF_WITH_TRANSITION = "off_with_transition"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +83,7 @@ async def async_setup_entry(
 class Light(LightEntity, ZHAEntity):
     """Representation of a ZHA or ZLL light."""
 
-    def __init__(self, entity_data: Any) -> None:
+    def __init__(self, entity_data: EntityData) -> None:
         """Initialize the ZHA light."""
         super().__init__(entity_data)
         color_modes: set[ColorMode] = set()
@@ -197,16 +202,16 @@ class Light(LightEntity, ZHAEntity):
         """Restore entity state."""
         self.entity_data.entity.restore_external_state_attributes(
             state=(state.state == STATE_ON),
-            off_with_transition=state.attributes.get("off_with_transition"),
-            off_brightness=state.attributes.get("off_brightness"),
-            brightness=state.attributes.get("brightness"),
-            color_temp=state.attributes.get("color_temp"),
-            xy_color=state.attributes.get("xy_color"),
-            hs_color=state.attributes.get("hs_color"),
+            off_with_transition=state.attributes.get(OFF_WITH_TRANSITION),
+            off_brightness=state.attributes.get(OFF_BRIGHTNESS),
+            brightness=state.attributes.get(ATTR_BRIGHTNESS),
+            color_temp=state.attributes.get(ATTR_COLOR_TEMP),
+            xy_color=state.attributes.get(ATTR_XY_COLOR),
+            hs_color=state.attributes.get(ATTR_HS_COLOR),
             color_mode=(
-                HA_TO_ZHA_COLOR_MODE[ColorMode(state.attributes["color_mode"])]
-                if state.attributes.get("color_mode") is not None
+                HA_TO_ZHA_COLOR_MODE[ColorMode(state.attributes[ATTR_COLOR_MODE])]
+                if state.attributes.get(ATTR_COLOR_MODE) is not None
                 else None
             ),
-            effect=state.attributes.get("effect"),
+            effect=state.attributes.get(ATTR_EFFECT),
         )

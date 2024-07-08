@@ -88,7 +88,14 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 )
 from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_MODEL,
+    ATTR_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -110,7 +117,6 @@ from .const import (
     ATTR_LQI,
     ATTR_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
-    ATTR_MODEL,
     ATTR_NEIGHBORS,
     ATTR_NWK,
     ATTR_POWER_SOURCE,
@@ -144,6 +150,7 @@ from .const import (
     DEVICE_PAIRING_STATUS,
     DOMAIN,
     ZHA_ALARM_OPTIONS,
+    ZHA_OPTIONS,
 )
 
 if TYPE_CHECKING:
@@ -185,7 +192,23 @@ ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 SIGNAL_REMOVE_ENTITIES = "zha_remove_entities"
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 SIGNAL_ADD_ENTITIES = "zha_add_entities"
-ZHA_OPTIONS = "zha_options"
+ENTITIES = "entities"
+
+RX_ON_WHEN_IDLE = "rx_on_when_idle"
+RELATIONSHIP = "relationship"
+EXTENDED_PAN_ID = "extended_pan_id"
+PERMIT_JOINING = "permit_joining"
+DEPTH = "depth"
+
+DEST_NWK = "dest_nwk"
+ROUTE_STATUS = "route_status"
+MEMORY_CONSTRAINED = "memory_constrained"
+MANY_TO_ONE = "many_to_one"
+ROUTE_RECORD_REQUIRED = "route_record_required"
+NEXT_HOP = "next_hop"
+
+USER_GIVEN_NAME = "user_given_name"
+DEVICE_REG_ID = "device_reg_id"
 
 
 class GroupEntityReference(NamedTuple):
@@ -315,9 +338,9 @@ class ZHADeviceProxy(EventBase):
         device_info: dict[str, Any] = {}
         device_info.update(self.device_info)
         device_info[ATTR_ACTIVE_COORDINATOR] = self.device.is_active_coordinator
-        device_info["entities"] = [
+        device_info[ENTITIES] = [
             {
-                "entity_id": entity_ref.ha_entity_id,
+                ATTR_ENTITY_ID: entity_ref.ha_entity_id,
                 ATTR_NAME: entity_ref.ha_device_info[ATTR_NAME],
             }
             for entity_ref in self.gateway_proxy.ha_entity_refs[self.device.ieee]
@@ -326,27 +349,27 @@ class ZHADeviceProxy(EventBase):
         topology = self.gateway_proxy.gateway.application_controller.topology
         device_info[ATTR_NEIGHBORS] = [
             {
-                "device_type": neighbor.device_type.name,
-                "rx_on_when_idle": neighbor.rx_on_when_idle.name,
-                "relationship": neighbor.relationship.name,
-                "extended_pan_id": str(neighbor.extended_pan_id),
-                "ieee": str(neighbor.ieee),
-                "nwk": str(neighbor.nwk),
-                "permit_joining": neighbor.permit_joining.name,
-                "depth": str(neighbor.depth),
-                "lqi": str(neighbor.lqi),
+                ATTR_DEVICE_TYPE: neighbor.device_type.name,
+                RX_ON_WHEN_IDLE: neighbor.rx_on_when_idle.name,
+                RELATIONSHIP: neighbor.relationship.name,
+                EXTENDED_PAN_ID: str(neighbor.extended_pan_id),
+                ATTR_IEEE: str(neighbor.ieee),
+                ATTR_NWK: str(neighbor.nwk),
+                PERMIT_JOINING: neighbor.permit_joining.name,
+                DEPTH: str(neighbor.depth),
+                ATTR_LQI: str(neighbor.lqi),
             }
             for neighbor in topology.neighbors[self.device.ieee]
         ]
 
         device_info[ATTR_ROUTES] = [
             {
-                "dest_nwk": str(route.DstNWK),
-                "route_status": str(route.RouteStatus.name),
-                "memory_constrained": bool(route.MemoryConstrained),
-                "many_to_one": bool(route.ManyToOne),
-                "route_record_required": bool(route.RouteRecordRequired),
-                "next_hop": str(route.NextHop),
+                DEST_NWK: str(route.DstNWK),
+                ROUTE_STATUS: str(route.RouteStatus.name),
+                MEMORY_CONSTRAINED: bool(route.MemoryConstrained),
+                MANY_TO_ONE: bool(route.ManyToOne),
+                ROUTE_RECORD_REQUIRED: bool(route.RouteRecordRequired),
+                NEXT_HOP: str(route.NextHop),
             }
             for route in topology.routes[self.device.ieee]
         ]
@@ -374,9 +397,9 @@ class ZHADeviceProxy(EventBase):
         device_registry = dr.async_get(self.gateway_proxy.hass)
         reg_device = device_registry.async_get(self.device_id)
         if reg_device is not None:
-            device_info["user_given_name"] = reg_device.name_by_user
-            device_info["device_reg_id"] = reg_device.id
-            device_info["area_id"] = reg_device.area_id
+            device_info[USER_GIVEN_NAME] = reg_device.name_by_user
+            device_info[DEVICE_REG_ID] = reg_device.id
+            device_info[ATTR_AREA_ID] = reg_device.area_id
         return device_info
 
     def handle_zha_event(self, zha_event: ZHAEvent) -> None:
@@ -411,7 +434,7 @@ class ZHAGatewayProxy(EventBase):
         super().__init__()
         self.hass = hass
         self.config_entry = config_entry
-        self.gateway: Gateway = gateway
+        self.gateway = gateway
         self.device_proxies: dict[str, ZHADeviceProxy] = {}
         self.group_proxies: dict[int, ZHAGroupProxy] = {}
         self._ha_entity_refs: collections.defaultdict[EUI64, list[EntityReference]] = (

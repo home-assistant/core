@@ -1,10 +1,8 @@
 """Constants for the ZHA integration."""
 
-DOMAIN = "zha"
 EZSP_OVERWRITE_EUI64 = (
     "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
 )
-CONF_USE_THREAD = "use_thread"
 
 ATTR_ACTIVE_COORDINATOR = "active_coordinator"
 ATTR_AVAILABLE = "available"
@@ -15,7 +13,6 @@ ATTR_LAST_SEEN = "last_seen"
 ATTR_LQI = "lqi"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURER_CODE = "manufacturer_code"
-ATTR_MODEL = "model"
 ATTR_NEIGHBORS = "neighbors"
 ATTR_NWK = "nwk"
 ATTR_POWER_SOURCE = "power_source"
@@ -55,15 +52,9 @@ CONF_DEVICE_CONFIG = "device_config"
 
 CUSTOM_CONFIGURATION = "custom_configuration"
 
-DATA_DEVICE_CONFIG = "zha_device_config"
 DATA_ZHA = "zha"
-DATA_ZHA_CONFIG = "config"
-DATA_ZHA_CORE_EVENTS = "zha_core_events"
 DATA_ZHA_DEVICE_TRIGGER_CACHE = "zha_device_trigger_cache"
-DATA_ZHA_GATEWAY = "zha_gateway"
 
-DEFAULT_RADIO_TYPE = "ezsp"
-DEFAULT_BAUDRATE = 57600
 DEFAULT_DATABASE_NAME = "zigbee.db"
 
 DEVICE_PAIRING_STATUS = "pairing_status"
@@ -80,5 +71,3 @@ MFG_CLUSTER_ID_START = 0xFC00
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
-
-ZHA_DISCOVERY_NEW = "zha_discovery_new_{}"

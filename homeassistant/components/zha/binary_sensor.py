@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
+    EntityData,
     async_add_entities as zha_async_add_entities,
     get_zha_data,
 )
@@ -44,7 +45,7 @@ async def async_setup_entry(
 class BinarySensor(ZHAEntity, BinarySensorEntity):
     """ZHA BinarySensor."""
 
-    def __init__(self, entity_data) -> None:
+    def __init__(self, entity_data: EntityData) -> None:
         """Initialize the ZHA binary sensor."""
         super().__init__(entity_data)
         if self.entity_data.entity.info_object.device_class is not None:

@@ -17,7 +17,6 @@ from zha.application.const import (
     ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
     ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     ATTR_TYPE,
@@ -61,7 +60,7 @@ from homeassistant.components.zha.websocket_api import (
     TYPE,
     async_load_api,
 )
-from homeassistant.const import ATTR_NAME, Platform
+from homeassistant.const import ATTR_MODEL, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
