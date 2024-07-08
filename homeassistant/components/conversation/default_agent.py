@@ -768,8 +768,10 @@ class DefaultAgent(ConversationEntity):
     @core.callback
     def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
         """Clear slot lists when a registry has changed."""
+        # Two subscribers can be scheduled at same time
+        if self._unsub_clear_slot_list is None:
+            return
         self._slot_lists = None
-        assert self._unsub_clear_slot_list is not None
         for unsub in self._unsub_clear_slot_list:
             unsub()
         self._unsub_clear_slot_list = None
