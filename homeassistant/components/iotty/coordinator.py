@@ -80,9 +80,9 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
             if not any(x.device_id == d.device_id for x in current_devices)
         ]
 
-        for device_to_remove in removed_devices:
+        for removed_device in removed_devices:
             device_to_remove = self._device_registry.async_get_device(
-                {(DOMAIN, device_to_remove.device_id)}
+                {(DOMAIN, removed_device.device_id)}
             )
             if device_to_remove is not None:
                 self._device_registry.async_remove_device(device_to_remove.id)

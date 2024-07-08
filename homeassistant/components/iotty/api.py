@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from aiohttp import ClientSession
 from iottycloud.cloudapi import CloudApi
@@ -35,7 +36,7 @@ class IottyProxy(CloudApi):
         self._oauth_session = oauth_session
         self._hass = hass
 
-    async def async_get_access_token(self) -> str:
+    async def async_get_access_token(self) -> Any:
         """Return a valid access token."""
 
         if not self._oauth_session.valid_token:
