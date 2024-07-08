@@ -30,7 +30,6 @@ async def async_setup_entry(
 class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     """Representation of a SwitchBot lock."""
 
-    _attr_translation_key = "lock"
     _attr_name = None
 
     @callback
