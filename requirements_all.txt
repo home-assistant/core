@@ -1423,7 +1423,7 @@ niluclient==0.1.2
 noaa-coops==0.1.9
 
 # homeassistant.components.nfandroidtv
-notifications-android-tv==0.1.5
+notifications-android-tv==1.2.2
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
