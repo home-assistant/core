@@ -147,7 +147,7 @@ class KafkaManager:
 
     async def write(self, event: Event[EventStateChangedData]) -> None:
         """Write a binary payload to Kafka."""
-        key = self._get_key(event)
+        key = event.data["entity_id"].encode("utf-8")
         payload = self._encode_event(event)
 
         if key and payload:
