@@ -6,7 +6,7 @@
     },
     "step": {
       "user": {
-        "description": "Add a filter sensor. Only one filter can be used with the UI configuration.",
+        "description": "Add a filter sensor. UI configuration is limited to a single filter, use YAML for filter chain.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "Entity",
@@ -19,7 +19,7 @@
         }
       },
       "options": {
-        "description": "Read the documention for further details on how to configure the filter sensor using these options.",
+        "description": "Read the documentation for further details on how to configure the filter sensor using these options.",
         "data": {
           "window_size": "Window size",
           "precision": "Precision",
@@ -77,7 +77,7 @@
         "outlier": "Outlier",
         "throttle": "Throttle",
         "time_throttle": "Time throttle",
-        "time_simple_moving_average": "Time simple moving average"
+        "time_simple_moving_average": "Moving Average (Time based)"
       }
     },
     "type": {
