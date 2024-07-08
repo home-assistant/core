@@ -42,7 +42,6 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator."""
 
     config_entry: MealieConfigEntry
-    coordinator_name: str = ""
 
     def __init__(
         self,
@@ -58,7 +57,7 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             name="",
             update_interval=update_interval,
         )
-        self.name = f"Mealie {self.config_entry.unique_id} {self.coordinator_name}"
+        self.name = f"Mealie {self.config_entry.unique_id} {name}"
         self.client = client
 
 
