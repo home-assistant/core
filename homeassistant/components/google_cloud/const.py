@@ -23,13 +23,18 @@ CONF_TEXT_TYPE = "text_type"
 # STT constants
 CONF_STT_MODEL = "stt_model"
 
-DEFAULT_STT_MODEL = "command_and_search"
+DEFAULT_STT_MODEL = "latest_short"
 
+# https://cloud.google.com/speech-to-text/docs/transcription-model
 SUPPORTED_STT_MODELS = [
-    "default",
-    "command_and_search",
-    "latest_short",
     "latest_long",
+    "latest_short",
+    "telephony",
+    "telephony_short",
+    "medical_dictation",
+    "medical_conversation",
+    "command_and_search",
+    "default",
     "phone_call",
     "video",
 ]

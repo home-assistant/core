@@ -297,7 +297,7 @@ async def test_options_flow(
         "gain": 0.0,
         "profiles": [],
         "text_type": "text",
-        "stt_model": "command_and_search",
+        "stt_model": "latest_short",
     }
     await hass.async_block_till_done()
     assert mock_api_tts.list_voices.call_count == 3
