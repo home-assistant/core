@@ -39,7 +39,6 @@ async def async_setup_entry(
                 door_bird_data,
                 device.live_image_url,
                 "live",
-                "live",
                 _LIVE_INTERVAL,
                 device.rtsp_live_video_url,
             ),
@@ -47,13 +46,11 @@ async def async_setup_entry(
                 door_bird_data,
                 device.history_image_url(1, "doorbell"),
                 "last_ring",
-                "last_ring",
                 _LAST_VISITOR_INTERVAL,
             ),
             DoorBirdCamera(
                 door_bird_data,
                 device.history_image_url(1, "motionsensor"),
-                "last_motion",
                 "last_motion",
                 _LAST_MOTION_INTERVAL,
             ),
@@ -69,7 +66,6 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         door_bird_data: DoorBirdData,
         url: str,
         camera_id: str,
-        translation_key: str,
         interval: datetime.timedelta,
         stream_url: str | None = None,
     ) -> None:
@@ -77,7 +73,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         super().__init__(door_bird_data)
         self._url = url
         self._stream_url = stream_url
-        self._attr_translation_key = translation_key
+        self._attr_translation_key = camera_id
         self._last_image: bytes | None = None
         if self._stream_url:
             self._attr_supported_features = CameraEntityFeature.STREAM

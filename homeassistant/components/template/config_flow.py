@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
+from functools import partial
 from typing import Any, cast
 
 import voluptuous as vol
@@ -40,7 +41,7 @@ from .const import CONF_PRESS, DOMAIN
 from .sensor import async_create_preview_sensor
 from .template_entity import TemplateEntity
 
-_SCHEMA_STATE = {
+_SCHEMA_STATE: dict[vol.Marker, Any] = {
     vol.Required(CONF_STATE): selector.TemplateSelector(),
 }
 
@@ -127,14 +128,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     return vol.Schema(schema)
 
 
-def options_schema(domain: str) -> vol.Schema:
-    """Generate options schema."""
-    return generate_schema(domain, "option")
+options_schema = partial(generate_schema, flow_type="options")
 
-
-def config_schema(domain: str) -> vol.Schema:
-    """Generate config schema."""
-    return generate_schema(domain, "config")
+config_schema = partial(generate_schema, flow_type="config")
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
