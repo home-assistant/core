@@ -53,6 +53,3 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         self._attr_is_locked = False
         self.async_write_ha_state()
 
-    async def async_open(self, **kwargs: Any) -> None:
-        """Open the lock."""
-        await self.async_unlock(**kwargs)
