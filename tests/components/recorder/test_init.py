@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from datetime import datetime, timedelta
-from pathlib import Path
 import sqlite3
 import threading
 from typing import Any, cast
@@ -14,7 +14,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
-from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -26,7 +25,6 @@ from homeassistant.components.recorder import (
     CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
-    SQLITE_URL_PREFIX,
     Recorder,
     db_schema,
     get_instance,
@@ -104,7 +102,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -140,19 +138,16 @@ def _default_recorder(hass):
     )
 
 
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_shutdown_before_startup_finishes(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
-    recorder_db_url: str,
-    tmp_path: Path,
 ) -> None:
-    """Test shutdown before recorder starts is clean."""
-    if recorder_db_url == "sqlite://":
-        # On-disk database because this test does not play nice with the
-        # MutexPool
-        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    """Test shutdown before recorder starts is clean.
+
+    On-disk database because this test does not play nice with the MutexPool.
+    """
     config = {
-        recorder.CONF_DB_URL: recorder_db_url,
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
     hass.set_state(CoreState.not_running)
@@ -905,16 +900,19 @@ async def test_saving_event_with_oversized_data(
     hass.bus.async_fire("test_event", event_data)
     hass.bus.async_fire("test_event_too_big", massive_dict)
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
-        ):
-            events[event_type] = data
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+            )
+        }
 
     assert "test_event_too_big" in caplog.text
 
@@ -932,18 +930,19 @@ async def test_saving_event_invalid_context_ulid(
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
     hass.bus.async_fire("test_event", event_data, context=Context(id="invalid"))
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event"]))
-        ):
-            events[event_type] = data
-
-    assert "invalid" in caplog.text
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event"]))
+            )
+        }
 
     assert len(events) == 1
     assert json_loads(events["test_event"]) == event_data
@@ -1365,28 +1364,27 @@ async def test_statistics_runs_initiated(
 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.parametrize("enable_statistics", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
-    tmp_path: Path, freezer: FrozenDateTimeFactory
+    async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     def get_statistic_runs(hass: HomeAssistant) -> list:
         with session_scope(hass=hass, read_only=True) as session:
             return list(session.query(StatisticsRuns))
 
-    async with async_test_home_assistant() as hass:
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass, wait_recorder=False) as instance,
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         statistics_runs = await instance.async_add_executor_job(
             get_statistic_runs, hass
         )
@@ -1412,7 +1410,10 @@ async def test_compile_missing_statistics(
         stats_hourly.append(event)
 
     freezer.tick(timedelta(hours=1))
-    async with async_test_home_assistant() as hass:
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass, wait_recorder=False) as instance,
+    ):
         hass.bus.async_listen(
             EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
         )
@@ -1421,13 +1422,9 @@ async def test_compile_missing_statistics(
             async_hourly_stats_updated_listener,
         )
 
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-        await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         statistics_runs = await instance.async_add_executor_job(
             get_statistic_runs, hass
         )
@@ -1627,24 +1624,24 @@ async def test_service_disable_states_not_recording(
         )
 
 
-async def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
+async def test_service_disable_run_information_recorded(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
     """Test that runs are still recorded when recorder is disabled."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     def get_recorder_runs(hass: HomeAssistant) -> list:
         with session_scope(hass=hass, read_only=True) as session:
             return list(session.query(RecorderRuns))
 
-    async with async_test_home_assistant() as hass:
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         db_run_info = await instance.async_add_executor_job(get_recorder_runs, hass)
         assert len(db_run_info) == 1
         assert db_run_info[0].start is not None
@@ -1660,13 +1657,13 @@ async def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
         await async_wait_recording_done(hass)
         await hass.async_stop()
 
-    async with async_test_home_assistant() as hass:
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         db_run_info = await instance.async_add_executor_job(get_recorder_runs, hass)
         assert len(db_run_info) == 2
         assert db_run_info[0].start is not None
@@ -1681,23 +1678,17 @@ class CannotSerializeMe:
     """A class that the JSONEncoder cannot serialize."""
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.parametrize("recorder_config", [{CONF_COMMIT_INTERVAL: 0}])
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
-
-    def _create_tmpdir_for_test_db() -> Path:
-        test_dir = tmp_path.joinpath("sqlite")
-        test_dir.mkdir()
-        return test_dir.joinpath("test.db")
-
-    test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
-    recorder_helper.async_initialize_recorder(hass)
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl, CONF_COMMIT_INTERVAL: 0}}
-    )
     await hass.async_block_till_done()
     caplog.clear()
 
@@ -1716,6 +1707,7 @@ async def test_database_corruption_while_running(
         side_effect=OperationalError("statement", {}, []),
     ):
         await async_wait_recording_done(hass)
+        test_db_file = recorder_db_url.removeprefix("sqlite:///")
         await hass.async_add_executor_job(corrupt_db_file, test_db_file)
         await async_wait_recording_done(hass)
 
@@ -1809,23 +1801,21 @@ async def test_entity_id_filter(
             assert len(db_events) == idx + 1, data
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_database_lock_and_unlock(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
-    recorder_db_url: str,
-    tmp_path: Path,
 ) -> None:
-    """Test writing events during lock getting written after unlocking."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # Database locking is only used for SQLite
-        return
+    """Test writing events during lock getting written after unlocking.
 
-    if recorder_db_url == "sqlite://":
-        # Use file DB, in memory DB cannot do write locks.
-        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    This test is specific for SQLite: Locking is not implemented for other engines.
+
+    Use file DB, in memory DB cannot do write locks.
+    """
     config = {
         recorder.CONF_COMMIT_INTERVAL: 0,
-        recorder.CONF_DB_URL: recorder_db_url,
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
@@ -1863,26 +1853,23 @@ async def test_database_lock_and_unlock(
     assert len(db_events) == 1
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_database_lock_and_overflow(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
-    recorder_db_url: str,
-    tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # Database locking is only used for SQLite
-        return pytest.skip("Database locking is only used for SQLite")
+    """Test writing events during lock leading to overflow the queue causes the database to unlock.
 
-    # Use file DB, in memory DB cannot do write locks.
-    if recorder_db_url == "sqlite://":
-        # Use file DB, in memory DB cannot do write locks.
-        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    This test is specific for SQLite: Locking is not implemented for other engines.
+
+    Use file DB, in memory DB cannot do write locks.
+    """
     config = {
         recorder.CONF_COMMIT_INTERVAL: 0,
-        recorder.CONF_DB_URL: recorder_db_url,
     }
 
     def _get_db_events():
@@ -1929,25 +1916,23 @@ async def test_database_lock_and_overflow(
     assert start_time.count(":") == 2
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_database_lock_and_overflow_checks_available_memory(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
-    recorder_db_url: str,
-    tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        return pytest.skip("Database locking is only used for SQLite")
+    """Test writing events during lock leading to overflow the queue causes the database to unlock.
 
-    # Use file DB, in memory DB cannot do write locks.
-    if recorder_db_url == "sqlite://":
-        # Use file DB, in memory DB cannot do write locks.
-        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    This test is specific for SQLite: Locking is not implemented for other engines.
+
+    Use file DB, in memory DB cannot do write locks.
+    """
     config = {
         recorder.CONF_COMMIT_INTERVAL: 0,
-        recorder.CONF_DB_URL: recorder_db_url,
     }
 
     def _get_db_events():
@@ -2019,13 +2004,15 @@ async def test_database_lock_and_overflow_checks_available_memory(
     assert start_time.count(":") == 2
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_lock_timeout(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test locking database timeout when recorder stopped."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: Locking is not implemented for other engines
-        return
+    """Test locking database timeout when recorder stopped.
+
+    This test is specific for SQLite: Locking is not implemented for other engines.
+    """
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
@@ -2093,16 +2080,18 @@ async def test_database_connection_keep_alive(
     assert "Sending keepalive" in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_connection_keep_alive_disabled_on_sqlite(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
-    """Test we do not do keep alive for sqlite."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite, keepalive runs on other engines
-        return
+    """Test we do not do keep alive for sqlite.
+
+    This test is specific for SQLite, keepalive runs on other engines.
+    """
 
     instance = await async_setup_recorder_instance(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -2642,7 +2631,6 @@ async def test_commit_before_commits_pending_writes(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     recorder_db_url: str,
-    tmp_path: Path,
 ) -> None:
     """Test commit_before with a non-zero commit interval.
 

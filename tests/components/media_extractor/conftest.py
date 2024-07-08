@@ -1,19 +1,17 @@
 """Common fixtures for the Media Extractor tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.media_extractor import DOMAIN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockYoutubeDL
 from .const import AUDIO_QUERY
-
-from tests.common import async_mock_service
 
 
 @pytest.fixture(autouse=True)
@@ -29,12 +27,6 @@ async def setup_media_player(hass: HomeAssistant) -> None:
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "media_player", "play_media")
 
 
 @pytest.fixture(name="mock_youtube_dl")

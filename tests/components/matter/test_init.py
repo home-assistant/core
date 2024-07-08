@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from matter_server.client.exceptions import (
@@ -15,7 +16,6 @@ from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import MatterNodeData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.matter.const import DOMAIN

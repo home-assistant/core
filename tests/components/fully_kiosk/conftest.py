@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.const import (

@@ -1,10 +1,10 @@
 """The tests for the Demo cover platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,

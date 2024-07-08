@@ -65,7 +65,6 @@ async def test_http_processing_intent(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     agent_id,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -96,7 +95,6 @@ async def test_http_processing_intent_target_ha_agent(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     mock_conversation_agent: MockAgent,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -127,7 +125,6 @@ async def test_http_processing_intent_entity_added_removed(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -140,6 +137,7 @@ async def test_http_processing_intent_entity_added_removed(
         "light", "demo", "1234", suggested_object_id="kitchen"
     )
     entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", "off")
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
@@ -161,7 +159,6 @@ async def test_http_processing_intent_entity_added_removed(
     )
     hass.states.async_set("light.late", "off", {"friendly_name": "friendly light"})
 
-    client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on friendly light"}
     )
@@ -175,7 +172,6 @@ async def test_http_processing_intent_entity_added_removed(
     # Now add an alias
     entity_registry.async_update_entity("light.late", aliases={"late added light"})
 
-    client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on late added light"}
     )
@@ -189,7 +185,6 @@ async def test_http_processing_intent_entity_added_removed(
     # Now delete the entity
     hass.states.async_remove("light.late")
 
-    client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on late added light"}
     )
@@ -204,7 +199,6 @@ async def test_http_processing_intent_alias_added_removed(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -263,7 +257,6 @@ async def test_http_processing_intent_entity_renamed(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -282,6 +275,7 @@ async def test_http_processing_intent_entity_renamed(
         LIGHT_DOMAIN,
         {LIGHT_DOMAIN: [{"platform": "test"}]},
     )
+    await hass.async_block_till_done()
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
@@ -351,7 +345,6 @@ async def test_http_processing_intent_entity_exposed(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -372,6 +365,7 @@ async def test_http_processing_intent_entity_exposed(
     )
     await hass.async_block_till_done()
     entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    await hass.async_block_till_done()
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
@@ -386,8 +380,7 @@ async def test_http_processing_intent_entity_exposed(
     assert data == snapshot
     assert data["response"]["response_type"] == "action_done"
 
-    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
-    client = await hass_client()
+    calls.clear()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on my cool light"}
     )
@@ -401,9 +394,8 @@ async def test_http_processing_intent_entity_exposed(
 
     # Unexpose the entity
     expose_entity(hass, "light.kitchen", False)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on kitchen light"}
     )
@@ -413,7 +405,6 @@ async def test_http_processing_intent_entity_exposed(
     assert data == snapshot
     assert data["response"]["response_type"] == "error"
 
-    client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on my cool light"}
     )
@@ -427,7 +418,6 @@ async def test_http_processing_intent_entity_exposed(
     expose_entity(hass, "light.kitchen", True)
     await hass.async_block_till_done()
 
-    client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on kitchen light"}
     )
@@ -438,7 +428,6 @@ async def test_http_processing_intent_entity_exposed(
     assert data == snapshot
     assert data["response"]["response_type"] == "action_done"
 
-    client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on my cool light"}
     )
@@ -662,6 +651,7 @@ async def test_http_api_wrong_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.usefixtures("init_components")
 async def test_custom_agent(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -670,10 +660,6 @@ async def test_custom_agent(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a custom conversation agent."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     client = await hass_client()
 
     data = {
@@ -733,13 +719,12 @@ async def test_custom_agent(
 )
 async def test_ws_api(
     hass: HomeAssistant,
+    init_components,
     hass_ws_client: WebSocketGenerator,
     payload,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Websocket conversation API."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id({"type": "conversation/process", **payload})
@@ -753,11 +738,9 @@ async def test_ws_api(
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_ws_prepare(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, agent_id
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator, agent_id
 ) -> None:
     """Test the Websocket prepare conversation API."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
     agent = default_agent.async_get_default_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
 
@@ -781,15 +764,11 @@ async def test_ws_prepare(
 
 async def test_custom_sentences(
     hass: HomeAssistant,
+    init_components,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test custom sentences with a custom intent."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     # Expecting testing_config/custom_sentences/en/beer.yaml
     intent.async_register(hass, OrderBeerIntentHandler())
 
@@ -819,7 +798,6 @@ async def test_custom_sentences(
 async def test_custom_sentences_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test custom sentences with a custom intent in config."""
@@ -853,11 +831,9 @@ async def test_custom_sentences_config(
     assert data["response"]["speech"]["plain"]["speech"] == "Stealth mode engaged"
 
 
-async def test_prepare_reload(hass: HomeAssistant) -> None:
+async def test_prepare_reload(hass: HomeAssistant, init_components) -> None:
     """Test calling the reload service."""
     language = hass.config.language
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
     agent = default_agent.async_get_default_agent(hass)
@@ -1184,6 +1160,7 @@ async def test_ws_hass_agent_debug(
         aliases={"my cool light"},
         area_id=kitchen_area.id,
     )
+    await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", "off")
 
     on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
