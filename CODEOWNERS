@@ -703,6 +703,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/irish_rail_transport/ @ttroy50
 /homeassistant/components/isal/ @bdraco
 /tests/components/isal/ @bdraco
+/homeassistant/components/iskra/ @iskramis
 /homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
 /tests/components/islamic_prayer_times/ @engrbm87 @cpfair
 /homeassistant/components/iss/ @DurgNomis-drol

@@ -1926,6 +1926,9 @@ pyiqvia==2022.04.0
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2
 
+# homeassistant.components.iskra
+pyiskra==0.1.3
+
 # homeassistant.components.iss
 pyiss==1.0.1
 
