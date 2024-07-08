@@ -46,6 +46,7 @@ _EXTRA_STATE_ATTRIBUTES: set[str] = {
     "rms_voltage_max",
     "ac_frequency_max",
     "power_factor_max",
+    "active_power_max",
     # Smart Energy metering
     "device_type",
     "status",
