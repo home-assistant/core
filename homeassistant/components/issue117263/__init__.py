@@ -69,10 +69,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if instance.dialect_name != SupportedDialect.SQLITE:
         _LOGGER.error("This integration is only for SQLite databases")
         return False
+    await instance.async_add_executor_job(_queue_task_if_needed, instance)
+    return True
+
+
+def _queue_task_if_needed(instance: Recorder) -> None:
     with session_scope(session=instance.get_session()) as session:
         if get_index_by_name(session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX):
             instance.queue_task(RebuildStatesTableTask())
-    return True
 
 
 def rebuild_sqlite_table(
