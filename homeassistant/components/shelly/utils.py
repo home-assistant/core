@@ -27,7 +27,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -53,6 +53,7 @@ from .const import (
     SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
+    VIRTUAL_COMPONENTS_MAP,
 )
 
 
@@ -505,21 +506,17 @@ def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    ids: list[str] = []
-    if platform == Platform.SWITCH.value:
-        ids.extend(
-            k
-            for k, v in config.items()
-            if k.startswith("boolean") and v["meta"]["ui"]["view"] == "toggle"
-        )
-    if platform == Platform.BINARY_SENSOR.value:
-        ids.extend(
-            k
-            for k, v in config.items()
-            if k.startswith("boolean") and v["meta"]["ui"]["view"] == "label"
-        )
+    component = VIRTUAL_COMPONENTS_MAP.get(platform)
 
-    return ids
+    if not component:
+        return []
+
+    return [
+        k
+        for k, v in config.items()
+        if k.startswith(component["type"])
+        and v["meta"]["ui"]["view"] == component["mode"]
+    ]
 
 
 @callback
