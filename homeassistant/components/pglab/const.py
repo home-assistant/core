@@ -6,7 +6,7 @@ import logging
 DOMAIN = "pglab"
 
 # The message logger.
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 # The MQTT message used to subscribe to get a new PG LAB device.
 DISCOVERY_TOPIC = "pglab/discovery"
