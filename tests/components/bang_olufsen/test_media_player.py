@@ -275,20 +275,20 @@ async def test_async_update_playback_state(
         ),
         # Chromecast as source, but metadata says Bluetooth
         (
-            BangOlufsenSource.BLUETOOTH,
+            BangOlufsenSource.CHROMECAST,
             BangOlufsenSource.BLUETOOTH,
             MediaType.MUSIC,
             TEST_PLAYBACK_PROGRESS.progress,
             PlaybackContentMetadata(title=BangOlufsenSource.BLUETOOTH.name),
         ),
-        # # BLUETOOTH
-        # (
-        #     BangOlufsenSource.BLUETOOTH,
-        #     BangOlufsenSource.BLUETOOTH,
-        #     MediaType.MUSIC,
-        #     TEST_PLAYBACK_PROGRESS.progress,
-        #     PlaybackContentMetadata(art=[]),
-        # ),
+        # Chromecast as source, but metadata says Bluetooth in another way
+        (
+            BangOlufsenSource.CHROMECAST,
+            BangOlufsenSource.BLUETOOTH,
+            MediaType.MUSIC,
+            TEST_PLAYBACK_PROGRESS.progress,
+            PlaybackContentMetadata(art=[]),
+        ),
     ],
 )
 async def test_async_update_source_change(
