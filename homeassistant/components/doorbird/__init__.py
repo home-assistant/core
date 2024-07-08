@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from typing import Any
 
 from doorbirdpy import DoorBird
 import requests
@@ -51,7 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
 
     device = DoorBird(device_ip, username, password)
     try:
-        status, info = await hass.async_add_executor_job(_init_door_bird_device, device)
+        status = await device.ready()
+        info = await device.info()
     except requests.exceptions.HTTPError as err:
         if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error(
@@ -91,11 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
     return True
 
 
-def _init_door_bird_device(device: DoorBird) -> tuple[tuple[bool, int], dict[str, Any]]:
-    """Verify we can connect to the device and return the status."""
-    return device.ready(), device.info()
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -106,7 +101,7 @@ async def _async_register_events(
 ) -> bool:
     """Register events on device."""
     try:
-        await hass.async_add_executor_job(door_station.register_events, hass)
+        await door_station.async_register_events(hass)
     except requests.exceptions.HTTPError:
         persistent_notification.async_create(
             hass,

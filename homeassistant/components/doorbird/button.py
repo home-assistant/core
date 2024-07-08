@@ -1,7 +1,8 @@
 """Support for powering relays in a DoorBird video doorbell."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from doorbirdpy import DoorBird
 
@@ -19,7 +20,7 @@ IR_RELAY = "__ir_light__"
 class DoorbirdButtonEntityDescription(ButtonEntityDescription):
     """Class to describe a Doorbird Button entity."""
 
-    press_action: Callable[[DoorBird, str], None]
+    press_action: Callable[[DoorBird, str], Coroutine[Any, Any, bool]]
 
 
 RELAY_ENTITY_DESCRIPTION = DoorbirdButtonEntityDescription(
@@ -73,6 +74,8 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
             self._attr_name = f"Relay {self._relay}"
         self._attr_unique_id = f"{self._mac_addr}_{self._relay}"
 
-    def press(self) -> None:
+    async def async_press(self) -> None:
         """Power the relay."""
-        self.entity_description.press_action(self._door_station.device, self._relay)
+        await self.entity_description.press_action(
+            self._door_station.device, self._relay
+        )

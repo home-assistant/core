@@ -40,16 +40,12 @@ def _schema_with_defaults(
     )
 
 
-def _check_device(device: DoorBird) -> tuple[tuple[bool, int], dict[str, Any]]:
-    """Verify we can connect to the device and return the status."""
-    return device.ready(), device.info()
-
-
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
-        status, info = await hass.async_add_executor_job(_check_device, device)
+        status = await device.ready()
+        info = await device.info()
     except requests.exceptions.HTTPError as err:
         if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             raise InvalidAuth from err
@@ -70,7 +66,7 @@ async def async_verify_supported_device(hass: HomeAssistant, host: str) -> bool:
     """Verify the doorbell state endpoint returns a 401."""
     device = DoorBird(host, "", "")
     try:
-        await hass.async_add_executor_job(device.doorbell_state)
+        await device.doorbell_state()
     except requests.exceptions.HTTPError as err:
         if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             return True

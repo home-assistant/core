@@ -75,7 +75,7 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
-    def register_events(self, hass: HomeAssistant) -> None:
+    async def async_register_events(self, hass: HomeAssistant) -> None:
         """Register events on device."""
         # Override url if another is specified in the configuration
         if custom_url := self.custom_url:
@@ -88,14 +88,14 @@ class ConfiguredDoorBird:
             # User may not have permission to get the favorites
             return
 
-        favorites = self.device.favorites()
+        favorites = await self.device.favorites()
         for event in self.door_station_events:
             if self._register_event(hass_url, event, favs=favorites):
                 _LOGGER.info(
                     "Successfully registered URL for %s on %s", event, self.name
                 )
 
-        schedule: list[DoorBirdScheduleEntry] = self.device.schedule()
+        schedule: list[DoorBirdScheduleEntry] = await self.device.schedule()
         http_fav: dict[str, dict[str, Any]] = favorites.get("http") or {}
         favorite_input_type: dict[str, str] = {
             output.param: entry.input
@@ -178,14 +178,8 @@ async def async_reset_device_favorites(
     hass: HomeAssistant, door_station: ConfiguredDoorBird
 ) -> None:
     """Handle clearing favorites on device."""
-    await hass.async_add_executor_job(_reset_device_favorites, door_station)
-
-
-def _reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
-    """Handle clearing favorites on device."""
-    # Clear webhooks
     door_bird = door_station.device
-    favorites: dict[str, list[str]] = door_bird.favorites()
+    favorites: dict[str, list[str]] = await door_bird.favorites()
     for favorite_type, favorite_ids in favorites.items():
         for favorite_id in favorite_ids:
-            door_bird.delete_favorite(favorite_type, favorite_id)
+            await door_bird.delete_favorite(favorite_type, favorite_id)
