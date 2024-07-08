@@ -130,12 +130,6 @@ class KafkaManager:
             "utf-8"
         )
 
-    def _get_key(self, event: Event[EventStateChangedData]) -> bytes | None:
-        """Get the entity_id to use as key."""
-        key = event.data["entity_id"]
-
-        return key.encode("utf-8")
-
     async def start(self) -> None:
         """Start the Kafka manager."""
         self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)
