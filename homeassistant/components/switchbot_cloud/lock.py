@@ -51,4 +51,3 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         await self.send_command(LockCommands.UNLOCK)
         self._attr_is_locked = False
         self.async_write_ha_state()
-
