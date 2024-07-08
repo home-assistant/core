@@ -60,6 +60,8 @@ async def async_telegram_call(
         kwargs[ATTR_FILE] = list(map(hass.config.path, file))
     if service == SERVICE_SEND_MESSAGE:
         message = await client.send_message(**kwargs)
+        if isinstance(message, list):
+            message = message.pop()
         coordinator.data.update({CONF_LAST_SENT_MESSAGE_ID: message.id})
         coordinator.async_update_listeners()
         return message
