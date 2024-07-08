@@ -10,7 +10,7 @@ from simplefin4py.exceptions import SimpleFinInvalidClaimTokenError
 from homeassistant.components.simplefin import CONF_ACCESS_URL
 from homeassistant.components.simplefin.const import DOMAIN
 
-from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def mock_access_url() -> str:
 
 
 @pytest.fixture
-async def mock_config_entry(mock_access_url) -> MockConfigEntry:
+async def mock_config_entry(mock_access_url: str) -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -42,9 +42,9 @@ async def mock_config_entry(mock_access_url) -> MockConfigEntry:
 @pytest.fixture
 def mock_get_financial_data() -> FinancialData:
     """Fixture to mock the fetch_data method of SimpleFin."""
-    fixture_data = load_json_value_fixture("simplefin/fin_data.json")
+    fixture_data = load_fixture("fin_data.json", DOMAIN)
 
-    fin_data = FinancialData(fixture_data)
+    fin_data = FinancialData.from_json(fixture_data)
     with patch(
         "homeassistant.components.simplefin.coordinator.SimpleFin.fetch_data",
     ) as mock_fetch_data:
@@ -74,7 +74,7 @@ def mock_decode_claim_token_invalid_then_good() -> str:
 
 
 @pytest.fixture
-def mock_simplefin_client(mock_access_url) -> Generator[AsyncMock]:
+def mock_simplefin_client(mock_access_url: str) -> Generator[AsyncMock]:
     """Mock a SimpleFin client."""
 
     with (
@@ -89,7 +89,7 @@ def mock_simplefin_client(mock_access_url) -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
 
-        fixture_data = load_fixture("simplefin/fin_data.json")
+        fixture_data = load_fixture("fin_data.json", DOMAIN)
         fin_data = FinancialData.from_json(fixture_data)
 
         assert fin_data.accounts != []

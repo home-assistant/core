@@ -6,23 +6,17 @@
         "data": {
           "api_token": "Claim Token or Access URL"
         }
-      },
-      "reauth_confirm": {
-        "description": "Please enter either a Claim Token or an Access URL.",
-        "data": {
-          "api_token": "Claim Token or Access URL"
-        }
       }
     },
     "error": {
-      "auth_error": "Authentication failed. This could be because access has been revoked or if the credentials are incorrect",
+      "invalid_auth": "Authentication failed: This could be due to revoked access or incorrect credentials",
       "claim_error": "The claim token either does not exist or has already been used claimed by someone else. Receiving this could mean that the user\u2019s transaction information has been compromised",
       "invalid_claim_token": "The claim token is invalid and could not be decoded",
       "payment_required": "You presented a valid access url, however payment is required before you can obtain data",
       "url_error": "There was an issue parsing the Account URL"
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "missing_access_url": "Access URL or Claim Token missing"
     }
   },
   "entity": {

@@ -27,7 +27,9 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            access_url = user_input[CONF_ACCESS_URL]
+            access_url = user_input.get(CONF_ACCESS_URL, None)
+            if not access_url:
+                return self.async_abort(reason="missing_access_url")
             try:
                 if not access_url.startswith("http"):
                     # Claim token detected - convert to access url
