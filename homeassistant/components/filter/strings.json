@@ -1,5 +1,91 @@
 {
   "title": "Filter",
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "user": {
+        "description": "Add a filter sensor",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "Entity",
+          "filter": "Filter"
+        },
+        "data_description": {
+          "name": "Name for the created entity.",
+          "entity_id": "Entity to filter from.",
+          "filter": "Select filter to configure."
+        }
+      },
+      "options": {
+        "description": "Read the documention for further details on how to configure the filter sensor using these options.",
+        "data": {
+          "window_size": "Window size",
+          "precision": "Precision",
+          "radius": "Radius",
+          "time_constant": "Time constant",
+          "lower_bound": "Lower bound",
+          "upper_bound": "Upper bound",
+          "type": "Type"
+        },
+        "data_description": {
+          "window_size": "Size of the window of previous states.",
+          "precision": "Defines the number of decimal places of the calculated sensor value.",
+          "radius": "Band radius from median of previous states.",
+          "time_constant": "Loosely relates to the amount of time it takes for a state to influence the output.",
+          "lower_bound": "Lower bound for filter range.",
+          "upper_bound": "Upper bound for filter range.",
+          "type": "Defines the type of Simple Moving Average."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "init": {
+        "description": "[%key:component::filter::config::step::options::description%]",
+        "data": {
+          "window_size": "[%key:component::filter::config::step::options::data::window_size%]",
+          "precision": "[%key:component::filter::config::step::options::data::precision%]",
+          "radius": "[%key:component::filter::config::step::options::data::radius%]",
+          "time_constant": "[%key:component::filter::config::step::options::data::time_constant%]",
+          "lower_bound": "[%key:component::filter::config::step::options::data::lower_bound%]",
+          "upper_bound": "[%key:component::filter::config::step::options::data::upper_bound%]",
+          "type": "[%key:component::filter::config::step::options::data::type%]"
+        },
+        "data_description": {
+          "window_size": "[%key:component::filter::config::step::options::data_description::window_size%]",
+          "precision": "[%key:component::filter::config::step::options::data_description::precision%]",
+          "radius": "[%key:component::filter::config::step::options::data_description::radius%]",
+          "time_constant": "[%key:component::filter::config::step::options::data_description::time_constant%]",
+          "lower_bound": "[%key:component::filter::config::step::options::data_description::lower_bound%]",
+          "upper_bound": "[%key:component::filter::config::step::options::data_description::upper_bound%]",
+          "type": "[%key:component::filter::config::step::options::data_description::type%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "filter": {
+      "options": {
+        "range": "Range",
+        "lowpass": "Lowpass",
+        "outlier": "Outlier",
+        "throttle": "Throttle",
+        "time_throttle": "Time throttle",
+        "time_simple_moving_average": "Time simple moving average"
+      }
+    },
+    "type": {
+      "options": {
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "reload": {
       "name": "[%key:common::action::reload%]",
