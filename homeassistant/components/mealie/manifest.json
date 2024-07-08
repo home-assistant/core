@@ -1,10 +1,7 @@
 {
   "domain": "mealie",
   "name": "Mealie",
-  "codeowners": [
-    "@joostlek",
-    "@andrew-codechimp"
-  ],
+  "codeowners": ["@joostlek", "@andrew-codechimp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mealie",
   "integration_type": "service",
