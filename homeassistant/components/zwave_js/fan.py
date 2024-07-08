@@ -78,7 +78,12 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
