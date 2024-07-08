@@ -37,7 +37,7 @@ async def test_access_url(hass: HomeAssistant, mock_get_financial_data) -> None:
     [
         (SimpleFinInvalidAccountURLError, "url_error"),
         (SimpleFinPaymentRequiredError, "payment_required"),
-        (SimpleFinAuthError, "auth_error"),
+        (SimpleFinAuthError, "invalid_auth"),
     ],
 )
 async def test_access_url_errors(

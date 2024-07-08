@@ -10,7 +10,7 @@ from simplefin4py.exceptions import SimpleFinInvalidClaimTokenError
 from homeassistant.components.simplefin import CONF_ACCESS_URL
 from homeassistant.components.simplefin.const import DOMAIN
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 @pytest.fixture
@@ -71,3 +71,30 @@ def mock_decode_claim_token_invalid_then_good() -> str:
         new_callable=lambda: MagicMock(side_effect=return_values),
     ):
         yield
+
+
+@pytest.fixture
+def mock_simplefin_client(mock_access_url) -> Generator[AsyncMock]:
+    """Mock a SimpleFin client."""
+
+    with (
+        patch(
+            "homeassistant.components.simplefin.SimpleFin",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "simplefin4py.SimpleFin",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+
+        fixture_data = load_fixture("simplefin/fin_data.json")
+        fin_data = FinancialData.from_json(fixture_data)
+
+        assert fin_data.accounts != []
+        client.fetch_data.return_value = fin_data
+
+        client.access_url = mock_access_url
+
+        yield client
