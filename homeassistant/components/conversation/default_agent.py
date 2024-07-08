@@ -163,7 +163,7 @@ class DefaultAgent(ConversationEntity):
         # Sentences that will trigger a callback (skipping intent recognition)
         self._trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
-        self._listening_for_changes = False
+        self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
 
     @property
     def supported_languages(self) -> list[str]:
@@ -187,25 +187,29 @@ class DefaultAgent(ConversationEntity):
     @core.callback
     def _listen_clear_slot_list(self) -> None:
         """Listen for changes that can invalidate slot list."""
-        self.hass.bus.async_listen(
-            ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_clear_slot_list,
-        )
-        self.hass.bus.async_listen(
-            fr.EVENT_FLOOR_REGISTRY_UPDATED,
-            self._async_clear_slot_list,
-        )
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_clear_slot_list,
-            event_filter=self._filter_entity_registry_changes,
-        )
-        self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            self._async_clear_slot_list,
-            event_filter=self._filter_state_changes,
-        )
-        async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list)
+        assert self._unsub_clear_slot_list is None
+
+        self._unsub_clear_slot_list = [
+            self.hass.bus.async_listen(
+                ar.EVENT_AREA_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+            ),
+            self.hass.bus.async_listen(
+                fr.EVENT_FLOOR_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+            ),
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_entity_registry_changes,
+            ),
+            self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_state_changes,
+            ),
+            async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
+        ]
 
     async def async_recognize(
         self, user_input: ConversationInput
@@ -765,6 +769,10 @@ class DefaultAgent(ConversationEntity):
     def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
         """Clear slot lists when a registry has changed."""
         self._slot_lists = None
+        assert self._unsub_clear_slot_list is not None
+        for unsub in self._unsub_clear_slot_list:
+            unsub()
+        self._unsub_clear_slot_list = None
 
     @core.callback
     def _make_slot_lists(self) -> dict[str, SlotList]:
@@ -851,10 +859,7 @@ class DefaultAgent(ConversationEntity):
             "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
-        if not self._listening_for_changes:
-            self._listening_for_changes = True
-            self._listen_clear_slot_list()
-
+        self._listen_clear_slot_list()
         return self._slot_lists
 
     def _make_intent_context(
