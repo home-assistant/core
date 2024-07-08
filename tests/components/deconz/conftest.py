@@ -249,6 +249,12 @@ def fixture_websocket_data(_mock_websocket: _WebsocketMock) -> WebsocketDataType
 
     async def change_websocket_data(data: dict[str, Any]) -> None:
         """Provide new data on the websocket."""
+        if "t" not in data:
+            data["t"] = "event"
+        if "e" not in data:
+            data["e"] = "changed"
+        if "id" not in data:
+            data["id"] = "0"
         await _mock_websocket(data=data)
 
     return change_websocket_data

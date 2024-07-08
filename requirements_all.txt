@@ -294,7 +294,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.5.0
+aiomealie==0.6.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -449,7 +449,7 @@ androidtvremote2==0.1.1
 anel-pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova
-anova-wifi==0.15.0
+anova-wifi==0.17.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -1179,11 +1179,12 @@ isal==1.6.1
 ismartgate==5.0.1
 
 # homeassistant.components.abode
-jaraco.abode==5.1.2
+jaraco.abode==5.2.1
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
+# homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath==0.82.2
 
@@ -1598,7 +1599,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.8
+psutil==6.0.0
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -1632,6 +1633,9 @@ py-dormakaba-dkey==1.0.5
 
 # homeassistant.components.improv_ble
 py-improv-ble-client==1.0.3
+
+# homeassistant.components.madvr
+py-madvr2==1.6.27
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
@@ -1773,7 +1777,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.11.1
+pydaikin==2.13.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2004,7 +2008,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.8
+pymodbus==3.6.9
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2769,7 +2773,7 @@ transmission-rpc==7.0.3
 ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.0.0
+ttn_client==1.1.0
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
@@ -2877,7 +2881,7 @@ weatherflow4py==0.2.21
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.3
+webrtc-noise-gain==1.2.4
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
@@ -2904,7 +2908,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.30.1
+xiaomi-ble==0.30.2
 
 # homeassistant.components.knx
 xknx==2.12.2
@@ -2931,7 +2935,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==6.4.1
+yalexs==6.4.2
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

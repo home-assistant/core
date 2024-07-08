@@ -431,6 +431,8 @@ build.json @home-assistant/supervisor
 /tests/components/fan/ @home-assistant/core
 /homeassistant/components/fastdotcom/ @rohankapoorcom @erwindouna
 /tests/components/fastdotcom/ @rohankapoorcom @erwindouna
+/homeassistant/components/feedreader/ @mib1185
+/tests/components/feedreader/ @mib1185
 /homeassistant/components/fibaro/ @rappenze
 /tests/components/fibaro/ @rappenze
 /homeassistant/components/file/ @fabaff
@@ -825,6 +827,8 @@ build.json @home-assistant/supervisor
 /tests/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
+/homeassistant/components/madvr/ @iloveicedgreentea
+/tests/components/madvr/ @iloveicedgreentea
 /homeassistant/components/mastodon/ @fabaff
 /homeassistant/components/matrix/ @PaarthShah
 /tests/components/matrix/ @PaarthShah
@@ -989,8 +993,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
-/homeassistant/components/omnilogic/ @oliver84 @djtimca @gentoosu
-/tests/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /homeassistant/components/onboarding/ @home-assistant/core
 /tests/components/onboarding/ @home-assistant/core
 /homeassistant/components/oncue/ @bdraco @peterager
