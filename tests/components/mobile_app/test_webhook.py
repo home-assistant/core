@@ -10,7 +10,7 @@ from nacl.secret import SecretBox
 import pytest
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.mobile_app.const import CONF_SECRET, DOMAIN
+from homeassistant.components.mobile_app.const import CONF_SECRET, DATA_DEVICES, DOMAIN
 from homeassistant.components.tag import EVENT_TAG_SCANNED
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
@@ -243,6 +243,7 @@ async def test_webhook_handle_get_config(
     """Test that we can get config properly."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
+    device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
 
     # Create two entities
     for sensor in (
@@ -280,6 +281,7 @@ async def test_webhook_handle_get_config(
         "latitude": hass_config["latitude"],
         "longitude": hass_config["longitude"],
         "elevation": hass_config["elevation"],
+        "hass_device_id": device.id,
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
