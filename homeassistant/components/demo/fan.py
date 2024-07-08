@@ -81,7 +81,9 @@ async def async_setup_entry(
                 hass,
                 "fan5",
                 "Preset Only Limited Fan",
-                FanEntityFeature.PRESET_MODE,
+                FanEntityFeature.PRESET_MODE
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.TURN_ON,
                 [
                     PRESET_MODE_AUTO,
                     PRESET_MODE_SMART,
