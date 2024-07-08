@@ -8,17 +8,16 @@ from sensoterra.customerapi import (
     InvalidAuth as ApiAuthError,
     Timeout as ApiTimeout,
 )
-from sensoterra.probe import Sensor
+from sensoterra.probe import Probe, Sensor
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER, SCAN_INTERVAL_MINUTES
-from .models import SensoterraSensor
 
 
-class SensoterraCoordinator(DataUpdateCoordinator[list[SensoterraSensor]]):
+class SensoterraCoordinator(DataUpdateCoordinator[list[Probe]]):
     """Sensoterra coordinator."""
 
     def __init__(self, hass: HomeAssistant, api: CustomerApi) -> None:
@@ -30,13 +29,10 @@ class SensoterraCoordinator(DataUpdateCoordinator[list[SensoterraSensor]]):
             update_interval=timedelta(minutes=SCAN_INTERVAL_MINUTES),
         )
         self.api = api
-        self.add_devices_callback: Callable[[list[SensoterraSensor]], None] | None = (
-            None
-        )
+        self.add_devices_callback: Callable[[list[Probe]], None] | None = None
 
-    async def _async_update_data(self) -> list[SensoterraSensor]:
+    async def _async_update_data(self) -> list[Probe]:
         """Fetch data from Sensoterra Customer API endpoint."""
-        current_sensors = set(self.async_contexts())
         try:
             probes = await self.api.poll()
         except ApiAuthError as err:
@@ -45,24 +41,14 @@ class SensoterraCoordinator(DataUpdateCoordinator[list[SensoterraSensor]]):
             raise UpdateFailed("Timeout communicating with Sensotera API") from err
 
         if self.add_devices_callback is not None:
-            self.add_devices_callback(
-                [
-                    SensoterraSensor(probe, sensor)
-                    for probe in probes
-                    for sensor in probe.sensors()
-                    if sensor.id not in current_sensors
-                ]
-            )
+            self.add_devices_callback(probes)
 
-        return [
-            SensoterraSensor(probe, sensor)
-            for probe in probes
-            for sensor in probe.sensors()
-        ]
+        return probes
 
     def get_sensor(self, id: str | None) -> Sensor | None:
         """Try to find the sensor in the API result."""
-        for _, sensor in self.data:
-            if sensor.id == id:
-                return sensor
+        for probe in self.data:
+            for sensor in probe.sensors():
+                if sensor.id == id:
+                    return sensor
         return None

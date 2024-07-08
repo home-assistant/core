@@ -9,7 +9,7 @@
         }
       },
       "reconfigure": {
-        "description": "Enter credentials to obtain a new token",
+        "description": "[%key:component::sensoterra::config::step::user::description%]",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -32,9 +32,6 @@
       },
       "si_at_cm": {
         "name": "SI @ {depth} cm"
-      },
-      "last_seen": {
-        "name": "Last seen"
       }
     }
   }
