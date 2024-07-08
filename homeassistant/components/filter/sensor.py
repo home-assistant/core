@@ -210,6 +210,10 @@ async def async_setup_entry(
     filter_config = {
         k: v for k, v in entry.options.items() if k not in (CONF_NAME, CONF_ENTITY_ID)
     }
+    if isinstance(filter_config[CONF_FILTER_WINDOW_SIZE], dict):
+        filter_config[CONF_FILTER_WINDOW_SIZE] = timedelta(
+            **filter_config[CONF_FILTER_WINDOW_SIZE]
+        )
 
     filters = [
         FILTERS[filter_config.pop(CONF_FILTER_NAME)](entity=entity_id, **filter_config)
