@@ -43,6 +43,10 @@ CREATE_NEW_ENTITY = {
 }
 
 
+class PGLabDiscoveryError(Exception):
+    """Raised when a discovery has failed."""
+
+
 def get_device_id_from_discovery_topic(topic: str) -> str | None:
     """From the discovery topic get the PG LAB Electronics device id."""
 
@@ -73,8 +77,12 @@ class DiscoverDeviceInfo:
 
     def add_entity_id(self, entity: Entity) -> None:
         """Add the entity id."""
+
+        # Do some checking, be sure that the entity has a unique id.
         if entity.unique_id:
             self._entities.append((entity.platform.domain, entity.unique_id))
+        else:
+            raise PGLabDiscoveryError("Unexpected entity unique id")
 
     @property
     def hash(self) -> int:
@@ -85,10 +93,6 @@ class DiscoverDeviceInfo:
     def entities(self) -> list[tuple[str, str]]:
         """Return array of entities available."""
         return self._entities
-
-
-class PGLabDiscoveryError(Exception):
-    """Raised when a discovery has failed."""
 
 
 @dataclass
@@ -265,9 +269,13 @@ class PGLabDiscovery:
 
     async def add_entity(self, entity: Entity, device_id: str):
         """Save a new PG LAB device entity."""
-        if device_id in self._discovered:
-            discovery_info = self._discovered[device_id]
-            discovery_info.add_entity_id(entity)
+
+        # Be sure that the device is been discovered.
+        if device_id not in self._discovered:
+            raise PGLabDiscoveryError("Unknown device, device_id not discovered")
+
+        discovery_info = self._discovered[device_id]
+        discovery_info.add_entity_id(entity)
 
 
 async def create_discovery(
