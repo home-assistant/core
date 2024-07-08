@@ -57,5 +57,12 @@ async def test_timer_events(
     assert mock_send_message.mock_calls[0][2] == {
         "target": [webhook_id],
         "message": message,
-        "data": None,
+        "data": {
+            "channel": "Timers",
+            "group": "timers",
+            "importance": "high",
+            "push": {
+                "interruption-level": "passive",
+            },
+        },
     }
