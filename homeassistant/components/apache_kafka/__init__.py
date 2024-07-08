@@ -130,6 +130,12 @@ class KafkaManager:
             "utf-8"
         )
 
+    def _get_key(self, event: Event[EventStateChangedData]) -> bytes | None:
+        """Get the entity_id to use as key."""
+        key = event.data["entity_id"]
+
+        return key.encode("utf-8")
+
     async def start(self) -> None:
         """Start the Kafka manager."""
         self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)
@@ -141,7 +147,8 @@ class KafkaManager:
 
     async def write(self, event: Event[EventStateChangedData]) -> None:
         """Write a binary payload to Kafka."""
+        key = self._get_key(event)
         payload = self._encode_event(event)
 
-        if payload:
-            await self._producer.send_and_wait(self._topic, payload)
+        if key and payload:
+            await self._producer.send_and_wait(self._topic, payload, key)
