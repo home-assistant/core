@@ -596,9 +596,6 @@ class DefaultAgent(ConversationEntity):
     async def async_reload(self, language: str | None = None) -> None:
         """Clear cached intents for a language."""
         if language is None:
-            language = self.hass.config.language
-
-        if language is None:
             self._lang_intents.clear()
             _LOGGER.debug("Cleared intents for all languages")
         else:
