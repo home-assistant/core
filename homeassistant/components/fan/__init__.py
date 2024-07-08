@@ -314,8 +314,8 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         if not supported_features & FanEntityFeature.TURN_OFF and (
-            type(self).async_turn_off is not FanEntity.async_turn_off
-            or type(self).turn_off is not FanEntity.turn_off
+            type(self).async_turn_off is not ToggleEntity.async_turn_off
+            or type(self).turn_off is not ToggleEntity.turn_off
         ):
             # turn_off implicitly supported by implementing turn_off method
             _report_turn_on_off("TURN_OFF", "turn_off")
