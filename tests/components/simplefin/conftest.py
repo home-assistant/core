@@ -35,7 +35,6 @@ async def mock_config_entry(mock_access_url: str) -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_ACCESS_URL: mock_access_url},
         version=1,
-        unique_id=mock_access_url,
     )
 
 

@@ -15,21 +15,45 @@ from simplefin4py.exceptions import (
 from homeassistant import config_entries
 from homeassistant.components.simplefin import CONF_ACCESS_URL
 from homeassistant.components.simplefin.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_access_url(hass: HomeAssistant, mock_get_financial_data) -> None:
-    """Test standard config flow."""
+async def test_successful_claim(
+    hass: HomeAssistant,
+    mock_get_financial_data: FinancialData,
+) -> None:
+    """Test successful token claim in config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.simplefin.config_flow.SimpleFin.claim_setup_token",
+        return_value="https://i:am@yomama.house.com",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ACCESS_URL: "donJulio"},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_access_url(
+    hass: HomeAssistant, mock_get_financial_data: FinancialData
+) -> None:
+    """Test standard config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_ACCESS_URL: "http://user:password@string"},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -47,7 +71,7 @@ async def test_access_url_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.simplefin.config_flow.SimpleFin.claim_setup_token",
@@ -57,7 +81,7 @@ async def test_access_url_errors(
             result["flow_id"],
             {CONF_ACCESS_URL: "donJulio"},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": error_key}
 
     # Pass the entry creation
@@ -65,7 +89,7 @@ async def test_access_url_errors(
         result["flow_id"],
         {CONF_ACCESS_URL: "http://user:password@string"},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -82,7 +106,7 @@ async def test_claim_token_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.simplefin.config_flow.SimpleFin.claim_setup_token",
@@ -92,7 +116,7 @@ async def test_claim_token_errors(
             result["flow_id"],
             {CONF_ACCESS_URL: "donJulio"},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": error_key}
 
     # Finally succeed in creating the item
@@ -104,25 +128,4 @@ async def test_claim_token_errors(
             result["flow_id"],
             {CONF_ACCESS_URL: "donJulio"},
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-
-
-async def test_successful_claim(
-    hass: HomeAssistant,
-    mock_get_financial_data: FinancialData,
-) -> None:
-    """Test successful token claim in config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.simplefin.config_flow.SimpleFin.claim_setup_token",
-        return_value="https://i:am@yomama.house.com",
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_ACCESS_URL: "donJulio"},
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
