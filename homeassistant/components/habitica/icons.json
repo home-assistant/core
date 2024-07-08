@@ -64,6 +64,18 @@
           "wizard": "mdi:wizard-hat",
           "rogue": "mdi:ninja"
         }
+      },
+      "todos": {
+        "default": "mdi:checkbox-outline"
+      },
+      "dailys": {
+        "default": "mdi:calendar-month"
+      },
+      "habits": {
+        "default": "mdi:contrast-box"
+      },
+      "rewards": {
+        "default": "mdi:treasure-chest"
       }
     },
     "switch": {
