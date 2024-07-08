@@ -144,5 +144,5 @@ class KafkaManager:
         key = event.data["entity_id"].encode("utf-8")
         payload = self._encode_event(event)
 
-        if key and payload:
+        if payload:
             await self._producer.send_and_wait(self._topic, payload, key)
