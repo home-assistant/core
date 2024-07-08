@@ -213,14 +213,14 @@ async def async_setup_entry(
 
     # Create zone sensors
     for zone in zones:
-        zone_type = zone["type"]
+        zone_type = zone.type
         if zone_type not in ZONE_SENSORS:
             _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
             continue
 
         entities.extend(
             [
-                TadoZoneSensor(tado, zone["name"], zone["id"], entity_description)
+                TadoZoneSensor(tado, zone.name, zone.id, entity_description)
                 for entity_description in ZONE_SENSORS[zone_type]
             ]
         )
