@@ -905,6 +905,7 @@ class DefaultAgent(ConversationEntity):
 
         return response_template.async_render(response_args)
 
+    @core.callback
     def register_trigger(
         self,
         sentences: list[str],
@@ -919,6 +920,7 @@ class DefaultAgent(ConversationEntity):
 
         return functools.partial(self._unregister_trigger, trigger_data)
 
+    @core.callback
     def _rebuild_trigger_intents(self) -> None:
         """Rebuild the HassIL intents object from the current trigger sentences."""
         intents_dict = {
@@ -932,20 +934,23 @@ class DefaultAgent(ConversationEntity):
             },
         }
 
-        self._trigger_intents = Intents.from_dict(intents_dict)
+        trigger_intents = Intents.from_dict(intents_dict)
 
         # Assume slot list references are wildcards
         wildcard_names: set[str] = set()
-        for trigger_intent in self._trigger_intents.intents.values():
+        for trigger_intent in trigger_intents.intents.values():
             for intent_data in trigger_intent.data:
                 for sentence in intent_data.sentences:
                     _collect_list_references(sentence, wildcard_names)
 
         for wildcard_name in wildcard_names:
-            self._trigger_intents.slot_lists[wildcard_name] = WildcardSlotList()
+            trigger_intents.slot_lists[wildcard_name] = WildcardSlotList()
+
+        self._trigger_intents = trigger_intents
 
         _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
 
+    @core.callback
     def _unregister_trigger(self, trigger_data: TriggerData) -> None:
         """Unregister a set of trigger sentences."""
         self._trigger_sentences.remove(trigger_data)
