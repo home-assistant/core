@@ -2322,7 +2322,7 @@ python-ripple-api==0.0.3
 python-roborock==2.5.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.36
+python-smarttub==0.0.37
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
