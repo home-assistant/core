@@ -69,35 +69,35 @@ class VentilationMode(enum.StrEnum):
 
     PERMANENT = "permanent"  # on, speed controlled by program (levelOne-levelFour)
     VENTILATION = "ventilation"  # activated by schedule
-    SENSOR_DRIVEN = "sensorDriven"  # activated by schedule, override by sensor
-    SENSOR_OVERRIDE = "sensorOverride"  # activated by sensor
+    SENSOR_DRIVEN = "sensor_driven"  # activated by schedule, override by sensor
+    SENSOR_OVERRIDE = "sensor_override"  # activated by sensor
 
     @staticmethod
-    def to_ha_mode(mode: str | None) -> str | None:
-        """Return the mapped Home Assistant mode for the ViCare ventilation mode."""
+    def to_vicare_mode(mode: str | None) -> str | None:
+        """Return the mapped ViCare ventilation mode for the Home Assistant mode."""
         if mode:
             try:
                 ventilation_mode = VentilationMode(mode)
             except ValueError:
                 # ignore unsupported / unmapped modes
                 return None
-            return VICARE_TO_HA_MODE_VENTILATION.get(ventilation_mode) if mode else None
+            return HA_TO_VICARE_MODE_VENTILATION.get(ventilation_mode) if mode else None
         return None
 
     @staticmethod
-    def from_ha_mode(ha_mode: str | None) -> str | None:
-        """Return the mapped ViCare ventilation mode for the Home Assistant mode."""
+    def from_vicare_mode(vicare_mode: str | None) -> str | None:
+        """Return the mapped Home Assistant mode for the ViCare ventilation mode."""
         for mode in VentilationMode:
-            if VICARE_TO_HA_MODE_VENTILATION.get(VentilationMode(mode)) == ha_mode:
+            if HA_TO_VICARE_MODE_VENTILATION.get(VentilationMode(mode)) == vicare_mode:
                 return mode
         return None
 
 
-VICARE_TO_HA_MODE_VENTILATION = {
+HA_TO_VICARE_MODE_VENTILATION = {
     VentilationMode.PERMANENT: "permanent",
     VentilationMode.VENTILATION: "ventilation",
-    VentilationMode.SENSOR_DRIVEN: "sensor_driven",
-    VentilationMode.SENSOR_OVERRIDE: "sensor_override",
+    VentilationMode.SENSOR_DRIVEN: "sensorDriven",
+    VentilationMode.SENSOR_OVERRIDE: "sensorOverride",
 }
 
 
