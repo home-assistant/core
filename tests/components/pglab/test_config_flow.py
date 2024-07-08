@@ -10,26 +10,20 @@ from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient
 
 
-async def check_single_instance_configuration(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, source: str
-):
-    """Check if PGLab configuration is allowed for multiple instances."""
+async def test_mqtt_config_single_instance(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test MQTT flow aborts when an entry already exist."""
+
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source}
+        DOMAIN, context={"source": SOURCE_MQTT}
     )
 
     # Be sure that result is abort. Only single instance is allowed.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
-
-
-async def test_mqtt_config_single_instance(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> None:
-    """Test MQTT flow aborts when an entry already exist."""
-    await check_single_instance_configuration(hass, mqtt_mock, SOURCE_MQTT)
 
 
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
