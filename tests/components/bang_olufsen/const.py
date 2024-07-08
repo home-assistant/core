@@ -15,8 +15,6 @@ from mozart_api.models import (
     PlayQueueItemType,
     RenderingState,
     SceneProperties,
-    Source,
-    SourceTypeEnum,
     UserFlow,
     VolumeLevel,
     VolumeMute,
@@ -29,6 +27,7 @@ from homeassistant.components.bang_olufsen.const import (
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
     CONF_BEOLINK_JID,
+    BangOlufsenSource,
 )
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
@@ -102,7 +101,7 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
     },
 )
 
-TEST_AUDIO_SOURCES = ["Tidal Connect"]
+TEST_AUDIO_SOURCES = [BangOlufsenSource.TIDAL.name]
 TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [
@@ -126,27 +125,6 @@ TEST_PLAYBACK_ERROR = PlaybackError(error="Test error")
 TEST_PLAYBACK_PROGRESS = PlaybackProgress(progress=123)
 TEST_PLAYBACK_STATE_PAUSED = RenderingState(value="paused")
 TEST_PLAYBACK_STATE_PLAYING = RenderingState(value="started")
-TEST_SOURCE_CHANGE = Source(
-    id="tidalConnect",
-    is_enabled=True,
-    is_playable=True,
-    name="Tidal Connect",
-    type=SourceTypeEnum(value="tidalConnect"),
-)
-TEST_SOURCE_CHANGE_URI_STREAMER = Source(
-    id="uriStreamer",
-    is_enabled=True,
-    is_playable=True,
-    name="Audio Streamer",
-    type=SourceTypeEnum(value="uriStreamer"),
-)
-TEST_SOURCE_CHANGE_DEEZER = Source(
-    id="deezer",
-    is_enabled=True,
-    is_playable=True,
-    name="Deezer",
-    type=SourceTypeEnum(value="deezer"),
-)
 TEST_VOLUME = VolumeState(level=VolumeLevel(level=40))
 TEST_VOLUME_HOME_ASSISTANT_FORMAT = 0.4
 TEST_PLAYBACK_STATE_TURN_OFF = RenderingState(value="stopped")

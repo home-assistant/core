@@ -99,8 +99,8 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 ),
                 # The only available source
                 Source(
-                    name="Tidal Connect",
-                    id="tidalConnect",
+                    name="Tidal",
+                    id="tidal",
                     is_enabled=True,
                     is_multiroom_available=True,
                 ),
