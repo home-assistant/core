@@ -381,7 +381,7 @@
     "flow_title": "{name} ({host})",
     "step": {
       "init": {
-        "description": "If you have an advance API plan (see https://developer.viessmann.com/start/pricing.html), the rate limit for API calls is doubled (3000 instead of 1500).",
+        "description": "If you have an advance API plan (see {api_plan_url}), the rate limit for API calls is doubled (3000 instead of 1500).",
         "data": {
           "extended_api": "Advanced API plan"
         }

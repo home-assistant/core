@@ -175,6 +175,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
+            description_placeholders={
+                "api_plan_url": "https://developer.viessmann.com/start/pricing.html",
+            },
             data_schema=self.add_suggested_values_to_schema(
                 OPTIONS_SCHEMA,
                 user_input or dict(self.entry.options),
