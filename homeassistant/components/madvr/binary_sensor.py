@@ -1,47 +1,115 @@
 """Binary sensor entities for the madVR integration."""
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import MadVRConfigEntry
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 
-type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+_HDR_FLAG = "hdr_flag"
+_OUTGOING_HDR_FLAG = "outgoing_hdr_flag"
+_POWER_STATE = "power_state"
+_SIGNAL_STATE = "signal_state"
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: MadVRConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the binary sensor entities."""
-    coordinator = entry.runtime_data
-    async_add_entities(
-        [
-            MadvrPowerStateBinarySensor(coordinator),
-            MadvrSignalStateBinarySensor(coordinator),
-            MadvrHDRFlagBinarySensor(coordinator),
-            MadvrHDROutgoingFlagBinarySensor(coordinator),
-        ]
-    )
+@dataclass(frozen=True)
+class MadvrBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describe madVR binary sensor entity."""
+
+    icon_on: str = ""
+    icon_off: str = ""
+    value_fn: Callable[[MadVRCoordinator], bool] = lambda _: False
 
 
-class MadvrBaseBinarySensor(CoordinatorEntity, BinarySensorEntity):
+BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
+    MadvrBinarySensorEntityDescription(
+        key=_POWER_STATE,
+        name="Power State",
+        device_class=BinarySensorDeviceClass.POWER,
+        icon_on="mdi:power",
+        icon_off="mdi:power-off",
+        value_fn=lambda coordinator: coordinator.client.is_on
+        if coordinator.client
+        else False,
+    ),
+    MadvrBinarySensorEntityDescription(
+        key=_SIGNAL_STATE,
+        name="Signal State",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        icon_on="mdi:signal",
+        icon_off="mdi:signal-off",
+        value_fn=lambda coordinator: bool(
+            coordinator.data.get("is_signal", False) if coordinator.data else False
+        ),
+    ),
+    MadvrBinarySensorEntityDescription(
+        key=_HDR_FLAG,
+        name="HDR Flag",
+        device_class=None,
+        icon_on="mdi:hdr",
+        icon_off="mdi:hdr-off",
+        value_fn=lambda coordinator: bool(
+            coordinator.data.get("hdr_flag", False) if coordinator.data else False
+        ),
+    ),
+    MadvrBinarySensorEntityDescription(
+        key=_OUTGOING_HDR_FLAG,
+        name="Outgoing HDR Flag",
+        device_class=None,
+        icon_on="mdi:hdr",
+        icon_off="mdi:hdr-off",
+        value_fn=lambda coordinator: bool(
+            coordinator.data.get("outgoing_hdr_flag", False)
+            if coordinator.data
+            else False
+        ),
+    ),
+)
+
+
+class MadvrBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Base class for madVR binary sensors."""
 
     _attr_has_entity_name = True
     coordinator: MadVRCoordinator
+    entity_description: MadvrBinarySensorEntityDescription
 
-    def __init__(self, coordinator: MadVRCoordinator, name: str, key: str) -> None:
-        """Initialize the base binary sensor."""
+    def __init__(
+        self,
+        coordinator: MadVRCoordinator,
+        description: MadvrBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the binary sensor."""
         super().__init__(coordinator)
-        self._attr_name = name
-        self._key = key
-        self._attr_unique_id = f"{coordinator.mac}_{key}"
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return bool(self.entity_description.value_fn(self.coordinator))
+
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+        return (
+            self.entity_description.icon_on
+            if self.is_on
+            else self.entity_description.icon_off
+        )
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -54,91 +122,13 @@ class MadvrBaseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
 
-class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the power state of the madVR device."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        """Initialize the power state binary sensor."""
-        super().__init__(coordinator, f"{coordinator.name} Power State", "power_state")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the device is on."""
-        return self.coordinator.client.is_on if self.coordinator.client else False
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        return "mdi:power" if self.is_on else "mdi:power-off"
-
-
-class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the signal state of the madVR device."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        """Initialize the signal state binary sensor."""
-        super().__init__(
-            coordinator, f"{coordinator.name} Signal State", "signal_state"
-        )
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the device is receiving a signal."""
-        return bool(
-            self.coordinator.data.get("is_signal", False)
-            if self.coordinator.data
-            else False
-        )
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        return "mdi:signal" if self.is_on else "mdi:signal-off"
-
-
-class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the HDR flag state of the madVR device."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        """Initialize the HDR flag binary sensor."""
-        super().__init__(coordinator, f"{coordinator.name} HDR Flag", "hdr_flag")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if HDR is detected."""
-        return bool(
-            self.coordinator.data.get("hdr_flag", False)
-            if self.coordinator.data
-            else False
-        )
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        return "mdi:hdr" if self.is_on else "mdi:hdr-off"
-
-
-class MadvrHDROutgoingFlagBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the outgoing HDR flag state of the madVR device."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        """Initialize the outgoing HDR flag binary sensor."""
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing HDR Flag",
-            "outgoing_hdr_flag",
-        )
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if HDR is detected."""
-        return bool(
-            self.coordinator.data.get("outgoing_hdr_flag", False)
-            if self.coordinator.data
-            else False
-        )
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        return "mdi:hdr" if self.is_on else "mdi:hdr-off"
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MadVRConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the binary sensor entities."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        MadvrBinarySensor(coordinator, description) for description in BINARY_SENSORS
+    )

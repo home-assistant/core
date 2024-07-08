@@ -34,7 +34,7 @@ async def test_power_state_binary_sensor(
 ) -> None:
     """Test the power state binary sensor."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_madvr_power_state"
+    entity_id = "binary_sensor.madvr_envy_power_state"
 
     state = hass.states.get(entity_id)
     # this gets the power state from the client
@@ -48,7 +48,7 @@ async def test_signal_state_binary_sensor(
 ) -> None:
     """Test the signal state binary sensor."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_madvr_signal_state"
+    entity_id = "binary_sensor.madvr_envy_signal_state"
 
     # Test initial state (assuming no signal)
     # mock_madvr_client.msg_dict = {"is_signal": False}
@@ -73,7 +73,7 @@ async def test_hdr_flag_binary_sensor(
 ) -> None:
     """Test the HDR flag binary sensor."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_madvr_hdr_flag"
+    entity_id = "binary_sensor.madvr_envy_hdr_flag"
 
     # Test initial state (assuming no HDR)
     coordinator = mock_config_entry.runtime_data
@@ -99,7 +99,7 @@ async def test_outgoing_hdr_flag_binary_sensor(
 ) -> None:
     """Test the outgoing HDR flag binary sensor."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_madvr_outgoing_hdr_flag"
+    entity_id = "binary_sensor.madvr_envy_outgoing_hdr_flag"
 
     # Test initial state (assuming no outgoing HDR)
     coordinator = mock_config_entry.runtime_data
