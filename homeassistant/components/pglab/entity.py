@@ -48,6 +48,7 @@ class PGLabEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
+        await super().async_added_to_hass()
 
         # Inform PGLab discovery instance that a new entity is available.
         # This is important to know in case the device needs to be reconfigured
@@ -56,6 +57,8 @@ class PGLabEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
+
+        await super().async_will_remove_from_hass()
         await self._entity.unsubscribe_topics()
 
     @callback
