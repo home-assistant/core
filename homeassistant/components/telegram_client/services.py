@@ -2,9 +2,7 @@
 
 from typing import Any
 
-from telethon import Button, TelegramClient
-
-from homeassistant.core import HomeAssistant
+from telethon import Button
 
 from .const import (
     ATTR_BUTTONS,
@@ -15,12 +13,14 @@ from .const import (
     ATTR_KEYBOARD_SINGLE_USE,
     ATTR_TARGET_ID,
     ATTR_TARGET_USERNAME,
+    CONF_LAST_SENT_MESSAGE_ID,
     SERVICE_SEND_MESSAGE,
 )
+from .coordinator import TelegramClientCoordinator
 
 
 async def async_telegram_call(
-    hass: HomeAssistant, client: TelegramClient, service: str, **kwargs
+    coordinator: TelegramClientCoordinator, service: str, **kwargs
 ) -> Any:
     """Process Telegram service call."""
 
@@ -31,6 +31,8 @@ async def async_telegram_call(
             else Button.inline(data.get("text"), data.get("data"))
         )
 
+    hass = coordinator.hass
+    client = coordinator.client
     kwargs["entity"] = kwargs.pop(
         ATTR_TARGET_USERNAME, kwargs.pop(ATTR_TARGET_ID, None)
     )
@@ -57,7 +59,10 @@ async def async_telegram_call(
     if file := kwargs.get(ATTR_FILE):
         kwargs[ATTR_FILE] = list(map(hass.config.path, file))
     if service == SERVICE_SEND_MESSAGE:
-        return await client.send_message(**kwargs)
+        message = await client.send_message(**kwargs)
+        coordinator.data.update({CONF_LAST_SENT_MESSAGE_ID: message.id})
+        coordinator.async_update_listeners()
+        return message
     raise NotImplementedError(
         f"Method {service} is not implemented for Telegram client."
     )

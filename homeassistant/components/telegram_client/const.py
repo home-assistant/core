@@ -17,6 +17,7 @@ CONF_USER_ID: Final = "user_id"
 CONF_USERNAME: Final = "username"
 CONF_LAST_NAME: Final = "last_name"
 CONF_RESTRICTED: Final = "restricted"
+CONF_LAST_SENT_MESSAGE_ID: Final = "last_sent_message_id"
 
 DOMAIN: Final = "telegram_client"
 

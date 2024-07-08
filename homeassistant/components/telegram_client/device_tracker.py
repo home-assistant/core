@@ -69,8 +69,7 @@ class TelegramClientDeviceTracker(TelegramClientEntity, ScannerEntity):
     async def async_send_message(self, **kwargs) -> None:
         """Process Telegram service call."""
         await async_telegram_call(
-            self.coordinator.hass,
-            self.coordinator.client,
+            self.coordinator,
             SERVICE_SEND_MESSAGE,
             **kwargs,
         )

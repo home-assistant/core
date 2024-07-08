@@ -123,17 +123,16 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         me = await self.async_client_call(self._client.get_me())
-        return {
-            "me": {
-                "user_id": me.id,
-                "username": me.username,
-                "restricted": me.restricted,
-                "premium": me.premium,
-                "last_name": me.last_name,
-                "first_name": me.first_name,
-                "phone": me.phone,
-            }
-        }
+        return dict(
+            self.data or {},
+            user_id=me.id,
+            username=me.username,
+            restricted=me.restricted,
+            premium=me.premium,
+            last_name=me.last_name,
+            first_name=me.first_name,
+            phone=me.phone,
+        )
 
     async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Call a coro or raise exception."""

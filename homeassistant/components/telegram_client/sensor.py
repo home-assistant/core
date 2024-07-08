@@ -1,15 +1,15 @@
 """Telegram client sensor entity class."""
 
-from dataclasses import dataclass
-
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_FIRST_NAME,
     CONF_LAST_NAME,
+    CONF_LAST_SENT_MESSAGE_ID,
     CONF_PHONE,
     CONF_TYPE,
     CONF_TYPE_CLIENT,
@@ -18,47 +18,41 @@ from .const import (
 )
 from .entity import TelegramClientEntity
 
-
-@dataclass(frozen=True, kw_only=True)
-class TelegramClientSensorEntityDescription(SensorEntityDescription):
-    """Describes Telegram client sensor entity."""
-
-    data_key: str
-
-
-SENSORS: tuple[TelegramClientSensorEntityDescription, ...] = (
-    TelegramClientSensorEntityDescription(
+SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key=CONF_USER_ID,
         translation_key=CONF_USER_ID,
         name="User ID",
-        data_key="me",
         icon="mdi:id-card",
     ),
-    TelegramClientSensorEntityDescription(
+    SensorEntityDescription(
         key=CONF_USERNAME,
         translation_key=CONF_USERNAME,
         name="Username",
-        data_key="me",
         icon="mdi:account",
     ),
-    TelegramClientSensorEntityDescription(
+    SensorEntityDescription(
         key=CONF_LAST_NAME,
         translation_key=CONF_LAST_NAME,
         name="Last name",
-        data_key="me",
     ),
-    TelegramClientSensorEntityDescription(
+    SensorEntityDescription(
         key=CONF_FIRST_NAME,
         translation_key=CONF_FIRST_NAME,
         name="First name",
-        data_key="me",
     ),
-    TelegramClientSensorEntityDescription(
+    SensorEntityDescription(
         key=CONF_PHONE,
         translation_key=CONF_PHONE,
         name="Phone",
-        data_key="me",
         icon="mdi:card-account-phone",
+    ),
+    SensorEntityDescription(
+        key=CONF_LAST_SENT_MESSAGE_ID,
+        translation_key=CONF_LAST_SENT_MESSAGE_ID,
+        name="Last sent message ID",
+        icon="mdi:message-arrow-right",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -81,19 +75,13 @@ async def async_setup_entry(
 class TelegramClientSensorEntity(TelegramClientEntity, SensorEntity):
     """Telegram client sensor entity class."""
 
-    entity_description: TelegramClientSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            self.entity_description.data_key in self.coordinator.data
-            and self.entity_description.key
-            in self.coordinator.data[self.entity_description.data_key]
-        ):
-            self._attr_native_value = self.coordinator.data[
-                self.entity_description.data_key
-            ][self.entity_description.key]
+        if self.entity_description.key in self.coordinator.data:
+            self._attr_native_value = self.coordinator.data[self.entity_description.key]
         else:
             self._attr_native_value = None
 

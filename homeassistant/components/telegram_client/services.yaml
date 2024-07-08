@@ -7,15 +7,14 @@ send_message:
       integration: telegram_client
   fields:
     target_username:
-      example: me, telegram, BotFather, +380987654321
+      example: me
       selector:
         text:
     target_id:
-      example: -1000000000000, 1000000000000
       selector:
         number:
     message:
-      example: The garage door has been open for 10 minutes.
+      example: This is the test message, sent from **Telegram client** for Home Assistant.
       selector:
         text:
     reply_to:
@@ -23,6 +22,7 @@ send_message:
         number:
           mode: box
     parse_mode:
+      example: markdown
       selector:
         select:
           options:
@@ -32,6 +32,9 @@ send_message:
       selector:
         boolean:
     file:
+      example:
+        - configuration.yaml
+        - secrets.yaml
       selector:
         object:
     force_document:
@@ -44,9 +47,23 @@ send_message:
       selector:
         object:
     inline_keyboard:
+      example:
+        - - text: 😂
+            data: joy
+          - text: 🤣
+            data: rofl
+          - text: 😅
+            data: sweat
+        - - text: 😀
+            data: grinning
+          - text: 😃
+            data: smiley
+          - text: smile
+            data: 😄
       selector:
         object:
     keyboard_resize:
+      example: true
       selector:
         boolean:
     keyboard_single_use:
