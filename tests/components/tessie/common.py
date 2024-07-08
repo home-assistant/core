@@ -12,9 +12,11 @@ from homeassistant.components.tessie.const import DOMAIN, TessieStatus
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
+# Tessie library
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
 TEST_VEHICLE_STATUS_AWAKE = {"status": TessieStatus.AWAKE}
@@ -46,9 +48,27 @@ ERROR_VIRTUAL_KEY = ClientResponseError(
 )
 ERROR_CONNECTION = ClientConnectionError()
 
+# Fleet API library
+PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
+LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
+SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+RESPONSE_OK = {"response": {}, "error": None}
+COMMAND_OK = {"response": {"result": True, "reason": ""}}
+SCOPES = [
+    "user_data",
+    "vehicle_device_data",
+    "vehicle_cmds",
+    "vehicle_charging_cmds",
+    "energy_device_data",
+    "energy_cmds",
+    "offline_access",
+    "openid",
+]
+NO_SCOPES = ["user_data", "offline_access", "openid"]
+
 
 async def setup_platform(
-    hass: HomeAssistant, platforms: list[Platform] = PLATFORMS
+    hass: HomeAssistant, platforms: list[Platform] | UndefinedType = UNDEFINED
 ) -> MockConfigEntry:
     """Set up the Tessie platform."""
 
@@ -58,7 +78,10 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.tessie.PLATFORMS", platforms):
+    with patch(
+        "homeassistant.components.tessie.PLATFORMS",
+        PLATFORMS if platforms is UNDEFINED else platforms,
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 

@@ -493,7 +493,7 @@ async def test_group_probe_cleanup_called(
 
 
 async def test_quirks_v2_entity_discovery(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
 ) -> None:
@@ -561,7 +561,7 @@ async def test_quirks_v2_entity_discovery(
 
 
 async def test_quirks_v2_entity_discovery_e1_curtain(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
 ) -> None:

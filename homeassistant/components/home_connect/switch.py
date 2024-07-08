@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
+    BSH_CHILD_LOCK_STATE,
     BSH_OPERATION_STATE,
     BSH_POWER_ON,
     BSH_POWER_STATE,
@@ -39,6 +40,7 @@ async def async_setup_entry(
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
             entity_list = [HomeConnectProgramSwitch(**d) for d in entity_dicts]
             entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
+            entity_list += [HomeConnectChildLockSwitch(device_dict[CONF_DEVICE])]
             entities += entity_list
         return entities
 
@@ -153,3 +155,44 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         else:
             self._attr_is_on = None
         _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
+
+
+class HomeConnectChildLockSwitch(HomeConnectEntity, SwitchEntity):
+    """Child lock switch class for Home Connect."""
+
+    def __init__(self, device) -> None:
+        """Initialize the entity."""
+        super().__init__(device, "ChildLock")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Switch child lock on."""
+        _LOGGER.debug("Tried to switch child lock on device: %s", self.name)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, BSH_CHILD_LOCK_STATE, True
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn on child lock on device: %s", err)
+            self._attr_is_on = False
+        self.async_entity_update()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Switch child lock off."""
+        _LOGGER.debug("Tried to switch off child lock on device: %s", self.name)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, BSH_CHILD_LOCK_STATE, False
+            )
+        except HomeConnectError as err:
+            _LOGGER.error(
+                "Error while trying to turn off child lock on device: %s", err
+            )
+            self._attr_is_on = True
+        self.async_entity_update()
+
+    async def async_update(self) -> None:
+        """Update the switch's status."""
+        self._attr_is_on = False
+        if self.device.appliance.status.get(BSH_CHILD_LOCK_STATE, {}).get(ATTR_VALUE):
+            self._attr_is_on = True
+        _LOGGER.debug("Updated child lock, new state: %s", self._attr_is_on)

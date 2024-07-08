@@ -20,7 +20,6 @@ from homeassistant.components.shelly.const import (
     ENTRY_RELOAD_COOLDOWN,
     MAX_PUSH_UPDATE_FAILURES,
     RPC_RECONNECT_INTERVAL,
-    SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
@@ -352,7 +351,7 @@ async def test_block_button_click_event(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
@@ -564,7 +563,7 @@ async def test_rpc_update_entry_sleep_period(
 
     # Move time to generate sleep period update
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 3600)
-    freezer.tick(timedelta(seconds=600 * SLEEP_PERIOD_MULTIPLIER))
+    freezer.tick(timedelta(seconds=600 * UPDATE_PERIOD_MULTIPLIER))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -596,7 +595,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     assert get_entity_state(hass, entity_id) == "22.9"
 
     # Move time to generate polling
-    freezer.tick(timedelta(seconds=SLEEP_PERIOD_MULTIPLIER * 1000))
+    freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 1000))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -889,7 +888,7 @@ async def test_block_sleeping_device_connection_error(
     assert get_entity_state(hass, entity_id) == STATE_ON
 
     # Move time to generate sleep period update
-    freezer.tick(timedelta(seconds=sleep_period * SLEEP_PERIOD_MULTIPLIER))
+    freezer.tick(timedelta(seconds=sleep_period * UPDATE_PERIOD_MULTIPLIER))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -934,7 +933,7 @@ async def test_rpc_sleeping_device_connection_error(
     assert get_entity_state(hass, entity_id) == STATE_ON
 
     # Move time to generate sleep period update
-    freezer.tick(timedelta(seconds=sleep_period * SLEEP_PERIOD_MULTIPLIER))
+    freezer.tick(timedelta(seconds=sleep_period * UPDATE_PERIOD_MULTIPLIER))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

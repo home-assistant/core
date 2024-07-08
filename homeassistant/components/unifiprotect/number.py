@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
-from typing import Any
 
 from uiprotect.data import (
     Camera,
@@ -14,22 +12,16 @@ from uiprotect.data import (
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
 )
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd
-
-_LOGGER = logging.getLogger(__name__)
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,13 +52,13 @@ async def _set_auto_close(obj: Doorlock, value: float) -> None:
 
 
 def _get_chime_duration(obj: Camera) -> int:
-    return int(obj.chime_duration.total_seconds())
+    return int(obj.chime_duration_seconds)
 
 
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="wdr_value",
-        name="Wide Dynamic Range",
+        name="Wide dynamic range",
         icon="mdi:state-machine",
         entity_category=EntityCategory.CONFIG,
         ufp_min=0,
@@ -79,7 +71,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="mic_level",
-        name="Microphone Level",
+        name="Microphone level",
         icon="mdi:microphone",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -94,7 +86,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="zoom_position",
-        name="Zoom Level",
+        name="Zoom level",
         icon="mdi:magnify-plus-outline",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -108,7 +100,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="chime_duration",
-        name="Chime Duration",
+        name="Chime duration",
         icon="mdi:bell",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -123,7 +115,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="icr_lux",
-        name="Infrared Custom Lux Trigger",
+        name="Infrared custom lux trigger",
         icon="mdi:white-balance-sunny",
         entity_category=EntityCategory.CONFIG,
         ufp_min=1,
@@ -140,7 +132,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="sensitivity",
-        name="Motion Sensitivity",
+        name="Motion sensitivity",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -154,7 +146,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription[Light](
         key="duration",
-        name="Auto-shutoff Duration",
+        name="Auto-shutoff duration",
         icon="mdi:camera-timer",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -171,7 +163,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="sensitivity",
-        name="Motion Sensitivity",
+        name="Motion sensitivity",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -188,7 +180,7 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription[Doorlock](
         key="auto_lock_time",
-        name="Auto-lock Timeout",
+        name="Auto-lock timeout",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -217,7 +209,7 @@ CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
 )
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_NUMBERS,
     ModelType.LIGHT: LIGHT_NUMBERS,
     ModelType.SENSOR: SENSE_NUMBERS,
@@ -245,10 +237,7 @@ async def async_setup_entry(
             )
         )
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
+    data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
         async_all_device_entities(
             data,
@@ -263,6 +252,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
 
     device: Camera | Light
     entity_description: ProtectNumberEntityDescription
+    _state_attrs = ("_attr_available", "_attr_native_value")
 
     def __init__(
         self,
@@ -277,20 +267,10 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         self._attr_native_step = self.entity_description.ufp_step
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_native_value)

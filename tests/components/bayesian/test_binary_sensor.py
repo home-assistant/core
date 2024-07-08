@@ -718,17 +718,18 @@ async def test_observed_entities(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert ["sensor.test_monitored"] == state.attributes.get(
-        "occurred_observation_entities"
-    )
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.test_monitored"
+    ]
 
     hass.states.async_set("sensor.test_monitored1", "on")
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
-        state.attributes.get("occurred_observation_entities")
-    )
+    assert sorted(state.attributes.get("occurred_observation_entities")) == [
+        "sensor.test_monitored",
+        "sensor.test_monitored1",
+    ]
 
 
 async def test_state_attributes_are_serializable(hass: HomeAssistant) -> None:
@@ -785,9 +786,10 @@ async def test_state_attributes_are_serializable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
-        state.attributes.get("occurred_observation_entities")
-    )
+    assert sorted(state.attributes.get("occurred_observation_entities")) == [
+        "sensor.test_monitored",
+        "sensor.test_monitored1",
+    ]
 
     for attrs in state.attributes.values():
         json.dumps(attrs)
@@ -1012,7 +1014,10 @@ async def test_template_triggers(hass: HomeAssistant) -> None:
 
     events = []
     async_track_state_change_event(
-        hass, "binary_sensor.test_binary", callback(lambda event: events.append(event))
+        hass,
+        "binary_sensor.test_binary",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     context = Context()
@@ -1051,7 +1056,10 @@ async def test_state_triggers(hass: HomeAssistant) -> None:
 
     events = []
     async_track_state_change_event(
-        hass, "binary_sensor.test_binary", callback(lambda event: events.append(event))
+        hass,
+        "binary_sensor.test_binary",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     context = Context()

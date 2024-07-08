@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfEnergy,
+    UnitOfFrequency,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -801,3 +802,55 @@ async def test_rpc_disabled_xtotal_counter(
 
     entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
     assert hass.states.get(entity_id) is None
+
+
+async def test_rpc_pulse_counter_frequency_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC counter sensor."""
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_frequency"
+    state = hass.states.get(entity_id)
+    assert state.state == "208.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfFrequency.HERTZ
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-input:2-counter_frequency"
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_frequency_value"
+    assert hass.states.get(entity_id).state == "6.11"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-input:2-counter_frequency_value"
+
+
+async def test_rpc_disabled_xfreq(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC input with the xfreq sensor disabled."""
+    status = deepcopy(mock_rpc_device.status)
+    status["input:2"] = {
+        "id": 2,
+        "counts": {"total": 56174, "xtotal": 561.74},
+        "freq": 208.00,
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_frequency_value"
+
+    state = hass.states.get(entity_id)
+    assert not state
+
+    entry = entity_registry.async_get(entity_id)
+    assert not entry

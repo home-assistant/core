@@ -1,5 +1,6 @@
 """The tests for local file camera component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -24,7 +25,7 @@ ENTITY_CAMERA = "camera.demo_camera"
 
 
 @pytest.fixture
-async def camera_only() -> None:
+def camera_only() -> Generator[None]:
     """Enable only the button platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -34,7 +35,7 @@ async def camera_only() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def demo_camera(hass, camera_only):
+async def demo_camera(hass: HomeAssistant, camera_only: None) -> None:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}

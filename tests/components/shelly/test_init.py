@@ -263,7 +263,7 @@ async def test_sleeping_block_device_online(
     assert "will resume when device is online" in caplog.text
 
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
@@ -284,7 +284,7 @@ async def test_sleeping_rpc_device_online(
     assert "will resume when device is online" in caplog.text
 
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
@@ -302,7 +302,7 @@ async def test_sleeping_rpc_device_online_new_firmware(
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "sys", "wakeup_period", 1500)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == 1500

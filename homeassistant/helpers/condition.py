@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Callable, Container
+from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
@@ -12,7 +12,6 @@ import re
 import sys
 from typing import Any, Protocol, cast
 
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import zone as zone_cmp

@@ -10,6 +10,7 @@ from RFXtrx import Connect, RFXtrxTransport
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -37,7 +38,7 @@ def create_rfx_test_cfg(
 
 
 async def setup_rfx_test_cfg(
-    hass,
+    hass: HomeAssistant,
     device="abcd",
     automatic_add=False,
     devices: dict[str, dict] | None = None,

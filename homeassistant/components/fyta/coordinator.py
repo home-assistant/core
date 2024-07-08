@@ -1,8 +1,10 @@
 """Coordinator for FYTA integration."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -12,7 +14,6 @@ from fyta_cli.fyta_exceptions import (
     FytaPlantError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -20,13 +21,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_EXPIRATION
 
+if TYPE_CHECKING:
+    from . import FytaConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
     """Fyta custom coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: FytaConfigEntry
 
     def __init__(self, hass: HomeAssistant, fyta: FytaConnector) -> None:
         """Initialize my coordinator."""
