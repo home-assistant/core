@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import defaultdict
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 import functools
@@ -155,7 +154,6 @@ class DefaultAgent(ConversationEntity):
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents] = {}
-        self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = config_intents
@@ -220,12 +218,7 @@ class DefaultAgent(ConversationEntity):
             return trigger_result
 
         language = user_input.language or self.hass.config.language
-        lang_intents = self._lang_intents.get(language)
-
-        # Reload intents if missing or new components
-        if lang_intents is None:
-            # Load intents in executor
-            lang_intents = await self.async_get_or_load_intents(language)
+        lang_intents = await self.async_get_or_load_intents(language)
 
         if lang_intents is None:
             # No intents loaded
@@ -297,7 +290,7 @@ class DefaultAgent(ConversationEntity):
             return ConversationResult(response=response)
 
         # Intent match or failure
-        lang_intents = self._lang_intents.get(language)
+        lang_intents = await self.async_get_or_load_intents(language)
 
         if result is None:
             # Intent was not recognized
@@ -607,6 +600,9 @@ class DefaultAgent(ConversationEntity):
     async def async_reload(self, language: str | None = None) -> None:
         """Clear cached intents for a language."""
         if language is None:
+            language = self.hass.config.language
+
+        if language is None:
             self._lang_intents.clear()
             _LOGGER.debug("Cleared intents for all languages")
         else:
@@ -629,27 +625,16 @@ class DefaultAgent(ConversationEntity):
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
-        hass_components = set(self.hass.config.components)
-        async with self._lang_lock[language]:
-            return await self.hass.async_add_executor_job(
-                self._get_or_load_intents, language, hass_components
-            )
+        if lang_intents := self._lang_intents.get(language):
+            return lang_intents
 
-    def _get_or_load_intents(
-        self, language: str, hass_components: set[str]
-    ) -> LanguageIntents | None:
+        return await self.hass.async_add_executor_job(self._load_intents, language)
+
+    def _load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
-        lang_intents = self._lang_intents.get(language)
-
-        if lang_intents is None:
-            intents_dict: dict[str, Any] = {}
-            language_variant: str | None = None
-        else:
-            intents_dict = lang_intents.intents_dict
-            language_variant = lang_intents.language_variant
-
+        intents_dict: dict[str, Any] = {}
+        language_variant: str | None = None
         supported_langs = set(get_languages())
-        intents_changed = False
 
         if not language_variant:
             # Choose a language variant upfront and commit to it for custom
@@ -677,7 +662,6 @@ class DefaultAgent(ConversationEntity):
                 merge_dict(intents_dict, lang_variant_intents)
 
                 # Will need to recreate graph
-                intents_changed = True
                 _LOGGER.debug(
                     "Loaded intents  language=%s (%s)",
                     language,
@@ -685,94 +669,79 @@ class DefaultAgent(ConversationEntity):
                 )
 
         # Check for custom sentences in <config>/custom_sentences/<language>/
-        if lang_intents is None:
-            # Only load custom sentences once, otherwise they will be re-loaded
-            # when components change.
-            custom_sentences_dir = Path(
-                self.hass.config.path("custom_sentences", language_variant)
-            )
-            if custom_sentences_dir.is_dir():
-                for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
-                    with custom_sentences_path.open(
-                        encoding="utf-8"
-                    ) as custom_sentences_file:
-                        # Merge custom sentences
-                        if isinstance(
-                            custom_sentences_yaml := yaml.safe_load(
-                                custom_sentences_file
-                            ),
-                            dict,
-                        ):
-                            # Add metadata so we can identify custom sentences in the debugger
-                            custom_intents_dict = custom_sentences_yaml.get(
-                                "intents", {}
-                            )
-                            for intent_dict in custom_intents_dict.values():
-                                intent_data_list = intent_dict.get("data", [])
-                                for intent_data in intent_data_list:
-                                    sentence_metadata = intent_data.get("metadata", {})
-                                    sentence_metadata[METADATA_CUSTOM_SENTENCE] = True
-                                    sentence_metadata[METADATA_CUSTOM_FILE] = str(
-                                        custom_sentences_path.relative_to(
-                                            custom_sentences_dir.parent
-                                        )
+        custom_sentences_dir = Path(
+            self.hass.config.path("custom_sentences", language_variant)
+        )
+        if custom_sentences_dir.is_dir():
+            for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
+                with custom_sentences_path.open(
+                    encoding="utf-8"
+                ) as custom_sentences_file:
+                    # Merge custom sentences
+                    if isinstance(
+                        custom_sentences_yaml := yaml.safe_load(custom_sentences_file),
+                        dict,
+                    ):
+                        # Add metadata so we can identify custom sentences in the debugger
+                        custom_intents_dict = custom_sentences_yaml.get("intents", {})
+                        for intent_dict in custom_intents_dict.values():
+                            intent_data_list = intent_dict.get("data", [])
+                            for intent_data in intent_data_list:
+                                sentence_metadata = intent_data.get("metadata", {})
+                                sentence_metadata[METADATA_CUSTOM_SENTENCE] = True
+                                sentence_metadata[METADATA_CUSTOM_FILE] = str(
+                                    custom_sentences_path.relative_to(
+                                        custom_sentences_dir.parent
                                     )
-                                    intent_data["metadata"] = sentence_metadata
+                                )
+                                intent_data["metadata"] = sentence_metadata
 
-                            merge_dict(intents_dict, custom_sentences_yaml)
-                        else:
-                            _LOGGER.warning(
-                                "Custom sentences file does not match expected format path=%s",
-                                custom_sentences_file.name,
-                            )
+                        merge_dict(intents_dict, custom_sentences_yaml)
+                    else:
+                        _LOGGER.warning(
+                            "Custom sentences file does not match expected format path=%s",
+                            custom_sentences_file.name,
+                        )
 
-                    # Will need to recreate graph
-                    intents_changed = True
-                    _LOGGER.debug(
-                        "Loaded custom sentences language=%s (%s), path=%s",
-                        language,
-                        language_variant,
-                        custom_sentences_path,
-                    )
-
-            # Load sentences from HA config for default language only
-            if self._config_intents and (
-                self.hass.config.language in (language, language_variant)
-            ):
-                hass_config_path = self.hass.config.path()
-                merge_dict(
-                    intents_dict,
-                    {
-                        "intents": {
-                            intent_name: {
-                                "data": [
-                                    {
-                                        "sentences": sentences,
-                                        "metadata": {
-                                            METADATA_CUSTOM_SENTENCE: True,
-                                            METADATA_CUSTOM_FILE: hass_config_path,
-                                        },
-                                    }
-                                ]
-                            }
-                            for intent_name, sentences in self._config_intents.items()
-                        }
-                    },
-                )
-                intents_changed = True
+                # Will need to recreate graph
                 _LOGGER.debug(
-                    "Loaded intents from configuration.yaml",
+                    "Loaded custom sentences language=%s (%s), path=%s",
+                    language,
+                    language_variant,
+                    custom_sentences_path,
                 )
+
+        # Load sentences from HA config for default language only
+        if self._config_intents and (
+            self.hass.config.language in (language, language_variant)
+        ):
+            hass_config_path = self.hass.config.path()
+            merge_dict(
+                intents_dict,
+                {
+                    "intents": {
+                        intent_name: {
+                            "data": [
+                                {
+                                    "sentences": sentences,
+                                    "metadata": {
+                                        METADATA_CUSTOM_SENTENCE: True,
+                                        METADATA_CUSTOM_FILE: hass_config_path,
+                                    },
+                                }
+                            ]
+                        }
+                        for intent_name, sentences in self._config_intents.items()
+                    }
+                },
+            )
+            _LOGGER.debug(
+                "Loaded intents from configuration.yaml",
+            )
 
         if not intents_dict:
             return None
 
-        if not intents_changed and lang_intents is not None:
-            return lang_intents
-
-        # This can be made faster by not re-parsing existing sentences.
-        # But it will likely only be called once anyways, unless new
-        # components with sentences are often being loaded.
         intents = Intents.from_dict(intents_dict)
 
         # Load responses
@@ -780,19 +749,14 @@ class DefaultAgent(ConversationEntity):
         intent_responses = responses_dict.get("intents", {})
         error_responses = responses_dict.get("errors", {})
 
-        if lang_intents is None:
-            lang_intents = LanguageIntents(
-                intents,
-                intents_dict,
-                intent_responses,
-                error_responses,
-                language_variant,
-            )
-            self._lang_intents[language] = lang_intents
-        else:
-            lang_intents.intents = intents
-            lang_intents.intent_responses = intent_responses
-            lang_intents.error_responses = error_responses
+        lang_intents = LanguageIntents(
+            intents,
+            intents_dict,
+            intent_responses,
+            error_responses,
+            language_variant,
+        )
+        self._lang_intents[language] = lang_intents
 
         return lang_intents
 
