@@ -4,6 +4,7 @@ send_message:
   target:
     entity:
       domain: device_tracker
+      integration: telegram_client
   fields:
     target_username:
       example: me, telegram, BotFather, +380987654321

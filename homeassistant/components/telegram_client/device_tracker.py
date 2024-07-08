@@ -5,11 +5,13 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
-from .const import SERVICE_SEND_MESSAGE
+from .const import DOMAIN, SERVICE_SEND_MESSAGE
 from .coordinator import TelegramClientCoordinator
 from .entity import TelegramClientEntity
 from .schemas import SERVICE_SEND_MESSAGE_SCHEMA
@@ -22,13 +24,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Telegram client device tracker entity."""
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
         SERVICE_SEND_MESSAGE_SCHEMA,
         "async_send_message",
     )
-    coordinator = entry.runtime_data
+    coordinator = hass.data[DOMAIN].get(entry.entry_id)
     async_add_entities(
         [
             TelegramClientDeviceTracker(
@@ -36,7 +38,7 @@ async def async_setup_entry(
                 EntityDescription(
                     key="connected",
                     translation_key="connected",
-                    name="Connected",
+                    name=coordinator.name,
                 ),
             )
         ]

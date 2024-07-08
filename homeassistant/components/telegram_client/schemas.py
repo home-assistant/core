@@ -56,21 +56,26 @@ STEP_PHONE_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PHONE): cv.string,
     }
 )
-STEP_TOKEN_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TOKEN): cv.string,
-    }
-)
+
+
+def step_token_data_schema(default_token=None):
+    """Step Token data schema."""
+    return vol.Schema({vol.Required(CONF_TOKEN, default=default_token): cv.string})
+
+
 STEP_OTP_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OTP): cv.string,
     }
 )
-STEP_PASSWORD_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
-)
+
+
+def step_password_data_schema(default_password=None):
+    """Step Password data schema."""
+    return vol.Schema(
+        {vol.Required(CONF_PASSWORD, default=default_password): cv.string}
+    )
+
 
 _BASE_SERVICE_SCHEMA = vol.Schema(
     {

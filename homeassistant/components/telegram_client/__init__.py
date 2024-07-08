@@ -7,17 +7,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import DOMAIN
 from .coordinator import TelegramClientCoordinator, TelegramClientEntryConfigEntry
-from .schemas import SERVICE_SEND_MESSAGE_SCHEMA
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
 ]
-
-SERVICE_SCHEMAS = {SERVICE_SEND_MESSAGE: SERVICE_SEND_MESSAGE_SCHEMA}
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -46,8 +43,8 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if entry.entry_id in hass.data[DOMAIN]:
-        coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TelegramClientCoordinator = hass.data[DOMAIN].get(entry.entry_id)
+    if coordinator:
         await coordinator.async_client_disconnect()
 
     return True

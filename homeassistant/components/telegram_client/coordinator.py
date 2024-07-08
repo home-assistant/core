@@ -1,19 +1,25 @@
 """Telegram client data update coordinator."""
 
-from asyncio import timeout
+import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
 from pathlib import Path
-from sqlite3 import OperationalError
+import re
+import sqlite3
 from typing import Any
 
 from telethon import TelegramClient, __version__ as sw_version, events
+from telethon.errors import AccessTokenExpiredError, AccessTokenInvalidError
 from telethon.errors.common import AuthKeyNotFound
 from telethon.errors.rpcbaseerrors import AuthKeyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, IntegrationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    IntegrationError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -21,8 +27,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_API_HASH,
     CONF_API_ID,
-    CONF_SESSION_ID,
+    CONF_PHONE,
+    CONF_TOKEN,
     CONF_TYPE,
+    CONF_TYPE_CLIENT,
     DOMAIN,
     LOGGER,
     UPDATE_INTERVAL,
@@ -35,6 +43,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     """Telegram client coordinator."""
 
     _unique_id: str | None
+    _entry: TelegramClientEntryConfigEntry
     _client: TelegramClient
 
     def __init__(
@@ -42,6 +51,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize Telegram client coordinator."""
         self._unique_id = entry.unique_id
+        self._entry = entry
         name = f"Telegram {entry.data[CONF_TYPE]} ({entry.unique_id})"
         self._device_info = {
             "identifiers": {(DOMAIN, entry.unique_id)},
@@ -59,12 +69,13 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id, **self._device_info
         )
+        session_id = (
+            re.sub(r"\D", "", self._entry.data[CONF_PHONE])
+            if self._entry.data[CONF_TYPE] == CONF_TYPE_CLIENT
+            else self._entry.data[CONF_TOKEN].split(":")[0]
+        )
         self._client = TelegramClient(
-            Path(
-                hass.config.path(
-                    STORAGE_DIR, DOMAIN, f"{entry.data[CONF_SESSION_ID]}.session"
-                )
-            ),
+            Path(hass.config.path(STORAGE_DIR, DOMAIN, f"{session_id}.session")),
             entry.data[CONF_API_ID],
             entry.data[CONF_API_HASH],
         )
@@ -124,21 +135,18 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             }
         }
 
-    async def async_client_call[_T](
-        self, coro: Coroutine[Any, Any, _T], retries: int = 1
-    ) -> _T:
+    async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Call a coro or raise exception."""
         try:
-            if not self._client.is_connected():
-                await self._client.connect()
+            await self.async_client_start()
             if not await self._client.is_user_authorized():
                 raise ConfigEntryAuthFailed(
                     f"User is not authorized for {self._unique_id}"
                 )
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 result = await coro
                 if result is None:
-                    raise ConfigEntryAuthFailed(
+                    raise ConfigEntryNotReady(
                         f"API call returned None for {self._unique_id}"
                     )
                 return result
@@ -146,22 +154,43 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             AuthKeyError,
             AuthKeyNotFound,
             ConfigEntryAuthFailed,
-            OperationalError,
         ) as err:
-            raise ConfigEntryAuthFailed(
-                f"Credentials expired for {self._unique_id}"
-            ) from err
+            await self._client.log_out()
+            raise ConfigEntryAuthFailed(err) from err
+        except sqlite3.OperationalError as err:
+            raise ConfigEntryAuthFailed(err) from err
         except ConnectionError as err:
-            if retries < 3:
-                raise IntegrationError(f"API call failed {retries} times.") from err
-            await self.async_client_start()
-            LOGGER.warning(f"API call raised an error {err} for {retries} time(s)")
-            return await self.async_client_call(coro, retries=retries + 1)
+            retries = 3
+            for i in range(retries):
+                await asyncio.sleep(1)
+                LOGGER.warning(f"API call raised an error {err} for {i + 1} time(s)")
+                try:
+                    return await coro
+                finally:
+                    pass
+            raise IntegrationError(f"API call failed {retries} times.") from err
 
     async def async_client_start(self):
         """Start the client."""
-        await self.async_client_call(self._client.start())
+        if not self._client.is_connected():
+            try:
+                if self._entry.data[CONF_TYPE] == CONF_TYPE_CLIENT:
+                    await self._client.connect()
+                    if not await self._client.is_user_authorized():
+                        raise ConfigEntryAuthFailed("Credentials has expired")
+                    await self._client.start(phone=self._entry.data[CONF_PHONE])
+                else:
+                    await self._client.start(bot_token=self._entry.data[CONF_TOKEN])
+            except (
+                AccessTokenExpiredError,
+                AccessTokenInvalidError,
+                ConnectionError,
+                ConfigEntryAuthFailed,
+            ) as err:
+                await self._client.log_out()
+                raise ConfigEntryAuthFailed(err) from err
 
-    async def async_client_disconnect(self):
+    async def async_client_disconnect(self, retries=5, delay=1):
         """Disconnect the client."""
-        await self._client.disconnect()
+        if self._client.is_connected():
+            await self._client.disconnect()

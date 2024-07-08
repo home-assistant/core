@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -10,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import CONF_PREMIUM, CONF_RESTRICTED, CONF_TYPE, CONF_TYPE_CLIENT
 from .entity import TelegramClientEntity
 
 
@@ -22,16 +24,18 @@ class TelegramClientBinarySensorEntityDescription(BinarySensorEntityDescription)
 
 BINARY_SENSORS: tuple[TelegramClientBinarySensorEntityDescription, ...] = (
     TelegramClientBinarySensorEntityDescription(
-        key="restricted",
-        translation_key="restricted",
+        key=CONF_RESTRICTED,
+        translation_key=CONF_RESTRICTED,
         name="Restricted",
         data_key="me",
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     TelegramClientBinarySensorEntityDescription(
-        key="premium",
-        translation_key="premium",
+        key=CONF_PREMIUM,
+        translation_key=CONF_PREMIUM,
         name="Premium",
         data_key="me",
+        icon="mdi:star",
     ),
 )
 
@@ -46,6 +50,8 @@ async def async_setup_entry(
     async_add_entities(
         TelegramClientBinarySensorEntity(coordinator, entity_description)
         for entity_description in BINARY_SENSORS
+        if entry.data[CONF_TYPE] == CONF_TYPE_CLIENT
+        or entity_description.key not in [CONF_PREMIUM]
     )
 
 

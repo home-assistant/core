@@ -10,7 +10,13 @@ CONF_API_ID: Final = "api_id"
 CONF_TYPE: Final = "type"
 CONF_OTP: Final = "otp"
 CONF_PHONE: Final = "phone"
+CONF_PREMIUM: Final = "premium"
 CONF_SESSION_ID: Final = "session_id"
+CONF_FIRST_NAME: Final = "first_name"
+CONF_USER_ID: Final = "user_id"
+CONF_USERNAME: Final = "username"
+CONF_LAST_NAME: Final = "last_name"
+CONF_RESTRICTED: Final = "restricted"
 
 DOMAIN: Final = "telegram_client"
 
