@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.lock import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     STATE_JAMMED,
     STATE_LOCKING,
     STATE_UNLOCKING,
@@ -44,7 +44,7 @@ CONF_UNLOCK = "unlock"
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,

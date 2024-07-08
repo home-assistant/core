@@ -1,10 +1,10 @@
 """The tests for the demo button component."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.notify import (

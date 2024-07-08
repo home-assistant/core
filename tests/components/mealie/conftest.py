@@ -1,11 +1,11 @@
 """Mealie tests configuration."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
-from aiomealie import Mealplan, MealplanResponse
+from aiomealie import About, Mealplan, MealplanResponse, Recipe, UserInfo
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
@@ -29,7 +29,7 @@ def mock_mealie_client() -> Generator[AsyncMock]:
     """Mock a Mealie client."""
     with (
         patch(
-            "homeassistant.components.mealie.coordinator.MealieClient",
+            "homeassistant.components.mealie.MealieClient",
             autospec=True,
         ) as mock_client,
         patch(
@@ -44,6 +44,15 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_mealplan_today.return_value = ORJSONDecoder(list[Mealplan]).decode(
             load_fixture("get_mealplan_today.json", DOMAIN)
         )
+        client.get_user_info.return_value = UserInfo.from_json(
+            load_fixture("users_self.json", DOMAIN)
+        )
+        client.get_about.return_value = About.from_json(
+            load_fixture("about.json", DOMAIN)
+        )
+        client.get_recipe.return_value = Recipe.from_json(
+            load_fixture("get_recipe.json", DOMAIN)
+        )
         yield client
 
 
@@ -55,4 +64,5 @@ def mock_config_entry() -> MockConfigEntry:
         title="Mealie",
         data={CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
+        unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
     )

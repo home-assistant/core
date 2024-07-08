@@ -1,11 +1,11 @@
 """Tests for the Rain Bird config flow."""
 
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.rainbird import DOMAIN

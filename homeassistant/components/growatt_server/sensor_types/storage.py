@@ -21,6 +21,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatDisChargeToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_storage_production_lifetime",
@@ -36,6 +37,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eacDisChargeToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_load_consumption_today",
@@ -43,6 +45,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eopDischrToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_load_consumption_lifetime",
@@ -58,6 +61,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eacChargeToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_charge_storage_lifetime",
@@ -73,6 +77,15 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GrowattSensorEntityDescription(
+        key="storage_solar_production_2",
+        translation_key="storage_solar_production_2",
+        api_key="ppv2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="storage_battery_percentage",
@@ -80,6 +93,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="capacity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="storage_power_flow",
@@ -87,12 +101,14 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pCharge",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="storage_load_consumption_solar_storage",
         translation_key="storage_load_consumption_solar_storage",
         api_key="rateVA",
         native_unit_of_measurement="VA",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="storage_charge_today",
@@ -100,6 +116,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eChargeToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_import_from_grid",
@@ -107,6 +124,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pAcInPut",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="storage_import_from_grid_today",
@@ -114,6 +132,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eToUserToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_import_from_grid_total",
@@ -129,6 +148,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="outPutPower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="storage_grid_voltage",
@@ -136,6 +156,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="vGrid",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -144,6 +165,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="vpv",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -152,6 +174,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="freqOutPut",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -160,6 +183,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="outPutVolt",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -168,6 +192,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="freqGrid",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -176,6 +201,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="iAcCharge",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -184,6 +210,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="iChargePV1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -192,6 +219,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="chgCurr",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -200,6 +228,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="outPutCurrent",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -208,6 +237,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="vBat",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -216,6 +246,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="loadPercent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
 )

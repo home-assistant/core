@@ -15,10 +15,8 @@ from homeassistant.helpers.update_coordinator import (
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator
     import logging
-
-    from typing_extensions import Generator
 
     from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 

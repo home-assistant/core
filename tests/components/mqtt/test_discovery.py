@@ -809,7 +809,7 @@ async def test_duplicate_removal(
     assert "Component has already been discovered: binary_sensor bla" not in caplog.text
 
 
-async def test_cleanup_device(
+async def test_cleanup_device_manual(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
@@ -965,10 +965,10 @@ async def test_cleanup_device_multiple_config_entries(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == [
-        config_entry.entry_id,
+    assert device_entry.config_entries == {
         mqtt_config_entry.entry_id,
-    ]
+        config_entry.entry_id,
+    }
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
@@ -991,7 +991,7 @@ async def test_cleanup_device_multiple_config_entries(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
-    assert device_entry.config_entries == [config_entry.entry_id]
+    assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
@@ -1012,6 +1012,7 @@ async def test_cleanup_device_multiple_config_entries(
 
 async def test_cleanup_device_multiple_config_entries_mqtt(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1059,10 +1060,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == [
-        config_entry.entry_id,
+    assert device_entry.config_entries == {
         mqtt_config_entry.entry_id,
-    ]
+        config_entry.entry_id,
+    }
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
@@ -1083,7 +1084,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
-    assert device_entry.config_entries == [config_entry.entry_id]
+    assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
@@ -1093,6 +1094,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 
     # Verify retained discovery topics have not been cleared again
     mqtt_mock.async_publish.assert_not_called()
+    assert "KeyError:" not in caplog.text
 
 
 async def test_discovery_expansion(
@@ -1361,24 +1363,29 @@ EXCLUDED_MODULES = {
 
 
 async def test_missing_discover_abbreviations(
+    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Check MQTT platforms for missing abbreviations."""
     await mqtt_mock_entry()
-    missing = []
+    missing: list[str] = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
-    for fil in Path(mqtt.__file__).parent.rglob("*.py"):
-        if fil.name in EXCLUDED_MODULES:
-            continue
-        with open(fil, encoding="utf-8") as file:
-            matches = re.findall(regex, file.read())
-            missing.extend(
-                f"{fil}: no abbreviation for {match[1]} ({match[0]})"
-                for match in matches
-                if match[1] not in ABBREVIATIONS.values()
-                and match[1] not in DEVICE_ABBREVIATIONS.values()
-                and match[0] not in ABBREVIATIONS_WHITE_LIST
-            )
+
+    def _add_missing():
+        for fil in Path(mqtt.__file__).parent.rglob("*.py"):
+            if fil.name in EXCLUDED_MODULES:
+                continue
+            with open(fil, encoding="utf-8") as file:
+                matches = re.findall(regex, file.read())
+                missing.extend(
+                    f"{fil}: no abbreviation for {match[1]} ({match[0]})"
+                    for match in matches
+                    if match[1] not in ABBREVIATIONS.values()
+                    and match[1] not in DEVICE_ABBREVIATIONS.values()
+                    and match[0] not in ABBREVIATIONS_WHITE_LIST
+                )
+
+    await hass.async_add_executor_job(_add_missing)
 
     assert not missing
 

@@ -1,10 +1,10 @@
 """Fixtures for WLED integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 from wled import Device as WLEDDevice
 
 from homeassistant.components.wled.const import DOMAIN

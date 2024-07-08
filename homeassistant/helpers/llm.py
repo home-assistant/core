@@ -355,7 +355,7 @@ class AssistAPI(API):
         if not llm_context.device_id or not async_device_supports_timers(
             self.hass, llm_context.device_id
         ):
-            prompt.append("This device does not support timers.")
+            prompt.append("This device is not able to start timers.")
 
         if exposed_entities:
             prompt.append(
@@ -483,7 +483,7 @@ def _get_exposed_entities(
 
         if attributes := {
             attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal))
+            if isinstance(attr_value, (Enum, Decimal, int))
             else attr_value
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes

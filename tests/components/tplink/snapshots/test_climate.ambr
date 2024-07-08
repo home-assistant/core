@@ -86,6 +86,7 @@
     'model': 'HS100',
     'name': 'thermostat',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '1.0.0',
