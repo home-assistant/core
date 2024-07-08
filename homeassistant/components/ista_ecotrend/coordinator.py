@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
@@ -35,20 +35,27 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self):
         """Fetch ista EcoTrend data."""
 
-        if not self.details:
-            self.details = await self.async_get_details()
-
         try:
+            await self.hass.async_add_executor_job(self.ista.login)
+
+            if not self.details:
+                self.details = await self.async_get_details()
+
             return await self.hass.async_add_executor_job(self.get_consumption_data)
+
         except ServerError as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from ista EcoTrend, try again later"
             ) from e
         except (LoginError, KeycloakError) as e:
+            if TYPE_CHECKING:
+                assert self.config_entry
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
-                translation_placeholders={CONF_EMAIL: self.ista._email},  # noqa: SLF001
+                translation_placeholders={
+                    CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
+                },  # noqa: SLF001
             ) from e
 
     def get_consumption_data(self) -> dict[str, Any]:
@@ -61,26 +68,16 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_get_details(self) -> dict[str, Any]:
         """Retrieve details of consumption units."""
-        try:
-            result = await self.hass.async_add_executor_job(
-                self.ista.get_consumption_unit_details
+
+        result = await self.hass.async_add_executor_job(
+            self.ista.get_consumption_unit_details
+        )
+
+        return {
+            consumption_unit: next(
+                details
+                for details in result["consumptionUnits"]
+                if details["id"] == consumption_unit
             )
-        except ServerError as e:
-            raise UpdateFailed(
-                "Unable to connect and retrieve data from ista EcoTrend, try again later"
-            ) from e
-        except (LoginError, KeycloakError) as e:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_exception",
-                translation_placeholders={CONF_EMAIL: self.ista._email},  # noqa: SLF001
-            ) from e
-        else:
-            return {
-                consumption_unit: next(
-                    details
-                    for details in result["consumptionUnits"]
-                    if details["id"] == consumption_unit
-                )
-                for consumption_unit in self.ista.get_uuids()
-            }
+            for consumption_unit in self.ista.get_uuids()
+        }
