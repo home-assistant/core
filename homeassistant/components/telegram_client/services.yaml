@@ -1,12 +1,10 @@
 # Describes the format for available Telegram client services
 
 send_message:
+  target:
+    entity:
+      domain: device_tracker
   fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: telegram_client
     target_username:
       example: me, telegram, BotFather, +380987654321
       selector:
@@ -16,26 +14,56 @@ send_message:
       selector:
         number:
     message:
-      required: true
       example: The garage door has been open for 10 minutes.
       selector:
         text:
+    reply_to:
+      selector:
+        number:
+          mode: box
     parse_mode:
       selector:
         select:
           options:
             - html
             - markdown
-    disable_notification:
+    link_preview:
       selector:
         boolean:
-    disable_web_page_preview:
+    file:
+      selector:
+        object:
+    force_document:
+      selector:
+        boolean:
+    clear_draft:
+      selector:
+        boolean:
+    keyboard:
+      selector:
+        object:
+    inline_keyboard:
+      selector:
+        object:
+    keyboard_resize:
+      selector:
+        boolean:
+    keyboard_single_use:
+      selector:
+        boolean:
+    silent:
+      selector:
+        boolean:
+    supports_streaming:
       selector:
         boolean:
     schedule:
       selector:
         datetime:
-    reply_to_message_id:
+    comment_to:
       selector:
         number:
           mode: box
+    nosound_video:
+      selector:
+        boolean:

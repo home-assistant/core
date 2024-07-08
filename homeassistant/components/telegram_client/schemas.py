@@ -6,73 +6,107 @@ from homeassistant.const import CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    ATTR_DEVICE_ID,
-    ATTR_DISABLE_NOTIF,
-    ATTR_DISABLE_WEB_PREV,
+    ATTR_CLEAR_DRAFT,
+    ATTR_COMMENT_TO,
+    ATTR_FILE,
+    ATTR_FORCE_DOCUMENT,
+    ATTR_INLINE_KEYBOARD,
     ATTR_KEYBOARD,
-    ATTR_KEYBOARD_INLINE,
+    ATTR_KEYBOARD_RESIZE,
+    ATTR_KEYBOARD_SINGLE_USE,
+    ATTR_LINK_PREVIEW,
     ATTR_MESSAGE,
-    ATTR_MESSAGE_TAG,
-    ATTR_ONE_TIME_KEYBOARD,
-    ATTR_PARSER,
-    ATTR_REPLY_TO_MSGID,
-    ATTR_RESIZE_KEYBOARD,
+    ATTR_NOSOUND_VIDEO,
+    ATTR_PARSE_MODE,
+    ATTR_REPLY_TO,
     ATTR_SCHEDULE,
+    ATTR_SILENT,
+    ATTR_SUPPORTS_STREAMING,
     ATTR_TARGET_ID,
     ATTR_TARGET_USERNAME,
-    ATTR_TIMEOUT,
+    ATTR_TTL,
     CONF_API_HASH,
     CONF_API_ID,
     CONF_OTP,
     CONF_PHONE,
+    CONF_TOKEN,
+    CONF_TYPE,
+    CONF_TYPE_BOT,
+    CONF_TYPE_CLIENT,
 )
-from .helpers import date_is_in_future, has_only_one_target_kind
+from .validators import (
+    allow_keyboard_resize_if_keyboard_defined,
+    allow_keyboard_single_use_if_keyboard_defined,
+    allow_nosound_video_if_file_defined,
+    date_is_in_future,
+    has_message_if_file_not_specified,
+    has_no_more_than_one_keyboard_kind,
+    has_one_target_kind,
+)
 
 STEP_API_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_ID): str,
-        vol.Required(CONF_API_HASH): str,
+        vol.Required(CONF_API_ID): cv.string,
+        vol.Required(CONF_API_HASH): cv.string,
+        vol.Required(CONF_TYPE): vol.In([CONF_TYPE_CLIENT, CONF_TYPE_BOT]),
     }
 )
 STEP_PHONE_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PHONE): str,
+        vol.Required(CONF_PHONE): cv.string,
+    }
+)
+STEP_TOKEN_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN): cv.string,
     }
 )
 STEP_OTP_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OTP): str,
+        vol.Required(CONF_OTP): cv.string,
     }
 )
 STEP_PASSWORD_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_PASSWORD): cv.string,
     }
 )
 
 _BASE_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Optional(ATTR_TARGET_USERNAME): cv.string,
         vol.Optional(ATTR_TARGET_ID): int,
-        vol.Optional(ATTR_PARSER): cv.string,
-        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-        vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
-        vol.Optional(ATTR_RESIZE_KEYBOARD): cv.boolean,
-        vol.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
-        vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
-        vol.Optional(ATTR_MESSAGE_TAG): cv.string,
-        vol.Optional(ATTR_REPLY_TO_MSGID): cv.positive_int,
+        vol.Optional(ATTR_REPLY_TO): cv.positive_int,
+        vol.Optional(ATTR_PARSE_MODE): cv.string,
+        vol.Optional(ATTR_LINK_PREVIEW): cv.boolean,
+        vol.Optional(ATTR_FILE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_FORCE_DOCUMENT): cv.boolean,
+        vol.Optional(ATTR_CLEAR_DRAFT): cv.boolean,
+        vol.Optional(ATTR_KEYBOARD): vol.Or(
+            vol.All(cv.ensure_list, [[cv.string]]),
+            vol.All(cv.ensure_list, [cv.string]),
+        ),
+        vol.Optional(ATTR_INLINE_KEYBOARD): cv.ensure_list,
+        vol.Optional(ATTR_KEYBOARD_RESIZE): cv.boolean,
+        vol.Optional(ATTR_KEYBOARD_SINGLE_USE): cv.boolean,
+        vol.Optional(ATTR_SILENT): cv.boolean,
+        vol.Optional(ATTR_SUPPORTS_STREAMING): cv.boolean,
         vol.Optional(ATTR_SCHEDULE): vol.All(cv.datetime, date_is_in_future),
+        vol.Optional(ATTR_COMMENT_TO): cv.positive_int,
+        vol.Optional(ATTR_TTL): vol.All(cv.positive_int, vol.Range(min=1, max=60)),
+        vol.Optional(ATTR_NOSOUND_VIDEO): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,
 )
 
 SERVICE_SEND_MESSAGE_SCHEMA = vol.Schema(
     vol.All(
-        _BASE_SERVICE_SCHEMA.extend({vol.Required(ATTR_MESSAGE): cv.string}),
-        has_only_one_target_kind,
+        _BASE_SERVICE_SCHEMA.extend({vol.Optional(ATTR_MESSAGE): cv.string}),
+        has_message_if_file_not_specified,
+        has_one_target_kind,
+        has_no_more_than_one_keyboard_kind,
+        allow_keyboard_resize_if_keyboard_defined,
+        allow_keyboard_single_use_if_keyboard_defined,
+        allow_nosound_video_if_file_defined,
     )
 )

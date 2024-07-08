@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Any
 
 from telethon import TelegramClient
-from telethon.errors import PasswordHashInvalidError, SessionPasswordNeededError
+from telethon.errors import (
+    AccessTokenInvalidError,
+    PasswordHashInvalidError,
+    SessionPasswordNeededError,
+)
 from telethon.errors.rpcerrorlist import FloodWaitError
 import voluptuous as vol
 
@@ -22,6 +26,9 @@ from .const import (
     CONF_OTP,
     CONF_PHONE,
     CONF_SESSION_ID,
+    CONF_TOKEN,
+    CONF_TYPE,
+    CONF_TYPE_CLIENT,
     DOMAIN,
 )
 from .schemas import (
@@ -29,6 +36,7 @@ from .schemas import (
     STEP_OTP_DATA_SCHEMA,
     STEP_PASSWORD_DATA_SCHEMA,
     STEP_PHONE_DATA_SCHEMA,
+    STEP_TOKEN_DATA_SCHEMA,
 )
 
 
@@ -36,12 +44,14 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram client."""
 
     VERSION = 1
-    _session: str | None = None
-    _api_id: str | None = None
-    _api_hash: str | None = None
+    _session: str
+    _api_id: str
+    _api_hash: str
+    _type: str
     _phone: str = ""
-    _phone_code_hash: str | None = None
-    _password: str | None = None
+    _phone_code_hash: str
+    _token: str = ""
+    _password: str = ""
 
     def create_client(self):
         """Create Telegram client."""
@@ -63,7 +73,12 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             self._session = self.flow_id
             self._api_id = user_input[CONF_API_ID]
             self._api_hash = user_input[CONF_API_HASH]
-            return await self.async_step_phone()
+            self._type = user_input[CONF_TYPE]
+            return (
+                await self.async_step_phone()
+                if self._type == CONF_TYPE_CLIENT
+                else await self.async_step_token()
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_API_DATA_SCHEMA, errors=errors
@@ -81,7 +96,30 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_otp()
 
         return self.async_show_form(
-            step_id="phone", data_schema=STEP_PHONE_DATA_SCHEMA, errors=errors
+            step_id=CONF_PHONE, data_schema=STEP_PHONE_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_token(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle token input."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._token = user_input[CONF_TOKEN]
+            await self.async_set_unique_id(self._token.split(":")[0])
+            self._abort_if_unique_id_configured()
+            client = self.create_client()
+            try:
+                await client.connect()
+                await client.start(bot_token=self._token)
+                return await self.async_finish()
+            except AccessTokenInvalidError:
+                errors[CONF_TOKEN] = "invalid_auth"
+            finally:
+                await client.disconnect()
+
+        return self.async_show_form(
+            step_id=CONF_TOKEN, data_schema=STEP_TOKEN_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_otp(
@@ -115,7 +153,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.disconnect()
 
         return self.async_show_form(
-            step_id="otp", data_schema=STEP_OTP_DATA_SCHEMA, errors=errors
+            step_id=CONF_OTP, data_schema=STEP_OTP_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_password(
@@ -136,7 +174,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.disconnect()
 
         return self.async_show_form(
-            step_id="password",
+            step_id=CONF_PASSWORD,
             data_schema=STEP_PASSWORD_DATA_SCHEMA,
             errors=errors,
             last_step=True,
@@ -148,7 +186,9 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SESSION_ID: self._session,
             CONF_API_ID: self._api_id,
             CONF_API_HASH: self._api_hash,
+            CONF_TYPE: self._type,
             CONF_PHONE: self._phone,
+            CONF_TOKEN: self._token,
             CONF_PASSWORD: self._password,
         }
         if self.context["source"] == "reauth":
@@ -158,8 +198,11 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(reauth_entry, data=data)
                 await self.hass.config_entries.async_reload(reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
+        unique_id = (
+            self._phone if self._type == CONF_TYPE_CLIENT else self._token.split(":")[0]
+        )
         return self.async_create_entry(
-            title=self._phone,
+            title=f"Telegam {self._type} ({unique_id})",
             data=data,
         )
 

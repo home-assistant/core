@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -18,7 +19,9 @@ class TelegramClientEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: TelegramClientCoordinator,
-        entity_description: BinarySensorEntityDescription | SensorEntityDescription,
+        entity_description: EntityDescription
+        | BinarySensorEntityDescription
+        | SensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

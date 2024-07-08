@@ -1,44 +1,63 @@
 """Telegram client services."""
 
-from homeassistant.core import ServiceCall
+from typing import Any
+
+from telethon import Button, TelegramClient
+
+from homeassistant.core import HomeAssistant
 
 from .const import (
-    ATTR_DISABLE_NOTIF,
-    ATTR_DISABLE_WEB_PREV,
-    ATTR_MESSAGE,
-    ATTR_PARSER,
-    ATTR_REPLY_TO_MSGID,
-    ATTR_SCHEDULE,
+    ATTR_BUTTONS,
+    ATTR_FILE,
+    ATTR_INLINE_KEYBOARD,
+    ATTR_KEYBOARD,
+    ATTR_KEYBOARD_RESIZE,
+    ATTR_KEYBOARD_SINGLE_USE,
     ATTR_TARGET_ID,
     ATTR_TARGET_USERNAME,
     SERVICE_SEND_MESSAGE,
 )
-from .coordinator import TelegramClientCoordinator
 
 
 async def async_telegram_call(
-    coordinator: TelegramClientCoordinator, call: ServiceCall
-) -> None:
+    hass: HomeAssistant, client: TelegramClient, service: str, **kwargs
+) -> Any:
     """Process Telegram service call."""
-    service = call.service
-    target = call.data.get(ATTR_TARGET_USERNAME) or call.data.get(ATTR_TARGET_ID)
-    reply_to = call.data.get(ATTR_REPLY_TO_MSGID)
-    parse_mode = call.data.get(ATTR_PARSER)
-    link_preview = not call.data.get(ATTR_DISABLE_WEB_PREV, False)
-    silent = call.data.get(ATTR_DISABLE_NOTIF)
-    schedule = call.data.get(ATTR_SCHEDULE)
-    client = coordinator.client
 
-    if service == SERVICE_SEND_MESSAGE:
-        message = call.data[ATTR_MESSAGE]
-        await coordinator.async_client_call(
-            client.send_message(
-                target,
-                message,
-                reply_to=reply_to,
-                parse_mode=parse_mode,
-                link_preview=link_preview,
-                silent=silent,
-                schedule=schedule,
-            )
+    def inline_button(data):
+        return (
+            Button.inline(data)
+            if isinstance(data, str)
+            else Button.inline(data.get("text"), data.get("data"))
         )
+
+    kwargs["entity"] = kwargs.pop(
+        ATTR_TARGET_USERNAME, kwargs.pop(ATTR_TARGET_ID, None)
+    )
+    if keyboard := kwargs.pop(ATTR_KEYBOARD, None):
+        if not isinstance(keyboard[0], list):
+            keyboard = [keyboard]
+        kwargs[ATTR_BUTTONS] = [
+            [
+                Button.text(
+                    button,
+                    resize=kwargs.pop(ATTR_KEYBOARD_RESIZE, None),
+                    single_use=kwargs.pop(ATTR_KEYBOARD_SINGLE_USE, None),
+                )
+                for button in row
+            ]
+            for row in keyboard
+        ]
+    if inline_keyboard := kwargs.pop(ATTR_INLINE_KEYBOARD, None):
+        if not isinstance(inline_keyboard[0], list):
+            inline_keyboard = [inline_keyboard]
+        kwargs[ATTR_BUTTONS] = [
+            [inline_button(button) for button in row] for row in inline_keyboard
+        ]
+    if file := kwargs.get(ATTR_FILE):
+        kwargs[ATTR_FILE] = list(map(hass.config.path, file))
+    if service == SERVICE_SEND_MESSAGE:
+        return await client.send_message(**kwargs)
+    raise NotImplementedError(
+        f"Method {service} is not implemented for Telegram client."
+    )

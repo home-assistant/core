@@ -21,8 +21,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_API_HASH,
     CONF_API_ID,
-    CONF_PHONE,
     CONF_SESSION_ID,
+    CONF_TYPE,
     DOMAIN,
     LOGGER,
     UPDATE_INTERVAL,
@@ -35,7 +35,6 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     """Telegram client coordinator."""
 
     _unique_id: str | None
-    _phone: str
     _client: TelegramClient
 
     def __init__(
@@ -43,8 +42,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize Telegram client coordinator."""
         self._unique_id = entry.unique_id
-        self._phone = entry.data[CONF_PHONE]
-        name = f"Telegram client ({self._phone})"
+        name = f"Telegram {entry.data[CONF_TYPE]} ({entry.unique_id})"
         self._device_info = {
             "identifiers": {(DOMAIN, entry.unique_id)},
             "name": name,
@@ -134,12 +132,14 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             if not self._client.is_connected():
                 await self._client.connect()
             if not await self._client.is_user_authorized():
-                raise ConfigEntryAuthFailed(f"User is not authorized for {self._phone}")
+                raise ConfigEntryAuthFailed(
+                    f"User is not authorized for {self._unique_id}"
+                )
             async with timeout(10):
                 result = await coro
                 if result is None:
                     raise ConfigEntryAuthFailed(
-                        f"API call returned None for {self._phone}"
+                        f"API call returned None for {self._unique_id}"
                     )
                 return result
         except (
@@ -149,7 +149,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             OperationalError,
         ) as err:
             raise ConfigEntryAuthFailed(
-                f"Credentials expired for {self._phone}"
+                f"Credentials expired for {self._unique_id}"
             ) from err
         except ConnectionError as err:
             if retries < 3:

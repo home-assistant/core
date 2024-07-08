@@ -19,6 +19,16 @@
         "title": "Phone",
         "description": "This is the phone number your account is linked to. It can be different from the app owner's phone."
       },
+      "token": {
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "Token that you received from [@BotFather](https://t.me/BotFather) bot."
+        },
+        "title": "Bot token",
+        "description": "You can obtain `token` using [this manual](https://core.telegram.org/bots/features#botfather)."
+      },
       "otp": {
         "data": {
           "otp": "One time password"
@@ -55,16 +65,8 @@
   "services": {
     "send_message": {
       "name": "Send message",
-      "description": "Sends a notification.",
+      "description": "Sends text message to user, group or bot.",
       "fields": {
-        "device_id": {
-          "name": "Account",
-          "description": "Account to send message from."
-        },
-        "message": {
-          "name": "Message",
-          "description": "Message body of the notification."
-        },
         "target_username": {
           "name": "Target username",
           "description": "User, channel, bot username or phone number."
@@ -73,25 +75,69 @@
           "name": "Target ID",
           "description": "User or group id."
         },
+        "message": {
+          "name": "Message",
+          "description": "Message body. Optional if file is specified."
+        },
+        "reply_to": {
+          "name": "Reply to message id",
+          "description": "Mark the message as a reply to a previous message. Also can be used to send a message in a specific group topic."
+        },
         "parse_mode": {
           "name": "Parse mode",
-          "description": "Parser for the message text."
+          "description": "Parser for the message text. Disable to send as a plain text."
         },
-        "disable_notification": {
-          "name": "Disable notification",
-          "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound."
+        "link_preview": {
+          "name": "Show link preview",
+          "description": "Enables previews for links in the message."
         },
-        "disable_web_page_preview": {
-          "name": "Disable web page preview",
-          "description": "Disables link previews for links in the message."
+        "file": {
+          "name": "File",
+          "description": "Path(s) to files relatively to config directory to attach to the message. Could be a single path or an array of paths."
+        },
+        "force_document": {
+          "name": "Force document",
+          "description": "Attach file(s) as document(s) rather than image/audio/video."
+        },
+        "clear_draft": {
+          "name": "Clear draft",
+          "description": "Clears draft message to selected target after sending the message."
+        },
+        "keyboard": {
+          "name": "Keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message. E.g.\n\n`button1`\n\n```\n\n- button1\n\n- button2\n\n- button3\n\n```\n\n```\n\n- ['button1', 'button2', 'button3']\n\n- ['button4', 'button5', 'button6']\n\n```"
+        },
+        "inline_keyboard": {
+          "name": "Inline keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message."
+        },
+        "keyboard_resize": {
+          "name": "Resize keyboard",
+          "description": "Resizes keyboard to minimize space used. Can be used only if `keyboard` is defined."
+        },
+        "keyboard_single_use": {
+          "name": "Single use keyboard",
+          "description": "Hides keyboard after user press any button. Can be used only if `keyboard` is defined."
+        },
+        "silent": {
+          "name": "Silent",
+          "description": "Sends message without sound notification."
+        },
+        "supports_streaming": {
+          "name": "Support streaming",
+          "description": "Whether the sent video supports streaming or not."
         },
         "schedule": {
           "name": "Schedule",
-          "description": "Schedule message delivery."
+          "description": "Schedule message delivery. Can be used only in `client` mode. Bots can't schedule message delivery."
         },
-        "reply_to_message_id": {
-          "name": "Reply to message id",
-          "description": "Mark the message as a reply to a previous message."
+        "comment_to": {
+          "name": "Comment to",
+          "description": "Similar to `reply_to`, but replies in the linked group of a broadcast channel instead."
+        },
+        "nosound_video": {
+          "name": "Nosound video",
+          "description": "Displays video without audio track as a video. Otherwise Telegram will attempt to display such video as an animated gif."
         }
       }
     }
