@@ -116,5 +116,6 @@ def get_supported_devices(
     return [
         device_config
         for device_config in devices
-        if device_config.getModel() not in UNSUPPORTED_DEVICES
+        if device_config.isOnline()
+        and device_config.getModel() not in UNSUPPORTED_DEVICES
     ]
