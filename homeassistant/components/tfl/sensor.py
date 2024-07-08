@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from operator import itemgetter
+import typing
 from urllib.error import HTTPError, URLError
 
 from tflwrapper import stopPoint
@@ -18,15 +19,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TfLConfigEntry
 from .common import call_tfl_api
-from .const import (
-    ATTR_NEXT_ARRIVALS,
-    ATTR_NEXT_THREE_ARRIVALS,
-    CONF_STOP_POINTS,
-    DOMAIN,
-    RAW_ARRIVAL_DESTINATION_NAME,
-    RAW_ARRIVAL_LINE_NAME,
-    RAW_ARRIVAL_TIME_TO_STATION,
-)
+from .const import CONF_STOP_POINTS, DOMAIN
+
+ATTR_NEXT_ARRIVALS = "all"
+ATTR_NEXT_THREE_ARRIVALS = "next_3"
+
+RAW_ARRIVAL_LINE_NAME = "lineName"
+RAW_ARRIVAL_DESTINATION_NAME = "destinationName"
+RAW_ARRIVAL_TIME_TO_STATION = "timeToStation"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
@@ -112,7 +112,9 @@ class StopPointSensor(SensorEntity):
         try:
             attributes = {}
 
-            def raw_arrival_to_arrival_mapper(raw_arrival):
+            def raw_arrival_to_arrival_mapper(
+                raw_arrival: dict[str, typing.Any],
+            ) -> dict[str, typing.Any]:
                 return {
                     "line_name": raw_arrival[RAW_ARRIVAL_LINE_NAME],
                     "destination_name": raw_arrival[RAW_ARRIVAL_DESTINATION_NAME],
@@ -136,7 +138,7 @@ class StopPointSensor(SensorEntity):
 
                 # Due to 255 character limit, the value of the sensor is the next arrival and
                 # the next 3 and full list are provided as attributes
-                self._attr_native_value = arrival_next
+                self._attr_native_value = str(arrival_next)
                 attributes[ATTR_NEXT_THREE_ARRIVALS] = arrivals_next_3
                 attributes[ATTR_NEXT_ARRIVALS] = arrivals
 

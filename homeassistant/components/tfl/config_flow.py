@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_API_APP_KEY, default=""): cv.string,
+        vol.Optional(CONF_API_APP_KEY): cv.string,
     }
 )
 STEP_STOP_POINTS_DATA_SCHEMA = vol.Schema(
@@ -76,7 +76,9 @@ async def validate_stop_point(
         raise
 
 
-async def validate_stop_points(hass: HomeAssistant, app_key: str, stop_points):
+async def validate_stop_points(
+    hass: HomeAssistant, app_key: str, stop_points: list[str]
+) -> tuple[dict[str, str], dict[str, str]]:
     """Validate the stop points."""
     errors: dict[str, str] = {}
     description_placeholders: dict[str, str] = {}

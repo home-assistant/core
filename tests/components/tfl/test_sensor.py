@@ -5,17 +5,14 @@ from urllib.error import HTTPError
 
 from tflwrapper import stopPoint
 
-from homeassistant.components.tfl.const import (
+from homeassistant.components.tfl.sensor import (
     ATTR_NEXT_ARRIVALS,
     ATTR_NEXT_THREE_ARRIVALS,
+    StopPointSensor,
 )
-from homeassistant.components.tfl.sensor import StopPointSensor
 from homeassistant.core import HomeAssistant
 
-from tests.components.tfl.conftest import (
-    MOCK_DATA_SENSOR_ARRIVALS,
-    MOCK_DATA_TFL_STATION_ARRIVALS,
-)
+from .conftest import MOCK_DATA_SENSOR_ARRIVALS, MOCK_DATA_TFL_STATION_ARRIVALS
 
 
 async def test_async_update_success(hass: HomeAssistant) -> None:
