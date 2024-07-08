@@ -172,7 +172,6 @@ EXCEPTIONS = {
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
-    "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
