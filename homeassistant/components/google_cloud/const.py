@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 DOMAIN = "google_cloud"
+TITLE = "Google Cloud"
 
+CONF_SERVICE_ACCOUNT_INFO = "service_account_info"
 CONF_KEY_FILE = "key_file"
 
 DEFAULT_LANG = "en-US"
@@ -33,7 +35,6 @@ SUPPORTED_STT_MODELS = [
 ]
 
 # https://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages
-# Filtered on Model=command_and_search
 STT_LANGUAGES = [
     "af-ZA",
     "am-ET",

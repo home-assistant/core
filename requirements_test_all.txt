@@ -808,6 +808,12 @@ google-api-python-client==2.71.0
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.13.11
 
+# homeassistant.components.google_cloud
+google-cloud-speech==2.26.0
+
+# homeassistant.components.google_cloud
+google-cloud-texttospeech==2.16.3
+
 # homeassistant.components.google_generative_ai_conversation
 google-generativeai==0.6.0
 

@@ -2,20 +2,22 @@
   "config": {
     "step": {
       "user": {
+        "description": "Upload your Google Cloud service account JSON file that you can create at {url}.",
         "data": {
-          "key_file": "Path to your Google Cloud service account json file"
+          "uploaded_key_file": "Upload service account JSON file"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "`{key_file}` is no longer valid. Fix the path or recreate it."
+        "description": "Invalid service account info. Please re-create it and re-upload it."
       }
     },
     "error": {
-      "file_not_found": "The specidied key file does not exist. Fix the path and try again."
+      "invalid_file": "Invalid service account JSON file"
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {

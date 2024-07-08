@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import json
 import logging
-from pathlib import Path
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from google.cloud import texttospeech
 import voluptuous as vol
 
+from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -21,6 +21,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    FileSelector,
+    FileSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -28,19 +30,30 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_KEY_FILE,
+    CONF_SERVICE_ACCOUNT_INFO,
     CONF_STT_MODEL,
     DEFAULT_LANG,
     DEFAULT_STT_MODEL,
     DOMAIN,
     SUPPORTED_STT_MODELS,
+    TITLE,
 )
-from .helpers import async_tts_voices, tts_options_schema
+from .helpers import (
+    async_tts_voices,
+    tts_options_schema,
+    tts_platform_schema,
+    validate_service_account_info,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
+UPLOADED_KEY_FILE = "uploaded_key_file"
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_KEY_FILE): str,
+        vol.Required(UPLOADED_KEY_FILE): FileSelector(
+            FileSelectorConfig(accept=".json,application/json")
+        )
     }
 )
 
@@ -54,7 +67,14 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize a new GoogleCloudConfigFlow."""
-        self.reauth_entry: ConfigEntry | None = None
+        self.entry: ConfigEntry | None = None
+        self.abort_reason: str | None = None
+
+    def _parse_uploaded_file(self, uploaded_file_id: str) -> dict:
+        """Read and parse an uploaded JSON file."""
+        with process_uploaded_file(self.hass, uploaded_file_id) as file_path:
+            contents = file_path.read_text()
+        return json.loads(contents)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -62,28 +82,38 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, Any] = {}
         if user_input is not None:
-            if Path(self.hass.config.path(user_input[CONF_KEY_FILE])).is_file():
-                if self.reauth_entry:
-                    return self.async_update_reload_and_abort(
-                        self.reauth_entry,
-                        data=user_input,
-                    )
-                return self.async_create_entry(
-                    title="Google Cloud",
-                    data=user_input,
+            try:
+                service_account_info = await self.hass.async_add_executor_job(
+                    self._parse_uploaded_file, user_input[UPLOADED_KEY_FILE]
                 )
-            errors["base"] = "file_not_found"
+                validate_service_account_info(service_account_info)
+            except ValueError:
+                _LOGGER.exception("Reading uploaded JSON file failed")
+                errors["base"] = "invalid_file"
+            else:
+                data = {CONF_SERVICE_ACCOUNT_INFO: service_account_info}
+                if self.entry:
+                    if TYPE_CHECKING:
+                        assert self.abort_reason
+                    return self.async_update_reload_and_abort(
+                        self.entry, data=data, reason=self.abort_reason
+                    )
+                return self.async_create_entry(title=TITLE, data=data)
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "url": "https://console.cloud.google.com/apis/credentials/serviceaccountkey"
+            },
         )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.abort_reason = "reauth_successful"
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -92,13 +122,47 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_user()
-        assert self.reauth_entry
+        if TYPE_CHECKING:
+            assert self.entry
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={
-                CONF_NAME: self.reauth_entry.title,
-                CONF_KEY_FILE: self.reauth_entry.data.get(CONF_KEY_FILE, ""),
-            },
+            description_placeholders={CONF_NAME: self.entry.title},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.abort_reason = "reconfigure_successful"
+        if TYPE_CHECKING:
+            assert self.entry
+        return await self.async_step_user()
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import Google Cloud configuration from YAML."""
+
+        def _read_key_file():
+            with open(
+                self.hass.config.path(import_data[CONF_KEY_FILE]), encoding="utf8"
+            ) as f:
+                return json.load(f)
+
+        service_account_info = await self.hass.async_add_executor_job(_read_key_file)
+        try:
+            validate_service_account_info(service_account_info)
+        except ValueError:
+            _LOGGER.exception("Reading credentials JSON file failed")
+            return self.async_abort(reason="invalid_file")
+        options = {
+            k: v for k, v in import_data.items() if k in tts_platform_schema().schema
+        }
+        options.pop(CONF_KEY_FILE)
+        _LOGGER.info("Creating imported config entry with options: %s", options)
+        return self.async_create_entry(
+            title=TITLE,
+            data={CONF_SERVICE_ACCOUNT_INFO: service_account_info},
+            options=options,
         )
 
     @staticmethod
@@ -120,9 +184,11 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        key_file = self.hass.config.path(self.config_entry.data[CONF_KEY_FILE])
+        service_account_info = self.config_entry.data[CONF_SERVICE_ACCOUNT_INFO]
         client: texttospeech.TextToSpeechAsyncClient = (
-            texttospeech.TextToSpeechAsyncClient.from_service_account_file(key_file)
+            texttospeech.TextToSpeechAsyncClient.from_service_account_info(
+                service_account_info
+            )
         )
         voices = await async_tts_voices(client)
         return self.async_show_form(
@@ -138,7 +204,7 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
                             mode=SelectSelectorMode.DROPDOWN, options=list(voices)
                         )
                     ),
-                    **tts_options_schema(MappingProxyType(self.options), voices).schema,
+                    **tts_options_schema(self.options, voices).schema,
                     vol.Optional(
                         CONF_STT_MODEL,
                         description={

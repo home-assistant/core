@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterable
 import logging
 
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.cloud import speech_v1
 
 from homeassistant.components.stt import (
@@ -25,7 +25,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_KEY_FILE,
+    CONF_SERVICE_ACCOUNT_INFO,
     CONF_STT_MODEL,
     DEFAULT_STT_MODEL,
     DOMAIN,
@@ -41,8 +41,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Google Cloud speech platform via config entry."""
-    key_file = hass.config.path(config_entry.data[CONF_KEY_FILE])
-    client = speech_v1.SpeechAsyncClient.from_service_account_file(key_file)
+    service_account_info = config_entry.data[CONF_SERVICE_ACCOUNT_INFO]
+    client = speech_v1.SpeechAsyncClient.from_service_account_info(service_account_info)
     async_add_entities([GoogleCloudSpeechToTextEntity(config_entry, client)])
 
 
@@ -64,6 +64,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             model="Cloud",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        self._entry = entry
         self._client = client
         self._model = entry.options.get(CONF_STT_MODEL, DEFAULT_STT_MODEL)
 
@@ -138,6 +139,8 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
                 transcript += response.results[0].alternatives[0].transcript
         except GoogleAPIError as err:
             _LOGGER.error("Error occurred during Google Cloud STT call: %s", err)
+            if isinstance(err, Unauthenticated):
+                self._entry.async_start_reauth(self.hass)
             return SpeechResult(None, SpeechResultState.ERROR)
 
         return SpeechResult(transcript, SpeechResultState.SUCCESS)

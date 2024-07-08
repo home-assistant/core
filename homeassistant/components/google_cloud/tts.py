@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -18,10 +18,11 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ENCODING,
@@ -30,6 +31,7 @@ from .const import (
     CONF_KEY_FILE,
     CONF_PITCH,
     CONF_PROFILES,
+    CONF_SERVICE_ACCOUNT_INFO,
     CONF_SPEED,
     CONF_TEXT_TYPE,
     CONF_VOICE,
@@ -43,7 +45,11 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(tts_platform_schema().schema)
 
 
-async def async_get_engine(hass: HomeAssistant, config, discovery_info=None):
+async def async_get_engine(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+):
     """Set up Google Cloud TTS component."""
     if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
@@ -54,6 +60,13 @@ async def async_get_engine(hass: HomeAssistant, config, discovery_info=None):
         client = texttospeech.TextToSpeechAsyncClient.from_service_account_file(
             key_file
         )
+        if not hass.config_entries.async_entries(DOMAIN):
+            _LOGGER.info("Creating config entry by importing: %s", config)
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+                )
+            )
     else:
         client = texttospeech.TextToSpeechAsyncClient()
     try:
@@ -76,16 +89,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Google Cloud text-to-speech."""
-    key_file = hass.config.path(config_entry.data[CONF_KEY_FILE])
+    service_account_info = config_entry.data[CONF_SERVICE_ACCOUNT_INFO]
     client: texttospeech.TextToSpeechAsyncClient = (
-        texttospeech.TextToSpeechAsyncClient.from_service_account_file(key_file)
+        texttospeech.TextToSpeechAsyncClient.from_service_account_info(
+            service_account_info
+        )
     )
     try:
         voices = await async_tts_voices(client)
     except GoogleAPIError as err:
         _LOGGER.error("Error from calling list_voices: %s", err)
+        if isinstance(err, Unauthenticated):
+            config_entry.async_start_reauth(hass)
         return
-    options_schema = tts_options_schema(config_entry.options, voices)
+    options_schema = tts_options_schema(dict(config_entry.options), voices)
     language = config_entry.options.get(CONF_LANG, DEFAULT_LANG)
     async_add_entities(
         [
@@ -108,8 +125,8 @@ class GoogleCloudTTSEntity(TextToSpeechEntity):
         entry: ConfigEntry,
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
-        language,
-        options_schema,
+        language: str,
+        options_schema: vol.Schema,
     ) -> None:
         """Init Google Cloud TTS entity."""
         self._attr_unique_id = f"{entry.entry_id}-tts"
@@ -121,6 +138,7 @@ class GoogleCloudTTSEntity(TextToSpeechEntity):
             model="Cloud",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        self._entry = entry
         self._client = client
         self._voices = voices
         self._language = language
@@ -157,9 +175,15 @@ class GoogleCloudTTSEntity(TextToSpeechEntity):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from Google Cloud."""
-        return await _async_get_tts_audio(
-            message, language, options, self._client, self._options_schema
-        )
+        try:
+            return await _async_get_tts_audio(
+                message, language, options, self._client, self._options_schema
+            )
+        except GoogleAPIError as err:
+            _LOGGER.error("Error occurred during Google Cloud TTS call: %s", err)
+            if isinstance(err, Unauthenticated):
+                self._entry.async_start_reauth(self.hass)
+            return None, None
 
 
 class GoogleCloudTTSProvider(Provider):
@@ -170,8 +194,8 @@ class GoogleCloudTTSProvider(Provider):
         hass: HomeAssistant,
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
-        language,
-        options_schema,
+        language: str,
+        options_schema: vol.Schema,
     ) -> None:
         """Init Google Cloud TTS service."""
         self.hass = hass
@@ -212,9 +236,13 @@ class GoogleCloudTTSProvider(Provider):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from Google Cloud."""
-        return await _async_get_tts_audio(
-            message, language, options, self._client, self._options_schema
-        )
+        try:
+            return await _async_get_tts_audio(
+                message, language, options, self._client, self._options_schema
+            )
+        except GoogleAPIError as err:
+            _LOGGER.error("Error occurred during Google Cloud TTS call: %s", err)
+            return None, None
 
 
 async def _async_get_tts_audio(
@@ -255,11 +283,7 @@ async def _async_get_tts_audio(
         ),
     )
 
-    try:
-        response = await client.synthesize_speech(request, timeout=10)
-    except GoogleAPIError as err:
-        _LOGGER.error("Error occurred during Google Cloud TTS call: %s", err)
-        return None, None
+    response = await client.synthesize_speech(request, timeout=10)
 
     if encoding == texttospeech.AudioEncoding.MP3:
         extension = "mp3"
