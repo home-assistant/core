@@ -138,10 +138,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 # To prevent weirdness - if there is a map without a name
                 # - set its name to its flag
                 if roborock_map.mapFlag not in self.maps:
-                    map_name = str(roborock_map.mapFlag)
-                    if roborock_map.name != "":
-                        map_name = roborock_map.name
-
+                    map_name = roborock_map.name or str(roborock_map.mapFlag)
                     self.maps[roborock_map.mapFlag] = RoborockMapInfo(
                         flag=roborock_map.mapFlag, name=map_name, rooms={}
                     )

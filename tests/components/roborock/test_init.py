@@ -206,7 +206,7 @@ async def test_oserror_remove_image(
         != 0
     )
     with patch(
-        "homeassistant.components.roborock.roborock_storage.os.remove",
+        "homeassistant.components.roborock.roborock_storage.Path.unlink",
         side_effect=OSError,
     ):
         await hass.config_entries.async_remove(setup_entry.entry_id)
