@@ -348,6 +348,7 @@ async def test_async_turn_off(
         "media_player",
         "turn_off",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
     )
 
     async_dispatcher_send(
@@ -381,6 +382,7 @@ async def test_async_set_volume_level(
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_VOLUME_LEVEL: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
         },
+        blocking=True,
     )
 
     # The service call will trigger a WebSocket notification
@@ -418,6 +420,7 @@ async def test_async_mute_volume(
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_VOLUME_MUTED: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
         },
+        blocking=True,
     )
 
     # The service call will trigger a WebSocket notification
@@ -473,6 +476,7 @@ async def test_async_media_play_pause(
         "media_player",
         "media_play_pause",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
     )
 
     mock_mozart_client.post_playback_command.assert_called_once_with(command=command)
@@ -500,6 +504,7 @@ async def test_async_media_stop(
         "media_player",
         "media_stop",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
     )
 
     # Check API call
@@ -518,6 +523,7 @@ async def test_async_media_next_track(
         "media_player",
         "media_next_track",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
     )
 
     mock_mozart_client.post_playback_command.assert_called_once_with(command="skip")
@@ -579,6 +585,7 @@ async def test_async_media_previous_track(
         "media_player",
         "media_previous_track",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
     )
 
     mock_mozart_client.post_playback_command.assert_called_once_with(command="prev")
@@ -596,6 +603,7 @@ async def test_async_clear_playlist(
         "media_player",
         "clear_playlist",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
     )
 
     mock_mozart_client.post_clear_queue.assert_called_once()
@@ -685,6 +693,7 @@ async def test_async_play_media_url(
             ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
             ATTR_MEDIA_CONTENT_TYPE: "audio/mpeg",
         },
+        blocking=True,
     )
 
     mock_mozart_client.post_uri_source.assert_called_once()
@@ -710,6 +719,7 @@ async def test_async_play_media_overlay_absolute_volume_uri(
             ATTR_MEDIA_ANNOUNCE: True,
             ATTR_MEDIA_EXTRA: {"overlay_absolute_volume": 60},
         },
+        blocking=True,
     )
 
     mock_mozart_client.post_overlay_play.assert_called_once()
@@ -744,6 +754,7 @@ async def test_async_play_media_overlay_invalid_offset_volume_tts(
                     "overlay_tts_language": "da-dk",
                 },
             },
+            blocking=True,
         )
         mock_logger.assert_called_once_with("Error setting volume")
 
@@ -777,6 +788,7 @@ async def test_async_play_media_overlay_offset_volume_tts(
             ATTR_MEDIA_ANNOUNCE: True,
             ATTR_MEDIA_EXTRA: {"overlay_offset_volume": 20},
         },
+        blocking=True,
     )
 
     mock_mozart_client.post_overlay_play.assert_called_once_with(
@@ -802,6 +814,7 @@ async def test_async_play_media_tts(
             ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
             ATTR_MEDIA_CONTENT_TYPE: "provider",
         },
+        blocking=True,
     )
 
     mock_mozart_client.post_overlay_play.assert_called_once()
@@ -823,6 +836,7 @@ async def test_async_play_media_radio(
             ATTR_MEDIA_CONTENT_ID: "1234567890123456",
             ATTR_MEDIA_CONTENT_TYPE: "radio",
         },
+        blocking=True,
     )
 
     mock_mozart_client.run_provided_scene.assert_called_once_with(
@@ -846,6 +860,7 @@ async def test_async_play_media_favourite(
             ATTR_MEDIA_CONTENT_ID: "1",
             ATTR_MEDIA_CONTENT_TYPE: "favourite",
         },
+        blocking=True,
     )
 
     mock_mozart_client.activate_preset.assert_called_once_with(id=int("1"))
@@ -869,6 +884,7 @@ async def test_async_play_media_deezer_flow(
             ATTR_MEDIA_CONTENT_TYPE: "deezer",
             ATTR_MEDIA_EXTRA: {"id": "123"},
         },
+        blocking=True,
     )
 
     mock_mozart_client.start_deezer_flow.assert_called_once_with(
@@ -893,6 +909,7 @@ async def test_async_play_media_deezer_playlist(
             ATTR_MEDIA_CONTENT_TYPE: "deezer",
             ATTR_MEDIA_EXTRA: {"start_from": 123},
         },
+        blocking=True,
     )
 
     mock_mozart_client.add_to_queue.assert_called_once_with(
@@ -916,6 +933,7 @@ async def test_async_play_media_deezer_track(
             ATTR_MEDIA_CONTENT_ID: "1234567890",
             ATTR_MEDIA_CONTENT_TYPE: "deezer",
         },
+        blocking=True,
     )
 
     mock_mozart_client.add_to_queue.assert_called_once_with(
@@ -1037,9 +1055,8 @@ async def test_async_browse_media(
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     client = await hass_ws_client()
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "media_player/browse_media",
             "entity_id": TEST_MEDIA_PLAYER_ENTITY_ID,
         }
