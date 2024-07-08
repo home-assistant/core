@@ -72,6 +72,11 @@
         }
       }
     },
+    "switch": {
+      "sleep": {
+        "name": "Rest in the inn"
+      }
+    },
     "todo": {
       "todos": {
         "name": "To-Do's"
