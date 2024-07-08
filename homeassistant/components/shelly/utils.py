@@ -536,18 +536,24 @@ def async_remove_orphaned_virtual_entities(
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
 
-    if devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id):
-        device_id = devices[0].id
-        entities = er.async_entries_for_device(entity_reg, device_id, True)
-        for entity in entities:
-            if not entity.entity_id.startswith(platform):
-                continue
-            if virt_comp_type in entity.unique_id:
-                # we are looking for the component ID, e.g. boolean:201
-                if match := re.search(r"[a-z]+:\d+", entity.unique_id):
-                    virt_comp_id = match.group()
-                    if virt_comp_id not in virt_comp_ids:
-                        orphaned_entities.append(f"{virt_comp_id}-{virt_comp_type}")
+    if not (
+        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
+    ):
+        return
+
+    device_id = devices[0].id
+    entities = er.async_entries_for_device(entity_reg, device_id, True)
+    for entity in entities:
+        if not entity.entity_id.startswith(platform):
+            continue
+        if virt_comp_type not in entity.unique_id:
+            continue
+        # we are looking for the component ID, e.g. boolean:201
+        if not (match := re.search(r"[a-z]+:\d+", entity.unique_id)):
+            continue
+        virt_comp_id = match.group()
+        if virt_comp_id not in virt_comp_ids:
+            orphaned_entities.append(f"{virt_comp_id}-{virt_comp_type}")
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
