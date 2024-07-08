@@ -15,11 +15,11 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setting_rising(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test retrieving sun setting and rising."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)

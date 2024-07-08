@@ -30,7 +30,7 @@ from tests.common import (
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
 
-async def test_get(entity_registry: er.EntityRegistry):
+async def test_get(entity_registry: er.EntityRegistry) -> None:
     """Test we can get an item."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
 
@@ -620,7 +620,7 @@ async def test_removing_config_entry_id(
 
 async def test_deleted_entity_removing_config_entry_id(
     entity_registry: er.EntityRegistry,
-):
+) -> None:
     """Test that we update config entry id in registry on deleted entity."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
 
@@ -1528,9 +1528,7 @@ def test_entity_registry_items() -> None:
     assert entities.get_entry(entry2.id) is None
 
 
-async def test_disabled_by_str_not_allowed(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_disabled_by_str_not_allowed(entity_registry: er.EntityRegistry) -> None:
     """Test we need to pass disabled by type."""
     with pytest.raises(ValueError):
         entity_registry.async_get_or_create(
@@ -1545,7 +1543,7 @@ async def test_disabled_by_str_not_allowed(
 
 
 async def test_entity_category_str_not_allowed(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we need to pass entity category type."""
     with pytest.raises(ValueError):
@@ -1574,9 +1572,7 @@ async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> 
         )
 
 
-async def test_unique_id_non_hashable(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_unique_id_non_hashable(entity_registry: er.EntityRegistry) -> None:
     """Test unique_id which is not hashable."""
     with pytest.raises(TypeError):
         entity_registry.async_get_or_create("light", "hue", ["not", "valid"])
@@ -1587,9 +1583,7 @@ async def test_unique_id_non_hashable(
 
 
 async def test_unique_id_non_string(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unique_id which is not a string."""
     entity_registry.async_get_or_create("light", "hue", 1234)
@@ -1683,7 +1677,7 @@ async def test_restore_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-):
+) -> None:
     """Make sure entity registry id is stable and entity_id is reused if possible."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
@@ -1777,7 +1771,7 @@ async def test_restore_entity(
 
 async def test_async_migrate_entry_delete_self(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
-):
+) -> None:
     """Test async_migrate_entry."""
     config_entry1 = MockConfigEntry(domain="test1")
     config_entry2 = MockConfigEntry(domain="test2")
@@ -1812,7 +1806,7 @@ async def test_async_migrate_entry_delete_self(
 
 async def test_async_migrate_entry_delete_other(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
-):
+) -> None:
     """Test async_migrate_entry."""
     config_entry1 = MockConfigEntry(domain="test1")
     config_entry2 = MockConfigEntry(domain="test2")

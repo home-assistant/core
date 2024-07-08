@@ -9,6 +9,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
+from pydaikin.factory import DaikinFactory
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -84,7 +85,7 @@ async def daikin_api_setup(
     session = async_get_clientsession(hass)
     try:
         async with asyncio.timeout(TIMEOUT):
-            device = await Appliance.factory(
+            device: Appliance = await DaikinFactory(
                 host, session, key=key, uuid=uuid, password=password
             )
         _LOGGER.debug("Connection to %s successful", host)

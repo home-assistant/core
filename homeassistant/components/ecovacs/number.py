@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from deebot_client.capabilities import Capabilities, CapabilitySet, VacuumCapabilities
+from deebot_client.capabilities import CapabilitySet
 from deebot_client.events import CleanCountEvent, VolumeEvent
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -16,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import (
-    CapabilityDevice,
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
@@ -39,7 +38,6 @@ class EcovacsNumberEntityDescription(
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
     EcovacsNumberEntityDescription[VolumeEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.settings.volume,
         value_fn=lambda e: e.volume,
         native_max_value_fn=lambda e: e.maximum,
@@ -52,7 +50,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         native_step=1.0,
     ),
     EcovacsNumberEntityDescription[CleanCountEvent](
-        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.clean.count,
         value_fn=lambda e: e.count,
         key="clean_count",
@@ -81,7 +78,7 @@ async def async_setup_entry(
 
 
 class EcovacsNumberEntity(
-    EcovacsDescriptionEntity[CapabilityDevice, CapabilitySet[EventT, int]],
+    EcovacsDescriptionEntity[CapabilitySet[EventT, int]],
     NumberEntity,
 ):
     """Ecovacs number entity."""

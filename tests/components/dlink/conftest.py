@@ -130,7 +130,7 @@ async def setup_integration(
     hass: HomeAssistant,
     config_entry_with_uid: MockConfigEntry,
     mocked_plug: MagicMock,
-) -> Generator[ComponentSetup, None, None]:
+) -> Generator[ComponentSetup]:
     """Set up the D-Link integration in Home Assistant."""
 
     async def func() -> None:
@@ -144,7 +144,7 @@ async def setup_integration_legacy(
     hass: HomeAssistant,
     config_entry_with_uid: MockConfigEntry,
     mocked_plug_legacy: MagicMock,
-) -> Generator[ComponentSetup, None, None]:
+) -> Generator[ComponentSetup]:
     """Set up the D-Link integration in Home Assistant with different data."""
 
     async def func() -> None:

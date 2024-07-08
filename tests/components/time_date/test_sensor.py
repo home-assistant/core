@@ -5,10 +5,9 @@ from unittest.mock import ANY, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.time_date.const import DOMAIN, OPTION_TYPES
+from homeassistant.components.time_date.const import OPTION_TYPES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import event, issue_registry as ir
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import event
 import homeassistant.util.dt as dt_util
 
 from . import load_int
@@ -24,11 +23,6 @@ from tests.common import async_fire_time_changed
             "time",
             dt_util.utc_from_timestamp(45.5),
             dt_util.utc_from_timestamp(60),
-        ),
-        (
-            "beat",
-            dt_util.parse_datetime("2020-11-13 00:00:29+01:00"),
-            dt_util.parse_datetime("2020-11-13 00:01:26.4+01:00"),
         ),
         (
             "date_time",
@@ -83,9 +77,6 @@ async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2017-05-18, 00:54"
 
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@079"
-
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2017-05-18T00:54:00"
 
@@ -109,9 +100,6 @@ async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
 
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2020-10-17, 16:42"
-
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@738"
 
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2020-10-17T16:42:00"
@@ -143,9 +131,6 @@ async def test_states_non_default_timezone(
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2017-05-18, 00:54"
 
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@079"
-
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2017-05-17T20:54:00"
 
@@ -170,9 +155,6 @@ async def test_states_non_default_timezone(
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2020-10-17, 16:42"
 
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@738"
-
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2020-10-17T12:42:00"
 
@@ -194,9 +176,6 @@ async def test_states_non_default_timezone(
 
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2020-10-17, 16:42"
-
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@738"
 
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2020-10-17T18:42:00"
@@ -280,48 +259,5 @@ async def test_icons(hass: HomeAssistant) -> None:
     assert state.attributes["icon"] == "mdi:calendar-clock"
     state = hass.states.get("sensor.date_time_utc")
     assert state.attributes["icon"] == "mdi:calendar-clock"
-    state = hass.states.get("sensor.internet_time")
-    assert state.attributes["icon"] == "mdi:clock"
     state = hass.states.get("sensor.date_time_iso")
     assert state.attributes["icon"] == "mdi:calendar-clock"
-
-
-@pytest.mark.parametrize(
-    (
-        "display_options",
-        "expected_warnings",
-        "expected_issues",
-    ),
-    [
-        (["time", "date"], [], []),
-        (["beat"], ["'beat': is deprecated"], ["deprecated_beat"]),
-        (["time", "beat"], ["'beat': is deprecated"], ["deprecated_beat"]),
-    ],
-)
-async def test_deprecation_warning(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    display_options: list[str],
-    expected_warnings: list[str],
-    expected_issues: list[str],
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test deprecation warning for swatch beat."""
-    config = {
-        "sensor": {
-            "platform": "time_date",
-            "display_options": display_options,
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    warnings = [record for record in caplog.records if record.levelname == "WARNING"]
-    assert len(warnings) == len(expected_warnings)
-    for expected_warning in expected_warnings:
-        assert any(expected_warning in warning.message for warning in warnings)
-
-    assert len(issue_registry.issues) == len(expected_issues)
-    for expected_issue in expected_issues:
-        assert (DOMAIN, expected_issue) in issue_registry.issues

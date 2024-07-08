@@ -62,6 +62,7 @@ class SpcAlarm(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
+    _attr_code_arm_required = False
 
     def __init__(self, area: Area, api: SpcWebGateway) -> None:
         """Initialize the SPC alarm panel."""

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 from hdate import Location
 import voluptuous as vol
 
@@ -72,11 +74,14 @@ def get_unique_prefix(
     havdalah_offset: int | None,
 ) -> str:
     """Create a prefix for unique ids."""
+    # location.altitude was unset before 2024.6 when this method
+    # was used to create the unique id. As such it would always
+    # use the default altitude of 754.
     config_properties = [
         location.latitude,
         location.longitude,
         location.timezone,
-        location.altitude,
+        754,
         location.diaspora,
         language,
         candle_lighting_offset,
@@ -96,7 +101,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
-        breaks_in_ha_version="2024.10.0",
+        issue_domain=DOMAIN,
+        breaks_in_ha_version="2024.12.0",
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
         translation_placeholders={
@@ -118,20 +124,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up a configuration entry for Jewish calendar."""
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
-    candle_lighting_offset = config_entry.data.get(
+    candle_lighting_offset = config_entry.options.get(
         CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
     )
-    havdalah_offset = config_entry.data.get(
+    havdalah_offset = config_entry.options.get(
         CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
     )
 
-    location = Location(
-        name=hass.config.location_name,
-        diaspora=diaspora,
-        latitude=config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
-        longitude=config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-        altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
-        timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
+    location = await hass.async_add_executor_job(
+        partial(
+            Location,
+            name=hass.config.location_name,
+            diaspora=diaspora,
+            latitude=config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+            longitude=config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+            altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
+            timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
+        )
     )
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
@@ -153,6 +162,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async_update_unique_ids(ent_reg, config_entry.entry_id, old_prefix)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        # Trigger update of states for all platforms
+        await hass.config_entries.async_reload(config_entry.entry_id)
+
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     return True
 
 

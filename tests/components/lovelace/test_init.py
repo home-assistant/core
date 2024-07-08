@@ -13,7 +13,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_not_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -23,7 +23,7 @@ def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -33,7 +33,7 @@ def mock_onboarding_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_add_onboarding_listener() -> Generator[MagicMock, None, None]:
+def mock_add_onboarding_listener() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_add_listener",

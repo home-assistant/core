@@ -4,6 +4,7 @@ import copy
 from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energy import data
@@ -47,7 +48,7 @@ async def setup_integration(recorder_mock: Recorder):
 
 
 @pytest.fixture(autouse=True)
-def frozen_time(freezer):
+def frozen_time(freezer: FrozenDateTimeFactory) -> FrozenDateTimeFactory:
     """Freeze clock for tests."""
     freezer.move_to("2022-04-19 07:53:05")
     return freezer
@@ -86,6 +87,7 @@ async def test_cost_sensor_no_states(
         "data": energy_data,
     }
     await setup_integration(hass)
+    # pylint: disable-next=fixme
     # TODO: No states, should the cost entity refuse to setup?
 
 

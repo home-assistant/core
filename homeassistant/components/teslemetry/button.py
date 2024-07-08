@@ -14,7 +14,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleEntity
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,4 +87,4 @@ class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
         """Press the button."""
         await self.wake_up_if_asleep()
         if self.entity_description.func:
-            await self.handle_command(self.entity_description.func(self))
+            await handle_vehicle_command(self.entity_description.func(self))

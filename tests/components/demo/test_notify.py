@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.fixture
-def notify_only() -> Generator[None, None]:
+def notify_only() -> Generator[None]:
     """Enable only the notify platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -81,6 +81,6 @@ async def test_calling_notify_from_script_loaded_from_yaml(
     await hass.services.async_call("script", "test")
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert {
+    assert events[0].data == {
         "message": "Test 123 4",
-    } == events[0].data
+    }

@@ -95,7 +95,7 @@ def platforms() -> list[str]:
 
 
 @pytest.fixture(autouse=True)
-async def setup_components(hass) -> None:
+async def setup_components(hass: HomeAssistant) -> None:
     """Fixture to initialize the integration."""
     await async_setup_component(hass, "media_source", {})
 
@@ -1097,7 +1097,7 @@ async def test_multiple_devices(
 
 
 @pytest.fixture
-def event_store() -> Generator[None, None, None]:
+def event_store() -> Generator[None]:
     """Persist changes to event store immediately."""
     with patch(
         "homeassistant.components.nest.media_source.STORAGE_SAVE_DELAY_SECONDS",

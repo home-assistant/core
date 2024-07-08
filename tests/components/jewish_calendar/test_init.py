@@ -38,7 +38,6 @@ async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
         latitude=yaml_conf[DOMAIN][CONF_LATITUDE],
         longitude=yaml_conf[DOMAIN][CONF_LONGITUDE],
         timezone=hass.config.time_zone,
-        altitude=hass.config.elevation,
         diaspora=DEFAULT_DIASPORA,
     )
     old_prefix = get_unique_prefix(location, DEFAULT_LANGUAGE, 20, 50)
@@ -58,7 +57,10 @@ async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == yaml_conf[DOMAIN]
+    for entry_key, entry_val in entries[0].data.items():
+        assert entry_val == yaml_conf[DOMAIN][entry_key]
+    for entry_key, entry_val in entries[0].options.items():
+        assert entry_val == yaml_conf[DOMAIN][entry_key]
 
     # Assert that the unique_id was updated
     new_unique_id = ent_reg.async_get(sample_entity.entity_id).unique_id

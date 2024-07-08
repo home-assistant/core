@@ -960,14 +960,18 @@ RPC_SENSORS: Final = {
         name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+        removal_condition=lambda config, _, key: (
+            config[key]["type"] != "analog" or config[key]["enable"] is False
+        ),
     ),
     "analoginput_xpercent": RpcSensorDescription(
         key="input",
         sub_key="xpercent",
         name="Analog value",
         removal_condition=lambda config, status, key: (
-            config[key]["enable"] is False or status[key].get("xpercent") is None
+            config[key]["type"] != "analog"
+            or config[key]["enable"] is False
+            or status[key].get("xpercent") is None
         ),
     ),
     "pulse_counter": RpcSensorDescription(
@@ -977,7 +981,9 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement="pulse",
         state_class=SensorStateClass.TOTAL,
         value=lambda status, _: status["total"],
-        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+        removal_condition=lambda config, _status, key: (
+            config[key]["type"] != "count" or config[key]["enable"] is False
+        ),
     ),
     "counter_value": RpcSensorDescription(
         key="input",
@@ -985,8 +991,29 @@ RPC_SENSORS: Final = {
         name="Counter value",
         value=lambda status, _: status["xtotal"],
         removal_condition=lambda config, status, key: (
-            config[key]["enable"] is False
+            config[key]["type"] != "count"
+            or config[key]["enable"] is False
             or status[key]["counts"].get("xtotal") is None
+        ),
+    ),
+    "counter_frequency": RpcSensorDescription(
+        key="input",
+        sub_key="freq",
+        name="Pulse counter frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda config, _, key: (
+            config[key]["type"] != "count" or config[key]["enable"] is False
+        ),
+    ),
+    "counter_frequency_value": RpcSensorDescription(
+        key="input",
+        sub_key="xfreq",
+        name="Pulse counter frequency value",
+        removal_condition=lambda config, status, key: (
+            config[key]["type"] != "count"
+            or config[key]["enable"] is False
+            or status[key].get("xfreq") is None
         ),
     ),
 }

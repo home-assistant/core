@@ -7,9 +7,10 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
+from . import prepare_webhook_setup, setup_integration
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.withings import prepare_webhook_setup, setup_integration
 from tests.typing import ClientSessionGenerator
 
 

@@ -200,7 +200,9 @@ class MatterCover(MatterEntity, CoverEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(key="MatterCover", name=None),
+        entity_description=CoverEntityDescription(
+            key="MatterCover", translation_key="cover"
+        ),
         entity_class=MatterCover,
         required_attributes=(
             clusters.WindowCovering.Attributes.OperationalStatus,
@@ -214,7 +216,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
         entity_description=CoverEntityDescription(
-            key="MatterCoverPositionAwareLift", name=None
+            key="MatterCoverPositionAwareLift", translation_key="cover"
         ),
         entity_class=MatterCover,
         required_attributes=(
@@ -229,7 +231,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
         entity_description=CoverEntityDescription(
-            key="MatterCoverPositionAwareTilt", name=None
+            key="MatterCoverPositionAwareTilt", translation_key="cover"
         ),
         entity_class=MatterCover,
         required_attributes=(
@@ -244,7 +246,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
         entity_description=CoverEntityDescription(
-            key="MatterCoverPositionAwareLiftAndTilt", name=None
+            key="MatterCoverPositionAwareLiftAndTilt", translation_key="cover"
         ),
         entity_class=MatterCover,
         required_attributes=(
