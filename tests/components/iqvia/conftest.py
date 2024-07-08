@@ -1,6 +1,6 @@
 """Define test fixtures for IQVIA."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import patch
 
@@ -90,7 +90,7 @@ async def setup_iqvia_fixture(
     data_asthma_index: JsonObjectType,
     data_disease_forecast: JsonObjectType,
     data_disease_index: JsonObjectType,
-) -> Generator[None]:
+) -> AsyncGenerator[None]:
     """Define a fixture to set up IQVIA."""
     with (
         patch(

@@ -1,6 +1,5 @@
 """Test IQVIA diagnostics."""
 
-import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -10,11 +9,11 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("setup_iqvia")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
+    setup_iqvia: None,  # Needs to be injected after config_entry
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
