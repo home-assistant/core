@@ -58,11 +58,14 @@ def tts_options_schema(
                 CONF_GENDER,
                 description={"suggested_value": config_options.get(CONF_GENDER)},
                 default=texttospeech.SsmlVoiceGender.NEUTRAL.name,  # type: ignore[attr-defined]
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    mode=SelectSelectorMode.DROPDOWN,
-                    options=list(texttospeech.SsmlVoiceGender.__members__),
-                )
+            ): vol.All(
+                vol.Upper,
+                SelectSelector(
+                    SelectSelectorConfig(
+                        mode=SelectSelectorMode.DROPDOWN,
+                        options=list(texttospeech.SsmlVoiceGender.__members__),
+                    )
+                ),
             ),
             vol.Optional(
                 CONF_VOICE,
@@ -78,11 +81,14 @@ def tts_options_schema(
                 CONF_ENCODING,
                 description={"suggested_value": config_options.get(CONF_ENCODING)},
                 default=texttospeech.AudioEncoding.MP3.name,  # type: ignore[attr-defined]
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    mode=SelectSelectorMode.DROPDOWN,
-                    options=list(texttospeech.AudioEncoding.__members__),
-                )
+            ): vol.All(
+                vol.Upper,
+                SelectSelector(
+                    SelectSelectorConfig(
+                        mode=SelectSelectorMode.DROPDOWN,
+                        options=list(texttospeech.AudioEncoding.__members__),
+                    )
+                ),
             ),
             vol.Optional(
                 CONF_SPEED,
@@ -125,11 +131,14 @@ def tts_options_schema(
                 CONF_TEXT_TYPE,
                 description={"suggested_value": config_options.get(CONF_TEXT_TYPE)},
                 default="text",
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    mode=SelectSelectorMode.DROPDOWN,
-                    options=["text", "ssml"],
-                )
+            ): vol.All(
+                vol.Lower,
+                SelectSelector(
+                    SelectSelectorConfig(
+                        mode=SelectSelectorMode.DROPDOWN,
+                        options=["text", "ssml"],
+                    )
+                ),
             ),
         }
     )

@@ -20,6 +20,20 @@
     }
   },
   "entity": {
+    "button": {
+      "run_cron": {
+        "name": "Start my day"
+      },
+      "buy_health_potion": {
+        "name": "Buy a health potion"
+      },
+      "allocate_all_stat_points": {
+        "name": "Allocate all stat points"
+      },
+      "revive": {
+        "name": "Revive from death"
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name"
@@ -56,6 +70,23 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
+      },
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
+      },
+      "habits": {
+        "name": "Habits"
+      },
+      "rewards": {
+        "name": "Rewards"
+      }
+    },
+    "switch": {
+      "sleep": {
+        "name": "Rest in the inn"
       }
     },
     "todo": {
@@ -94,6 +125,12 @@
     },
     "setup_rate_limit_exception": {
       "message": "Currently rate limited, try again later"
+    },
+    "service_call_unallowed": {
+      "message": "Unable to carry out this action, because the required conditions are not met"
+    },
+    "service_call_exception": {
+      "message": "Unable to connect to Habitica, try again later"
     }
   },
   "issues": {
