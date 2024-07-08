@@ -5,8 +5,10 @@ EZSP_OVERWRITE_EUI64 = (
 )
 
 ATTR_ACTIVE_COORDINATOR = "active_coordinator"
+ATTR_ATTRIBUTES = "attributes"
 ATTR_AVAILABLE = "available"
 ATTR_DEVICE_TYPE = "device_type"
+ATTR_CLUSTER_NAME = "cluster_name"
 ATTR_ENDPOINT_NAMES = "endpoint_names"
 ATTR_IEEE = "ieee"
 ATTR_LAST_SEEN = "last_seen"
@@ -22,6 +24,7 @@ ATTR_QUIRK_ID = "quirk_id"
 ATTR_ROUTES = "routes"
 ATTR_RSSI = "rssi"
 ATTR_SIGNATURE = "signature"
+ATTR_SUCCESS = "success"
 
 
 CONF_ALARM_MASTER_CODE = "alarm_master_code"

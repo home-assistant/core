@@ -22,13 +22,15 @@ from zha.application.const import (
     ATTR_TYPE,
     CLUSTER_TYPE_IN,
 )
+from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
+from zha.zigbee.device import ClusterHandlerConfigurationComplete
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
 import zigpy.util
-from zigpy.zcl.clusters import general, security
+from zigpy.zcl.clusters import closures, general, security
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
@@ -1038,3 +1040,101 @@ async def test_websocket_bind_unbind_group(
         assert bind_mock.mock_calls == [call(test_group_id, ANY)]
     elif command_type == "unbind":
         assert unbind_mock.mock_calls == [call(test_group_id, ANY)]
+
+
+async def test_websocket_reconfigure(
+    hass: HomeAssistant, zha_client: MockHAClientWebSocket, zigpy_device_mock
+) -> None:
+    """Test websocket API to reconfigure a device."""
+    gateway = get_zha_gateway(hass)
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [closures.WindowCovering.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.SHADE,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+    )
+
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device_proxy = get_zha_gateway_proxy(hass).get_device_proxy(zha_device.ieee)
+
+    def mock_reconfigure() -> None:
+        zha_device_proxy.handle_zha_channel_configure_reporting(
+            ClusterConfigureReportingEvent(
+                cluster_name="Window Covering",
+                cluster_id=258,
+                attributes={
+                    "current_position_lift_percentage": {
+                        "min": 0,
+                        "max": 900,
+                        "id": "current_position_lift_percentage",
+                        "name": "current_position_lift_percentage",
+                        "change": 1,
+                        "status": "SUCCESS",
+                    },
+                    "current_position_tilt_percentage": {
+                        "min": 0,
+                        "max": 900,
+                        "id": "current_position_tilt_percentage",
+                        "name": "current_position_tilt_percentage",
+                        "change": 1,
+                        "status": "SUCCESS",
+                    },
+                },
+                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0102",
+                event_type="zha_channel_message",
+                event="zha_channel_configure_reporting",
+            )
+        )
+
+        zha_device_proxy.handle_zha_channel_bind(
+            ClusterBindEvent(
+                cluster_name="Window Covering",
+                cluster_id=1,
+                success=True,
+                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0012",
+                event_type="zha_channel_message",
+                event="zha_channel_bind",
+            )
+        )
+
+        zha_device_proxy.handle_zha_channel_cfg_done(
+            ClusterHandlerConfigurationComplete(
+                device_ieee="28:2c:02:bf:ff:ea:05:68",
+                unique_id="28:2c:02:bf:ff:ea:05:68",
+                event_type="zha_channel_message",
+                event="zha_channel_cfg_done",
+            )
+        )
+
+    with patch.object(
+        zha_device_proxy.device, "async_configure", side_effect=mock_reconfigure
+    ):
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zha/devices/reconfigure",
+                ATTR_IEEE: str(zha_device_proxy.device.ieee),
+            }
+        )
+
+        messages = []
+
+        while len(messages) != 3:
+            msg = await zha_client.receive_json()
+
+            if msg[ID] == 6:
+                messages.append(msg)
+
+    # Ensure the frontend receives progress events
+    assert {m["event"]["type"] for m in messages} == {
+        "zha_channel_configure_reporting",
+        "zha_channel_bind",
+        "zha_channel_cfg_done",
+    }

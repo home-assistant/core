@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, ParamSpec, TypeV
 
 import voluptuous as vol
 from zha.application.const import (
+    ATTR_CLUSTER_ID,
     ATTR_DEVICE_IEEE,
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
@@ -27,6 +28,11 @@ from zha.application.const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
+    ZHA_CLUSTER_HANDLER_CFG_DONE,
+    ZHA_CLUSTER_HANDLER_MSG,
+    ZHA_CLUSTER_HANDLER_MSG_BIND,
+    ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
+    ZHA_CLUSTER_HANDLER_MSG_DATA,
     ZHA_EVENT,
     ZHA_GW_MSG,
     ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -65,7 +71,8 @@ from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
 from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
-from zha.zigbee.device import Device, ZHAEvent
+from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
+from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device, ZHAEvent
 from zha.zigbee.group import Group, GroupMember
 from zigpy.config import (
     CONF_DATABASE,
@@ -109,7 +116,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
+    ATTR_ATTRIBUTES,
     ATTR_AVAILABLE,
+    ATTR_CLUSTER_NAME,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
@@ -126,6 +135,7 @@ from .const import (
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
+    ATTR_SUCCESS,
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
@@ -289,11 +299,11 @@ class ZHADeviceProxy(EventBase):
 
     _ha_device_id: str
 
-    def __init__(self, device: Device, gateway_proxy) -> None:
+    def __init__(self, device: Device, gateway_proxy: ZHAGatewayProxy) -> None:
         """Initialize the gateway proxy."""
         super().__init__()
-        self.device: Device = device
-        self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
+        self.device = device
+        self.gateway_proxy = gateway_proxy
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
 
@@ -402,6 +412,7 @@ class ZHADeviceProxy(EventBase):
             device_info[ATTR_AREA_ID] = reg_device.area_id
         return device_info
 
+    @callback
     def handle_zha_event(self, zha_event: ZHAEvent) -> None:
         """Handle a ZHA event."""
         self.gateway_proxy.hass.bus.async_fire(
@@ -411,6 +422,53 @@ class ZHADeviceProxy(EventBase):
                 ATTR_UNIQUE_ID: zha_event.unique_id,
                 ATTR_DEVICE_ID: self.device_id,
                 **zha_event.data,
+            },
+        )
+
+    @callback
+    def handle_zha_channel_configure_reporting(
+        self, event: ClusterConfigureReportingEvent
+    ) -> None:
+        """Handle a ZHA cluster configure reporting event."""
+        async_dispatcher_send(
+            self.gateway_proxy.hass,
+            ZHA_CLUSTER_HANDLER_MSG,
+            {
+                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
+                ZHA_CLUSTER_HANDLER_MSG_DATA: {
+                    ATTR_CLUSTER_NAME: event.cluster_name,
+                    ATTR_CLUSTER_ID: event.cluster_id,
+                    ATTR_ATTRIBUTES: event.attributes,
+                },
+            },
+        )
+
+    @callback
+    def handle_zha_channel_cfg_done(
+        self, event: ClusterHandlerConfigurationComplete
+    ) -> None:
+        """Handle a ZHA cluster configure reporting event."""
+        async_dispatcher_send(
+            self.gateway_proxy.hass,
+            ZHA_CLUSTER_HANDLER_MSG,
+            {
+                ATTR_TYPE: ZHA_CLUSTER_HANDLER_CFG_DONE,
+            },
+        )
+
+    @callback
+    def handle_zha_channel_bind(self, event: ClusterBindEvent) -> None:
+        """Handle a ZHA cluster bind event."""
+        async_dispatcher_send(
+            self.gateway_proxy.hass,
+            ZHA_CLUSTER_HANDLER_MSG,
+            {
+                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
+                ZHA_CLUSTER_HANDLER_MSG_DATA: {
+                    ATTR_CLUSTER_NAME: event.cluster_name,
+                    ATTR_CLUSTER_ID: event.cluster_id,
+                    ATTR_SUCCESS: event.success,
+                },
             },
         )
 
