@@ -51,6 +51,8 @@ ZHA_TO_HA_COLOR_MODE = {
     ZhaColorMode.WHITE: ColorMode.WHITE,
 }
 
+HA_TO_ZHA_COLOR_MODE = {v: k for k, v in ZHA_TO_HA_COLOR_MODE.items()}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -85,7 +87,7 @@ class Light(LightEntity, ZHAEntity):
             if color_mode == ZhaColorMode.BRIGHTNESS:
                 has_brightness = True
             if color_mode not in (ZhaColorMode.BRIGHTNESS, ZhaColorMode.ONOFF):
-                color_modes.add(ColorMode(color_mode))
+                color_modes.add(ZHA_TO_HA_COLOR_MODE[color_mode])
         if color_modes:
             self._attr_supported_color_modes = color_modes
         elif has_brightness:
@@ -202,7 +204,7 @@ class Light(LightEntity, ZHAEntity):
             xy_color=state.attributes.get("xy_color"),
             hs_color=state.attributes.get("hs_color"),
             color_mode=(
-                ZHA_TO_HA_COLOR_MODE[state.attributes["color_mode"]]
+                HA_TO_ZHA_COLOR_MODE[ColorMode(state.attributes["color_mode"])]
                 if state.attributes.get("color_mode") is not None
                 else None
             ),
