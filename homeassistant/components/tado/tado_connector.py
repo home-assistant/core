@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from python_tado_ha import Tado
+from python_tado_async import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
@@ -201,6 +201,7 @@ class TadoConnector:
         _LOGGER.debug("Updating zone %s", zone_id)
         try:
             # Tado's get zone state seems deprecated
+            # TODO: fix this either in the library or do it here
             data = await self.tado.get_zone_states()
             data = data[0].zoneStates[str(zone_id)]
         except RuntimeError:

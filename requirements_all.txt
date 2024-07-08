@@ -2328,7 +2328,7 @@ python-smarttub==0.0.36
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado-ha==0.1.3
+python-tado-async==0.1.4
 
 # homeassistant.components.technove
 python-technove==1.3.1

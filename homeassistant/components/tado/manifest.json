@@ -14,5 +14,5 @@
   },
   "iot_class": "cloud_polling",
   "loggers": ["PyTado"],
-  "requirements": ["python-tado-ha==0.1.3"]
+  "requirements": ["python-tado-async==0.1.4"]
 }
