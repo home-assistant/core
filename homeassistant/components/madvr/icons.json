@@ -15,6 +15,13 @@
           "off": "mdi:hdr-off"
         }
       },
+      "power_state": {
+        "default": "mdi:power",
+        "state": {
+          "on": "mdi:power",
+          "off": "mdi:power-off"
+        }
+      },
       "signal_state": {
         "default": "mdi:signal",
         "state": {

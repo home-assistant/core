@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -37,7 +36,6 @@ BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
     MadvrBinarySensorEntityDescription(
         key=_POWER_STATE,
         translation_key=_POWER_STATE,
-        device_class=BinarySensorDeviceClass.POWER,
         value_fn=lambda coordinator: coordinator.client.is_on
         if coordinator.client
         else False,
@@ -45,7 +43,6 @@ BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
     MadvrBinarySensorEntityDescription(
         key=_SIGNAL_STATE,
         translation_key=_SIGNAL_STATE,
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=lambda coordinator: bool(
             coordinator.data.get("is_signal", False) if coordinator.data else False
         ),

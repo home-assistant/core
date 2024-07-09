@@ -301,7 +301,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power State',
     'platform': 'madvr',
@@ -315,7 +315,6 @@
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_power_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
       'friendly_name': 'madVR Envy Power State',
     }),
     'context': <ANY>,
@@ -348,7 +347,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal State',
     'platform': 'madvr',
@@ -362,7 +361,6 @@
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_signal_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
       'friendly_name': 'madVR Envy Signal State',
     }),
     'context': <ANY>,
