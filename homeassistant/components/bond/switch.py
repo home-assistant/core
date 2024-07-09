@@ -26,8 +26,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bond generic devices."""
     data = entry.runtime_data
-    hub = data.hub
-    bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_POWER_TRACKED_STATE,
@@ -36,8 +34,8 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        BondSwitch(hub, device, bpup_subs)
-        for device in hub.devices
+        BondSwitch(data, device)
+        for device in data.hub.devices
         if DeviceType.is_generic(device.type)
     )
 

@@ -8,7 +8,6 @@ from datetime import datetime
 import logging
 
 from aiohttp import ClientError
-from bond_async import BPUPSubscriptions
 
 from homeassistant.const import (
     ATTR_HW_VERSION,
@@ -24,7 +23,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
-from .utils import BondDevice, BondHub
+from .models import BondData
+from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,19 +39,19 @@ class BondEntity(Entity):
 
     def __init__(
         self,
-        hub: BondHub,
+        data: BondData,
         device: BondDevice,
-        bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
         sub_device_id: str | None = None,
     ) -> None:
         """Initialize entity with API and device info."""
+        hub = data.hub
         self._hub = hub
         self._device = device
         self._device_id = device.device_id
         self._sub_device = sub_device
         self._attr_available = True
-        self._bpup_subs = bpup_subs
+        self._bpup_subs = data.bpup_subs
         self._update_lock = Lock()
         self._initialized = False
         if sub_device_id:

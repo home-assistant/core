@@ -7,7 +7,7 @@ import math
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_async import Action, BPUPSubscriptions, DeviceType, Direction
+from bond_async import Action, DeviceType, Direction
 import voluptuous as vol
 
 from homeassistant.components.fan import (
@@ -29,7 +29,8 @@ from homeassistant.util.scaling import int_states_in_range
 from . import BondConfigEntry
 from .const import SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
-from .utils import BondDevice, BondHub
+from .models import BondData
+from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +44,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bond fan devices."""
     data = entry.runtime_data
-    hub = data.hub
-    bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SPEED_TRACKED_STATE,
@@ -53,8 +52,8 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        BondFan(hub, device, bpup_subs)
-        for device in hub.devices
+        BondFan(data, device)
+        for device in data.hub.devices
         if DeviceType.is_fan(device.type)
     )
 
@@ -62,14 +61,12 @@ async def async_setup_entry(
 class BondFan(BondEntity, FanEntity):
     """Representation of a Bond fan."""
 
-    def __init__(
-        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
-    ) -> None:
+    def __init__(self, data: BondData, device: BondDevice) -> None:
         """Create HA entity representing Bond fan."""
         self._power: bool | None = None
         self._speed: int | None = None
         self._direction: int | None = None
-        super().__init__(hub, device, bpup_subs)
+        super().__init__(data, device)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
         features = FanEntityFeature(0)
