@@ -884,6 +884,15 @@ class PipelineRun:
         stream: AsyncIterable[ProcessedAudioChunk],
     ) -> str:
         """Run speech-to-text portion of pipeline. Returns the spoken text."""
+        # Create a background task to prepare the conversation agent
+        if self.end_stage >= PipelineStage.INTENT:
+            self.hass.async_create_background_task(
+                conversation.async_prepare_agent(
+                    self.hass, self.intent_agent, self.language
+                ),
+                f"prepare conversation agent {self.intent_agent}",
+            )
+
         if isinstance(self.stt_provider, stt.Provider):
             engine = self.stt_provider.name
         else:
@@ -986,8 +995,6 @@ class PipelineRun:
         """Prepare recognizing an intent."""
         agent_info = conversation.async_get_agent_info(
             self.hass,
-            # If no conversation engine is set, use the Home Assistant agent
-            # (the conversation integration default is currently the last one set)
             self.pipeline.conversation_engine or conversation.HOME_ASSISTANT_AGENT,
         )
 

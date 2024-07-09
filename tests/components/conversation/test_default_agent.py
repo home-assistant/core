@@ -1,14 +1,20 @@
 """Test for the default agent."""
 
 from collections import defaultdict
+import os
+import tempfile
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
+from syrupy import SnapshotAssertion
+import yaml
 
 from homeassistant.components import conversation, cover, media_player
 from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation.models import ConversationInput
+from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
@@ -17,10 +23,12 @@ from homeassistant.components.intent import (
     TimerInfo,
     async_register_timer_handler,
 )
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     STATE_CLOSED,
+    STATE_ON,
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant, callback
@@ -34,9 +42,28 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import expose_entity
+from . import expose_entity, expose_new
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
+from tests.components.light.common import MockLight
+
+
+class OrderBeerIntentHandler(intent.IntentHandler):
+    """Handle OrderBeer intent."""
+
+    intent_type = "OrderBeer"
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Return speech response."""
+        beer_style = intent_obj.slots["beer_style"]["value"]
+        response = intent_obj.create_response()
+        response.async_set_speech(f"You ordered a {beer_style}")
+        return response
 
 
 @pytest.fixture
@@ -1363,3 +1390,671 @@ async def test_name_wildcard_lower_priority(hass: HomeAssistant) -> None:
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert not beer_handler.triggered
     assert food_handler.triggered
+
+
+async def test_intent_entity_added_removed(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test processing intent via HTTP API with entities added later.
+
+    We want to ensure that adding an entity later busts the cache
+    so that the new entity is available as well as any aliases.
+    """
+    context = Context()
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", "off")
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on my cool light", None, context
+    )
+
+    assert len(calls) == 1
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    # Add an entity
+    entity_registry.async_get_or_create(
+        "light", "demo", "5678", suggested_object_id="late"
+    )
+    hass.states.async_set("light.late", "off", {"friendly_name": "friendly light"})
+
+    result = await conversation.async_converse(
+        hass, "turn on friendly light", None, context
+    )
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    # Now add an alias
+    entity_registry.async_update_entity("light.late", aliases={"late added light"})
+
+    result = await conversation.async_converse(
+        hass, "turn on late added light", None, context
+    )
+
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    # Now delete the entity
+    hass.states.async_remove("light.late")
+
+    result = await conversation.async_converse(
+        hass, "turn on late added light", None, context
+    )
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+
+
+async def test_intent_alias_added_removed(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test processing intent via HTTP API with aliases added later.
+
+    We want to ensure that adding an alias later busts the cache
+    so that the new alias is available.
+    """
+    context = Context()
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    hass.states.async_set("light.kitchen", "off", {"friendly_name": "kitchen light"})
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+    assert len(calls) == 1
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    # Add an alias
+    entity_registry.async_update_entity("light.kitchen", aliases={"late added alias"})
+
+    result = await conversation.async_converse(
+        hass, "turn on late added alias", None, context
+    )
+
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    # Now remove the alieas
+    entity_registry.async_update_entity("light.kitchen", aliases={})
+
+    result = await conversation.async_converse(
+        hass, "turn on late added alias", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+
+
+async def test_intent_entity_renamed(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test processing intent via HTTP API with entities renamed later.
+
+    We want to ensure that renaming an entity later busts the cache
+    so that the new name is used.
+    """
+    context = Context()
+    entity = MockLight("kitchen light", STATE_ON)
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    assert len(calls) == 1
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    # Rename the entity
+    entity_registry.async_update_entity("light.kitchen", name="renamed light")
+    await hass.async_block_till_done()
+
+    result = await conversation.async_converse(
+        hass, "turn on renamed light", None, context
+    )
+
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+
+    # Now clear the custom name
+    entity_registry.async_update_entity("light.kitchen", name=None)
+    await hass.async_block_till_done()
+
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    result = await conversation.async_converse(
+        hass, "turn on renamed light", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+
+
+async def test_intent_entity_exposed(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test processing intent via HTTP API with manual expose.
+
+    We want to ensure that manually exposing an entity later busts the cache
+    so that the new setting is used.
+    """
+    context = Context()
+    entity = MockLight("kitchen light", STATE_ON)
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    assert len(calls) == 1
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    calls.clear()
+    result = await conversation.async_converse(
+        hass, "turn on my cool light", None, context
+    )
+
+    assert len(calls) == 1
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    # Unexpose the entity
+    expose_entity(hass, "light.kitchen", False)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+
+    result = await conversation.async_converse(
+        hass, "turn on my cool light", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+
+    # Now expose the entity
+    expose_entity(hass, "light.kitchen", True)
+    await hass.async_block_till_done()
+
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+    result = await conversation.async_converse(
+        hass, "turn on my cool light", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+
+async def test_intent_conversion_not_expose_new(
+    hass: HomeAssistant,
+    init_components,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test processing intent via HTTP API when not exposing new entities."""
+    # Disable exposing new entities to the default agent
+    expose_new(hass, False)
+
+    context = Context()
+    entity = MockLight("kitchen light", STATE_ON)
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+
+    # Expose the entity
+    expose_entity(hass, "light.kitchen", True)
+    await hass.async_block_till_done()
+
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    assert len(calls) == 1
+    data = result.as_dict()
+
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+
+
+async def test_custom_sentences(
+    hass: HomeAssistant,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test custom sentences with a custom intent."""
+    # Expecting testing_config/custom_sentences/en/beer.yaml
+    intent.async_register(hass, OrderBeerIntentHandler())
+
+    # Don't use "en" to test loading custom sentences with language variants.
+    language = "en-us"
+
+    # Invoke intent via HTTP API
+    for beer_style in ("stout", "lager"):
+        result = await conversation.async_converse(
+            hass,
+            f"I'd like to order a {beer_style}, please",
+            None,
+            Context(),
+            language=language,
+        )
+
+        data = result.as_dict()
+        assert data == snapshot
+        assert data["response"]["response_type"] == "action_done"
+        assert (
+            data["response"]["speech"]["plain"]["speech"]
+            == f"You ordered a {beer_style}"
+        )
+
+
+async def test_custom_sentences_config(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test custom sentences with a custom intent in config."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {"conversation": {"intents": {"StealthMode": ["engage stealth mode"]}}},
+    )
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {
+            "intent_script": {
+                "StealthMode": {"speech": {"text": "Stealth mode engaged"}}
+            }
+        },
+    )
+
+    # Invoke intent via HTTP API
+    result = await conversation.async_converse(
+        hass, "engage stealth mode", None, Context(), None
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+    assert data["response"]["speech"]["plain"]["speech"] == "Stealth mode engaged"
+
+
+async def test_language_region(hass: HomeAssistant, init_components) -> None:
+    """Test regional languages."""
+    hass.states.async_set("light.kitchen", "off")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    # Add fake region
+    language = f"{hass.config.language}-YZ"
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            conversation.ATTR_TEXT: "turn on the kitchen",
+            conversation.ATTR_LANGUAGE: language,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == LIGHT_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": ["light.kitchen"]}
+
+
+async def test_non_default_response(hass: HomeAssistant, init_components) -> None:
+    """Test intent response that is not the default."""
+    hass.states.async_set("cover.front_door", "closed")
+    calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    result = await agent.async_process(
+        ConversationInput(
+            text="open the front door",
+            context=Context(),
+            conversation_id=None,
+            device_id=None,
+            language=hass.config.language,
+            agent_id=None,
+        )
+    )
+    assert len(calls) == 1
+    assert result.response.speech["plain"]["speech"] == "Opened"
+
+
+async def test_turn_on_area(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test turning on an area."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    kitchen_area = area_registry.async_create("kitchen")
+    device_registry.async_update_device(device.id, area_id=kitchen_area.id)
+
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="stove"
+    )
+    entity_registry.async_update_entity(
+        "light.stove", aliases={"my stove light"}, area_id=kitchen_area.id
+    )
+    hass.states.async_set("light.stove", "off")
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == LIGHT_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": ["light.stove"]}
+
+    basement_area = area_registry.async_create("basement")
+    device_registry.async_update_device(device.id, area_id=basement_area.id)
+    entity_registry.async_update_entity("light.stove", area_id=basement_area.id)
+    calls.clear()
+
+    # Test that the area is updated
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    # Test the new area works
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on lights in the basement"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == LIGHT_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": ["light.stove"]}
+
+
+async def test_light_area_same_name(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test turning on a light with the same name as an area."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    kitchen_area = area_registry.async_create("kitchen")
+    device_registry.async_update_device(device.id, area_id=kitchen_area.id)
+
+    kitchen_light = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="kitchen light"
+    )
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, area_id=kitchen_area.id
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+
+    ceiling_light = entity_registry.async_get_or_create(
+        "light", "demo", "5678", original_name="ceiling light"
+    )
+    entity_registry.async_update_entity(
+        ceiling_light.entity_id, area_id=kitchen_area.id
+    )
+    hass.states.async_set(
+        ceiling_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "ceiling light"}
+    )
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on kitchen light"},
+    )
+    await hass.async_block_till_done()
+
+    # Should only turn on one light instead of all lights in the kitchen
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == LIGHT_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": [kitchen_light.entity_id]}
+
+
+async def test_custom_sentences_priority(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that user intents from custom_sentences have priority over builtin intents/sentences."""
+    with tempfile.NamedTemporaryFile(
+        mode="w+",
+        encoding="utf-8",
+        suffix=".yaml",
+        dir=os.path.join(hass.config.config_dir, "custom_sentences", "en"),
+    ) as custom_sentences_file:
+        # Add a custom sentence that would match a builtin sentence.
+        # Custom sentences have priority.
+        yaml.dump(
+            {
+                "language": "en",
+                "intents": {
+                    "CustomIntent": {"data": [{"sentences": ["turn on the lamp"]}]}
+                },
+            },
+            custom_sentences_file,
+        )
+        custom_sentences_file.flush()
+        custom_sentences_file.seek(0)
+
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, "conversation", {})
+        assert await async_setup_component(hass, "light", {})
+        assert await async_setup_component(hass, "intent", {})
+        assert await async_setup_component(
+            hass,
+            "intent_script",
+            {
+                "intent_script": {
+                    "CustomIntent": {"speech": {"text": "custom response"}}
+                }
+            },
+        )
+
+        # Ensure that a "lamp" exists so that we can verify the custom intent
+        # overrides the builtin sentence.
+        hass.states.async_set("light.lamp", "off")
+
+        result = await conversation.async_converse(
+            hass,
+            "turn on the lamp",
+            None,
+            Context(),
+            language=hass.config.language,
+        )
+
+        data = result.as_dict()
+        assert data["response"]["response_type"] == "action_done"
+        assert data["response"]["speech"]["plain"]["speech"] == "custom response"
+
+
+async def test_config_sentences_priority(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that user intents from configuration.yaml have priority over builtin intents/sentences."""
+    # Add a custom sentence that would match a builtin sentence.
+    # Custom sentences have priority.
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {"conversation": {"intents": {"CustomIntent": ["turn on the lamp"]}}},
+    )
+    assert await async_setup_component(hass, "light", {})
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {"intent_script": {"CustomIntent": {"speech": {"text": "custom response"}}}},
+    )
+
+    # Ensure that a "lamp" exists so that we can verify the custom intent
+    # overrides the builtin sentence.
+    hass.states.async_set("light.lamp", "off")
+
+    result = await conversation.async_converse(
+        hass,
+        "turn on the lamp",
+        None,
+        Context(),
+        language=hass.config.language,
+    )
+    data = result.as_dict()
+    assert data["response"]["response_type"] == "action_done"
+    assert data["response"]["speech"]["plain"]["speech"] == "custom response"
