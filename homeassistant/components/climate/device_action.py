@@ -46,6 +46,7 @@ SET_TEMPERATURE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): "set_temperature",
         vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        vol.Required(const.ATTR_TEMPERATURE): int,
     }
 )
 
@@ -150,7 +151,8 @@ async def async_get_action_capabilities(
             min_temp = get_capability(hass, entry.entity_id, const.ATTR_MIN_TEMP)
             max_temp = get_capability(hass, entry.entity_id, const.ATTR_MAX_TEMP)
         except HomeAssistantError:
-            preset_modes = []
+            min_temp = const.ATTR_MIN_TEMP
+            max_temp = const.ATTR_MAX_TEMP
         fields[vol.Required(const.ATTR_TEMPERATURE)] = vol.Range(min_temp, max_temp)
 
     return {"extra_fields": vol.Schema(fields)}
