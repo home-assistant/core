@@ -32,10 +32,8 @@ from .const import CONF_OFF_ACTION, DEFAULT_NAME, DOMAIN
 async def validate(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate input."""
-    if CONF_BROADCAST_PORT in user_input:
-        # Convert float to int for broadcast port
-        user_input[CONF_BROADCAST_PORT] = int(user_input[CONF_BROADCAST_PORT])
+    """Validate input setup."""
+    user_input = await validate_options(handler, user_input)
 
     user_input[CONF_MAC] = dr.format_mac(user_input[CONF_MAC])
 
@@ -45,25 +43,41 @@ async def validate(
     return user_input
 
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_MAC): TextSelector(),
-        vol.Optional(CONF_HOST): TextSelector(),
-        vol.Optional(CONF_OFF_ACTION): ActionSelector(),
-        vol.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
-        vol.Optional(CONF_BROADCAST_PORT): NumberSelector(
-            NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
-        ),
-    }
-)
+async def validate_options(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate input options."""
+    if CONF_BROADCAST_PORT in user_input:
+        # Convert float to int for broadcast port
+        user_input[CONF_BROADCAST_PORT] = int(user_input[CONF_BROADCAST_PORT])
+    return user_input
+
+
+DATA_SCHEMA = {vol.Required(CONF_MAC): TextSelector()}
+OPTIONS_SCHEMA = {
+    vol.Optional(CONF_HOST): TextSelector(),
+    vol.Optional(CONF_OFF_ACTION): ActionSelector(),
+    vol.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
+    vol.Optional(CONF_BROADCAST_PORT): NumberSelector(
+        NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
+    ),
+}
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(schema=DATA_SCHEMA, validate_user_input=validate),
-    "import": SchemaFlowFormStep(schema=DATA_SCHEMA, validate_user_input=validate),
+    "user": SchemaFlowFormStep(
+        schema=vol.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
+        validate_user_input=validate,
+    ),
+    "import": SchemaFlowFormStep(
+        schema=vol.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
+        validate_user_input=validate,
+    ),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(DATA_SCHEMA, validate_user_input=validate),
+    "init": SchemaFlowFormStep(
+        vol.Schema(OPTIONS_SCHEMA), validate_user_input=validate_options
+    ),
 }
 
 
