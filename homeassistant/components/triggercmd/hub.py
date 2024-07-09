@@ -46,11 +46,6 @@ class Hub:
         """Token for hub."""
         return self._token
 
-    async def test_connection(self) -> bool:
-        """Test connectivity to the hub is OK."""
-        await asyncio.sleep(1)
-        return True
-
 
 class Switch:
     """switch (device for HA) for TRIGGERcmd."""
@@ -78,13 +73,3 @@ class Switch:
     def remove_callback(self, callback: Callable[[], None]) -> None:
         """Remove previously registered callback."""
         self._callbacks.discard(callback)
-
-    @property
-    def online(self) -> float:
-        """Switch is online."""
-        return True
-
-    @property
-    def is_on(self) -> bool:
-        """Switch is on."""
-        return True

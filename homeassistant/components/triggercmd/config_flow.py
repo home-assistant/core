@@ -12,7 +12,6 @@ from homeassistant import config_entries, exceptions
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN  # pylint:disable=unused-import
-from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,11 +30,6 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     if not tokenData["id"]:
         raise InvalidToken
 
-    hub = Hub(hass, data["token"])
-    result = await hub.test_connection()
-    if not result:
-        raise CannotConnect
-
     return {"title": tokenData["id"]}
 
 
@@ -53,8 +47,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
 
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
             except InvalidToken:
                 errors["token"] = "invalid_token"
             except Exception:  # pylint: disable=broad-except
@@ -64,10 +56,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error: cannot connect."""
 
 
 class InvalidToken(exceptions.HomeAssistantError):

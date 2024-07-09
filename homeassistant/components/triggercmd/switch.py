@@ -7,11 +7,11 @@ import logging
 from triggercmd import client
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TriggercmdConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,12 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TriggercmdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add switch for passed config_entry in HA."""
-    hub = hass.data[DOMAIN][config_entry.entry_id]
-
+    hub = config_entry.runtime_data.hub
     async_add_entities(TRIGGERcmdSwitch(switch) for switch in hub.switches)
 
 
@@ -63,8 +62,8 @@ class TRIGGERcmdSwitch(SwitchEntity):
 
     @property
     def available(self) -> bool:
-        """Return True if switch and hub is available."""
-        return self._switch.online and self._switch.hub.online
+        """Return True if hub is available."""
+        return self._switch.hub.online
 
     @property
     def name(self) -> str:
