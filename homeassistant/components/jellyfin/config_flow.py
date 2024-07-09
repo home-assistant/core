@@ -96,9 +96,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_CLIENT_DEVICE_ID: self.client_device_id, **user_input},
                 )
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        return self._show_user_form(errors, user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -145,6 +143,22 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler(config_entry)
+
+    def _show_user_form(
+        self, errors: dict[str, str], user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the user form with or without existing input."""
+        schema = STEP_USER_DATA_SCHEMA
+        if user_input is not None:
+            schema = vol.Schema(
+                {
+                    vol.Required(CONF_URL, default=user_input[CONF_URL]): str,
+                    vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
+                    vol.Optional(CONF_PASSWORD, default=""): str,
+                }
+            )
+
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class OptionsFlowHandler(OptionsFlow):
