@@ -418,3 +418,62 @@ async def test_rpc_device_virtual_binary_sensor_without_name(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-boolean:203-boolean"
+
+
+async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test if the virtual binary sensor will be removed if the mode has been changed to a toggle."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "toggle"}}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:200"] = {"value": True}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    config_entry = await init_integration(hass, 3, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_boolean_200",
+        "boolean:200-boolean",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert not entry
+
+
+async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: DeviceRegistry,
+    mock_rpc_device: Mock,
+) -> None:
+    """Check whether the virtual binary sensor will be removed if it has been removed from the device configuration."""
+    config_entry = await init_integration(hass, 3, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_boolean_200",
+        "boolean:200-boolean",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert not entry
