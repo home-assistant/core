@@ -94,6 +94,8 @@ async def test_access_url_errors(
         {CONF_ACCESS_URL: "http://user:password@string"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ACCESS_URL: "http://user:password@string"}
+    assert result["title"] == "SimpleFIN"
 
 
 @pytest.mark.parametrize(
@@ -133,3 +135,5 @@ async def test_claim_token_errors(
             {CONF_ACCESS_URL: "donJulio"},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == {CONF_ACCESS_URL: "https://i:am@yomama.house.com"}
+        assert result["title"] == "SimpleFIN"
