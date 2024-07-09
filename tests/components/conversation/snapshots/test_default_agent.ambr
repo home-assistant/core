@@ -1,7 +1,7 @@
 # serializer version: 1
-# name: test_custom_agent
+# name: test_custom_sentences
   dict({
-    'conversation_id': 'test-conv-id',
+    'conversation_id': None,
     'response': dict({
       'card': dict({
       }),
@@ -13,36 +13,198 @@
         'targets': list([
         ]),
       }),
-      'language': 'test-language',
+      'language': 'en-us',
       'response_type': 'action_done',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Test response',
+          'speech': 'You ordered a stout',
         }),
       }),
     }),
   })
 # ---
-# name: test_get_agent_info
+# name: test_custom_sentences.1
   dict({
-    'id': 'conversation.home_assistant',
-    'name': 'Home Assistant',
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en-us',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'You ordered a lager',
+        }),
+      }),
+    }),
   })
 # ---
-# name: test_get_agent_info.1
+# name: test_custom_sentences_config
   dict({
-    'id': 'mock-entry',
-    'name': 'Mock Title',
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Stealth mode engaged',
+        }),
+      }),
+    }),
   })
 # ---
-# name: test_get_agent_info.2
+# name: test_intent_alias_added_removed
   dict({
-    'id': 'conversation.home_assistant',
-    'name': 'Home Assistant',
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
   })
 # ---
-# name: test_turn_on_intent[None-turn kitchen on-None]
+# name: test_intent_alias_added_removed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_alias_added_removed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called late added alias',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_conversion_not_expose_new
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_conversion_not_expose_new.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_added_removed
   dict({
     'conversation_id': None,
     'response': dict({
@@ -72,7 +234,7 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[None-turn kitchen on-conversation.home_assistant]
+# name: test_intent_entity_added_removed.1
   dict({
     'conversation_id': None,
     'response': dict({
@@ -83,8 +245,8 @@
         ]),
         'success': list([
           dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
+            'id': 'light.late',
+            'name': 'friendly light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -102,7 +264,7 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[None-turn kitchen on-homeassistant]
+# name: test_intent_entity_added_removed.2
   dict({
     'conversation_id': None,
     'response': dict({
@@ -113,8 +275,8 @@
         ]),
         'success': list([
           dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
+            'id': 'light.late',
+            'name': 'friendly light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -132,7 +294,27 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[None-turn on kitchen-None]
+# name: test_intent_entity_added_removed.3
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called late added light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_exposed
   dict({
     'conversation_id': None,
     'response': dict({
@@ -144,7 +326,7 @@
         'success': list([
           dict({
             'id': 'light.kitchen',
-            'name': 'kitchen',
+            'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -162,7 +344,7 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[None-turn on kitchen-conversation.home_assistant]
+# name: test_intent_entity_exposed.1
   dict({
     'conversation_id': None,
     'response': dict({
@@ -174,7 +356,7 @@
         'success': list([
           dict({
             'id': 'light.kitchen',
-            'name': 'kitchen',
+            'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -192,7 +374,47 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[None-turn on kitchen-homeassistant]
+# name: test_intent_entity_exposed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_exposed.3
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called my cool light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_exposed.4
   dict({
     'conversation_id': None,
     'response': dict({
@@ -204,7 +426,7 @@
         'success': list([
           dict({
             'id': 'light.kitchen',
-            'name': 'kitchen',
+            'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -222,7 +444,7 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[my_new_conversation-turn kitchen on-None]
+# name: test_intent_entity_exposed.5
   dict({
     'conversation_id': None,
     'response': dict({
@@ -234,7 +456,7 @@
         'success': list([
           dict({
             'id': 'light.kitchen',
-            'name': 'kitchen',
+            'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -252,7 +474,7 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[my_new_conversation-turn kitchen on-conversation.home_assistant]
+# name: test_intent_entity_renamed
   dict({
     'conversation_id': None,
     'response': dict({
@@ -264,7 +486,7 @@
         'success': list([
           dict({
             'id': 'light.kitchen',
-            'name': 'kitchen',
+            'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -282,7 +504,7 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[my_new_conversation-turn kitchen on-homeassistant]
+# name: test_intent_entity_renamed.1
   dict({
     'conversation_id': None,
     'response': dict({
@@ -294,7 +516,7 @@
         'success': list([
           dict({
             'id': 'light.kitchen',
-            'name': 'kitchen',
+            'name': 'renamed light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -312,7 +534,27 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[my_new_conversation-turn on kitchen-None]
+# name: test_intent_entity_renamed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_renamed.3
   dict({
     'conversation_id': None,
     'response': dict({
@@ -324,7 +566,7 @@
         'success': list([
           dict({
             'id': 'light.kitchen',
-            'name': 'kitchen',
+            'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
@@ -342,61 +584,21 @@
     }),
   })
 # ---
-# name: test_turn_on_intent[my_new_conversation-turn on kitchen-conversation.home_assistant]
+# name: test_intent_entity_renamed.4
   dict({
     'conversation_id': None,
     'response': dict({
       'card': dict({
       }),
       'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
-            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
-          }),
-        ]),
-        'targets': list([
-        ]),
+        'code': 'no_valid_targets',
       }),
       'language': 'en',
-      'response_type': 'action_done',
+      'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_turn_on_intent[my_new_conversation-turn on kitchen-homeassistant]
-  dict({
-    'conversation_id': None,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
-            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
-          }),
-        ]),
-        'targets': list([
-        ]),
-      }),
-      'language': 'en',
-      'response_type': 'action_done',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Turned on the light',
+          'speech': 'Sorry, I am not aware of any device called renamed light',
         }),
       }),
     }),
