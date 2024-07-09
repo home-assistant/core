@@ -11,7 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -67,12 +67,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Russound RIO platform."""
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-
-    russ = Russound(hass.loop, host, port)
-
-    await russ.connect()
+    russ = entry.runtime_data
 
     # Discover sources and zones
     sources = await russ.enumerate_sources()
@@ -87,7 +82,7 @@ async def async_setup_entry(
             )
             continue
         await russ.watch_zone(zone_id)
-        zone = RussoundZoneDevice(entry, russ, zone_id, name, sources)
+        zone = RussoundZoneDevice(russ, zone_id, name, sources)
         entities.append(zone)
 
     @callback
@@ -113,17 +108,13 @@ class RussoundZoneDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, entry: ConfigEntry, russ, zone_id, name, sources) -> None:
+    def __init__(self, russ, zone_id, name, sources) -> None:
         """Initialize the zone device."""
         super().__init__()
-        self._entry = entry
-        self._device_name = entry.title
-        self._attr_unique_id = zone_id.device_str()
         self._name = name
         self._russ = russ
         self._zone_id = zone_id
         self._sources = sources
-        self._update_states()
 
     def _zone_var(self, name, default=None):
         return self._russ.get_cached_zone_variable(self._zone_id, name, default)
@@ -232,11 +223,3 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 continue
             await self._russ.send_zone_event(self._zone_id, "SelectSource", source_id)
             break
-
-    def _update_states(self) -> None:
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self._entry.unique_id))},
-            manufacturer="Russound",
-            name=self._device_name,
-            model="MCA-C5",
-        )

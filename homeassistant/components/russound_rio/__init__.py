@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except RUSSOUND_RIO_EXCEPTIONS as err:
         raise ConfigEntryError(err) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = russ
+    entry.runtime_data = russ
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
