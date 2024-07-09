@@ -21,10 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 
 
 class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+    """Placeholder class to store APIs."""
 
     def __init__(self, apikey: str) -> None:
         """Initialize."""
@@ -53,7 +50,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": "Fluss+"}
 
 
 class FlussConfigFlow(ConfigFlow, domain=DOMAIN):

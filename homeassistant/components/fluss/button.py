@@ -24,7 +24,7 @@ async def async_setup_entry(
     # # async_add_entities(FlussDevice() for device in )
 
     devices = await api.async_get_devices()
-    LOGGER.warning("Devices %s", devices)
+    # LOGGER.warning("Devices %s", devices)
     if isinstance(devices, dict) and "devices" in devices:
         devices = devices["devices"]
 
