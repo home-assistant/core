@@ -43,14 +43,14 @@ class TadoBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="battery state",
-    state_fn=lambda data: data["batteryState"] == "LOW",
+    state_fn=lambda data: data.get("battery_state") == "LOW",
     device_class=BinarySensorDeviceClass.BATTERY,
 )
 CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="connection state",
     translation_key="connection_state",
-    state_fn=lambda data: data.connectionState.value
-    if hasattr(data, "connectionState") and hasattr(data.connectionState, "value")
+    state_fn=lambda data: data.connection_state.value
+    if hasattr(data, "connection_state") and hasattr(data.connection_state, "value")
     else False,
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
@@ -67,16 +67,16 @@ LINK_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="overlay",
     translation_key="overlay",
-    state_fn=lambda data: data.overlayType,
+    state_fn=lambda data: data.overlay_type,
     attributes_fn=lambda data: (
-        {"termination": data.overlay.termination["type"]} if data.overlayType else {}
+        {"termination": data.overlay.termination["type"]} if data.overlay_type else {}
     ),
     device_class=BinarySensorDeviceClass.POWER,
 )
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="open window",
-    state_fn=lambda data: bool(data.openWindow),
-    attributes_fn=lambda data: bool(data.openWindow),
+    state_fn=lambda data: bool(data.open_window),
+    attributes_fn=lambda data: bool(data.open_window),
     device_class=BinarySensorDeviceClass.WINDOW,
 )
 EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -130,7 +130,7 @@ async def async_setup_entry(
 
     # Create device sensors
     for device in devices:
-        if device.batteryState is not None:
+        if device.battery_state is not None:
             device_type = TYPE_BATTERY
         else:
             device_type = TYPE_POWER

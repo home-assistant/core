@@ -202,7 +202,7 @@ class TadoConnector:
             # Tado's get zone state seems deprecated
             # TODO: fix this either in the library or do it here
             data = await self.tado.get_zone_states()
-            data = data[0].zoneStates[str(zone_id)]
+            data = data[0].zone_states[str(zone_id)]
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating zone %s", zone_id)
             return

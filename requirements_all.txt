@@ -2687,7 +2687,7 @@ systembridgeconnector==4.0.3
 systembridgemodels==4.0.4
 
 # homeassistant.components.tado
-tadoasync==0.1.6
+tadoasync==0.1.9
 
 # homeassistant.components.tailscale
 tailscale==0.6.0

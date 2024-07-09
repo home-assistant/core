@@ -115,20 +115,20 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self._attr_available = False
         _LOGGER.debug(
             "Tado device %s has geoTracking state %s",
-            device["name"],
-            device["settings"]["geoTrackingEnabled"],
+            device.name,
+            device.settings.geo_tracking_enabled,
         )
 
-        if device["settings"]["geoTrackingEnabled"] is False:
+        if device.settings.geo_tracking_enabled is False:
             return
 
         self._attr_available = True
         self._active = False
-        if device.get("location") is not None and device["location"]["atHome"]:
-            _LOGGER.debug("Tado device %s is at home", device["name"])
+        if device.location is not None and device.location.at_home:
+            _LOGGER.debug("Tado device %s is at home", device.name)
             self._active = True
         else:
-            _LOGGER.debug("Tado device %s is not at home", device["name"])
+            _LOGGER.debug("Tado device %s is not at home", device.name)
 
     @callback
     def on_demand_update(self) -> None:
