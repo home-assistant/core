@@ -4,7 +4,7 @@ from dataclasses import asdict
 from datetime import date
 from typing import cast
 
-from aiomealie.exceptions import MealieNotFoundError
+from aiomealie.exceptions import MealieConnectionError, MealieNotFoundError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -74,7 +74,13 @@ def setup_services(hass: HomeAssistant) -> None:
                 translation_key="end_date_before_start_date",
             )
         client = cast(MealieConfigEntry, entry).runtime_data.client
-        mealplans = await client.get_mealplans(start_date, end_date)
+        try:
+            mealplans = await client.get_mealplans(start_date, end_date)
+        except MealieConnectionError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
         return {"mealplan": [asdict(x) for x in mealplans.items]}
 
     async def async_get_recipe(call: ServiceCall) -> ServiceResponse:
@@ -84,6 +90,11 @@ def setup_services(hass: HomeAssistant) -> None:
         client = entry.runtime_data.client
         try:
             recipe = await client.get_recipe(recipe_id)
+        except MealieConnectionError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
         except MealieNotFoundError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

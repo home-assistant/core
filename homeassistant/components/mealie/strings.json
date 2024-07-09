@@ -46,6 +46,9 @@
     "end_date_before_start_date": {
       "message": "End date must be after start date."
     },
+    "connection_error": {
+      "message": "Error connecting to Mealie instance."
+    },
     "recipe_not_found": {
       "message": "Recipe with ID or slug `{recipe_id}` not found."
     }
