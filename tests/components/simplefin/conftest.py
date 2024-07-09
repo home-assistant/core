@@ -39,7 +39,7 @@ async def mock_config_entry(mock_access_url: str) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_get_financial_data() -> FinancialData:
+def __mock_get_financial_data() -> FinancialData:
     """Fixture to mock the fetch_data method of SimpleFin."""
     fixture_data = load_fixture("fin_data.json", DOMAIN)
 

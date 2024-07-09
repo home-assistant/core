@@ -1,9 +1,8 @@
 """Test config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from simplefin4py import FinancialData
 from simplefin4py.exceptions import (
     SimpleFinAuthError,
     SimpleFinClaimError,
@@ -22,7 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 async def test_successful_claim(
     hass: HomeAssistant,
-    mock_get_financial_data: FinancialData,
+    mock_simplefin_client: AsyncMock,
 ) -> None:
     """Test successful token claim in config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -42,7 +41,8 @@ async def test_successful_claim(
 
 
 async def test_access_url(
-    hass: HomeAssistant, mock_get_financial_data: FinancialData
+    hass: HomeAssistant,
+    mock_simplefin_client: AsyncMock,
 ) -> None:
     """Test standard config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -67,7 +67,10 @@ async def test_access_url(
     ],
 )
 async def test_access_url_errors(
-    hass: HomeAssistant, mock_get_financial_data, side_effect: Exception, error_key: str
+    hass: HomeAssistant,
+    mock_simplefin_client: AsyncMock,
+    side_effect: Exception,
+    error_key: str,
 ) -> None:
     """Test the various errors we can get in access_url mode."""
     result = await hass.config_entries.flow.async_init(
@@ -102,7 +105,7 @@ async def test_access_url_errors(
     ],
 )
 async def test_claim_token_errors(
-    hass: HomeAssistant, mock_get_financial_data: FinancialData, side_effect, error_key
+    hass: HomeAssistant, mock_simplefin_client: AsyncMock, side_effect, error_key
 ) -> None:
     """Test config flow with various token claim errors."""
     result = await hass.config_entries.flow.async_init(
