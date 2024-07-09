@@ -1054,7 +1054,7 @@ async def test_usb_discovery_already_running(
     [CP2652_ZIGBEE_DISCOVERY_INFO],
 )
 async def test_abort_usb_discovery_aborts_specific_devices(
-    hass: HomeAssistant, supervisor, addon_options, discovery_info: dict[str, Any]
+    hass: HomeAssistant, supervisor, addon_options, discovery_info
 ) -> None:
     """Test usb discovery flow is aborted on specific devices."""
     result = await hass.config_entries.flow.async_init(
@@ -1984,6 +1984,7 @@ async def test_options_addon_running(
     set_addon_options,
     restart_addon,
     get_addon_discovery_info,
+    discovery_info,
     entry_data,
     old_addon_options,
     new_addon_options,
@@ -2105,6 +2106,7 @@ async def test_options_addon_running_no_changes(
     set_addon_options,
     restart_addon,
     get_addon_discovery_info,
+    discovery_info,
     entry_data,
     old_addon_options,
     new_addon_options,
@@ -2261,10 +2263,12 @@ async def test_options_different_device(
     set_addon_options,
     restart_addon,
     get_addon_discovery_info,
+    discovery_info,
     entry_data,
     old_addon_options,
     new_addon_options,
     disconnect_calls,
+    server_version_side_effect,
 ) -> None:
     """Test options flow and configuring a different device."""
     addon_options.update(old_addon_options)
@@ -2425,10 +2429,12 @@ async def test_options_addon_restart_failed(
     set_addon_options,
     restart_addon,
     get_addon_discovery_info,
+    discovery_info,
     entry_data,
     old_addon_options,
     new_addon_options,
     disconnect_calls,
+    restart_addon_side_effect,
 ) -> None:
     """Test options flow and add-on restart failure."""
     addon_options.update(old_addon_options)
@@ -2554,10 +2560,12 @@ async def test_options_addon_running_server_info_failure(
     set_addon_options,
     restart_addon,
     get_addon_discovery_info,
+    discovery_info,
     entry_data,
     old_addon_options,
     new_addon_options,
     disconnect_calls,
+    server_version_side_effect,
 ) -> None:
     """Test options flow and add-on already running with server info failure."""
     addon_options.update(old_addon_options)
@@ -2669,6 +2677,7 @@ async def test_options_addon_not_installed(
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
+    discovery_info,
     entry_data,
     old_addon_options,
     new_addon_options,
