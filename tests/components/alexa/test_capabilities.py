@@ -234,7 +234,6 @@ async def test_api_increase_color_temp(
         ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console", None], 0),
         ("media_player", "SATELLITE TV", ["satellite_tv", "game console"], 0),
-        ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),
     ],
 )
 async def test_api_select_input(
@@ -255,18 +254,6 @@ async def test_api_select_input(
         },
     )
 
-    # test where no source matches
-    if idx is None:
-        await assert_request_fails(
-            "Alexa.InputController",
-            "SelectInput",
-            "media_player#test",
-            "media_player.select_source",
-            hass,
-            payload={"input": payload},
-        )
-        return
-
     call, _ = await assert_request_calls_service(
         "Alexa.InputController",
         "SelectInput",
@@ -276,6 +263,34 @@ async def test_api_select_input(
         payload={"input": payload},
     )
     assert call.data["source"] == source_list[idx]
+
+
+@pytest.mark.parametrize(
+    ("source_list"),
+    [(["satellite_tv", "game console"]), ([])],
+)
+async def test_api_select_input_fails(
+    hass: HomeAssistant,
+    source_list: list[Any],
+) -> None:
+    """Test api set input process fails."""
+    hass.states.async_set(
+        "media_player.test",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "source": "unknown",
+            "source_list": source_list,
+        },
+    )
+    await assert_request_fails(
+        "Alexa.InputController",
+        "SelectInput",
+        "media_player#test",
+        "media_player.select_source",
+        hass,
+        payload={"input": "BAD DEVICE"},
+    )
 
 
 @pytest.mark.parametrize(
