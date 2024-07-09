@@ -6837,6 +6837,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "weheat": {
+      "name": "Weheat",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "wemo": {
       "name": "Belkin WeMo",
       "integration_type": "hub",
