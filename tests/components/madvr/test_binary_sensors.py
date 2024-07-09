@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -28,85 +29,51 @@ async def test_binary_sensor_setup(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_power_state_binary_sensor(
+@pytest.mark.parametrize(
+    ("entity_id", "positive_payload", "negative_payload"),
+    [
+        (
+            "binary_sensor.madvr_envy_power_state",
+            {"is_on": True},
+            {"is_on": False},
+        ),
+        (
+            "binary_sensor.madvr_envy_signal_state",
+            {"is_signal": True},
+            {"is_signal": False},
+        ),
+        (
+            "binary_sensor.madvr_envy_hdr_flag",
+            {"hdr_flag": True},
+            {"hdr_flag": False},
+        ),
+        (
+            "binary_sensor.madvr_envy_outgoing_hdr_flag",
+            {"outgoing_hdr_flag": True},
+            {"outgoing_hdr_flag": False},
+        ),
+    ],
+)
+async def test_binary_sensors(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    positive_payload: dict,
+    negative_payload: dict,
 ) -> None:
-    """Test the power state binary sensor."""
+    """Test the binary sensors."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_power_state"
-
-    state = hass.states.get(entity_id)
-    # this gets the power state from the client
-    assert state.state == STATE_ON
-
-
-async def test_signal_state_binary_sensor(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the signal state binary sensor."""
-    await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_signal_state"
-
-    # retrieve the handle_update function from mock
     update_callback = get_update_callback(mock_madvr_client)
-    # simulate the coordinator receiving data from callback
-    update_callback({"is_signal": False, "fake_key": "other_value"})
 
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    # Test signal detected
-    update_callback({"is_signal": True})
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-
-
-async def test_hdr_flag_binary_sensor(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the HDR flag binary sensor."""
-    await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_hdr_flag"
-
-    # Test initial state (assuming no HDR)
-    update_callback = get_update_callback(mock_madvr_client)
-    update_callback({"hdr_flag": False})
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    # Test HDR detected
-    update_callback({"hdr_flag": True})
-
+    # Test positive state
+    update_callback(positive_payload)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
-
-async def test_outgoing_hdr_flag_binary_sensor(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the outgoing HDR flag binary sensor."""
-    await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.madvr_envy_outgoing_hdr_flag"
-
-    # Test initial state (assuming no outgoing HDR)
-    update_callback = get_update_callback(mock_madvr_client)
-    update_callback({"outgoing_hdr_flag": False})
-
+    # Test negative state
+    update_callback(negative_payload)
+    await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
-
-    # Test outgoing HDR detected
-    update_callback({"outgoing_hdr_flag": True})
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON

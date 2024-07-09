@@ -33,7 +33,7 @@ BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
     MadvrBinarySensorEntityDescription(
         key=_POWER_STATE,
         translation_key=_POWER_STATE,
-        value_fn=lambda coordinator: coordinator.client.is_on,
+        value_fn=lambda coordinator: coordinator.data.get("is_on", False),
     ),
     MadvrBinarySensorEntityDescription(
         key=_SIGNAL_STATE,
