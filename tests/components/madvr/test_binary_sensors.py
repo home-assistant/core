@@ -39,7 +39,6 @@ async def test_power_state_binary_sensor(
     state = hass.states.get(entity_id)
     # this gets the power state from the client
     assert state.state == STATE_ON
-    assert state.attributes["icon"] == "mdi:power"
 
 
 async def test_signal_state_binary_sensor(
@@ -50,21 +49,17 @@ async def test_signal_state_binary_sensor(
     await setup_integration(hass, mock_config_entry)
     entity_id = "binary_sensor.madvr_envy_signal_state"
 
-    # Test initial state (assuming no signal)
-    # mock_madvr_client.msg_dict = {"is_signal": False}
     coordinator = mock_config_entry.runtime_data
-    coordinator.handle_push_data({"is_signal": False})
+    # simulate the coordinator receiving data from callback
+    coordinator.handle_push_data({"is_signal": False, "fake_key": "other_value"})
 
     state = hass.states.get(entity_id)
-    assert state
     assert state.state == STATE_OFF
-    assert state.attributes["icon"] == "mdi:signal-off"
 
     # Test signal detected
     coordinator.handle_push_data({"is_signal": True})
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes["icon"] == "mdi:signal"
 
 
 async def test_hdr_flag_binary_sensor(
@@ -80,9 +75,7 @@ async def test_hdr_flag_binary_sensor(
     coordinator.handle_push_data({"hdr_flag": False})
 
     state = hass.states.get(entity_id)
-    assert state
     assert state.state == STATE_OFF
-    assert state.attributes["icon"] == "mdi:hdr-off"
 
     # Test HDR detected
     coordinator.handle_push_data({"hdr_flag": True})
@@ -90,7 +83,6 @@ async def test_hdr_flag_binary_sensor(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes["icon"] == "mdi:hdr"
 
 
 async def test_outgoing_hdr_flag_binary_sensor(
@@ -106,14 +98,10 @@ async def test_outgoing_hdr_flag_binary_sensor(
     coordinator.handle_push_data({"outgoing_hdr_flag": False})
 
     state = hass.states.get(entity_id)
-    assert state
     assert state.state == STATE_OFF
-    assert state.attributes["icon"] == "mdi:hdr-off"
 
     # Test outgoing HDR detected
     coordinator.handle_push_data({"outgoing_hdr_flag": True})
 
     state = hass.states.get(entity_id)
-    assert state
     assert state.state == STATE_ON
-    assert state.attributes["icon"] == "mdi:hdr"
