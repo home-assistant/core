@@ -13,6 +13,7 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
@@ -27,14 +28,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_OFF_ACTION = "turn_off"
-
-DEFAULT_NAME = "Wake on LAN"
-DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
@@ -48,21 +44,34 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up a wake on lan switch."""
-    broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)
-    broadcast_port: int | None = config.get(CONF_BROADCAST_PORT)
-    host: str | None = config.get(CONF_HOST)
-    mac_address: str = config[CONF_MAC]
-    name: str = config[CONF_NAME]
-    off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
+    """Set up a wake on lan switch.
 
-    add_entities(
+    The YAML platform config is automatically
+    imported to a config entry, this method can be removed
+    when YAML support is removed.
+    """
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Wake on LAN sensor entry."""
+    broadcast_address: str | None = entry.options.get(CONF_BROADCAST_ADDRESS)
+    broadcast_port: int | None = entry.options.get(CONF_BROADCAST_PORT)
+    host: str | None = entry.options.get(CONF_HOST)
+    mac_address: str = entry.options[CONF_MAC]
+    name: str = entry.title
+    off_action: list[Any] | None = entry.options.get(CONF_OFF_ACTION)
+
+    async_add_entities(
         [
             WolSwitch(
                 hass,
