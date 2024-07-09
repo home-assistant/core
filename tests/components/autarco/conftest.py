@@ -3,10 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from autarco import Account
+from autarco import AccountSite
 import pytest
 
-from homeassistant.components.autarco.const import CONF_PUBLIC_KEY, DOMAIN
+from homeassistant.components.autarco.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
@@ -35,12 +35,15 @@ def mock_autarco_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
-        client.get_account.return_value = Account(
-            public_key="key-public",
-            system_name="test-system",
-            retailer="test-retailer",
-            health="OK",
-        )
+        client.get_account.return_value = [
+            AccountSite(
+                site_id=1,
+                public_key="key-public",
+                system_name="test-system",
+                retailer="test-retailer",
+                health="OK",
+            )
+        ]
         yield client
 
 
@@ -50,10 +53,8 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Autarco",
-        unique_id="key-public",
         data={
             CONF_EMAIL: "test@autarco.com",
             CONF_PASSWORD: "test-password",
-            CONF_PUBLIC_KEY: "key-public",
         },
     )

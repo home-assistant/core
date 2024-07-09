@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from autarco import Autarco, Solar
+from autarco import AccountSite, Autarco, Solar
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_PUBLIC_KEY, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 
 class AutarcoData(NamedTuple):
@@ -28,6 +28,7 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
         self,
         hass: HomeAssistant,
         client: Autarco,
+        site: AccountSite,
     ) -> None:
         """Initialize global Autarco data updater."""
         super().__init__(
@@ -37,10 +38,10 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-        self.public_key = self.config_entry.data[CONF_PUBLIC_KEY]
+        self.site = site
 
     async def _async_update_data(self) -> AutarcoData:
         """Fetch data from Autarco API."""
         return AutarcoData(
-            solar=await self.client.get_solar(self.public_key),
+            solar=await self.client.get_solar(self.site.public_key),
         )

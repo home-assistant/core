@@ -71,15 +71,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Autarco sensors based on a config entry."""
-    coordinator: AutarcoDataUpdateCoordinator = entry.runtime_data
-    async_add_entities(
-        AutarcoSolarSensorEntity(
-            coordinator=coordinator,
-            description=description,
-            service="solar",
+    for coordinator in entry.runtime_data:
+        async_add_entities(
+            AutarcoSolarSensorEntity(
+                coordinator=coordinator,
+                description=description,
+            )
+            for description in SENSORS_SOLAR
         )
-        for description in SENSORS_SOLAR
-    )
 
 
 class AutarcoSolarSensorEntity(
@@ -94,15 +93,14 @@ class AutarcoSolarSensorEntity(
         *,
         coordinator: AutarcoDataUpdateCoordinator,
         description: AutarcoSolarSensorEntityDescription,
-        service: str,
     ) -> None:
         """Initialize Autarco sensor."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.public_key}_{service}_{description.key}"
+        self._attr_unique_id = f"{coordinator.site.site_id}_solar_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.public_key}_{service}")},
+            identifiers={(DOMAIN, f"{coordinator.site.site_id}_solar")},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Autarco",
             name="Solar",

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from autarco import Autarco
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +15,7 @@ from .coordinator import AutarcoDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type AutarcoConfigEntry = ConfigEntry[AutarcoDataUpdateCoordinator]
+type AutarcoConfigEntry = ConfigEntry[list[AutarcoDataUpdateCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutarcoConfigEntry) -> bool:
@@ -23,11 +25,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutarcoConfigEntry) -> b
         password=entry.data[CONF_PASSWORD],
         session=async_get_clientsession(hass),
     )
+    account_sites = await client.get_account()
 
-    coordinator = AutarcoDataUpdateCoordinator(hass, client)
-    await coordinator.async_config_entry_first_refresh()
+    coordinators: list[AutarcoDataUpdateCoordinator] = [
+        AutarcoDataUpdateCoordinator(hass, client, site) for site in account_sites
+    ]
 
-    entry.runtime_data = coordinator
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators
+        ]
+    )
+
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

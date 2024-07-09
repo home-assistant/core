@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from autarco import AutarcoAuthenticationError, AutarcoConnectionError
 import pytest
 
-from homeassistant.components.autarco.const import CONF_PUBLIC_KEY, DOMAIN
+from homeassistant.components.autarco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -38,9 +38,7 @@ async def test_full_user_flow(
     assert result.get("data") == {
         CONF_EMAIL: "test@autarco.com",
         CONF_PASSWORD: "test-password",
-        CONF_PUBLIC_KEY: "key-public",
     }
-    assert result["result"].unique_id == "key-public"
     assert len(mock_autarco_client.get_account.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
