@@ -303,6 +303,7 @@ class RpcVirtualSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a virtual boolean component on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
+    _attr_has_entity_name = True
 
     @property
     def is_on(self) -> bool:
