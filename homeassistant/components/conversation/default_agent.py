@@ -9,6 +9,7 @@ import functools
 import logging
 from pathlib import Path
 import re
+import time
 from typing import IO, Any, cast
 
 from hassil.expression import Expression, ListReference, Sequence
@@ -35,7 +36,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     intent,
-    start,
+    start as ha_start,
     template,
     translation,
 )
@@ -140,7 +141,7 @@ async def async_setup_default_agent(
             async_should_expose(hass, DOMAIN, state.entity_id)
         async_track_state_added_domain(hass, MATCH_ALL, async_entity_state_listener)
 
-    start.async_at_started(hass, async_hass_started)
+    ha_start.async_at_started(hass, async_hass_started)
 
 
 class DefaultAgent(ConversationEntity):
@@ -229,7 +230,9 @@ class DefaultAgent(ConversationEntity):
         slot_lists = self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
 
-        return await self.hass.async_add_executor_job(
+        start = time.monotonic()
+
+        result = await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
@@ -237,6 +240,13 @@ class DefaultAgent(ConversationEntity):
             intent_context,
             language,
         )
+
+        _LOGGER.debug(
+            "Recognize done in %.2f seconds",
+            time.monotonic() - start,
+        )
+
+        return result
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
@@ -626,12 +636,20 @@ class DefaultAgent(ConversationEntity):
                 else cast(LanguageIntents, lang_intents)
             )
 
+        start = time.monotonic()
+
         result = await self.hass.async_add_executor_job(self._load_intents, language)
 
         if result is None:
             self._lang_intents[language] = ERROR_SENTINEL
         else:
             self._lang_intents[language] = result
+
+        _LOGGER.debug(
+            "Full intents load completed for language=%s in %.2f seconds",
+            language,
+            time.monotonic() - start,
+        )
 
         return result
 
@@ -667,7 +685,7 @@ class DefaultAgent(ConversationEntity):
             intents_dict = lang_variant_intents
 
             _LOGGER.debug(
-                "Loaded intents  language=%s (%s)",
+                "Loaded built-in intents for language=%s (%s)",
                 language,
                 language_variant,
             )
@@ -765,6 +783,7 @@ class DefaultAgent(ConversationEntity):
     def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
         """Clear slot lists when a registry has changed."""
         # Two subscribers can be scheduled at same time
+        _LOGGER.debug("Clearing slot lists")
         if self._unsub_clear_slot_list is None:
             return
         self._slot_lists = None
@@ -777,6 +796,8 @@ class DefaultAgent(ConversationEntity):
         """Create slot lists with areas and entity names/aliases."""
         if self._slot_lists is not None:
             return self._slot_lists
+
+        start = time.monotonic()
 
         entity_registry = er.async_get(self.hass)
         states = [
@@ -858,6 +879,12 @@ class DefaultAgent(ConversationEntity):
         }
 
         self._listen_clear_slot_list()
+
+        _LOGGER.debug(
+            "Created slot lists in %.2f seconds",
+            time.monotonic() - start,
+        )
+
         return self._slot_lists
 
     def _make_intent_context(
