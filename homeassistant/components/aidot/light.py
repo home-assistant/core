@@ -107,7 +107,7 @@ class AidotLight(LightEntity):
         self.lanCtrl.setUpdateDeviceCb(self.updateState)
 
         async def handle_event(event):
-            if not self.lanCtrl._connecting and not self.lanCtrl._connectAndLogin:
+            if not self.lanCtrl.connecting and not self.lanCtrl.connectAndLogin:
                 await self.lanCtrl.connect(event.data["ipAddress"])
                 self.pingtask = hass.loop.create_task(self.lanCtrl.ping_task())
                 self.recvtask = hass.loop.create_task(self.lanCtrl.recvData())
@@ -131,12 +131,12 @@ class AidotLight(LightEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self.lanCtrl._available
+        return self.lanCtrl.available
 
     @property
     def is_on(self) -> bool:
         """Return True if the light is on."""
-        return self.lanCtrl._is_on
+        return self.lanCtrl.is_on
 
     @property
     def brightness(self) -> int:
@@ -156,13 +156,13 @@ class AidotLight(LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in Kelvin."""
-        return self.lanCtrl._cct
+        return self.lanCtrl.cct
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
-        if self.lanCtrl._rgdb:
-            rgbw = ctypes.c_uint32(self.lanCtrl._rgdb).value
+        if self.lanCtrl.rgdb:
+            rgbw = ctypes.c_uint32(self.lanCtrl.rgdb).value
             r = (rgbw >> 24) & 0xFF
             g = (rgbw >> 16) & 0xFF
             b = (rgbw >> 8) & 0xFF
@@ -173,9 +173,9 @@ class AidotLight(LightEntity):
     @property
     def color_mode(self) -> ColorMode | str | None:
         """Return the color mode of the light."""
-        if self.lanCtrl._colorMode == "rgbw":
+        if self.lanCtrl.colorMode == "rgbw":
             colorMode = ColorMode.RGBW
-        elif self.lanCtrl._colorMode == "cct":
+        elif self.lanCtrl.colorMode == "cct":
             colorMode = ColorMode.COLOR_TEMP
         else:
             colorMode = ColorMode.BRIGHTNESS
@@ -185,7 +185,7 @@ class AidotLight(LightEntity):
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
 
-        if self.lanCtrl._connectAndLogin is False:
+        if self.lanCtrl.connectAndLogin is False:
             _LOGGER.error(
                 "The device is not logged in or may not be on the local area network"
             )
@@ -212,7 +212,7 @@ class AidotLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        if self.lanCtrl._connectAndLogin is False:
+        if self.lanCtrl.connectAndLogin is False:
             _LOGGER.error(
                 "The device is not logged in or may not be on the local area network"
             )

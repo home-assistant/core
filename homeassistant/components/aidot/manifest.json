@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/aidot",
   "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["python-aidot==0.1.1"],
+  "requirements": ["python-aidot==0.1.2"],
   "ssdp": [],
   "version": "0.1.1",
   "zeroconf": []

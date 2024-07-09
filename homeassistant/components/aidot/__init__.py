@@ -6,19 +6,18 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aidot.discover import Discover
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from aidot.discover import Discover
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up aidot from a config entry."""
@@ -27,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})["login_response"] = entry.data["login_response"]
     hass.data.setdefault(DOMAIN, {})["products"] = entry.data["product_list"]
 
-    def discover(devId, event: Mapping[str, Any]):
-        hass.bus.async_fire(devId, event)
+    def discover(dev_id, event: Mapping[str, Any]):
+        hass.bus.async_fire(dev_id, event)
 
     await Discover().broadcast_message(
         discover, hass.data[DOMAIN]["login_response"]["id"]
