@@ -250,3 +250,11 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 items.append(todo_item)
 
         self._attr_todo_items = items
+
+    @property
+    def available(self) -> bool:
+        """Return False if shopping list no longer available."""
+        for shopping_list in self.coordinator.shopping_lists:
+            if shopping_list.list_id == self._shopping_list.list_id:
+                return True
+        return False
