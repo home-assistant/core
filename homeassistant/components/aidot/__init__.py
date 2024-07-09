@@ -6,12 +6,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aidot.discover import Discover
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from aidot.discover import Discover
 
 from .const import DOMAIN
 

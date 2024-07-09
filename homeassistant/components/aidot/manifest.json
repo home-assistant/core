@@ -9,6 +9,5 @@
   "iot_class": "local_polling",
   "requirements": ["python-aidot==0.1.2"],
   "ssdp": [],
-  "version": "0.1.1",
   "zeroconf": []
 }

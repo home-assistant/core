@@ -60,6 +60,9 @@ class AidotLight(LightEntity):
         self.user_info = user_info
         self._attr_unique_id = device["id"]
         self._attr_name = device["name"]
+        self.pingtask = None
+        self.recvtask = None
+
         modelId = device["modelId"]
         manufacturer = modelId.split(".")[0]
         model = modelId[len(manufacturer) + 1 :]
