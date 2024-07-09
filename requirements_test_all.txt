@@ -703,7 +703,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.bryant_evolution
-evolutionhttp==0.0.15
+evolutionhttp==0.0.18
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/bryant_evolution",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["evolutionhttp==0.0.15"]
+  "requirements": ["evolutionhttp==0.0.18"]
 }

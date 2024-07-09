@@ -2,7 +2,7 @@
 
 from unittest.mock import DEFAULT, AsyncMock, patch
 
-from evolutionhttp import BryantEvolutionLocalClient
+from evolutionhttp import BryantEvolutionLocalClient, ZoneInfo
 
 from homeassistant import config_entries
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
@@ -27,8 +27,8 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         ) as mock_call,
     ):
         mock_call.side_effect = lambda system_id, filename: {
-            1: [1, 2],
-            2: [3, 4],
+            1: [ZoneInfo(1, 1, "S1Z1"), ZoneInfo(1, 2, "S1Z2")],
+            2: [ZoneInfo(2, 3, "S2Z2"), ZoneInfo(2, 4, "S2Z3")],
         }.get(system_id, [])
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -84,8 +84,8 @@ async def test_form_cannot_connect(
         ) as mock_call,
     ):
         mock_call.side_effect = lambda system_id, filename: {
-            1: [1, 2],
-            2: [3, 4],
+            1: [ZoneInfo(1, 1, "S1Z1"), ZoneInfo(1, 2, "S1Z2")],
+            2: [ZoneInfo(2, 3, "S2Z3"), ZoneInfo(2, 4, "S2Z4")],
         }.get(system_id, [])
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -140,8 +140,8 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         ) as mock_call,
     ):
         mock_call.side_effect = lambda system_id, filename: {
-            1: [1, 2],
-            2: [3, 4],
+            1: [ZoneInfo(1, 1, "S1Z1"), ZoneInfo(1, 2, "S1Z2")],
+            2: [ZoneInfo(2, 3, "S2Z23"), ZoneInfo(2, 4, "S2Z4")],
         }.get(system_id, [])
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -175,8 +175,8 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         ) as mock_call,
     ):
         mock_call.side_effect = lambda system_id, filename: {
-            1: [1],
-            2: [3, 4, 5],
+            1: [ZoneInfo(1, 1, "S1Z1")],
+            2: [ZoneInfo(2, 3, "S2Z3"), ZoneInfo(2, 4, "S2Z4"), ZoneInfo(2, 5, "S2Z5")],
         }.get(system_id, [])
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
