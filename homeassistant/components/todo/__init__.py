@@ -97,52 +97,6 @@ TODO_ITEM_FIELD_SCHEMA = {
 }
 TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
 
-SERVICE_ADD_ITEM_SCHEMA = vol.Schema(
-    vol.All(
-        cv.make_entity_service_schema(
-            {
-                vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                **TODO_ITEM_FIELD_SCHEMA,
-            }
-        ),
-        *TODO_ITEM_FIELD_VALIDATIONS,
-    )
-)
-
-SERVICE_UPDATE_ITEM_SCHEMA = vol.Schema(
-    vol.All(
-        cv.make_entity_service_schema(
-            {
-                vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
-                vol.Optional(ATTR_STATUS): vol.In(
-                    {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
-                ),
-                **TODO_ITEM_FIELD_SCHEMA,
-            }
-        ),
-        *TODO_ITEM_FIELD_VALIDATIONS,
-        cv.has_at_least_one_key(
-            ATTR_RENAME, ATTR_STATUS, *[desc.service_field for desc in TODO_ITEM_FIELDS]
-        ),
-    )
-)
-
-SERVICE_REMOVE_ITEM_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-SERVICE_GET_ITEMS_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Optional(ATTR_STATUS): vol.All(
-            cv.ensure_list,
-            [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
-        ),
-    }
-)
-
 
 def _validate_supported_features(
     supported_features: int | None, call_data: dict[str, Any]
@@ -173,25 +127,67 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_ADD_ITEM,
-        SERVICE_ADD_ITEM_SCHEMA,
+        vol.Schema(
+            vol.All(
+                cv.make_entity_service_schema(
+                    {
+                        vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                        **TODO_ITEM_FIELD_SCHEMA,
+                    }
+                ),
+                *TODO_ITEM_FIELD_VALIDATIONS,
+            )
+        ),
         _async_add_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
         SERVICE_UPDATE_ITEM,
-        SERVICE_UPDATE_ITEM_SCHEMA,
+        vol.Schema(
+            vol.All(
+                cv.make_entity_service_schema(
+                    {
+                        vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                        vol.Optional(ATTR_RENAME): vol.All(
+                            cv.string, vol.Length(min=1)
+                        ),
+                        vol.Optional(ATTR_STATUS): vol.In(
+                            {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                        ),
+                        **TODO_ITEM_FIELD_SCHEMA,
+                    }
+                ),
+                *TODO_ITEM_FIELD_VALIDATIONS,
+                cv.has_at_least_one_key(
+                    ATTR_RENAME,
+                    ATTR_STATUS,
+                    *[desc.service_field for desc in TODO_ITEM_FIELDS],
+                ),
+            )
+        ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
     )
     component.async_register_entity_service(
         SERVICE_REMOVE_ITEM,
-        SERVICE_REMOVE_ITEM_SCHEMA,
+        cv.make_entity_service_schema(
+            {
+                vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
+            }
+        ),
         _async_remove_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
         SERVICE_GET_ITEMS,
-        SERVICE_GET_ITEMS_SCHEMA,
+        cv.make_entity_service_schema(
+            {
+                vol.Optional(ATTR_STATUS): vol.All(
+                    cv.ensure_list,
+                    [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
+                ),
+            }
+        ),
         _async_get_todo_items,
         supports_response=SupportsResponse.ONLY,
     )
