@@ -39,19 +39,6 @@ async def mock_config_entry(mock_access_url: str) -> MockConfigEntry:
 
 
 @pytest.fixture
-def __mock_get_financial_data() -> FinancialData:
-    """Fixture to mock the fetch_data method of SimpleFin."""
-    fixture_data = load_fixture("fin_data.json", DOMAIN)
-
-    fin_data = FinancialData.from_json(fixture_data)
-    with patch(
-        "homeassistant.components.simplefin.coordinator.SimpleFin.fetch_data",
-    ) as mock_fetch_data:
-        mock_fetch_data.return_value = fin_data
-        yield
-
-
-@pytest.fixture
 def mock_claim_setup_token() -> str:
     """Fixture to mock the claim_setup_token method of SimpleFin."""
     with patch(
