@@ -383,7 +383,7 @@
   "issues": {
     "device_offline": {
       "title": "Device {model} is offline",
-      "description": "The device {model} is currently not reachable. If the device is turned off on purpose, you can ignore the message and reload the integration once it's turned on again."
+      "description": "The device {model} is currently not reachable. If the device is turned off on purpose, you can ignore the message and reload the integration once the device is turned on again."
     }
   },
   "services": {
