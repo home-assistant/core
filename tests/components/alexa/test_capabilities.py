@@ -281,22 +281,24 @@ async def test_api_select_input(
 @pytest.mark.parametrize(
     (
         "target_activity",
+        "current_activity",
         "activity_list",
         "current_activity_index",
         "target_activity_index",
     ),
     [
-        ("TV", ["TV", "MUSIC", "DVD"], 1, 0),
-        ("MUSIC", ["TV", "MUSIC", "DVD", 1000], 0, 1),
-        ("DVD", ["TV", "MUSIC", "DVD", None], 0, 2),
-        ("BAD DEVICE", ["TV", "MUSIC", "DVD"], 0, None),
-        ("TV", ["TV"], 0, 0),
-        ("BAD DEVICE", [], None, None),
+        ("TV", "TV", ["TV", "MUSIC", "DVD"], 1, 0),
+        ("MUSIC", "MUSIC", ["TV", "MUSIC", "DVD", 1000], 0, 1),
+        ("DVD", "DVD", ["TV", "MUSIC", "DVD", None], 0, 2),
+        ("BAD DEVICE", None, ["TV", "MUSIC", "DVD"], 0, None),
+        ("TV", "TV", ["TV"], 0, 0),
+        ("BAD DEVICE", None, [], None, None),
     ],
 )
 async def test_api_select_activity(
     hass: HomeAssistant,
     target_activity: str,
+    current_activity: str | None,
     activity_list: list[str],
     current_activity_index: int | None,
     target_activity_index: int | None,
