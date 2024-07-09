@@ -11,3 +11,14 @@ get_mealplan:
     end_date:
       selector:
         date:
+get_recipe:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    recipe_id:
+      required: true
+      selector:
+        text:

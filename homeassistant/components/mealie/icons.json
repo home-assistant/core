@@ -7,6 +7,7 @@
     }
   },
   "services": {
-    "get_mealplan": "mdi:food"
+    "get_mealplan": "mdi:food",
+    "get_recipe": "mdi:map"
   }
 }
