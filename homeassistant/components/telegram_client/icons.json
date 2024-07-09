@@ -1,5 +1,6 @@
 {
   "services": {
-    "send_message": "mdi:send"
+    "send_message": "mdi:message-arrow-right",
+    "edit_message": "mdi:message-draw"
   }
 }

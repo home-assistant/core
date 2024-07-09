@@ -93,7 +93,7 @@
         },
         "file": {
           "name": "File",
-          "description": "Path(s) to files relatively to config directory to attach to the message. Could be a single path or an array of paths."
+          "description": "Path(s) to files relatively to config directory to attach to the message."
         },
         "force_document": {
           "name": "Force document",
@@ -138,6 +138,68 @@
         "nosound_video": {
           "name": "Nosound video",
           "description": "Displays video without audio track as a video. Otherwise Telegram will attempt to display such video as an animated gif."
+        }
+      }
+    },
+    "edit_message": {
+      "name": "Edit message",
+      "description": "Edits text message of a previously sent message to user, group or bot.",
+      "fields": {
+        "target_username": {
+          "name": "Target username",
+          "description": "User, channel, bot username or phone number."
+        },
+        "target_id": {
+          "name": "Target ID",
+          "description": "User or group id."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Message ID to edit."
+        },
+        "text": {
+          "name": "Text",
+          "description": "New message text."
+        },
+        "parse_mode": {
+          "name": "Parse mode",
+          "description": "Parser for the message text. Disable to send as a plain text."
+        },
+        "link_preview": {
+          "name": "Show link preview",
+          "description": "Enables previews for links in the message."
+        },
+        "file": {
+          "name": "File",
+          "description": "Path(s) to files relatively to config directory to replace into the message."
+        },
+        "force_document": {
+          "name": "Force document",
+          "description": "Attach file(s) as document(s) rather than image/audio/video."
+        },
+        "keyboard": {
+          "name": "Keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message. E.g.\n\n`button1`\n\n```\n\n- button1\n\n- button2\n\n- button3\n\n```\n\n```\n\n- ['button1', 'button2', 'button3']\n\n- ['button4', 'button5', 'button6']\n\n```"
+        },
+        "inline_keyboard": {
+          "name": "Inline keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message."
+        },
+        "keyboard_resize": {
+          "name": "Resize keyboard",
+          "description": "Resizes keyboard to minimize space used. Can be used only if `keyboard` is defined."
+        },
+        "keyboard_single_use": {
+          "name": "Single use keyboard",
+          "description": "Hides keyboard after user press any button. Can be used only if `keyboard` is defined."
+        },
+        "supports_streaming": {
+          "name": "Support streaming",
+          "description": "Whether the sent video supports streaming or not."
+        },
+        "schedule": {
+          "name": "Schedule",
+          "description": "Schedule message edition. Can be used only in `client` mode. Bots can't schedule message delivery."
         }
       }
     }

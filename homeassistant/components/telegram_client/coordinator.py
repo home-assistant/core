@@ -46,6 +46,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     _entry: TelegramClientEntryConfigEntry
     _client: TelegramClient
     _last_sent_message_id_sensor: Any
+    _last_edited_message_id_sensor: Any
 
     def __init__(
         self, hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
@@ -128,6 +129,15 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     @last_sent_message_id.setter
     def last_sent_message_id(self, sensor: Any):
         self._last_sent_message_id = sensor
+
+    @property
+    def last_edited_message_id(self) -> Any:
+        """Last edited message id."""
+        return self._last_edited_message_id_sensor
+
+    @last_edited_message_id.setter
+    def last_edited_message_id(self, sensor: Any):
+        self._last_edited_message_id_sensor = sensor
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""

@@ -8,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_FIRST_NAME,
+    CONF_LAST_EDITED_MESSAGE_ID,
     CONF_LAST_NAME,
     CONF_LAST_SENT_MESSAGE_ID,
     CONF_PHONE,
@@ -73,4 +74,16 @@ async def async_setup_entry(
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     )
-    async_add_entities([coordinator.last_sent_message_id])
+    coordinator.last_edited_message_id = TelegramClientSensor(
+        coordinator,
+        SensorEntityDescription(
+            key=CONF_LAST_EDITED_MESSAGE_ID,
+            translation_key=CONF_LAST_EDITED_MESSAGE_ID,
+            name="Last edited message ID",
+            icon="mdi:message-draw",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    )
+    async_add_entities(
+        [coordinator.last_sent_message_id, coordinator.last_edited_message_id]
+    )

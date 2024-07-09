@@ -13,6 +13,7 @@ from .const import (
     ATTR_KEYBOARD_SINGLE_USE,
     ATTR_TARGET_ID,
     ATTR_TARGET_USERNAME,
+    SERVICE_EDIT_MESSAGE,
     SERVICE_SEND_MESSAGE,
 )
 from .coordinator import TelegramClientCoordinator
@@ -32,9 +33,6 @@ async def async_telegram_call(
 
     hass = coordinator.hass
     client = coordinator.client
-    kwargs["entity"] = kwargs.pop(
-        ATTR_TARGET_USERNAME, kwargs.pop(ATTR_TARGET_ID, None)
-    )
     if keyboard := kwargs.pop(ATTR_KEYBOARD, None):
         if not isinstance(keyboard[0], list):
             keyboard = [keyboard]
@@ -58,10 +56,25 @@ async def async_telegram_call(
     if file := kwargs.get(ATTR_FILE):
         kwargs[ATTR_FILE] = list(map(hass.config.path, file))
     if service == SERVICE_SEND_MESSAGE:
-        message = await client.send_message(**kwargs)
+        target_usernames = kwargs.pop(ATTR_TARGET_USERNAME, [])
+        if not isinstance(target_usernames, list):
+            target_usernames = [target_usernames]
+        target_ids = kwargs.pop(ATTR_TARGET_ID, [])
+        if not isinstance(target_ids, list):
+            target_ids = [target_ids]
+        for target in target_usernames + target_ids:
+            kwargs["entity"] = target
+            message = await client.send_message(**kwargs)
         if isinstance(message, list):
             message = message.pop()
         coordinator.last_sent_message_id.set_state(message.id)
+        return message
+    if service == SERVICE_EDIT_MESSAGE:
+        kwargs["entity"] = kwargs.pop(
+            ATTR_TARGET_USERNAME, kwargs.pop(ATTR_TARGET_ID, None)
+        )
+        message = await client.edit_message(**kwargs)
+        coordinator.last_edited_message_id.set_state(message.id)
         return message
     raise NotImplementedError(
         f"Method {service} is not implemented for Telegram client."

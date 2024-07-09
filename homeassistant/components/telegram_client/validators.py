@@ -27,6 +27,23 @@ def has_message_if_file_not_defined(conf: dict[str, Any]) -> dict[str, Any]:
     return conf
 
 
+def string_number(value: str) -> int:
+    """Verify string number."""
+    try:
+        return int(value)
+    except ValueError as err:
+        raise ValueError(f"{value} is not a valid integer string") from err
+
+
+def has_at_least_one_target_kind(conf: dict[str, Any]) -> dict[str, Any]:
+    """Validate config has at least one target kind."""
+    if ATTR_TARGET_USERNAME not in conf and ATTR_TARGET_ID not in conf:
+        raise vol.Invalid(
+            "You should specify at least one target_id or target_username"
+        )
+    return conf
+
+
 def has_one_target_kind(conf: dict[str, Any]) -> dict[str, Any]:
     """Validate config has only one target kind."""
     error_msg = "You should specify either target_id or target_username but not both"

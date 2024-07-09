@@ -18,17 +18,20 @@ CONF_USERNAME: Final = "username"
 CONF_LAST_NAME: Final = "last_name"
 CONF_RESTRICTED: Final = "restricted"
 CONF_LAST_SENT_MESSAGE_ID: Final = "last_sent_message_id"
+CONF_LAST_EDITED_MESSAGE_ID: Final = "last_edited_message_id"
 
 DOMAIN: Final = "telegram_client"
 
 
 SERVICE_SEND_MESSAGE = "send_message"
+SERVICE_EDIT_MESSAGE = "edit_message"
 
 ATTR_DATA = "data"
 ATTR_MESSAGE = "message"
 ATTR_TITLE = "title"
 
 ATTR_ARGS = "args"
+ATTR_TEXT = "text"
 ATTR_AUTHENTICATION = "authentication"
 ATTR_CALLBACK_QUERY = "callback_query"
 ATTR_CALLBACK_QUERY_ID = "callback_query_id"

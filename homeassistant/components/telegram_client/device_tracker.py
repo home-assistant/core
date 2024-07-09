@@ -11,10 +11,10 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import DOMAIN, SERVICE_EDIT_MESSAGE, SERVICE_SEND_MESSAGE
 from .coordinator import TelegramClientCoordinator
 from .entity import TelegramClientCoordinatorEntity
-from .schemas import SERVICE_SEND_MESSAGE_SCHEMA
+from .schemas import SERVICE_EDIT_MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE_SCHEMA
 from .services import async_telegram_call
 
 
@@ -30,19 +30,24 @@ async def async_setup_entry(
         SERVICE_SEND_MESSAGE_SCHEMA,
         "async_send_message",
     )
-    coordinator = hass.data[DOMAIN].get(entry.entry_id)
-    async_add_entities(
-        [
-            TelegramClientDeviceTracker(
-                coordinator,
-                EntityDescription(
-                    key="connected",
-                    translation_key="connected",
-                    name=coordinator.name,
-                ),
-            )
-        ]
+    platform.async_register_entity_service(
+        SERVICE_EDIT_MESSAGE,
+        SERVICE_EDIT_MESSAGE_SCHEMA,
+        "async_edit_message",
     )
+    if coordinator := hass.data[DOMAIN].get(entry.entry_id):
+        async_add_entities(
+            [
+                TelegramClientDeviceTracker(
+                    coordinator,
+                    EntityDescription(
+                        key="connected",
+                        translation_key="connected",
+                        name=coordinator.name,
+                    ),
+                )
+            ]
+        )
 
 
 class TelegramClientDeviceTracker(TelegramClientCoordinatorEntity, ScannerEntity):
@@ -67,9 +72,17 @@ class TelegramClientDeviceTracker(TelegramClientCoordinatorEntity, ScannerEntity
         return self._attr_unique_id
 
     async def async_send_message(self, **kwargs) -> None:
-        """Process Telegram service call."""
+        """Process Telegram send message service call."""
         await async_telegram_call(
             self.coordinator,
             SERVICE_SEND_MESSAGE,
+            **kwargs,
+        )
+
+    async def async_edit_message(self, **kwargs) -> None:
+        """Process Telegram edit message service call."""
+        await async_telegram_call(
+            self.coordinator,
+            SERVICE_EDIT_MESSAGE,
             **kwargs,
         )
