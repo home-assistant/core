@@ -37,13 +37,9 @@ from .const import (
     ATTR_RENAME,
     ATTR_STATUS,
     DOMAIN,
-    SERVICE_ADD_ITEM,
-    SERVICE_GET_ITEMS,
-    SERVICE_REMOVE_COMPLETED_ITEMS,
-    SERVICE_REMOVE_ITEM,
-    SERVICE_UPDATE_ITEM,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServices,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,7 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
-        SERVICE_ADD_ITEM,
+        TodoServices.ADD_ITEM,
         vol.All(
             cv.make_entity_service_schema(
                 {
@@ -140,7 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        SERVICE_UPDATE_ITEM,
+        TodoServices.UPDATE_ITEM,
         vol.All(
             cv.make_entity_service_schema(
                 {
@@ -163,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        SERVICE_REMOVE_ITEM,
+        TodoServices.REMOVE_ITEM,
         cv.make_entity_service_schema(
             {
                 vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
@@ -173,7 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        SERVICE_GET_ITEMS,
+        TodoServices.GET_ITEMS,
         cv.make_entity_service_schema(
             {
                 vol.Optional(ATTR_STATUS): vol.All(
@@ -186,7 +182,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
-        SERVICE_REMOVE_COMPLETED_ITEMS,
+        TodoServices.REMOVE_COMPLETED_ITEMS,
         {},
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],

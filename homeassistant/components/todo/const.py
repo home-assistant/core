@@ -11,11 +11,16 @@ ATTR_DESCRIPTION = "description"
 ATTR_ITEM = "item"
 ATTR_RENAME = "rename"
 ATTR_STATUS = "status"
-SERVICE_ADD_ITEM = "add_item"
-SERVICE_UPDATE_ITEM = "update_item"
-SERVICE_REMOVE_ITEM = "remove_item"
-SERVICE_GET_ITEMS = "get_items"
-SERVICE_REMOVE_COMPLETED_ITEMS = "remove_completed_items"
+
+
+class TodoServices(StrEnum):
+    """Services for the To-do integration."""
+
+    ADD_ITEM = "add_item"
+    UPDATE_ITEM = "update_item"
+    REMOVE_ITEM = "remove_item"
+    GET_ITEMS = "get_items"
+    REMOVE_COMPLETED_ITEMS = "remove_completed_items"
 
 
 class TodoListEntityFeature(IntFlag):
