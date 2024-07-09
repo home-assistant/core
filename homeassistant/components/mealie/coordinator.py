@@ -54,10 +54,9 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass,
             LOGGER,
-            name="",
+            name=name,
             update_interval=update_interval,
         )
-        self.name = f"Mealie {self.config_entry.unique_id} {name}"
         self.client = client
 
 
@@ -102,10 +101,6 @@ class MealieShoppingListCoordinator(
 ):
     """Class to manage fetching Mealie Shopping list data."""
 
-    coordinator_name: str = "shoppinglist"
-    shopping_lists: list[ShoppingList]
-    shopping_list_items: dict[str, list[ShoppingItem]] = {}
-
     def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -114,6 +109,8 @@ class MealieShoppingListCoordinator(
             client=client,
             update_interval=timedelta(minutes=5),
         )
+        self.shopping_lists: list[ShoppingList]
+        self.shopping_list_items: dict[str, list[ShoppingItem]] = {}
 
     async def async_get_shopping_lists(self) -> list[ShoppingList]:
         """Return shopping lists."""

@@ -44,10 +44,8 @@ async def async_setup_entry(
     entry: MealieConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the calendar platform for entity."""
-    coordinator: MealieShoppingListCoordinator = (
-        entry.runtime_data.shoppinglist_coordinator
-    )
+    """Set up the todo platform for entity."""
+    coordinator = entry.runtime_data.shoppinglist_coordinator
 
     async_add_entities(
         MealieShoppingListTodoListEntity(coordinator, shopping_list)
@@ -70,15 +68,14 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     def __init__(
         self, coordinator: MealieShoppingListCoordinator, shopping_list: ShoppingList
     ) -> None:
-        """Create the Calendar entity."""
-        super().__init__(coordinator, shopping_list.name.lower())
-        self.coordinator = coordinator
+        """Create the todo entity."""
+        super().__init__(coordinator, shopping_list.list_id)
         self._shopping_list = shopping_list
         self._attr_name = shopping_list.name
         self._attr_unique_id = (
             f"{self.coordinator.config_entry.entry_id}_{shopping_list.list_id}"
         )
-        self._attr_icon = "mdi:basket"
+        self.translation_key = "shopping_list"
 
     @property
     def todo_items(self) -> list[TodoItem] | None:
@@ -92,12 +89,6 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             ]
 
         return []
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass update state from existing coordinator data."""
-        await super().async_added_to_hass()
-
-        self._handle_coordinator_update()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the list."""
@@ -241,6 +232,14 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update todo attributes."""
+
         items = []
 
         if self._shopping_list.list_id in self.coordinator.shopping_list_items:
@@ -251,5 +250,3 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 items.append(todo_item)
 
         self._attr_todo_items = items
-
-        super()._handle_coordinator_update()

@@ -58,14 +58,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     mealplan_coordinator = MealieMealplanCoordinator(hass, client)
     shoppinglist_coordinator = MealieShoppingListCoordinator(hass, client)
 
-    entry.runtime_data = MealieData(
-        client, mealplan_coordinator, shoppinglist_coordinator
-    )
-
     await mealplan_coordinator.async_config_entry_first_refresh()
 
     await shoppinglist_coordinator.async_get_shopping_lists()
     await shoppinglist_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = MealieData(
+        client, mealplan_coordinator, shoppinglist_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
