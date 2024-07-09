@@ -19,12 +19,8 @@ async def async_setup_entry(
     """Set up the Fluss Devices."""
 
     api: FlussApiClient = hass.data[DOMAIN][entry.entry_id]
-    # for device in await api.async_get_devices():
-    #     LOGGER.warning("INFO %s", device)
-    # # async_add_entities(FlussDevice() for device in )
 
     devices = await api.async_get_devices()
-    # LOGGER.warning("Devices %s", devices)
     if isinstance(devices, dict) and "devices" in devices:
         devices = devices["devices"]
 

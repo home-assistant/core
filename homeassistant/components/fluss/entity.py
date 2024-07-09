@@ -38,5 +38,3 @@ class FlussEntity(Entity):
 
     async def async_update(self) -> None:
         """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
-        # _LOGGER.debug("(%s) Updating entity", self.entry.data[])
-        # await self.device.status_query()

@@ -14,11 +14,7 @@ from .const import DOMAIN
 LOGGER = logging.getLogger(__package__)
 
 # For your initial PR, limit it to 1 platform.
-# PLATFORMS: list[Platform] = [Platform.COVER]
 PLATFORMS: list[Platform] = [Platform.BUTTON]
-
-
-# type FlussConfigEntry = ConfigEntry[FlussData]  # noqa: F821
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

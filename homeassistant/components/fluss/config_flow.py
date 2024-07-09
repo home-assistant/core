@@ -29,7 +29,6 @@ class PlaceholderHub:
 
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the host."""
-        # Actual authentication logic should be here.
         return True
 
 
@@ -44,12 +43,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not await hub.authenticate():
         raise InvalidAuth
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
     return {"title": "Fluss+"}
 
 

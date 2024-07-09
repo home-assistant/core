@@ -44,29 +44,6 @@ class FlussApiClient:
             headers={"Authorization": self._api_key},
         )
 
-    # Cover functionality
-    # async def async_open_cover(self, deviceId: str) -> any:
-    #     """Open the cover."""
-    #     return await self._api_wrapper(
-    #         method="post",
-    #         url=f"https://zgekzokxrl.execute-api.eu-west-1.amazonaws.com/v1/api/device/{deviceId}/trigger",
-    #         headers={"Authorization": self._api_key},
-    #     )
-
-    # async def async_close_cover(self, deviceId: str) -> any:
-    #     """Open the cover."""
-    #     return await self._api_wrapper(
-    #         method="post",
-    #         url=f"https://zgekzokxrl.execute-api.eu-west-1.amazonaws.com/v1/api/device/{deviceId}/trigger",
-    #         headers={"Authorization": self._api_key},
-    #         data={
-    #             "timeStamp": int(
-    #                 datetime.datetime.now().timestamp() * 1000
-    #             ),  # Convert to milliseconds
-    #             "metaData": {},
-    #         },
-    #     )
-
     async def async_trigger_device(self, deviceId: str) -> typing.Any:
         """Trigger the device."""
         timestamp = int(datetime.datetime.now().timestamp() * 1000)
