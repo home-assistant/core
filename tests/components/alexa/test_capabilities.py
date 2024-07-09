@@ -50,7 +50,7 @@ from tests.common import async_mock_service
 
 @pytest.mark.parametrize(
     (
-        "curr_activity",
+        "current_activity",
         "activity_list",
     ),
     [
@@ -59,7 +59,7 @@ from tests.common import async_mock_service
     ],
 )
 async def test_discovery_remote(
-    hass: HomeAssistant, curr_activity: str, activity_list: list[str]
+    hass: HomeAssistant, current_activity: str, activity_list: list[str]
 ) -> None:
     """Test discory for a remote entity."""
     request = get_new_request("Alexa.Discovery", "Discover")
@@ -68,7 +68,7 @@ async def test_discovery_remote(
         "remote.test",
         "off",
         {
-            "current_activity": curr_activity,
+            "current_activity": current_activity,
             "activity_list": activity_list,
         },
     )
@@ -302,14 +302,14 @@ async def test_api_select_activity(
     target_activity_index: int | None,
 ) -> None:
     """Test api set activity process."""
-    curr_activty = (
+    current_activity = (
         activity_list[current_activity_index] if current_activity_index else "None"
     )
     hass.states.async_set(
         "remote.test",
         "off",
         {
-            "current_activity": curr_activty,
+            "current_activity": current_activity,
             "activity_list": activity_list,
         },
     )
@@ -340,7 +340,7 @@ async def test_api_select_activity(
 
 @pytest.mark.parametrize(
     (
-        "curr_state",
+        "current_state",
         "target_name",
         "target_service",
     ),
@@ -351,14 +351,14 @@ async def test_api_select_activity(
 )
 async def test_api_remote_set_power_state(
     hass: HomeAssistant,
-    curr_state: str,
+    current_state: str,
     target_name: str,
     target_service: str,
 ) -> None:
     """Test api remote set power state process."""
     hass.states.async_set(
         "remote.test",
-        curr_state,
+        current_state,
         {
             "current_activity": ["TV", "MUSIC", "DVD"],
             "activity_list": "TV",
