@@ -248,7 +248,7 @@ def async_device_latency_supported_fn(
 
 
 def make_wan_latency_sensors(
-    supported_wan_fn: Callable[[UnifiHub, str], TypedDeviceUptimeStatsWan],
+    supported_wan_fn: Callable[[UnifiHub, str], TypedDeviceUptimeStatsWan | None],
     wan_fn: Callable[[UnifiHub, Device], TypedDeviceUptimeStatsWan],
 ) -> tuple[UnifiSensorEntityDescription, ...]:
     """Create WAN latency sensors from WAN monitor data."""
