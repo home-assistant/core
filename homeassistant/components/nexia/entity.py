@@ -53,14 +53,16 @@ class NexiaThermostatEntity(NexiaEntity):
         """Initialize the entity."""
         super().__init__(coordinator, unique_id)
         self._thermostat = thermostat
+        thermostat_id = thermostat.thermostat_id
         self._attr_device_info = DeviceInfo(
             configuration_url=self.coordinator.nexia_home.root_url,
-            identifiers={(DOMAIN, self._thermostat.thermostat_id)},
+            identifiers={(DOMAIN, thermostat_id)},
             manufacturer=MANUFACTURER,
-            model=self._thermostat.get_model(),
-            name=self._thermostat.get_name(),
-            sw_version=self._thermostat.get_firmware(),
+            model=thermostat.get_model(),
+            name=thermostat.get_name(),
+            sw_version=thermostat.get_firmware(),
         )
+        self._thermostat_signal = f"{SIGNAL_THERMOSTAT_UPDATE}-{thermostat_id}"
 
     async def async_added_to_hass(self) -> None:
         """Listen for signals for services."""
@@ -68,7 +70,7 @@ class NexiaThermostatEntity(NexiaEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}",
+                self._thermostat_signal,
                 self.async_write_ha_state,
             )
         )
@@ -82,9 +84,7 @@ class NexiaThermostatEntity(NexiaEntity):
 
         Update all the zones on the thermostat.
         """
-        async_dispatcher_send(
-            self.hass, f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}"
-        )
+        async_dispatcher_send(self.hass, self._thermostat_signal)
 
     @property
     def available(self) -> bool:
@@ -108,11 +108,12 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
         self._attr_device_info |= {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._zone.zone_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},
             ATTR_NAME: zone_name,
             ATTR_SUGGESTED_AREA: zone_name,
-            ATTR_VIA_DEVICE: (DOMAIN, self._zone.thermostat.thermostat_id),
+            ATTR_VIA_DEVICE: (DOMAIN, zone.thermostat.thermostat_id),
         }
+        self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 
     async def async_added_to_hass(self) -> None:
         """Listen for signals for services."""
@@ -120,7 +121,7 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}",
+                self._zone_signal,
                 self.async_write_ha_state,
             )
         )
@@ -133,4 +134,4 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
 
         Update a single zone.
         """
-        async_dispatcher_send(self.hass, f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}")
+        async_dispatcher_send(self.hass, self._zone_signal)
