@@ -301,6 +301,24 @@
           "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
         }
       },
+      "climate_state_seat_fan_front_left": {
+        "name": "Seat cooler left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "climate_state_seat_fan_front_right": {
+        "name": "Seat cooler right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_fan_front_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_fan_front_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_fan_front_left::state::high%]"
+        }
+      },
       "components_customer_preferred_export_rule": {
         "name": "Allow export",
         "state": {
