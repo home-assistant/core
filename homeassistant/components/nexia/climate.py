@@ -15,7 +15,6 @@ from nexia.const import (
     SYSTEM_STATUS_HEAT,
     SYSTEM_STATUS_IDLE,
 )
-from nexia.home import NexiaHome
 from nexia.thermostat import NexiaThermostat
 from nexia.util import find_humidity_setpoint
 from nexia.zone import NexiaThermostatZone
@@ -31,7 +30,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
@@ -44,10 +42,10 @@ from .const import (
     ATTR_DEHUMIDIFY_SETPOINT,
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_RUN_MODE,
-    DOMAIN,
 )
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
+from .types import NexiaConfigEntry
 from .util import percent_conv
 
 PARALLEL_UPDATES = 1  # keep data in sync with only one connection at a time
@@ -116,12 +114,12 @@ NEXIA_SUPPORTED = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NexiaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate for a Nexia device."""
-    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home: NexiaHome = coordinator.nexia_home
+    coordinator = config_entry.runtime_data
+    nexia_home = coordinator.nexia_home
 
     platform = entity_platform.async_get_current_platform()
 
