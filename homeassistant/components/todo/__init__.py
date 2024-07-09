@@ -89,6 +89,62 @@ TODO_ITEM_FIELD_SCHEMA = {
 }
 TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
 
+ATTR_ITEM = "item"
+ATTR_RENAME = "rename"
+ATTR_STATUS = "status"
+
+SERVICE_ADD_ITEM = "add_item"
+SERVICE_ADD_ITEM_SCHEMA = vol.Schema(
+    vol.All(
+        cv.make_entity_service_schema(
+            {
+                vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                **TODO_ITEM_FIELD_SCHEMA,
+            }
+        ),
+        *TODO_ITEM_FIELD_VALIDATIONS,
+    )
+)
+
+SERVICE_UPDATE_ITEM = "update_item"
+SERVICE_UPDATE_ITEM_SCHEMA = vol.Schema(
+    vol.All(
+        cv.make_entity_service_schema(
+            {
+                vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
+                vol.Optional(ATTR_STATUS): vol.In(
+                    {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                ),
+                **TODO_ITEM_FIELD_SCHEMA,
+            }
+        ),
+        *TODO_ITEM_FIELD_VALIDATIONS,
+        cv.has_at_least_one_key(
+            ATTR_RENAME, ATTR_STATUS, *[desc.service_field for desc in TODO_ITEM_FIELDS]
+        ),
+    )
+)
+
+SERVICE_REMOVE_ITEM = "remove_item"
+SERVICE_REMOVE_ITEM_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
+SERVICE_GET_ITEMS = "get_items"
+SERVICE_GET_ITEMS_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_STATUS): vol.All(
+            cv.ensure_list,
+            [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
+        ),
+    }
+)
+
+SERVICE_REMOVE_COMPLETED_ITEMS = "remove_completed_items"
+
 
 def _validate_supported_features(
     supported_features: int | None, call_data: dict[str, Any]
@@ -118,65 +174,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
-        "add_item",
-        vol.All(
-            cv.make_entity_service_schema(
-                {
-                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
-                    **TODO_ITEM_FIELD_SCHEMA,
-                }
-            ),
-            *TODO_ITEM_FIELD_VALIDATIONS,
-        ),
+        SERVICE_ADD_ITEM,
+        SERVICE_ADD_ITEM_SCHEMA,
         _async_add_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "update_item",
-        vol.All(
-            cv.make_entity_service_schema(
-                {
-                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional("rename"): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional("status"): vol.In(
-                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
-                    ),
-                    **TODO_ITEM_FIELD_SCHEMA,
-                }
-            ),
-            *TODO_ITEM_FIELD_VALIDATIONS,
-            cv.has_at_least_one_key(
-                "rename", "status", *[desc.service_field for desc in TODO_ITEM_FIELDS]
-            ),
-        ),
+        SERVICE_UPDATE_ITEM,
+        SERVICE_UPDATE_ITEM_SCHEMA,
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "remove_item",
-        cv.make_entity_service_schema(
-            {
-                vol.Required("item"): vol.All(cv.ensure_list, [cv.string]),
-            }
-        ),
+        SERVICE_REMOVE_ITEM,
+        SERVICE_REMOVE_ITEM_SCHEMA,
         _async_remove_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "get_items",
-        cv.make_entity_service_schema(
-            {
-                vol.Optional("status"): vol.All(
-                    cv.ensure_list,
-                    [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
-                ),
-            }
-        ),
+        SERVICE_GET_ITEMS,
+        SERVICE_GET_ITEMS_SCHEMA,
         _async_get_todo_items,
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
-        "remove_completed_items",
+        SERVICE_REMOVE_COMPLETED_ITEMS,
         {},
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
