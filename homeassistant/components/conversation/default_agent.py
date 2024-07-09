@@ -614,9 +614,8 @@ class DefaultAgent(ConversationEntity):
 
         lang_intents = await self.async_get_or_load_intents(language)
 
+        # No intents loaded
         if lang_intents is None:
-            # No intents loaded
-            _LOGGER.warning("No intents were loaded for language: %s", language)
             return
 
         self._make_slot_lists()
