@@ -110,6 +110,7 @@ async def _load_translations(hass: HomeAssistant) -> None:
     for platform in Platform:
         hass.config.top_level_components.add(platform)
     hass.config.top_level_components.add(input_select.DOMAIN)
+    hass.config.top_level_components.add(const.DOMAIN)
     for language in BASIC_CONFIG.languages:
         await translation._async_get_translations_cache(hass).async_load(
             language, hass.config.top_level_components
@@ -2126,7 +2127,7 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     # If a fan state has (temporary) no percentage_step attribute return 1 available
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 0,
-        "currentFanSpeedSetting": "1/5",
+        "currentFanSpeedSetting": "1_5",
     }
 
 
@@ -2136,49 +2137,49 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
         (
             33,
             1.0,
-            "2/5",
+            "2_5",
             [
-                ["Low", "Min", "Slow", "1"],
-                ["Medium Low", "2"],
-                ["Medium", "3"],
-                ["Medium High", "4"],
-                ["High", "Max", "Fast", "5"],
+                ["Low"],
+                ["Medium Low"],
+                ["Medium"],
+                ["Medium High"],
+                ["High"],
             ],
             40,
         ),
         (
             40,
             1.0,
-            "2/5",
+            "2_5",
             [
-                ["Low", "Min", "Slow", "1"],
-                ["Medium Low", "2"],
-                ["Medium", "3"],
-                ["Medium High", "4"],
-                ["High", "Max", "Fast", "5"],
+                ["Low"],
+                ["Medium Low"],
+                ["Medium"],
+                ["Medium High"],
+                ["High"],
             ],
             40,
         ),
         (
             33,
             100 / 3,
-            "1/3",
+            "1_3",
             [
-                ["Low", "Min", "Slow", "1"],
-                ["Medium", "2"],
-                ["High", "Max", "Fast", "3"],
+                ["Low"],
+                ["Medium"],
+                ["High"],
             ],
             33,
         ),
         (
             20,
             100 / 4,
-            "1/4",
+            "1_4",
             [
-                ["Low", "Min", "Slow", "1"],
-                ["Medium Low", "2"],
-                ["Medium High", "3"],
-                ["High", "Max", "Fast", "4"],
+                ["Low"],
+                ["Medium Low"],
+                ["Medium High"],
+                ["High"],
             ],
             25,
         ),
@@ -2218,7 +2219,7 @@ async def test_fan_speed_ordered(
             "ordered": True,
             "speeds": [
                 {
-                    "speed_name": f"{idx+1}/{len(speeds)}",
+                    "speed_name": f"{idx+1}_{len(speeds)}",
                     "speed_values": [{"lang": "en", "speed_synonym": x}],
                 }
                 for idx, x in enumerate(speeds)

@@ -4,6 +4,28 @@
       "sync_devices": {
         "name": "Synchronize devices"
       }
+    },
+    "fan": {
+      "speed": {
+        "name": "Speed",
+        "state": {
+          "5_5": "High",
+          "4_5": "Medium High",
+          "3_5": "Medium",
+          "2_5": "Medium Low",
+          "1_5": "Low",
+          "4_4": "High",
+          "3_4": "Medium High",
+          "2_4": "Medium Low",
+          "1_4": "Low",
+          "3_3": "High",
+          "2_3": "Medium",
+          "1_3": "Low",
+          "2_2": "High",
+          "1_2": "Low",
+          "1_1": "Normal"
+        }
+      }
     }
   },
   "services": {
