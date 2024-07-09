@@ -514,7 +514,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.autarco
-autarco==1.0.0
+autarco==2.0.0
 
 # homeassistant.components.avea
 # avea==1.5.1
