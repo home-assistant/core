@@ -480,9 +480,6 @@ base36==0.1.1
 # homeassistant.components.scrape
 beautifulsoup4==4.12.3
 
-# homeassistant.components.zha
-bellows==0.39.1
-
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.3
 
@@ -1442,7 +1439,7 @@ pyefergy==22.5.0
 pyegps==0.2.5
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.3
+pyenphase==1.20.6
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1692,14 +1689,9 @@ pyschlage==2024.6.0
 # homeassistant.components.sensibo
 pysensibo==1.0.36
 
-# homeassistant.components.serial
-# homeassistant.components.zha
-pyserial-asyncio-fast==0.11
-
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
 # homeassistant.components.usb
-# homeassistant.components.zha
 # homeassistant.components.zwave_js
 pyserial==3.5
 
@@ -2103,7 +2095,7 @@ systembridgeconnector==4.0.3
 systembridgemodels==4.0.4
 
 # homeassistant.components.tailscale
-tailscale==0.6.0
+tailscale==0.6.1
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
@@ -2208,7 +2200,7 @@ vacuum-map-parser-roborock==0.1.2
 vallox-websocket-api==5.3.0
 
 # homeassistant.components.rdw
-vehicle==2.2.1
+vehicle==2.2.2
 
 # homeassistant.components.velbus
 velbus-aio==2024.7.5
@@ -2251,7 +2243,7 @@ weatherflow4py==0.2.21
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.4
+webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
@@ -2275,7 +2267,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.30.1
+xiaomi-ble==0.30.2
 
 # homeassistant.components.knx
 xknx==2.12.2
@@ -2326,22 +2318,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.117
-
-# homeassistant.components.zha
-zigpy-deconz==0.23.2
-
-# homeassistant.components.zha
-zigpy-xbee==0.20.1
-
-# homeassistant.components.zha
-zigpy-zigate==0.12.1
-
-# homeassistant.components.zha
-zigpy-znp==0.12.2
-
-# homeassistant.components.zha
-zigpy==0.64.1
+zha==0.0.18
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0

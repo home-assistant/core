@@ -45,6 +45,12 @@
     },
     "end_date_before_start_date": {
       "message": "End date must be after start date."
+    },
+    "connection_error": {
+      "message": "Error connecting to Mealie instance."
+    },
+    "recipe_not_found": {
+      "message": "Recipe with ID or slug `{recipe_id}` not found."
     }
   },
   "services": {
@@ -63,6 +69,20 @@
         "end_date": {
           "name": "End date",
           "description": "The enddate of the data to get (default: today)."
+        }
+      }
+    },
+    "get_recipe": {
+      "name": "Get recipe",
+      "description": "Get recipe from Mealie",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "recipe_id": {
+          "name": "Recipe ID or slug",
+          "description": "The recipe ID or the slug of the recipe to get."
         }
       }
     }

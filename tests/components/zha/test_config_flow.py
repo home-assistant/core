@@ -9,6 +9,7 @@ import uuid
 
 import pytest
 import serial.tools.list_ports
+from zha.application.const import RadioType
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
@@ -21,13 +22,12 @@ from homeassistant.components import ssdp, usb, zeroconf
 from homeassistant.components.hassio import AddonState
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow, radio_manager
-from homeassistant.components.zha.core.const import (
+from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
     EZSP_OVERWRITE_EUI64,
-    RadioType,
 )
 from homeassistant.components.zha.radio_manager import ProbeResult
 from homeassistant.config_entries import (
