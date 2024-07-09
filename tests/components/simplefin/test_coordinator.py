@@ -26,7 +26,6 @@ async def test_data_update_with_errors(
     error: Exception,
 ) -> None:
     """Test the error cases in the coordinator."""
-    # Directly set the side_effect on the mock_simplefin_client's fetch_data method
     mock_simplefin_client.fetch_data.side_effect = side_effect
 
     coordinator = SimpleFinDataUpdateCoordinator(hass, mock_simplefin_client)
