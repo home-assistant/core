@@ -14,12 +14,12 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TechnoVEConfigEntry
 from .const import DOMAIN
 from .coordinator import TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
@@ -65,14 +65,12 @@ NUMBERS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TechnoVEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up TechnoVE number entity based on a config entry."""
-    coordinator: TechnoVEDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        TechnoVENumberEntity(coordinator, description) for description in NUMBERS
+        TechnoVENumberEntity(entry.runtime_data, description) for description in NUMBERS
     )
 
 

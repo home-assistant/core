@@ -20,7 +20,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from . import RoborockConfigEntry
 from .const import DOMAIN, GET_MAPS_SERVICE_NAME
@@ -103,7 +102,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntityV1.__init__(
             self,
-            slugify(coordinator.duid),
+            coordinator.duid_slug,
             coordinator,
             listener_request=[
                 RoborockDataProtocol.FAN_POWER,

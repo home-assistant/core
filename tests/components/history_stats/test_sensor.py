@@ -8,7 +8,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config as hass_config
-from homeassistant.components.history_stats import DOMAIN
+from homeassistant.components.history_stats.const import DOMAIN
 from homeassistant.components.history_stats.sensor import (
     PLATFORM_SCHEMA as SENSOR_SCHEMA,
 )
@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import RecorderInstanceGenerator
 
@@ -46,6 +46,15 @@ async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test")
     assert state.state == "0.0"
+
+
+async def test_setup_config_entry(
+    recorder_mock: Recorder, hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test the history statistics sensor setup from a config entry."""
+
+    state = hass.states.get("sensor.unnamed_statistics")
+    assert state.state == "2"
 
 
 async def test_setup_multiple_states(

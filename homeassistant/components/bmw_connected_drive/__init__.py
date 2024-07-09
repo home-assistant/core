@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
 
-from bimmer_connected.vehicle import MyBMWVehicle
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,10 +16,8 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DOMAIN
+from .const import ATTR_VIN, CONF_READ_ONLY, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,8 +87,20 @@ async def _async_migrate_entries(
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
         replacements = {
-            "charging_level_hv": "remaining_battery_percent",
-            "fuel_percent": "remaining_fuel_percent",
+            "charging_level_hv": "fuel_and_battery.remaining_battery_percent",
+            "fuel_percent": "fuel_and_battery.remaining_fuel_percent",
+            "ac_current_limit": "charging_profile.ac_current_limit",
+            "charging_start_time": "fuel_and_battery.charging_start_time",
+            "charging_end_time": "fuel_and_battery.charging_end_time",
+            "charging_status": "fuel_and_battery.charging_status",
+            "charging_target": "fuel_and_battery.charging_target",
+            "remaining_battery_percent": "fuel_and_battery.remaining_battery_percent",
+            "remaining_range_total": "fuel_and_battery.remaining_range_total",
+            "remaining_range_electric": "fuel_and_battery.remaining_range_electric",
+            "remaining_range_fuel": "fuel_and_battery.remaining_range_fuel",
+            "remaining_fuel": "fuel_and_battery.remaining_fuel",
+            "remaining_fuel_percent": "fuel_and_battery.remaining_fuel_percent",
+            "activity": "climate.activity",
         }
         if (key := entry.unique_id.split("-")[-1]) in replacements:
             new_unique_id = entry.unique_id.replace(key, replacements[key])
@@ -175,37 +183,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
-
-
-class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
-    """Common base for BMW entities."""
-
-    coordinator: BMWDataUpdateCoordinator
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: BMWDataUpdateCoordinator,
-        vehicle: MyBMWVehicle,
-    ) -> None:
-        """Initialize entity."""
-        super().__init__(coordinator)
-
-        self.vehicle = vehicle
-
-        self._attrs: dict[str, Any] = {
-            "car": self.vehicle.name,
-            "vin": self.vehicle.vin,
-        }
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.vehicle.vin)},
-            manufacturer=vehicle.brand.name,
-            model=vehicle.name,
-            name=vehicle.name,
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()

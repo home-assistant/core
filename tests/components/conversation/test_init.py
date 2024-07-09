@@ -137,6 +137,7 @@ async def test_http_processing_intent_entity_added_removed(
         "light", "demo", "1234", suggested_object_id="kitchen"
     )
     entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", "off")
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
@@ -274,6 +275,7 @@ async def test_http_processing_intent_entity_renamed(
         LIGHT_DOMAIN,
         {LIGHT_DOMAIN: [{"platform": "test"}]},
     )
+    await hass.async_block_till_done()
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
@@ -363,6 +365,7 @@ async def test_http_processing_intent_entity_exposed(
     )
     await hass.async_block_till_done()
     entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    await hass.async_block_till_done()
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
@@ -391,7 +394,7 @@ async def test_http_processing_intent_entity_exposed(
 
     # Unexpose the entity
     expose_entity(hass, "light.kitchen", False)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on kitchen light"}
@@ -1157,6 +1160,7 @@ async def test_ws_hass_agent_debug(
         aliases={"my cool light"},
         area_id=kitchen_area.id,
     )
+    await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", "off")
 
     on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")

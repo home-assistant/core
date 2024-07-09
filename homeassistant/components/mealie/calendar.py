@@ -10,7 +10,7 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MealieConfigEntry, MealieCoordinator
+from .coordinator import MealieConfigEntry, MealieCoordinator
 from .entity import MealieEntity
 
 
@@ -60,7 +60,8 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         mealplans = self.coordinator.data[self._entry_type]
         if not mealplans:
             return None
-        return _get_event_from_mealplan(mealplans[0])
+        sorted_mealplans = sorted(mealplans, key=lambda x: x.mealplan_date)
+        return _get_event_from_mealplan(sorted_mealplans[0])
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
