@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
@@ -72,8 +73,18 @@ def vicare_login(
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
+    device_config_list = vicare_api.devices
+    for device_config in device_config_list:
+        _LOGGER.debug(
+            "Found device: %s (online: %s, supported: %s)",
+            device_config.getModel(),
+            str(device_config.isOnline()),
+            str(device_config.getModel() not in UNSUPPORTED_DEVICES),
+        )
 
-    device_config_list = get_supported_devices(vicare_api.devices)
+    device_config_list = get_online_devices(
+        hass, get_supported_devices(device_config_list)
+    )
     if (number_of_devices := len(device_config_list)) > 1:
         cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
         _LOGGER.debug(
@@ -82,11 +93,8 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             cache_duration,
         )
         vicare_api = vicare_login(hass, entry.data, cache_duration)
-        device_config_list = get_supported_devices(vicare_api.devices)
-
-    for device in device_config_list:
-        _LOGGER.debug(
-            "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
+        device_config_list = get_online_devices(
+            hass, get_supported_devices(vicare_api.devices)
         )
 
     hass.data[DOMAIN][entry.entry_id][DEVICE_LIST] = [
@@ -113,9 +121,36 @@ def get_supported_devices(
     devices: list[PyViCareDeviceConfig],
 ) -> list[PyViCareDeviceConfig]:
     """Remove unsupported devices from the list."""
+
+    _LOGGER.debug("Ignoring unsupported devices (%s)", UNSUPPORTED_DEVICES)
     return [
         device_config
         for device_config in devices
-        if device_config.isOnline()
-        and device_config.getModel() not in UNSUPPORTED_DEVICES
+        if device_config.getModel() not in UNSUPPORTED_DEVICES
     ]
+
+
+def get_online_devices(
+    hass: HomeAssistant,
+    devices: list[PyViCareDeviceConfig],
+) -> list[PyViCareDeviceConfig]:
+    """Remove offline devices from the list."""
+
+    _LOGGER.debug("Ignoring offline devices")
+    result = []
+    for device_config in devices:
+        if device_config.isOnline():
+            result.append(device_config)
+        else:
+            ir.create_issue(
+                hass,
+                DOMAIN,
+                "device_offline",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="device_offline",
+                translation_placeholders={
+                    "model": device_config.getModel(),
+                },
+            )
+    return result
