@@ -50,7 +50,7 @@ from tests.common import async_mock_service
 
 @pytest.mark.parametrize(
     (
-        "curr_activity",
+        "current_activity",
         "activity_list",
     ),
     [
@@ -59,7 +59,7 @@ from tests.common import async_mock_service
     ],
 )
 async def test_discovery_remote(
-    hass: HomeAssistant, curr_activity: str, activity_list: list[str]
+    hass: HomeAssistant, current_activity: str, activity_list: list[str]
 ) -> None:
     """Test discory for a remote entity."""
     request = get_new_request("Alexa.Discovery", "Discover")
@@ -68,7 +68,7 @@ async def test_discovery_remote(
         "remote.test",
         "off",
         {
-            "current_activity": curr_activity,
+            "current_activity": current_activity,
             "activity_list": activity_list,
         },
     )
@@ -279,68 +279,68 @@ async def test_api_select_input(
 
 
 @pytest.mark.parametrize(
-    (
-        "target_activity",
-        "activity_list",
-        "current_activity_index",
-        "target_activity_index",
-    ),
+    ("activity", "activity_list", "target_activity_index"),
     [
-        ("TV", ["TV", "MUSIC", "DVD"], 1, 0),
-        ("MUSIC", ["TV", "MUSIC", "DVD", 1000], 0, 1),
-        ("DVD", ["TV", "MUSIC", "DVD", None], 0, 2),
-        ("BAD DEVICE", ["TV", "MUSIC", "DVD"], 0, None),
-        ("TV", ["TV"], 0, 0),
-        ("BAD DEVICE", [], None, None),
+        ("TV", ["TV", "MUSIC", "DVD"], 0),
+        ("MUSIC", ["TV", "MUSIC", "DVD", 1000], 1),
+        ("DVD", ["TV", "MUSIC", "DVD", None], 2),
+        ("TV", ["TV"], 0),
     ],
 )
 async def test_api_select_activity(
     hass: HomeAssistant,
-    target_activity: str,
+    activity: str,
     activity_list: list[str],
-    current_activity_index: int | None,
     target_activity_index: int | None,
 ) -> None:
     """Test api set activity process."""
-    curr_activty = (
-        activity_list[current_activity_index] if current_activity_index else "None"
-    )
     hass.states.async_set(
         "remote.test",
         "off",
         {
-            "current_activity": curr_activty,
+            "current_activity": activity,
             "activity_list": activity_list,
         },
     )
-    # test where no source matches
-    if target_activity_index is None:
-        await assert_request_fails(
-            "Alexa.ModeController",
-            "SetMode",
-            "remote#test",
-            "remote.turn_on",
-            hass,
-            payload={"mode": f"activity.{target_activity}"},
-            instance="remote.activity",
-        )
-        return
-
     call, _ = await assert_request_calls_service(
         "Alexa.ModeController",
         "SetMode",
         "remote#test",
         "remote.turn_on",
         hass,
-        payload={"mode": f"activity.{target_activity}"},
+        payload={"mode": f"activity.{activity}"},
         instance="remote.activity",
     )
     assert call.data["activity"] == activity_list[target_activity_index]
 
 
+@pytest.mark.parametrize(("activity_list"), [(["TV", "MUSIC", "DVD"]), ([])])
+async def test_api_select_activity_fails(
+    hass: HomeAssistant, activity_list: list[str]
+) -> None:
+    """Test api set activity process fails."""
+    hass.states.async_set(
+        "remote.test",
+        "off",
+        {
+            "current_activity": None,
+            "activity_list": activity_list,
+        },
+    )
+    await assert_request_fails(
+        "Alexa.ModeController",
+        "SetMode",
+        "remote#test",
+        "remote.turn_on",
+        hass,
+        payload={"mode": "activity.BAD"},
+        instance="remote.activity",
+    )
+
+
 @pytest.mark.parametrize(
     (
-        "curr_state",
+        "current_state",
         "target_name",
         "target_service",
     ),
@@ -351,14 +351,14 @@ async def test_api_select_activity(
 )
 async def test_api_remote_set_power_state(
     hass: HomeAssistant,
-    curr_state: str,
+    current_state: str,
     target_name: str,
     target_service: str,
 ) -> None:
     """Test api remote set power state process."""
     hass.states.async_set(
         "remote.test",
-        curr_state,
+        current_state,
         {
             "current_activity": ["TV", "MUSIC", "DVD"],
             "activity_list": "TV",
