@@ -45,7 +45,7 @@ class ModbusFan(BaseSwitch, FanEntity):
     ) -> None:
         """Initialize the fan."""
         super().__init__(hass, hub, config)
-        if self.command_on and self._command_off:
+        if self.command_on is not None and self._command_off is not None:
             self._attr_supported_features |= (
                 FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
             )
