@@ -1116,7 +1116,16 @@ async def async_add_entities(
     if not entities:
         return
 
-    entities_to_add = [entity_class(entity_data) for entity_data in entities]
+    entities_to_add = []
+    for entity_data in entities:
+        try:
+            entities_to_add.append(entity_class(entity_data))
+        except Exception as ex:  # noqa: BLE001
+            _LOGGER.error(
+                "Error while adding entity from entity data: %s",
+                entity_data,
+                exc_info=ex,
+            )
     _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()
 
