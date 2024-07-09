@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterable
+from collections.abc import AsyncGenerator, AsyncIterable
 import logging
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
@@ -52,7 +52,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        client,
+        client: speech_v1.SpeechAsyncClient,
     ) -> None:
         """Init Google Cloud STT entity."""
         self._attr_unique_id = f"{entry.entry_id}-stt"
@@ -115,7 +115,9 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             )
         )
 
-        async def request_generator():
+        async def request_generator() -> (
+            AsyncGenerator[speech_v1.StreamingRecognizeRequest]
+        ):
             # The first request must only contain a streaming_config
             yield speech_v1.StreamingRecognizeRequest(streaming_config=streaming_config)
             # All subsequent requests must only contain audio_content
