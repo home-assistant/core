@@ -22,11 +22,11 @@ _POWER_STATE = "power_state"
 _SIGNAL_STATE = "signal_state"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MadvrBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe madVR binary sensor entity."""
 
-    value_fn: Callable[[MadVRCoordinator], bool] = lambda _: False
+    value_fn: Callable[[MadVRCoordinator], bool]
 
 
 BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
@@ -68,7 +68,6 @@ async def async_setup_entry(
 class MadvrBinarySensor(MadVREntity, BinarySensorEntity):
     """Base class for madVR binary sensors."""
 
-    coordinator: MadVRCoordinator
     entity_description: MadvrBinarySensorEntityDescription
 
     def __init__(
