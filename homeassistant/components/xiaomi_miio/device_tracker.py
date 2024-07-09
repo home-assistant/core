@@ -71,7 +71,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
         return [device["mac"] for device in station_info.associated_stations]
 
-    async def async_get_device_name(self, device):
+    async def async_get_device_name(self, device: str) -> str | None:
         """Return None.
 
         The repeater doesn't provide the name of the associated device.

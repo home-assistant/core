@@ -296,7 +296,7 @@ async def test_feed_errors(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
-            "Error fetching feed data from http://some.rss.local/rss_feed.xml: <urlopen error Test>"
+            "Error fetching feed data from http://some.rss.local/rss_feed.xml : <urlopen error Test>"
             in caplog.text
         )
 
