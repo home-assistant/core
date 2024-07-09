@@ -82,7 +82,7 @@ def mock_simplefin_client(mock_access_url: str) -> Generator[AsyncMock]:
             autospec=True,
         ) as mock_client,
         patch(
-            "simplefin4py.SimpleFin",
+            "homeassistant.components.simplefin.config_flow.SimpleFin",
             new=mock_client,
         ),
     ):
