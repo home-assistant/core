@@ -160,22 +160,23 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     ) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator, zone, zone.zone_id)
-        unit = self._thermostat.get_unit()
-        min_humidity, max_humidity = self._thermostat.get_humidity_setpoint_limits()
-        min_setpoint, max_setpoint = self._thermostat.get_setpoint_limits()
+        thermostat = self._thermostat
+        unit = thermostat.get_unit()
+        min_humidity, max_humidity = thermostat.get_humidity_setpoint_limits()
+        min_setpoint, max_setpoint = thermostat.get_setpoint_limits()
         # The has_* calls are stable for the life of the device
         # and do not do I/O
-        self._has_relative_humidity = self._thermostat.has_relative_humidity()
-        self._has_emergency_heat = self._thermostat.has_emergency_heat()
-        self._has_humidify_support = self._thermostat.has_humidify_support()
-        self._has_dehumidify_support = self._thermostat.has_dehumidify_support()
+        self._has_relative_humidity = thermostat.has_relative_humidity()
+        self._has_emergency_heat = thermostat.has_emergency_heat()
+        self._has_humidify_support = thermostat.has_humidify_support()
+        self._has_dehumidify_support = thermostat.has_dehumidify_support()
         self._attr_supported_features = NEXIA_SUPPORTED
         if self._has_humidify_support or self._has_dehumidify_support:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
         if self._has_emergency_heat:
             self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
-        self._attr_preset_modes = self._zone.get_presets()
-        self._attr_fan_modes = self._thermostat.get_fan_modes()
+        self._attr_preset_modes = zone.get_presets()
+        self._attr_fan_modes = thermostat.get_fan_modes()
         self._attr_hvac_modes = HVAC_MODES
         self._attr_min_humidity = percent_conv(min_humidity)
         self._attr_max_humidity = percent_conv(max_humidity)
