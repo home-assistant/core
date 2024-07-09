@@ -11,7 +11,6 @@ from simplefin4py.exceptions import (
     SimpleFinPaymentRequiredError,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.simplefin import CONF_ACCESS_URL
 from homeassistant.components.simplefin.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -25,7 +24,7 @@ async def test_successful_claim(
 ) -> None:
     """Test successful token claim in config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -74,7 +73,7 @@ async def test_access_url_errors(
 ) -> None:
     """Test the various errors we can get in access_url mode."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -109,7 +108,7 @@ async def test_claim_token_errors(
 ) -> None:
     """Test config flow with various token claim errors."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
