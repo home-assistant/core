@@ -93,7 +93,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
             return self._last_image
 
         try:
-            self._last_image = self._door_station.device.get_image(
+            self._last_image = await self._door_station.device.get_image(
                 self._url, timeout=_TIMEOUT
             )
         except TimeoutError:
