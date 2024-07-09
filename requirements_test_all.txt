@@ -1435,7 +1435,7 @@ pyefergy==22.5.0
 pyegps==0.2.5
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.3
+pyenphase==1.20.6
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
