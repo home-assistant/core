@@ -39,7 +39,7 @@ async def test_form(hass: HomeAssistant, mock_russound_alt) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -54,8 +54,8 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
             MOCK_CONFIG,
         )
 
-    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -80,3 +80,19 @@ async def test_import(hass: HomeAssistant) -> None:
     assert result["title"] == MOCK_CONFIG["name"]
     assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle import cannot connect error."""
+
+    with patch(
+        "homeassistant.components.russound_rio.config_flow.Russound",
+        side_effect=TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_CONFIG
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
