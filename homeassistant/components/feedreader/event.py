@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up event entities for feedreader."""
-    coordinator: FeedReaderCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities([FeedReaderEvent(coordinator)])
 
