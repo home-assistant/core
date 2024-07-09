@@ -53,7 +53,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_STATE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CAST_APP_ID_HOMEASSISTANT_MEDIA,
@@ -90,6 +89,7 @@ from homeassistant.helpers.translation import (
     async_translate_entity_string,
     async_translation_suffix,
 )
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.dt import utcnow
 from homeassistant.util.percentage import (
@@ -329,7 +329,11 @@ class _Trait(ABC):
         """Execute a trait command."""
         raise NotImplementedError
 
-    def _translator(self, value: str | None, attribute: str) -> Callable[[str], str]:
+    def _translator(
+        self,
+        value: str | UndefinedType = UNDEFINED,
+        attribute: str | UndefinedType = UNDEFINED,
+    ) -> Callable[[str], str]:
         entity_registry = er.async_get(self.hass)
         domain = self.state.domain
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
@@ -339,18 +343,18 @@ class _Trait(ABC):
             platform = entry.platform
             translation_key = entry.translation_key
 
-        if attribute is not ATTR_STATE and value:
-            suffix = async_translation_suffix(attribute=attribute, value=value)
+        if value is not UNDEFINED:
             default = value
-        elif attribute is not ATTR_STATE:
-            suffix = async_translation_suffix(attribute=attribute)
+        elif attribute is not UNDEFINED:
             default = attribute
-        elif value:
-            suffix = async_translation_suffix(value=value)
-            default = value
+        elif device_class:
+            default = device_class
+        elif platform:
+            default = platform
         else:
-            suffix = async_translation_suffix()
-            default = "name"
+            default = domain
+
+        suffix = async_translation_suffix(attribute=attribute, value=value)
 
         def _translate(language):
             result = async_translate_entity_string(
@@ -368,11 +372,11 @@ class _Trait(ABC):
 
         return _translate
 
-    def _synonyms_name(self, attr: str):
-        translator = self._translator(None, attr)
-        return {language: [translator(language)] for language in self.config.languages}
-
-    def _synonyms_value(self, value: str, attr: str):
+    def _synonyms(
+        self,
+        value: str | UndefinedType = UNDEFINED,
+        attr: str | UndefinedType = UNDEFINED,
+    ):
         translator = self._translator(value, attr)
         return {language: [translator(language)] for language in self.config.languages}
 
@@ -1666,9 +1670,7 @@ class ArmDisArmTrait(_Trait):
                 "level_name": state,
                 "level_values": [
                     {"level_synonym": synonyms, "lang": language}
-                    for language, synonyms in self._synonyms_value(
-                        state, ATTR_STATE
-                    ).items()
+                    for language, synonyms in self._synonyms(value=state).items()
                 ],
             }
             levels.append(level)
@@ -1811,7 +1813,7 @@ class FanSpeedTrait(_Trait):
                     "speed_name": mode,
                     "speed_values": [
                         {"speed_synonym": synonyms, "lang": language}
-                        for language, synonyms in self._synonyms_value(
+                        for language, synonyms in self._synonyms(
                             mode, climate.ATTR_FAN_MODE
                         ).items()
                     ],
@@ -1964,15 +1966,15 @@ class ModesTrait(_Trait):
             "name": attr,
             "name_values": [
                 {"name_synonym": synonyms, "lang": language}
-                for language, synonyms in self._synonyms_name(attr).items()
+                for language, synonyms in self._synonyms(attr=attr).items()
             ],
             "settings": [
                 {
                     "setting_name": setting,
                     "setting_values": [
                         {"setting_synonym": synonyms, "lang": language}
-                        for language, synonyms in self._synonyms_value(
-                            setting, attr
+                        for language, synonyms in self._synonyms(
+                            value=setting, attr=attr
                         ).items()
                     ],
                 }
@@ -2149,8 +2151,8 @@ class InputSelectorTrait(_Trait):
                 "key": source,
                 "names": [
                     {"name_synonym": synonyms, "lang": language}
-                    for language, synonyms in self._synonyms_value(
-                        source, media_player.ATTR_INPUT_SOURCE
+                    for language, synonyms in self._synonyms(
+                        value=source, attr=media_player.ATTR_INPUT_SOURCE
                     ).items()
                 ],
             }
