@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import mimetypes
 from typing import TYPE_CHECKING, TypedDict
 
@@ -25,6 +26,8 @@ from .helper import get_engine_instance
 
 if TYPE_CHECKING:
     from . import SpeechManager, TextToSpeechEntity
+
+URL_QUERY_JSON = "_json"
 
 
 async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
@@ -64,9 +67,13 @@ def generate_media_source_id(
     if options is not None:
         params.update(options)
 
+    if all(isinstance(v, (str, int, float, bool)) for v in params.values()):
+        query = params
+    else:
+        query = {URL_QUERY_JSON: json.dumps(params)}
     return ms_generate_media_source_id(
         DOMAIN,
-        str(URL.build(path=engine, query=params)),
+        str(URL.build(path=engine, query=query)),
     )
 
 
@@ -84,10 +91,12 @@ class MediaSourceOptions(TypedDict):
 def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
     """Turn a media source ID into options."""
     parsed = URL(media_source_id)
-    if "message" not in parsed.query:
+    if URL_QUERY_JSON in parsed.query:
+        options = json.loads(parsed.query[URL_QUERY_JSON])
+    else:
+        options = dict(parsed.query)
+    if "message" not in options:
         raise Unresolvable("No message specified.")
-
-    options = dict(parsed.query)
     kwargs: MediaSourceOptions = {
         "engine": parsed.name,
         "message": options.pop("message"),
