@@ -2,11 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiomealie.exceptions import MealieError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -63,12 +66,33 @@ async def test_add_todo_list_item(
     mock_mealie_client.add_shopping_item.assert_called_once()
 
 
+async def test_add_todo_list_item_error(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for failing to add a To-do Item."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.add_shopping_item = AsyncMock()
+    mock_mealie_client.add_shopping_item.side_effect = MealieError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "add_item",
+            {"item": "Soda"},
+            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            blocking=True,
+        )
+
+
 async def test_update_todo_list_item(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test for adding a To-do Item."""
+    """Test for updating a To-do Item."""
     await setup_integration(hass, mock_config_entry)
 
     mock_mealie_client.update_shopping_item = AsyncMock()
@@ -82,6 +106,27 @@ async def test_update_todo_list_item(
     )
 
     mock_mealie_client.update_shopping_item.assert_called_once()
+
+
+async def test_update_todo_list_item_error(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for failing to update a To-do Item."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.update_shopping_item = AsyncMock()
+    mock_mealie_client.update_shopping_item.side_effect = MealieError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "update_item",
+            {"item": "aubergine", "rename": "Eggplant", "status": "completed"},
+            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            blocking=True,
+        )
 
 
 async def test_delete_todo_list_item(
@@ -103,3 +148,24 @@ async def test_delete_todo_list_item(
     )
 
     mock_mealie_client.delete_shopping_item.assert_called_once()
+
+
+async def test_delete_todo_list_item_error(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for failing to delete a To-do Item."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.delete_shopping_item = AsyncMock()
+    mock_mealie_client.delete_shopping_item.side_effect = MealieError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "remove_item",
+            {"item": "aubergine"},
+            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            blocking=True,
+        )
