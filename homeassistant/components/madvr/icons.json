@@ -84,6 +84,12 @@
       "aspect_res": {
         "default": "mdi:aspect-ratio"
       },
+      "incoming_signal_type": {
+        "default": "mdi:video-image"
+      },
+      "outgoing_signal_type": {
+        "default": "mdi:video-image"
+      },
       "aspect_dec": {
         "default": "mdi:aspect-ratio"
       },

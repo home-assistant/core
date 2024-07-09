@@ -56,6 +56,9 @@
       "incoming_res": {
         "name": "Incoming resolution"
       },
+      "incoming_signal_type": {
+        "name": "Incoming signal type"
+      },
       "incoming_frame_rate": {
         "name": "Incoming frame rate"
       },
@@ -76,6 +79,9 @@
       },
       "outgoing_res": {
         "name": "Outgoing resolution"
+      },
+      "outgoing_signal_type": {
+        "name": "Outgoing signal type"
       },
       "outgoing_frame_rate": {
         "name": "Outgoing frame rate"

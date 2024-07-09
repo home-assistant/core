@@ -33,12 +33,6 @@ async def test_sensor_setup(
     ("entity_id", "payload", "expected_state", "expected_attributes"),
     [
         (
-            "sensor.madvr_envy_mac_address",
-            {"mac_address": "00:11:22:33:44:55"},
-            "00:11:22:33:44:55",
-            {},
-        ),
-        (
             "sensor.madvr_envy_gpu_temperature",
             {"temp_gpu": 45.5},
             "45.5",
@@ -88,6 +82,18 @@ async def test_sensor_setup(
             "sensor.madvr_envy_incoming_frame_rate",
             {"incoming_frame_rate": "60Hz"},
             "60Hz",
+            {},
+        ),
+        (
+            "sensor.madvr_envy_outgoing_signal_type",
+            {"outgoing_signal_type": "2D"},
+            "2D",
+            {},
+        ),
+        (
+            "sensor.madvr_envy_incoming_signal_type",
+            {"incoming_signal_type": "3D"},
+            "3D",
             {},
         ),
         (
@@ -237,7 +243,7 @@ async def test_temperature_sensor_invalid_value(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.madvr_envy_gpu_temperature")
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
 
 async def test_sensor_availability(
@@ -249,12 +255,12 @@ async def test_sensor_availability(
     await setup_integration(hass, mock_config_entry)
     update_callback = get_update_callback(mock_madvr_client)
 
-    # Test sensor becomes unavailable
+    # Test sensor becomes unknown
     update_callback({"incoming_res": None})
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.madvr_envy_incoming_resolution")
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
     # Test sensor becomes available again
     update_callback({"incoming_res": "1920x1080"})
