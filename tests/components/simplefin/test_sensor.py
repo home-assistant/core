@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -14,7 +13,6 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
