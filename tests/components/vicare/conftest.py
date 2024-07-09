@@ -40,7 +40,7 @@ class MockPyViCare:
                     ),
                     f"deviceId{idx}",
                     f"model{idx}",
-                    f"online{idx}",
+                    "Online",
                 )
             )
 
