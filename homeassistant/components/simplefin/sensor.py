@@ -80,7 +80,9 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
         """Return the icon of this account."""
 
         if self.entity_description.icon_fn is not None:
-            return self.entity_description.icon_fn(self.account_data)
+            return self.entity_description.icon_fn(
+                self.account_data.inferred_account_type
+            )
         return None
 
     @property
