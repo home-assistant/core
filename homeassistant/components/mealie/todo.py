@@ -79,7 +79,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     @property
     def shopping_items(self) -> list[ShoppingItem]:
         """Get the shopping items for this list."""
-        return self.coordinator.shopping_list_items[self._shopping_list.list_id]
+        return self.coordinator.data[self._shopping_list.list_id]
 
     @property
     def todo_items(self) -> list[TodoItem] | None:
@@ -238,7 +238,6 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     @property
     def available(self) -> bool:
         """Return False if shopping list no longer available."""
-        for shopping_list in self.coordinator.shopping_lists:
-            if shopping_list.list_id == self._shopping_list.list_id:
-                return True
-        return False
+        return (
+            super().available and self._shopping_list.list_id in self.coordinator.data
+        )

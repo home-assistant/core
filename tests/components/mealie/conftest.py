@@ -7,7 +7,6 @@ from aiomealie import (
     About,
     Mealplan,
     MealplanResponse,
-    MutateShoppingItem,
     Recipe,
     ShoppingItemsResponse,
     ShoppingListsResponse,
@@ -83,22 +82,4 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
-    )
-
-
-def make_shopping_item(
-    item_id: str | None = None,
-    list_id: str | None = None,
-    note: str | None = None,
-    checked: bool = False,
-    position: int | None = None,
-) -> MutateShoppingItem:
-    """Mock a Mealie Mutate Shopping Item instance."""
-    return MutateShoppingItem(
-        item_id=item_id or 1,
-        list_id=list_id or SHOPPING_LIST_ID,
-        note=note or SHOPPING_ITEM_NOTE,
-        checked=checked or False,
-        position=position or 0,
-        is_food=False,
     )

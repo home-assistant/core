@@ -110,7 +110,6 @@ class MealieShoppingListCoordinator(
             update_interval=timedelta(minutes=5),
         )
         self.shopping_lists: list[ShoppingList]
-        self.shopping_list_items: dict[str, list[ShoppingItem]] = {}
 
     async def async_get_shopping_lists(self) -> list[ShoppingList]:
         """Return shopping lists."""
@@ -125,6 +124,8 @@ class MealieShoppingListCoordinator(
     async def _async_update_data(
         self,
     ) -> dict[str, list[ShoppingItem]]:
+        shopping_list_items: dict[str, list[ShoppingItem]] = {}
+
         try:
             for shopping_list in self.shopping_lists:
                 shopping_list_id = shopping_list.list_id
@@ -133,11 +134,11 @@ class MealieShoppingListCoordinator(
                     await self.client.get_shopping_items(shopping_list_id)
                 ).items
 
-                self.shopping_list_items[shopping_list_id] = shopping_items
+                shopping_list_items[shopping_list_id] = shopping_items
 
         except MealieAuthenticationError as error:
             raise ConfigEntryError("Authentication failed") from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
 
-        return self.shopping_list_items
+        return shopping_list_items
