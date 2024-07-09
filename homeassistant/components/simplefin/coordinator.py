@@ -10,8 +10,7 @@ from simplefin4py.exceptions import SimpleFinAuthError, SimpleFinPaymentRequired
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
@@ -36,10 +35,10 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
         try:
             return await self.client.fetch_data()
         except SimpleFinAuthError as err:
-            raise ConfigEntryError from err
+            raise UpdateFailed from err
 
         except SimpleFinPaymentRequiredError as err:
             LOGGER.warning(
                 "There is a billing issue with your SimpleFin account, contact Simplefin to address this issue"
             )
-            raise ConfigEntryNotReady from err
+            raise UpdateFailed from err
