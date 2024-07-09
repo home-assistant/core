@@ -870,7 +870,7 @@ habluetooth==3.1.3
 hass-nabucasa==0.81.1
 
 # homeassistant.components.conversation
-hassil==1.7.1
+hassil==1.7.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
@@ -1439,7 +1439,7 @@ pyefergy==22.5.0
 pyegps==0.2.5
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.3
+pyenphase==1.20.6
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2095,7 +2095,7 @@ systembridgeconnector==4.0.3
 systembridgemodels==4.0.4
 
 # homeassistant.components.tailscale
-tailscale==0.6.0
+tailscale==0.6.1
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
@@ -2200,7 +2200,7 @@ vacuum-map-parser-roborock==0.1.2
 vallox-websocket-api==5.3.0
 
 # homeassistant.components.rdw
-vehicle==2.2.1
+vehicle==2.2.2
 
 # homeassistant.components.velbus
 velbus-aio==2024.7.5

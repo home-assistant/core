@@ -3,7 +3,7 @@
 from datetime import date
 from unittest.mock import AsyncMock
 
-from aiomealie.exceptions import MealieNotFoundError
+from aiomealie.exceptions import MealieConnectionError, MealieNotFoundError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -20,7 +20,7 @@ from homeassistant.components.mealie.services import (
     SERVICE_GET_RECIPE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
@@ -136,18 +136,27 @@ async def test_service_recipe(
     assert response == snapshot
 
 
-async def test_service_recipe_not_found(
+@pytest.mark.parametrize(
+    ("exception", "raised_exception"),
+    [
+        (MealieNotFoundError, ServiceValidationError),
+        (MealieConnectionError, HomeAssistantError),
+    ],
+)
+async def test_service_recipe_exceptions(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    raised_exception: type[Exception],
 ) -> None:
     """Test the get_recipe service."""
 
     await setup_integration(hass, mock_config_entry)
 
-    mock_mealie_client.get_recipe.side_effect = MealieNotFoundError
+    mock_mealie_client.get_recipe.side_effect = exception
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(raised_exception):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_RECIPE,
@@ -155,6 +164,27 @@ async def test_service_recipe_not_found(
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_RECIPE_ID: "recipe_id",
             },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_service_mealplan_connection_error(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a connection error in the get_mealplans service."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.get_mealplans.side_effect = MealieConnectionError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_MEALPLAN,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
         )

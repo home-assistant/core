@@ -1056,7 +1056,7 @@ hass-nabucasa==0.81.1
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.7.1
+hassil==1.7.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
@@ -1831,7 +1831,7 @@ pyeiscp==0.0.7
 pyemoncms==0.0.7
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.3
+pyenphase==1.20.6
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2685,7 +2685,7 @@ systembridgeconnector==4.0.3
 systembridgemodels==4.0.4
 
 # homeassistant.components.tailscale
-tailscale==0.6.0
+tailscale==0.6.1
 
 # homeassistant.components.tank_utility
 tank-utility==1.5.0
@@ -2829,7 +2829,7 @@ vacuum-map-parser-roborock==0.1.2
 vallox-websocket-api==5.3.0
 
 # homeassistant.components.rdw
-vehicle==2.2.1
+vehicle==2.2.2
 
 # homeassistant.components.velbus
 velbus-aio==2024.7.5
