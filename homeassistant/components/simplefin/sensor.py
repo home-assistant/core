@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from simplefin4py import Account
-from simplefin4py.model import AccountType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,7 +26,7 @@ class SimpleFinSensorEntityDescription(SensorEntityDescription):
     """Describes a sensor entity."""
 
     value_fn: Callable[[Account], int | str | datetime | None]
-    icon_fn: Callable[[AccountType], str] | None = None
+    icon_fn: Callable[[Account], str] | None = None
     unit_fn: Callable[[Account], str] | None = None
 
 
@@ -80,9 +79,7 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
         """Return the icon of this account."""
 
         if self.entity_description.icon_fn is not None:
-            return self.entity_description.icon_fn(
-                self.account_data.inferred_account_type
-            )
+            return self.entity_description.icon_fn(self.account_data)
         return None
 
     @property
