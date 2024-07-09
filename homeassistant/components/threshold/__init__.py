@@ -1,13 +1,22 @@
 """The threshold component."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_entity_device,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Min/Max from a config entry."""
+
+    async_remove_stale_devices_links_keep_entity_device(
+        hass,
+        entry.entry_id,
+        entry.options[CONF_ENTITY_ID],
+    )
+
     await hass.config_entries.async_forward_entry_setups(
         entry, (Platform.BINARY_SENSOR,)
     )
@@ -19,16 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
-
-    # Remove device link for entry, the source device may have changed.
-    # The link will be recreated after load.
-    device_registry = dr.async_get(hass)
-    devices = device_registry.devices.get_devices_for_config_entry_id(entry.entry_id)
-
-    for device in devices:
-        device_registry.async_update_device(
-            device.id, remove_config_entry_id=entry.entry_id
-        )
 
     await hass.config_entries.async_reload(entry.entry_id)
 

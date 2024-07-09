@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # The legacy platform schema uses a filename, after import
 # The full file path is stored in the config entry
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FILENAME): cv.string,
         vol.Optional(CONF_TIMESTAMP, default=False): cv.boolean,

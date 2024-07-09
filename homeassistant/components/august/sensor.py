@@ -127,12 +127,8 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     @callback
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
-        lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.LOCK_OPERATION}
-        )
-
         self._attr_available = True
-        if lock_activity is not None:
+        if lock_activity := self._get_latest({ActivityType.LOCK_OPERATION}):
             lock_activity = cast(LockOperationActivity, lock_activity)
             self._attr_native_value = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote

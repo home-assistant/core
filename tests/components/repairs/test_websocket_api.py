@@ -115,7 +115,7 @@ class MockFixFlowAbort(RepairsFlow):
 
 
 @pytest.fixture(autouse=True)
-async def mock_repairs_integration(hass):
+async def mock_repairs_integration(hass: HomeAssistant) -> None:
     """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
 

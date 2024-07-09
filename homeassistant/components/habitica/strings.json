@@ -20,6 +20,20 @@
     }
   },
   "entity": {
+    "button": {
+      "run_cron": {
+        "name": "Start my day"
+      },
+      "buy_health_potion": {
+        "name": "Buy a health potion"
+      },
+      "allocate_all_stat_points": {
+        "name": "Allocate all stat points"
+      },
+      "revive": {
+        "name": "Revive from death"
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name"
@@ -56,12 +70,73 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
+      },
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
+      },
+      "habits": {
+        "name": "Habits"
+      },
+      "rewards": {
+        "name": "Rewards"
+      }
+    },
+    "switch": {
+      "sleep": {
+        "name": "Rest in the inn"
+      }
+    },
+    "todo": {
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
       }
     }
   },
   "exceptions": {
+    "delete_todos_failed": {
+      "message": "Unable to delete {count} Habitica to-do(s), please try again"
+    },
+    "move_todos_item_failed": {
+      "message": "Unable to move the Habitica to-do to position {pos}, please try again"
+    },
+    "move_dailys_item_failed": {
+      "message": "Unable to move the Habitica daily to position {pos}, please try again"
+    },
+    "update_todos_item_failed": {
+      "message": "Unable to update the Habitica to-do `{name}`, please try again"
+    },
+    "update_dailys_item_failed": {
+      "message": "Unable to update the Habitica daily `{name}`, please try again"
+    },
+    "score_todos_item_failed": {
+      "message": "Unable to update the score for your Habitica to-do `{name}`, please try again"
+    },
+    "score_dailys_item_failed": {
+      "message": "Unable to update the score for your Habitica daily `{name}`, please try again"
+    },
+    "create_todos_item_failed": {
+      "message": "Unable to create new to-do `{name}` for Habitica, please try again"
+    },
     "setup_rate_limit_exception": {
       "message": "Currently rate limited, try again later"
+    },
+    "service_call_unallowed": {
+      "message": "Unable to carry out this action, because the required conditions are not met"
+    },
+    "service_call_exception": {
+      "message": "Unable to connect to Habitica, try again later"
+    }
+  },
+  "issues": {
+    "deprecated_task_entity": {
+      "title": "The Habitica `{task_name}` sensor is deprecated",
+      "description": "The Habitica entity `{entity}` is deprecated and will be removed in `2024.12`.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
     }
   },
   "services": {

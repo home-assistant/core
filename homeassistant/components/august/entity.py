@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 
+from yalexs.activity import Activity, ActivityType
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
@@ -31,8 +32,10 @@ class AugustEntityMixin(Entity):
         """Initialize an August device."""
         super().__init__()
         self._data = data
+        self._stream = data.activity_stream
         self._device = device
         detail = self._detail
+        self._device_id = device.device_id
         self._attr_unique_id = f"{device.device_id}_{unique_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
@@ -47,10 +50,6 @@ class AugustEntityMixin(Entity):
             self._attr_device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_BLUETOOTH, mac)}
 
     @property
-    def _device_id(self) -> str:
-        return self._device.device_id
-
-    @property
     def _detail(self) -> DoorbellDetail | LockDetail:
         return self._data.get_device_detail(self._device.device_id)
 
@@ -58,6 +57,11 @@ class AugustEntityMixin(Entity):
     def _hyper_bridge(self) -> bool:
         """Check if the lock has a paired hyper bridge."""
         return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
+
+    @callback
+    def _get_latest(self, activity_types: set[ActivityType]) -> Activity | None:
+        """Get the latest activity for the device."""
+        return self._stream.get_latest_device_activity(self._device_id, activity_types)
 
     @callback
     def _update_from_data_and_write_state(self) -> None:
@@ -76,7 +80,7 @@ class AugustEntityMixin(Entity):
             )
         )
         self.async_on_remove(
-            self._data.activity_stream.async_subscribe_device_id(
+            self._stream.async_subscribe_device_id(
                 self._device_id, self._update_from_data_and_write_state
             )
         )

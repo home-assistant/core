@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerStates, RestrictedReasons
+from aioautomower.model import MowerModes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -41,12 +41,11 @@ async def test_switch_states(
     )
     await setup_integration(hass, mock_config_entry)
 
-    for state, restricted_reson, expected_state in (
-        (MowerStates.RESTRICTED, RestrictedReasons.NOT_APPLICABLE, "off"),
-        (MowerStates.IN_OPERATION, RestrictedReasons.NONE, "on"),
+    for mode, expected_state in (
+        (MowerModes.HOME, "off"),
+        (MowerModes.MAIN_AREA, "on"),
     ):
-        values[TEST_MOWER_ID].mower.state = state
-        values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
+        values[TEST_MOWER_ID].mower.mode = mode
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -84,7 +83,7 @@ async def test_switch_commands(
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match="Command couldn't be sent to the command queue: Test error",
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain="switch",
@@ -135,7 +134,7 @@ async def test_stay_out_zone_switch_commands(
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match="Command couldn't be sent to the command queue: Test error",
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain="switch",

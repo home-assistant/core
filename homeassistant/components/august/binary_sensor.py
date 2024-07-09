@@ -5,14 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 
-from yalexs.activity import (
-    ACTION_DOORBELL_CALL_MISSED,
-    SOURCE_PUBNUB,
-    Activity,
-    ActivityType,
-)
+from yalexs.activity import Activity, ActivityType
 from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDetail, LockDoorStatus
 from yalexs.manager.const import ACTIVITY_UPDATE_INTERVAL
@@ -30,82 +26,25 @@ from homeassistant.helpers.event import async_call_later
 
 from . import AugustConfigEntry, AugustData
 from .entity import AugustDescriptionEntity
+from .util import (
+    retrieve_ding_activity,
+    retrieve_doorbell_motion_activity,
+    retrieve_online_state,
+    retrieve_time_based_activity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds())
 TIME_TO_RECHECK_DETECTION = timedelta(
     seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds() * 3
 )
-
-
-def _retrieve_online_state(
-    data: AugustData, detail: DoorbellDetail | LockDetail
-) -> bool:
-    """Get the latest state of the sensor."""
-    # The doorbell will go into standby mode when there is no motion
-    # for a short while. It will wake by itself when needed so we need
-    # to consider is available or we will not report motion or dings
-    if isinstance(detail, DoorbellDetail):
-        return detail.is_online or detail.is_standby
-    return detail.bridge_is_online
-
-
-def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
-    assert data.activity_stream is not None
-    latest = data.activity_stream.get_latest_device_activity(
-        detail.device_id, {ActivityType.DOORBELL_MOTION}
-    )
-
-    if latest is None:
-        return False
-
-    return _activity_time_based_state(latest)
-
-
-_IMAGE_ACTIVITIES = {ActivityType.DOORBELL_IMAGE_CAPTURE}
-
-
-def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
-    stream = data.activity_stream
-    assert stream is not None
-    latest = stream.get_latest_device_activity(detail.device_id, _IMAGE_ACTIVITIES)
-    if latest is None:
-        return False
-    return _activity_time_based_state(latest)
-
-
-_RING_ACTIVITIES = {ActivityType.DOORBELL_DING}
-
-
-def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail | LockDetail) -> bool:
-    stream = data.activity_stream
-    assert stream is not None
-    latest = stream.get_latest_device_activity(detail.device_id, _RING_ACTIVITIES)
-    if latest is None or (
-        data.push_updates_connected and latest.action == ACTION_DOORBELL_CALL_MISSED
-    ):
-        return False
-    return _activity_time_based_state(latest)
-
-
-def _activity_time_based_state(latest: Activity) -> bool:
-    """Get the latest state of the sensor."""
-    start = latest.activity_start_time
-    end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-    return start <= _native_datetime() <= end
-
-
-def _native_datetime() -> datetime:
-    """Return time in the format august uses without timezone."""
-    return datetime.now()
 
 
 @dataclass(frozen=True, kw_only=True)
 class AugustDoorbellBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes August binary_sensor entity."""
 
-    value_fn: Callable[[AugustData, DoorbellDetail], bool]
+    value_fn: Callable[[AugustData, DoorbellDetail | LockDetail], Activity | None]
     is_time_based: bool
 
 
@@ -118,20 +57,22 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
     AugustDoorbellBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        value_fn=_retrieve_motion_state,
+        value_fn=retrieve_doorbell_motion_activity,
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
         key="image capture",
         translation_key="image_capture",
-        value_fn=_retrieve_image_capture_state,
+        value_fn=partial(
+            retrieve_time_based_activity, {ActivityType.DOORBELL_IMAGE_CAPTURE}
+        ),
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
         key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_retrieve_online_state,
+        value_fn=retrieve_online_state,
         is_time_based=False,
     ),
 )
@@ -141,7 +82,7 @@ SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] =
     AugustDoorbellBinarySensorEntityDescription(
         key="ding",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        value_fn=_retrieve_ding_state,
+        value_fn=retrieve_ding_activity,
         is_time_based=True,
     ),
 )
@@ -185,22 +126,12 @@ class AugustDoorBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
     @callback
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
-        assert self._data.activity_stream is not None
-        door_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.DOOR_OPERATION}
-        )
-
-        if door_activity is not None:
+        if door_activity := self._get_latest({ActivityType.DOOR_OPERATION}):
             update_lock_detail_from_activity(self._detail, door_activity)
-            # If the source is pubnub the lock must be online since its a live update
-            if door_activity.source == SOURCE_PUBNUB:
+            if door_activity.was_pushed:
                 self._detail.set_online(True)
 
-        bridge_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.BRIDGE_OPERATION}
-        )
-
-        if bridge_activity is not None:
+        if bridge_activity := self._get_latest({ActivityType.BRIDGE_OPERATION}):
             update_lock_detail_from_activity(self._detail, bridge_activity)
         self._attr_available = self._detail.bridge_is_online
         self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN
@@ -216,10 +147,12 @@ class AugustDoorbellBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         self._cancel_any_pending_updates()
-        self._attr_is_on = self.entity_description.value_fn(self._data, self._detail)
+        self._attr_is_on = bool(
+            self.entity_description.value_fn(self._data, self._detail)
+        )
 
         if self.entity_description.is_time_based:
-            self._attr_available = _retrieve_online_state(self._data, self._detail)
+            self._attr_available = retrieve_online_state(self._data, self._detail)
             self._schedule_update_to_recheck_turn_off_sensor()
         else:
             self._attr_available = True

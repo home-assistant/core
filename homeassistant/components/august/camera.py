@@ -54,16 +54,12 @@ class AugustCamera(AugustEntityMixin, Camera):
         super().__init__(data, device, "camera")
         self._timeout = timeout
         self._session = session
+        self._attr_model = self._detail.model
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self._device.has_subscription
-
-    @property
-    def model(self) -> str | None:
-        """Return the camera model."""
-        return self._detail.model
 
     async def _async_update(self):
         """Update device."""
@@ -74,11 +70,9 @@ class AugustCamera(AugustEntityMixin, Camera):
     @callback
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
-        doorbell_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id,
-            {ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_IMAGE_CAPTURE},
-        )
-        if doorbell_activity is not None:
+        if doorbell_activity := self._get_latest(
+            {ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_IMAGE_CAPTURE}
+        ):
             update_doorbell_image_from_activity(self._detail, doorbell_activity)
 
     async def async_camera_image(

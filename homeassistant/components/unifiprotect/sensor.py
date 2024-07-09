@@ -16,8 +16,8 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
-    ProtectModelWithId,
     Sensor,
+    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -40,7 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
@@ -542,7 +542,7 @@ LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         name="License plate detected",
         icon="mdi:car",
         translation_key="license_plate",
-        ufp_value="is_license_plate_currently_detected",
+        ufp_obj_type=SmartDetectObjectType.LICENSE_PLATE,
         ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_license_plate_detect_event",
     ),
@@ -720,7 +720,7 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
@@ -747,19 +747,35 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 class ProtectLicensePlateEventSensor(ProtectEventSensor):
     """A UniFi Protect license plate sensor."""
 
+    device: Camera
+
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _set_event_done(self) -> None:
+        self._attr_native_value = OBJECT_TYPE_NONE
+        self._attr_extra_state_attributes = {}
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        description = self.entity_description
+
+        prev_event = self._event
+        prev_event_end = self._event_end
         super()._async_update_device_from_protect(device)
-        event = self._event
-        entity_description = self.entity_description
-        if (
-            event is None
-            or (event.metadata is None or event.metadata.license_plate is None)
-            or not entity_description.get_is_on(self.device, event)
+        if event := description.get_event_obj(device):
+            self._event = event
+            self._event_end = event.end
+
+        if not (
+            event
+            and (metadata := event.metadata)
+            and (license_plate := metadata.license_plate)
+            and description.has_matching_smart(event)
+            and not self._event_already_ended(prev_event, prev_event_end)
         ):
-            self._attr_native_value = OBJECT_TYPE_NONE
-            self._event = None
-            self._attr_extra_state_attributes = {}
+            self._set_event_done()
             return
 
-        self._attr_native_value = event.metadata.license_plate.name
+        self._attr_native_value = license_plate.name
+        self._set_event_attrs(event)
+        if event.end:
+            self._async_event_with_immediate_end()

@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
@@ -23,8 +22,8 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from . import NanoleafCoordinator, NanoleafEntryData
-from .const import DOMAIN
+from . import NanoleafConfigEntry
+from .coordinator import NanoleafCoordinator
 from .entity import NanoleafEntity
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
@@ -32,11 +31,12 @@ DEFAULT_NAME = "Nanoleaf"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NanoleafConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nanoleaf light."""
-    entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafLight(entry_data.coordinator)])
+    async_add_entities([NanoleafLight(entry.runtime_data)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):

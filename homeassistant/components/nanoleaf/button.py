@@ -1,22 +1,22 @@
 """Support for Nanoleaf buttons."""
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NanoleafCoordinator, NanoleafEntryData
-from .const import DOMAIN
+from . import NanoleafConfigEntry
+from .coordinator import NanoleafCoordinator
 from .entity import NanoleafEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NanoleafConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nanoleaf button."""
-    entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafIdentifyButton(entry_data.coordinator)])
+    async_add_entities([NanoleafIdentifyButton(entry.runtime_data)])
 
 
 class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
