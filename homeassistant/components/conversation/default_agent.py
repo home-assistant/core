@@ -979,7 +979,7 @@ class DefaultAgent(ConversationEntity):
                     _collect_list_references(sentence, wildcard_names)
 
         for wildcard_name in wildcard_names:
-            trigger_intents.slot_lists[wildcard_name] = WildcardSlotList()
+            trigger_intents.slot_lists[wildcard_name] = WildcardSlotList(wildcard_name)
 
         self._trigger_intents = trigger_intents
 
