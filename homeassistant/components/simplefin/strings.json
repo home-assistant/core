@@ -16,7 +16,8 @@
       "url_error": "There was an issue parsing the Account URL"
     },
     "abort": {
-      "missing_access_url": "Access URL or Claim Token missing"
+      "missing_access_url": "Access URL or Claim Token missing",
+      "already_configured": "This Access URL is already configured."
     }
   },
   "entity": {
