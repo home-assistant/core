@@ -50,9 +50,9 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_about.return_value = About.from_json(
             load_fixture("about.json", DOMAIN)
         )
-        client.get_recipe.return_value = Recipe.from_json(
-            load_fixture("get_recipe.json", DOMAIN)
-        )
+        recipe = Recipe.from_json(load_fixture("get_recipe.json", DOMAIN))
+        client.get_recipe.return_value = recipe
+        client.import_recipe.return_value = recipe
         yield client
 
 
