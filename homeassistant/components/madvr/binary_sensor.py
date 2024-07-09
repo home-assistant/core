@@ -33,30 +33,22 @@ BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
     MadvrBinarySensorEntityDescription(
         key=_POWER_STATE,
         translation_key=_POWER_STATE,
-        value_fn=lambda coordinator: coordinator.client.is_on
-        if coordinator.client
-        else False,
+        value_fn=lambda coordinator: coordinator.client.is_on,
     ),
     MadvrBinarySensorEntityDescription(
         key=_SIGNAL_STATE,
         translation_key=_SIGNAL_STATE,
-        value_fn=lambda coordinator: coordinator.data.get("is_signal", False)
-        if coordinator.data
-        else False,
+        value_fn=lambda coordinator: coordinator.data.get("is_signal", False),
     ),
     MadvrBinarySensorEntityDescription(
         key=_HDR_FLAG,
         translation_key=_HDR_FLAG,
-        value_fn=lambda coordinator: coordinator.data.get("hdr_flag", False)
-        if coordinator.data
-        else False,
+        value_fn=lambda coordinator: coordinator.data.get("hdr_flag", False),
     ),
     MadvrBinarySensorEntityDescription(
         key=_OUTGOING_HDR_FLAG,
         translation_key=_OUTGOING_HDR_FLAG,
-        value_fn=lambda coordinator: coordinator.data.get("outgoing_hdr_flag", False)
-        if coordinator.data
-        else False,
+        value_fn=lambda coordinator: coordinator.data.get("outgoing_hdr_flag", False),
     ),
 )
 
