@@ -25,6 +25,7 @@ APPLICATION_CREDENTIALS = [
     "senz",
     "spotify",
     "twitch",
+    "weheat",
     "withings",
     "xbox",
     "yolink",
