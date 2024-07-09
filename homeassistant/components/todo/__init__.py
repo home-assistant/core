@@ -33,7 +33,15 @@ from .const import (
     ATTR_DUE,
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
     DOMAIN,
+    SERVICE_ADD_ITEM,
+    SERVICE_GET_ITEMS,
+    SERVICE_REMOVE_COMPLETED_ITEMS,
+    SERVICE_REMOVE_ITEM,
+    SERVICE_UPDATE_ITEM,
     TodoItemStatus,
     TodoListEntityFeature,
 )
@@ -89,11 +97,6 @@ TODO_ITEM_FIELD_SCHEMA = {
 }
 TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
 
-ATTR_ITEM = "item"
-ATTR_RENAME = "rename"
-ATTR_STATUS = "status"
-
-SERVICE_ADD_ITEM = "add_item"
 SERVICE_ADD_ITEM_SCHEMA = vol.Schema(
     vol.All(
         cv.make_entity_service_schema(
@@ -106,7 +109,6 @@ SERVICE_ADD_ITEM_SCHEMA = vol.Schema(
     )
 )
 
-SERVICE_UPDATE_ITEM = "update_item"
 SERVICE_UPDATE_ITEM_SCHEMA = vol.Schema(
     vol.All(
         cv.make_entity_service_schema(
@@ -126,14 +128,12 @@ SERVICE_UPDATE_ITEM_SCHEMA = vol.Schema(
     )
 )
 
-SERVICE_REMOVE_ITEM = "remove_item"
 SERVICE_REMOVE_ITEM_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
-SERVICE_GET_ITEMS = "get_items"
 SERVICE_GET_ITEMS_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Optional(ATTR_STATUS): vol.All(
@@ -142,8 +142,6 @@ SERVICE_GET_ITEMS_SCHEMA = cv.make_entity_service_schema(
         ),
     }
 )
-
-SERVICE_REMOVE_COMPLETED_ITEMS = "remove_completed_items"
 
 
 def _validate_supported_features(
