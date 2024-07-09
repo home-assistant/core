@@ -16,11 +16,12 @@ from homeassistant.components.simplefin.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from tests.common import MockConfigEntry
 from homeassistant.helpers import entity_registry as er
+
 from . import setup_integration
-from tests.common import MockConfigEntry, snapshot_platform
 from .conftest import MOCK_ACCESS_URL
+
+from tests.common import MockConfigEntry
 
 
 async def test_successful_claim(
@@ -43,11 +44,12 @@ async def test_successful_claim(
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
 async def test_already_setup(
-        hass: HomeAssistant,
-        mock_config_entry: MockConfigEntry,
-        entity_registry: er.EntityRegistry,
-        mock_simplefin_client: AsyncMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_simplefin_client: AsyncMock,
 ) -> None:
     """Test all entities."""
     await setup_integration(hass, mock_config_entry)
@@ -63,6 +65,7 @@ async def test_already_setup(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
 
 async def test_access_url(
     hass: HomeAssistant,
@@ -162,5 +165,3 @@ async def test_claim_token_errors(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_ACCESS_URL: "https://i:am@yomama.house.com"}
         assert result["title"] == "SimpleFIN"
-
-
