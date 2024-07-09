@@ -77,7 +77,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
             vol.Optional(
                 CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS
             ): NumberSelector(
-                NumberSelectorConfig(min=0, step=0.1, mode=NumberSelectorMode.BOX)
+                NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
             ),
         }
 
@@ -98,10 +98,10 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     elif handler.options[CONF_FILTER_NAME] == FILTER_NAME_RANGE:
         filter_schema = {
             vol.Optional(CONF_FILTER_LOWER_BOUND): NumberSelector(
-                NumberSelectorConfig(min=0, step=0.1, mode=NumberSelectorMode.BOX)
+                NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
             ),
             vol.Optional(CONF_FILTER_UPPER_BOUND): NumberSelector(
-                NumberSelectorConfig(min=0, step=0.1, mode=NumberSelectorMode.BOX)
+                NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
             ),
         }
 
