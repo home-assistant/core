@@ -31,20 +31,6 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_get_todo_list_items(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_mealie_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test for getting a To-do list."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("todo.mealie_supermarket")
-    assert state
-    assert state == snapshot
-
-
 async def test_add_todo_list_item(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
@@ -52,8 +38,6 @@ async def test_add_todo_list_item(
 ) -> None:
     """Test for adding a To-do Item."""
     await setup_integration(hass, mock_config_entry)
-
-    mock_mealie_client.add_shopping_item = AsyncMock()
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -74,7 +58,6 @@ async def test_add_todo_list_item_error(
     """Test for failing to add a To-do Item."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_mealie_client.add_shopping_item = AsyncMock()
     mock_mealie_client.add_shopping_item.side_effect = MealieError
 
     with pytest.raises(HomeAssistantError):
@@ -95,8 +78,6 @@ async def test_update_todo_list_item(
     """Test for updating a To-do Item."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_mealie_client.update_shopping_item = AsyncMock()
-
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
@@ -116,7 +97,6 @@ async def test_update_todo_list_item_error(
     """Test for failing to update a To-do Item."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_mealie_client.update_shopping_item = AsyncMock()
     mock_mealie_client.update_shopping_item.side_effect = MealieError
 
     with pytest.raises(HomeAssistantError):
@@ -136,8 +116,6 @@ async def test_delete_todo_list_item(
 ) -> None:
     """Test for deleting a To-do Item."""
     await setup_integration(hass, mock_config_entry)
-
-    mock_mealie_client.delete_shopping_item = AsyncMock()
 
     await hass.services.async_call(
         TODO_DOMAIN,
