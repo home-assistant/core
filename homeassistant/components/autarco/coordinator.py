@@ -37,9 +37,10 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
+        self.public_key = self.config_entry.data[CONF_PUBLIC_KEY]
 
     async def _async_update_data(self) -> AutarcoData:
         """Fetch data from Autarco API."""
         return AutarcoData(
-            solar=await self.client.get_solar(self.config_entry.data[CONF_PUBLIC_KEY]),
+            solar=await self.client.get_solar(self.public_key),
         )

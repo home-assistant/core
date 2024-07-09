@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from autarco import AutarcoConnectionError
+from autarco import AutarcoAuthenticationError, AutarcoConnectionError
 import pytest
 
 from homeassistant.components.autarco.const import CONF_PUBLIC_KEY, DOMAIN
@@ -73,6 +73,7 @@ async def test_duplicate_entry(
     ("exception", "error"),
     [
         (AutarcoConnectionError, "cannot_connect"),
+        (AutarcoAuthenticationError, "invalid_auth"),
     ],
 )
 async def test_exceptions(

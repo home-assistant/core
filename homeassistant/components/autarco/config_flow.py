@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from autarco import Autarco, AutarcoConnectionError
+from autarco import Autarco, AutarcoAuthenticationError, AutarcoConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PUBLIC_KEY, DOMAIN
@@ -38,14 +37,13 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 account = await client.get_account()
-                await self.async_set_unique_id(account.public_key)
-                self._abort_if_unique_id_configured()
-            except HomeAssistantError:
-                # Catch the unique_id abort and reraise it to keep the code clean
-                raise
+            except AutarcoAuthenticationError:
+                errors["base"] = "invalid_auth"
             except AutarcoConnectionError:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(account.public_key)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data={

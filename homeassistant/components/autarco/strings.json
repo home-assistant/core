@@ -2,13 +2,19 @@
   "config": {
     "step": {
       "user": {
+        "description": "Connect to your Autarco account to get information about your solar panels.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your Autarco account.",
+          "password": "The password of your Autarco account."
         }
       }
     },
     "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
@@ -21,13 +27,13 @@
         "name": "Power production"
       },
       "energy_production_today": {
-        "name": "Energy production - today"
+        "name": "Energy production today"
       },
       "energy_production_tomorrow": {
-        "name": "Energy production - tomorrow"
+        "name": "Energy production tomorrow"
       },
       "energy_production_total": {
-        "name": "Energy production - total"
+        "name": "Total energy production"
       }
     }
   }
