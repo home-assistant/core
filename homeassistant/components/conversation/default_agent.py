@@ -627,6 +627,10 @@ class DefaultAgent(ConversationEntity):
 
         self._make_slot_lists()
 
+    def _get_custom_sentences_path(self, language_variant: str) -> Path:
+        """Get the custom sentences path."""
+        return Path(self.hass.config.path("custom_sentences", language_variant))
+
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
         if lang_intents := self._lang_intents.get(language):
@@ -636,15 +640,6 @@ class DefaultAgent(ConversationEntity):
                 else cast(LanguageIntents, lang_intents)
             )
 
-    def _get_custom_sentences_path(self, language_variant: str) -> Path:
-        """Get the custom sentences path."""
-        return Path(self.hass.config.path("custom_sentences", language_variant))
-
-    def _get_or_load_intents(
-        self, language: str, hass_components: set[str]
-    ) -> LanguageIntents | None:
-        """Load all intents for language (run inside executor)."""
-        lang_intents = self._lang_intents.get(language)
         start = time.monotonic()
 
         result = await self.hass.async_add_executor_job(self._load_intents, language)
