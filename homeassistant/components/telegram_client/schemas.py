@@ -35,11 +35,12 @@ from .const import (
     CONF_TYPE_CLIENT,
 )
 from .validators import (
+    allow_keyboard_if_file_not_defined,
     allow_keyboard_resize_if_keyboard_defined,
     allow_keyboard_single_use_if_keyboard_defined,
     allow_nosound_video_if_file_defined,
     date_is_in_future,
-    has_message_if_file_not_specified,
+    has_message_if_file_not_defined,
     has_no_more_than_one_keyboard_kind,
     has_one_target_kind,
 )
@@ -107,11 +108,12 @@ _BASE_SERVICE_SCHEMA = vol.Schema(
 SERVICE_SEND_MESSAGE_SCHEMA = vol.Schema(
     vol.All(
         _BASE_SERVICE_SCHEMA.extend({vol.Optional(ATTR_MESSAGE): cv.string}),
-        has_message_if_file_not_specified,
+        has_message_if_file_not_defined,
         has_one_target_kind,
         has_no_more_than_one_keyboard_kind,
         allow_keyboard_resize_if_keyboard_defined,
         allow_keyboard_single_use_if_keyboard_defined,
         allow_nosound_video_if_file_defined,
+        allow_keyboard_if_file_not_defined,
     )
 )

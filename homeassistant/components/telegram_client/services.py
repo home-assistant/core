@@ -13,7 +13,6 @@ from .const import (
     ATTR_KEYBOARD_SINGLE_USE,
     ATTR_TARGET_ID,
     ATTR_TARGET_USERNAME,
-    CONF_LAST_SENT_MESSAGE_ID,
     SERVICE_SEND_MESSAGE,
 )
 from .coordinator import TelegramClientCoordinator
@@ -62,8 +61,7 @@ async def async_telegram_call(
         message = await client.send_message(**kwargs)
         if isinstance(message, list):
             message = message.pop()
-        coordinator.data.update({CONF_LAST_SENT_MESSAGE_ID: message.id})
-        coordinator.async_update_listeners()
+        coordinator.last_sent_message_id.set_state(message.id)
         return message
     raise NotImplementedError(
         f"Method {service} is not implemented for Telegram client."

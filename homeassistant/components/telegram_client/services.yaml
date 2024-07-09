@@ -32,7 +32,7 @@ send_message:
       selector:
         boolean:
     file:
-      example: ["configuration.yaml", "secrets.yaml"]
+      example: configuration.yaml
       selector:
         object:
     force_document:

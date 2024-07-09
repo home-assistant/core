@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import (
 
 from .const import DOMAIN, SERVICE_SEND_MESSAGE
 from .coordinator import TelegramClientCoordinator
-from .entity import TelegramClientEntity
+from .entity import TelegramClientCoordinatorEntity
 from .schemas import SERVICE_SEND_MESSAGE_SCHEMA
 from .services import async_telegram_call
 
@@ -45,7 +45,7 @@ async def async_setup_entry(
     )
 
 
-class TelegramClientDeviceTracker(TelegramClientEntity, ScannerEntity):
+class TelegramClientDeviceTracker(TelegramClientCoordinatorEntity, ScannerEntity):
     """Representation of a Telegram client device tracker."""
 
     coordinator: TelegramClientCoordinator

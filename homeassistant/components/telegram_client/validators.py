@@ -20,7 +20,7 @@ from .const import (
 )
 
 
-def has_message_if_file_not_specified(conf: dict[str, Any]) -> dict[str, Any]:
+def has_message_if_file_not_defined(conf: dict[str, Any]) -> dict[str, Any]:
     """Validate config has title if file is not specified."""
     if ATTR_MESSAGE not in conf and ATTR_FILE not in conf:
         raise vol.Invalid("You should specify message if file is not specified")
@@ -76,4 +76,13 @@ def allow_nosound_video_if_file_defined(conf: dict[str, Any]) -> dict[str, Any]:
     """Validate config doesn't have nosound_video if file not defined."""
     if ATTR_NOSOUND_VIDEO in conf and ATTR_FILE not in conf:
         raise vol.Invalid("You can't specify nosound_video without defining file")
+    return conf
+
+
+def allow_keyboard_if_file_not_defined(conf: dict[str, Any]) -> dict[str, Any]:
+    """Validate config doesn't have keyboard or inline_keyboard if file defined."""
+    if ATTR_FILE in conf and (ATTR_KEYBOARD in conf or ATTR_INLINE_KEYBOARD in conf):
+        raise vol.Invalid(
+            "You can't specify keyboard or inline_keyboard with defined file"
+        )
     return conf

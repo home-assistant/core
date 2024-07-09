@@ -45,6 +45,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     _unique_id: str | None
     _entry: TelegramClientEntryConfigEntry
     _client: TelegramClient
+    _last_sent_message_id_sensor: Any
 
     def __init__(
         self, hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
@@ -84,26 +85,25 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
         @self._client.on(events.NewMessage)
         async def on_new_message(event: events.newmessage.NewMessage.Event):
-            hass.bus.async_fire(
-                "telegram_client_new_message",
-                {
-                    key: getattr(event.message, key)
-                    for key in (
-                        "message",
-                        "raw_text",
-                        "sender_id",
-                        "chat_id",
-                        "is_channel",
-                        "is_group",
-                        "is_private",
-                        "silent",
-                        "post",
-                        "from_scheduled",
-                        "date",
-                    )
-                    if hasattr(event.message, key)
-                },
-            )
+            data = {
+                key: getattr(event.message, key)
+                for key in (
+                    "message",
+                    "raw_text",
+                    "sender_id",
+                    "chat_id",
+                    "is_channel",
+                    "is_group",
+                    "is_private",
+                    "silent",
+                    "post",
+                    "from_scheduled",
+                    "date",
+                )
+                if hasattr(event.message, key)
+            }
+            data["client"] = self.data
+            hass.bus.async_fire("telegram_client_new_message", data)
 
     @property
     def device_info(self):
@@ -120,19 +120,27 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Client."""
         return self._client
 
+    @property
+    def last_sent_message_id(self) -> Any:
+        """Last sent message id."""
+        return self._last_sent_message_id
+
+    @last_sent_message_id.setter
+    def last_sent_message_id(self, sensor: Any):
+        self._last_sent_message_id = sensor
+
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         me = await self.async_client_call(self._client.get_me())
-        return dict(
-            self.data or {},
-            user_id=me.id,
-            username=me.username,
-            restricted=me.restricted,
-            premium=me.premium,
-            last_name=me.last_name,
-            first_name=me.first_name,
-            phone=me.phone,
-        )
+        return {
+            "user_id": me.id,
+            "username": me.username,
+            "restricted": me.restricted,
+            "premium": me.premium,
+            "last_name": me.last_name,
+            "first_name": me.first_name,
+            "phone": me.phone,
+        }
 
     async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Call a coro or raise exception."""
