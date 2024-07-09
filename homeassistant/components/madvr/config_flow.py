@@ -8,11 +8,10 @@ import aiohttp
 from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
-from . import MadVRConfigEntry
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .errors import CannotConnect
 
@@ -119,64 +118,4 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: MadVRConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return MadVROptionsFlowHandler(config_entry)
-
-
-class MadVROptionsFlowHandler(OptionsFlow):
-    """Handle an options flow for the integration."""
-
-    def __init__(self, config_entry: MadVRConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the options step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            new_data = {**self.config_entry.data, **user_input}
-            # there could be a situation where user changes the IP to "add" a new device so we need to update mac too
-            try:
-                # ensure we can connect and get the mac address from device
-                mac = await test_connection(
-                    self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
-                )
-            except CannotConnect:
-                _LOGGER.error("CannotConnect error caught")
-                errors["base"] = "cannot_connect"
-            else:
-                if not mac:
-                    errors["base"] = "no_mac"
-            if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=new_data
-                )
-                # reload the entity if changed
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
-
-        # if error or initial load, show the form
-        options = self.config_entry.data
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=options.get(CONF_HOST, "")): str,
-                vol.Required(CONF_PORT, default=options.get(CONF_PORT, 44077)): int,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
         )
