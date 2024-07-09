@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import MadVRConfigEntry
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
+from .entity import MadVREntity
 
 _HDR_FLAG = "hdr_flag"
 _OUTGOING_HDR_FLAG = "outgoing_hdr_flag"
@@ -80,10 +81,9 @@ async def async_setup_entry(
     )
 
 
-class MadvrBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class MadvrBinarySensor(MadVREntity, CoordinatorEntity, BinarySensorEntity):
     """Base class for madVR binary sensors."""
 
-    _attr_has_entity_name = True
     coordinator: MadVRCoordinator
     entity_description: MadvrBinarySensorEntityDescription
 
