@@ -15,8 +15,9 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_OFF,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import DEFAULT_MAC
@@ -122,7 +123,11 @@ async def test_entry_already_exist(
     assert result["reason"] == "already_configured"
 
 
-async def test_import(hass: HomeAssistant, mock_send_magic_packet: AsyncMock) -> None:
+async def test_import(
+    hass: HomeAssistant,
+    mock_send_magic_packet: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test importing."""
 
     assert await async_setup_component(
@@ -150,3 +155,12 @@ async def test_import(hass: HomeAssistant, mock_send_magic_packet: AsyncMock) ->
         CONF_MAC: DEFAULT_MAC,
         CONF_NAME: "Test WOL",
     }
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue
+    assert (
+        issue.learn_more_url
+        == "https://www.home-assistant.io/integrations/wake_on_lan/"
+    )
