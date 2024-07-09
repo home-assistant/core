@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from homeassistant.exceptions import PlatformNotReady
 from typing import Any
 
 import requests
@@ -19,6 +18,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -30,11 +30,11 @@ from .const import (
     CURSOR_TYPE_RIGHT,
     CURSOR_TYPE_SELECT,
     CURSOR_TYPE_UP,
+    DOMAIN,
+    KNOWN_ZONES,
     SERVICE_ENABLE_OUTPUT,
     SERVICE_MENU_CURSOR,
     SERVICE_SELECT_SCENE,
-    KNOWN_ZONES,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ def _discovery(config_info):
                 break
         if not zones:
             zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
-        _LOGGER.debug("config Zones: %s", zones)
+        _LOGGER.debug("Config Zones: %s", zones)
 
     return zones
 
@@ -151,7 +151,7 @@ async def async_setup_platform(
     # discovering a receiver dynamically that we have static config
     # for. Map each device from its zone_id .
     known_zones = hass.data.setdefault(DOMAIN, {KNOWN_ZONES: set()})[KNOWN_ZONES]
-    _LOGGER.debug("known receiver zones: %s", known_zones)
+    _LOGGER.debug("Known receiver zones: %s", known_zones)
 
     # Get the Infos for configuration from config (YAML) or Discovery
     config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
@@ -163,9 +163,9 @@ async def async_setup_platform(
 
     entities = []
     for zctrl in zone_ctrls:
-        _LOGGER.info("receiver zone: %s", zctrl.zone)
+        _LOGGER.info("Receiver zone: %s", zctrl.zone)
         if config_info.zone_ignore and zctrl.zone in config_info.zone_ignore:
-            _LOGGER.debug("ignore receiver zone: %s %s", config_info.name, zctrl.zone)
+            _LOGGER.debug("Ignore receiver zone: %s %s", config_info.name, zctrl.zone)
             continue
 
         entity = YamahaDeviceZone(
@@ -233,14 +233,14 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # Prefix as MusicCast could have used this
             self._attr_unique_id = f"{DOMAIN}_{self.zctrl.serial_number}_{self._zone}"
             _LOGGER.debug(
-                "receiver zone: %s zone %s uid %s",
+                "Receiver zone: %s zone %s uid %s",
                 self._name,
                 self._zone,
                 self._attr_unique_id,
             )
         else:
             _LOGGER.info(
-                "receiver zone: %s zone %s no uid %s",
+                "Receiver zone: %s zone %s no uid %s",
                 self._name,
                 self._zone,
                 self._attr_unique_id,
@@ -301,7 +301,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this media_player."""
-        return self._attr_unique_id or None
+        return self._attr_unique_id or ''
 
     @property
     def name(self):
