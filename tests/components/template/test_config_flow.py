@@ -54,11 +54,38 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         (
+            "button",
+            {},
+            "unknown",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "device_class": "restart",
+                "press": [
+                    {
+                        "service": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {
+                "device_class": "restart",
+                "press": [
+                    {
+                        "service": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {},
+        ),
+        (
             "switch",
             {"value_template": "{{ states('switch.one') }}"},
             "on",
             {"one": "on", "two": "off"},
-            {},
             {},
             {},
             {},
@@ -116,8 +143,8 @@ async def test_config_flow(
     assert result["data"] == {}
     assert result["options"] == {
         "name": "My template",
-        **state_template,
         "template_type": template_type,
+        **state_template,
         **extra_options,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -126,8 +153,8 @@ async def test_config_flow(
     assert config_entry.data == {}
     assert config_entry.options == {
         "name": "My template",
-        **state_template,
         "template_type": template_type,
+        **state_template,
         **extra_options,
     }
 
@@ -141,26 +168,42 @@ async def test_config_flow(
     (
         "template_type",
         "state_template",
+        "extra_input",
+        "extra_options",
     ),
     [
         (
             "sensor",
             {"state": "{{ 15 }}"},
+            {},
+            {},
         ),
         (
             "binary_sensor",
             {"state": "{{ false }}"},
+            {},
+            {},
         ),
         (
             "switch",
             {"value_template": "{{ false }}"},
+            {},
+            {},
+        ),
+        (
+            "button",
+            {},
+            {},
+            {},
         ),
     ],
 )
 async def test_config_flow_device(
     hass: HomeAssistant,
     template_type: str,
-    state_template: str,
+    state_template: dict[str, Any],
+    extra_input: dict[str, Any],
+    extra_options: dict[str, Any],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test remove the device registry configuration entry when the device changes."""
@@ -198,8 +241,9 @@ async def test_config_flow_device(
             result["flow_id"],
             {
                 "name": "My template",
-                **state_template,
                 "device_id": device_id,
+                **state_template,
+                **extra_input,
             },
         )
         await hass.async_block_till_done()
@@ -209,9 +253,10 @@ async def test_config_flow_device(
     assert result["data"] == {}
     assert result["options"] == {
         "name": "My template",
-        **state_template,
         "template_type": template_type,
         "device_id": device_id,
+        **state_template,
+        **extra_options,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -219,9 +264,10 @@ async def test_config_flow_device(
     assert config_entry.data == {}
     assert config_entry.options == {
         "name": "My template",
-        **state_template,
         "template_type": template_type,
         "device_id": device_id,
+        **state_template,
+        **extra_options,
     }
 
 
@@ -232,8 +278,8 @@ def get_suggested(schema, key):
             if k.description is None or "suggested_value" not in k.description:
                 return None
             return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise KeyError("Wanted key absent from schema")
+    # If the desired key is missing from the schema, return None
+    return None
 
 
 @pytest.mark.parametrize(
@@ -285,6 +331,32 @@ def get_suggested(schema, key):
             {},
             {},
             "value_template",
+        ),
+        (
+            "button",
+            {},
+            {},
+            ["unknown", "unknown"],
+            {"one": "30.0", "two": "20.0"},
+            {
+                "device_class": "restart",
+                "press": [
+                    {
+                        "service": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {
+                "press": [
+                    {
+                        "service": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
         ),
     ],
 )
@@ -988,26 +1060,42 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     (
         "template_type",
         "state_template",
+        "extra_input",
+        "extra_options",
     ),
     [
         (
             "sensor",
             {"state": "{{ 15 }}"},
+            {},
+            {},
         ),
         (
             "binary_sensor",
             {"state": "{{ false }}"},
+            {},
+            {},
+        ),
+        (
+            "button",
+            {},
+            {},
+            {},
         ),
         (
             "switch",
             {"value_template": "{{ false }}"},
+            {},
+            {},
         ),
     ],
 )
 async def test_options_flow_change_device(
     hass: HomeAssistant,
     template_type: str,
-    state_template: str,
+    state_template: dict[str, Any],
+    extra_input: dict[str, Any],
+    extra_options: dict[str, Any],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test remove the device registry configuration entry when the device changes."""
@@ -1041,11 +1129,12 @@ async def test_options_flow_change_device(
         domain=DOMAIN,
         options={
             "template_type": template_type,
-            "name": "Test",
-            **state_template,
+            "name": "My template",
             "device_id": device_id1,
+            **state_template,
+            **extra_options,
         },
-        title="Sensor template",
+        title="Template",
     )
     template_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
@@ -1062,21 +1151,24 @@ async def test_options_flow_change_device(
         user_input={
             "device_id": device_id2,
             **state_template,
+            **extra_input,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "template_type": template_type,
-        "name": "Test",
-        **state_template,
+        "name": "My template",
         "device_id": device_id2,
+        **state_template,
+        **extra_input,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
         "template_type": template_type,
-        "name": "Test",
-        **state_template,
+        "name": "My template",
         "device_id": device_id2,
+        **state_template,
+        **extra_options,
     }
 
     # Remove link with device
@@ -1087,19 +1179,24 @@ async def test_options_flow_change_device(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=state_template,
+        user_input={
+            **state_template,
+            **extra_input,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "template_type": template_type,
-        "name": "Test",
+        "name": "My template",
         **state_template,
+        **extra_input,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
         "template_type": template_type,
-        "name": "Test",
+        "name": "My template",
         **state_template,
+        **extra_options,
     }
 
     # Change to link to device 1
@@ -1113,19 +1210,22 @@ async def test_options_flow_change_device(
         user_input={
             "device_id": device_id1,
             **state_template,
+            **extra_input,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "template_type": template_type,
-        "name": "Test",
-        **state_template,
+        "name": "My template",
         "device_id": device_id1,
+        **state_template,
+        **extra_input,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
         "template_type": template_type,
-        "name": "Test",
-        **state_template,
+        "name": "My template",
         "device_id": device_id1,
+        **state_template,
+        **extra_options,
     }

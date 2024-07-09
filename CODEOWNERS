@@ -398,8 +398,8 @@ build.json @home-assistant/supervisor
 /tests/components/enigma2/ @autinerd
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
-/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
-/tests/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
+/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @joostlek @catsmanac
+/tests/components/enphase_envoy/ @bdraco @cgarwood @joostlek @catsmanac
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
@@ -834,8 +834,8 @@ build.json @home-assistant/supervisor
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
-/homeassistant/components/mealie/ @joostlek
-/tests/components/mealie/ @joostlek
+/homeassistant/components/mealie/ @joostlek @andrew-codechimp
+/tests/components/mealie/ @joostlek @andrew-codechimp
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/medcom_ble/ @elafargue

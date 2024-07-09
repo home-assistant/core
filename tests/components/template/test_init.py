@@ -299,12 +299,19 @@ async def async_yaml_patch_helper(hass, filename):
         ),
         (
             {
+                "template_type": "button",
+                "name": "My template",
+            },
+            {},
+        ),
+        (
+            {
                 "template_type": "switch",
                 "name": "My template",
-                "value_template": "{{1 == 1}}",
+                "value_template": "{{ true }}",
             },
             {
-                "value_template": "{{1 == 2}}",
+                "value_template": "{{ true }}",
             },
         ),
     ],
