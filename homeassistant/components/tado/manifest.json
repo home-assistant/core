@@ -13,6 +13,6 @@
     "models": ["tado", "AC02"]
   },
   "iot_class": "cloud_polling",
-  "loggers": ["python_tado_async"],
-  "requirements": ["python-tado-async==0.1.4"]
+  "loggers": ["tadoasync"],
+  "requirements": ["tadoasync==0.1.6"]
 }

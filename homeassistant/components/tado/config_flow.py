@@ -5,9 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import python_tado_async
-from python_tado_async import Tado
 import requests.exceptions
+from tadoasync import Tado
 import voluptuous as vol
 
 from homeassistant.components import zeroconf

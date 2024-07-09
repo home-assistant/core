@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from python_tado_async import Tado
 from requests import RequestException
+from tadoasync import Tado
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.core import HomeAssistant
@@ -151,8 +151,7 @@ class TadoConnector:
             return
 
         for device in devices:
-            device_short_serial_no = device.shortSerialNo
-            _LOGGER.debug("Updating device %s", device_short_serial_no)
+            _LOGGER.debug("Updating device %s", device.short_serial_no)
             try:
                 tmp_device = vars(device)
                 if (
@@ -160,27 +159,27 @@ class TadoConnector:
                     in device.characteristics.capabilities
                 ):
                     tmp_device[TEMP_OFFSET] = await self.tado.get_device_info(
-                        device_short_serial_no, TEMP_OFFSET
+                        device.short_serial_no, TEMP_OFFSET
                     )
             except RuntimeError:
                 _LOGGER.error(
                     "Unable to connect to Tado while updating device %s",
-                    device_short_serial_no,
+                    device.short_serial_no,
                 )
                 return
 
-            self.data["device"][device_short_serial_no] = tmp_device
+            self.data["device"][device.short_serial_no] = tmp_device
 
             _LOGGER.debug(
                 "Dispatching update to %s device %s: %s",
                 self.home_id,
-                device_short_serial_no,
+                device.short_serial_no,
                 device,
             )
             dispatcher_send(
                 self.hass,
                 SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self.home_id, "device", device_short_serial_no
+                    self.home_id, "device", device.short_serial_no
                 ),
             )
 
@@ -188,7 +187,7 @@ class TadoConnector:
         """Update the zone data from Tado."""
         try:
             zone_states = await self.tado.get_zone_states()
-            zone_states = zone_states[0].zoneStates
+            zone_states = zone_states[0].zone_states
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating zones")
             return
