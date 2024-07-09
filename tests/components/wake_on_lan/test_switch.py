@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -92,6 +93,7 @@ async def test_broadcast_config_ip_and_port(
         blocking=True,
     )
 
+    mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(
         mac, ip_address=broadcast_address, port=port
     )
@@ -128,6 +130,7 @@ async def test_broadcast_config_ip(
         blocking=True,
     )
 
+    mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
 
 
@@ -156,6 +159,7 @@ async def test_broadcast_config_port(
         blocking=True,
     )
 
+    mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(mac, port=port)
 
 
