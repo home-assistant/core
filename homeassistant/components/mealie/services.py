@@ -14,7 +14,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
@@ -77,7 +77,7 @@ def setup_services(hass: HomeAssistant) -> None:
         try:
             mealplans = await client.get_mealplans(start_date, end_date)
         except MealieConnectionError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
             ) from err
@@ -91,7 +91,7 @@ def setup_services(hass: HomeAssistant) -> None:
         try:
             recipe = await client.get_recipe(recipe_id)
         except MealieConnectionError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
             ) from err
