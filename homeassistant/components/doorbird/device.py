@@ -146,7 +146,7 @@ class ConfiguredDoorBird:
         self, url: str, favs: dict[str, Any] | None = None
     ) -> bool:
         """Return whether the given URL is registered as a device favorite."""
-        return self.async_get_webhook_id(url, favs) is not None
+        return await self.async_get_webhook_id(url, favs) is not None
 
     async def async_get_webhook_id(
         self, url: str, favs: dict[str, Any] | None = None
