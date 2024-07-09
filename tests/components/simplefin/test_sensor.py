@@ -79,30 +79,16 @@ async def test_update_errors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.the_bank_of_go_the_bank_balance").state == "unavailable"
-    )
-    assert (
-        hass.states.get("sensor.investments_my_checking_balance").state == "unavailable"
-    )
-    assert (
-        hass.states.get("sensor.the_bank_of_go_prime_savings_balance").state
-        == "unavailable"
-    )
-    assert (
-        hass.states.get("sensor.random_bank_costco_anywhere_visa_r_card_balance").state
-        == "unavailable"
-    )
-    assert hass.states.get("sensor.investments_dr_evil_balance").state == "unavailable"
-    assert (
-        hass.states.get("sensor.investments_nerdcorp_series_b_balance").state
-        == "unavailable"
-    )
-    assert (
-        hass.states.get("sensor.mythical_randomsavings_unicorn_pot_balance").state
-        == "unavailable"
-    )
-    assert (
-        hass.states.get("sensor.mythical_randomsavings_castle_mortgage_balance").state
-        == "unavailable"
-    )
+    sensors = [
+        "sensor.the_bank_of_go_the_bank_balance",
+        "sensor.investments_my_checking_balance",
+        "sensor.the_bank_of_go_prime_savings_balance",
+        "sensor.random_bank_costco_anywhere_visa_r_card_balance",
+        "sensor.investments_dr_evil_balance",
+        "sensor.investments_nerdcorp_series_b_balance",
+        "sensor.mythical_randomsavings_unicorn_pot_balance",
+        "sensor.mythical_randomsavings_castle_mortgage_balance",
+    ]
+
+    for sensor in sensors:
+        assert hass.states.get(sensor).state == "unavailable"
