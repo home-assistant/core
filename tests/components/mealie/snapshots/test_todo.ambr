@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': <TodoListEntityFeature: 15>,
     'translation_key': 'shopping_list',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_e9d78ff2-4b23-4b77-a3a8-464827100b46',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_e9d78ff2-4b23-4b77-a3a8-464827100b46',
     'unit_of_measurement': None,
   })
 # ---
@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': <TodoListEntityFeature: 15>,
     'translation_key': 'shopping_list',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_f8438635-8211-4be8-80d0-0aa42e37a5f2',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_f8438635-8211-4be8-80d0-0aa42e37a5f2',
     'unit_of_measurement': None,
   })
 # ---
@@ -122,7 +122,7 @@
     'previous_unique_id': None,
     'supported_features': <TodoListEntityFeature: 15>,
     'translation_key': 'shopping_list',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_27edbaab-2ec6-441f-8490-0283ea77585f',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_27edbaab-2ec6-441f-8490-0283ea77585f',
     'unit_of_measurement': None,
   })
 # ---
