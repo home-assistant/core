@@ -31,7 +31,9 @@ from tests.typing import WebSocketGenerator
     [
         (
             "binary_sensor",
-            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
             "on",
             {"one": "on", "two": "off"},
             {},
@@ -41,9 +43,21 @@ from tests.typing import WebSocketGenerator
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
+            {
+                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+            },
             "50.0",
             {"one": "30.0", "two": "20.0"},
+            {},
+            {},
+            {},
+            {},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
             {},
             {},
             {},
@@ -91,7 +105,7 @@ async def test_config_flow(
             result["flow_id"],
             {
                 "name": "My template",
-                "state": state_template,
+                **state_template,
                 **extra_input,
             },
         )
@@ -102,7 +116,7 @@ async def test_config_flow(
     assert result["data"] == {}
     assert result["options"] == {
         "name": "My template",
-        "state": state_template,
+        **state_template,
         "template_type": template_type,
         **extra_options,
     }
@@ -112,7 +126,7 @@ async def test_config_flow(
     assert config_entry.data == {}
     assert config_entry.options == {
         "name": "My template",
-        "state": state_template,
+        **state_template,
         "template_type": template_type,
         **extra_options,
     }
@@ -131,11 +145,15 @@ async def test_config_flow(
     [
         (
             "sensor",
-            "{{ 15 }}",
+            {"state": "{{ 15 }}"},
         ),
         (
             "binary_sensor",
-            "{{ false }}",
+            {"state": "{{ false }}"},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ false }}"},
         ),
     ],
 )
@@ -180,7 +198,7 @@ async def test_config_flow_device(
             result["flow_id"],
             {
                 "name": "My template",
-                "state": state_template,
+                **state_template,
                 "device_id": device_id,
             },
         )
@@ -191,7 +209,7 @@ async def test_config_flow_device(
     assert result["data"] == {}
     assert result["options"] == {
         "name": "My template",
-        "state": state_template,
+        **state_template,
         "template_type": template_type,
         "device_id": device_id,
     }
@@ -201,7 +219,7 @@ async def test_config_flow_device(
     assert config_entry.data == {}
     assert config_entry.options == {
         "name": "My template",
-        "state": state_template,
+        **state_template,
         "template_type": template_type,
         "device_id": device_id,
     }
@@ -227,25 +245,46 @@ def get_suggested(schema, key):
         "input_states",
         "extra_options",
         "options_options",
+        "key_template",
     ),
     [
         (
             "binary_sensor",
-            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
-            "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+            },
             ["on", "off"],
             {"one": "on", "two": "off"},
             {},
             {},
+            "state",
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
-            "{{ float(states('sensor.one')) - float(states('sensor.two')) }}",
+            {
+                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+            },
+            {
+                "state": "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+            },
             ["50.0", "10.0"],
             {"one": "30.0", "two": "20.0"},
             {},
             {},
+            "state",
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            {"value_template": "{{ states('switch.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            "value_template",
         ),
     ],
 )
@@ -258,6 +297,7 @@ async def test_options(
     input_states,
     extra_options,
     options_options,
+    key_template,
 ) -> None:
     """Test reconfiguring."""
     input_entities = ["one", "two"]
@@ -272,8 +312,8 @@ async def test_options(
         domain=DOMAIN,
         options={
             "name": "My template",
-            "state": old_state_template,
             "template_type": template_type,
+            **old_state_template,
             **extra_options,
         },
         title="My template",
@@ -291,25 +331,30 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
-    assert get_suggested(result["data_schema"].schema, "state") == old_state_template
+    assert get_suggested(
+        result["data_schema"].schema, key_template
+    ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"state": new_state_template, **options_options},
+        user_input={
+            **new_state_template,
+            **options_options,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "My template",
-        "state": new_state_template,
         "template_type": template_type,
+        **new_state_template,
         **extra_options,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
         "name": "My template",
-        "state": new_state_template,
         "template_type": template_type,
+        **new_state_template,
         **extra_options,
     }
     assert config_entry.title == "My template"
@@ -334,7 +379,7 @@ async def test_options(
     assert result["step_id"] == template_type
 
     assert get_suggested(result["data_schema"].schema, "name") is None
-    assert get_suggested(result["data_schema"].schema, "state") is None
+    assert get_suggested(result["data_schema"].schema, key_template) is None
 
 
 @pytest.mark.parametrize(
@@ -947,11 +992,15 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     [
         (
             "sensor",
-            "{{ 15 }}",
+            {"state": "{{ 15 }}"},
         ),
         (
             "binary_sensor",
-            "{{ false }}",
+            {"state": "{{ false }}"},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ false }}"},
         ),
     ],
 )
@@ -993,7 +1042,7 @@ async def test_options_flow_change_device(
         options={
             "template_type": template_type,
             "name": "Test",
-            "state": state_template,
+            **state_template,
             "device_id": device_id1,
         },
         title="Sensor template",
@@ -1011,22 +1060,22 @@ async def test_options_flow_change_device(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "state": state_template,
             "device_id": device_id2,
+            **state_template,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "template_type": template_type,
         "name": "Test",
-        "state": state_template,
+        **state_template,
         "device_id": device_id2,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
         "template_type": template_type,
         "name": "Test",
-        "state": state_template,
+        **state_template,
         "device_id": device_id2,
     }
 
@@ -1038,21 +1087,19 @@ async def test_options_flow_change_device(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "state": state_template,
-        },
+        user_input=state_template,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "template_type": template_type,
         "name": "Test",
-        "state": state_template,
+        **state_template,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
         "template_type": template_type,
         "name": "Test",
-        "state": state_template,
+        **state_template,
     }
 
     # Change to link to device 1
@@ -1064,21 +1111,21 @@ async def test_options_flow_change_device(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "state": state_template,
             "device_id": device_id1,
+            **state_template,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "template_type": template_type,
         "name": "Test",
-        "state": state_template,
+        **state_template,
         "device_id": device_id1,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
         "template_type": template_type,
         "name": "Test",
-        "state": state_template,
+        **state_template,
         "device_id": device_id1,
     }
