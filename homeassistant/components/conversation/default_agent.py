@@ -165,6 +165,7 @@ class DefaultAgent(ConversationEntity):
         self._trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
         self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
+        self._load_intents_lock = asyncio.Lock()
 
     @property
     def supported_languages(self) -> list[str]:
@@ -636,22 +637,33 @@ class DefaultAgent(ConversationEntity):
                 else cast(LanguageIntents, lang_intents)
             )
 
-        start = time.monotonic()
+        async with self._load_intents_lock:
+            # In case it was loaded now
+            if lang_intents := self._lang_intents.get(language):
+                return (
+                    None
+                    if lang_intents is ERROR_SENTINEL
+                    else cast(LanguageIntents, lang_intents)
+                )
 
-        result = await self.hass.async_add_executor_job(self._load_intents, language)
+            start = time.monotonic()
 
-        if result is None:
-            self._lang_intents[language] = ERROR_SENTINEL
-        else:
-            self._lang_intents[language] = result
+            result = await self.hass.async_add_executor_job(
+                self._load_intents, language
+            )
 
-        _LOGGER.debug(
-            "Full intents load completed for language=%s in %.2f seconds",
-            language,
-            time.monotonic() - start,
-        )
+            if result is None:
+                self._lang_intents[language] = ERROR_SENTINEL
+            else:
+                self._lang_intents[language] = result
 
-        return result
+            _LOGGER.debug(
+                "Full intents load completed for language=%s in %.2f seconds",
+                language,
+                time.monotonic() - start,
+            )
+
+            return result
 
     def _load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
