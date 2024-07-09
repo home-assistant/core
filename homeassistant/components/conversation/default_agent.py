@@ -635,6 +635,10 @@ class DefaultAgent(ConversationEntity):
                 self._get_or_load_intents, language, hass_components
             )
 
+    def _get_custom_sentences_path(self, language_variant: str) -> Path:
+        """Get the custom sentences path."""
+        return Path(self.hass.config.path("custom_sentences", language_variant))
+
     def _get_or_load_intents(
         self, language: str, hass_components: set[str]
     ) -> LanguageIntents | None:
@@ -688,9 +692,7 @@ class DefaultAgent(ConversationEntity):
         if lang_intents is None:
             # Only load custom sentences once, otherwise they will be re-loaded
             # when components change.
-            custom_sentences_dir = Path(
-                self.hass.config.path("custom_sentences", language_variant)
-            )
+            custom_sentences_dir = self._get_custom_sentences_path(language_variant)
             if custom_sentences_dir.is_dir():
                 for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
                     with custom_sentences_path.open(

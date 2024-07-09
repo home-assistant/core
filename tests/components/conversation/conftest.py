@@ -1,5 +1,8 @@
 """Conversation test helpers."""
 
+from collections.abc import AsyncGenerator
+import os
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -48,7 +51,28 @@ async def sl_setup(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def init_components(hass: HomeAssistant):
+async def init_components(hass: HomeAssistant, tmp_path: Path) -> AsyncGenerator[None]:
     """Initialize relevant components with empty configs."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+
+    def preload_and_cache():
+        custom_sentences_dir = Path(hass.config.path("custom_sentences/en"))
+        os.mkdir(tmp_path / "en")
+        for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
+            with (
+                custom_sentences_path.open(encoding="utf-8") as custom_sentences_file,
+                open(
+                    tmp_path / "en" / os.path.basename(custom_sentences_file.name),
+                    mode="w",
+                    encoding="utf-8",
+                ) as dest_file,
+            ):
+                dest_file.write(custom_sentences_file.read())
+
+    await hass.async_add_executor_job(preload_and_cache)
+    with patch(
+        "homeassistant.components.conversation.default_agent.DefaultAgent._get_custom_sentences_path",
+        return_value=tmp_path / "en",
+    ):
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, "conversation", {})
+        yield
