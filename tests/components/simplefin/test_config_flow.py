@@ -58,7 +58,7 @@ async def test_access_url(
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_key",  # noqa: PT006
+    ("side_effect", "error_key"),
     [
         (SimpleFinInvalidAccountURLError, "url_error"),
         (SimpleFinPaymentRequiredError, "payment_required"),
