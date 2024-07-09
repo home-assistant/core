@@ -528,19 +528,16 @@ class DefaultAgent(ConversationEntity):
         recognize_result: RecognizeResult,
     ) -> str:
         # Make copies of the states here so we can add translated names for responses.
-        matched: list[core.State] = []
-
-        for state in intent_response.matched_states:
-            state_copy = core.State.from_dict(state.as_dict())
-            if state_copy is not None:
-                matched.append(state_copy)
-
-        unmatched: list[core.State] = []
-        for state in intent_response.unmatched_states:
-            state_copy = core.State.from_dict(state.as_dict())
-            if state_copy is not None:
-                unmatched.append(state_copy)
-
+        matched = [
+            state_copy
+            for state in intent_response.matched_states
+            if (state_copy := core.State.from_dict(state.as_dict()))
+        ]
+        unmatched = [
+            state_copy
+            for state in intent_response.unmatched_states
+            if (state_copy := core.State.from_dict(state.as_dict()))
+        ]
         all_states = matched + unmatched
         domains = {state.domain for state in all_states}
         translations = await translation.async_get_translations(
@@ -629,7 +626,14 @@ class DefaultAgent(ConversationEntity):
                 else cast(LanguageIntents, lang_intents)
             )
 
-        return await self.hass.async_add_executor_job(self._load_intents, language)
+        result = await self.hass.async_add_executor_job(self._load_intents, language)
+
+        if result is None:
+            self._lang_intents[language] = ERROR_SENTINEL
+        else:
+            self._lang_intents[language] = result
+
+        return result
 
     def _load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
@@ -652,7 +656,6 @@ class DefaultAgent(ConversationEntity):
             _LOGGER.warning(
                 "Unable to find supported language variant for %s", language
             )
-            self._lang_intents[language] = ERROR_SENTINEL
             return None
 
         # Load intents for this language variant
@@ -663,7 +666,6 @@ class DefaultAgent(ConversationEntity):
             # Overriding because source dict is empty
             intents_dict = lang_variant_intents
 
-            # Will need to recreate graph
             _LOGGER.debug(
                 "Loaded intents  language=%s (%s)",
                 language,
@@ -706,7 +708,6 @@ class DefaultAgent(ConversationEntity):
 
                     merge_dict(intents_dict, custom_sentences_yaml)
 
-                # Will need to recreate graph
                 _LOGGER.debug(
                     "Loaded custom sentences language=%s (%s), path=%s",
                     language,
@@ -743,7 +744,6 @@ class DefaultAgent(ConversationEntity):
             )
 
         if not intents_dict:
-            self._lang_intents[language] = ERROR_SENTINEL
             return None
 
         intents = Intents.from_dict(intents_dict)
@@ -753,16 +753,13 @@ class DefaultAgent(ConversationEntity):
         intent_responses = responses_dict.get("intents", {})
         error_responses = responses_dict.get("errors", {})
 
-        lang_intents = LanguageIntents(
+        return LanguageIntents(
             intents,
             intents_dict,
             intent_responses,
             error_responses,
             language_variant,
         )
-        self._lang_intents[language] = lang_intents
-
-        return lang_intents
 
     @core.callback
     def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
