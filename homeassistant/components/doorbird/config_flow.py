@@ -51,7 +51,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         status = await device.ready()
         info = await device.info()
     except ClientResponseError as err:
-        if err.code == HTTPStatus.UNAUTHORIZED:
+        if err.status == HTTPStatus.UNAUTHORIZED:
             raise InvalidAuth from err
         raise CannotConnect from err
     except OSError as err:
@@ -73,7 +73,7 @@ async def async_verify_supported_device(hass: HomeAssistant, host: str) -> bool:
     try:
         await device.doorbell_state()
     except ClientResponseError as err:
-        if err.code == HTTPStatus.UNAUTHORIZED:
+        if err.status == HTTPStatus.UNAUTHORIZED:
             return True
     except OSError:
         return False
