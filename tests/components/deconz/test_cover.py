@@ -28,6 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import WebsocketDataType
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -55,7 +57,7 @@ async def test_cover(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that all supported cover entities are created."""
     assert len(hass.states.async_all()) == 2
@@ -67,13 +69,11 @@ async def test_cover(
     # Event signals cover is open
 
     event_changed_light = {
-        "t": "event",
-        "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"lift": 0, "open": True},
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     cover = hass.states.get("cover.window_covering_device")

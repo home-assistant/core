@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from pytrafikverket.exceptions import InvalidAuthentication, NoCameraFound, UnknownError
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket.models import CameraInfoModel
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import DOMAIN
@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
+async def test_form(hass: HomeAssistant, get_camera: CameraInfoModel) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -56,7 +56,9 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
 
 
 async def test_form_multiple_cameras(
-    hass: HomeAssistant, get_cameras: list[CameraInfo], get_camera2: CameraInfo
+    hass: HomeAssistant,
+    get_cameras: list[CameraInfoModel],
+    get_camera2: CameraInfoModel,
 ) -> None:
     """Test we get the form with multiple cameras."""
 
@@ -108,7 +110,7 @@ async def test_form_multiple_cameras(
 
 
 async def test_form_no_location_data(
-    hass: HomeAssistant, get_camera_no_location: CameraInfo
+    hass: HomeAssistant, get_camera_no_location: CameraInfoModel
 ) -> None:
     """Test we get the form."""
 

@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from aiomealie import Mealplan, MealplanResponse, UserInfo
+from aiomealie import About, Mealplan, MealplanResponse, Recipe, UserInfo
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
 
@@ -29,7 +29,7 @@ def mock_mealie_client() -> Generator[AsyncMock]:
     """Mock a Mealie client."""
     with (
         patch(
-            "homeassistant.components.mealie.coordinator.MealieClient",
+            "homeassistant.components.mealie.MealieClient",
             autospec=True,
         ) as mock_client,
         patch(
@@ -46,6 +46,12 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         )
         client.get_user_info.return_value = UserInfo.from_json(
             load_fixture("users_self.json", DOMAIN)
+        )
+        client.get_about.return_value = About.from_json(
+            load_fixture("about.json", DOMAIN)
+        )
+        client.get_recipe.return_value = Recipe.from_json(
+            load_fixture("get_recipe.json", DOMAIN)
         )
         yield client
 

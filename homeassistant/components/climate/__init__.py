@@ -378,6 +378,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         supported_features = self.supported_features
+        if supported_features & (
+            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        ):
+            # The entity supports both turn_on and turn_off, the backwards compatibility
+            # checks are not needed
+            return
+
+        supported_features = self.supported_features
         if not supported_features & ClimateEntityFeature.TURN_OFF and (
             type(self).async_turn_off is not ClimateEntity.async_turn_off
             or type(self).turn_off is not ClimateEntity.turn_off

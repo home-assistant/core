@@ -44,7 +44,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN, ConversationEntityFeature
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 
@@ -147,6 +147,7 @@ class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
     _attr_name = "Home Assistant"
+    _attr_supported_features = ConversationEntityFeature.CONTROL
 
     def __init__(
         self, hass: core.HomeAssistant, config_intents: dict[str, Any]
@@ -648,6 +649,7 @@ class DefaultAgent(ConversationEntity):
             language_variant = lang_intents.language_variant
 
         supported_langs = set(get_languages())
+        intents_changed = False
 
         if not language_variant:
             # Choose a language variant upfront and commit to it for custom

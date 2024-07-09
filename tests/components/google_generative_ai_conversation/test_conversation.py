@@ -44,10 +44,10 @@ def freeze_the_time():
         {CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
     ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_default_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     snapshot: SnapshotAssertion,
     agent_id: str | None,
     config_entry_options: {},
@@ -102,10 +102,10 @@ async def test_default_prompt(
     ("model_name", "supports_system_instruction"),
     [("models/gemini-1.5-pro", True), ("models/gemini-1.0-pro", False)],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_chat_history(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     model_name: str,
     supports_system_instruction: bool,
     snapshot: SnapshotAssertion,
@@ -167,11 +167,11 @@ async def test_chat_history(
 @patch(
     "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test function calling."""
@@ -277,11 +277,11 @@ async def test_function_call(
 @patch(
     "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_function_call_without_parameters(
     mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test function calling without parameters."""
@@ -358,11 +358,11 @@ async def test_function_call_without_parameters(
 @patch(
     "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
 ) -> None:
     """Test exception in function calling."""
     agent_id = mock_config_entry_with_assist.entry_id
@@ -440,8 +440,9 @@ async def test_function_exception(
     )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_error_handling(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that client errors are caught."""
     with patch("google.generativeai.GenerativeModel") as mock_model:
@@ -459,8 +460,9 @@ async def test_error_handling(
     )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_blocked_response(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test blocked response."""
     with patch("google.generativeai.GenerativeModel") as mock_model:
@@ -480,8 +482,9 @@ async def test_blocked_response(
     )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_empty_response(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test empty response."""
     with patch("google.generativeai.GenerativeModel") as mock_model:
@@ -501,10 +504,9 @@ async def test_empty_response(
     )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_invalid_llm_api(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test handling of invalid llm api."""
     hass.config_entries.async_update_entry(
@@ -593,10 +595,9 @@ async def test_template_variables(
     assert "The user id is 12345." in mock_model.mock_calls[0][2]["system_instruction"]
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_conversation_agent(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test GoogleGenerativeAIAgent."""
     agent = conversation.get_agent_manager(hass).async_get_agent(
