@@ -20,6 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_door_station_info
@@ -42,7 +43,10 @@ def _schema_with_defaults(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
-    device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
+    session = async_get_clientsession(hass)
+    device = DoorBird(
+        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], http_session=session
+    )
     try:
         status = await device.ready()
         info = await device.info()
@@ -64,7 +68,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 async def async_verify_supported_device(hass: HomeAssistant, host: str) -> bool:
     """Verify the doorbell state endpoint returns a 401."""
-    device = DoorBird(host, "", "")
+    session = async_get_clientsession(hass)
+    device = DoorBird(host, "", "", http_session=session)
     try:
         await device.doorbell_state()
     except ClientResponseError as err:

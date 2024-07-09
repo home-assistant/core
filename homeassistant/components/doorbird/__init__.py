@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -47,8 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
     device_ip = door_station_config[CONF_HOST]
     username = door_station_config[CONF_USERNAME]
     password = door_station_config[CONF_PASSWORD]
+    session = async_get_clientsession(hass)
 
-    device = DoorBird(device_ip, username, password)
+    device = DoorBird(device_ip, username, password, http_session=session)
     try:
         status = await device.ready()
         info = await device.info()
