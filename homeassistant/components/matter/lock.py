@@ -120,9 +120,6 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        # optimistically signal unlocking to state machine
-        self._attr_is_unlocking = True
-        self.async_write_ha_state()
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
