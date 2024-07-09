@@ -184,7 +184,9 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response | None:
     """Handle incoming webhook from Plaato."""
     try:
         data = WEBHOOK_SCHEMA(await request.json())
