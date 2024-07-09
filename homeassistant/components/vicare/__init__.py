@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
@@ -82,9 +81,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             str(device_config.getModel() not in UNSUPPORTED_DEVICES),
         )
 
-    device_config_list = get_online_devices(
-        hass, get_supported_devices(device_config_list)
-    )
+    device_config_list = get_online_devices(get_supported_devices(device_config_list))
     if (number_of_devices := len(device_config_list)) > 1:
         cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
         _LOGGER.debug(
@@ -94,7 +91,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
         vicare_api = vicare_login(hass, entry.data, cache_duration)
         device_config_list = get_online_devices(
-            hass, get_supported_devices(vicare_api.devices)
+            get_supported_devices(vicare_api.devices)
         )
 
     hass.data[DOMAIN][entry.entry_id][DEVICE_LIST] = [
@@ -122,7 +119,6 @@ def get_supported_devices(
 ) -> list[PyViCareDeviceConfig]:
     """Remove unsupported devices from the list."""
 
-    _LOGGER.debug("Ignoring unsupported devices (%s)", UNSUPPORTED_DEVICES)
     return [
         device_config
         for device_config in devices
@@ -131,26 +127,8 @@ def get_supported_devices(
 
 
 def get_online_devices(
-    hass: HomeAssistant,
     devices: list[PyViCareDeviceConfig],
 ) -> list[PyViCareDeviceConfig]:
     """Remove offline devices from the list."""
 
-    _LOGGER.debug("Ignoring offline devices")
-    result = []
-    for device_config in devices:
-        if device_config.isOnline():
-            result.append(device_config)
-        else:
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "device_offline",
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="device_offline",
-                translation_placeholders={
-                    "model": device_config.getModel(),
-                },
-            )
-    return result
+    return [device_config for device_config in devices if device_config.isOnline()]
