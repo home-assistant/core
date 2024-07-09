@@ -1,8 +1,8 @@
 """Test the aidot config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.aidot.config_flow import CannotConnect, InvalidHost
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -18,8 +18,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.aidot.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.aidot.config_flow.validate_input",
+        return_value={"title": "127.0.0.1"},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -49,18 +49,14 @@ async def test_form_invalid_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.aidot.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidHost,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
@@ -68,19 +64,15 @@ async def test_form_invalid_auth(
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.aidot.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"
@@ -100,18 +92,14 @@ async def test_form_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.aidot.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -121,7 +109,7 @@ async def test_form_cannot_connect(
     # we can show the config flow is able to recover from an error.
 
     with patch(
-        "homeassistant.components.aidot.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.aidot.config_flow.validate_input",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
