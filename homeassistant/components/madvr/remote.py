@@ -9,7 +9,6 @@ from typing import Any
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MadVRConfigEntry
 from .coordinator import MadVRCoordinator
@@ -32,7 +31,7 @@ async def async_setup_entry(
     )
 
 
-class MadvrRemote(MadVREntity, CoordinatorEntity[MadVRCoordinator], RemoteEntity):
+class MadvrRemote(MadVREntity, RemoteEntity):
     """Remote entity for the madVR integration."""
 
     _attr_name = None
