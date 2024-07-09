@@ -127,43 +127,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_ADD_ITEM,
-        vol.Schema(
-            vol.All(
-                cv.make_entity_service_schema(
-                    {
-                        vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                        **TODO_ITEM_FIELD_SCHEMA,
-                    }
-                ),
-                *TODO_ITEM_FIELD_VALIDATIONS,
-            )
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                    **TODO_ITEM_FIELD_SCHEMA,
+                }
+            ),
+            *TODO_ITEM_FIELD_VALIDATIONS,
         ),
         _async_add_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
         SERVICE_UPDATE_ITEM,
-        vol.Schema(
-            vol.All(
-                cv.make_entity_service_schema(
-                    {
-                        vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                        vol.Optional(ATTR_RENAME): vol.All(
-                            cv.string, vol.Length(min=1)
-                        ),
-                        vol.Optional(ATTR_STATUS): vol.In(
-                            {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
-                        ),
-                        **TODO_ITEM_FIELD_SCHEMA,
-                    }
-                ),
-                *TODO_ITEM_FIELD_VALIDATIONS,
-                cv.has_at_least_one_key(
-                    ATTR_RENAME,
-                    ATTR_STATUS,
-                    *[desc.service_field for desc in TODO_ITEM_FIELDS],
-                ),
-            )
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_STATUS): vol.In(
+                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                    ),
+                    **TODO_ITEM_FIELD_SCHEMA,
+                }
+            ),
+            *TODO_ITEM_FIELD_VALIDATIONS,
+            cv.has_at_least_one_key(
+                ATTR_RENAME,
+                ATTR_STATUS,
+                *[desc.service_field for desc in TODO_ITEM_FIELDS],
+            ),
         ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
