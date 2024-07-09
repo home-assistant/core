@@ -33,7 +33,7 @@ async def test_sensor_setup(
     ("entity_id", "payload", "expected_state", "expected_attributes"),
     [
         (
-            "sensor.madvr_envy_gpu_temperature",
+            "sensor.madvr_envy_temp_gpu",
             {"temp_gpu": 45.5},
             "45.5",
             {
@@ -43,7 +43,7 @@ async def test_sensor_setup(
             },
         ),
         (
-            "sensor.madvr_envy_hdmi_temperature",
+            "sensor.madvr_envy_temp_hdmi",
             {"temp_hdmi": 40.0},
             "40.0",
             {
@@ -53,7 +53,7 @@ async def test_sensor_setup(
             },
         ),
         (
-            "sensor.madvr_envy_cpu_temperature",
+            "sensor.madvr_envy_temp_cpu",
             {"temp_cpu": 50.2},
             "50.2",
             {
@@ -63,7 +63,7 @@ async def test_sensor_setup(
             },
         ),
         (
-            "sensor.madvr_envy_mainboard_temperature",
+            "sensor.madvr_envy_temp_mainboard",
             {"temp_mainboard": 35.8},
             "35.8",
             {
@@ -73,15 +73,15 @@ async def test_sensor_setup(
             },
         ),
         (
-            "sensor.madvr_envy_incoming_resolution",
+            "sensor.madvr_envy_incoming_res",
             {"incoming_res": "3840x2160"},
             "3840x2160",
             {},
         ),
         (
             "sensor.madvr_envy_incoming_frame_rate",
-            {"incoming_frame_rate": "60Hz"},
-            "60Hz",
+            {"incoming_frame_rate": "60p"},
+            "60p",
             {},
         ),
         (
@@ -98,26 +98,26 @@ async def test_sensor_setup(
         ),
         (
             "sensor.madvr_envy_incoming_color_space",
-            {"incoming_color_space": "BT.2020"},
-            "BT.2020",
+            {"incoming_color_space": "RGB"},
+            "RGB",
             {},
         ),
         (
             "sensor.madvr_envy_incoming_bit_depth",
-            {"incoming_bit_depth": "10-bit"},
-            "10-bit",
+            {"incoming_bit_depth": "10bit"},
+            "10bit",
             {},
         ),
         (
             "sensor.madvr_envy_incoming_colorimetry",
-            {"incoming_colorimetry": "BT.2020"},
-            "BT.2020",
+            {"incoming_colorimetry": "2020"},
+            "2020",
             {},
         ),
         (
             "sensor.madvr_envy_incoming_black_levels",
-            {"incoming_black_levels": "Full"},
-            "Full",
+            {"incoming_black_levels": "PC"},
+            "PC",
             {},
         ),
         (
@@ -127,81 +127,81 @@ async def test_sensor_setup(
             {},
         ),
         (
-            "sensor.madvr_envy_outgoing_resolution",
+            "sensor.madvr_envy_outgoing_res",
             {"outgoing_res": "3840x2160"},
             "3840x2160",
             {},
         ),
         (
             "sensor.madvr_envy_outgoing_frame_rate",
-            {"outgoing_frame_rate": "60Hz"},
-            "60Hz",
+            {"outgoing_frame_rate": "60p"},
+            "60p",
             {},
         ),
         (
             "sensor.madvr_envy_outgoing_color_space",
-            {"outgoing_color_space": "BT.2020"},
-            "BT.2020",
+            {"outgoing_color_space": "RGB"},
+            "RGB",
             {},
         ),
         (
             "sensor.madvr_envy_outgoing_bit_depth",
-            {"outgoing_bit_depth": "10-bit"},
-            "10-bit",
+            {"outgoing_bit_depth": "10bit"},
+            "10bit",
             {},
         ),
         (
             "sensor.madvr_envy_outgoing_colorimetry",
-            {"outgoing_colorimetry": "BT.2020"},
-            "BT.2020",
+            {"outgoing_colorimetry": "2020"},
+            "2020",
             {},
         ),
         (
             "sensor.madvr_envy_outgoing_black_levels",
-            {"outgoing_black_levels": "Full"},
-            "Full",
+            {"outgoing_black_levels": "PC"},
+            "PC",
             {},
         ),
         (
-            "sensor.madvr_envy_aspect_ratio_resolution",
-            {"aspect_res": "3840x2160"},
-            "3840x2160",
+            "sensor.madvr_envy_aspect_res",
+            {"aspect_res": "3840:2160"},
+            "3840:2160",
             {},
         ),
         (
-            "sensor.madvr_envy_aspect_ratio_decimal",
+            "sensor.madvr_envy_aspect_dec",
             {"aspect_dec": "1.78"},
             "1.78",
             {},
         ),
         (
-            "sensor.madvr_envy_aspect_ratio_integer",
-            {"aspect_int": "16:9"},
-            "16:9",
+            "sensor.madvr_envy_aspect_int",
+            {"aspect_int": "178"},
+            "178",
             {},
         ),
         (
-            "sensor.madvr_envy_aspect_ratio_name",
-            {"aspect_name": "16:9"},
-            "16:9",
+            "sensor.madvr_envy_aspect_name",
+            {"aspect_name": "Widescreen"},
+            "Widescreen",
             {},
         ),
         (
-            "sensor.madvr_envy_masking_resolution",
-            {"masking_res": "3840x2160"},
-            "3840x2160",
+            "sensor.madvr_envy_masking_res",
+            {"masking_res": "3840:2160"},
+            "3840:2160",
             {},
         ),
         (
-            "sensor.madvr_envy_masking_decimal",
+            "sensor.madvr_envy_masking_dec",
             {"masking_dec": "1.78"},
             "1.78",
             {},
         ),
         (
-            "sensor.madvr_envy_masking_integer",
-            {"masking_int": "16:9"},
-            "16:9",
+            "sensor.madvr_envy_masking_int",
+            {"masking_int": "178"},
+            "178",
             {},
         ),
     ],
@@ -242,7 +242,7 @@ async def test_temperature_sensor_invalid_value(
     update_callback({"temp_gpu": -1})  # Invalid temperature
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.madvr_envy_gpu_temperature")
+    state = hass.states.get("sensor.madvr_envy_temp_gpu")
     assert state.state == "unknown"
 
 
@@ -259,12 +259,12 @@ async def test_sensor_availability(
     update_callback({"incoming_res": None})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.madvr_envy_incoming_resolution")
+    state = hass.states.get("sensor.madvr_envy_incoming_res")
     assert state.state == "unknown"
 
     # Test sensor becomes available again
     update_callback({"incoming_res": "1920x1080"})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.madvr_envy_incoming_resolution")
+    state = hass.states.get("sensor.madvr_envy_incoming_res")
     assert state.state == "1920x1080"

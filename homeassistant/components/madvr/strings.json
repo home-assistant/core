@@ -38,23 +38,20 @@
       }
     },
     "sensor": {
-      "mac_address": {
-        "name": "Mac address"
-      },
       "temp_gpu": {
-        "name": "Gpu temperature"
+        "name": "Temp gpu"
       },
       "temp_hdmi": {
-        "name": "Hdmi temperature"
+        "name": "Temp hdmi"
       },
       "temp_cpu": {
-        "name": "Cpu temperature"
+        "name": "Temp cpu"
       },
       "temp_mainboard": {
-        "name": "Mainboard temperature"
+        "name": "Temp mainboard"
       },
       "incoming_res": {
-        "name": "Incoming resolution"
+        "name": "Incoming res"
       },
       "incoming_signal_type": {
         "name": "Incoming signal type"
@@ -78,7 +75,7 @@
         "name": "Incoming aspect ratio"
       },
       "outgoing_res": {
-        "name": "Outgoing resolution"
+        "name": "Outgoing res"
       },
       "outgoing_signal_type": {
         "name": "Outgoing signal type"
@@ -99,25 +96,25 @@
         "name": "Outgoing black levels"
       },
       "aspect_res": {
-        "name": "Aspect ratio resolution"
+        "name": "Aspect res"
       },
       "aspect_dec": {
-        "name": "Aspect ratio decimal"
+        "name": "Aspect dec"
       },
       "aspect_int": {
-        "name": "Aspect ratio integer"
+        "name": "Aspect int"
       },
       "aspect_name": {
-        "name": "Aspect ratio name"
+        "name": "Aspect name"
       },
       "masking_res": {
-        "name": "Masking resolution"
+        "name": "Masking res"
       },
       "masking_dec": {
-        "name": "Masking decimal"
+        "name": "Masking dec"
       },
       "masking_int": {
-        "name": "Masking integer"
+        "name": "Masking int"
       }
     }
   }

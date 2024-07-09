@@ -80,6 +80,8 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         key="incoming_signal_type",
         value_fn=lambda coordinator: coordinator.data.get("incoming_signal_type"),
         translation_key="incoming_signal_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=["2D", "3D"],
     ),
     MadvrSensorEntityDescription(
         key="incoming_frame_rate",
@@ -90,26 +92,36 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         key="incoming_color_space",
         value_fn=lambda coordinator: coordinator.data.get("incoming_color_space"),
         translation_key="incoming_color_space",
+        device_class=SensorDeviceClass.ENUM,
+        options=["RGB", "444", "422", "420"],
     ),
     MadvrSensorEntityDescription(
         key="incoming_bit_depth",
         value_fn=lambda coordinator: coordinator.data.get("incoming_bit_depth"),
         translation_key="incoming_bit_depth",
+        device_class=SensorDeviceClass.ENUM,
+        options=["8bit", "10bit", "12bit"],
     ),
     MadvrSensorEntityDescription(
         key="incoming_colorimetry",
         value_fn=lambda coordinator: coordinator.data.get("incoming_colorimetry"),
         translation_key="incoming_colorimetry",
+        device_class=SensorDeviceClass.ENUM,
+        options=["SDR", "HDR10", "HLG 601", "PAL", "709", "DCI", "2020"],
     ),
     MadvrSensorEntityDescription(
         key="incoming_black_levels",
         value_fn=lambda coordinator: coordinator.data.get("incoming_black_levels"),
         translation_key="incoming_black_levels",
+        device_class=SensorDeviceClass.ENUM,
+        options=["TV", "PC"],
     ),
     MadvrSensorEntityDescription(
         key="incoming_aspect_ratio",
         value_fn=lambda coordinator: coordinator.data.get("incoming_aspect_ratio"),
         translation_key="incoming_aspect_ratio",
+        device_class=SensorDeviceClass.ENUM,
+        options=["16:9", "4:3"],
     ),
     MadvrSensorEntityDescription(
         key="outgoing_res",
@@ -120,6 +132,8 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         key="outgoing_signal_type",
         value_fn=lambda coordinator: coordinator.data.get("outgoing_signal_type"),
         translation_key="outgoing_signal_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=["2D", "3D"],
     ),
     MadvrSensorEntityDescription(
         key="outgoing_frame_rate",
@@ -130,22 +144,31 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         key="outgoing_color_space",
         value_fn=lambda coordinator: coordinator.data.get("outgoing_color_space"),
         translation_key="outgoing_color_space",
+        device_class=SensorDeviceClass.ENUM,
+        options=["RGB", "444", "422", "420"],
     ),
     MadvrSensorEntityDescription(
         key="outgoing_bit_depth",
         value_fn=lambda coordinator: coordinator.data.get("outgoing_bit_depth"),
         translation_key="outgoing_bit_depth",
+        device_class=SensorDeviceClass.ENUM,
+        options=["8bit", "10bit", "12bit"],
     ),
     MadvrSensorEntityDescription(
         key="outgoing_colorimetry",
         value_fn=lambda coordinator: coordinator.data.get("outgoing_colorimetry"),
         translation_key="outgoing_colorimetry",
+        device_class=SensorDeviceClass.ENUM,
+        options=["SDR", "HDR10", "HLG 601", "PAL", "709", "DCI", "2020"],
     ),
     MadvrSensorEntityDescription(
         key="outgoing_black_levels",
         value_fn=lambda coordinator: coordinator.data.get("outgoing_black_levels"),
         translation_key="outgoing_black_levels",
+        device_class=SensorDeviceClass.ENUM,
+        options=["TV", "PC"],
     ),
+    # aspect ratio as a resolution
     MadvrSensorEntityDescription(
         key="aspect_res",
         value_fn=lambda coordinator: coordinator.data.get("aspect_res"),
@@ -166,6 +189,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         value_fn=lambda coordinator: coordinator.data.get("aspect_name"),
         translation_key="aspect_name",
     ),
+    # masking as a resolution
     MadvrSensorEntityDescription(
         key="masking_res",
         value_fn=lambda coordinator: coordinator.data.get("masking_res"),
