@@ -342,6 +342,20 @@ async def test_action_legacy(
             ],
         ),
         (
+            False,
+            {const.ATTR_MIN_TEMP: 11, const.ATTR_MAX_TEMP: 31},
+            {},
+            "set_temperature",
+            [
+                {
+                    "name": "temperature",
+                    "valueMin": 11,
+                    "valueMax": 31,
+                    "required": True,
+                }
+            ],
+        ),
+        (
             True,
             {},
             {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
@@ -366,6 +380,20 @@ async def test_action_legacy(
                     "options": [("home", "home"), ("away", "away")],
                     "required": True,
                     "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {const.ATTR_MIN_TEMP: 11, const.ATTR_MAX_TEMP: 31},
+            "set_temperature",
+            [
+                {
+                    "name": "temperature",
+                    "valueMin": 11,
+                    "valueMax": 31,
+                    "required": True,
                 }
             ],
         ),
