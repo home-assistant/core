@@ -80,31 +80,31 @@ class BondCover(BondEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
-        await self._hub.bond.action(
+        await self._bond.action(
             self._device_id,
             Action.set_position(_hass_to_bond_position(kwargs[ATTR_POSITION])),
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._hub.bond.action(self._device_id, Action.open())
+        await self._bond.action(self._device_id, Action.open())
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._hub.bond.action(self._device_id, Action.close())
+        await self._bond.action(self._device_id, Action.close())
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Hold cover."""
-        await self._hub.bond.action(self._device_id, Action.hold())
+        await self._bond.action(self._device_id, Action.hold())
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self._hub.bond.action(self._device_id, Action.tilt_open())
+        await self._bond.action(self._device_id, Action.tilt_open())
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self._hub.bond.action(self._device_id, Action.tilt_close())
+        await self._bond.action(self._device_id, Action.tilt_close())
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._hub.bond.action(self._device_id, Action.hold())
+        await self._bond.action(self._device_id, Action.hold())

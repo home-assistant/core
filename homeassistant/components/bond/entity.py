@@ -47,6 +47,7 @@ class BondEntity(Entity):
         """Initialize entity with API and device info."""
         hub = data.hub
         self._hub = hub
+        self._bond = hub.bond
         self._device = device
         self._device_id = device.device_id
         self._sub_device = sub_device
@@ -79,7 +80,7 @@ class BondEntity(Entity):
         device_info = DeviceInfo(
             manufacturer=self._hub.make,
             # type ignore: tuple items should not be Optional
-            identifiers={(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, self._hub.bond_id, self._device_id)},  # type: ignore[arg-type]
             configuration_url=f"http://{self._hub.host}",
         )
         if self.name is not None:
@@ -141,7 +142,7 @@ class BondEntity(Entity):
     async def _async_update_from_api(self) -> None:
         """Fetch via the API."""
         try:
-            state: dict = await self._hub.bond.device_state(self._device_id)
+            state: dict = await self._bond.device_state(self._device_id)
         except (ClientError, TimeoutError, OSError) as error:
             if self.available:
                 _LOGGER.warning(

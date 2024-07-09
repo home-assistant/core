@@ -48,17 +48,17 @@ class BondSwitch(BondEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._hub.bond.action(self._device.device_id, Action.turn_on())
+        await self._bond.action(self._device_id, Action.turn_on())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._hub.bond.action(self._device.device_id, Action.turn_off())
+        await self._bond.action(self._device_id, Action.turn_off())
 
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set switch power belief."""
         try:
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_power_state_belief(power_state)
+            await self._bond.action(
+                self._device_id, Action.set_power_state_belief(power_state)
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(

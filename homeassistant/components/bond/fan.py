@@ -133,15 +133,13 @@ class BondFan(BondEntity, FanEntity):
             bond_speed,
         )
 
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_speed(bond_speed)
-        )
+        await self._bond.action(self._device_id, Action.set_speed(bond_speed))
 
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the believed state to on or off."""
         try:
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_power_state_belief(power_state)
+            await self._bond.action(
+                self._device_id, Action.set_power_state_belief(power_state)
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
@@ -165,8 +163,8 @@ class BondFan(BondEntity, FanEntity):
             bond_speed,
         )
         try:
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_speed_belief(bond_speed)
+            await self._bond.action(
+                self._device_id, Action.set_speed_belief(bond_speed)
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
@@ -188,25 +186,21 @@ class BondFan(BondEntity, FanEntity):
         elif percentage is not None:
             await self.async_set_percentage(percentage)
         else:
-            await self._hub.bond.action(self._device.device_id, Action.turn_on())
+            await self._bond.action(self._device_id, Action.turn_on())
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        await self._hub.bond.action(self._device.device_id, Action(Action.BREEZE_ON))
+        await self._bond.action(self._device_id, Action(Action.BREEZE_ON))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         if self.preset_mode == PRESET_MODE_BREEZE:
-            await self._hub.bond.action(
-                self._device.device_id, Action(Action.BREEZE_OFF)
-            )
-        await self._hub.bond.action(self._device.device_id, Action.turn_off())
+            await self._bond.action(self._device_id, Action(Action.BREEZE_OFF))
+        await self._bond.action(self._device_id, Action.turn_off())
 
     async def async_set_direction(self, direction: str) -> None:
         """Set fan rotation direction."""
         bond_direction = (
             Direction.REVERSE if direction == DIRECTION_REVERSE else Direction.FORWARD
         )
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_direction(bond_direction)
-        )
+        await self._bond.action(self._device_id, Action.set_direction(bond_direction))
