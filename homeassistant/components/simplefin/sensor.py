@@ -51,12 +51,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up SimpleFIN sensors for config entries."""
 
-    runtime_data = config_entry.runtime_data
-    accounts = config_entry.runtime_data.sf_coordinator.data.accounts
+    sf_coordinator = config_entry.runtime_data
+    accounts = sf_coordinator.data.accounts
 
     async_add_entities(
         SimpleFinSensor(
-            runtime_data.sf_coordinator,
+            sf_coordinator,
             sensor_description,
             account,
         )

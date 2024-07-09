@@ -12,6 +12,8 @@ from homeassistant.components.simplefin.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
 
+MOCK_ACCESS_URL = "https://i:am@yomama.house.com"
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
@@ -23,17 +25,11 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_access_url() -> str:
-    """Fixture to mock the access_url method of SimpleFin."""
-    return "https://i:am@yomama.house.com"
-
-
-@pytest.fixture
-async def mock_config_entry(mock_access_url: str) -> MockConfigEntry:
+async def mock_config_entry() -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ACCESS_URL: mock_access_url},
+        data={CONF_ACCESS_URL: MOCK_ACCESS_URL},
         version=1,
     )
 
@@ -60,7 +56,7 @@ def mock_decode_claim_token_invalid_then_good() -> str:
 
 
 @pytest.fixture
-def mock_simplefin_client(mock_access_url: str) -> Generator[AsyncMock]:
+def mock_simplefin_client() -> Generator[AsyncMock]:
     """Mock a SimpleFin client."""
 
     with (
@@ -81,6 +77,6 @@ def mock_simplefin_client(mock_access_url: str) -> Generator[AsyncMock]:
         assert fin_data.accounts != []
         client.fetch_data.return_value = fin_data
 
-        client.access_url = mock_access_url
+        client.access_url = MOCK_ACCESS_URL
 
         yield client
