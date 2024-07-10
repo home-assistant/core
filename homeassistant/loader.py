@@ -102,6 +102,13 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     "mydolphin_plus": BlockedIntegration(
         AwesomeVersion("1.0.13"), "crashes Home Assistant"
     ),
+    # Added in 2024.7.2 because of
+    # https://github.com/gcobb321/icloud3/issues/349
+    # Note: Current version 3.0.5.2, the fixed version is a guesstimate,
+    # as no solution is available at time of writing.
+    "icloud3": BlockedIntegration(
+        AwesomeVersion("3.0.5.3"), "prevents recorder from working"
+    ),
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
