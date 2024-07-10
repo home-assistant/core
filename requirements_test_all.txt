@@ -870,7 +870,7 @@ habluetooth==3.1.3
 hass-nabucasa==0.81.1
 
 # homeassistant.components.conversation
-hassil==1.7.3
+hassil==1.7.4
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
@@ -898,7 +898,7 @@ holidays==0.52
 home-assistant-frontend==20240710.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.7.3
+home-assistant-intents==2024.7.10
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
