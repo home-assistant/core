@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import goto_future, init_integration
-from .conftest import TRAINS, TRAINS_WRONG_FORMAT
+from .conftest import TRAINS, TRAINS_WRONG_FORMAT, get_time
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -40,7 +40,8 @@ async def test_update_train(
     await init_integration(hass, mock_config_entry)
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
-    assert departure_sensor.state == "2021-10-10T08:10:10+00:00"
+    expected_time = get_time(10, 10)
+    assert departure_sensor.state == expected_time
 
     mock_israelrail.query.return_value = TRAINS[1:]
 
@@ -48,7 +49,8 @@ async def test_update_train(
 
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
-    assert departure_sensor.state == "2021-10-10T08:20:10+00:00"
+    expected_time = get_time(10, 20)
+    assert departure_sensor.state == expected_time
 
 
 async def test_no_duration_wrong_date_format(

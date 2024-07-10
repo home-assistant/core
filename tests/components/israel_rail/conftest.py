@@ -1,6 +1,8 @@
 """Configuration for Israel rail tests."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
+from zoneinfo import ZoneInfo
 
 from israelrailapi.api import TrainRoute
 import pytest
@@ -56,6 +58,11 @@ def mock_israelrail() -> AsyncMock:
         yield client
 
 
+def get_time(hour: int, minute: int) -> str:
+    """Return a time in isoformat."""
+    return datetime(2021, 10, 10, hour, minute, 10, tzinfo=ZoneInfo("UTC")).isoformat()
+
+
 def get_train_route(
     train_number: str = "1234",
     departure_time: str = "2021-10-10T10:10:10",
@@ -84,8 +91,8 @@ def get_train_route(
 TRAINS = [
     get_train_route(
         train_number="1234",
-        departure_time="2021-10-10T10:10:10",
-        arrival_time="2021-10-10T10:30:10",
+        departure_time=get_time(10, 10),
+        arrival_time=get_time(10, 30),
         origin_platform="1",
         dest_platform="2",
         origin_station="3500",
@@ -93,8 +100,8 @@ TRAINS = [
     ),
     get_train_route(
         train_number="1235",
-        departure_time="2021-10-10T10:20:10",
-        arrival_time="2021-10-10T10:40:10",
+        departure_time=get_time(10, 20),
+        arrival_time=get_time(10, 40),
         origin_platform="1",
         dest_platform="2",
         origin_station="3500",
@@ -102,8 +109,8 @@ TRAINS = [
     ),
     get_train_route(
         train_number="1236",
-        departure_time="2021-10-10T10:30:10",
-        arrival_time="2021-10-10T10:50:10",
+        departure_time=get_time(10, 30),
+        arrival_time=get_time(10, 50),
         origin_platform="1",
         dest_platform="2",
         origin_station="3500",
@@ -111,8 +118,8 @@ TRAINS = [
     ),
     get_train_route(
         train_number="1237",
-        departure_time="2021-10-10T10:40:10",
-        arrival_time="2021-10-10T11:00:10",
+        departure_time=get_time(10, 40),
+        arrival_time=get_time(11, 00),
         origin_platform="1",
         dest_platform="2",
         origin_station="3500",
@@ -120,8 +127,8 @@ TRAINS = [
     ),
     get_train_route(
         train_number="1238",
-        departure_time="2021-10-10T10:50:10",
-        arrival_time="2021-10-10T11:10:10",
+        departure_time=get_time(10, 50),
+        arrival_time=get_time(11, 10),
         origin_platform="1",
         dest_platform="2",
         origin_station="3500",
