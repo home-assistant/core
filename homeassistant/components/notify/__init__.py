@@ -102,11 +102,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             title = title_tpl.async_render(parse_result=False)
 
         notification_id = None
+        actions = None
         if data := service.data.get(ATTR_DATA):
             notification_id = data.get(pn.ATTR_NOTIFICATION_ID)
+            actions = data.get(pn.ATTR_ACTIONS)
 
         pn.async_create(
-            hass, message.async_render(parse_result=False), title, notification_id
+            hass,
+            message.async_render(parse_result=False),
+            title,
+            notification_id,
+            actions,
         )
 
     hass.services.async_register(

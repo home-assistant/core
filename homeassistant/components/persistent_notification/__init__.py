@@ -30,7 +30,16 @@ ATTR_CREATED_AT: Final = "created_at"
 ATTR_MESSAGE: Final = "message"
 ATTR_NOTIFICATION_ID: Final = "notification_id"
 ATTR_TITLE: Final = "title"
+ATTR_ACTION: Final = "action"
 ATTR_STATUS: Final = "status"
+ATTR_ACTIONS: Final = "actions"
+
+
+class NotificationAction(TypedDict):
+    """Action for a persistent notification."""
+
+    action: str
+    title: str
 
 
 class Notification(TypedDict):
@@ -40,6 +49,7 @@ class Notification(TypedDict):
     message: str
     notification_id: str
     title: str | None
+    actions: list[NotificationAction] | None
 
 
 class UpdateType(StrEnum):
@@ -81,9 +91,10 @@ def create(
     message: str,
     title: str | None = None,
     notification_id: str | None = None,
+    actions: list[NotificationAction] | None = None,
 ) -> None:
     """Generate a notification."""
-    hass.add_job(async_create, hass, message, title, notification_id)
+    hass.add_job(async_create, hass, message, title, notification_id, actions)
 
 
 @bind_hass
@@ -99,6 +110,7 @@ def async_create(
     message: str,
     title: str | None = None,
     notification_id: str | None = None,
+    actions: list[NotificationAction] | None = None,
 ) -> None:
     """Generate a notification."""
     notifications = _async_get_or_create_notifications(hass)
@@ -108,6 +120,7 @@ def async_create(
         ATTR_MESSAGE: message,
         ATTR_NOTIFICATION_ID: notification_id,
         ATTR_TITLE: title,
+        ATTR_ACTIONS: actions,
         ATTR_CREATED_AT: dt_util.utcnow(),
     }
 
@@ -166,6 +179,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             call.data[ATTR_MESSAGE],
             call.data.get(ATTR_TITLE),
             call.data.get(ATTR_NOTIFICATION_ID),
+            call.data.get(ATTR_ACTIONS),
         )
 
     @callback
@@ -187,6 +201,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Required(ATTR_MESSAGE): vol.Any(cv.dynamic_template, cv.string),
                 vol.Optional(ATTR_TITLE): vol.Any(cv.dynamic_template, cv.string),
                 vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+                vol.Optional(ATTR_ACTIONS): vol.All(
+                    cv.ensure_list,
+                    [
+                        vol.Schema(
+                            {
+                                vol.Required(ATTR_ACTION): cv.string,
+                                vol.Required(ATTR_TITLE): cv.string,
+                            }
+                        )
+                    ],
+                ),
             }
         ),
     )

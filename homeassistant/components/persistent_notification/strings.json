@@ -13,6 +13,10 @@
           "name": "Title",
           "description": "Optional title of the notification."
         },
+        "actions": {
+          "name": "Actions",
+          "description": "Optional actions to be presented to the user with the notification."
+        },
         "notification_id": {
           "name": "Notification ID",
           "description": "ID of the notification. This new notification will overwrite an existing notification with the same ID."

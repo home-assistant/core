@@ -9,6 +9,9 @@ create:
       example: Test notification
       selector:
         text:
+    actions:
+      selector:
+        object:
     notification_id:
       example: 1234
       selector:
