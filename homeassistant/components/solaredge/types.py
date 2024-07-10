@@ -1,4 +1,4 @@
-"""Constants for the SolarEdge Monitoring API."""
+"""Typing for the SolarEdge Monitoring API."""
 
 from __future__ import annotations
 
