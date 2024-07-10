@@ -53,6 +53,7 @@ class ConfiguredDoorBird:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: DoorBird,
         name: str | None,
         custom_url: str | None,
@@ -60,6 +61,7 @@ class ConfiguredDoorBird:
         event_entity_ids: dict[str, str],
     ) -> None:
         """Initialize configured device."""
+        self._hass = hass
         self._name = name
         self._device = device
         self._custom_url = custom_url
@@ -98,13 +100,13 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
-    async def async_register_events(self, hass: HomeAssistant) -> None:
+    async def async_register_events(self) -> None:
         """Register events on device."""
         if not self.door_station_events:
             # User may not have permission to get the favorites
             return
 
-        http_fav = await self._async_register_events(hass)
+        http_fav = await self._async_register_events()
         event_config = await self._async_get_event_config(http_fav)
         _LOGGER.debug("%s: Event config: %s", self.name, event_config)
         if event_config.unconfigured_favorites:
@@ -141,14 +143,14 @@ class ConfiguredDoorBird:
                         code,
                     )
 
-    async def _async_register_events(self, hass: HomeAssistant) -> dict[str, Any]:
+    async def _async_register_events(self) -> dict[str, Any]:
         """Register events on device."""
         # Override url if another is specified in the configuration
         if custom_url := self.custom_url:
             hass_url = custom_url
         else:
             # Get the URL of this server
-            hass_url = get_url(hass, prefer_external=False)
+            hass_url = get_url(self._hass, prefer_external=False)
 
         http_fav = await self._async_get_http_favorites()
         if any(
@@ -246,12 +248,11 @@ class ConfiguredDoorBird:
         }
 
 
-async def async_reset_device_favorites(
-    hass: HomeAssistant, door_station: ConfiguredDoorBird
-) -> None:
+async def async_reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
     """Handle clearing favorites on device."""
     door_bird = door_station.device
     favorites = await door_bird.favorites()
     for favorite_type, favorite_ids in favorites.items():
         for favorite_id in favorite_ids:
             await door_bird.delete_favorite(favorite_type, favorite_id)
+    await door_station.async_register_events()

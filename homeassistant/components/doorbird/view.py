@@ -9,7 +9,6 @@ from aiohttp import web
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 
 from .const import API_URL, DOMAIN
-from .device import async_reset_device_favorites
 from .util import get_door_station_by_token
 
 
@@ -37,11 +36,6 @@ class DoorBirdRequestView(HomeAssistantView):
             event_data = door_station.get_event_data(event)
         else:
             event_data = {}
-
-        if event == "clear":
-            await async_reset_device_favorites(hass, door_station)
-            message = f"HTTP Favorites cleared for {door_station.slug}"
-            return web.Response(text=message)
 
         #
         # This integration uses a multiple different events.
