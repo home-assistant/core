@@ -1,6 +1,5 @@
 """Configflow for the emoncms integration."""
 
-from datetime import timedelta
 from typing import Any
 
 from pyemoncms import EmoncmsClient
@@ -15,7 +14,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
@@ -27,18 +25,16 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_EXCLUDE_FEEDID,
-    CONF_FEED_LIST,
+    CONF_MESSAGE,
     CONF_ONLY_INCLUDE_FEEDID,
     CONF_SENSOR_NAMES,
+    CONF_SUCCESS,
     DOMAIN,
+    FEED_ID,
+    FEED_NAME,
+    FEED_TAG,
     LOGGER,
 )
-
-CONF_MESSAGE = "message"
-CONF_SUCCESS = "success"
-FEED_ID = "id"
-FEED_NAME = "name"
-FEED_TAG = "tag"
 
 
 def get_options(feeds: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -104,7 +100,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Required(CONF_ID): str,
                         vol.Required(CONF_URL): str,
                         vol.Required(CONF_API_KEY): str,
-                        vol.Required(CONF_SCAN_INTERVAL, default=30): int,
                     }
                 ),
                 user_input,
@@ -114,20 +109,31 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: ConfigType) -> ConfigFlowResult:
         """Import config from yaml."""
+        url = import_info[CONF_URL]
+        api_key = import_info[CONF_API_KEY]
         value_template = None
-        if CONF_VALUE_TEMPLATE in import_info:
+        exclude_feeds = None
+        include_only_feeds = None
+        if import_info.get(CONF_VALUE_TEMPLATE) is not None:
             value_template = import_info[CONF_VALUE_TEMPLATE].template
+        if import_info.get(CONF_EXCLUDE_FEEDID) is not None:
+            exclude_feeds = list(map(str, import_info[CONF_EXCLUDE_FEEDID]))
+        if import_info.get(CONF_ONLY_INCLUDE_FEEDID) is not None:
+            include_only_feeds = list(map(str, import_info[CONF_ONLY_INCLUDE_FEEDID]))
+        if not include_only_feeds and not exclude_feeds:
+            emoncms_result = await get_feed_list(self.hass, url, api_key)
+            if emoncms_result[CONF_SUCCESS]:
+                include_only_feeds = [
+                    feed[FEED_ID] for feed in emoncms_result[CONF_MESSAGE]
+                ]
         config = {
             CONF_ID: import_info[CONF_ID],
-            CONF_API_KEY: import_info[CONF_API_KEY],
-            CONF_EXCLUDE_FEEDID: import_info.get(CONF_EXCLUDE_FEEDID),
-            CONF_ONLY_INCLUDE_FEEDID: import_info.get(CONF_ONLY_INCLUDE_FEEDID),
+            CONF_API_KEY: api_key,
+            CONF_EXCLUDE_FEEDID: exclude_feeds,
+            CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
             CONF_SENSOR_NAMES: import_info.get(CONF_SENSOR_NAMES),
-            CONF_SCAN_INTERVAL: timedelta.total_seconds(
-                import_info.get(CONF_SCAN_INTERVAL, timedelta(seconds=30))
-            ),
             CONF_UNIT_OF_MEASUREMENT: import_info.get(CONF_UNIT_OF_MEASUREMENT),
-            CONF_URL: import_info[CONF_URL],
+            CONF_URL: url,
             CONF_VALUE_TEMPLATE: value_template,
         }
         LOGGER.debug(config)
@@ -145,46 +151,37 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        default_url = self._config_entry.data[CONF_URL]
-        default_scan_interval = self._config_entry.data[CONF_SCAN_INTERVAL]
-        default_api_key = self._config_entry.data[CONF_API_KEY]
+        server_id = self._config_entry.data[CONF_ID]
+        url = self._config_entry.data[CONF_URL]
+        api_key = self._config_entry.data[CONF_API_KEY]
         exclude_feeds = self._config_entry.data.get(CONF_EXCLUDE_FEEDID)
         include_only_feeds = self._config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID)
+        value_template = self._config_entry.data.get(CONF_VALUE_TEMPLATE)
+        unit_of_measurement = self._config_entry.data.get(CONF_UNIT_OF_MEASUREMENT)
         selected_feeds = []
         if include_only_feeds:
-            selected_feeds = [str(feed) for feed in include_only_feeds]
+            selected_feeds = include_only_feeds
         options: Any = selected_feeds
-        result = await get_feed_list(self.hass, default_url, default_api_key)
+        result = await get_feed_list(self.hass, url, api_key)
         if not result[CONF_SUCCESS]:
             errors["base"] = result[CONF_MESSAGE]
         else:
-            if include_only_feeds:
-                selected_feeds = [
-                    feed[FEED_ID]
-                    for feed in result[CONF_MESSAGE]
-                    if int(feed[FEED_ID]) in include_only_feeds
-                ]
             if exclude_feeds:
-                selected_feeds = [
+                include_only_feeds = [
                     feed[FEED_ID]
                     for feed in result[CONF_MESSAGE]
-                    if int(feed[FEED_ID]) not in exclude_feeds
+                    if feed[FEED_ID] not in exclude_feeds
                 ]
             options = get_options(result[CONF_MESSAGE])
-        if CONF_FEED_LIST in self._config_entry.data:
-            selected_feeds = self._config_entry.data[CONF_FEED_LIST]
         dropdown = {"options": options, "mode": "dropdown", "multiple": True}
         if user_input:
-            default_url = user_input[CONF_URL]
-            default_api_key = user_input[CONF_API_KEY]
-            default_scan_interval = user_input[CONF_SCAN_INTERVAL]
-            selected_feeds = user_input[CONF_FEED_LIST]
-            user_input[CONF_ID] = self._config_entry.data[CONF_ID]
+            url = user_input[CONF_URL]
+            api_key = user_input[CONF_API_KEY]
+            selected_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
+            user_input[CONF_ID] = server_id
             user_input[CONF_EXCLUDE_FEEDID] = None
-            user_input[CONF_ONLY_INCLUDE_FEEDID] = None
-            user_input[CONF_VALUE_TEMPLATE] = self._config_entry.data[
-                CONF_VALUE_TEMPLATE
-            ]
+            user_input[CONF_VALUE_TEMPLATE] = value_template
+            user_input[CONF_UNIT_OF_MEASUREMENT] = unit_of_measurement
             if self.hass.config_entries.async_update_entry(
                 self._config_entry, data=user_input
             ):
@@ -195,14 +192,11 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_URL, default=default_url): str,
-                    vol.Required(CONF_API_KEY, default=default_api_key): str,
+                    vol.Required(CONF_URL, default=url): str,
+                    vol.Required(CONF_API_KEY, default=api_key): str,
                     vol.Required(
-                        CONF_SCAN_INTERVAL, default=default_scan_interval
-                    ): int,
-                    vol.Required(CONF_FEED_LIST, default=selected_feeds): selector(
-                        {"select": dropdown}
-                    ),
+                        CONF_ONLY_INCLUDE_FEEDID, default=selected_feeds
+                    ): selector({"select": dropdown}),
                 }
             ),
             errors=errors,

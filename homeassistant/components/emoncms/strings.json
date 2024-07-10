@@ -5,8 +5,7 @@
         "data": {
           "id": "id",
           "url": "Server Hostname",
-          "api_key": "API Key",
-          "scan_interval": "update interval in seconds"
+          "api_key": "API Key"
         }
       }
     }
@@ -17,8 +16,7 @@
         "data": {
           "url": "[%key:component::emoncms::config::step::user::data::url%]",
           "api_key": "[%key:component::emoncms::config::step::user::data::api_key%]",
-          "scan_interval": "[%key:component::emoncms::config::step::user::data::scan_interval%]",
-          "feed list": "choose feeds to include"
+          "include_only_feed_id": "choose feeds to include"
         }
       }
     }

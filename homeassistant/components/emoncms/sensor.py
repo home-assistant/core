@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any
 
 from pyemoncms import EmoncmsClient
@@ -18,7 +17,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
@@ -38,7 +36,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_EXCLUDE_FEEDID,
-    CONF_FEED_LIST,
     CONF_ONLY_INCLUDE_FEEDID,
     CONF_SENSOR_NAMES,
     DOMAIN,
@@ -114,22 +111,21 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the emoncms ensors."""
+    """Set up the emoncms sensors."""
+    LOGGER.debug(f"WE ARE IN ASYNC_STEP_ENTRY : {entry}")
     config = entry.data
     apikey = config[CONF_API_KEY]
     url = config[CONF_URL]
     sensorid = config[CONF_ID]
     value_template = None
-    if CONF_VALUE_TEMPLATE in config:
+    if config.get(CONF_VALUE_TEMPLATE) is not None:
         value_template = template.Template(config[CONF_VALUE_TEMPLATE])
     config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    selected_feeds = config.get(CONF_FEED_LIST)
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
-    scan_interval = timedelta(seconds=int(config.get(CONF_SCAN_INTERVAL, 30)))
 
-    if exclude_feeds is None and selected_feeds is None and include_only_feeds is None:
+    if exclude_feeds is None and include_only_feeds is None:
         return
 
     if value_template is not None:
@@ -148,7 +144,7 @@ async def async_setup_entry(
             translation_key="migrate_database",
             translation_placeholders={"url": url},
         )
-    coordinator = EmoncmsCoordinator(hass, emoncms_client, scan_interval)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     await coordinator.async_refresh()
     elems = coordinator.data
     if elems is None:
@@ -157,13 +153,10 @@ async def async_setup_entry(
     sensors: list[EmonCmsSensor] = []
 
     for idx, elem in enumerate(elems):
-        if selected_feeds is not None and elem["id"] not in selected_feeds:
+        if exclude_feeds is not None and elem["id"] in exclude_feeds:
             continue
 
-        if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
-            continue
-
-        if include_only_feeds is not None and int(elem["id"]) not in include_only_feeds:
+        if include_only_feeds is not None and elem["id"] not in include_only_feeds:
             continue
 
         entity_id = ent_reg.async_get_entity_id(

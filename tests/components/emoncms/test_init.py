@@ -26,3 +26,13 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    emoncms_client_failure: AsyncMock,
+) -> None:
+    """Test load failure."""
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)

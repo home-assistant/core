@@ -19,7 +19,6 @@ class EmoncmsCoordinator(DataUpdateCoordinator[list[dict[str, Any]] | None]):
         self,
         hass: HomeAssistant,
         emoncms_client: EmoncmsClient,
-        scan_interval: timedelta,
     ) -> None:
         """Initialize the emoncms data coordinator."""
         super().__init__(
@@ -27,5 +26,5 @@ class EmoncmsCoordinator(DataUpdateCoordinator[list[dict[str, Any]] | None]):
             _LOGGER,
             name="emoncms_coordinator",
             update_method=emoncms_client.async_list_feeds,
-            update_interval=scan_interval,
+            update_interval=timedelta(seconds=60),
         )

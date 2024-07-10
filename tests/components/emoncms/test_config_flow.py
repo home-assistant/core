@@ -1,26 +1,41 @@
 """Test emoncms config flow."""
 
+import copy
 from typing import Any
 from unittest.mock import AsyncMock
 
-from homeassistant.components.emoncms.const import DOMAIN
+import pytest
+
+from homeassistant.components.emoncms.const import (
+    CONF_EXCLUDE_FEEDID,
+    CONF_ONLY_INCLUDE_FEEDID,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlowResult
-from homeassistant.const import CONF_ID
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_ID,
+    CONF_PLATFORM,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_URL,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import template
 
 from . import setup_integration
-from .conftest import (
-    FAILURE_MESSAGE,
-    FINAL,
-    FINAL_2,
-    IMPORTED_YAML,
-    USER_INPUT,
-    USER_INPUT_2,
-    YAML_INPUT,
-)
+from .conftest import FAILURE_MESSAGE, FLOW_RESULT
 
 from tests.common import MockConfigEntry
+
+YAML = {
+    CONF_PLATFORM: "emoncms",
+    CONF_API_KEY: "my_api_key",
+    CONF_ID: 1,
+    CONF_URL: "http://1.1.1.1",
+    CONF_VALUE_TEMPLATE: template.Template("{{ value | float + 1500 }}"),
+}
 
 
 async def flow_import(hass: HomeAssistant, yaml: dict[str, Any]) -> ConfigFlowResult:
@@ -32,23 +47,61 @@ async def flow_import(hass: HomeAssistant, yaml: dict[str, Any]) -> ConfigFlowRe
     )
 
 
-async def test_flow_import(
+async def test_flow_import_all_feeds(
     hass: HomeAssistant,
     emoncms_client: AsyncMock,
 ) -> None:
-    """YAML import - success test."""
-    result = await flow_import(hass, YAML_INPUT)
+    """YAML import of all feeds - success test."""
+    result = await flow_import(hass, YAML)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == YAML_INPUT[CONF_ID]
-    assert result["data"] == IMPORTED_YAML
+    assert result["title"] == FLOW_RESULT[CONF_ID]
+    assert result["data"] == FLOW_RESULT
+
+
+YAML_INCL_FEED = copy.deepcopy(YAML)
+YAML_INCL_FEED[CONF_ONLY_INCLUDE_FEEDID] = [2]
+
+FLOW_RESULT_INCL_FEED = copy.deepcopy(FLOW_RESULT)
+FLOW_RESULT_INCL_FEED[CONF_ONLY_INCLUDE_FEEDID] = ["2"]
+FLOW_RESULT_INCL_FEED[CONF_EXCLUDE_FEEDID] = None
+
+
+async def test_flow_import_include_feeds(
+    hass: HomeAssistant,
+    emoncms_client: AsyncMock,
+) -> None:
+    """YAML import with included feed - success test."""
+    result = await flow_import(hass, YAML_INCL_FEED)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == FLOW_RESULT_INCL_FEED[CONF_ID]
+    assert result["data"] == FLOW_RESULT_INCL_FEED
+
+
+YAML_EXCL_FEED = copy.deepcopy(YAML)
+YAML_EXCL_FEED[CONF_EXCLUDE_FEEDID] = [2]
+
+FLOW_RESULT_EXCL_FEED = copy.deepcopy(FLOW_RESULT)
+FLOW_RESULT_EXCL_FEED[CONF_ONLY_INCLUDE_FEEDID] = None
+FLOW_RESULT_EXCL_FEED[CONF_EXCLUDE_FEEDID] = ["2"]
+
+
+async def test_flow_import_exclude_feed(
+    hass: HomeAssistant,
+    emoncms_client: AsyncMock,
+) -> None:
+    """YAML import with excluded feed - success test."""
+    result = await flow_import(hass, YAML_EXCL_FEED)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == FLOW_RESULT_EXCL_FEED[CONF_ID]
+    assert result["data"] == FLOW_RESULT_EXCL_FEED
 
 
 async def test_flow_import_failure(
     hass: HomeAssistant,
     emoncms_client_failure: AsyncMock,
 ) -> None:
-    """Import of a YAML config - failure test."""
-    result = await flow_import(hass, YAML_INPUT)
+    """YAML import - failure test."""
+    result = await flow_import(hass, YAML)
     assert result["type"] == FlowResultType.ABORT
 
 
@@ -71,18 +124,52 @@ async def options_flow(
     assert result["data"] == final
 
 
+USER_INPUT = {
+    CONF_URL: "http://1.1.1.1",
+    CONF_API_KEY: "my_api_key",
+    CONF_ONLY_INCLUDE_FEEDID: ["1"],
+}
+
+CONFIG_ENTRY = {
+    CONF_API_KEY: "my_api_key",
+    CONF_ID: 1,
+    CONF_ONLY_INCLUDE_FEEDID: ["1"],
+    CONF_URL: "http://1.1.1.1",
+    CONF_VALUE_TEMPLATE: "{{ value | float + 1500 }}",
+    CONF_EXCLUDE_FEEDID: None,
+    CONF_UNIT_OF_MEASUREMENT: None,
+}
+
+USER_INPUT_2 = {
+    CONF_URL: "http://1.1.1.1",
+    CONF_API_KEY: "my_api_key",
+    CONF_ONLY_INCLUDE_FEEDID: ["1", "2"],
+}
+
+CONFIG_ENTRY_2 = copy.deepcopy(CONFIG_ENTRY)
+CONFIG_ENTRY_2[CONF_ONLY_INCLUDE_FEEDID] = ["1", "2"]
+
+
+@pytest.fixture
+def config_entry_excl_feed() -> MockConfigEntry:
+    """Mock emoncms config entry with excluded fields."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=FLOW_RESULT_EXCL_FEED[CONF_ID],
+        data=FLOW_RESULT_EXCL_FEED,
+    )
+
+
 async def test_options_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
     config_entry: MockConfigEntry,
-    config_entry_2: MockConfigEntry,
-    config_entry_3: MockConfigEntry,
+    config_entry_excl_feed: MockConfigEntry,
 ) -> None:
     """Options flow - success test."""
-    await options_flow(hass, config_entry, USER_INPUT, FINAL)
-    await options_flow(hass, config_entry_2, USER_INPUT_2, FINAL_2)
-    await options_flow(hass, config_entry_3, USER_INPUT_2, FINAL_2)
+    await options_flow(hass, config_entry, USER_INPUT, CONFIG_ENTRY)
+    await options_flow(hass, config_entry_excl_feed, USER_INPUT_2, CONFIG_ENTRY_2)
 
 
 async def test_options_flow_failure(
