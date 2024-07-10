@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
+from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS, NoPrimaryControllerException
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -25,6 +25,15 @@ DATA_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def find_primary_controller_metadata(controllers):
+    """Find the mac address of the primary Russound controller."""
+    for controller_id, mac_address, controller_type in controllers:
+        # The integration only cares about the primary controller linked by IP and not any downstream controllers
+        if controller_id == 1:
+            return (mac_address, controller_type)
+    return None
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -42,17 +51,28 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             name = user_input[CONF_NAME]
             port = user_input[CONF_PORT]
 
-            self.context[CONF_HOST] = host
-
             try:
                 russ = Russound(self.hass.loop, host, port)
                 async with asyncio.timeout(5):
                     await russ.connect()
-                    await russ.enumerate_sources()
+                    controllers = await russ.enumerate_controllers()
+                    metadata = find_primary_controller_metadata(controllers)
+                    if metadata:
+                        await self.async_set_unique_id(metadata[0])
+                    else:
+                        raise NoPrimaryControllerException
                     await russ.close()
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: host, CONF_PORT: port}
+                    )
             except RUSSOUND_RIO_EXCEPTIONS as err:
                 _LOGGER.error("Could not connect to Russound RIO: %s", err)
                 errors["base"] = "cannot_connect"
+            except NoPrimaryControllerException as err:
+                _LOGGER.error(
+                    "Russound RIO device doesn't have a primary controller: %s", err
+                )
+                errors["base"] = "no_primary_controller"
             else:
                 data = {
                     CONF_HOST: host,
@@ -75,15 +95,23 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         name = import_config[CONF_NAME]
         port = import_config.get(CONF_PORT, 9621)
 
-        self.context[CONF_HOST] = host
-
         # Connection logic is repeated here since this method will be removed in future releases
         try:
             russ = Russound(self.hass.loop, host, port)
             async with asyncio.timeout(5):
                 await russ.connect()
-                await russ.enumerate_sources()
+                controllers = await russ.enumerate_controllers()
+                metadata = find_primary_controller_metadata(controllers)
+                if metadata:
+                    await self.async_set_unique_id(metadata[0])
+                else:
+                    return self.async_abort(
+                        reason="no_primary_controller", description_placeholders={}
+                    )
                 await russ.close()
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: host, CONF_PORT: port}
+                )
         except RUSSOUND_RIO_EXCEPTIONS as err:
             _LOGGER.error("Could not connect to Russound RIO: %s", err)
             return self.async_abort(

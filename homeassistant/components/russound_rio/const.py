@@ -12,3 +12,7 @@ RUSSOUND_RIO_EXCEPTIONS = (
     TimeoutError,
     asyncio.CancelledError,
 )
+
+
+class NoPrimaryControllerException(Exception):
+    """Thrown when the Russound device is not the primary unit in the RNET stack."""

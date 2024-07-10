@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.russound_rio.config_flow import FlowHandler
 from homeassistant.components.russound_rio.const import DOMAIN
 from homeassistant.components.russound_rio.media_player import RussoundZoneDevice
 from homeassistant.config_entries import ConfigEntryState
@@ -41,6 +42,9 @@ def mock_russound_fixture():
     with patch(
         "homeassistant.components.russound_rio.Russound", autospec=True
     ) as russound_mock:
+        russound_mock.enumerate_controllers.return_value = [
+            (1, "00:11:22:33:44:55", "MCA-C5")
+        ]
         yield russound_mock
 
 
@@ -99,12 +103,20 @@ def media_player(mock_config_entry, mock_russound, mock_zone_id, mock_sources):
 
 
 @pytest.fixture
-def mock_russound():
-    """Mock the Russound RIO library."""
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_hass():
     """Mock Home Assistant."""
     return MagicMock(spec=HomeAssistant)
+
+
+@pytest.fixture
+def config_flow(hass: HomeAssistant):
+    """Create a config flow instance."""
+    flow = FlowHandler()
+    flow.hass = hass
+    return flow
+
+
+# @pytest.fixture
+# def flow_handler():
+#     """Create a config flow instance."""
+#     return MagicMock(spec=FlowHandler)
