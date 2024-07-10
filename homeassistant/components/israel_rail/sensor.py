@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant import core
 from homeassistant.components.sensor import (
@@ -32,7 +32,6 @@ class IsraelRailSensorEntityDescription(SensorEntityDescription):
     """Describes israel rail sensor entity."""
 
     value_fn: Callable[[DataConnection], StateType | datetime]
-    attrs: Callable[[list[DataConnection]], dict[str, Any]] = lambda _: {}
 
     index: int = 0
 
