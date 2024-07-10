@@ -23,9 +23,9 @@ async def async_get_config_entry_diagnostics(
         "config_entry_data": async_redact_data(dict(config_entry.data), TO_REDACT),
         "sites_data": [
             {
-                "site_id": coordinator.site.site_id,
-                "site_name": coordinator.site.system_name,
-                "site_health": coordinator.site.health,
+                "id": coordinator.site.site_id,
+                "name": coordinator.site.system_name,
+                "health": coordinator.site.health,
                 "solar": {
                     "power_production": coordinator.data.solar.power_production,
                     "energy_production_today": coordinator.data.solar.energy_production_today,
