@@ -45,7 +45,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import (
+    CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
@@ -475,9 +477,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value
         # in the mode register.
+
         if self._hvac_onoff_register is not None:
+            _call_type = CALL_TYPE_REGISTER_HOLDING
+
+            if self._hvac_onoff_register_type == CALL_TYPE_WRITE_COILS:
+                _call_type = CALL_TYPE_COIL
+
             onoff = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
+                _call_type, self._hvac_onoff_register, raw=True
             )
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
