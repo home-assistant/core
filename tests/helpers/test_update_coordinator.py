@@ -597,9 +597,18 @@ async def test_async_config_entry_first_refresh_success(
     crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test first refresh successfully."""
+
+    setup_calls = 0
+
+    async def setup() -> None:
+        nonlocal setup_calls
+        setup_calls += 1
+
+    crd.setup_method = setup
     await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is True
+    assert setup_calls == 1
 
 
 async def test_not_schedule_refresh_if_system_option_disable_polling(
