@@ -328,6 +328,9 @@ aioridwell==2024.01.0
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.34
 
+# homeassistant.components.russound_rio
+aiorussound==1.1.2
+
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
