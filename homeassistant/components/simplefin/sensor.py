@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 
 from simplefin4py import Account
 
@@ -16,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import SimpleFinConfigEntry
 from .entity import SimpleFinEntity
@@ -25,7 +25,7 @@ from .entity import SimpleFinEntity
 class SimpleFinSensorEntityDescription(SensorEntityDescription):
     """Describes a sensor entity."""
 
-    value_fn: Callable[[Account], int | str | datetime | None]
+    value_fn: Callable[[Account], StateType]
     icon_fn: Callable[[Account], str] | None = None
     unit_fn: Callable[[Account], str] | None = None
 
@@ -70,7 +70,7 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
     entity_description: SimpleFinSensorEntityDescription
 
     @property
-    def native_value(self) -> int | str | datetime | None:
+    def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self.account_data)
 

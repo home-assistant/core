@@ -69,6 +69,7 @@ def mock_simplefin_client() -> Generator[AsyncMock]:
             new=mock_client,
         ),
     ):
+        mock_client.claim_setup_token.return_value = MOCK_ACCESS_URL
         client = mock_client.return_value
 
         fixture_data = load_fixture("fin_data.json", DOMAIN)
@@ -79,4 +80,4 @@ def mock_simplefin_client() -> Generator[AsyncMock]:
 
         client.access_url = MOCK_ACCESS_URL
 
-        yield client
+        yield mock_client

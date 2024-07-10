@@ -8,7 +8,7 @@ import pytest
 from simplefin4py.exceptions import SimpleFinAuthError, SimpleFinPaymentRequiredError
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -74,7 +74,7 @@ async def test_update_errors(
         == "7500.00"
     )
 
-    mock_simplefin_client.fetch_data.side_effect = side_effect
+    mock_simplefin_client.return_value.fetch_data.side_effect = side_effect
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -91,4 +91,4 @@ async def test_update_errors(
     ]
 
     for sensor in sensors:
-        assert hass.states.get(sensor).state == "unavailable"
+        assert hass.states.get(sensor).state == STATE_UNAVAILABLE
