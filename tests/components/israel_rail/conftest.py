@@ -15,7 +15,7 @@ VALID_CONFIG = {
     CONF_DESTINATION: "אשקלון",
 }
 
-SOURCE_DEST = "Source1 Destination1"
+SOURCE_DEST = "באר יעקב אשקלון"
 
 
 @pytest.fixture

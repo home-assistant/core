@@ -40,15 +40,15 @@ async def test_update_train(
     await init_integration(hass, mock_config_entry)
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
-    assert departure_sensor.state == "2021-10-10T07:10:10+00:00"
+    assert departure_sensor.state == "2021-10-10T08:10:10+00:00"
 
-    mock_israelrail.return_value.query.return_value = TRAINS[1:]
+    mock_israelrail.query.return_value = TRAINS[1:]
 
     await goto_future(hass, freezer)
 
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
-    assert departure_sensor.state == "2021-10-10T07:20:10+00:00"
+    assert departure_sensor.state == "2021-10-10T08:20:10+00:00"
 
 
 async def test_no_duration_wrong_date_format(
@@ -57,7 +57,7 @@ async def test_no_duration_wrong_date_format(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure the duration is not set when there is no departure time."""
-    mock_israelrail.return_value.query.return_value = TRAINS_WRONG_FORMAT
+    mock_israelrail.query.return_value = TRAINS_WRONG_FORMAT
     await init_integration(hass, mock_config_entry)
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_train_number")
@@ -75,7 +75,7 @@ async def test_fail_query(
     """Ensure the integration handles query failures."""
     await init_integration(hass, mock_config_entry)
     assert len(hass.states.async_entity_ids()) == 7
-    mock_israelrail.return_value.query.side_effect = Exception("error")
+    mock_israelrail.query.side_effect = Exception("error")
     await goto_future(hass, freezer)
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")

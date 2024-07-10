@@ -66,7 +66,10 @@ async def test_flow_fails(
 
 
 async def test_flow_already_configured(
-    hass: HomeAssistant, mock_israelrail: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that the user step fails when the entry is already configured."""
     mock_config_entry.add_to_hass(hass)
