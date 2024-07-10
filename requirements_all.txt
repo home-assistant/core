@@ -16,7 +16,7 @@ Adax-local==0.1.5
 BlinkStick==1.2.0
 
 # homeassistant.components.doorbird
-DoorBirdPy==2.1.0
+DoorBirdPy==3.0.0
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -354,6 +354,9 @@ aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.34
+
+# homeassistant.components.russound_rio
+aiorussound==1.1.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1496,7 +1499,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.4
+openwebifpy==4.2.5
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.17
@@ -2506,9 +2509,6 @@ rpi-bad-power==0.1.0
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.1
 
-# homeassistant.components.russound_rio
-russound-rio==1.0.0
-
 # homeassistant.components.russound_rnet
 russound==0.1.9
 
@@ -2679,7 +2679,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.1.0
+switchbot-api==2.2.1
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
