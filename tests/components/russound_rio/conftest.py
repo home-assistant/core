@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.russound_rio.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .const import HARDWARE_MAC, MOCK_CONFIG, MODEL
 
@@ -22,11 +23,13 @@ def mock_setup_entry():
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Create a mock config entry."""
-    return MockConfigEntry(
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock a Russound RIO config entry."""
+    entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, unique_id=HARDWARE_MAC, title=MODEL
     )
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture
