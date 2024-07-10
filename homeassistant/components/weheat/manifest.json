@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/weheat",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["weheat-backend-client==2024.6.19rc1"],
+  "requirements": ["weheat-backend-client==2024.6.19rc3"],
   "ssdp": [],
   "zeroconf": []
 }

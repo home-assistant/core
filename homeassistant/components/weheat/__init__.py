@@ -8,6 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
+from .const import DOMAIN
+from .coordinator import WeheatDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -27,6 +29,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     entry.runtime_data = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
     )
+
+    hass.data.setdefault(DOMAIN, {})
+
+    coordinator = WeheatDataUpdateCoordinator(
+        hass=hass, session=session, heatpump_id=entry.unique_id
+    )
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
