@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_TYPE
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -23,6 +24,8 @@ from .const import (
     CONF_STATION_TO,
     DOMAIN,
 )
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -52,25 +55,6 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             for station in self.stations["station"]
         ]
 
-    async def _fetch_station_for_name(self, station_name: str) -> Any | None:
-        if self.stations is None:
-            self.stations = await self.hass.async_add_executor_job(
-                self.api_client.get_stations
-            )
-        station = (
-            next(
-                (
-                    station
-                    for station in self.stations["station"]
-                    if station.get("standardname") == station_name
-                ),
-                None,
-            )
-            if self.stations is not None
-            else None
-        )
-        return station.get("standardname") if station else None
-
     async def async_step_user(
         self, _: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -99,7 +83,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_TYPE] = "liveboard"
             config_entry_name = user_input.get(CONF_NAME, "")
             if config_entry_name == "":
-                config_entry_name = f"{await self._fetch_station_for_name(user_input[CONF_STATION_LIVE])}"
+                config_entry_name = f"{user_input[CONF_STATION_LIVE]}"
             return self.async_create_entry(
                 title=config_entry_name,
                 data=user_input,
@@ -137,7 +121,9 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_TYPE] = "connection"
             config_entry_name = user_input.get(CONF_NAME, "")
             if config_entry_name == "":
-                config_entry_name = f"{await self._fetch_station_for_name(user_input[CONF_STATION_FROM])}-{await self._fetch_station_for_name(user_input[CONF_STATION_TO])}"
+                config_entry_name = (
+                    f"{user_input[CONF_STATION_FROM]}-{user_input[CONF_STATION_TO]}"
+                )
             return self.async_create_entry(
                 title=config_entry_name,
                 data=user_input,
