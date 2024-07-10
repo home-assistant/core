@@ -49,7 +49,12 @@ from .http_api import RegistrationsView
 from .util import async_create_cloud_hook
 from .webhook import handle_webhook
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

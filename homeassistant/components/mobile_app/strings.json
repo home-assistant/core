@@ -18,5 +18,10 @@
       "message": "Message",
       "title": "Title"
     }
+  },
+  "exceptions": {
+    "not_connected_local_push": {
+      "message": "Device not connected to local push notifications."
+    }
   }
 }

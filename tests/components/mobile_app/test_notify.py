@@ -1,18 +1,46 @@
 """Notify platform tests for mobile_app."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import notify
 from homeassistant.components.mobile_app.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, MockUser
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def single_platform() -> Generator[None]:
+    """Only setup the DROP sensor platform."""
+    with patch("homeassistant.components.mobile_app.PLATFORMS", [Platform.NOTIFY]):
+        yield
+
+
+MOCK_ENTRY_DATA = {
+    "app_data": {},
+    "app_id": "io.homeassistant.mobile_app",
+    "app_name": "mobile_app tests",
+    "app_version": "1.0",
+    "device_id": "4d5e6f",
+    "device_name": "Test",
+    "manufacturer": "Home Assistant",
+    "model": "mobile_app",
+    "os_name": "Linux",
+    "os_version": "5.0.6",
+    "secret": "123abc",
+    "supports_encryption": False,
+    "user_id": "1a2b3c",
+    "webhook_id": "mock-webhook_id",
+}
 
 
 @pytest.fixture
@@ -42,20 +70,9 @@ async def setup_push_receiver(
 
     entry = MockConfigEntry(
         data={
+            **MOCK_ENTRY_DATA,
             "app_data": {"push_token": "PUSH_TOKEN", "push_url": push_url},
-            "app_id": "io.homeassistant.mobile_app",
-            "app_name": "mobile_app tests",
-            "app_version": "1.0",
-            "device_id": "4d5e6f",
-            "device_name": "Test",
-            "manufacturer": "Home Assistant",
-            "model": "mobile_app",
-            "os_name": "Linux",
-            "os_version": "5.0.6",
-            "secret": "123abc",
-            "supports_encryption": False,
             "user_id": hass_admin_user.id,
-            "webhook_id": "mock-webhook_id",
         },
         domain=DOMAIN,
         source="registration",
@@ -63,25 +80,19 @@ async def setup_push_receiver(
         version=1,
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    await hass.async_block_till_done()
 
+async def test_loaded_late(hass: HomeAssistant, setup_push_receiver: None) -> None:
+    """Test that loading late entries, loads and removes services."""
+
+    push_url = "https://mobile-push.home-assistant.dev/push2"
     loaded_late_entry = MockConfigEntry(
         data={
-            "app_data": {"push_token": "PUSH_TOKEN2", "push_url": f"{push_url}2"},
-            "app_id": "io.homeassistant.mobile_app",
-            "app_name": "mobile_app tests",
-            "app_version": "1.0",
+            **MOCK_ENTRY_DATA,
+            "app_data": {"push_token": "PUSH_TOKEN2", "push_url": f"{push_url}"},
             "device_id": "4d5e6f2",
             "device_name": "Loaded Late",
-            "manufacturer": "Home Assistant",
-            "model": "mobile_app",
-            "os_name": "Linux",
-            "os_version": "5.0.6",
-            "secret": "123abc2",
-            "supports_encryption": False,
-            "user_id": "1a2b3c2",
             "webhook_id": "webhook_id_2",
         },
         domain=DOMAIN,
@@ -116,18 +127,10 @@ async def setup_websocket_channel_only_push(
     """Set up local push."""
     entry = MockConfigEntry(
         data={
+            **MOCK_ENTRY_DATA,
             "app_data": {"push_websocket_channel": True},
-            "app_id": "io.homeassistant.mobile_app",
-            "app_name": "mobile_app tests",
-            "app_version": "1.0",
             "device_id": "websocket-push-device-id",
             "device_name": "Websocket Push Name",
-            "manufacturer": "Home Assistant",
-            "model": "mobile_app",
-            "os_name": "Linux",
-            "os_version": "5.0.6",
-            "secret": "123abc2",
-            "supports_encryption": False,
             "user_id": hass_admin_user.id,
             "webhook_id": "websocket-push-webhook-id",
         },
@@ -138,9 +141,27 @@ async def setup_websocket_channel_only_push(
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    return entry
 
-    assert hass.services.has_service("notify", "mobile_app_websocket_push_name")
+
+@pytest.fixture
+async def non_push_entry(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> MockConfigEntry:
+    """Fixture that sets up a mocked entry without push."""
+    entry = MockConfigEntry(
+        data={
+            **MOCK_ENTRY_DATA,
+            "webhook_id": "websocket-no-push-webhook-id",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="mobile_app test entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    return entry
 
 
 async def test_notify_works(
@@ -168,6 +189,7 @@ async def test_notify_ws_works(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     setup_push_receiver,
+    non_push_entry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test notify works."""
@@ -243,7 +265,7 @@ async def test_notify_ws_works(
         {
             "id": 9,
             "type": "mobile_app/push_notification_channel",
-            "webhook_id": "webhook_id_2",
+            "webhook_id": "websocket-no-push-webhook-id",
         }
     )
     sub_result = await client.receive_json()
@@ -426,3 +448,90 @@ async def test_local_push_only(
 
     msg = await client.receive_json()
     assert msg == {"id": 5, "type": "event", "event": {"message": "Hello world 1"}}
+
+
+async def test_notify_entity(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver: None,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test notify entity."""
+    await hass.services.async_call(
+        notify.DOMAIN,
+        notify.SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.test",
+            notify.ATTR_MESSAGE: "Hello world",
+            notify.ATTR_TITLE: "Hello title",
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+
+    assert call_json["push_token"] == "PUSH_TOKEN"
+    assert call_json["message"] == "Hello world"
+    assert call_json["title"] == "Hello title"
+    assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
+    assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "mock-webhook_id"
+
+
+async def test_notify_entity_non_push(
+    entity_registry: er.EntityRegistry,
+    non_push_entry: MockConfigEntry,
+) -> None:
+    """Test that no entity is created if push is not supported."""
+    entry_id = non_push_entry.entry_id
+    entries = er.async_entries_for_config_entry(entity_registry, entry_id)
+    assert entries == []
+
+
+async def test_notify_entity_public_only_push(
+    hass: HomeAssistant,
+    setup_websocket_channel_only_push: None,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test notify entity."""
+    with pytest.raises(
+        HomeAssistantError, match="Device not connected to local push notifications"
+    ):
+        await hass.services.async_call(
+            notify.DOMAIN,
+            notify.SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.websocket_push_name",
+                notify.ATTR_MESSAGE: "Not connected",
+            },
+            blocking=True,
+        )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "websocket-push-webhook-id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    await hass.services.async_call(
+        notify.DOMAIN,
+        notify.SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.websocket_push_name",
+            notify.ATTR_MESSAGE: "Hello world",
+        },
+        blocking=True,
+    )
+
+    msg = await client.receive_json()
+    assert msg == {"id": 5, "type": "event", "event": {"message": "Hello world"}}
