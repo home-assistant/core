@@ -155,6 +155,8 @@ build.json @home-assistant/supervisor
 /tests/components/aurora_abb_powerone/ @davet2001
 /homeassistant/components/aussie_broadband/ @nickw444 @Bre77
 /tests/components/aussie_broadband/ @nickw444 @Bre77
+/homeassistant/components/autarco/ @klaasnicolaas
+/tests/components/autarco/ @klaasnicolaas
 /homeassistant/components/auth/ @home-assistant/core
 /tests/components/auth/ @home-assistant/core
 /homeassistant/components/automation/ @home-assistant/core
