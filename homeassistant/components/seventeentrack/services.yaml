@@ -18,3 +18,19 @@ get_packages:
       selector:
         config_entry:
           integration: seventeentrack
+add_package:
+  fields:
+    tracking_number:
+      required: true
+      example: "123456789"
+      selector:
+        text:
+    title:
+      example: "Laptop"
+      selector:
+        text:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: seventeentrack

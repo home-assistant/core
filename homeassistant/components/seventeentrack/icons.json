@@ -28,6 +28,7 @@
     }
   },
   "services": {
-    "get_packages": "mdi:package"
+    "get_packages": "mdi:package-variant-closed",
+    "add_package": "mdi:package-variant-closed-plus"
   }
 }

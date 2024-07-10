@@ -100,6 +100,24 @@
           "description": "The packages will be retrieved for the selected service."
         }
       }
+    },
+    "add_package": {
+      "name": "Add package",
+      "description": "Add a package to 17Track",
+      "fields": {
+        "tracking_number": {
+          "name": "Tracking number",
+          "description": "The tracking number of the package."
+        },
+        "title": {
+          "name": "Title",
+          "description": "A friendly name for the package."
+        },
+        "config_entry_id": {
+          "name": "17Track service",
+          "description": "The packages will be retrieved for the selected service."
+        }
+      }
     }
   },
   "selector": {

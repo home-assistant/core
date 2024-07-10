@@ -42,6 +42,7 @@ NOTIFICATION_DELIVERED_MESSAGE = (
 VALUE_DELIVERED = "Delivered"
 
 SERVICE_GET_PACKAGES = "get_packages"
+SERVICE_ADD_PACKAGE = "add_package"
 
 ATTR_PACKAGE_STATE = "package_state"
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
