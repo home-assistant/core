@@ -500,6 +500,7 @@ FLOWS = {
         "shelly",
         "shopping_list",
         "sia",
+        "simplefin",
         "simplepush",
         "simplisafe",
         "skybell",
