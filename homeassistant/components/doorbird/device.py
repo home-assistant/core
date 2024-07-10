@@ -222,7 +222,7 @@ class ConfiguredDoorBird:
         The favorite must exist or there will be problems.
         """
         favs = favs if favs else await self.device.favorites()
-        http_fav: dict[str, dict[str, Any]] = favs.get(HTTP_EVENT_TYPE) or {}
+        http_fav = favs.get(HTTP_EVENT_TYPE) or {}
         for fav_id, data in http_fav.items():
             if data["value"] == url:
                 return fav_id
