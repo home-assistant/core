@@ -92,7 +92,7 @@ async def test_exceptions(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": error}
 
-    getattr(mock_autarco_client, "get_account").side_effect = None
+    mock_autarco_client.get_account.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
