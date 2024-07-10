@@ -33,6 +33,7 @@ def create_eager_task[_T](
 
             frame.report("attempted to create an asyncio task from a thread")
             raise
+
     return Task(coro, loop=loop, name=name, eager_start=True)
 
 
