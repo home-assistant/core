@@ -59,7 +59,6 @@ class TeslaOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
-        logging.getLogger(__name__).debug("async_resolve_external_data")
         return await self._token_request(
             {
                 "grant_type": "authorization_code",
