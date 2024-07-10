@@ -10,6 +10,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import VALID_CONFIG
 
+from tests.common import MockConfigEntry
+
 
 async def test_create_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_israelrail: AsyncMock
@@ -21,17 +23,15 @@ async def test_create_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         VALID_CONFIG,
     )
-    await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "start destination"
-    assert result2["data"] == {
-        CONF_START: "start",
-        CONF_DESTINATION: "destination",
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "באר יעקב אשקלון"
+    assert result["data"] == {
+        CONF_START: "באר יעקב",
+        CONF_DESTINATION: "אשקלון",
     }
 
 
@@ -48,6 +48,7 @@ async def test_flow_fails(
     )
 
     assert failed_result["errors"] == {"base": "unknown"}
+    assert failed_result["type"] == FlowResultType.FORM
 
     mock_israelrail.return_value.query.side_effect = None
 
@@ -55,11 +56,35 @@ async def test_flow_fails(
         failed_result["flow_id"],
         VALID_CONFIG,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "start destination"
+    assert result["title"] == "באר יעקב אשקלון"
     assert result["data"] == {
-        CONF_START: "start",
-        CONF_DESTINATION: "destination",
+        CONF_START: "באר יעקב",
+        CONF_DESTINATION: "אשקלון",
     }
+
+
+async def test_flow_already_configured(
+    hass: HomeAssistant, mock_israelrail: AsyncMock
+) -> None:
+    """Test the import configuration flow with error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=f"{VALID_CONFIG[CONF_START]} {VALID_CONFIG[CONF_DESTINATION]}",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result_aborted = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        VALID_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result_aborted["type"] is FlowResultType.ABORT
+    assert result_aborted["reason"] == "already_configured"

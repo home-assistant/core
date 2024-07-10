@@ -1,0 +1,110 @@
+# serializer version: 1
+# name: test_valid_config[sensor.mock_title_departure]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'destination': 'Tel Aviv-Savidor Center',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Departure',
+      'start': 'Hertsliya',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_departure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-10-10T07:10:10+00:00',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_departure_1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'destination': 'Tel Aviv-Savidor Center',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Departure +1',
+      'start': 'Hertsliya',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_departure_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-10-10T07:20:10+00:00',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_departure_2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'destination': 'Tel Aviv-Savidor Center',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Departure +2',
+      'start': 'Hertsliya',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_departure_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-10-10T07:30:10+00:00',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_duration]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'device_class': 'duration',
+      'friendly_name': 'Mock Title Duration',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1200',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_platform]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'friendly_name': 'Mock Title Platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_train_number]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'friendly_name': 'Mock Title Train Number',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_train_number',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1234',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_transfers]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'friendly_name': 'Mock Title Transfers',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_transfers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---

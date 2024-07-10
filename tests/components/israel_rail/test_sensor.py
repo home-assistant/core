@@ -5,11 +5,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import goto_future, init_integration
-from .conftest import trains, trains_wrong_format
+from .conftest import TRAINS, TRAINS_WRONG_FORMAT
 
 from tests.common import MockConfigEntry
 
@@ -18,23 +20,28 @@ async def test_valid_config(
     hass: HomeAssistant,
     mock_israelrail: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure everything starts correctly."""
     await init_integration(hass, mock_config_entry)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert entity_entries
     assert len(hass.states.async_entity_ids()) == 7
-    assert hass.states.get("sensor.mock_title_departure")
-    assert hass.states.get("sensor.mock_title_departure_1")
-    assert hass.states.get("sensor.mock_title_departure_2")
-    assert hass.states.get("sensor.mock_title_duration")
-    assert hass.states.get("sensor.mock_title_transfers")
-    assert hass.states.get("sensor.mock_title_platform")
-    assert hass.states.get("sensor.mock_title_train_number")
+    for entity_entry in entity_entries:
+        state = hass.states.get(entity_entry.entity_id)
+        assert state == snapshot(name=f"{entity_entry.entity_id}")
 
 
 async def test_invalid_config(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_israelrail: AsyncMock,
 ) -> None:
     """Ensure nothing is created when config is wrong."""
+    mock_israelrail.return_value.query.side_effect = Exception("error")
     await init_integration(hass, mock_config_entry)
     assert not hass.states.async_entity_ids("sensor")
 
@@ -51,7 +58,7 @@ async def test_update_train(
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     assert departure_sensor.state == "2021-10-10T07:10:10+00:00"
 
-    mock_israelrail.return_value.query.return_value = trains[1:]
+    mock_israelrail.return_value.query.return_value = TRAINS[1:]
 
     await goto_future(hass, freezer)
 
@@ -66,7 +73,7 @@ async def test_no_duration_wrong_date_format(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure the duration is not set when there is no departure time."""
-    mock_israelrail.return_value.query.return_value = trains_wrong_format
+    mock_israelrail.return_value.query.return_value = TRAINS_WRONG_FORMAT
     await init_integration(hass, mock_config_entry)
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_train_number")

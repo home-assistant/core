@@ -1,5 +1,6 @@
 """The Israel Rail component."""
 
+from dataclasses import dataclass
 import logging
 
 from israelrailapi import TrainSchedule
@@ -16,6 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+
+@dataclass
+class IsraelRailEntryData:
+    """IsraelRailEntryData data class."""
+
+    coordinator: IsraelRailDataUpdateCoordinator
+
+
+type IsraelRailConfigEntry = ConfigEntry[IsraelRailEntryData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,15 +54,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, train_schedule, start, destination
     )
     await israel_rail_coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = israel_rail_coordinator
+    entry.runtime_data = IsraelRailEntryData(israel_rail_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

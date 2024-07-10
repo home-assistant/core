@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant import core
 from homeassistant.components.sensor import (
@@ -27,11 +27,19 @@ from .coordinator import DataConnection, IsraelRailDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+def _make_get_attrs(i):
+    return lambda data: {
+        "start": data[i].start,
+        "destination": data[i].destination,
+    }
+
+
 @dataclass(kw_only=True, frozen=True)
 class IsraelRailSensorEntityDescription(SensorEntityDescription):
     """Describes israel rail sensor entity."""
 
     value_fn: Callable[[DataConnection], StateType | datetime]
+    attrs: Callable[[list[DataConnection]], dict[str, Any]] = lambda _: {}
 
     index: int = 0
 
@@ -44,6 +52,7 @@ DEPARTURE_SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=lambda data_connection: data_connection.departure,
             index=i,
+            attrs=_make_get_attrs(i),
         )
         for i in range(DEPARTURES_COUNT)
     ],
@@ -80,7 +89,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
 
     unique_id = config_entry.unique_id
 
@@ -88,10 +97,8 @@ async def async_setup_entry(
         assert unique_id
 
     entities = [
-        IsraelRailDepartureSensor(coordinator, description, unique_id)
-        for description in DEPARTURE_SENSORS
-    ] + [
-        IsraelRailSensor(coordinator, description, unique_id) for description in SENSORS
+        IsraelRailEntitySensor(coordinator, description, unique_id)
+        for description in (*DEPARTURE_SENSORS, *SENSORS)
     ]
 
     async_add_entities(entities)
@@ -119,6 +126,8 @@ class IsraelRailEntitySensor(
             identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
+        self._attr_extra_state_attributes = entity_description.attrs(coordinator.data)
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -126,39 +135,3 @@ class IsraelRailEntitySensor(
         return self.entity_description.value_fn(
             self.coordinator.data[self.entity_description.index]
         )
-
-
-class IsraelRailDepartureSensor(IsraelRailEntitySensor):
-    """Implementation of a Israel Rail departure sensor."""
-
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
-
-    def __init__(
-        self,
-        coordinator: IsraelRailDataUpdateCoordinator,
-        entity_description: IsraelRailSensorEntityDescription,
-        unique_id: str,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description, unique_id)
-        self._attr_unique_id = f"{unique_id}_departure{self.entity_description.index}"
-        departure_data = self.coordinator.data[self.entity_description.index]
-        self._attr_extra_state_attributes = {
-            "start": departure_data.start,
-            "destination": departure_data.destination,
-        }
-
-
-class IsraelRailSensor(IsraelRailEntitySensor):
-    """Implementation of a Israel Rail other sensor."""
-
-    def __init__(
-        self,
-        coordinator: IsraelRailDataUpdateCoordinator,
-        entity_description: IsraelRailSensorEntityDescription,
-        unique_id: str,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description, unique_id)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unique_id}_{entity_description.key}"

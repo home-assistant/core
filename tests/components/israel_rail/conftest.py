@@ -1,4 +1,6 @@
-"""Configuration for 17Track tests."""
+"""Configuration for Israel rail tests."""
+
+# -*- coding: utf-8 -*-
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,8 +13,8 @@ from homeassistant.components.israel_rail import CONF_DESTINATION, CONF_START, D
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
-    CONF_START: "start",
-    CONF_DESTINATION: "destination",
+    CONF_START: "באר יעקב",
+    CONF_DESTINATION: "אשקלון",
 }
 
 SOURCE_DEST = "Source1 Destination1"
@@ -39,7 +41,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_israelrail():
-    """Build a fixture for the 17Track API."""
+    """Build a fixture for the Israel rail API."""
     mock_israelrail_api = MagicMock()
     with (
         patch(
@@ -47,15 +49,11 @@ def mock_israelrail():
             return_value=mock_israelrail_api,
         ),
         patch(
-            "homeassistant.components.israel_rail.coordinator.TrainSchedule",
-            return_value=mock_israelrail_api,
-        ),
-        patch(
             "homeassistant.components.israel_rail.config_flow.TrainSchedule",
             return_value=mock_israelrail_api,
         ) as mock_israelrail_api,
     ):
-        mock_israelrail_api.return_value.query.return_value = trains[:]
+        mock_israelrail_api.return_value.query.return_value = TRAINS[:]
 
         yield mock_israelrail_api
 
@@ -85,7 +83,7 @@ def get_train_route(
     )
 
 
-trains = [
+TRAINS = [
     get_train_route(
         train_number="1234",
         departure_time="2021-10-10T10:10:10",
@@ -133,7 +131,7 @@ trains = [
     ),
 ]
 
-trains_wrong_format = [
+TRAINS_WRONG_FORMAT = [
     get_train_route(
         train_number="1234",
         departure_time="2021-10-1010:10:10",
