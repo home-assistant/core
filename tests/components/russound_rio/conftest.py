@@ -47,7 +47,7 @@ def mock_russound_fixture():
 @pytest.fixture(name="mock_russound_alt")
 def mock_russound_alt_fixture():
     """Mock the Russound RIO library."""
-    with patch("russound_rio.Russound", autospec=True) as russound_mock:
+    with patch("aiorussound.Russound", autospec=True) as russound_mock:
         yield russound_mock
 
 

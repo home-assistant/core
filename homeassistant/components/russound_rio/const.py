@@ -2,7 +2,7 @@
 
 import asyncio
 
-from russound_rio import CommandException
+from aiorussound import CommandException
 
 DOMAIN = "russound_rio"
 

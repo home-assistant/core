@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from russound_rio import Russound
+from aiorussound import Russound
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

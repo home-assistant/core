@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from russound_rio import Russound
+from aiorussound import Russound
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
