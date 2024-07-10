@@ -22,7 +22,6 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    Selector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -63,85 +62,9 @@ FILTERS = [
 ]
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    """Return schema for options."""
-    filter_schema: dict[vol.Marker, Selector] = {}
-
-    if handler.options[CONF_FILTER_NAME] == FILTER_NAME_OUTLIER:
-        filter_schema = {
-            vol.Optional(
-                CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
-            ): NumberSelector(
-                NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-            ),
-            vol.Optional(
-                CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS
-            ): NumberSelector(
-                NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
-            ),
-        }
-
-    elif handler.options[CONF_FILTER_NAME] == FILTER_NAME_LOWPASS:
-        filter_schema = {
-            vol.Optional(
-                CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
-            ): NumberSelector(
-                NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-            ),
-            vol.Optional(
-                CONF_FILTER_TIME_CONSTANT, default=DEFAULT_FILTER_TIME_CONSTANT
-            ): NumberSelector(
-                NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-            ),
-        }
-
-    elif handler.options[CONF_FILTER_NAME] == FILTER_NAME_RANGE:
-        filter_schema = {
-            vol.Optional(CONF_FILTER_LOWER_BOUND): NumberSelector(
-                NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
-            ),
-            vol.Optional(CONF_FILTER_UPPER_BOUND): NumberSelector(
-                NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
-            ),
-        }
-
-    elif handler.options[CONF_FILTER_NAME] == FILTER_NAME_TIME_SMA:
-        filter_schema = {
-            vol.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): SelectSelector(
-                SelectSelectorConfig(
-                    options=[TIME_SMA_LAST],
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key=CONF_TIME_SMA_TYPE,
-                )
-            ),
-            vol.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
-                DurationSelectorConfig(enable_day=False, allow_negative=False)
-            ),
-        }
-
-    elif handler.options[CONF_FILTER_NAME] == FILTER_NAME_THROTTLE:
-        filter_schema = {
-            vol.Optional(
-                CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
-            ): NumberSelector(
-                NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-            ),
-        }
-
-    elif handler.options[CONF_FILTER_NAME] == FILTER_NAME_TIME_THROTTLE:
-        filter_schema = {
-            vol.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
-                DurationSelectorConfig(enable_day=False, allow_negative=False)
-            ),
-        }
-
-    base_schema: dict[vol.Marker, Selector] = {
-        vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
-            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-        )
-    }
-
-    return vol.Schema({**filter_schema, **base_schema})
+async def get_next_step(user_input: dict[str, Any]) -> str:
+    """Return next step for options."""
+    return cast(str, user_input[CONF_FILTER_NAME])
 
 
 async def validate_options(
@@ -181,21 +104,130 @@ DATA_SCHEMA_SETUP = vol.Schema(
     }
 )
 
+BASE_OPTIONS_SCHEMA = {
+    vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
+        NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+    )
+}
+
+OUTLIER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): NumberSelector(
+            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+        ),
+        vol.Optional(CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS): NumberSelector(
+            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+        ),
+    }
+).extend(BASE_OPTIONS_SCHEMA)
+
+LOWPASS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): NumberSelector(
+            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+        ),
+        vol.Optional(
+            CONF_FILTER_TIME_CONSTANT, default=DEFAULT_FILTER_TIME_CONSTANT
+        ): NumberSelector(
+            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+        ),
+    }
+).extend(BASE_OPTIONS_SCHEMA)
+
+RANGE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_FILTER_LOWER_BOUND): NumberSelector(
+            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+        ),
+        vol.Optional(CONF_FILTER_UPPER_BOUND): NumberSelector(
+            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+        ),
+    }
+).extend(BASE_OPTIONS_SCHEMA)
+
+TIME_SMA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): SelectSelector(
+            SelectSelectorConfig(
+                options=[TIME_SMA_LAST],
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_TIME_SMA_TYPE,
+            )
+        ),
+        vol.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
+            DurationSelectorConfig(enable_day=False, allow_negative=False)
+        ),
+    }
+).extend(BASE_OPTIONS_SCHEMA)
+
+THROTTLE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): NumberSelector(
+            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+        ),
+    }
+).extend(BASE_OPTIONS_SCHEMA)
+
+TIME_THROTTLE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
+            DurationSelectorConfig(enable_day=False, allow_negative=False)
+        ),
+    }
+).extend(BASE_OPTIONS_SCHEMA)
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_SETUP,
-        next_step="options",
+        next_step=get_next_step,
     ),
-    "options": SchemaFlowFormStep(
-        schema=get_options_schema,
-        validate_user_input=validate_options,
+    "lowpass": SchemaFlowFormStep(
+        schema=LOWPASS_SCHEMA, validate_user_input=validate_options
+    ),
+    "outlier": SchemaFlowFormStep(
+        schema=OUTLIER_SCHEMA, validate_user_input=validate_options
+    ),
+    "range": SchemaFlowFormStep(
+        schema=RANGE_SCHEMA, validate_user_input=validate_options
+    ),
+    "time_simple_moving_average": SchemaFlowFormStep(
+        schema=TIME_SMA_SCHEMA, validate_user_input=validate_options
+    ),
+    "throttle": SchemaFlowFormStep(
+        schema=THROTTLE_SCHEMA, validate_user_input=validate_options
+    ),
+    "time_throttle": SchemaFlowFormStep(
+        schema=TIME_THROTTLE_SCHEMA, validate_user_input=validate_options
     ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        get_options_schema,
-        validate_user_input=validate_options,
+        schema=None,
+        next_step=get_next_step,
+    ),
+    "lowpass": SchemaFlowFormStep(
+        schema=LOWPASS_SCHEMA, validate_user_input=validate_options
+    ),
+    "outlier": SchemaFlowFormStep(
+        schema=OUTLIER_SCHEMA, validate_user_input=validate_options
+    ),
+    "range": SchemaFlowFormStep(
+        schema=RANGE_SCHEMA, validate_user_input=validate_options
+    ),
+    "time_simple_moving_average": SchemaFlowFormStep(
+        schema=TIME_SMA_SCHEMA, validate_user_input=validate_options
+    ),
+    "throttle": SchemaFlowFormStep(
+        schema=THROTTLE_SCHEMA, validate_user_input=validate_options
+    ),
+    "time_throttle": SchemaFlowFormStep(
+        schema=TIME_THROTTLE_SCHEMA, validate_user_input=validate_options
     ),
 }
 

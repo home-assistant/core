@@ -162,7 +162,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "outlier"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
