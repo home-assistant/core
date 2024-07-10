@@ -6,14 +6,9 @@ import pytest
 
 from homeassistant.components.russound_rio import async_setup_entry, async_unload_entry
 from homeassistant.components.russound_rio.const import RUSSOUND_RIO_EXCEPTIONS
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-
-MOCK_CONFIG = {
-    CONF_HOST: "127.0.0.1",
-    CONF_PORT: 9621,
-}
 
 
 @pytest.mark.asyncio

@@ -10,7 +10,7 @@ from aiorussound import Russound
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS, NoPrimaryControllerException
@@ -18,7 +18,6 @@ from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS, NoPrimaryControllerException
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_PORT, default=9621): cv.port,
     }
 )
@@ -26,7 +25,9 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def find_primary_controller_metadata(controllers: list[tuple[int, str, str]]):
+def find_primary_controller_metadata(
+    controllers: list[tuple[int, str, str]],
+) -> tuple[str, str]:
     """Find the mac address of the primary Russound controller."""
     for controller_id, mac_address, controller_type in controllers:
         # The integration only cares about the primary controller linked by IP and not any downstream controllers
@@ -47,12 +48,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            name = user_input[CONF_NAME]
             port = user_input[CONF_PORT]
 
             controllers = None
+            russ = Russound(self.hass.loop, host, port)
             try:
-                russ = Russound(self.hass.loop, host, port)
                 async with asyncio.timeout(5):
                     await russ.connect()
                     controllers = await russ.enumerate_controllers()
@@ -68,12 +68,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_primary_controller"
             else:
                 await self.async_set_unique_id(metadata[0])
-                data = {
-                    CONF_HOST: host,
-                    CONF_NAME: name,
-                    CONF_PORT: port,
-                }
-                return self.async_create_entry(title=name, data=data)
+                data = {CONF_HOST: host, CONF_PORT: port, CONF_MODEL: metadata[1]}
+                return self.async_create_entry(title=metadata[1], data=data)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -85,12 +81,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Attempt to import the existing configuration."""
         self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
         host = import_config[CONF_HOST]
-        name = import_config[CONF_NAME]
         port = import_config.get(CONF_PORT, 9621)
 
         # Connection logic is repeated here since this method will be removed in future releases
+        russ = Russound(self.hass.loop, host, port)
         try:
-            russ = Russound(self.hass.loop, host, port)
             async with asyncio.timeout(5):
                 await russ.connect()
                 controllers = await russ.enumerate_controllers()
@@ -108,10 +103,5 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             )
         else:
             await self.async_set_unique_id(metadata[0])
-            data = {
-                CONF_HOST: host,
-                CONF_NAME: name,
-                CONF_PORT: port,
-            }
-
-            return self.async_create_entry(title=name, data=data)
+            data = {CONF_HOST: host, CONF_PORT: port, CONF_MODEL: metadata[1]}
+            return self.async_create_entry(title=metadata[1], data=data)

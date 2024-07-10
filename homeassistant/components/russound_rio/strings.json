@@ -1,4 +1,8 @@
 {
+  "common": {
+    "error_cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect.",
+    "error_no_primary_controller": "No primary controller was detected for the Russound device. Please make sure that the target Russound device has it's controller ID set to 1 (using the selector on the back of the unit)."
+  },
   "config": {
     "step": {
       "user": {
@@ -10,20 +14,16 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect.",
-      "no_primary_controller": "No primary controller was detected for the Russound device. Please make sure that the target Russound device has it's controller ID set to 1 (using the selector on the back of the unit)."
+      "cannot_connect": "[%key:component::russound_rio::common::error_cannot_connect%]",
+      "no_primary_controller": "[%key:component::russound_rio::common::error_no_primary_controller%]"
     },
     "abort": {
-      "cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect.",
-      "no_primary_controller": "No primary controller was detected for the Russound device. Please make sure that the target Russound device has it's controller ID set to 1 (using the selector on the back of the unit).",
+      "cannot_connect": "[%key:component::russound_rio::common::error_cannot_connect%]",
+      "no_primary_controller": "[%key:component::russound_rio::common::error_no_primary_controller%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "The {integration_title} YAML configuration will be deprecated",
-      "description": "The {integration_title} has been automatically migrated, please remove the YAML from configuration.yaml."
-    },
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The {integration_title} YAML configuration import cannot connect to the Russound device",
       "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nPlease make sure {integration_title} is turned on, and restart Home Assistant to try importing again. Otherwise, please remove the YAML from your configuration and add the integration manually."

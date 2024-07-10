@@ -14,8 +14,13 @@ from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     "host": "127.0.0.1",
-    "name": "MCA-C5",
     "port": 9621,
+}
+
+MOCK_DATA = {
+    "host": "127.0.0.1",
+    "port": 9621,
+    "model": "MCA-C5",
 }
 
 

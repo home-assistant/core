@@ -6,11 +6,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.russound_rio.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-MOCK_CONFIG = {
-    "host": "127.0.0.1",
-    "name": "MCA-C5",
-    "port": 9621,
-}
+from .conftest import MOCK_CONFIG, MOCK_DATA
 
 
 async def test_form(hass: HomeAssistant, mock_russound) -> None:
@@ -39,7 +35,7 @@ async def test_form(hass: HomeAssistant, mock_russound) -> None:
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "MCA-C5"
-    assert result2["data"] == MOCK_CONFIG
+    assert result2["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -50,7 +46,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.russound_rio.config_flow.Russound",
+        "homeassistant.components.russound_rio.config_flow.Russound.connect",
         side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -106,7 +102,7 @@ async def test_import(hass: HomeAssistant, mock_russound, config_flow) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "MCA-C5"
-    assert result["data"] == MOCK_CONFIG
+    assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -114,7 +110,7 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle import cannot connect error."""
 
     with patch(
-        "homeassistant.components.russound_rio.config_flow.Russound",
+        "homeassistant.components.russound_rio.config_flow.Russound.connect",
         side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
