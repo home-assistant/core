@@ -44,7 +44,7 @@ async def test_climate_inner_heat_heating(
     climate = climates[0]
 
     mock_setup.api.get_full_status.return_value = {
-        "sensor": SensorMode.INNER_SENSOR_CONTROL,
+        "sensor": SensorMode.INNER_SENSOR_CONTROL.value,
         "power": 1,
         "auto_mode": 0,
         "active": 1,
@@ -132,7 +132,7 @@ async def test_climate_outer_auto_idle(
     climate = climates[0]
 
     mock_setup.api.get_full_status.return_value = {
-        "sensor": SensorMode.OUTER_SENSOR_CONTROL,
+        "sensor": SensorMode.OUTER_SENSOR_CONTROL.value,
         "power": 1,
         "auto_mode": 1,
         "active": 0,
@@ -175,7 +175,7 @@ async def test_climate_inner_off_off(
     climate = climates[0]
 
     mock_setup.api.get_full_status.return_value = {
-        "sensor": SensorMode.INNER_SENSOR_CONTROL,
+        "sensor": SensorMode.INNER_SENSOR_CONTROL.value,
         "power": 0,
         "auto_mode": 0,
         "active": 0,
