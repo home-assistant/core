@@ -206,9 +206,7 @@ class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
         # Initialize the Entity Class
         super().__init__(coordinator, station_id)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{self.coordinator.data[station_id].station.station_id}_{description.key}"
-        )
+        self._attr_unique_id = f"{station_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal | None:
