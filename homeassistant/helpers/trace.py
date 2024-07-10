@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
 from typing import Any
-
-from typing_extensions import Generator
 
 from homeassistant.core import ServiceResponse
 import homeassistant.util.dt as dt_util

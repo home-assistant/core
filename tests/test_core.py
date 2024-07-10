@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+from pathlib import Path
 import re
 from tempfile import TemporaryDirectory
 import threading
@@ -918,6 +919,14 @@ def test_event_repr() -> None:
         str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
         == "<Event TestEvent[R]: beer=nice>"
     )
+
+
+def test_event_origin_idx() -> None:
+    """Test the EventOrigin idx."""
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+    assert ha.EventOrigin.local.idx == 0
+    assert ha.EventOrigin.remote.idx == 1
 
 
 def test_event_as_dict() -> None:
@@ -2001,8 +2010,9 @@ async def test_config_is_allowed_path() -> None:
         config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
         test_file = os.path.join(tmp_dir, "test.jpg")
-        with open(test_file, "w", encoding="utf8") as tmp_file:
-            tmp_file.write("test")
+        await asyncio.get_running_loop().run_in_executor(
+            None, Path(test_file).write_text, "test"
+        )
 
         valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
         for path in valid:
@@ -3094,14 +3104,14 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
-def test_is_callback_check_partial():
+def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert ha.is_callback(callback_func)
@@ -3130,14 +3140,14 @@ def test_is_callback_check_partial():
     )
 
 
-def test_hassjob_passing_job_type():
+def test_hassjob_passing_job_type() -> None:
     """Test passing the job type to HassJob when we already know it."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert (
@@ -3237,7 +3247,7 @@ async def test_async_run_job_deprecated(
 ) -> None:
     """Test async_run_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_run_job(_test)
@@ -3254,7 +3264,7 @@ async def test_async_add_job_deprecated(
 ) -> None:
     """Test async_add_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_job(_test)
@@ -3271,7 +3281,7 @@ async def test_async_add_hass_job_deprecated(
 ) -> None:
     """Test async_add_hass_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_hass_job(HassJob(_test))
@@ -3385,24 +3395,24 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(state_changed_events) == 1
-    assert len(state_reported_events) == 2
+    assert len(state_reported_events) == 1
 
     hass.states.async_set("light.bowl", "off")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 2
-    assert len(state_reported_events) == 3
+    assert len(state_reported_events) == 1
 
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
     unsub()
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 4
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
 
 async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:

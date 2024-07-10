@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections import defaultdict
+from collections.abc import Callable, Generator, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from typing_extensions import Generator
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     NVR,
-    Bootstrap,
     Camera,
     Event,
     EventType,
@@ -22,6 +21,7 @@ from uiprotect.data import (
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -78,10 +78,11 @@ class ProtectData:
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: dict[str, list[Callable[[ProtectDeviceType], None]]] = {}
+        self._subscriptions: defaultdict[
+            str, set[Callable[[ProtectDeviceType], None]]
+        ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
-        self._unsub_interval: CALLBACK_TYPE | None = None
-        self._unsub_websocket: CALLBACK_TYPE | None = None
+        self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
         self.last_update_success = False
         self.api = protect
@@ -112,11 +113,9 @@ class ProtectData:
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
     ) -> Generator[ProtectAdoptableDeviceModel]:
         """Get all devices matching types."""
+        bootstrap = self.api.bootstrap
         for device_type in device_types:
-            devices = async_get_devices_by_type(
-                self.api.bootstrap, device_type
-            ).values()
-            for device in devices:
+            for device in async_get_devices_by_type(bootstrap, device_type).values():
                 if ignore_unadopted and not device.is_adopted_by_us:
                     continue
                 yield device
@@ -127,33 +126,61 @@ class ProtectData:
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
         )
 
-    async def async_setup(self) -> None:
+    @callback
+    def async_setup(self) -> None:
         """Subscribe and do the refresh."""
-        self._unsub_websocket = self.api.subscribe_websocket(
-            self._async_process_ws_message
-        )
-        await self.async_refresh()
+        self.last_update_success = True
+        self._async_update_change(True, force_update=True)
+        api = self.api
+        self._unsubs = [
+            api.subscribe_websocket_state(self._async_websocket_state_changed),
+            api.subscribe_websocket(self._async_process_ws_message),
+            async_track_time_interval(
+                self._hass, self._async_poll, self._update_interval
+            ),
+        ]
+
+    @callback
+    def _async_websocket_state_changed(self, state: WebsocketState) -> None:
+        """Handle a change in the websocket state."""
+        self._async_update_change(state is WebsocketState.CONNECTED)
+
+    def _async_update_change(
+        self,
+        success: bool,
+        force_update: bool = False,
+        exception: Exception | None = None,
+    ) -> None:
+        """Process a change in update success."""
+        was_success = self.last_update_success
+        self.last_update_success = success
+
+        if not success:
+            level = logging.ERROR if was_success else logging.DEBUG
+            title = self._entry.title
+            _LOGGER.log(level, "%s: Connection lost", title, exc_info=exception)
+            self._async_process_updates()
+            return
+
+        self._auth_failures = 0
+        if not was_success:
+            _LOGGER.info("%s: Connection restored", self._entry.title)
+            self._async_process_updates()
+        elif force_update:
+            self._async_process_updates()
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
-        if self._unsub_websocket:
-            self._unsub_websocket()
-            self._unsub_websocket = None
-        if self._unsub_interval:
-            self._unsub_interval()
-            self._unsub_interval = None
+        for unsub in self._unsubs:
+            unsub()
+        self._unsubs.clear()
         await self.api.async_disconnect_ws()
 
-    async def async_refresh(self, *_: Any, force: bool = False) -> None:
+    async def async_refresh(self) -> None:
         """Update the data."""
-
-        # if last update was failure, force until success
-        if not self.last_update_success:
-            force = True
-
         try:
-            updates = await self.api.update(force=force)
-        except NotAuthorized:
+            await self.api.update()
+        except NotAuthorized as ex:
             if self._auth_failures < AUTH_RETRIES:
                 _LOGGER.exception("Auth error while updating")
                 self._auth_failures += 1
@@ -161,17 +188,11 @@ class ProtectData:
                 await self.async_stop()
                 _LOGGER.exception("Reauthentication required")
                 self._entry.async_start_reauth(self._hass)
-            self.last_update_success = False
-        except ClientError:
-            if self.last_update_success:
-                _LOGGER.exception("Error while updating")
-            self.last_update_success = False
-            # manually trigger update to mark entities unavailable
-            self._async_process_updates(self.api.bootstrap)
+            self._async_update_change(False, exception=ex)
+        except ClientError as ex:
+            self._async_update_change(False, exception=ex)
         else:
-            self.last_update_success = True
-            self._auth_failures = 0
-            self._async_process_updates(updates)
+            self._async_update_change(True, force_update=True)
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
@@ -181,7 +202,6 @@ class ProtectData:
         initialized yet. Will cause Websocket code to check for channels to be
         initialized for the camera and issue a dispatch once they do.
         """
-
         self._pending_camera_ids.add(camera_id)
 
     @callback
@@ -275,25 +295,15 @@ class ProtectData:
             self._async_update_device(new_obj, message.changed_data)
 
     @callback
-    def _async_process_updates(self, updates: Bootstrap | None) -> None:
+    def _async_process_updates(self) -> None:
         """Process update from the protect data."""
-
-        # Websocket connected, use data from it
-        if updates is None:
-            return
-
         self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
 
     @callback
     def _async_poll(self, now: datetime) -> None:
-        """Poll the Protect API.
-
-        If the websocket is connected, most of the time
-        this will be a no-op. If the websocket is disconnected,
-        this will trigger a reconnect and refresh.
-        """
+        """Poll the Protect API."""
         self._entry.async_create_background_task(
             self._hass,
             self.async_refresh(),
@@ -302,35 +312,29 @@ class ProtectData:
         )
 
     @callback
-    def async_subscribe_device_id(
+    def async_subscribe(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
-        if not self._subscriptions:
-            self._unsub_interval = async_track_time_interval(
-                self._hass, self._async_poll, self._update_interval
-            )
-        self._subscriptions.setdefault(mac, []).append(update_callback)
-        return partial(self.async_unsubscribe_device_id, mac, update_callback)
+        self._subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe, mac, update_callback)
 
     @callback
-    def async_unsubscribe_device_id(
+    def _async_unsubscribe(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> None:
         """Remove a callback subscriber."""
         self._subscriptions[mac].remove(update_callback)
         if not self._subscriptions[mac]:
             del self._subscriptions[mac]
-        if not self._subscriptions and self._unsub_interval:
-            self._unsub_interval()
-            self._unsub_interval = None
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
-        if not (subscriptions := self._subscriptions.get(device.mac)):
+        mac = device.mac
+        if not (subscriptions := self._subscriptions.get(mac)):
             return
-        _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
+        _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
             update_callback(device)
 

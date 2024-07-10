@@ -1,10 +1,10 @@
 """Common fixtures for the ista EcoTrend tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -53,9 +53,11 @@ def mock_ista() -> Generator[MagicMock]:
         ),
     ):
         client = mock_client.return_value
-        client._uuid = "26e93f1a-c828-11ea-87d0-0242ac130003"
-        client._a_firstName = "Max"
-        client._a_lastName = "Istamann"
+        client.get_account.return_value = {
+            "firstName": "Max",
+            "lastName": "Istamann",
+            "activeConsumptionUnit": "26e93f1a-c828-11ea-87d0-0242ac130003",
+        }
         client.get_consumption_unit_details.return_value = {
             "consumptionUnits": [
                 {
@@ -74,17 +76,17 @@ def mock_ista() -> Generator[MagicMock]:
                 },
             ]
         }
-        client.getUUIDs.return_value = [
+        client.get_uuids.return_value = [
             "26e93f1a-c828-11ea-87d0-0242ac130003",
             "eaf5c5c8-889f-4a3c-b68c-e9a676505762",
         ]
-        client.get_raw = get_raw
+        client.get_consumption_data = get_consumption_data
 
         yield client
 
 
-def get_raw(obj_uuid: str | None = None) -> dict[str, Any]:
-    """Mock function get_raw."""
+def get_consumption_data(obj_uuid: str | None = None) -> dict[str, Any]:
+    """Mock function get_consumption_data."""
     return {
         "consumptionUnitId": obj_uuid,
         "consumptions": [

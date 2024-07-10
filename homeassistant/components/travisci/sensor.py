@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -74,7 +74,7 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 NOTIFICATION_ID = "travisci"
 NOTIFICATION_TITLE = "Travis CI Sensor Setup"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(

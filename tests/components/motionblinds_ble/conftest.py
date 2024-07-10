@@ -1,9 +1,9 @@
 """Setup the Motionblinds Bluetooth tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 TEST_MAC = "abcd"
 TEST_NAME = f"MOTION_{TEST_MAC.upper()}"
