@@ -56,6 +56,8 @@ from .const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_COILS,
+    CALL_TYPE_WRITE_REGISTERS,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
@@ -256,11 +258,11 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
             vol.Optional(
-                CONF_HVAC_ONOFF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_INPUT
+                CONF_HVAC_ONOFF_REGISTER_TYPE, default=CALL_TYPE_WRITE_REGISTERS
             ): vol.In(
                 [
-                    CALL_TYPE_COIL,
-                    CALL_TYPE_REGISTER_INPUT,
+                    CALL_TYPE_WRITE_COILS,
+                    CALL_TYPE_WRITE_REGISTERS,
                 ]
             ),
             vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
