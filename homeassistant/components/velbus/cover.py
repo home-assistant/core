@@ -66,16 +66,14 @@ class VelbusCover(VelbusEntity, CoverEntity):
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
-        opening = self._channel.is_opening()
-        if opening:
+        if opening := self._channel.is_opening():
             self._assumed_closed = False
         return opening
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        closing = self._channel.is_closing()
-        if closing:
+        if closing := self._channel.is_closing():
             self._assumed_closed = True
         return closing
 
