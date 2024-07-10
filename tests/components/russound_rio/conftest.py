@@ -119,9 +119,3 @@ def config_flow(hass: HomeAssistant):
     flow = FlowHandler()
     flow.hass = hass
     return flow
-
-
-# @pytest.fixture
-# def flow_handler():
-#     """Create a config flow instance."""
-#     return MagicMock(spec=FlowHandler)
