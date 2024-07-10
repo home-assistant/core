@@ -355,6 +355,9 @@ aioridwell==2024.01.0
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.34
 
+# homeassistant.components.russound_rio
+aiorussound==1.1.2
+
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
@@ -2502,9 +2505,6 @@ rpi-bad-power==0.1.0
 
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.1
-
-# homeassistant.components.russound_rio
-russound-rio==1.0.0
 
 # homeassistant.components.russound_rnet
 russound==0.1.9
