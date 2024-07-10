@@ -17,8 +17,8 @@ def mock_setup_entry():
     """Prevent setup."""
     with patch(
         "homeassistant.components.russound_rio.async_setup_entry", return_value=True
-    ):
-        yield
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def mock_russound() -> Generator[AsyncMock]:
         ) as mock_client,
         patch(
             "homeassistant.components.russound_rio.config_flow.Russound",
-            new=mock_client,
+            return_value=mock_client,
         ),
     ):
         mock_client.enumerate_controllers.return_value = [(1, HARDWARE_MAC, MODEL)]
