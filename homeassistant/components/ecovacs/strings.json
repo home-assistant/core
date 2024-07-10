@@ -91,6 +91,9 @@
       "clean_count": {
         "name": "Clean count"
       },
+      "cut_direction": {
+        "name": "Cut direction"
+      },
       "volume": {
         "name": "Volume"
       }
