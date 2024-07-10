@@ -27,8 +27,12 @@ async def test_load_unload_coordinator_called(
     await hass.async_block_till_done()
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_coordinator.assert_called_once()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    method_call = mock_coordinator.method_calls[0]
+    name, _, _ = method_call
+    assert name == "().async_config_entry_first_refresh"
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -55,8 +59,12 @@ async def test_load_unload_iottyproxy_called(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    mock_iotty.assert_called_once()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    method_call = mock_iotty.method_calls[0]
+    name, _, _ = method_call
+    assert name == "().get_devices"
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

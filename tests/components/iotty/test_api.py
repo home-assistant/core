@@ -19,13 +19,11 @@ async def test_api_create_fail(
 ) -> None:
     """Test API creation with no session."""
 
-    with pytest.raises(ValueError) as excinfo:
-        _ = api.IottyProxy(hass, None, None)
-    assert "websession" in str(excinfo.value)
+    with pytest.raises(ValueError, match="websession"):
+        api.IottyProxy(hass, None, None)
 
-    with pytest.raises(ValueError) as excinfo:
-        _ = api.IottyProxy(hass, aioclient_mock, None)
-    assert "oauth_session" in str(excinfo.value)
+    with pytest.raises(ValueError, match="oauth_session"):
+        api.IottyProxy(hass, aioclient_mock, None)
 
 
 async def test_api_create_ok(
@@ -34,7 +32,7 @@ async def test_api_create_ok(
     aiohttp_client_session: None,
     local_oauth_impl: ClientSession,
 ) -> None:
-    """Test API creation."""
+    """Test API creation. We're checking that we can create an IottyProxy without raising."""
 
     mock_config_entry.add_to_hass(hass)
     assert mock_config_entry.data["auth_implementation"] is not None
@@ -43,9 +41,7 @@ async def test_api_create_ok(
         hass, DOMAIN, local_oauth_impl
     )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
-
-    assert iotty is not None
+    _ = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
 
 
 @patch(
@@ -58,12 +54,15 @@ async def test_api_getaccesstoken_tokennotvalid_reloadtoken(
     mock_aioclient: None,
     aiohttp_client_session: ClientSession,
 ) -> None:
-    """Print a message if the token is not valid."""
+    """A new, valid token is returned if th current token is not valid."""
     config_entry_oauth2_flow.async_register_implementation(
         hass, DOMAIN, local_oauth_impl
     )
+
+    new_token = "ACCESS_TOKEN_1"
+
     mock_aioclient.post(
-        "https://token.url", json={"access_token": "ACCESS_TOKEN_1", "expires_in": 100}
+        "https://token.url", json={"access_token": new_token, "expires_in": 100}
     )
 
     mock_aioclient.post("https://example.com", status=201)
@@ -76,4 +75,4 @@ async def test_api_getaccesstoken_tokennotvalid_reloadtoken(
     iotty = api.IottyProxy(hass, aiohttp_client_session, oauth2_session)
 
     tok = await iotty.async_get_access_token()
-    assert tok is not None
+    assert tok == new_token
