@@ -1,92 +1,108 @@
 """Constants for the Telegram client integration."""
 
+from datetime import timedelta
 import logging
 from typing import Final
 
-LOGGER = logging.getLogger(__name__)
+# region general
+DOMAIN: Final = "telegram_client"
+LOGGER: Final = logging.getLogger(__name__)
+SCAN_INTERVAL: Final = timedelta(seconds=10)
+# endregion
 
+# region client types
+CLIENT_TYPE_BOT: Final = "bot"
+CLIENT_TYPE_CLIENT: Final = "client"
+# endregion
+
+# region configuration
 CONF_API_HASH: Final = "api_hash"
 CONF_API_ID: Final = "api_id"
-CONF_TYPE: Final = "type"
 CONF_OTP: Final = "otp"
 CONF_PHONE: Final = "phone"
-CONF_PREMIUM: Final = "premium"
 CONF_SESSION_ID: Final = "session_id"
-CONF_FIRST_NAME: Final = "first_name"
-CONF_USER_ID: Final = "user_id"
+CONF_TOKEN: Final = "token"
+CONF_CLIENT_TYPE: Final = "type"
 CONF_USERNAME: Final = "username"
-CONF_LAST_NAME: Final = "last_name"
-CONF_RESTRICTED: Final = "restricted"
-CONF_LAST_SENT_MESSAGE_ID: Final = "last_sent_message_id"
-CONF_LAST_EDITED_MESSAGE_ID: Final = "last_edited_message_id"
+CONF_USER_ID: Final = "user_id"
+# endregion
 
-DOMAIN: Final = "telegram_client"
+# region events
+EVENT_CALLBACK_QUERY: Final = "callback_query"
+EVENT_CHAT_ACTION: Final = "chat_action"
+EVENT_INLINE_QUERY: Final = "inline_query"
+EVENT_MESSAGE_DELETED: Final = "message_deleted"
+EVENT_MESSAGE_EDITED: Final = "message_edited"
+EVENT_MESSAGE_READ: Final = "message_read"
+EVENT_NEW_MESSAGE: Final = "new_message"
+EVENT_USER_UPDATE: Final = "user_update"
+# endregion
 
+# region options
+OPTION_BLACKLIST_CHATS: Final = "blacklist_chats"
+OPTION_CHATS: Final = "chats"
+OPTION_EVENTS: Final = "events"
+OPTION_FORWARDS: Final = "forwards"
+OPTION_FROM_USERS: Final = "from_users"
+OPTION_INCOMING: Final = "incoming"
+OPTION_OUTGOING: Final = "outgoing"
+OPTION_PATTERN: Final = "pattern"
+# endregion
 
-SERVICE_SEND_MESSAGE = "send_message"
-SERVICE_EDIT_MESSAGE = "edit_message"
+# region sensors
+SENSOR_FIRST_NAME: Final = "first_name"
+SENSOR_LAST_EDITED_MESSAGE_ID: Final = "last_edited_message_id"
+SENSOR_LAST_NAME: Final = "last_name"
+SENSOR_LAST_SENT_MESSAGE_ID: Final = "last_sent_message_id"
+SENSOR_PREMIUM: Final = "premium"
+SENSOR_RESTRICTED: Final = "restricted"
+# endregion
 
-ATTR_DATA = "data"
-ATTR_MESSAGE = "message"
-ATTR_TITLE = "title"
+# region services
+SERVICE_EDIT_MESSAGE: Final = "edit_message"
+SERVICE_SEND_MESSAGE: Final = "send_message"
+# endregion
 
-ATTR_ARGS = "args"
-ATTR_TEXT = "text"
-ATTR_AUTHENTICATION = "authentication"
-ATTR_CALLBACK_QUERY = "callback_query"
-ATTR_CALLBACK_QUERY_ID = "callback_query_id"
-ATTR_CAPTION = "caption"
-ATTR_CHAT_ID = "chat_id"
-ATTR_CHAT_INSTANCE = "chat_instance"
-ATTR_DATE = "date"
-ATTR_SILENT = "silent"
-ATTR_SUPPORTS_STREAMING = "supports_streaming"
-ATTR_COMMENT_TO = "comment_to"
-ATTR_NOSOUND_VIDEO = "nosound_video"
-ATTR_FILE = "file"
-ATTR_LINK_PREVIEW = "link_preview"
-ATTR_EDITED_MSG = "edited_message"
-ATTR_FILE = "file"
-ATTR_FORCE_DOCUMENT = "force_document"
-ATTR_CLEAR_DRAFT = "clear_draft"
-ATTR_FROM_FIRST = "from_first"
-ATTR_FROM_LAST = "from_last"
-ATTR_KEYBOARD = "keyboard"
-ATTR_KEYBOARD_RESIZE = "keyboard_resize"
-ATTR_KEYBOARD_SINGLE_USE = "keyboard_single_use"
-ATTR_INLINE_KEYBOARD = "inline_keyboard"
-ATTR_TTL = "ttl"
-ATTR_BUTTONS = "buttons"
-ATTR_MESSAGEID = "message_id"
-ATTR_MSG = "message"
-ATTR_MSGID = "id"
-ATTR_NOSOUND_VIDEO = "nosound_video"
-ATTR_PARSE_MODE = "parse_mode"
-ATTR_PASSWORD = "password"
-ATTR_REPLY_TO = "reply_to"
-ATTR_REPLYMARKUP = "reply_markup"
-ATTR_SHOW_ALERT = "show_alert"
-ATTR_STICKER_ID = "sticker_id"
-ATTR_TARGET_USERNAME = "target_username"
-ATTR_TARGET_ID = "target_id"
-ATTR_TEXT = "text"
-ATTR_URL = "url"
-ATTR_USER_ID = "user_id"
-ATTR_USERNAME = "username"
-ATTR_VERIFY_SSL = "verify_ssl"
-ATTR_TIMEOUT = "timeout"
-ATTR_MESSAGE_TAG = "message_tag"
-ATTR_CHANNEL_POST = "channel_post"
-ATTR_SCHEDULE = "schedule"
-ATTR_QUESTION = "question"
-ATTR_OPTIONS = "options"
-ATTR_ANSWERS = "answers"
-ATTR_OPEN_PERIOD = "open_period"
-ATTR_IS_ANONYMOUS = "is_anonymous"
-ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
-ATTR_MESSAGE_THREAD_ID = "message_thread_id"
+# region service fields
+FIELD_BUTTONS: Final = "buttons"
+FIELD_CLEAR_DRAFT: Final = "clear_draft"
+FIELD_COMMENT_TO: Final = "comment_to"
+FIELD_FILE: Final = "file"
+FIELD_FORCE_DOCUMENT: Final = "force_document"
+FIELD_INLINE_KEYBOARD: Final = "inline_keyboard"
+FIELD_KEYBOARD: Final = "keyboard"
+FIELD_KEYBOARD_RESIZE: Final = "keyboard_resize"
+FIELD_KEYBOARD_SINGLE_USE: Final = "keyboard_single_use"
+FIELD_LINK_PREVIEW: Final = "link_preview"
+FIELD_MESSAGE: Final = "message"
+FIELD_NOSOUND_VIDEO: Final = "nosound_video"
+FIELD_PARSE_MODE: Final = "parse_mode"
+FIELD_REPLY_TO: Final = "reply_to"
+FIELD_SCHEDULE: Final = "schedule"
+FIELD_SILENT: Final = "silent"
+FIELD_SUPPORTS_STREAMING: Final = "supports_streaming"
+FIELD_TARGET_ID: Final = "target_id"
+FIELD_TARGET_USERNAME: Final = "target_username"
+FIELD_TEXT: Final = "text"
+FIELD_USERNAME: Final = "username"
+FIELD_USER_ID: Final = "user_id"
+# endregion
 
-UPDATE_INTERVAL = 10
-CONF_TYPE_BOT = "bot"
-CONF_TYPE_CLIENT = "client"
-CONF_TOKEN = "token"
+# region keys
+KEY_BASE: Final = "base"
+KEY_ENTRY_ID: Final = "entry_id"
+KEY_SUGGESTED_VALUE: Final = "suggested_value"
+# endregion
+
+# region strings
+STRING_FIRST_NAME: Final = "First name"
+STRING_LAST_EDITED_MESSAGE_ID: Final = "Last edited message ID"
+STRING_LAST_NAME: Final = "Last name"
+STRING_LAST_SENT_MESSAGE_ID: Final = "Last sent message ID"
+STRING_PREMIUM: Final = "Premium"
+STRING_RESTRICTED: Final = "Restricted"
+# endregion
+
+# region icons
+ICON_PREMIUM: Final = "mdi:star"
+# endregion

@@ -18,22 +18,30 @@ from telethon.errors import (
 from telethon.errors.rpcerrorlist import FloodWaitError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CLIENT_TYPE_CLIENT,
     CONF_API_HASH,
     CONF_API_ID,
+    CONF_CLIENT_TYPE,
     CONF_OTP,
     CONF_PHONE,
     CONF_SESSION_ID,
     CONF_TOKEN,
-    CONF_TYPE,
-    CONF_TYPE_CLIENT,
     DOMAIN,
+    KEY_ENTRY_ID,
 )
+from .options_flow import TelegramClientOptionsFlow
 from .schemas import (
     STEP_API_DATA_SCHEMA,
     STEP_OTP_DATA_SCHEMA,
@@ -47,23 +55,23 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram client."""
 
     VERSION = 1
-    _entry: ConfigEntry
+    _config_entry: ConfigEntry
     _client: TelegramClient
     _session: str
     _api_id: str
     _api_hash: str
     _type: str
-    _phone: str = ""
+    _phone: str
     _phone_code_hash: str
-    _token: str = ""
-    _password: str = ""
+    _token: str
+    _password: str
 
     def create_client(self) -> TelegramClient:
         """Create Telegram client."""
         path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
         path.mkdir(parents=True, exist_ok=True)
         path = path.joinpath(
-            f"{re.sub(r'\D', '', self._phone) if self._type == CONF_TYPE_CLIENT else self._token.split(":")[0]}.session"
+            f"{re.sub(r'\D', '', self._phone) if self._type == CLIENT_TYPE_CLIENT else self._token.split(":")[0]}.session"
         )
         return TelegramClient(
             path,
@@ -71,10 +79,16 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             self._api_hash,
         )
 
-    def get_entry(self) -> ConfigEntry | None:
+    def get_config_entry(self) -> ConfigEntry | None:
         """Get config entry."""
-        entry_id = self.context.get("entry_id")
+        entry_id = self.context.get(KEY_ENTRY_ID)
         return self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return TelegramClientOptionsFlow(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -85,10 +99,10 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             self._session = self.flow_id
             self._api_id = user_input[CONF_API_ID]
             self._api_hash = user_input[CONF_API_HASH]
-            self._type = user_input[CONF_TYPE]
+            self._type = user_input[CONF_CLIENT_TYPE]
             return (
                 await self.async_step_phone()
-                if self._type == CONF_TYPE_CLIENT
+                if self._type == CLIENT_TYPE_CLIENT
                 else await self.async_step_token()
             )
 
@@ -126,7 +140,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._client.log_out()
                 errors[CONF_TOKEN] = str(err)
 
-        entry = self.get_entry()
+        entry = self.get_config_entry()
         return self.async_show_form(
             step_id=CONF_TOKEN,
             data_schema=step_token_data_schema(
@@ -185,7 +199,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._client.disconnect()
                 errors[CONF_PASSWORD] = "invalid_auth"
 
-        entry = self.get_entry()
+        entry = self.get_config_entry()
         return self.async_show_form(
             step_id=CONF_PASSWORD,
             data_schema=step_password_data_schema(
@@ -201,20 +215,24 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SESSION_ID: self._session,
             CONF_API_ID: self._api_id,
             CONF_API_HASH: self._api_hash,
-            CONF_TYPE: self._type,
+            CONF_CLIENT_TYPE: self._type,
             CONF_PHONE: self._phone,
             CONF_TOKEN: self._token,
             CONF_PASSWORD: self._password,
         }
         if self.context["source"] == "reauth":
-            if reauth_entry := self.hass.config_entries.async_get_entry(
+            if reauth_config_entry := self.hass.config_entries.async_get_entry(
                 self.context["entry_id"]
             ):
-                self.hass.config_entries.async_update_entry(reauth_entry, data=data)
-                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
+                self.hass.config_entries.async_update_entry(
+                    reauth_config_entry, data=data
+                )
+                await self.hass.config_entries.async_reload(
+                    reauth_config_entry.entry_id
+                )
             return self.async_abort(reason="reauth_successful")
         try:
-            if self._type == CONF_TYPE_CLIENT:
+            if self._type == CLIENT_TYPE_CLIENT:
                 await self._client.start(phone=self._phone)
             else:
                 await self._client.start(bot_token=self._token)
@@ -223,7 +241,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._client.disconnect()
         unique_id = (
             f"@{me.username}" or self._phone
-            if self._type == CONF_TYPE_CLIENT
+            if self._type == CLIENT_TYPE_CLIENT
             else f"@{me.username}"
         )
         await self.async_set_unique_id(unique_id)
@@ -240,10 +258,10 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         self._session = entry_data[CONF_SESSION_ID]
         self._api_id = entry_data[CONF_API_ID]
         self._api_hash = entry_data[CONF_API_HASH]
-        self._type = entry_data[CONF_TYPE]
+        self._type = entry_data[CONF_CLIENT_TYPE]
         self._phone = entry_data[CONF_PHONE]
 
-        if self._type == CONF_TYPE_CLIENT:
+        if self._type == CLIENT_TYPE_CLIENT:
             self._client = self.create_client()
             return await self.async_step_reauth_confirm()
         return await self.async_step_token()
