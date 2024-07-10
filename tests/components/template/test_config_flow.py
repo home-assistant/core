@@ -370,16 +370,6 @@ def get_suggested(schema, key):
             "state",
         ),
         (
-            "switch",
-            {"value_template": "{{ states('switch.one') }}"},
-            {"value_template": "{{ states('switch.two') }}"},
-            ["on", "off"],
-            {"one": "on", "two": "off"},
-            {},
-            {},
-            "value_template",
-        ),
-        (
             "image",
             {
                 "url": "{{ states('sensor.one') }}",
@@ -394,6 +384,17 @@ def get_suggested(schema, key):
                 "url": "{{ states('sensor.two') }}",
                 "verify_ssl": True,
             },
+            "url",
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            {"value_template": "{{ states('switch.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            "value_template",
         ),
     ],
 )
