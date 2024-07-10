@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
+from awesomeversion import AwesomeVersion
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import (
+    BETA_STRATEGY_MEALIE,
+    BETA_STRATEGY_PEP440,
+    DOMAIN,
+    LOGGER,
+    MIN_REQUIRED_MEALIE_V,
+    OUTDATED_LOG_MESSAGE,
+)
 from .coordinator import (
     MealieConfigEntry,
     MealieData,
@@ -41,10 +49,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     )
     try:
         about = await client.get_about()
+        version = create_version(about.version)
     except MealieAuthenticationError as error:
         raise ConfigEntryError("Authentication failed") from error
     except MealieConnectionError as error:
         raise ConfigEntryNotReady(error) from error
+
+    if not version.valid or version < MIN_REQUIRED_MEALIE_V:
+        LOGGER.error(
+            OUTDATED_LOG_MESSAGE,
+            about.version,
+            MIN_REQUIRED_MEALIE_V,
+        )
+        return False
 
     assert entry.unique_id
     device_registry = dr.async_get(hass)
@@ -75,3 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def create_version(version: str) -> AwesomeVersion:
+    """Convert beta versions to PEP440."""
+    return AwesomeVersion(version.replace(BETA_STRATEGY_MEALIE, BETA_STRATEGY_PEP440))

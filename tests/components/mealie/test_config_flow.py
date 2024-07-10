@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiomealie import MealieAuthenticationError, MealieConnectionError
+from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
 
 from homeassistant.components.mealie.const import DOMAIN
@@ -81,6 +81,39 @@ async def test_flow_errors(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("version"),
+    [
+        ("v1.0.0beta-5"),
+        ("v0.1.0"),
+        ("something"),
+    ],
+)
+async def test_flow_version_error(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    version,
+) -> None:
+    """Test flow version error."""
+    mock_mealie_client.get_about.return_value = About(version=version)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "mealie_version"}
 
 
 async def test_duplicate(
