@@ -60,6 +60,7 @@ SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
         translation_key="energy_production_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         state=lambda solar: solar.energy_production_total,
     ),
 )
