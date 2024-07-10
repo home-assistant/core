@@ -65,7 +65,9 @@ class ConfiguredDoorBird:
         self._custom_url = custom_url
         self._token = token
         self._event_entity_ids = event_entity_ids
+        # Raw events, ie "doorbell" or "motion"
         self.events: list[str] = []
+        # Event names, ie "doorbird_1234_doorbell" or "doorbird_1234_motion"
         self.door_station_events: list[str] = []
         self.event_descriptions: list[DoorbirdEvent] = []
 
@@ -104,6 +106,7 @@ class ConfiguredDoorBird:
 
         http_fav = await self._async_register_events(hass)
         event_config = await self._async_get_event_config(http_fav)
+        _LOGGER.debug("%s: Event config: %s", self.name, event_config)
         if event_config.unconfigured_favorites:
             await self._configure_unconfigured_favorites(event_config)
             event_config = await self._async_get_event_config(http_fav)
@@ -153,7 +156,7 @@ class ConfiguredDoorBird:
             # events are registered and the any does not short circuit
             [
                 await self._async_register_event(hass_url, event, http_fav)
-                for event in self.events
+                for event in self.door_station_events
             ]
         ):
             # If any events were registered, get the updated favorites
@@ -212,8 +215,10 @@ class ConfiguredDoorBird:
         the event was already registered or registration failed.
         """
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
+        _LOGGER.debug("Registering URL %s for event %s", url, event)
         # If its already registered, don't register it again
         if any(fav["value"] == url for fav in http_fav.values()):
+            _LOGGER.debug("URL already registered for %s", event)
             return False
 
         if not await self.device.change_favorite(
