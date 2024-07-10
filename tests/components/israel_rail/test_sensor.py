@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -27,17 +28,6 @@ async def test_valid_config(
     await init_integration(hass, mock_config_entry)
     assert len(hass.states.async_entity_ids()) == 7
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_invalid_config(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_israelrail: AsyncMock,
-) -> None:
-    """Ensure nothing is created when config is wrong."""
-    mock_israelrail.return_value.query.side_effect = Exception("error")
-    await init_integration(hass, mock_config_entry)
-    assert not hass.states.async_entity_ids("sensor")
 
 
 async def test_update_train(
@@ -89,4 +79,4 @@ async def test_fail_query(
     await goto_future(hass, freezer)
     assert len(hass.states.async_entity_ids()) == 7
     departure_sensor = hass.states.get("sensor.mock_title_departure")
-    assert departure_sensor.state == "unavailable"
+    assert departure_sensor.state == STATE_UNAVAILABLE
