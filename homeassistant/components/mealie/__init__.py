@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, MIN_REQUIRED_MEALIE_VERSION
 from .coordinator import (
     MealieConfigEntry,
     MealieData,
@@ -20,6 +20,7 @@ from .coordinator import (
     MealieShoppingListCoordinator,
 )
 from .services import setup_services
+from .utils import create_version
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
@@ -41,10 +42,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     )
     try:
         about = await client.get_about()
+        version = create_version(about.version)
     except MealieAuthenticationError as error:
         raise ConfigEntryError("Authentication failed") from error
     except MealieConnectionError as error:
         raise ConfigEntryNotReady(error) from error
+
+    if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="version_error",
+            translation_placeholders={
+                "mealie_version": about.version,
+                "min_version": MIN_REQUIRED_MEALIE_VERSION,
+            },
+        )
 
     assert entry.unique_id
     device_registry = dr.async_get(hass)
