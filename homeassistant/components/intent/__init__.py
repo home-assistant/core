@@ -381,7 +381,7 @@ class GetCurrentDateIntentHandler(intent.IntentHandler):
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
-        response.async_set_speech_slots({"date": datetime.now()})
+        response.async_set_speech_slots({"date": datetime.now().date()})
         return response
 
 
@@ -393,7 +393,7 @@ class GetCurrentTimeIntentHandler(intent.IntentHandler):
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
-        response.async_set_speech_slots({"time": datetime.now()})
+        response.async_set_speech_slots({"time": datetime.now().time()})
         return response
 
 
