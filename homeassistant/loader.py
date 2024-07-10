@@ -109,6 +109,11 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     "icloud3": BlockedIntegration(
         AwesomeVersion("3.0.5.3"), "prevents recorder from working"
     ),
+    # Added in 2024.7.2 because of
+    # https://github.com/custom-components/places/issues/289
+    "places": BlockedIntegration(
+        AwesomeVersion("2.7.1"), "prevents recorder from working"
+    ),
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
