@@ -89,6 +89,7 @@ from tests.typing import WebSocketGenerator
             {},
             {},
             {},
+            {},
         ),
     ],
 )
@@ -323,16 +324,6 @@ def get_suggested(schema, key):
             "state",
         ),
         (
-            "switch",
-            {"value_template": "{{ states('switch.one') }}"},
-            {"value_template": "{{ states('switch.two') }}"},
-            ["on", "off"],
-            {"one": "on", "two": "off"},
-            {},
-            {},
-            "value_template",
-        ),
-        (
             "button",
             {},
             {},
@@ -357,6 +348,17 @@ def get_suggested(schema, key):
                     }
                 ],
             },
+            "state",
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            {"value_template": "{{ states('switch.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            "value_template",
         ),
     ],
 )
