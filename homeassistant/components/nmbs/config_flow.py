@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_TYPE
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -24,8 +23,6 @@ from .const import (
     CONF_STATION_TO,
     DOMAIN,
 )
-
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
