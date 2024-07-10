@@ -2180,7 +2180,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.20
+universal-silabs-flasher==0.0.21
 
 # homeassistant.components.upb
 upb-lib==0.5.7
@@ -2321,7 +2321,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.19
+zha==0.0.20
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0
