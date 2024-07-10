@@ -32,6 +32,7 @@ class ConfiguredDoorBird:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: DoorBird,
         name: str | None,
         custom_url: str | None,
@@ -39,6 +40,7 @@ class ConfiguredDoorBird:
         event_entity_ids: dict[str, str],
     ) -> None:
         """Initialize configured device."""
+        self._hass = hass
         self._name = name
         self._device = device
         self._custom_url = custom_url
@@ -75,8 +77,9 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
-    async def async_register_events(self, hass: HomeAssistant) -> None:
+    async def async_register_events(self) -> None:
         """Register events on device."""
+        hass = self._hass
         # Override url if another is specified in the configuration
         if custom_url := self.custom_url:
             hass_url = custom_url
@@ -174,12 +177,11 @@ class ConfiguredDoorBird:
         }
 
 
-async def async_reset_device_favorites(
-    hass: HomeAssistant, door_station: ConfiguredDoorBird
-) -> None:
+async def async_reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
     """Handle clearing favorites on device."""
     door_bird = door_station.device
-    favorites: dict[str, dict[str, Any]] = await door_bird.favorites()
+    favorites = await door_bird.favorites()
     for favorite_type, favorite_ids in favorites.items():
         for favorite_id in favorite_ids:
             await door_bird.delete_favorite(favorite_type, favorite_id)
+    await door_station.async_register_events()
