@@ -15,7 +15,6 @@ from homeassistant.components.text import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_SLEEP_PERIOD
 from .coordinator import ShellyConfigEntry
 from .entity import (
     RpcEntityDescription,
@@ -50,9 +49,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        if config_entry.data[CONF_SLEEP_PERIOD]:
-            return
-
         coordinator = config_entry.runtime_data.rpc
         assert coordinator
 
