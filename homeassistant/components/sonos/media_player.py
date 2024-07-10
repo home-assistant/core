@@ -743,6 +743,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if self.source:
             attributes[ATTR_INPUT_SOURCE] = self.source
 
+        attributes["coordinator"] = self.coordinator.zone_name
+
         return attributes
 
     async def async_get_browse_image(

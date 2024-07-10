@@ -89,6 +89,20 @@ async def _setup_hass(hass: HomeAssistant):
     await hass.async_block_till_done()
 
 
+def _load_zgs(
+    fixture_file: str, soco_1: MockSoCo, soco_2: MockSoCo, create_uui_ds: bool = True
+) -> SonosMockEvent:
+    zgs = load_fixture(f"sonos/{fixture_file}")
+    variables = {}
+    variables["ZoneGroupState"] = zgs
+    if create_uui_ds:
+        variables["zone_player_uui_ds_in_group"] = f"{soco_1.uid},{soco_2.uid}"
+    event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
+    if create_uui_ds:
+        event.zone_player_uui_ds_in_group = f"{soco_1.uid},{soco_2.uid}"
+    return event
+
+
 async def test_zgs_event_group_speakers(
     hass: HomeAssistant, soco_factory: SoCoMockFactory
 ) -> None:
@@ -96,19 +110,36 @@ async def test_zgs_event_group_speakers(
     soco_1 = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
 
-    zgs = load_fixture("sonos/zgs_group.xml")
-    variables = {
-        "ZoneGroupState": zgs,
-        "zone_player_uui_ds_in_group": f"{soco_1.uid},{soco_2.uid}",
-    }
-    event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
-    event.zone_player_uui_ds_in_group = f"{soco_1.uid},{soco_2.uid}"
     await _setup_hass(hass)
+
+    # Initial state - speakers are not grouped
+    state = hass.states.get("media_player.living_room")
+    assert state.attributes["group_members"] == ["media_player.living_room"]
+    state = hass.states.get("media_player.bedroom")
+    assert state.attributes["group_members"] == ["media_player.bedroom"]
+
+    # Group the speakers, living room is the coordinator and should be first
+    event = _load_zgs("zgs_group.xml", soco_1, soco_2, create_uui_ds=True)
     soco_1.zoneGroupTopology.subscribe.return_value._callback(event)
+    soco_2.zoneGroupTopology.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.living_room")
-    assert state.attributes["group_members"][0] == "media_player.living_room"
-    assert state.attributes["group_members"][1] == "media_player.bedroom"
+    assert state.attributes["group_members"] == [
+        "media_player.living_room",
+        "media_player.bedroom",
+    ]
     state = hass.states.get("media_player.bedroom")
-    assert state.attributes["group_members"][0] == "media_player.living_room"
-    assert state.attributes["group_members"][1] == "media_player.bedroom"
+    assert state.attributes["group_members"] == [
+        "media_player.living_room",
+        "media_player.bedroom",
+    ]
+
+    # Ungroup the speakers
+    event = _load_zgs("zgs_two_single.xml", soco_1, soco_2, create_uui_ds=False)
+    soco_1.zoneGroupTopology.subscribe.return_value._callback(event)
+    soco_2.zoneGroupTopology.subscribe.return_value._callback(event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.living_room")
+    assert state.attributes["group_members"] == ["media_player.living_room"]
+    state = hass.states.get("media_player.bedroom")
+    assert state.attributes["group_members"] == ["media_player.bedroom"]
