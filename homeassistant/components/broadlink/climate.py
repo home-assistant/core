@@ -1,6 +1,6 @@
 """Support for Broadlink climate devices."""
 
-from enum import Enum
+from enum import IntEnum
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -20,7 +20,7 @@ from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
 
-class SensorMode(Enum):
+class SensorMode(IntEnum):
     """Thermostat sensor modes."""
 
     INNER_SENSOR_CONTROL = 0
@@ -72,7 +72,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update data."""
         if data.get("sensor") is not None:
-            self.sensor_mode = SensorMode(data.get("sensor"))
+            self.sensor_mode = SensorMode(data["sensor"])
         if data.get("power"):
             if data.get("auto_mode"):
                 self._attr_hvac_mode = HVACMode.AUTO
