@@ -211,6 +211,4 @@ class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | date | datetime | Decimal | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(
-            self.station.observation.obs[0]
-        )
+        return self.entity_description.value_fn(self.station.observation.obs[0])

@@ -64,8 +64,6 @@ class WeatherFlowWeather(
     ) -> None:
         """Initialise the platform with a data instance and station."""
         super().__init__(coordinator, station_id)
-
-        self.station_id = station_id
         self._attr_unique_id = f"weatherflow_forecast_{station_id}"
 
     @property
