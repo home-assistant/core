@@ -870,7 +870,7 @@ habluetooth==3.1.3
 hass-nabucasa==0.81.1
 
 # homeassistant.components.conversation
-hassil==1.7.1
+hassil==1.7.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
@@ -895,7 +895,7 @@ hole==0.8.0
 holidays==0.52
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240705.0
+home-assistant-frontend==20240710.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.3
@@ -2318,7 +2318,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.18
+zha==0.0.19
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0
