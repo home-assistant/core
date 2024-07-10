@@ -168,7 +168,6 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         self._sensorid = sensorid
         if uuid is not None:
             self._attr_unique_id = f'{uuid}-{elem["id"]}'
-            self._attr_name = f"Emoncms{id_for_name}|{elem['tag']}|{elem['name']}"
 
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
