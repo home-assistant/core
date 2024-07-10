@@ -33,8 +33,8 @@
       "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nNo primary controller was detected for the Russound device. Please make sure that the target Russound device has it's controller ID set to 1 (using the selector on the back of the unit)."
     },
     "deprecated_yaml_import_issue_unknown": {
-      "title": "The {integration_title} YAML configuration could not be imported",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nPlease make sure {integration_title} is turned on, and restart Home Assistant to try importing again. Otherwise, please remove the YAML from your configuration and add the integration manually."
+      "title": "[%key:component::russound_rio::issues::deprecated_yaml_import_issue_cannot_connect::title%]",
+      "description": "[%key:component::russound_rio::issues::deprecated_yaml_import_issue_cannot_connect::description%]"
     }
   }
 }
