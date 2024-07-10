@@ -53,16 +53,15 @@ from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
     DOMAIN,
-    ESTIMATED_QUEUE_ITEM_SIZE,
     KEEPALIVE_TIME,
     LAST_REPORTED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
+    MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
-    QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY,
     SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
     STATISTICS_ROWS_SCHEMA_VERSION,
@@ -156,6 +155,7 @@ ADJUST_LRU_SIZE_TASK = AdjustLRUSizeTask()
 DB_LOCK_TIMEOUT = 30
 DB_LOCK_QUEUE_CHECK_TIMEOUT = 10  # check every 10 seconds
 
+QUEUE_CHECK_INTERVAL = timedelta(minutes=5)
 
 INVALIDATED_ERR = "Database connection invalidated"
 CONNECTIVITY_ERR = "Error in database connectivity during commit"
@@ -347,7 +347,7 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass,
             self._async_check_queue,
-            timedelta(minutes=10),
+            QUEUE_CHECK_INTERVAL,
             name="Recorder queue watcher",
         )
 
@@ -418,12 +418,7 @@ class Recorder(threading.Thread):
         # If they have more RAM available, keep filling the backlog
         # since we do not want to stop recording events or give the
         # user a bad backup when they have plenty of RAM available.
-        max_queue_backlog = int(
-            QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY
-            * (self._available_memory() / ESTIMATED_QUEUE_ITEM_SIZE)
-        )
-        self.max_backlog = max(max_queue_backlog, MAX_QUEUE_BACKLOG_MIN_VALUE)
-        return current_backlog >= (max_queue_backlog * percentage_modifier)
+        return self._available_memory() < MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG
 
     @callback
     def _async_stop_queue_watcher_and_event_listener(self) -> None:
