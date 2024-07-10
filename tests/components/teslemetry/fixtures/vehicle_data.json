@@ -176,7 +176,7 @@
       "roof_color": "RoofColorGlass",
       "seat_type": null,
       "spoiler_type": "None",
-      "sun_roof_installed": null,
+      "sun_roof_installed": true,
       "supports_qr_pairing": false,
       "third_row_seats": "None",
       "timestamp": 1705707520649,
@@ -250,6 +250,8 @@
         "min_limit_mph": 50,
         "pin_code_set": true
       },
+      "sun_roof_state": "open",
+      "vehicle_state_sun_roof_percent_open": 20,
       "timestamp": 1705707520649,
       "tpms_hard_warning_fl": false,
       "tpms_hard_warning_fr": false,

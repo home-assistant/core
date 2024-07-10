@@ -10,23 +10,27 @@ from urllib.error import URLError
 
 import feedparser
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, EVENT_FEEDREADER
 
 DELAY_SAVE = 30
-EVENT_FEEDREADER = "feedreader"
 STORAGE_VERSION = 1
 
 
 _LOGGER = getLogger(__name__)
 
 
-class FeedReaderCoordinator(DataUpdateCoordinator[None]):
+class FeedReaderCoordinator(
+    DataUpdateCoordinator[list[feedparser.FeedParserDict] | None]
+):
     """Abstraction over Feedparser module."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -42,34 +46,36 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
             name=f"{DOMAIN} {url}",
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        self._url = url
+        self.url = url
+        self.feed_author: str | None = None
+        self.feed_version: str | None = None
         self._max_entries = max_entries
-        self._feed: feedparser.FeedParserDict | None = None
         self._storage = storage
         self._last_entry_timestamp: struct_time | None = None
         self._event_type = EVENT_FEEDREADER
+        self._feed: feedparser.FeedParserDict | None = None
         self._feed_id = url
 
     @callback
     def _log_no_entries(self) -> None:
         """Send no entries log at debug level."""
-        _LOGGER.debug("No new entries to be published in feed %s", self._url)
+        _LOGGER.debug("No new entries to be published in feed %s", self.url)
 
-    def _fetch_feed(self) -> feedparser.FeedParserDict:
+    async def _async_fetch_feed(self) -> feedparser.FeedParserDict:
         """Fetch the feed data."""
-        return feedparser.parse(
-            self._url,
-            etag=None if not self._feed else self._feed.get("etag"),
-            modified=None if not self._feed else self._feed.get("modified"),
-        )
+        _LOGGER.debug("Fetching new data from feed %s", self.url)
 
-    async def _async_update_data(self) -> None:
-        """Update the feed and publish new entries to the event bus."""
-        _LOGGER.debug("Fetching new data from feed %s", self._url)
-        self._feed = await self.hass.async_add_executor_job(self._fetch_feed)
+        def _parse_feed() -> feedparser.FeedParserDict:
+            return feedparser.parse(
+                self.url,
+                etag=None if not self._feed else self._feed.get("etag"),
+                modified=None if not self._feed else self._feed.get("modified"),
+            )
 
-        if not self._feed:
-            raise UpdateFailed(f"Error fetching feed data from {self._url}")
+        feed = await self.hass.async_add_executor_job(_parse_feed)
+
+        if not feed:
+            raise UpdateFailed(f"Error fetching feed data from {self.url}")
 
         # The 'bozo' flag really only indicates that there was an issue
         # during the initial parsing of the XML, but it doesn't indicate
@@ -77,36 +83,56 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         # feedparser lib is trying a less strict parsing approach.
         # If an error is detected here, log warning message but continue
         # processing the feed entries if present.
-        if self._feed.bozo != 0:
-            if isinstance(self._feed.bozo_exception, URLError):
+        if feed.bozo != 0:
+            if isinstance(feed.bozo_exception, URLError):
                 raise UpdateFailed(
-                    f"Error fetching feed data from {self._url}: {self._feed.bozo_exception}"
+                    f"Error fetching feed data from {self.url} : {feed.bozo_exception}"
                 )
 
             # no connection issue, but parsing issue
             _LOGGER.warning(
                 "Possible issue parsing feed %s: %s",
-                self._url,
-                self._feed.bozo_exception,
+                self.url,
+                feed.bozo_exception,
             )
+        return feed
+
+    async def async_setup(self) -> None:
+        """Set up the feed manager."""
+        feed = await self._async_fetch_feed()
+        self.logger.debug("Feed data fetched from %s : %s", self.url, feed["feed"])
+        self.feed_author = feed["feed"].get("author")
+        self.feed_version = feedparser.api.SUPPORTED_VERSIONS.get(feed["version"])
+        self._feed = feed
+
+    async def _async_update_data(self) -> list[feedparser.FeedParserDict] | None:
+        """Update the feed and publish new entries to the event bus."""
+        assert self._feed is not None
+        # _last_entry_timestamp is not set during async_setup, but we have already
+        # fetched data, so we can use them, instead of fetch again
+        if self._last_entry_timestamp:
+            self._feed = await self._async_fetch_feed()
+
         # Using etag and modified, if there's no new data available,
         # the entries list will be empty
         _LOGGER.debug(
             "%s entri(es) available in feed %s",
             len(self._feed.entries),
-            self._url,
+            self.url,
         )
-        if not self._feed.entries:
+        if not isinstance(self._feed.entries, list):
             self._log_no_entries()
             return None
 
         self._filter_entries()
         self._publish_new_entries()
 
-        _LOGGER.debug("Fetch from feed %s completed", self._url)
+        _LOGGER.debug("Fetch from feed %s completed", self.url)
 
         if self._last_entry_timestamp:
             self._storage.async_put_timestamp(self._feed_id, self._last_entry_timestamp)
+
+        return self._feed.entries
 
     @callback
     def _filter_entries(self) -> None:
@@ -116,7 +142,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
             _LOGGER.debug(
                 "Processing only the first %s entries in feed %s",
                 self._max_entries,
-                self._url,
+                self.url,
             )
             self._feed.entries = self._feed.entries[0 : self._max_entries]
 
@@ -132,7 +158,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
                 "No updated_parsed or published_parsed info available for entry %s",
                 entry,
             )
-        entry["feed_url"] = self._url
+        entry["feed_url"] = self.url
         self.hass.bus.async_fire(self._event_type, entry)
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
 
@@ -164,7 +190,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         if new_entry_count == 0:
             self._log_no_entries()
         else:
-            _LOGGER.debug("%d entries published in feed %s", new_entry_count, self._url)
+            _LOGGER.debug("%d entries published in feed %s", new_entry_count, self.url)
 
 
 class StoredData:
