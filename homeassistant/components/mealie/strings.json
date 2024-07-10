@@ -9,6 +9,12 @@
         "data_description": {
           "host": "The URL of your Mealie instance."
         }
+      },
+      "reauth_confirm": {
+        "description": "Please reauthenticate with Mealie.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
       }
     },
     "error": {
@@ -18,7 +24,9 @@
       "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "You have to use the same account that was used to configure the integration."
     }
   },
   "entity": {
