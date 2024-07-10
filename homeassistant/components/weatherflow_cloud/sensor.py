@@ -212,5 +212,5 @@ class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
-            self.coordinator.data[self.station_id].observation.obs[0]
+            self.station.observation.obs[0]
         )
