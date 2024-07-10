@@ -743,8 +743,6 @@ async def test_check_config_sensor(hass: HomeAssistant, do_config) -> None:
                 ],
             }
         ],
-=======
->>>>>>> cd4358ed9ef28f883950f6828af95c039e118e9e
     ],
 )
 async def test_check_config_climate(hass: HomeAssistant, do_config) -> None:
