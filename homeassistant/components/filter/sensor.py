@@ -210,7 +210,9 @@ async def async_setup_entry(
     filter_config = {
         k: v for k, v in entry.options.items() if k not in (CONF_NAME, CONF_ENTITY_ID)
     }
-    if isinstance(filter_config[CONF_FILTER_WINDOW_SIZE], dict):
+    if CONF_FILTER_WINDOW_SIZE in filter_config and isinstance(
+        filter_config[CONF_FILTER_WINDOW_SIZE], dict
+    ):
         filter_config[CONF_FILTER_WINDOW_SIZE] = timedelta(
             **filter_config[CONF_FILTER_WINDOW_SIZE]
         )
