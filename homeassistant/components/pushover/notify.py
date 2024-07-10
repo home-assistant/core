@@ -114,7 +114,7 @@ class PushoverNotificationService(BaseNotificationService):
                 timestamp,
                 sound,
                 html,
-                ttl
+                ttl,
             )
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
