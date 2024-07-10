@@ -140,7 +140,7 @@ class MatterLock(MatterEntity, LockEntity):
         # the lock should acknowledge the command with an attribute update
         # but bad things may happen, so guard against it with a timer.
         self._optimistic_timer = self.hass.loop.call_later(
-            30, self._reset_optimistic_state
+            30 if self._attr_is_locked else 5, self._reset_optimistic_state
         )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
