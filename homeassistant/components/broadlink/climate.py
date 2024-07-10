@@ -71,8 +71,8 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
     @callback
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update data."""
-        if data.get("sensor") is not None:
-            self.sensor_mode = SensorMode(data["sensor"])
+        if (sensor := data.get("sensor")) is not None:
+            self.sensor_mode = SensorMode(sensor)
         if data.get("power"):
             if data.get("auto_mode"):
                 self._attr_hvac_mode = HVACMode.AUTO
