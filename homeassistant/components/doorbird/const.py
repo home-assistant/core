@@ -24,5 +24,12 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 API_URL = f"/api/{DOMAIN}"
 
 
-DEFAULT_DOORBELL_EVENT = "ha_doorbell"
-DEFAULT_MOTION_EVENT = "ha_motion"
+DEFAULT_DOORBELL_EVENT = "doorbell"
+DEFAULT_MOTION_EVENT = "motion"
+
+DEFAULT_EVENT_TYPES = (
+    (DEFAULT_DOORBELL_EVENT, "doorbell"),
+    (DEFAULT_MOTION_EVENT, "motion"),
+)
+
+HTTP_EVENT_TYPE = "http"
