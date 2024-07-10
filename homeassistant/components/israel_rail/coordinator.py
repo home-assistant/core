@@ -91,10 +91,9 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
                 datetime.now().strftime("%H:%M"),
             )
         except Exception as e:
-            _LOGGER.warning(
+            raise UpdateFailed(
                 "Unable to connect and retrieve data from israelrail api",
-            )
-            raise UpdateFailed from e
+            ) from e
 
         return [
             DataConnection(

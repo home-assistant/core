@@ -1,7 +1,7 @@
 {
   "config": {
     "error": {
-      "unknown": "An unknown error was raised by israelrailapi"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"

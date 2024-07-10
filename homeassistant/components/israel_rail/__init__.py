@@ -21,7 +21,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 type IsraelRailConfigEntry = ConfigEntry[IsraelRailDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IsraelRailConfigEntry) -> bool:
     """Set up Israel rail from a config entry."""
     config = entry.data
 
@@ -53,6 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IsraelRailConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

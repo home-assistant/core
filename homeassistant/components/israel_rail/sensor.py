@@ -8,19 +8,19 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
-from homeassistant import core
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import IsraelRailConfigEntry
 from .const import ATTRIBUTION, DEPARTURES_COUNT, DOMAIN
 from .coordinator import DataConnection, IsraelRailDataUpdateCoordinator
 
@@ -75,8 +75,8 @@ SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant,
-    config_entry: ConfigEntry,
+    hass: HomeAssistant,
+    config_entry: IsraelRailConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
@@ -87,12 +87,10 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert unique_id
 
-    entities = [
+    async_add_entities(
         IsraelRailEntitySensor(coordinator, description, unique_id)
         for description in (*DEPARTURE_SENSORS, *SENSORS)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class IsraelRailEntitySensor(
