@@ -965,6 +965,9 @@ isal==1.6.1
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
 
+# homeassistant.components.israel_rail
+israel-rail-api==0.1.2
+
 # homeassistant.components.abode
 jaraco.abode==5.2.1
 

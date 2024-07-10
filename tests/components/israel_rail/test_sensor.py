@@ -13,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from . import goto_future, init_integration
 from .conftest import TRAINS, TRAINS_WRONG_FORMAT
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_valid_config(
@@ -25,14 +25,8 @@ async def test_valid_config(
 ) -> None:
     """Ensure everything starts correctly."""
     await init_integration(hass, mock_config_entry)
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert entity_entries
     assert len(hass.states.async_entity_ids()) == 7
-    for entity_entry in entity_entries:
-        state = hass.states.get(entity_entry.entity_id)
-        assert state == snapshot(name=f"{entity_entry.entity_id}")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_invalid_config(

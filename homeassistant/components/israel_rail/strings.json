@@ -28,9 +28,6 @@
       "departure2": {
         "name": "Departure +2"
       },
-      "duration": {
-        "name": "Duration"
-      },
       "transfers": {
         "name": "Transfers"
       },
@@ -38,7 +35,7 @@
         "name": "Platform"
       },
       "train_number": {
-        "name": "Train Number"
+        "name": "Train number"
       }
     }
   }

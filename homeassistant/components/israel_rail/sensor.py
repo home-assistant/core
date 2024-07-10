@@ -27,13 +27,6 @@ from .coordinator import DataConnection, IsraelRailDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-def _make_get_attrs(i):
-    return lambda data: {
-        "start": data[i].start,
-        "destination": data[i].destination,
-    }
-
-
 @dataclass(kw_only=True, frozen=True)
 class IsraelRailSensorEntityDescription(SensorEntityDescription):
     """Describes israel rail sensor entity."""
@@ -52,7 +45,6 @@ DEPARTURE_SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=lambda data_connection: data_connection.departure,
             index=i,
-            attrs=_make_get_attrs(i),
         )
         for i in range(DEPARTURES_COUNT)
     ],
@@ -89,7 +81,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     unique_id = config_entry.unique_id
 
@@ -127,7 +119,6 @@ class IsraelRailEntitySensor(
             entry_type=DeviceEntryType.SERVICE,
         )
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
-        self._attr_extra_state_attributes = entity_description.attrs(coordinator.data)
 
     @property
     def native_value(self) -> StateType | datetime:

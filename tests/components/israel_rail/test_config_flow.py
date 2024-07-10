@@ -38,6 +38,7 @@ async def test_create_entry(
 async def test_flow_fails(
     hass: HomeAssistant,
     mock_israelrail: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that the user step fails."""
     mock_israelrail.return_value.query.side_effect = Exception("error")
@@ -48,7 +49,7 @@ async def test_flow_fails(
     )
 
     assert failed_result["errors"] == {"base": "unknown"}
-    assert failed_result["type"] == FlowResultType.FORM
+    assert failed_result["type"] is FlowResultType.FORM
 
     mock_israelrail.return_value.query.side_effect = None
 
@@ -77,7 +78,7 @@ async def test_flow_already_configured(
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result_aborted = await hass.config_entries.flow.async_configure(
