@@ -10,7 +10,8 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, MIN_REQUIRED_MEALIE_VERSION
+from .utils import create_version
 
 USER_SCHEMA = vol.Schema(
     {
@@ -43,6 +44,8 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             info = await client.get_user_info()
+            about = await client.get_about()
+            version = create_version(about.version)
         except MealieConnectionError:
             return {"base": "cannot_connect"}, None
         except MealieAuthenticationError:
@@ -50,6 +53,8 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected error")
             return {"base": "unknown"}, None
+        if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
+            return {"base": "mealie_version"}, None
         return {}, info.user_id
 
     async def async_step_user(

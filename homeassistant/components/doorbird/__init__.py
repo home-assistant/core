@@ -79,7 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
     name: str | None = door_station_config.get(CONF_NAME)
     events = entry.options.get(CONF_EVENTS, [])
     event_entity_ids: dict[str, str] = {}
-    door_station = ConfiguredDoorBird(device, name, custom_url, token, event_entity_ids)
+    door_station = ConfiguredDoorBird(
+        hass, device, name, custom_url, token, event_entity_ids
+    )
     door_bird_data = DoorBirdData(door_station, info, event_entity_ids)
     door_station.update_events(events)
     # Subscribe to doorbell or motion events
@@ -103,7 +105,7 @@ async def _async_register_events(
 ) -> bool:
     """Register events on device."""
     try:
-        await door_station.async_register_events(hass)
+        await door_station.async_register_events()
     except ClientResponseError:
         persistent_notification.async_create(
             hass,
