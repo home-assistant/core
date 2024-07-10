@@ -17,7 +17,7 @@ from aiomealie import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -82,7 +82,7 @@ class MealieMealplanCoordinator(
                 await self.client.get_mealplans(dt_util.now().date(), next_week.date())
             ).items
         except MealieAuthenticationError as error:
-            raise ConfigEntryError("Authentication failed") from error
+            raise ConfigEntryAuthFailed from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
         res: dict[MealplanEntryType, list[Mealplan]] = {
@@ -116,7 +116,7 @@ class MealieShoppingListCoordinator(
         try:
             self.shopping_lists = (await self.client.get_shopping_lists()).items
         except MealieAuthenticationError as error:
-            raise ConfigEntryError("Authentication failed") from error
+            raise ConfigEntryAuthFailed from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
         return self.shopping_lists
@@ -137,7 +137,7 @@ class MealieShoppingListCoordinator(
                 shopping_list_items[shopping_list_id] = shopping_items
 
         except MealieAuthenticationError as error:
-            raise ConfigEntryError("Authentication failed") from error
+            raise ConfigEntryAuthFailed from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
 
