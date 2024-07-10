@@ -1,8 +1,6 @@
 """Configuration for Israel rail tests."""
 
-# -*- coding: utf-8 -*-
-
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from israelrailapi.api import TrainRoute
 import pytest
@@ -40,22 +38,22 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_israelrail():
+def mock_israelrail() -> AsyncMock:
     """Build a fixture for the Israel rail API."""
-    mock_israelrail_api = MagicMock()
     with (
         patch(
             "homeassistant.components.israel_rail.TrainSchedule",
-            return_value=mock_israelrail_api,
-        ),
+            autospec=True,
+        ) as mock_client,
         patch(
             "homeassistant.components.israel_rail.config_flow.TrainSchedule",
-            return_value=mock_israelrail_api,
-        ) as mock_israelrail_api,
+            new=mock_client,
+        ),
     ):
-        mock_israelrail_api.return_value.query.return_value = TRAINS[:]
+        client = mock_client.return_value
+        client.query.return_value = TRAINS
 
-        yield mock_israelrail_api
+        yield client
 
 
 def get_train_route(
@@ -66,7 +64,7 @@ def get_train_route(
     dest_platform: str = "2",
     origin_station: str = "3500",
     destination_station: str = "3700",
-):
+) -> TrainRoute:
     """Build a TrainRoute of the israelrail API."""
     return TrainRoute(
         [

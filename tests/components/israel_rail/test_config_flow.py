@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant import config_entries
 from homeassistant.components.israel_rail import CONF_DESTINATION, CONF_START, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -18,7 +17,7 @@ async def test_create_entry(
 ) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -41,7 +40,7 @@ async def test_flow_fails(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that the user step fails."""
-    mock_israelrail.return_value.query.side_effect = Exception("error")
+    mock_israelrail.query.side_effect = Exception("error")
     failed_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -51,7 +50,7 @@ async def test_flow_fails(
     assert failed_result["errors"] == {"base": "unknown"}
     assert failed_result["type"] is FlowResultType.FORM
 
-    mock_israelrail.return_value.query.side_effect = None
+    mock_israelrail.query.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         failed_result["flow_id"],
@@ -67,15 +66,10 @@ async def test_flow_fails(
 
 
 async def test_flow_already_configured(
-    hass: HomeAssistant, mock_israelrail: AsyncMock
+    hass: HomeAssistant, mock_israelrail: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test the import configuration flow with error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=VALID_CONFIG,
-        unique_id=f"{VALID_CONFIG[CONF_START]} {VALID_CONFIG[CONF_DESTINATION]}",
-    )
-    entry.add_to_hass(hass)
+    """Test that the user step fails when the entry is already configured."""
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -85,7 +79,6 @@ async def test_flow_already_configured(
         result["flow_id"],
         VALID_CONFIG,
     )
-    await hass.async_block_till_done()
 
     assert result_aborted["type"] is FlowResultType.ABORT
     assert result_aborted["reason"] == "already_configured"
