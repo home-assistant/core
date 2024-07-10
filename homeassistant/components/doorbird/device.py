@@ -149,6 +149,8 @@ class ConfiguredDoorBird:
 
         http_fav = await self._async_get_http_favorites()
         if any(
+            # Note that a list comp is used here to ensure all
+            # events are registered and the any does not short circuit
             [
                 await self._async_register_event(hass_url, event, http_fav=http_fav)
                 for event in self.events
