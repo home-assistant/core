@@ -1,4 +1,5 @@
 """Flame height number sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,7 +29,6 @@ async def async_setup_entry(
     description = NumberEntityDescription(
         key="flame_control",
         translation_key="flame_control",
-        icon="mdi:arrow-expand-vertical",
     )
 
     async_add_entities(
@@ -61,8 +61,7 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the current Flame Height segment number value."""
         # UI uses 1-5 for flame height, backing lib uses 0-4
-        value = self.coordinator.read_api.data.flameheight + 1
-        return value
+        return self.coordinator.read_api.data.flameheight + 1
 
     async def async_set_native_value(self, value: float) -> None:
         """Slider change."""

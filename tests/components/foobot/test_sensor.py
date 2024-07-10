@@ -1,12 +1,13 @@
 """The tests for the Foobot sensor platform."""
+
 from http import HTTPStatus
 import re
 from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.foobot import sensor as foobot
-import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,

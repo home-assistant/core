@@ -1,10 +1,23 @@
 """Provides diagnostics for ZHA."""
+
 from __future__ import annotations
 
 import dataclasses
 from importlib.metadata import version
 from typing import Any
 
+from zha.application.const import (
+    ATTR_ATTRIBUTE_NAME,
+    ATTR_DEVICE_TYPE,
+    ATTR_IEEE,
+    ATTR_IN_CLUSTERS,
+    ATTR_OUT_CLUSTERS,
+    ATTR_PROFILE_ID,
+    ATTR_VALUE,
+    UNKNOWN,
+)
+from zha.application.gateway import Gateway
+from zha.zigbee.device import Device
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.profiles import PROFILES
 from zigpy.types import Channels
@@ -16,19 +29,13 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .core.const import (
-    ATTR_ATTRIBUTE_NAME,
-    ATTR_DEVICE_TYPE,
-    ATTR_IEEE,
-    ATTR_IN_CLUSTERS,
-    ATTR_OUT_CLUSTERS,
-    ATTR_PROFILE_ID,
-    ATTR_VALUE,
-    CONF_ALARM_MASTER_CODE,
-    UNKNOWN,
+from .const import CONF_ALARM_MASTER_CODE
+from .helpers import (
+    ZHADeviceProxy,
+    async_get_zha_device_proxy,
+    get_zha_data,
+    get_zha_gateway,
 )
-from .core.device import ZHADevice
-from .core.helpers import async_get_zha_device, get_zha_data, get_zha_gateway
 
 KEYS_TO_REDACT = {
     ATTR_IEEE,
@@ -63,7 +70,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     zha_data = get_zha_data(hass)
-    app = get_zha_gateway(hass).application_controller
+    gateway: Gateway = get_zha_gateway(hass)
+    app = gateway.application_controller
 
     energy_scan = await app.energy_scan(
         channels=Channels.ALL_CHANNELS, duration_exp=4, count=1
@@ -85,7 +93,16 @@ async def async_get_config_entry_diagnostics(
                 "zigpy_znp": version("zigpy_znp"),
                 "zigpy_zigate": version("zigpy-zigate"),
                 "zhaquirks": version("zha-quirks"),
+                "zha": version("zha"),
             },
+            "devices": [
+                {
+                    "manufacturer": device.manufacturer,
+                    "model": device.model,
+                    "logical_type": device.device_type,
+                }
+                for device in gateway.devices.values()
+            ],
         },
         KEYS_TO_REDACT,
     )
@@ -95,13 +112,15 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    zha_device: ZHADevice = async_get_zha_device(hass, device.id)
-    device_info: dict[str, Any] = zha_device.zha_device_info
-    device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(zha_device)
+    zha_device_proxy: ZHADeviceProxy = async_get_zha_device_proxy(hass, device.id)
+    device_info: dict[str, Any] = zha_device_proxy.zha_device_info
+    device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(
+        zha_device_proxy.device
+    )
     return async_redact_data(device_info, KEYS_TO_REDACT)
 
 
-def get_endpoint_cluster_attr_data(zha_device: ZHADevice) -> dict:
+def get_endpoint_cluster_attr_data(zha_device: Device) -> dict:
     """Return endpoint cluster attribute data."""
     cluster_details = {}
     for ep_id, endpoint in zha_device.device.endpoints.items():

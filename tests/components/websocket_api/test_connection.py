@@ -1,7 +1,8 @@
 """Test WebSocket Connection class."""
+
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from aiohttp.test_utils import make_mocked_request
 import pytest
@@ -74,7 +75,6 @@ async def test_exception_handling(
     send_messages = []
     user = MockUser()
     refresh_token = Mock()
-    current_request = AsyncMock()
     hass.data[DOMAIN] = {}
 
     def get_extra_info(key: str) -> Any:

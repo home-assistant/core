@@ -18,6 +18,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -45,6 +47,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_air_filter_operating_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8820.0',
   })
@@ -66,6 +69,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -93,6 +98,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_electric_heater_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.396365851163864',
   })
@@ -116,6 +122,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -140,6 +148,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_exhaust_air_fan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2606',
   })
@@ -163,6 +172,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -187,6 +198,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_exhaust_air_fan_control_signal',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -208,6 +220,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -232,6 +246,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_exhaust_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-3.3',
   })
@@ -253,6 +268,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -277,6 +294,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_extract_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.0',
   })
@@ -300,6 +318,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -328,6 +348,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_fireplace_ventilation_remaining_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
@@ -351,6 +372,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -375,6 +398,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_heat_exchanger_efficiency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '81',
   })
@@ -398,6 +422,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -422,6 +448,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_heat_exchanger_speed',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -443,6 +470,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -467,6 +496,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_outside_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-8.6',
   })
@@ -490,6 +520,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -518,6 +550,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_rapid_ventilation_remaining_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
@@ -539,6 +572,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -563,6 +598,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_room_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.0',
   })
@@ -586,6 +622,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -610,6 +648,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_supply_air_fan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2784',
   })
@@ -633,6 +672,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -657,6 +698,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_supply_air_fan_control_signal',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '74',
   })
@@ -678,6 +720,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -702,6 +746,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_supply_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.1',
   })

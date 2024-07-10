@@ -1,4 +1,5 @@
 """Remote vehicle services for Subaru integration."""
+
 import logging
 
 from subarulink.exceptions import SubaruException

@@ -1,4 +1,5 @@
 """Support for Logitech UE Smart Radios."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -30,7 +31,7 @@ PLAYBACK_DICT = {
     "stop": MediaPlayerState.IDLE,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 

@@ -5,7 +5,9 @@ To update, run python3 -m script.hassfest
 
 from __future__ import annotations
 
-BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
+from typing import Final
+
+BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
@@ -65,6 +67,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "dormakaba_dkey",
         "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-M-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE-EQ",
     },
     {
         "domain": "eufylife_ble",
@@ -267,6 +284,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "mib*",
     },
     {
+        "domain": "lamarzocco",
+        "local_name": "MICRA_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "MINI_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3AV_*",
+    },
+    {
         "domain": "ld2410_ble",
         "local_name": "HLK-LD2410B_*",
     },
@@ -314,6 +347,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "led_ble",
         "local_name": "AP-*",
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "MELK-*",
     },
     {
         "domain": "medcom_ble",
@@ -411,6 +448,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         ],
         "manufacturer_id": 89,
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
+        "domain": "motionblinds_ble",
+        "local_name": "MOTION_*",
     },
     {
         "domain": "oralb",
@@ -585,6 +627,15 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "connectable": False,
         "domain": "thermobeacon",
+        "manufacturer_data_start": [
+            0,
+        ],
+        "manufacturer_id": 48,
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "thermobeacon",
         "local_name": "ThermoBeacon",
     },
     {
@@ -601,6 +652,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "thermopro",
         "local_name": "TP96*",
+    },
+    {
+        "connectable": False,
+        "domain": "thermopro",
+        "local_name": "TP97*",
     },
     {
         "domain": "tilt_ble",

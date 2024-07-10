@@ -1,11 +1,12 @@
 """Component to embed Aqualink devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import httpx
 from iaqualink.client import AqualinkClient
@@ -35,11 +36,9 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, UPDATE_INTERVAL
-
-_AqualinkEntityT = TypeVar("_AqualinkEntityT", bound="AqualinkEntity")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +54,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -71,7 +68,7 @@ async def async_setup_entry(  # noqa: C901
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
     switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
-    aqualink = AqualinkClient(username, password)
+    aqualink = AqualinkClient(username, password, httpx_client=get_async_client(hass))
     try:
         await aqualink.login()
     except AqualinkServiceException as login_exception:
@@ -183,7 +180,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
 
-def refresh_system(
+def refresh_system[_AqualinkEntityT: AqualinkEntity, **_P](
     func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""

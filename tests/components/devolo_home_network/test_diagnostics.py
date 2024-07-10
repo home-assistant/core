@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network diagnostics."""
+
 from __future__ import annotations
 
 import pytest
@@ -24,7 +25,7 @@ async def test_entry_diagnostics(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
     assert result == snapshot

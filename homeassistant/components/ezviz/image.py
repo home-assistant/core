@@ -1,10 +1,15 @@
 """Support EZVIZ last motion image."""
+
 from __future__ import annotations
 
 import logging
 
+from pyezviz.exceptions import PyEzvizError
+from pyezviz.utils import decrypt_image
+
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -50,12 +55,28 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         self._attr_image_last_updated = dt_util.parse_datetime(
             str(self.data["last_alarm_time"])
         )
+        camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
+        self.alarm_image_password = (
+            camera.data[CONF_PASSWORD] if camera is not None else None
+        )
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
+            image_data = response.content
+            if self.data["encrypted"] and self.alarm_image_password is not None:
+                try:
+                    image_data = decrypt_image(
+                        response.content, self.alarm_image_password
+                    )
+                except PyEzvizError:
+                    _LOGGER.warning(
+                        "%s: Can't decrypt last alarm picture, looks like it was encrypted with other password",
+                        self.entity_id,
+                    )
+                    image_data = response.content
             return Image(
-                content=response.content,
+                content=image_data,
                 content_type="image/jpeg",  # Actually returns binary/octet-stream
             )
         return None

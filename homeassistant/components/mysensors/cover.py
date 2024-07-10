@@ -1,4 +1,5 @@
 """Support for MySensors covers."""
+
 from __future__ import annotations
 
 from enum import Enum, unique

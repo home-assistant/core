@@ -16,11 +16,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
-    'original_icon': 'mdi:pipe-leak',
+    'original_icon': None,
     'original_name': 'Leak detected',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -35,11 +37,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'Hub DROP-1_C0FFEE Leak detected',
-      'icon': 'mdi:pipe-leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hub_drop_1_c0ffee_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -61,11 +63,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:bell-ring',
+    'original_icon': None,
     'original_name': 'Notification unread',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -79,11 +83,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hub DROP-1_C0FFEE Notification unread',
-      'icon': 'mdi:bell-ring',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hub_drop_1_c0ffee_notification_unread',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -105,11 +109,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
-    'original_icon': 'mdi:pipe-leak',
+    'original_icon': None,
     'original_name': 'Leak detected',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -124,11 +130,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'Leak Detector Leak detected',
-      'icon': 'mdi:pipe-leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.leak_detector_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -150,11 +156,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
-    'original_icon': 'mdi:pipe-leak',
+    'original_icon': None,
     'original_name': 'Leak detected',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -169,11 +177,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'Protection Valve Leak detected',
-      'icon': 'mdi:pipe-leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.protection_valve_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -195,11 +203,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
-    'original_icon': 'mdi:pipe-leak',
+    'original_icon': None,
     'original_name': 'Leak detected',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -214,11 +224,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'Pump Controller Leak detected',
-      'icon': 'mdi:pipe-leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pump_controller_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -240,11 +250,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-pump',
+    'original_icon': None,
     'original_name': 'Pump status',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -258,11 +270,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pump Controller Pump status',
-      'icon': 'mdi:water-pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pump_controller_pump_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -284,11 +296,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
-    'original_icon': 'mdi:pipe-leak',
+    'original_icon': None,
     'original_name': 'Leak detected',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -303,11 +317,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'RO Filter Leak detected',
-      'icon': 'mdi:pipe-leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ro_filter_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -329,11 +343,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Reserve capacity in use',
     'platform': 'drop_connect',
     'previous_unique_id': None,
@@ -347,11 +363,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Softener Reserve capacity in use',
-      'icon': 'mdi:water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.softener_reserve_capacity_in_use',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

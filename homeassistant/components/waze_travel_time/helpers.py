@@ -1,4 +1,5 @@
 """Helpers for Waze Travel Time integration."""
+
 import logging
 
 from pywaze.route_calculator import WazeRouteCalculator, WRCError
@@ -19,7 +20,7 @@ async def is_valid_config_entry(
     httpx_client = get_async_client(hass)
     client = WazeRouteCalculator(region=region, client=httpx_client)
     try:
-        await client.calc_all_routes_info(resolved_origin, resolved_destination)
+        await client.calc_routes(resolved_origin, resolved_destination)
     except WRCError as error:
         _LOGGER.error("Error trying to validate entry: %s", error)
         return False

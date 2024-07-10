@@ -1,21 +1,22 @@
 """Update data from Nextcoud."""
+
 from __future__ import annotations
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import NextcloudDataUpdateCoordinator
+from . import NextcloudConfigEntry
 from .entity import NextcloudEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NextcloudConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nextcloud update entity."""
-    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     if coordinator.data.get("update_available") is None:
         return
     async_add_entities(

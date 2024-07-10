@@ -1,9 +1,9 @@
 """The tests for the Command line sensor platform."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import subprocess
 from typing import Any
 from unittest.mock import patch
 
@@ -21,6 +21,8 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+
+from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
 
@@ -106,7 +108,7 @@ async def test_template_render(
         hass,
         dt_util.utcnow() + timedelta(minutes=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -132,22 +134,18 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"Works\n",
-    ) as check_output:
+    with mock_asyncio_subprocess_run(b"Works\n") as mock_subprocess_run:
         # Give time for template to load
         async_fire_time_changed(
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert len(check_output.mock_calls) == 1
-        check_output.assert_called_with(
+        assert len(mock_subprocess_run.mock_calls) == 1
+        mock_subprocess_run.assert_called_with(
             'echo "sensor_value" "3 4"',
-            shell=True,  # noqa: S604 # shell by design
-            timeout=15,
+            stdout=-1,
             close_fds=False,
         )
 
@@ -477,6 +475,46 @@ async def test_update_with_unnecessary_json_attrs(
                 {
                     "sensor": {
                         "name": "Test",
+                        "command": 'echo \
+                            {\
+                                \\"top_level\\": {\
+                                    \\"second_level\\": {\
+                                        \\"key\\": \\"some_json_value\\",\
+                                        \\"another_key\\": \\"another_json_value\\",\
+                                        \\"key_three\\": \\"value_three\\"\
+                                    }\
+                                }\
+                            }',
+                        "json_attributes": ["key", "another_key", "key_three"],
+                        "json_attributes_path": "$.top_level.second_level",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_update_with_json_attrs_with_json_attrs_path(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Test using json_attributes_path to select a different part of the json object as root."""
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"
+    assert "top_level" not in entity_state.attributes
+    assert "second_level" not in entity_state.attributes
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
                         "unique_id": "unique",
                         "command": "echo 0",
                     }
@@ -679,10 +717,7 @@ async def test_template_not_error_when_data_is_none(
 ) -> None:
     """Test command sensor with template not logging error when data is None."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=subprocess.CalledProcessError,
-    ):
+    with mock_asyncio_subprocess_run(returncode=1):
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -739,7 +774,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -747,13 +782,10 @@ async def test_availability(
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"January 17, 2022",
-    ):
+    with mock_asyncio_subprocess_run(b"January 17, 2022"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state

@@ -1,4 +1,5 @@
 """Platform for FAA Delays sensor component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -33,7 +34,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="GROUND_DELAY",
         translation_key="ground_delay",
-        icon="mdi:airport",
         is_on_fn=lambda airport: airport.ground_delay.status,
         extra_state_attributes_fn=lambda airport: {
             "average": airport.ground_delay.average,
@@ -43,7 +43,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="GROUND_STOP",
         translation_key="ground_stop",
-        icon="mdi:airport",
         is_on_fn=lambda airport: airport.ground_stop.status,
         extra_state_attributes_fn=lambda airport: {
             "endtime": airport.ground_stop.endtime,
@@ -53,7 +52,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="DEPART_DELAY",
         translation_key="depart_delay",
-        icon="mdi:airplane-takeoff",
         is_on_fn=lambda airport: airport.depart_delay.status,
         extra_state_attributes_fn=lambda airport: {
             "minimum": airport.depart_delay.minimum,
@@ -65,7 +63,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="ARRIVE_DELAY",
         translation_key="arrive_delay",
-        icon="mdi:airplane-landing",
         is_on_fn=lambda airport: airport.arrive_delay.status,
         extra_state_attributes_fn=lambda airport: {
             "minimum": airport.arrive_delay.minimum,
@@ -77,7 +74,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="CLOSURE",
         translation_key="closure",
-        icon="mdi:airplane:off",
         is_on_fn=lambda airport: airport.closure.status,
         extra_state_attributes_fn=lambda airport: {
             "begin": airport.closure.start,

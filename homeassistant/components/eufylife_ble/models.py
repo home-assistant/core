@@ -1,4 +1,5 @@
 """Models for the EufyLife integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

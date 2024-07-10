@@ -1,4 +1,5 @@
 """Motor speed support for Xiaomi Mi Air Humidifier."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -108,16 +109,11 @@ ATTR_OSCILLATION_ANGLE = "angle"
 ATTR_VOLUME = "volume"
 
 
-@dataclass(frozen=True)
-class XiaomiMiioNumberMixin:
+@dataclass(frozen=True, kw_only=True)
+class XiaomiMiioNumberDescription(NumberEntityDescription):
     """A class that describes number entities."""
 
     method: str
-
-
-@dataclass(frozen=True)
-class XiaomiMiioNumberDescription(NumberEntityDescription, XiaomiMiioNumberMixin):
-    """A class that describes number entities."""
 
     available_with_device_off: bool = True
 

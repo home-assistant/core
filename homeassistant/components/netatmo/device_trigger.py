@@ -1,4 +1,5 @@
 """Provides device automations for Netatmo."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -95,7 +96,7 @@ async def async_get_triggers(
     """List device triggers for Netatmo devices."""
     registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
-    triggers = []
+    triggers: list[dict[str, str]] = []
 
     for entry in er.async_entries_for_device(registry, device_id):
         if (
@@ -105,17 +106,17 @@ async def async_get_triggers(
 
         for trigger in DEVICES.get(device.model, []):
             if trigger in SUBTYPES:
-                for subtype in SUBTYPES[trigger]:
-                    triggers.append(
-                        {
-                            CONF_PLATFORM: "device",
-                            CONF_DEVICE_ID: device_id,
-                            CONF_DOMAIN: DOMAIN,
-                            CONF_ENTITY_ID: entry.id,
-                            CONF_TYPE: trigger,
-                            CONF_SUBTYPE: subtype,
-                        }
-                    )
+                triggers.extend(
+                    {
+                        CONF_PLATFORM: "device",
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.id,
+                        CONF_TYPE: trigger,
+                        CONF_SUBTYPE: subtype,
+                    }
+                    for subtype in SUBTYPES[trigger]
+                )
             else:
                 triggers.append(
                     {

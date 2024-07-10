@@ -1,4 +1,5 @@
 """Setup mocks for the Plugwise integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -46,7 +47,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.plugwise.async_setup_entry", return_value=True
@@ -55,7 +56,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_smile_config_flow() -> Generator[None, MagicMock, None]:
+def mock_smile_config_flow() -> Generator[MagicMock]:
     """Return a mocked Smile client."""
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
@@ -70,7 +71,7 @@ def mock_smile_config_flow() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_adam() -> Generator[None, MagicMock, None]:
+def mock_smile_adam() -> Generator[MagicMock]:
     """Create a Mock Adam environment for testing exceptions."""
     chosen_env = "adam_multiple_devices_per_zone"
 
@@ -86,10 +87,7 @@ def mock_smile_adam() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -99,7 +97,7 @@ def mock_smile_adam() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_adam_2() -> Generator[None, MagicMock, None]:
+def mock_smile_adam_2() -> Generator[MagicMock]:
     """Create a 2nd Mock Adam environment for testing exceptions."""
     chosen_env = "m_adam_heating"
 
@@ -115,10 +113,7 @@ def mock_smile_adam_2() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -128,7 +123,7 @@ def mock_smile_adam_2() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_adam_3() -> Generator[None, MagicMock, None]:
+def mock_smile_adam_3() -> Generator[MagicMock]:
     """Create a 3rd Mock Adam environment for testing exceptions."""
     chosen_env = "m_adam_cooling"
 
@@ -144,10 +139,7 @@ def mock_smile_adam_3() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -157,7 +149,7 @@ def mock_smile_adam_3() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_adam_4() -> Generator[None, MagicMock, None]:
+def mock_smile_adam_4() -> Generator[MagicMock]:
     """Create a 4th Mock Adam environment for testing exceptions."""
     chosen_env = "m_adam_jip"
 
@@ -173,10 +165,7 @@ def mock_smile_adam_4() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -186,7 +175,7 @@ def mock_smile_adam_4() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_anna() -> Generator[None, MagicMock, None]:
+def mock_smile_anna() -> Generator[MagicMock]:
     """Create a Mock Anna environment for testing exceptions."""
     chosen_env = "anna_heatpump_heating"
     with patch(
@@ -201,10 +190,7 @@ def mock_smile_anna() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile Anna"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -214,7 +200,7 @@ def mock_smile_anna() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_anna_2() -> Generator[None, MagicMock, None]:
+def mock_smile_anna_2() -> Generator[MagicMock]:
     """Create a 2nd Mock Anna environment for testing exceptions."""
     chosen_env = "m_anna_heatpump_cooling"
     with patch(
@@ -229,10 +215,7 @@ def mock_smile_anna_2() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile Anna"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -242,7 +225,7 @@ def mock_smile_anna_2() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_anna_3() -> Generator[None, MagicMock, None]:
+def mock_smile_anna_3() -> Generator[MagicMock]:
     """Create a 3rd Mock Anna environment for testing exceptions."""
     chosen_env = "m_anna_heatpump_idle"
     with patch(
@@ -257,10 +240,7 @@ def mock_smile_anna_3() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile Anna"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -270,25 +250,22 @@ def mock_smile_anna_3() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_p1() -> Generator[None, MagicMock, None]:
+def mock_smile_p1() -> Generator[MagicMock]:
     """Create a Mock P1 DSMR environment for testing exceptions."""
-    chosen_env = "p1v3_full_option"
+    chosen_env = "p1v4_442_single"
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
-        smile.gateway_id = "e950c7d5e1ee407a858e2a8b5016c8b3"
+        smile.gateway_id = "a455b61e52394b2db5081ce025a430f3"
         smile.heater_id = None
-        smile.smile_version = "3.3.9"
+        smile.smile_version = "4.4.2"
         smile.smile_type = "power"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile P1"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -298,7 +275,7 @@ def mock_smile_p1() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_smile_p1_2() -> Generator[None, MagicMock, None]:
+def mock_smile_p1_2() -> Generator[MagicMock]:
     """Create a Mock P1 3-phase DSMR environment for testing exceptions."""
     chosen_env = "p1v4_442_triple"
     with patch(
@@ -313,10 +290,7 @@ def mock_smile_p1_2() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile P1"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -326,7 +300,7 @@ def mock_smile_p1_2() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_stretch() -> Generator[None, MagicMock, None]:
+def mock_stretch() -> Generator[MagicMock]:
     """Create a Mock Stretch environment for testing exceptions."""
     chosen_env = "stretch_v31"
     with patch(
@@ -341,7 +315,6 @@ def mock_stretch() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "stretch98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Stretch"
-
         smile.connect.return_value = True
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(

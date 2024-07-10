@@ -1,4 +1,5 @@
 """Support for Homekit motion sensors."""
+
 from __future__ import annotations
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -117,21 +118,21 @@ async def async_setup_entry(
                 )
             )
 
-            for switch in switches:
-                # The Apple docs say that if we number the buttons ourselves
-                # We do it in service label index order. `switches` is already in
-                # that order.
-                entities.append(
-                    HomeKitEventEntity(
-                        conn,
-                        switch,
-                        EventEntityDescription(
-                            key=f"{service.accessory.aid}_{service.iid}",
-                            device_class=EventDeviceClass.BUTTON,
-                            translation_key="button",
-                        ),
-                    )
+            # The Apple docs say that if we number the buttons ourselves
+            # We do it in service label index order. `switches` is already in
+            # that order.
+            entities.extend(
+                HomeKitEventEntity(
+                    conn,
+                    switch,
+                    EventEntityDescription(
+                        key=f"{service.accessory.aid}_{service.iid}",
+                        device_class=EventDeviceClass.BUTTON,
+                        translation_key="button",
+                    ),
                 )
+                for switch in switches
+            )
 
         elif service.type == ServicesTypes.STATELESS_PROGRAMMABLE_SWITCH:
             # A stateless switch that has a SERVICE_LABEL_INDEX is part of a group

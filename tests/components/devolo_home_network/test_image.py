@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network images."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
@@ -31,7 +32,7 @@ async def test_image_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get(f"{DOMAIN}.{device_name}_guest_wifi_credentials_as_qr_code")
+        hass.states.get(f"{DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code")
         is not None
     )
 
@@ -50,13 +51,13 @@ async def test_guest_wifi_qr(
     """Test showing a QR code of the guest wifi credentials."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{DOMAIN}.{device_name}_guest_wifi_credentials_as_qr_code"
+    state_key = f"{DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
-    assert state.name == "Mock Title Guest Wifi credentials as QR code"
+    assert state.name == "Mock Title Guest Wi-Fi credentials as QR code"
     assert state.state == dt_util.utcnow().isoformat()
     assert entity_registry.async_get(state_key) == snapshot
 

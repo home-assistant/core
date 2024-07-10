@@ -1,4 +1,5 @@
 """Tests for the Withings calendar."""
+
 from datetime import date, timedelta
 from http import HTTPStatus
 from unittest.mock import AsyncMock
@@ -8,10 +9,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from . import load_workout_fixture
+from . import load_workout_fixture, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.withings import setup_integration
 from tests.typing import ClientSessionGenerator
 
 

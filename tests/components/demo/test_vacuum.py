@@ -1,4 +1,5 @@
 """The tests for the Demo vacuum platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -218,7 +219,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
 async def test_set_fan_speed(hass: HomeAssistant) -> None:
     """Test vacuum service to set the fan speed."""
-    group_vacuums = ",".join([ENTITY_VACUUM_COMPLETE, ENTITY_VACUUM_MOST])
+    group_vacuums = f"{ENTITY_VACUUM_COMPLETE},{ENTITY_VACUUM_MOST}"
     old_state_complete = hass.states.get(ENTITY_VACUUM_COMPLETE)
     old_state_most = hass.states.get(ENTITY_VACUUM_MOST)
 
@@ -238,7 +239,7 @@ async def test_set_fan_speed(hass: HomeAssistant) -> None:
 
 async def test_send_command(hass: HomeAssistant) -> None:
     """Test vacuum service to send a command."""
-    group_vacuums = ",".join([ENTITY_VACUUM_COMPLETE])
+    group_vacuums = f"{ENTITY_VACUUM_COMPLETE}"
     old_state_complete = hass.states.get(ENTITY_VACUUM_COMPLETE)
 
     await common.async_send_command(

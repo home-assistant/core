@@ -1,4 +1,5 @@
 """The met component."""
+
 from __future__ import annotations
 
 import logging
@@ -20,8 +21,12 @@ PLATFORMS = [Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
+type MetWeatherConfigEntry = ConfigEntry[MetDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: MetWeatherConfigEntry
+) -> bool:
     """Set up Met as config entry."""
     # Don't setup if tracking home location and latitude or longitude isn't set.
     # Also, filters out our onboarding default location.
@@ -43,10 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if config_entry.data.get(CONF_TRACK_HOME, False):
         coordinator.track_home()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
+    config_entry.async_on_unload(coordinator.untrack_home)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -55,19 +60,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: MetWeatherConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    hass.data[DOMAIN][config_entry.entry_id].untrack_home()
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def async_update_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_entry(hass: HomeAssistant, config_entry: MetWeatherConfigEntry):
     """Reload Met component when options changed."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 

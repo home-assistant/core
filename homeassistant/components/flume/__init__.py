@@ -1,4 +1,5 @@
 """The flume integration."""
+
 from __future__ import annotations
 
 from pyflume import FlumeAuth, FlumeDeviceList

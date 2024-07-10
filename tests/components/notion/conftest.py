@@ -1,4 +1,5 @@
 """Define fixtures for Notion tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
@@ -9,18 +10,20 @@ from aionotion.sensor.models import Sensor
 from aionotion.user.models import UserPreferences
 import pytest
 
-from homeassistant.components.notion import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.notion import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
 TEST_USERNAME = "user@host.com"
 TEST_PASSWORD = "password123"
+TEST_REFRESH_TOKEN = "abcde12345"
+TEST_USER_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.notion.async_setup_entry", return_value=True
@@ -47,6 +50,7 @@ def client_fixture(data_bridge, data_listener, data_sensor, data_user_preference
                 ]
             )
         ),
+        refresh_token=TEST_REFRESH_TOKEN,
         sensor=Mock(
             async_all=AsyncMock(
                 return_value=[
@@ -61,6 +65,7 @@ def client_fixture(data_bridge, data_listener, data_sensor, data_user_preference
                 )
             )
         ),
+        user_uuid=TEST_USER_UUID,
     )
 
 
@@ -77,7 +82,8 @@ def config_fixture():
     """Define a config entry data fixture."""
     return {
         CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_USER_UUID: TEST_USER_UUID,
+        CONF_REFRESH_TOKEN: TEST_REFRESH_TOKEN,
     }
 
 
@@ -107,19 +113,26 @@ def data_user_preferences_fixture():
 
 @pytest.fixture(name="get_client")
 def get_client_fixture(client):
-    """Define a fixture to mock the async_get_client method."""
+    """Define a fixture to mock the client retrieval methods."""
     return AsyncMock(return_value=client)
 
 
 @pytest.fixture(name="mock_aionotion")
 async def mock_aionotion_fixture(client):
     """Define a fixture to patch aionotion."""
-    with patch(
-        "homeassistant.components.notion.async_get_client",
-        AsyncMock(return_value=client),
-    ), patch(
-        "homeassistant.components.notion.config_flow.async_get_client",
-        AsyncMock(return_value=client),
+    with (
+        patch(
+            "homeassistant.components.notion.async_get_client_with_credentials",
+            AsyncMock(return_value=client),
+        ),
+        patch(
+            "homeassistant.components.notion.async_get_client_with_refresh_token",
+            AsyncMock(return_value=client),
+        ),
+        patch(
+            "homeassistant.components.notion.config_flow.async_get_client_with_credentials",
+            AsyncMock(return_value=client),
+        ),
     ):
         yield
 

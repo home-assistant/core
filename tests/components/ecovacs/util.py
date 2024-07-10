@@ -1,4 +1,5 @@
 """Ecovacs test util."""
+
 import asyncio
 
 from deebot_client.event_bus import EventBus

@@ -1,4 +1,5 @@
 """Test the Flipr binary sensor."""
+
 from datetime import datetime
 from unittest.mock import patch
 

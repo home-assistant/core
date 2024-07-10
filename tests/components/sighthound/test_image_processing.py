@@ -1,4 +1,5 @@
 """Tests for the Sighthound integration."""
+
 from copy import deepcopy
 import datetime
 import os
@@ -9,19 +10,24 @@ from PIL import UnidentifiedImageError
 import pytest
 import simplehound.core as hound
 
-import homeassistant.components.image_processing as ip
+from homeassistant.components.image_processing import DOMAIN as IP_DOMAIN, SERVICE_SCAN
 import homeassistant.components.sighthound.image_processing as sh
-from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_API_KEY,
+    CONF_ENTITY_ID,
+    CONF_SOURCE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 TEST_DIR = os.path.dirname(__file__)
 
 VALID_CONFIG = {
-    ip.DOMAIN: {
+    IP_DOMAIN: {
         "platform": "sighthound",
         CONF_API_KEY: "abc123",
-        ip.CONF_SOURCE: {ip.CONF_ENTITY_ID: "camera.demo_camera"},
+        CONF_SOURCE: {CONF_ENTITY_ID: "camera.demo_camera"},
     },
     "camera": {"platform": "demo"},
 }
@@ -95,7 +101,7 @@ async def test_bad_api_key(
     with mock.patch(
         "simplehound.core.cloud.detect", side_effect=hound.SimplehoundException
     ):
-        await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+        await async_setup_component(hass, IP_DOMAIN, VALID_CONFIG)
         await hass.async_block_till_done()
         assert "Sighthound error" in caplog.text
         assert not hass.states.get(VALID_ENTITY_ID)
@@ -103,14 +109,14 @@ async def test_bad_api_key(
 
 async def test_setup_platform(hass: HomeAssistant, mock_detections) -> None:
     """Set up platform with one entity."""
-    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await async_setup_component(hass, IP_DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
 
 async def test_process_image(hass: HomeAssistant, mock_image, mock_detections) -> None:
     """Process an image."""
-    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await async_setup_component(hass, IP_DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
@@ -124,7 +130,7 @@ async def test_process_image(hass: HomeAssistant, mock_image, mock_detections) -
     hass.bus.async_listen(sh.EVENT_PERSON_DETECTED, capture_person_event)
 
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-    await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+    await hass.services.async_call(IP_DOMAIN, SERVICE_SCAN, service_data=data)
     await hass.async_block_till_done()
 
     state = hass.states.get(VALID_ENTITY_ID)
@@ -141,13 +147,13 @@ async def test_catch_bad_image(
 ) -> None:
     """Process an image."""
     valid_config_save_file = deepcopy(VALID_CONFIG)
-    valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
-    await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
+    valid_config_save_file[IP_DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    await async_setup_component(hass, IP_DOMAIN, valid_config_save_file)
     await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-    await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+    await hass.services.async_call(IP_DOMAIN, SERVICE_SCAN, service_data=data)
     await hass.async_block_till_done()
     assert "Sighthound unable to process image" in caplog.text
 
@@ -155,8 +161,8 @@ async def test_catch_bad_image(
 async def test_save_image(hass: HomeAssistant, mock_image, mock_detections) -> None:
     """Save a processed image."""
     valid_config_save_file = deepcopy(VALID_CONFIG)
-    valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
-    await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
+    valid_config_save_file[IP_DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    await async_setup_component(hass, IP_DOMAIN, valid_config_save_file)
     await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
@@ -166,7 +172,7 @@ async def test_save_image(hass: HomeAssistant, mock_image, mock_detections) -> N
         pil_img = pil_img_open.return_value
         pil_img = pil_img.convert.return_value
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-        await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+        await hass.services.async_call(IP_DOMAIN, SERVICE_SCAN, service_data=data)
         await hass.async_block_till_done()
         state = hass.states.get(VALID_ENTITY_ID)
         assert state.state == "2"
@@ -182,9 +188,9 @@ async def test_save_timestamped_image(
 ) -> None:
     """Save a processed image."""
     valid_config_save_ts_file = deepcopy(VALID_CONFIG)
-    valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
-    valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_TIMESTAMPTED_FILE: True})
-    await async_setup_component(hass, ip.DOMAIN, valid_config_save_ts_file)
+    valid_config_save_ts_file[IP_DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    valid_config_save_ts_file[IP_DOMAIN].update({sh.CONF_SAVE_TIMESTAMPTED_FILE: True})
+    await async_setup_component(hass, IP_DOMAIN, valid_config_save_ts_file)
     await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
@@ -194,7 +200,7 @@ async def test_save_timestamped_image(
         pil_img = pil_img_open.return_value
         pil_img = pil_img.convert.return_value
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-        await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+        await hass.services.async_call(IP_DOMAIN, SERVICE_SCAN, service_data=data)
         await hass.async_block_till_done()
         state = hass.states.get(VALID_ENTITY_ID)
         assert state.state == "2"

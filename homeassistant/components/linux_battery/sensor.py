@@ -1,4 +1,5 @@
 """Details about the built-in battery."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ from batinfo import Batteries
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -48,7 +49,7 @@ DEFAULT_SYSTEM = "linux"
 
 SYSTEMS = ["android", "linux"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

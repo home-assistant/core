@@ -1,4 +1,5 @@
 """Constants for Radarr."""
+
 import logging
 from typing import Final
 

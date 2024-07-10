@@ -1,4 +1,5 @@
 """ZHA repairs for common environmental and device problems."""
+
 from __future__ import annotations
 
 import enum
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from ..core.const import DOMAIN
+from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,13 +74,18 @@ def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
     return HardwareType.OTHER
 
 
-async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
+async def probe_silabs_firmware_type(
+    device: str, *, probe_methods: ApplicationType | None = None
+) -> ApplicationType | None:
     """Probe the running firmware on a Silabs device."""
-    flasher = Flasher(device=device)
+    flasher = Flasher(
+        device=device,
+        **({"probe_methods": probe_methods} if probe_methods else {}),
+    )
 
     try:
         await flasher.probe_app_type()
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.debug("Failed to probe application type", exc_info=True)
 
     return flasher.app_type
@@ -100,7 +106,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
     if app_type == ApplicationType.EZSP:
         # If connecting fails but we somehow probe EZSP (e.g. stuck in bootloader),
         # reconnect, it should work
-        raise AlreadyRunningEZSP()
+        raise AlreadyRunningEZSP
 
     hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(

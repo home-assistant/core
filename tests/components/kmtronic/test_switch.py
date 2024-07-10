@@ -1,4 +1,5 @@
 """The tests for the KMtronic switch platform."""
+
 from datetime import timedelta
 from http import HTTPStatus
 

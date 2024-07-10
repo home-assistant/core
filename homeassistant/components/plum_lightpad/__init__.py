@@ -1,4 +1,5 @@
 """Support for Plum Lightpad devices."""
+
 import logging
 
 from aiohttp import ContentTypeError

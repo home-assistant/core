@@ -1,4 +1,5 @@
 """Support for Homematic thermostats."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -112,11 +113,11 @@ class HMThermostat(HMDevice, ClimateEntity):
     @property
     def preset_modes(self):
         """Return a list of available preset modes."""
-        preset_modes = []
-        for mode in self._hmdevice.ACTIONNODE:
-            if mode in HM_PRESET_MAP:
-                preset_modes.append(HM_PRESET_MAP[mode])
-        return preset_modes
+        return [
+            HM_PRESET_MAP[mode]
+            for mode in self._hmdevice.ACTIONNODE
+            if mode in HM_PRESET_MAP
+        ]
 
     @property
     def current_humidity(self):
@@ -139,10 +140,8 @@ class HMThermostat(HMDevice, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return None
-
-        self._hmdevice.writeNodeData(self._state, float(temperature))
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            self._hmdevice.writeNodeData(self._state, float(temperature))
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

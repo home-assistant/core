@@ -1,4 +1,5 @@
 """Alpha2 config flow."""
+
 import logging
 from typing import Any
 
@@ -6,9 +7,8 @@ import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -28,7 +28,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
         await base.update_data()
     except (aiohttp.client_exceptions.ClientConnectorError, TimeoutError):
         return {"error": "cannot_connect"}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception")
         return {"error": "unknown"}
 
@@ -43,7 +43,7 @@ class Alpha2BaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:

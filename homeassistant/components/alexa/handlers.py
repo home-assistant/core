@@ -1,4 +1,5 @@
 """Alexa message handlers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -20,6 +21,7 @@ from homeassistant.components import (
     light,
     media_player,
     number,
+    remote,
     timer,
     vacuum,
     valve,
@@ -125,9 +127,9 @@ async def async_api_discovery(
             continue
         try:
             discovered_serialized_entity = alexa_entity.serialize_discovery()
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
-                "Unable to serialize %s for discovery: %s", alexa_entity.entity_id, exc
+                "Unable to serialize %s for discovery", alexa_entity.entity_id
             )
         else:
             discovery_endpoints.append(discovered_serialized_entity)
@@ -184,6 +186,8 @@ async def async_api_turn_on(
         service = fan.SERVICE_TURN_ON
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_ON
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -233,6 +237,8 @@ async def async_api_turn_off(
         service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_OFF
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
@@ -1195,6 +1201,17 @@ async def async_api_set_mode(
         if mode != PRESET_MODE_NA and modes and mode in modes:
             service = humidifier.SERVICE_SET_MODE
             data[humidifier.ATTR_MODE] = mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+            raise AlexaInvalidValueError(msg)
+
+    # Remote Activity
+    if instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+        activity = mode.split(".")[1]
+        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        if activity != PRESET_MODE_NA and activities and activity in activities:
+            service = remote.SERVICE_TURN_ON
+            data[remote.ATTR_ACTIVITY] = activity
         else:
             msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
             raise AlexaInvalidValueError(msg)

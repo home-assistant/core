@@ -1,4 +1,5 @@
 """Support for iTach IR devices."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -12,7 +13,7 @@ from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DEFAULT_NUM_REPEATS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as REMOTE_PLATFORM_SCHEMA,
 )
 from homeassistant.const import (
     CONF_DEVICES,
@@ -41,7 +42,7 @@ CONF_COMMANDS = "commands"
 CONF_DATA = "data"
 CONF_IR_COUNT = "ir_count"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MAC): cv.string,
         vol.Required(CONF_HOST): cv.string,

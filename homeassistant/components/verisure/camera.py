@@ -1,4 +1,5 @@
 """Support for Verisure cameras."""
+
 from __future__ import annotations
 
 import errno

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/envisalink",
   "iot_class": "local_push",
   "loggers": ["pyenvisalink"],
-  "requirements": ["pyenvisalink==4.6"]
+  "requirements": ["pyenvisalink==4.7"]
 }

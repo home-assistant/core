@@ -1,4 +1,5 @@
 """Verify that WeMo device triggers work as expected."""
+
 import pytest
 from pytest_unordered import unordered
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS

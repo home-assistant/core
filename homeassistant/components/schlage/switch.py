@@ -24,25 +24,13 @@ from .coordinator import SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
-@dataclass(frozen=True)
-class SchlageSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    # NOTE: This has to be a mixin because these are required keys.
-    # SwitchEntityDescription has attributes with default values,
-    # which means we can't inherit from it because you haven't have
-    # non-default arguments follow default arguments in an initializer.
+@dataclass(frozen=True, kw_only=True)
+class SchlageSwitchEntityDescription(SwitchEntityDescription):
+    """Entity description for a Schlage switch."""
 
     on_fn: Callable[[Lock], None]
     off_fn: Callable[[Lock], None]
     value_fn: Callable[[Lock], bool]
-
-
-@dataclass(frozen=True)
-class SchlageSwitchEntityDescription(
-    SwitchEntityDescription, SchlageSwitchEntityDescriptionMixin
-):
-    """Entity description for a Schlage switch."""
 
 
 SWITCHES: tuple[SchlageSwitchEntityDescription, ...] = (
@@ -74,17 +62,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches based on a config entry."""
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for device_id in coordinator.data.locks:
-        for description in SWITCHES:
-            entities.append(
-                SchlageSwitch(
-                    coordinator=coordinator,
-                    description=description,
-                    device_id=device_id,
-                )
-            )
-    async_add_entities(entities)
+    async_add_entities(
+        SchlageSwitch(
+            coordinator=coordinator,
+            description=description,
+            device_id=device_id,
+        )
+        for device_id in coordinator.data.locks
+        for description in SWITCHES
+    )
 
 
 class SchlageSwitch(SchlageEntity, SwitchEntity):

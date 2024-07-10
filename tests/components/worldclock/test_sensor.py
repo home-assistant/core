@@ -1,4 +1,5 @@
 """The test for the World clock sensor platform."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant

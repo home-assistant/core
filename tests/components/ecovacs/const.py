@@ -1,6 +1,5 @@
 """Test ecovacs constants."""
 
-
 from homeassistant.components.ecovacs.const import (
     CONF_CONTINENT,
     CONF_OVERRIDE_MQTT_URL,

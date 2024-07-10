@@ -1,4 +1,5 @@
 """Test Matter lights."""
+
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -17,21 +18,31 @@ from .common import (
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
-    ("fixture", "entity_id"),
+    ("fixture", "entity_id", "supported_color_modes"),
     [
-        ("extended-color-light", "light.mock_extended_color_light"),
-        ("color-temperature-light", "light.mock_color_temperature_light"),
-        ("dimmable-light", "light.mock_dimmable_light"),
-        ("onoff-light", "light.mock_onoff_light"),
+        (
+            "extended-color-light",
+            "light.mock_extended_color_light_light",
+            ["color_temp", "hs", "xy"],
+        ),
+        (
+            "color-temperature-light",
+            "light.mock_color_temperature_light_light",
+            ["color_temp"],
+        ),
+        ("dimmable-light", "light.mock_dimmable_light_light", ["brightness"]),
+        ("onoff-light", "light.mock_onoff_light_light", ["onoff"]),
+        ("onoff-light-with-levelcontrol-present", "light.d215s_light", ["onoff"]),
     ],
 )
-async def test_on_off_light(
+async def test_light_turn_on_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
     fixture: str,
     entity_id: str,
+    supported_color_modes: list[str],
 ) -> None:
-    """Test an on/off light."""
+    """Test basic light discovery and turn on/off."""
 
     light_node = await setup_integration_with_node_fixture(
         hass,
@@ -46,6 +57,11 @@ async def test_on_off_light(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "off"
+
+    # check the supported_color_modes
+    # especially important is the onoff light device type that does have
+    # a levelcontrol cluster present which we should ignore
+    assert state.attributes["supported_color_modes"] == supported_color_modes
 
     # Test that the light is on
     set_node_attribute(light_node, 1, 6, 0, True)
@@ -97,9 +113,10 @@ async def test_on_off_light(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("extended-color-light", "light.mock_extended_color_light"),
-        ("color-temperature-light", "light.mock_color_temperature_light"),
-        ("dimmable-light", "light.mock_dimmable_light"),
+        ("extended-color-light", "light.mock_extended_color_light_light"),
+        ("color-temperature-light", "light.mock_color_temperature_light_light"),
+        ("dimmable-light", "light.mock_dimmable_light_light"),
+        ("dimmable-plugin-unit", "light.dimmable_plugin_unit_light"),
     ],
 )
 async def test_dimmable_light(
@@ -172,8 +189,8 @@ async def test_dimmable_light(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("extended-color-light", "light.mock_extended_color_light"),
-        ("color-temperature-light", "light.mock_color_temperature_light"),
+        ("extended-color-light", "light.mock_extended_color_light_light"),
+        ("color-temperature-light", "light.mock_color_temperature_light_light"),
     ],
 )
 async def test_color_temperature_light(
@@ -270,7 +287,7 @@ async def test_color_temperature_light(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("extended-color-light", "light.mock_extended_color_light"),
+        ("extended-color-light", "light.mock_extended_color_light_light"),
     ],
 )
 async def test_extended_color_light(

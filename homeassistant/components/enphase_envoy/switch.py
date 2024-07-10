@@ -1,4 +1,5 @@
 """Switch platform for Enphase Envoy solar energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -24,52 +25,31 @@ from .entity import EnvoyBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class EnvoyEnpowerRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnpowerSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Envoy Enpower switch entity."""
 
     value_fn: Callable[[EnvoyEnpower], bool]
     turn_on_fn: Callable[[Envoy], Coroutine[Any, Any, dict[str, Any]]]
     turn_off_fn: Callable[[Envoy], Coroutine[Any, Any, dict[str, Any]]]
 
 
-@dataclass(frozen=True)
-class EnvoyEnpowerSwitchEntityDescription(
-    SwitchEntityDescription, EnvoyEnpowerRequiredKeysMixin
-):
-    """Describes an Envoy Enpower switch entity."""
-
-
-@dataclass(frozen=True)
-class EnvoyDryContactRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyDryContactSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Envoy Enpower dry contact switch entity."""
 
     value_fn: Callable[[EnvoyDryContactStatus], bool]
     turn_on_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
     turn_off_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
 
 
-@dataclass(frozen=True)
-class EnvoyDryContactSwitchEntityDescription(
-    SwitchEntityDescription, EnvoyDryContactRequiredKeysMixin
-):
-    """Describes an Envoy Enpower dry contact switch entity."""
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyStorageSettingsSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Envoy storage settings switch entity."""
 
     value_fn: Callable[[EnvoyStorageSettings], bool]
     turn_on_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
     turn_off_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsSwitchEntityDescription(
-    SwitchEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
-):
-    """Describes an Envoy storage settings switch entity."""
 
 
 ENPOWER_GRID_SWITCH = EnvoyEnpowerSwitchEntityDescription(

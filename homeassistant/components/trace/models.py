@@ -1,4 +1,5 @@
 """Containers for a script or automation trace."""
+
 from __future__ import annotations
 
 import abc

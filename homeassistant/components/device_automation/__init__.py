@@ -1,4 +1,5 @@
 """Helpers for device automations."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -28,7 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -48,7 +49,7 @@ if TYPE_CHECKING:
     from .condition import DeviceAutomationConditionProtocol
     from .trigger import DeviceAutomationTriggerProtocol
 
-    DeviceAutomationPlatformType: TypeAlias = (
+    type DeviceAutomationPlatformType = (
         ModuleType
         | DeviceAutomationTriggerProtocol
         | DeviceAutomationConditionProtocol
@@ -133,8 +134,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
-) -> DeviceAutomationTriggerProtocol:
-    ...
+) -> DeviceAutomationTriggerProtocol: ...
 
 
 @overload
@@ -142,8 +142,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
-) -> DeviceAutomationConditionProtocol:
-    ...
+) -> DeviceAutomationConditionProtocol: ...
 
 
 @overload
@@ -151,15 +150,13 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
-) -> DeviceAutomationActionProtocol:
-    ...
+) -> DeviceAutomationActionProtocol: ...
 
 
 @overload
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> DeviceAutomationPlatformType:
-    ...
+) -> DeviceAutomationPlatformType: ...
 
 
 async def async_get_device_automation_platform(
@@ -172,7 +169,7 @@ async def async_get_device_automation_platform(
     platform_name = automation_type.value.section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
-        platform = integration.get_platform(platform_name)
+        platform = await integration.async_get_platform(platform_name)
     except IntegrationNotFound as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' not found"
@@ -343,7 +340,7 @@ def async_get_entity_registry_entry_or_raise(
 
 @callback
 def async_validate_entity_schema(
-    hass: HomeAssistant, config: ConfigType, schema: vol.Schema
+    hass: HomeAssistant, config: ConfigType, schema: VolSchemaType
 ) -> ConfigType:
     """Validate schema and resolve entity registry entry id to entity_id."""
     config = schema(config)
@@ -372,7 +369,7 @@ def handle_device_errors(
             await func(hass, connection, msg)
         except DeviceNotFound:
             connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+                msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
             )
 
     return with_error_handling

@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_DEVICE not in entry.data:
         config_updates = {
             **entry.data,
-            **{CONF_DEVICE: DEVICE_TYPE_GOGOGATE2},
+            CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
         }
 
     if config_updates:

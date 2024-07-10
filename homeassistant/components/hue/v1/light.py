@@ -1,4 +1,5 @@
 """Support for the Philips Hue lights."""
+
 from __future__ import annotations
 
 import asyncio

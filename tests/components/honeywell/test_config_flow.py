@@ -1,10 +1,10 @@
 """Tests for honeywell config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import aiosomecomfort
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
     CONF_HEAT_AWAY_TEMPERATURE,
@@ -32,7 +32,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -66,7 +66,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == FAKE_CONFIG
 
 
@@ -86,7 +86,7 @@ async def test_show_option_form(
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
 
@@ -113,7 +113,7 @@ async def test_create_option_entry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_COOL_AWAY_TEMPERATURE: 1,
         CONF_HEAT_AWAY_TEMPERATURE: 2,
@@ -146,7 +146,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -159,7 +159,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_entry.data == {
         CONF_USERNAME: "new-username",
@@ -189,7 +189,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     await hass.async_block_till_done()
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     client.login.side_effect = aiosomecomfort.device.AuthError
@@ -203,7 +203,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -238,7 +238,7 @@ async def test_reauth_flow_connnection_error(
     await hass.async_block_till_done()
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     client.login.side_effect = error
@@ -249,5 +249,5 @@ async def test_reauth_flow_connnection_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

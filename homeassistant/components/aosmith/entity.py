@@ -1,5 +1,4 @@
 """The base entity for the A. O. Smith integration."""
-from typing import TypeVar
 
 from py_aosmith import AOSmithAPIClient
 from py_aosmith.models import Device as AOSmithDevice
@@ -10,12 +9,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
 
-_AOSmithCoordinatorT = TypeVar(
-    "_AOSmithCoordinatorT", bound=AOSmithStatusCoordinator | AOSmithEnergyCoordinator
-)
 
-
-class AOSmithEntity(CoordinatorEntity[_AOSmithCoordinatorT]):
+class AOSmithEntity[
+    _AOSmithCoordinatorT: AOSmithStatusCoordinator | AOSmithEnergyCoordinator
+](CoordinatorEntity[_AOSmithCoordinatorT]):
     """Base entity for A. O. Smith."""
 
     _attr_has_entity_name = True

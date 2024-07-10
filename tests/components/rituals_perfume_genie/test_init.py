@@ -1,4 +1,5 @@
 """Tests for the Rituals Perfume Genie integration."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -11,6 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     init_integration,
     mock_config_entry,
+    mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
 )
 
@@ -30,7 +32,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
 async def test_config_entry_unload(hass: HomeAssistant) -> None:
     """Test the Rituals Perfume Genie configuration entry setup and unloading."""
     config_entry = mock_config_entry(unique_id="id_123_unload")
-    await init_integration(hass, config_entry)
+    await init_integration(hass, config_entry, [mock_diffuser(hublot="lot123")])
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

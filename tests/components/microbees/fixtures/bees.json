@@ -1,0 +1,87 @@
+[
+  {
+    "id": 24907,
+    "label": "Test this",
+    "serial": "10521CB7C864",
+    "gate_serial": "cde153cb-d55c-4230-be93-340eff8f53c2",
+    "gate_id": 4466,
+    "lastUpdate": 1707812698995,
+    "name": "Test this",
+    "active": true,
+    "productID": 46,
+    "prototypeName": "SocketBee Italy",
+    "rssi": -67,
+    "lastActivation": 1707768436222,
+    "icon": "https://products.microbees.com/wp-content/uploads/2020/10/new-foto-socketbee-italia.png",
+    "configuration": {},
+    "sensors": [
+      {
+        "id": 59754,
+        "name": "Sensore Assorbimento",
+        "lastUpdate": 1707812700120,
+        "deviceID": 462,
+        "prototypeID": 223,
+        "prototypeName": "Sensore Assorbimento",
+        "device_type": 0,
+        "dc_type": "Power",
+        "unit": "Wh",
+        "payload": [1, 1, 2, 0.5, 226, 0.013107268, 2, -67],
+        "value": 1
+      },
+      {
+        "id": 59755,
+        "name": "Stato Interruttore Test this",
+        "lastUpdate": 1707812700129,
+        "deviceID": 463,
+        "prototypeID": 224,
+        "prototypeName": "Stato Interruttore",
+        "device_type": 1,
+        "dc_type": "Uptime",
+        "unit": "",
+        "payload": [1, 1, 2, 0.5, 226, 0.013107268, 2, -67],
+        "value": 1
+      }
+    ],
+    "actuators": [
+      {
+        "id": 25497,
+        "name": "Test this",
+        "prototypeName": "Interruttore",
+        "deviceID": 461,
+        "configuration": {
+          "actuator_type": "1",
+          "icon": "power_button"
+        },
+        "starred": true,
+        "uptime": 2812005,
+        "sensorID": 59755,
+        "payload": [1, 1, 2, 0.5, 226, 0.013107268, 2, -67],
+        "value": 1,
+        "rooms": []
+      }
+    ],
+    "rooms": [],
+    "status_string": [
+      {
+        "name": "Seriale",
+        "value": "10521CB7C864",
+        "icon": "numeric"
+      },
+      {
+        "name": "Ultimo Aggiornamento",
+        "value": "09:25",
+        "icon": "av-timer"
+      },
+      {
+        "name": "Sensore Assorbimento",
+        "value": "1W",
+        "icon": "flash"
+      },
+      {
+        "name": "Stato Interruttore Test This",
+        "value": "on",
+        "icon": "toggle-switch-on"
+      }
+    ]
+  }
+]

@@ -1,4 +1,5 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -47,7 +48,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 
 SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SWITCH_KEYS)]

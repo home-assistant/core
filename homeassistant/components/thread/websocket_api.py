@@ -1,4 +1,5 @@
 """The thread websocket API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -43,9 +44,7 @@ async def ws_add_dataset(
     try:
         await dataset_store.async_add_dataset(hass, source, tlv)
     except TLVError as exc:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(exc)
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(exc))
         return
 
     connection.send_result(msg["id"])
@@ -93,9 +92,7 @@ async def ws_set_preferred_dataset(
     try:
         store.preferred_dataset = dataset_id
     except KeyError:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown dataset"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "unknown dataset")
         return
 
     connection.send_result(msg["id"])
@@ -119,10 +116,10 @@ async def ws_delete_dataset(
     try:
         store.async_delete(dataset_id)
     except KeyError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(exc))
         return
     except dataset_store.DatasetPreferredError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_ALLOWED, str(exc))
         return
 
     connection.send_result(msg["id"])
@@ -144,9 +141,7 @@ async def ws_get_dataset(
 
     store = await dataset_store.async_get_store(hass)
     if not (dataset := store.async_get(dataset_id)):
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown dataset"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "unknown dataset")
         return
 
     connection.send_result(msg["id"], {"tlv": dataset.tlv})
@@ -165,23 +160,22 @@ async def ws_list_datasets(
     """Get a list of thread datasets."""
 
     store = await dataset_store.async_get_store(hass)
-    result = []
     preferred_dataset = store.preferred_dataset
-    for dataset in store.datasets.values():
-        result.append(
-            {
-                "channel": dataset.channel,
-                "created": dataset.created,
-                "dataset_id": dataset.id,
-                "extended_pan_id": dataset.extended_pan_id,
-                "network_name": dataset.network_name,
-                "pan_id": dataset.pan_id,
-                "preferred": dataset.id == preferred_dataset,
-                "preferred_border_agent_id": dataset.preferred_border_agent_id,
-                "preferred_extended_address": dataset.preferred_extended_address,
-                "source": dataset.source,
-            }
-        )
+    result = [
+        {
+            "channel": dataset.channel,
+            "created": dataset.created,
+            "dataset_id": dataset.id,
+            "extended_pan_id": dataset.extended_pan_id,
+            "network_name": dataset.network_name,
+            "pan_id": dataset.pan_id,
+            "preferred": dataset.id == preferred_dataset,
+            "preferred_border_agent_id": dataset.preferred_border_agent_id,
+            "preferred_extended_address": dataset.preferred_extended_address,
+            "source": dataset.source,
+        }
+        for dataset in store.datasets.values()
+    ]
 
     connection.send_result(msg["id"], {"datasets": result})
 

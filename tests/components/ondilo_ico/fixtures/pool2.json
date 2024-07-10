@@ -1,0 +1,19 @@
+{
+  "id": 2,
+  "name": "Pool 2",
+  "type": "outdoor_inground_pool",
+  "volume": 120,
+  "disinfection": {
+    "primary": "chlorine",
+    "secondary": { "uv_sanitizer": false, "ozonator": false }
+  },
+  "address": {
+    "street": "1 Rue de Paris",
+    "zipcode": "75000",
+    "city": "Paris",
+    "country": "France",
+    "latitude": 48.861783,
+    "longitude": 2.337421
+  },
+  "updated_at": "2024-01-01T01:00:00+0000"
+}

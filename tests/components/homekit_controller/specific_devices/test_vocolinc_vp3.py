@@ -1,4 +1,5 @@
 """Make sure that existing VOCOlinc VP3 support isn't broken."""
+
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant

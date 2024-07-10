@@ -34,15 +34,15 @@ async def test_setup(
     setup_credentials: None,
 ) -> None:
     """Test setting up the integration."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -68,7 +68,7 @@ async def test_token_refresh_failure(
     )
 
     assert not await integration_setup()
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
@@ -88,7 +88,7 @@ async def test_token_refresh_success(
     )
 
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Verify token request
     assert len(aioclient_mock.mock_calls) == 1
@@ -132,7 +132,7 @@ async def test_token_requires_reauth(
     )
 
     assert not await integration_setup()
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -147,7 +147,7 @@ async def test_device_update_coordinator_failure(
     requests_mock: Mocker,
 ) -> None:
     """Test case where the device update coordinator fails on the first request."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     requests_mock.register_uri(
         "GET",
@@ -156,7 +156,7 @@ async def test_device_update_coordinator_failure(
     )
 
     assert not await integration_setup()
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_device_update_coordinator_reauth(
@@ -167,7 +167,7 @@ async def test_device_update_coordinator_reauth(
     requests_mock: Mocker,
 ) -> None:
     """Test case where the device update coordinator fails on the first request."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     requests_mock.register_uri(
         "GET",
@@ -179,7 +179,7 @@ async def test_device_update_coordinator_reauth(
     )
 
     assert not await integration_setup()
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

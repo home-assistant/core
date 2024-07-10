@@ -1,4 +1,5 @@
 """Sensor for Home Assistant analytics."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AnalyticsInsightsData
+from . import AnalyticsInsightsConfigEntry
 from .const import DOMAIN
 from .coordinator import AnalyticsData, HomeassistantAnalyticsDataUpdateCoordinator
 
@@ -59,12 +59,12 @@ def get_custom_integration_entity_description(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AnalyticsInsightsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize the entries."""
 
-    analytics_data: AnalyticsInsightsData = hass.data[DOMAIN][entry.entry_id]
+    analytics_data = entry.runtime_data
     coordinator: HomeassistantAnalyticsDataUpdateCoordinator = (
         analytics_data.coordinator
     )

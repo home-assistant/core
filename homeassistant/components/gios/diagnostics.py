@@ -1,25 +1,22 @@
 """Diagnostics support for GIOS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import GiosDataUpdateCoordinator
-from .const import DOMAIN
+from . import GiosConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: GiosConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: GiosDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
-    diagnostics_data = {
+    return {
         "config_entry": config_entry.as_dict(),
         "coordinator_data": asdict(coordinator.data),
     }
-
-    return diagnostics_data

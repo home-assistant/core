@@ -1,4 +1,5 @@
 """Test configuration and mocks for LCN component."""
+
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -14,7 +15,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service, load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 class MockModuleConnection(ModuleConnection):
@@ -67,20 +68,13 @@ def create_config_entry(name):
 
     title = entry_data[CONF_HOST]
     unique_id = fixture_filename
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         title=title,
         unique_id=unique_id,
         data=entry_data,
         options=options,
     )
-    return entry
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(name="entry")

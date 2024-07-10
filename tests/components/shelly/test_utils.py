@@ -1,4 +1,8 @@
 """Tests for Shelly utils."""
+
+from typing import Any
+from unittest.mock import Mock
+
 from aioshelly.const import (
     MODEL_1,
     MODEL_1L,
@@ -30,7 +34,9 @@ from homeassistant.util import dt as dt_util
 DEVICE_BLOCK_ID = 4
 
 
-async def test_block_get_number_of_channels(mock_block_device, monkeypatch) -> None:
+async def test_block_get_number_of_channels(
+    mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test block get number of channels."""
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "emeter")
     monkeypatch.setitem(mock_block_device.shelly, "num_emeters", 3)
@@ -63,7 +69,9 @@ async def test_block_get_number_of_channels(mock_block_device, monkeypatch) -> N
     )
 
 
-async def test_block_get_block_channel_name(mock_block_device, monkeypatch) -> None:
+async def test_block_get_block_channel_name(
+    mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test block get block channel name."""
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
 
@@ -98,7 +106,9 @@ async def test_block_get_block_channel_name(mock_block_device, monkeypatch) -> N
     )
 
 
-async def test_is_block_momentary_input(mock_block_device, monkeypatch) -> None:
+async def test_is_block_momentary_input(
+    mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test is block momentary input."""
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
 
@@ -158,7 +168,9 @@ async def test_is_block_momentary_input(mock_block_device, monkeypatch) -> None:
         ({"sleep_mode": {"period": 5, "unit": "h"}}, 5 * 3600),
     ],
 )
-async def test_get_block_device_sleep_period(settings, sleep_period) -> None:
+async def test_get_block_device_sleep_period(
+    settings: dict[str, Any], sleep_period: int
+) -> None:
     """Test get block device sleep period."""
     assert get_block_device_sleep_period(settings) == sleep_period
 
@@ -175,7 +187,9 @@ async def test_get_device_uptime() -> None:
     ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:10+00:00"))
 
 
-async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
+async def test_get_block_input_triggers(
+    mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test get block input triggers."""
     monkeypatch.setattr(
         mock_block_device.blocks[DEVICE_BLOCK_ID],
@@ -218,13 +232,15 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
     }
 
 
-async def test_get_rpc_channel_name(mock_rpc_device) -> None:
+async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
     """Test get RPC channel name."""
     assert get_rpc_channel_name(mock_rpc_device, "input:0") == "Test name input 0"
     assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name input_3"
 
 
-async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:
+async def test_get_rpc_input_triggers(
+    mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test get RPC input triggers."""
     monkeypatch.setattr(mock_rpc_device, "config", {"input:0": {"type": "button"}})
     assert set(get_rpc_input_triggers(mock_rpc_device)) == {

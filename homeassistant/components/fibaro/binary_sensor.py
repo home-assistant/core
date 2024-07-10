@@ -1,4 +1,5 @@
 """Support for Fibaro binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -75,9 +76,9 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
             self._attr_icon = SENSOR_TYPES[self._fibaro_sensor_type][1]
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the extra state attributes of the device."""
-        return super().extra_state_attributes | self._own_extra_state_attributes
+        return {**super().extra_state_attributes, **self._own_extra_state_attributes}
 
     def update(self) -> None:
         """Get the latest data and update the state."""

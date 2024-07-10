@@ -10,6 +10,14 @@
           "origin": "Origin",
           "destination": "Destination"
         }
+      },
+      "reconfigure": {
+        "description": "[%key:component::google_travel_time::config::step::user::description%]",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "origin": "[%key:component::google_travel_time::config::step::user::data::origin%]",
+          "destination": "[%key:component::google_travel_time::config::step::user::data::destination%]"
+        }
       }
     },
     "error": {
@@ -18,7 +26,8 @@
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -27,7 +36,7 @@
         "description": "You can optionally specify either a Departure Time or Arrival Time. If specifying a departure time, you can enter `now`, a Unix timestamp, or a 24 hour time string like `08:00:00`. If specifying an arrival time, you can use a Unix timestamp or a 24 hour time string like `08:00:00`",
         "data": {
           "mode": "Travel Mode",
-          "language": "Language",
+          "language": "[%key:common::config_flow::data::language%]",
           "time_type": "Time Type",
           "time": "Time",
           "avoid": "Avoid",

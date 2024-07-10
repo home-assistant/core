@@ -1,4 +1,5 @@
 """Test stt."""
+
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +27,7 @@ async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:
     assert entity is not None
 
     assert (await entity.get_supported_wake_words()) == [
-        wake_word.WakeWord(id="Test Model", name="Test Model")
+        wake_word.WakeWord(id="Test Model", name="Test Model", phrase="Test Phrase")
     ]
 
 
@@ -59,6 +60,8 @@ async def test_streaming_audio(
 
     assert result is not None
     assert result == snapshot
+    assert result.wake_word_id == "Test Model"
+    assert result.wake_word_phrase == "Test Phrase"
 
 
 async def test_streaming_audio_connection_lost(
@@ -100,10 +103,13 @@ async def test_streaming_audio_oserror(
         [Detection(name="Test Model", timestamp=1000).event()]
     )
 
-    with patch(
-        "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
-        mock_client,
-    ), patch.object(mock_client, "read_event", side_effect=OSError("Boom!")):
+    with (
+        patch(
+            "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
+            mock_client,
+        ),
+        patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
+    ):
         result = await entity.async_process_audio_stream(audio_stream(), None)
 
     assert result is None
@@ -171,7 +177,7 @@ async def test_dynamic_wake_word_info(
 
     # Original info
     assert (await entity.get_supported_wake_words()) == [
-        wake_word.WakeWord("Test Model", "Test Model")
+        wake_word.WakeWord("Test Model", "Test Model", "Test Phrase")
     ]
 
     new_info = Info(
@@ -185,6 +191,7 @@ async def test_dynamic_wake_word_info(
                     WakeModel(
                         name="ww1",
                         description="Wake Word 1",
+                        phrase="Wake Word Phrase 1",
                         installed=True,
                         attribution=TEST_ATTR,
                         languages=[],
@@ -193,6 +200,7 @@ async def test_dynamic_wake_word_info(
                     WakeModel(
                         name="ww2",
                         description="Wake Word 2",
+                        phrase="Wake Word Phrase 2",
                         installed=True,
                         attribution=TEST_ATTR,
                         languages=[],
@@ -210,6 +218,6 @@ async def test_dynamic_wake_word_info(
         return_value=new_info,
     ):
         assert (await entity.get_supported_wake_words()) == [
-            wake_word.WakeWord("ww1", "Wake Word 1"),
-            wake_word.WakeWord("ww2", "Wake Word 2"),
+            wake_word.WakeWord("ww1", "Wake Word 1", "Wake Word Phrase 1"),
+            wake_word.WakeWord("ww2", "Wake Word 2", "Wake Word Phrase 2"),
         ]

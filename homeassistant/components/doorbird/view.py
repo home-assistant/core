@@ -1,15 +1,14 @@
 """Support for DoorBird devices."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
 
 from aiohttp import web
 
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 
 from .const import API_URL, DOMAIN
-from .device import async_reset_device_favorites
 from .util import get_door_station_by_token
 
 
@@ -23,7 +22,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
     async def get(self, request: web.Request, event: str) -> web.Response:
         """Respond to requests from the device."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         token: str | None = request.query.get("token")
         if (
             token is None
@@ -37,11 +36,6 @@ class DoorBirdRequestView(HomeAssistantView):
             event_data = door_station.get_event_data(event)
         else:
             event_data = {}
-
-        if event == "clear":
-            await async_reset_device_favorites(hass, door_station)
-            message = f"HTTP Favorites cleared for {door_station.slug}"
-            return web.Response(text=message)
 
         #
         # This integration uses a multiple different events.

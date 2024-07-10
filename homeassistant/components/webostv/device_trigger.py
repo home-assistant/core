@@ -1,4 +1,5 @@
 """Provides device automations for control of LG webOS Smart TV."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -54,8 +55,7 @@ async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for device."""
-    triggers = [async_get_turn_on_trigger(device_id)]
-    return triggers
+    return [async_get_turn_on_trigger(device_id)]
 
 
 async def async_attach_trigger(

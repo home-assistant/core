@@ -1,4 +1,5 @@
 """Support for PlayStation 4 consoles."""
+
 import logging
 import os
 
@@ -108,8 +109,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if country in COUNTRIES:
                 for device in data["devices"]:
                     device[CONF_REGION] = country
-                version = entry.version = 2
-                config_entries.async_update_entry(entry, data=data)
+                version = 2
+                config_entries.async_update_entry(entry, data=data, version=2)
                 _LOGGER.info(
                     "PlayStation 4 Config Updated: Region changed to: %s",
                     country,
@@ -142,12 +143,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 config_entry=entry,
                 device_id=e_entry.device_id,
             )
-            entry.version = 3
             _LOGGER.info(
                 "PlayStation 4 identifier for entity: %s has changed",
                 entity_id,
             )
-            config_entries.async_update_entry(entry)
+            config_entries.async_update_entry(entry, version=3)
             return True
 
     msg = f"""{reason[version]} for the PlayStation 4 Integration.

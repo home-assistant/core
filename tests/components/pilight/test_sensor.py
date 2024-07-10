@@ -1,10 +1,10 @@
 """The tests for the Pilight sensor platform."""
+
 import logging
 
 import pytest
 
-from homeassistant.components import pilight
-import homeassistant.components.sensor as sensor
+from homeassistant.components import pilight, sensor
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -12,7 +12,7 @@ from tests.common import assert_setup_component, mock_component
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     mock_component(hass, "pilight")
 

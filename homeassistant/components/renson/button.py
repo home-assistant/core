@@ -1,4 +1,5 @@
 """Renson ventilation unit buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,18 +22,11 @@ from .const import DOMAIN
 from .entity import RensonEntity
 
 
-@dataclass(frozen=True)
-class RensonButtonEntityDescriptionMixin:
-    """Action function called on press."""
+@dataclass(frozen=True, kw_only=True)
+class RensonButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Renson button entity."""
 
     action_fn: Callable[[RensonVentilation], None]
-
-
-@dataclass(frozen=True)
-class RensonButtonEntityDescription(
-    ButtonEntityDescription, RensonButtonEntityDescriptionMixin
-):
-    """Class describing Renson button entity."""
 
 
 ENTITY_DESCRIPTIONS: tuple[RensonButtonEntityDescription, ...] = (

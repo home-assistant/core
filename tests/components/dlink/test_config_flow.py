@@ -1,12 +1,13 @@
 """Test D-Link Smart Plug config flow."""
+
 from unittest.mock import MagicMock, patch
 
-from homeassistant import data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.dlink.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
     CONF_DATA,
@@ -34,7 +35,7 @@ async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
             result["flow_id"],
             user_input=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
 
@@ -47,7 +48,7 @@ async def test_flow_user_already_configured(
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -61,7 +62,7 @@ async def test_flow_user_cannot_connect(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
@@ -70,7 +71,7 @@ async def test_flow_user_cannot_connect(
             result["flow_id"],
             user_input=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
 
@@ -84,7 +85,7 @@ async def test_flow_user_unknown_error(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "unknown"
 
@@ -93,7 +94,7 @@ async def test_flow_user_unknown_error(
             result["flow_id"],
             user_input=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
 
@@ -103,14 +104,14 @@ async def test_dhcp(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
     with patch_config_flow(mocked_plug), _patch_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DHCP_DATA,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
 
@@ -122,14 +123,14 @@ async def test_dhcp_failed_legacy_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
     with patch_config_flow(mocked_plug_legacy_no_auth):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DHCP_DATA,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
     with patch_config_flow(mocked_plug), _patch_setup_entry():
@@ -137,7 +138,7 @@ async def test_dhcp_failed_legacy_auth(
             result["flow_id"],
             user_input=CONF_DHCP_DATA,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
 
@@ -150,9 +151,9 @@ async def test_dhcp_already_configured(
         DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert config_entry.unique_id == "aabbccddeeff"
 
 
 async def test_dhcp_unique_id_assignment(
@@ -167,14 +168,14 @@ async def test_dhcp_unique_id_assignment(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=dhcp_data
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
     with patch_config_flow(mocked_plug), _patch_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DHCP_DATA,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA | {CONF_HOST: "2.3.4.5"}
     assert result["result"].unique_id == "11:22:33:44:55:66"
 
@@ -187,6 +188,6 @@ async def test_dhcp_changed_ip(
         DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW_NEW_IP
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_with_uid.data[CONF_HOST] == "5.6.7.8"

@@ -1,4 +1,5 @@
 """Test the homewizard config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -28,14 +29,14 @@ async def test_manual_flow_works(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result == snapshot
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -70,21 +71,21 @@ async def test_discovery_flow_works(
         ),
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=None
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"ip_address": "127.0.0.1"}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result == snapshot
 
 
@@ -116,7 +117,7 @@ async def test_discovery_flow_during_onboarding(
         ),
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -153,7 +154,7 @@ async def test_discovery_flow_during_onboarding_disabled_api(
         ),
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     assert result["errors"] == {"base": "api_not_enabled"}
 
@@ -165,7 +166,7 @@ async def test_discovery_flow_during_onboarding_disabled_api(
         result["flow_id"], user_input={"ip_address": "127.0.0.1"}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -197,7 +198,7 @@ async def test_discovery_disabled_api(
         ),
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     mock_homewizardenergy.device.side_effect = DisabledError
@@ -206,7 +207,7 @@ async def test_discovery_disabled_api(
         result["flow_id"], user_input={"ip_address": "127.0.0.1"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_not_enabled"}
 
 
@@ -232,7 +233,7 @@ async def test_discovery_missing_data_in_service_info(hass: HomeAssistant) -> No
         ),
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_parameters"
 
 
@@ -258,7 +259,7 @@ async def test_discovery_invalid_api(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_api_version"
 
 
@@ -280,15 +281,16 @@ async def test_error_flow(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_IP_ADDRESS: "127.0.0.1"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
+    assert result["data_schema"]({}) == {CONF_IP_ADDRESS: "127.0.0.1"}
 
     # Recover from error
     mock_homewizardenergy.device.side_effect = None
@@ -297,7 +299,7 @@ async def test_error_flow(
         result["flow_id"], {CONF_IP_ADDRESS: "127.0.0.1"}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -320,14 +322,14 @@ async def test_abort_flow(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
@@ -347,12 +349,12 @@ async def test_reauth_flow(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -373,10 +375,10 @@ async def test_reauth_error(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_not_enabled"}

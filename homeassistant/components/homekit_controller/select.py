@@ -1,4 +1,5 @@
 """Support for Homekit select entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,19 +23,11 @@ from .connection import HKDevice
 from .entity import CharacteristicEntity
 
 
-@dataclass(frozen=True)
-class HomeKitSelectEntityDescriptionRequired:
-    """Required fields for HomeKitSelectEntityDescription."""
-
-    choices: dict[str, IntEnum]
-
-
-@dataclass(frozen=True)
-class HomeKitSelectEntityDescription(
-    SelectEntityDescription, HomeKitSelectEntityDescriptionRequired
-):
+@dataclass(frozen=True, kw_only=True)
+class HomeKitSelectEntityDescription(SelectEntityDescription):
     """A generic description of a select entity backed by a single characteristic."""
 
+    choices: dict[str, IntEnum]
     name: str | None = None
 
 
@@ -43,7 +36,6 @@ SELECT_ENTITIES: dict[str, HomeKitSelectEntityDescription] = {
         key="temperature_display_units",
         translation_key="temperature_display_units",
         name="Temperature Display Units",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         choices={
             "celsius": TemperatureDisplayUnits.CELSIUS,

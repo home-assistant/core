@@ -1,4 +1,5 @@
 """The ATAG Integration."""
+
 from asyncio import timeout
 from datetime import timedelta
 import logging

@@ -1,4 +1,5 @@
 """Test the DSMR config flow."""
+
 from itertools import chain, repeat
 import os
 from typing import Any
@@ -8,7 +9,7 @@ import pytest
 import serial
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.dsmr import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -31,14 +32,15 @@ def com_port():
 
 
 async def test_setup_network(
-    hass: HomeAssistant, dsmr_connection_send_validate_fixture
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -47,7 +49,7 @@ async def test_setup_network(
         {"type": "Network"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
@@ -69,15 +71,17 @@ async def test_setup_network(
         "protocol": "dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
 async def test_setup_network_rfxtrx(
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test we can setup network."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -86,7 +90,7 @@ async def test_setup_network_rfxtrx(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -95,7 +99,7 @@ async def test_setup_network_rfxtrx(
         {"type": "Network"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
@@ -120,7 +124,7 @@ async def test_setup_network_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
@@ -184,7 +188,7 @@ async def test_setup_network_rfxtrx(
 async def test_setup_serial(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     version: str,
     entry_data: dict[str, Any],
 ) -> None:
@@ -195,7 +199,7 @@ async def test_setup_serial(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -204,7 +208,7 @@ async def test_setup_serial(
         {"type": "Serial"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -215,7 +219,7 @@ async def test_setup_serial(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == entry_data
 
@@ -224,8 +228,10 @@ async def test_setup_serial(
 async def test_setup_serial_rfxtrx(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test we can setup serial."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -236,7 +242,7 @@ async def test_setup_serial_rfxtrx(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -245,7 +251,7 @@ async def test_setup_serial_rfxtrx(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -265,21 +271,23 @@ async def test_setup_serial_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_manual(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+    com_mock,
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test we can setup serial with manual entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -288,7 +296,7 @@ async def test_setup_serial_manual(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -297,7 +305,7 @@ async def test_setup_serial_manual(
         {"port": "Enter Manually", "dsmr_version": "2.2"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] is None
 
@@ -313,14 +321,16 @@ async def test_setup_serial_manual(
         "protocol": "dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/ttyUSB0"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_fail(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+    com_mock,
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -337,7 +347,7 @@ async def test_setup_serial_fail(
         side_effect=chain([serial.SerialException], repeat(DEFAULT)),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -346,7 +356,7 @@ async def test_setup_serial_fail(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -359,7 +369,7 @@ async def test_setup_serial_fail(
             {"port": port.device, "dsmr_version": "2.2"},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -368,8 +378,10 @@ async def test_setup_serial_fail(
 async def test_setup_serial_timeout(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -397,7 +409,7 @@ async def test_setup_serial_timeout(
     )
     rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -406,7 +418,7 @@ async def test_setup_serial_timeout(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -415,7 +427,7 @@ async def test_setup_serial_timeout(
             result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_communicate"}
 
@@ -424,8 +436,10 @@ async def test_setup_serial_timeout(
 async def test_setup_serial_wrong_telegram(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test failed telegram data."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -441,7 +455,7 @@ async def test_setup_serial_wrong_telegram(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -450,7 +464,7 @@ async def test_setup_serial_wrong_telegram(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -462,7 +476,7 @@ async def test_setup_serial_wrong_telegram(
         {"port": port.device, "dsmr_version": "2.2"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_communicate"}
 
@@ -484,7 +498,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -494,10 +508,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.dsmr.async_unload_entry", return_value=True):
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    with (
+        patch("homeassistant.components.dsmr.async_setup_entry", return_value=True),
+        patch("homeassistant.components.dsmr.async_unload_entry", return_value=True),
+    ):
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -517,16 +532,17 @@ def test_get_serial_by_id_no_dir() -> None:
 
 def test_get_serial_by_id() -> None:
     """Test serial by id conversion."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=True))
-    p2 = patch("os.scandir")
 
     def _realpath(path):
         if path is sentinel.matched_link:
             return sentinel.path
         return sentinel.serial_link_path
 
-    p3 = patch("os.path.realpath", side_effect=_realpath)
-    with p1 as is_dir_mock, p2 as scan_mock, p3:
+    with (
+        patch("os.path.isdir", MagicMock(return_value=True)) as is_dir_mock,
+        patch("os.scandir") as scan_mock,
+        patch("os.path.realpath", side_effect=_realpath),
+    ):
         res = config_flow.get_serial_by_id(sentinel.path)
         assert res is sentinel.path
         assert is_dir_mock.call_count == 1

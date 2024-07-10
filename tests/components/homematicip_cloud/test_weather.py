@@ -1,4 +1,5 @@
 """Tests for HomematicIP Cloud weather."""
+
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,

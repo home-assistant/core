@@ -18,14 +18,24 @@
         "data": {
           "alias": "Alias"
         }
+      },
+      "reauth_confirm": {
+        "description": "Re-authenticate NUT server at {host}:{port}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Connection error: {error}",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_ups_found": "There are no UPS devices available on the NUT server.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -166,7 +176,9 @@
       "ups_delay_reboot": { "name": "UPS reboot delay" },
       "ups_delay_shutdown": { "name": "UPS shutdown delay" },
       "ups_delay_start": { "name": "Load restart delay" },
-      "ups_display_language": { "name": "Language" },
+      "ups_display_language": {
+        "name": "[%key:common::config_flow::data::language%]"
+      },
       "ups_efficiency": { "name": "Efficiency" },
       "ups_id": { "name": "System identifier" },
       "ups_load": { "name": "Load" },

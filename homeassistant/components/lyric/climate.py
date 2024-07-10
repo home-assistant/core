@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric climate platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -36,6 +37,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import LyricDeviceEntity
@@ -110,7 +112,7 @@ HVAC_ACTIONS = {
 SERVICE_HOLD_TIME = "set_hold_time"
 ATTR_TIME_PERIOD = "time_period"
 
-SCHEMA_HOLD_TIME = {
+SCHEMA_HOLD_TIME: VolDictType = {
     vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
         cv.time_period,
         cv.positive_timedelta,
@@ -125,23 +127,22 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric climate platform based on a config entry."""
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for location in coordinator.data.locations:
-        for device in location.devices:
-            entities.append(
-                LyricClimate(
-                    coordinator,
-                    ClimateEntityDescription(
-                        key=f"{device.macID}_thermostat",
-                        name=device.name,
-                    ),
-                    location,
-                    device,
-                )
+    async_add_entities(
+        (
+            LyricClimate(
+                coordinator,
+                ClimateEntityDescription(
+                    key=f"{device.macID}_thermostat",
+                    name=device.name,
+                ),
+                location,
+                device,
             )
-
-    async_add_entities(entities, True)
+            for location in coordinator.data.locations
+            for device in location.devices
+        ),
+        True,
+    )
 
     platform = entity_platform.async_get_current_platform()
 

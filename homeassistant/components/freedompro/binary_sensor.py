@@ -1,4 +1,5 @@
 """Support for Freedompro binary_sensor."""
+
 from typing import Any
 
 from homeassistant.components.binary_sensor import (

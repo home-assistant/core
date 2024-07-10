@@ -1,4 +1,5 @@
 """Tests for the Fully Kiosk Browser integration."""
+
 import json
 from unittest.mock import MagicMock, patch
 

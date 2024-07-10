@@ -1,4 +1,5 @@
 """Tests for Tomorrow.io sensor entities."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -23,7 +24,7 @@ from homeassistant.components.tomorrowio.sensor import TomorrowioSensorEntityDes
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -102,11 +103,9 @@ V4_FIELDS = [
 @callback
 def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
-    ent_reg = async_get(hass)
+    ent_reg = er.async_get(hass)
     entry = ent_reg.async_get(entity_name)
-    updated_entry = ent_reg.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
+    updated_entry = ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 

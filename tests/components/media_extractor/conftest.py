@@ -1,16 +1,17 @@
-"""The tests for Media Extractor integration."""
+"""Common fixtures for the Media Extractor tests."""
+
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.media_extractor import DOMAIN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-from tests.components.media_extractor import MockYoutubeDL
-from tests.components.media_extractor.const import AUDIO_QUERY
+from . import MockYoutubeDL
+from .const import AUDIO_QUERY
 
 
 @pytest.fixture(autouse=True)
@@ -26,12 +27,6 @@ async def setup_media_player(hass: HomeAssistant) -> None:
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "media_player", "play_media")
 
 
 @pytest.fixture(name="mock_youtube_dl")
@@ -52,3 +47,12 @@ def empty_media_extractor_config() -> dict[str, Any]:
 def audio_media_extractor_config() -> dict[str, Any]:
     """Media extractor config for audio."""
     return {DOMAIN: {"default_query": AUDIO_QUERY}}
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.media_extractor.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

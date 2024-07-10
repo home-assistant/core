@@ -1,4 +1,5 @@
 """Support for ZoneMinder switches."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,10 @@ import voluptuous as vol
 from zoneminder.monitor import Monitor, MonitorState
 from zoneminder.zm import ZoneMinder
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -20,7 +24,7 @@ from . import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_ON): cv.string,
         vol.Required(CONF_COMMAND_OFF): cv.string,
@@ -39,16 +43,16 @@ def setup_platform(
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
-    switches = []
+    switches: list[ZMSwitchMonitors] = []
     zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
             raise PlatformNotReady(
                 "Switch could not fetch any monitors from ZoneMinder"
             )
-
-        for monitor in monitors:
-            switches.append(ZMSwitchMonitors(monitor, on_state, off_state))
+        switches.extend(
+            ZMSwitchMonitors(monitor, on_state, off_state) for monitor in monitors
+        )
     add_entities(switches)
 
 

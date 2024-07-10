@@ -1,12 +1,14 @@
 """Provides functionality to interact with fans."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
 import math
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -19,11 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -39,18 +37,13 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "fan"
-SCAN_INTERVAL = timedelta(seconds=30)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 class FanEntityFeature(IntFlag):
@@ -237,7 +230,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -276,7 +269,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
@@ -296,8 +289,6 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not preset_modes or preset_mode not in preset_modes:
             preset_modes_str: str = ", ".join(preset_modes or [])
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode:"
-                f" {preset_modes}",
                 translation_placeholders={
                     "preset_mode": preset_mode,
                     "preset_modes": preset_modes_str,
@@ -306,7 +297,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
@@ -319,7 +310,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     async def async_handle_turn_on_service(
@@ -351,7 +342,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""

@@ -1,4 +1,5 @@
 """Coordinator for Streamlabs water integration."""
+
 from dataclasses import dataclass
 from datetime import timedelta
 

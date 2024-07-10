@@ -1,4 +1,5 @@
 """Provides device actions for Z-Wave JS."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -237,15 +238,15 @@ async def async_get_actions(
                 CONF_SUBTYPE: f"Endpoint {endpoint} (All)",
             }
         )
-        for meter_type in endpoint_data[ATTR_METER_TYPE]:
-            actions.append(
-                {
-                    **base_action,
-                    CONF_TYPE: SERVICE_RESET_METER,
-                    ATTR_METER_TYPE: meter_type,
-                    CONF_SUBTYPE: f"Endpoint {endpoint} ({meter_type.name})",
-                }
-            )
+        actions.extend(
+            {
+                **base_action,
+                CONF_TYPE: SERVICE_RESET_METER,
+                ATTR_METER_TYPE: meter_type,
+                CONF_SUBTYPE: f"Endpoint {endpoint} ({meter_type.name})",
+            }
+            for meter_type in endpoint_data[ATTR_METER_TYPE]
+        )
 
     return actions
 

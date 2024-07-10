@@ -1,4 +1,5 @@
 """Support to interact with Remember The Milk."""
+
 import json
 import logging
 import os
@@ -136,7 +137,7 @@ def _register_new_account(
 
         configurator.request_done(hass, request_id)
 
-    request_id = configurator.async_request_config(
+    request_id = configurator.request_config(
         hass,
         f"{DOMAIN} - {account_name}",
         callback=register_account_callback,

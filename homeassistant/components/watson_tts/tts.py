@@ -1,11 +1,15 @@
 """Support for IBM Watson TTS integration."""
+
 import logging
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
-from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +117,7 @@ CONTENT_TYPE_EXTENSIONS = {
 DEFAULT_VOICE = "en-US_AllisonV3Voice"
 DEFAULT_OUTPUT_FORMAT = "audio/mp3"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
         vol.Required(CONF_APIKEY): cv.string,

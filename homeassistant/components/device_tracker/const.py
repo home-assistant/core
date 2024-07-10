@@ -1,4 +1,5 @@
 """Device tracker constants."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -13,6 +14,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from homeassistant.util.signal_type import SignalType
 
 LOGGER: Final = logging.getLogger(__package__)
 
@@ -67,7 +69,9 @@ ATTR_SOURCE_TYPE: Final = "source_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
 
-CONNECTED_DEVICE_REGISTERED: Final = "device_tracker_connected_device_registered"
+CONNECTED_DEVICE_REGISTERED = SignalType[dict[str, str | None]](
+    "device_tracker_connected_device_registered"
+)
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())

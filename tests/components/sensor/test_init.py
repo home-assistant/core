@@ -1,10 +1,10 @@
 """The test for sensor entity."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-import logging
 from types import ModuleType
 from typing import Any
 
@@ -50,6 +50,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .common import MockRestoreSensor, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     MockEntityPlatform,
@@ -62,6 +64,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
 )
 
 TEST_DOMAIN = "test"
@@ -102,7 +105,6 @@ TEST_DOMAIN = "test"
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     unit_system,
     native_unit,
     state_unit,
@@ -111,16 +113,14 @@ async def test_temperature_conversion(
 ) -> None:
     """Test temperature conversion."""
     hass.config.units = unit_system
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
         device_class=SensorDeviceClass.TEMPERATURE,
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -129,21 +129,19 @@ async def test_temperature_conversion(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
-@pytest.mark.parametrize("device_class", (None, SensorDeviceClass.PRESSURE))
+@pytest.mark.parametrize("device_class", [None, SensorDeviceClass.PRESSURE])
 async def test_temperature_conversion_wrong_device_class(
-    hass: HomeAssistant, device_class, enable_custom_integrations: None
+    hass: HomeAssistant, device_class
 ) -> None:
     """Test temperatures are not converted if the sensor has wrong device class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value="0.0",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=device_class,
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -153,25 +151,23 @@ async def test_temperature_conversion_wrong_device_class(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
 
 
-@pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))
+@pytest.mark.parametrize("state_class", ["measurement", "total_increasing"])
 async def test_deprecated_last_reset(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     state_class,
 ) -> None:
     """Test warning on deprecated last reset."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test", state_class=state_class, last_reset=dt_util.utc_from_timestamp(0)
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
-        "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
+        "Entity sensor.test (<class 'tests.components.sensor.common.MockSensor'>) "
         f"with state_class {state_class} has set last_reset. Setting last_reset for "
         "entities with state_class other than 'total' is not supported. Please update "
         "your configuration if state_class is manually configured."
@@ -184,7 +180,6 @@ async def test_deprecated_last_reset(
 async def test_datetime_conversion(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test conversion of datetime."""
     test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=UTC)
@@ -192,51 +187,49 @@ async def test_datetime_conversion(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
     test_date = date(2017, 12, 19)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test",
-        native_value=test_timestamp,
-        device_class=SensorDeviceClass.TIMESTAMP,
-    )
-    platform.ENTITIES["1"] = platform.MockSensor(
-        name="Test", native_value=test_date, device_class=SensorDeviceClass.DATE
-    )
-    platform.ENTITIES["2"] = platform.MockSensor(
-        name="Test", native_value=None, device_class=SensorDeviceClass.TIMESTAMP
-    )
-    platform.ENTITIES["3"] = platform.MockSensor(
-        name="Test", native_value=None, device_class=SensorDeviceClass.DATE
-    )
-    platform.ENTITIES["4"] = platform.MockSensor(
-        name="Test",
-        native_value=test_local_timestamp,
-        device_class=SensorDeviceClass.TIMESTAMP,
-    )
+    entities = [
+        MockSensor(
+            name="Test",
+            native_value=test_timestamp,
+            device_class=SensorDeviceClass.TIMESTAMP,
+        ),
+        MockSensor(
+            name="Test", native_value=test_date, device_class=SensorDeviceClass.DATE
+        ),
+        MockSensor(
+            name="Test", native_value=None, device_class=SensorDeviceClass.TIMESTAMP
+        ),
+        MockSensor(name="Test", native_value=None, device_class=SensorDeviceClass.DATE),
+        MockSensor(
+            name="Test",
+            native_value=test_local_timestamp,
+            device_class=SensorDeviceClass.TIMESTAMP,
+        ),
+    ]
+    setup_test_component_platform(hass, sensor.DOMAIN, entities)
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(platform.ENTITIES["0"].entity_id)
+    state = hass.states.get(entities[0].entity_id)
     assert state.state == test_timestamp.isoformat()
 
-    state = hass.states.get(platform.ENTITIES["1"].entity_id)
+    state = hass.states.get(entities[1].entity_id)
     assert state.state == test_date.isoformat()
 
-    state = hass.states.get(platform.ENTITIES["2"].entity_id)
+    state = hass.states.get(entities[2].entity_id)
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get(platform.ENTITIES["3"].entity_id)
+    state = hass.states.get(entities[3].entity_id)
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get(platform.ENTITIES["4"].entity_id)
+    state = hass.states.get(entities[4].entity_id)
     assert state.state == test_timestamp.isoformat()
 
 
 async def test_a_sensor_with_a_non_numeric_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test that a sensor with a non numeric device class will be non numeric.
 
@@ -248,29 +241,29 @@ async def test_a_sensor_with_a_non_numeric_device_class(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
 
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test",
-        native_value=test_local_timestamp,
-        native_unit_of_measurement="",
-        device_class=SensorDeviceClass.TIMESTAMP,
-    )
-
-    platform.ENTITIES["1"] = platform.MockSensor(
-        name="Test",
-        native_value=test_local_timestamp,
-        state_class="",
-        device_class=SensorDeviceClass.TIMESTAMP,
-    )
+    entities = [
+        MockSensor(
+            name="Test",
+            native_value=test_local_timestamp,
+            native_unit_of_measurement="",
+            device_class=SensorDeviceClass.TIMESTAMP,
+        ),
+        MockSensor(
+            name="Test",
+            native_value=test_local_timestamp,
+            state_class="",
+            device_class=SensorDeviceClass.TIMESTAMP,
+        ),
+    ]
+    setup_test_component_platform(hass, sensor.DOMAIN, entities)
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(platform.ENTITIES["0"].entity_id)
+    state = hass.states.get(entities[0].entity_id)
     assert state.state == test_timestamp.isoformat()
 
-    state = hass.states.get(platform.ENTITIES["1"].entity_id)
+    state = hass.states.get(entities[1].entity_id)
     assert state.state == test_timestamp.isoformat()
 
 
@@ -284,17 +277,15 @@ async def test_a_sensor_with_a_non_numeric_device_class(
 async def test_deprecated_datetime_str(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     device_class,
     state_value,
     provides,
 ) -> None:
     """Test warning on deprecated str for a date(time) value."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test", native_value=state_value, device_class=device_class
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -308,17 +299,15 @@ async def test_deprecated_datetime_str(
 async def test_reject_timezoneless_datetime_str(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test rejection of timezone-less datetime objects as timestamp."""
     test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=None)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=test_timestamp,
         device_class=SensorDeviceClass.TIMESTAMP,
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -402,7 +391,6 @@ RESTORE_DATA = {
 )
 async def test_restore_sensor_save_state(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     hass_storage: dict[str, Any],
     native_value,
     native_value_type,
@@ -411,16 +399,14 @@ async def test_restore_sensor_save_state(
     uom,
 ) -> None:
     """Test RestoreSensor."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockRestoreSensor(
+    entity0 = MockRestoreSensor(
         name="Test",
         native_value=native_value,
         native_unit_of_measurement=uom,
         device_class=device_class,
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -432,7 +418,7 @@ async def test_restore_sensor_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == expected_extra_data
-    assert type(extra_data["native_value"]) == native_value_type
+    assert type(extra_data["native_value"]) is native_value_type
 
 
 @pytest.mark.parametrize(
@@ -471,7 +457,6 @@ async def test_restore_sensor_save_state(
 )
 async def test_restore_sensor_restore_state(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     hass_storage: dict[str, Any],
     native_value,
     native_value_type,
@@ -482,21 +467,19 @@ async def test_restore_sensor_restore_state(
     """Test RestoreSensor."""
     mock_restore_cache_with_extra_data(hass, ((State("sensor.test", ""), extra_data),))
 
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockRestoreSensor(
+    entity0 = MockRestoreSensor(
         name="Test",
         device_class=device_class,
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert hass.states.get(entity0.entity_id)
 
     assert entity0.native_value == native_value
-    assert type(entity0.native_value) == native_value_type
+    assert type(entity0.native_value) is native_value_type
     assert entity0.native_unit_of_measurement == uom
 
 
@@ -620,7 +603,7 @@ async def test_restore_sensor_restore_state(
 )
 async def test_custom_unit(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     device_class,
     native_unit,
     custom_unit,
@@ -629,25 +612,21 @@ async def test_custom_unit(
     custom_state,
 ) -> None:
     """Test custom unit."""
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
     entity_registry.async_update_entity_options(
         entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
     )
     await hass.async_block_till_done()
 
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
         device_class=device_class,
         unique_id="very_unique",
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -883,7 +862,7 @@ async def test_custom_unit(
 )
 async def test_custom_unit_change(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     native_unit,
     custom_unit,
     state_unit,
@@ -893,18 +872,15 @@ async def test_custom_unit_change(
     device_class,
 ) -> None:
     """Test custom unit changes are picked up."""
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
         device_class=device_class,
         unique_id="very_unique",
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -966,12 +942,26 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        )
+        ),
+        # Volume Storage (subclass of Volume)
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfVolume.LITERS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.FLUID_OUNCES,
+            1000,
+            "1000",
+            "264",
+            "264",
+            "33814",
+            SensorDeviceClass.VOLUME_STORAGE,
+        ),
     ],
 )
 async def test_unit_conversion_priority(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     automatic_unit,
@@ -988,28 +978,20 @@ async def test_unit_conversion_priority(
 
     hass.config.units = unit_system
 
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
-
-    platform.ENTITIES["1"] = platform.MockSensor(
+    entity1 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
     )
-    entity1 = platform.ENTITIES["1"]
-
-    platform.ENTITIES["2"] = platform.MockSensor(
+    entity2 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -1017,16 +999,23 @@ async def test_unit_conversion_priority(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_2",
     )
-    entity2 = platform.ENTITIES["2"]
-
-    platform.ENTITIES["3"] = platform.MockSensor(
+    entity3 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         suggested_unit_of_measurement=suggested_unit,
     )
-    entity3 = platform.ENTITIES["3"]
+    setup_test_component_platform(
+        hass,
+        sensor.DOMAIN,
+        [
+            entity0,
+            entity1,
+            entity2,
+            entity3,
+        ],
+    )
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1118,7 +1107,7 @@ async def test_unit_conversion_priority(
 )
 async def test_unit_conversion_priority_precision(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     automatic_unit,
@@ -1136,11 +1125,7 @@ async def test_unit_conversion_priority_precision(
 
     hass.config.units = unit_system
 
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -1148,18 +1133,14 @@ async def test_unit_conversion_priority_precision(
         suggested_display_precision=suggested_precision,
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
-
-    platform.ENTITIES["1"] = platform.MockSensor(
+    entity1 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         suggested_display_precision=suggested_precision,
     )
-    entity1 = platform.ENTITIES["1"]
-
-    platform.ENTITIES["2"] = platform.MockSensor(
+    entity2 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -1168,9 +1149,7 @@ async def test_unit_conversion_priority_precision(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_2",
     )
-    entity2 = platform.ENTITIES["2"]
-
-    platform.ENTITIES["3"] = platform.MockSensor(
+    entity3 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -1178,7 +1157,25 @@ async def test_unit_conversion_priority_precision(
         suggested_display_precision=suggested_precision,
         suggested_unit_of_measurement=suggested_unit,
     )
-    entity3 = platform.ENTITIES["3"]
+    entity4 = MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=None,
+        unique_id="very_unique_4",
+    )
+    setup_test_component_platform(
+        hass,
+        sensor.DOMAIN,
+        [
+            entity0,
+            entity1,
+            entity2,
+            entity3,
+            entity4,
+        ],
+    )
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1253,6 +1250,21 @@ async def test_unit_conversion_priority_precision(
         round(custom_state, 4)
     )
 
+    # Set a display_precision without having suggested_display_precision
+    entity_registry.async_update_entity_options(
+        entity4.entity_id,
+        "sensor",
+        {"display_precision": 4},
+    )
+    entry4 = entity_registry.async_get(entity4.entity_id)
+    assert "suggested_display_precision" not in entry4.options["sensor"]
+    assert entry4.options["sensor"]["display_precision"] == 4
+    await hass.async_block_till_done()
+    state = hass.states.get(entity4.entity_id)
+    assert float(async_rounded_state(hass, entity4.entity_id, state)) == pytest.approx(
+        round(automatic_state, 4)
+    )
+
 
 @pytest.mark.parametrize(
     (
@@ -1279,7 +1291,7 @@ async def test_unit_conversion_priority_precision(
 )
 async def test_unit_conversion_priority_suggested_unit_change(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     original_unit,
@@ -1291,10 +1303,6 @@ async def test_unit_conversion_priority_suggested_unit_change(
     """Test priority of unit conversion."""
 
     hass.config.units = unit_system
-
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
 
     # Pre-register entities
     entry = entity_registry.async_get_or_create(
@@ -1314,16 +1322,14 @@ async def test_unit_conversion_priority_suggested_unit_change(
         {"suggested_unit_of_measurement": original_unit},
     )
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
-
-    platform.ENTITIES["1"] = platform.MockSensor(
+    entity1 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -1331,7 +1337,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_2",
     )
-    entity1 = platform.ENTITIES["1"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0, entity1])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1391,7 +1397,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
 )
 async def test_unit_conversion_priority_suggested_unit_change_2(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     native_unit_1,
     native_unit_2,
     suggested_unit,
@@ -1403,10 +1409,6 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
 
     hass.config.units = METRIC_SYSTEM
 
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-
     # Pre-register entities
     entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", unit_of_measurement=native_unit_1
@@ -1415,16 +1417,14 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
         "sensor", "test", "very_unique_2", unit_of_measurement=native_unit_1
     )
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit_2,
         native_value=str(native_value),
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
-
-    platform.ENTITIES["1"] = platform.MockSensor(
+    entity1 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit_2,
@@ -1432,7 +1432,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_2",
     )
-    entity1 = platform.ENTITIES["1"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0, entity1])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1495,7 +1495,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
 )
 async def test_suggested_precision_option(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     integration_suggested_precision,
@@ -1508,11 +1508,7 @@ async def test_suggested_precision_option(
 
     hass.config.units = unit_system
 
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -1520,7 +1516,7 @@ async def test_suggested_precision_option(
         suggested_display_precision=integration_suggested_precision,
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1573,7 +1569,7 @@ async def test_suggested_precision_option(
 )
 async def test_suggested_precision_option_update(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     suggested_unit,
@@ -1587,10 +1583,6 @@ async def test_suggested_precision_option_update(
     """Test suggested precision stored in the registry is updated."""
 
     hass.config.units = unit_system
-
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
 
     # Pre-register entities
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
@@ -1609,7 +1601,7 @@ async def test_suggested_precision_option_update(
         },
     )
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -1617,7 +1609,7 @@ async def test_suggested_precision_option_update(
         suggested_display_precision=new_precision,
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1632,6 +1624,39 @@ async def test_suggested_precision_option_update(
             "suggested_unit_of_measurement": suggested_unit,
         },
     }
+
+
+async def test_suggested_precision_option_removal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test suggested precision stored in the registry is removed."""
+    # Pre-register entities
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {
+            "suggested_display_precision": 1,
+        },
+    )
+
+    entity0 = MockSensor(
+        name="Test",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_value="1.5",
+        suggested_display_precision=None,
+        unique_id="very_unique",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Assert the suggested precision is no longer stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options.get("sensor", {}).get("suggested_display_precision") is None
 
 
 @pytest.mark.parametrize(
@@ -1665,7 +1690,7 @@ async def test_suggested_precision_option_update(
 )
 async def test_unit_conversion_priority_legacy_conversion_removed(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     original_unit,
@@ -1677,23 +1702,19 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
 
     hass.config.units = unit_system
 
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-
     # Pre-register entities
     entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", unit_of_measurement=original_unit
     )
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1714,17 +1735,15 @@ def test_device_classes_aligned() -> None:
 async def test_value_unknown_in_enumeration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test warning on invalid enum value."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value="invalid_option",
         device_class=SensorDeviceClass.ENUM,
         options=["option1", "option2"],
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1738,17 +1757,15 @@ async def test_value_unknown_in_enumeration(
 async def test_invalid_enumeration_entity_with_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test warning on entities that provide an enum with a device class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=21,
         device_class=SensorDeviceClass.POWER,
         options=["option1", "option2"],
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1762,16 +1779,14 @@ async def test_invalid_enumeration_entity_with_device_class(
 async def test_invalid_enumeration_entity_without_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test warning on entities that provide an enum without a device class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=21,
         options=["option1", "option2"],
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1784,28 +1799,26 @@ async def test_invalid_enumeration_entity_without_device_class(
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
-    ),
+    ],
 )
 async def test_non_numeric_device_class_with_unit_of_measurement(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     device_class: SensorDeviceClass,
 ) -> None:
     """Test error on numeric entities that provide an unit of measurement."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=None,
         device_class=device_class,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         options=["option1", "option2"],
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1818,7 +1831,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         SensorDeviceClass.APPARENT_POWER,
         SensorDeviceClass.AQI,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -1863,23 +1876,21 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.WATER,
         SensorDeviceClass.WEIGHT,
         SensorDeviceClass.WIND_SPEED,
-    ),
+    ],
 )
 async def test_device_classes_with_invalid_unit_of_measurement(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     device_class: SensorDeviceClass,
 ) -> None:
     """Test error when unit of measurement is not valid for used device class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value="1.0",
         device_class=device_class,
         native_unit_of_measurement="INVALID!",
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
     units = [
         str(unit) if unit else "no unit of measurement"
         for unit in DEVICE_CLASS_UNITS.get(device_class, set())
@@ -1919,7 +1930,6 @@ async def test_device_classes_with_invalid_unit_of_measurement(
 async def test_non_numeric_validation_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     native_value: Any,
     problem: str,
     device_class: SensorDeviceClass | None,
@@ -1927,16 +1937,14 @@ async def test_non_numeric_validation_error(
     unit: str | None,
 ) -> None:
     """Test error on expected numeric entities."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=native_value,
         device_class=device_class,
         native_unit_of_measurement=unit,
         state_class=state_class,
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1951,7 +1959,7 @@ async def test_non_numeric_validation_error(
 
 
 @pytest.mark.parametrize(
-    ("device_class", "state_class", "unit", "precision"), ((None, None, None, 1),)
+    ("device_class", "state_class", "unit", "precision"), [(None, None, None, 1)]
 )
 @pytest.mark.parametrize(
     ("native_value", "expected"),
@@ -1965,7 +1973,6 @@ async def test_non_numeric_validation_error(
 async def test_non_numeric_validation_raise(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     native_value: Any,
     expected: str,
     device_class: SensorDeviceClass | None,
@@ -1974,9 +1981,7 @@ async def test_non_numeric_validation_raise(
     precision,
 ) -> None:
     """Test error on expected numeric entities."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=device_class,
         native_unit_of_measurement=unit,
@@ -1984,7 +1989,7 @@ async def test_non_numeric_validation_raise(
         state_class=state_class,
         suggested_display_precision=precision,
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1992,7 +1997,7 @@ async def test_non_numeric_validation_raise(
     state = hass.states.get(entity0.entity_id)
     assert state is None
 
-    assert ("Error adding entities for domain sensor with platform test") in caplog.text
+    assert ("for domain sensor with platform test") in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -2017,7 +2022,6 @@ async def test_non_numeric_validation_raise(
 async def test_numeric_validation(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     native_value: Any,
     expected: str,
     device_class: SensorDeviceClass | None,
@@ -2025,16 +2029,14 @@ async def test_numeric_validation(
     unit: str | None,
 ) -> None:
     """Test does not error on expected numeric entities."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=native_value,
         device_class=device_class,
         native_unit_of_measurement=unit,
         state_class=state_class,
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2051,18 +2053,15 @@ async def test_numeric_validation(
 async def test_numeric_validation_ignores_custom_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test does not error on expected numeric entities."""
     native_value = "Three elephants"
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=native_value,
         device_class="custom__deviceclass",
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2083,18 +2082,16 @@ async def test_numeric_validation_ignores_custom_device_class(
 async def test_device_classes_with_invalid_state_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     device_class: SensorDeviceClass,
 ) -> None:
     """Test error when unit of measurement is not valid for used device class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=None,
         state_class="INVALID!",
         device_class=device_class,
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2132,7 +2129,6 @@ async def test_device_classes_with_invalid_state_class(
 async def test_numeric_state_expected_helper(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     device_class: SensorDeviceClass | None,
     state_class: SensorStateClass | None,
     native_unit_of_measurement: str | None,
@@ -2140,9 +2136,7 @@ async def test_numeric_state_expected_helper(
     is_numeric: bool,
 ) -> None:
     """Test numeric_state_expected helper."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         native_value=None,
         device_class=device_class,
@@ -2150,11 +2144,11 @@ async def test_numeric_state_expected_helper(
         native_unit_of_measurement=native_unit_of_measurement,
         suggested_display_precision=suggested_precision,
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    entity0 = platform.ENTITIES["0"]
     state = hass.states.get(entity0.entity_id)
     assert state is not None
 
@@ -2198,7 +2192,7 @@ async def test_numeric_state_expected_helper(
 )
 async def test_unit_conversion_update(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     unit_system_1,
     unit_system_2,
     native_unit,
@@ -2217,10 +2211,7 @@ async def test_unit_conversion_update(
 
     hass.config.units = unit_system_1
 
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-
-    entity0 = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test 0",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2228,7 +2219,7 @@ async def test_unit_conversion_update(
         unique_id="very_unique",
     )
 
-    entity1 = platform.MockSensor(
+    entity1 = MockSensor(
         name="Test 1",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2236,7 +2227,7 @@ async def test_unit_conversion_update(
         unique_id="very_unique_1",
     )
 
-    entity2 = platform.MockSensor(
+    entity2 = MockSensor(
         name="Test 2",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2245,7 +2236,7 @@ async def test_unit_conversion_update(
         unique_id="very_unique_2",
     )
 
-    entity3 = platform.MockSensor(
+    entity3 = MockSensor(
         name="Test 3",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2254,7 +2245,7 @@ async def test_unit_conversion_update(
         unique_id="very_unique_3",
     )
 
-    entity4 = platform.MockSensor(
+    entity4 = MockSensor(
         name="Test 4",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2407,7 +2398,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -2422,7 +2413,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, SENSOR_DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [SENSOR_DOMAIN]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -2504,13 +2497,12 @@ def test_async_rounded_state_unregistered_entity_is_passthrough(
 
 def test_async_rounded_state_registered_entity_with_display_precision(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test async_rounded_state on registered with display precision.
 
     The -0 should be dropped.
     """
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
     entity_registry.async_update_entity_options(
         entry.entity_id,
@@ -2543,11 +2535,8 @@ async def test_entity_category_config_raises_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error is raised when entity category is set to config."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test", entity_category=EntityCategory.CONFIG
-    )
+    entity0 = MockSensor(name="Test", entity_category=EntityCategory.CONFIG)
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2634,6 +2623,7 @@ def test_deprecated_constants_sensor_device_class(
 )
 async def test_suggested_unit_guard_invalid_unit(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     device_class: SensorDeviceClass,
     native_unit: str,
@@ -2642,14 +2632,10 @@ async def test_suggested_unit_guard_invalid_unit(
 
     An invalid suggested unit creates a log entry and the suggested unit will be ignored.
     """
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-
     state_value = 10
     invalid_suggested_unit = "invalid_unit"
 
-    entity = platform.ENTITIES["0"] = platform.MockSensor(
+    entity = MockSensor(
         name="Invalid",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2657,28 +2643,17 @@ async def test_suggested_unit_guard_invalid_unit(
         native_value=str(state_value),
         unique_id="invalid",
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity])
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    # Unit of measurement should be native one
-    state = hass.states.get(entity.entity_id)
-    assert int(state.state) == state_value
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert not hass.states.get("sensor.invalid")
+    assert not entity_registry.async_get("sensor.invalid")
 
-    # Assert the suggested unit is ignored and not stored in the entity registry
-    entry = entity_registry.async_get(entity.entity_id)
-    assert entry.unit_of_measurement == native_unit
-    assert entry.options == {}
     assert (
-        "homeassistant.components.sensor",
-        logging.WARNING,
-        (
-            "<class 'custom_components.test.sensor.MockSensor'> sets an"
-            " invalid suggested_unit_of_measurement. Please report it to the author"
-            " of the 'test' custom integration. This warning will become an error in"
-            " Home Assistant Core 2024.5"
-        ),
-    ) in caplog.record_tuples
+        "Entity <class 'tests.components.sensor.common.MockSensor'> suggest an incorrect unit of measurement: invalid_unit"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -2702,22 +2677,19 @@ async def test_suggested_unit_guard_invalid_unit(
 )
 async def test_suggested_unit_guard_valid_unit(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_class: SensorDeviceClass,
     native_unit: str,
     native_value: int,
     suggested_unit: str,
-    expect_value: float | int,
+    expect_value: float,
 ) -> None:
     """Test suggested_unit_of_measurement guard.
 
     Suggested unit is valid and therefore should be used for unit conversion and stored
     in the entity registry.
     """
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-
-    entity = platform.ENTITIES["0"] = platform.MockSensor(
+    entity = MockSensor(
         name="Valid",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2725,6 +2697,7 @@ async def test_suggested_unit_guard_valid_unit(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="valid",
     )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()

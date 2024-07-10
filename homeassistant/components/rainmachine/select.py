@@ -1,4 +1,5 @@
 """Support for RainMachine selects."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -50,7 +51,6 @@ SELECT_DESCRIPTIONS = (
     FreezeProtectionSelectDescription(
         key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
         translation_key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectTemp",

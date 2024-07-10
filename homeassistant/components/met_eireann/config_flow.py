@@ -1,24 +1,24 @@
 """Config flow to configure Met Éireann component."""
+
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, HOME_LOCATION_NAME
 
 
-class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Met Eireann component."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             # Check if an identical entity is already configured

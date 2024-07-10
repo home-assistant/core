@@ -1,4 +1,5 @@
 """Support for RESTful switches."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -63,7 +64,7 @@ DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ["post", "put", "patch"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_RESOURCE): cv.url,
@@ -218,8 +219,8 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
             req = await self.get_device_state(self.hass)
         except (TimeoutError, httpx.TimeoutException):
             _LOGGER.exception("Timed out while fetching data")
-        except httpx.RequestError as err:
-            _LOGGER.exception("Error while fetching data: %s", err)
+        except httpx.RequestError:
+            _LOGGER.exception("Error while fetching data")
 
         if req:
             self._process_manual_data(req.text)

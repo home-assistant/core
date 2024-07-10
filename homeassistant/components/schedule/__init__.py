@@ -1,4 +1,5 @@
 """Support for schedules in Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -32,7 +33,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -103,12 +104,12 @@ def serialize_to_time(value: Any) -> Any:
     return vol.Coerce(str)(value)
 
 
-BASE_SCHEMA = {
+BASE_SCHEMA: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_ICON): cv.icon,
 }
 
-TIME_RANGE_SCHEMA = {
+TIME_RANGE_SCHEMA: VolDictType = {
     vol.Required(CONF_FROM): cv.time,
     vol.Required(CONF_TO): deserialize_to_time,
 }
@@ -121,13 +122,13 @@ STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
     }
 )
 
-SCHEDULE_SCHEMA = {
+SCHEDULE_SCHEMA: VolDictType = {
     vol.Optional(day, default=[]): vol.All(
         cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
     )
     for day in CONF_ALL_DAYS
 }
-STORAGE_SCHEDULE_SCHEMA = {
+STORAGE_SCHEDULE_SCHEMA: VolDictType = {
     vol.Optional(day, default=[]): vol.All(
         cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule, [STORAGE_TIME_RANGE_SCHEMA]
     )
@@ -255,8 +256,7 @@ class Schedule(CollectionEntity):
     @classmethod
     def from_storage(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from storage."""
-        schedule = cls(config, editable=True)
-        return schedule
+        return cls(config, editable=True)
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> Schedule:

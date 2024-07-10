@@ -1,22 +1,22 @@
 """Config flow to configure the Freebox integration."""
+
 import logging
 from typing import Any
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .router import get_api
+from .router import get_api, get_hosts_list_if_supported
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -27,7 +27,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self.async_show_form(
@@ -51,7 +51,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Attempt to link with the Freebox router.
 
         Given a configured host, will ask the user to press the button
@@ -69,7 +69,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check permissions
             await fbx.system.get_config()
-            await fbx.lan.get_hosts_list()
+            await get_hosts_list_if_supported(fbx)
 
             # Close connection
             await fbx.close()
@@ -89,7 +89,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             errors["base"] = "cannot_connect"
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Freebox router at %s",
                 self._data[CONF_HOST],
@@ -100,7 +100,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize flow from zeroconf."""
         zeroconf_properties = discovery_info.properties
         host = zeroconf_properties["api_domain"]

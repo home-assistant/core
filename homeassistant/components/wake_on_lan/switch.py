@@ -1,4 +1,5 @@
 """Support for wake on lan."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ import voluptuous as vol
 import wakeonlan
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -35,7 +36,7 @@ CONF_OFF_ACTION = "turn_off"
 DEFAULT_NAME = "Wake on LAN"
 DEFAULT_PING_TIMEOUT = 1
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
@@ -128,7 +129,7 @@ class WolSwitch(SwitchEntity):
 
         if self._attr_assumed_state:
             self._state = True
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
@@ -137,7 +138,7 @@ class WolSwitch(SwitchEntity):
 
         if self._attr_assumed_state:
             self._state = False
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self) -> None:
         """Check if device is on and update the state. Only called if assumed state is false."""

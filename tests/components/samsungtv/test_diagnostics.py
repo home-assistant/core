@@ -1,4 +1,5 @@
 """Test samsungtv diagnostics."""
+
 from unittest.mock import Mock
 
 import pytest
@@ -9,11 +10,11 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_samsungtv_entry
 from .const import (
+    MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_UE48JU6400,
     SAMPLE_DEVICE_INFO_WIFI,
 )
-from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
@@ -41,7 +42,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
-            "minor_version": 1,
+            "minor_version": 2,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -78,7 +79,7 @@ async def test_entry_diagnostics_encrypted(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
-            "minor_version": 1,
+            "minor_version": 2,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -114,7 +115,7 @@ async def test_entry_diagnostics_encrypte_offline(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
-            "minor_version": 1,
+            "minor_version": 2,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,

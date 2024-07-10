@@ -1,11 +1,10 @@
 """The Tesla Powerwall integration."""
+
 from __future__ import annotations
 
-import asyncio
 from contextlib import AsyncExitStack
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from aiohttp import CookieJar
 from tesla_powerwall import (
@@ -28,7 +27,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN, POWERWALL_API_CHANGED, POWERWALL_COORDINATOR, UPDATE_INTERVAL
-from .models import PowerwallBaseInfo, PowerwallData, PowerwallRuntimeData
+from .models import (
+    PowerwallBaseInfo,
+    PowerwallConfigEntry,
+    PowerwallData,
+    PowerwallRuntimeData,
+)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -116,7 +120,7 @@ class PowerwallDataManager:
         raise RuntimeError("unreachable")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> bool:
     """Set up Tesla Powerwall from a config entry."""
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
@@ -177,7 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     runtime_data[POWERWALL_COORDINATOR] = coordinator
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
+    entry.runtime_data = runtime_data
 
     await async_migrate_entity_unique_ids(hass, entry, base_info)
 
@@ -187,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_migrate_entity_unique_ids(
-    hass: HomeAssistant, entry: ConfigEntry, base_info: PowerwallBaseInfo
+    hass: HomeAssistant, entry: PowerwallConfigEntry, base_info: PowerwallBaseInfo
 ) -> None:
     """Migrate old entity unique ids to use gateway_din."""
     old_base_unique_id = "_".join(base_info.serial_numbers)
@@ -221,39 +225,30 @@ async def _login_and_fetch_base_info(
 
 async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
     """Return PowerwallBaseInfo for the device."""
-
-    try:
-        async with asyncio.TaskGroup() as tg:
-            gateway_din = tg.create_task(power_wall.get_gateway_din())
-            site_info = tg.create_task(power_wall.get_site_info())
-            status = tg.create_task(power_wall.get_status())
-            device_type = tg.create_task(power_wall.get_device_type())
-            serial_numbers = tg.create_task(power_wall.get_serial_numbers())
-            batteries = tg.create_task(power_wall.get_batteries())
-
-    # Mimic the behavior of asyncio.gather by reraising the first caught exception since
-    # this is what is expected by the caller of this method
-    #
-    # While it would have been cleaner to use asyncio.gather in the first place instead of
-    # TaskGroup but in cases where you have more than 6 tasks, the linter fails due to
-    # missing typing information.
-    except BaseExceptionGroup as e:
-        raise e.exceptions[0] from None
-
+    # We await each call individually since the powerwall
+    # supports http keep-alive and we want to reuse the connection
+    # as its faster than establishing a new connection when
+    # run concurrently.
+    gateway_din = await power_wall.get_gateway_din()
+    site_info = await power_wall.get_site_info()
+    status = await power_wall.get_status()
+    device_type = await power_wall.get_device_type()
+    serial_numbers = await power_wall.get_serial_numbers()
+    batteries = await power_wall.get_batteries()
     # Serial numbers MUST be sorted to ensure the unique_id is always the same
     # for backwards compatibility.
     return PowerwallBaseInfo(
-        gateway_din=gateway_din.result().upper(),
-        site_info=site_info.result(),
-        status=status.result(),
-        device_type=device_type.result(),
-        serial_numbers=sorted(serial_numbers.result()),
+        gateway_din=gateway_din,
+        site_info=site_info,
+        status=status,
+        device_type=device_type,
+        serial_numbers=sorted(serial_numbers),
         url=f"https://{host}",
-        batteries={battery.serial_number: battery for battery in batteries.result()},
+        batteries={battery.serial_number: battery for battery in batteries},
     )
 
 
-async def get_backup_reserve_percentage(power_wall: Powerwall) -> Optional[float]:
+async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
     """Return the backup reserve percentage."""
     try:
         return await power_wall.get_backup_reserve_percentage()
@@ -263,53 +258,41 @@ async def get_backup_reserve_percentage(power_wall: Powerwall) -> Optional[float
 
 async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     """Process and update powerwall data."""
-
-    try:
-        async with asyncio.TaskGroup() as tg:
-            backup_reserve = tg.create_task(get_backup_reserve_percentage(power_wall))
-            charge = tg.create_task(power_wall.get_charge())
-            site_master = tg.create_task(power_wall.get_sitemaster())
-            meters = tg.create_task(power_wall.get_meters())
-            grid_services_active = tg.create_task(power_wall.is_grid_services_active())
-            grid_status = tg.create_task(power_wall.get_grid_status())
-            batteries = tg.create_task(power_wall.get_batteries())
-
-    # Mimic the behavior of asyncio.gather by reraising the first caught exception since
-    # this is what is expected by the caller of this method
-    #
-    # While it would have been cleaner to use asyncio.gather in the first place instead of
-    # TaskGroup but in cases where you have more than 6 tasks, the linter fails due to
-    # missing typing information.
-    except BaseExceptionGroup as e:
-        raise e.exceptions[0] from None
-
+    # We await each call individually since the powerwall
+    # supports http keep-alive and we want to reuse the connection
+    # as its faster than establishing a new connection when
+    # run concurrently.
+    backup_reserve = await get_backup_reserve_percentage(power_wall)
+    charge = await power_wall.get_charge()
+    site_master = await power_wall.get_sitemaster()
+    meters = await power_wall.get_meters()
+    grid_services_active = await power_wall.is_grid_services_active()
+    grid_status = await power_wall.get_grid_status()
+    batteries = await power_wall.get_batteries()
     return PowerwallData(
-        charge=charge.result(),
-        site_master=site_master.result(),
-        meters=meters.result(),
-        grid_services_active=grid_services_active.result(),
-        grid_status=grid_status.result(),
-        backup_reserve=backup_reserve.result(),
-        batteries={battery.serial_number: battery for battery in batteries.result()},
+        charge=charge,
+        site_master=site_master,
+        meters=meters,
+        grid_services_active=grid_services_active,
+        grid_status=grid_status,
+        backup_reserve=backup_reserve,
+        batteries={battery.serial_number: battery for battery in batteries},
     )
 
 
 @callback
-def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_last_update_was_successful(
+    hass: HomeAssistant, entry: PowerwallConfigEntry
+) -> bool:
     """Return True if the last update was successful."""
     return bool(
-        (domain_data := hass.data.get(DOMAIN))
-        and (entry_data := domain_data.get(entry.entry_id))
-        and (coordinator := entry_data.get(POWERWALL_COORDINATOR))
+        hasattr(entry, "runtime_data")
+        and (runtime_data := entry.runtime_data)
+        and (coordinator := runtime_data.get(POWERWALL_COORDINATOR))
         and coordinator.last_update_success
     )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

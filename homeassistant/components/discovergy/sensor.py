@@ -1,4 +1,5 @@
 """Discovergy sensor entity."""
+
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfElectricPotential,
@@ -24,6 +24,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import DiscovergyConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import DiscovergyUpdateCoordinator
 
@@ -42,7 +43,7 @@ class DiscovergySensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Reading, str, int], datetime | float | None] = field(
         default=_get_and_scale
     )
-    alternative_keys: list[str] = field(default_factory=lambda: [])
+    alternative_keys: list[str] = field(default_factory=list)
     scale: int = field(default_factory=lambda: 1000)
 
 
@@ -156,19 +157,19 @@ ADDITIONAL_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda reading, key, scale: reading.time_with_timezone,
+        value_fn=lambda reading, key, scale: reading.time,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DiscovergyConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Discovergy sensors."""
-    coordinators: list[DiscovergyUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]
-
     entities: list[DiscovergySensor] = []
-    for coordinator in coordinators:
+    for coordinator in entry.runtime_data:
         sensors: tuple[DiscovergySensorEntityDescription, ...] = ()
 
         # select sensor descriptions based on meter type and combine with additional sensors
@@ -212,7 +213,7 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, meter.meter_id)},
             name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
-            model=meter.type,
+            model=meter.meter_type,
             manufacturer=MANUFACTURER,
             serial_number=meter.full_serial_number,
         )

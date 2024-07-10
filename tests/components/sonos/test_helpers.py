@@ -1,4 +1,5 @@
 """Test the sonos config flow."""
+
 from __future__ import annotations
 
 import pytest

@@ -1,14 +1,13 @@
 """Diagnostics support for Sensibo."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import SensiboDataUpdateCoordinator
+from . import SensiboConfigEntry
 
 TO_REDACT = {
     "location",
@@ -30,10 +29,10 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: SensiboConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for Sensibo config entry."""
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     diag_data = {}
     diag_data["raw"] = async_redact_data(coordinator.data.raw, TO_REDACT)
     for device, device_data in coordinator.data.parsed.items():

@@ -1,4 +1,5 @@
 """Viessmann ViCare button device."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -20,9 +21,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixinWithSet
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import ViCareDevice, ViCareRequiredKeysMixinWithSet
 from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +40,6 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
     ViCareButtonEntityDescription(
         key="activate_onetimecharge",
         translation_key="activate_onetimecharge",
-        icon="mdi:shower-head",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getOneTimeCharge(),
         value_setter=lambda api: api.activateOneTimeCharge(),
@@ -48,19 +48,19 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 
 
 def _build_entities(
-    api: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
+    device_list: list[ViCareDevice],
 ) -> list[ViCareButton]:
     """Create ViCare button entities for a device."""
 
     return [
         ViCareButton(
-            api,
-            device_config,
+            device.api,
+            device.config,
             description,
         )
+        for device in device_list
         for description in BUTTON_DESCRIPTIONS
-        if is_supported(description.key, description, api)
+        if is_supported(description.key, description, device.api)
     ]
 
 
@@ -70,14 +70,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            api,
-            device_config,
+            device_list,
         )
     )
 

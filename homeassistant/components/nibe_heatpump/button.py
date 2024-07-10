@@ -1,4 +1,5 @@
 """The Nibe Heat Pump sensors."""
+
 from __future__ import annotations
 
 from nibe.coil_groups import UNIT_COILGROUPS, UnitCoilGroup

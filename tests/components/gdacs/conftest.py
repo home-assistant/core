@@ -1,4 +1,5 @@
 """Configuration for GDACS tests."""
+
 import pytest
 
 from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN

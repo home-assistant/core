@@ -1,4 +1,5 @@
 """Fixtures for testing qBittorrent component."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -7,7 +8,7 @@ import requests_mock
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock qbittorrent entry setup."""
     with patch(
         "homeassistant.components.qbittorrent.async_setup_entry", return_value=True
@@ -16,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_api() -> Generator[requests_mock.Mocker, None, None]:
+def mock_api() -> Generator[requests_mock.Mocker]:
     """Mock the qbittorrent API."""
     with requests_mock.Mocker() as mocker:
         mocker.get("http://localhost:8080/api/v2/app/preferences", status_code=403)

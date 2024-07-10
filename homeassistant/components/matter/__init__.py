@@ -1,4 +1,5 @@
 """The Matter integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +7,12 @@ from contextlib import suppress
 from functools import cache
 
 from matter_server.client import MatterClient
-from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.client.exceptions import (
+    CannotConnect,
+    InvalidServerVersion,
+    ServerVersionTooNew,
+    ServerVersionTooOld,
+)
 from matter_server.common.errors import MatterError, NodeNotExists
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
@@ -45,7 +51,10 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not (node := node_from_ha_device_id(hass, device_id)):
+    # Test hass.data[DOMAIN] to ensure config entry is set up
+    if not hass.data.get(DOMAIN, False) or not (
+        node := node_from_ha_device_id(hass, device_id)
+    ):
         return None
 
     return MatterDeviceInfo(
@@ -67,17 +76,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (CannotConnect, TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
-        if use_addon:
-            addon_manager = _get_addon_manager(hass)
-            addon_manager.async_schedule_update_addon(catch_error=True)
-        else:
+        if isinstance(err, ServerVersionTooOld):
+            if use_addon:
+                addon_manager = _get_addon_manager(hass)
+                addon_manager.async_schedule_update_addon(catch_error=True)
+            else:
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "server_version_version_too_old",
+                    is_fixable=False,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="server_version_version_too_old",
+                )
+        elif isinstance(err, ServerVersionTooNew):
             async_create_issue(
                 hass,
                 DOMAIN,
-                "invalid_server_version",
+                "server_version_version_too_new",
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
-                translation_key="invalid_server_version",
+                translation_key="server_version_version_too_new",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
@@ -87,7 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Unknown error connecting to the Matter server"
         ) from err
 
-    async_delete_issue(hass, DOMAIN, "invalid_server_version")
+    async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
+    async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
@@ -149,7 +169,7 @@ async def _client_listen(
         if entry.state != ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
         if entry.state != ConfigEntryState.LOADED:

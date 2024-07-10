@@ -1,4 +1,5 @@
 """Support for Meteo-France weather data."""
+
 from datetime import timedelta
 import logging
 
@@ -53,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_update_data_alert() -> CurrentPhenomenons:
         """Fetch data from API endpoint."""
+        assert isinstance(department, str)
         return await hass.async_add_executor_job(
             client.get_warning_current_phenomenoms, department, 0, True
         )

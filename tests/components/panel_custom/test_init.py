@@ -1,4 +1,5 @@
 """The tests for the panel_custom component."""
+
 from unittest.mock import Mock, patch
 
 from homeassistant import setup

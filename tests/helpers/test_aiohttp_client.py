@@ -1,10 +1,12 @@
 """Test the aiohttp client helper."""
+
 from unittest.mock import Mock, patch
 
 import aiohttp
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.mjpeg.const import (
+from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
     DOMAIN as MJPEG_DOMAIN,
@@ -20,12 +22,20 @@ from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.color import RGBColor
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="camera_client")
-def camera_client_fixture(hass, hass_client):
+async def camera_client_fixture(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Fixture to fetch camera streams."""
     mock_config_entry = MockConfigEntry(
         title="MJPEG Camera",
@@ -40,12 +50,10 @@ def camera_client_fixture(hass, hass_client):
         },
     )
     mock_config_entry.add_to_hass(hass)
-    hass.loop.run_until_complete(
-        hass.config_entries.async_setup(mock_config_entry.entry_id)
-    )
-    hass.loop.run_until_complete(hass.async_block_till_done())
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    return hass.loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 async def test_get_clientsession_with_ssl(hass: HomeAssistant) -> None:
@@ -165,25 +173,33 @@ async def test_warning_close_session_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test log warning message when closing the session from integration context."""
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/homeassistant/components/hue/light.py",
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            Mock(
-                filename="/home/paulus/homeassistant/components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         session = client.async_get_clientsession(hass)
         await session.close()
@@ -201,25 +217,33 @@ async def test_warning_close_session_custom(
 ) -> None:
     """Test log warning message when closing the session from custom context."""
     mock_integration(hass, MockModule("hue"), built_in=False)
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/config/custom_components/hue/light.py",
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            Mock(
-                filename="/home/paulus/config/custom_components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         session = client.async_get_clientsession(hass)
         await session.close()
@@ -231,7 +255,7 @@ async def test_warning_close_session_custom(
 
 
 async def test_async_aiohttp_proxy_stream(
-    aioclient_mock: AiohttpClientMocker, camera_client
+    aioclient_mock: AiohttpClientMocker, camera_client: TestClient
 ) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", content=b"Frame1Frame2Frame3")
@@ -245,7 +269,7 @@ async def test_async_aiohttp_proxy_stream(
 
 
 async def test_async_aiohttp_proxy_stream_timeout(
-    aioclient_mock: AiohttpClientMocker, camera_client
+    aioclient_mock: AiohttpClientMocker, camera_client: TestClient
 ) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=TimeoutError())
@@ -255,7 +279,7 @@ async def test_async_aiohttp_proxy_stream_timeout(
 
 
 async def test_async_aiohttp_proxy_stream_client_err(
-    aioclient_mock: AiohttpClientMocker, camera_client
+    aioclient_mock: AiohttpClientMocker, camera_client: TestClient
 ) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=aiohttp.ClientError())
@@ -272,8 +296,8 @@ async def test_sending_named_tuple(
     session = client.async_create_clientsession(hass)
     resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
     assert resp.status == 200
-    await resp.json() == {"rgb": RGBColor(4, 3, 2)}
-    aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
+    assert await resp.json() == {"rgb": [4, 3, 2]}
+    assert aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
 
 
 async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:

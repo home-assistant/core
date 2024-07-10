@@ -1,7 +1,9 @@
 """Test fixtures for voice assistant."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -33,7 +35,7 @@ _TRANSCRIPT = "test transcript"
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
@@ -110,6 +112,7 @@ class MockTTSProvider(tts.Provider):
             tts.Voice("fran_drescher", "Fran Drescher"),
         ]
     }
+    _supported_options = ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
 
     @property
     def default_language(self) -> str:
@@ -129,7 +132,7 @@ class MockTTSProvider(tts.Provider):
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
-        return ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
+        return self._supported_options
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -150,7 +153,7 @@ class MockTTSPlatform(MockPlatform):
 
 
 @pytest.fixture
-async def mock_tts_provider(hass) -> MockTTSProvider:
+async def mock_tts_provider() -> MockTTSProvider:
     """Mock TTS provider."""
     return MockTTSProvider()
 
@@ -201,16 +204,19 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
 
         if self.alternate_detections:
             detected_id = wake_words[self.detected_wake_word_index].id
+            detected_name = wake_words[self.detected_wake_word_index].name
             self.detected_wake_word_index = (self.detected_wake_word_index + 1) % len(
                 wake_words
             )
         else:
             detected_id = wake_words[0].id
+            detected_name = wake_words[0].name
 
         async for chunk, timestamp in stream:
             if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(
                     wake_word_id=detected_id,
+                    wake_word_phrase=detected_name,
                     timestamp=timestamp,
                     queued_audio=[(b"queued audio", 0)],
                 )
@@ -240,6 +246,7 @@ class MockWakeWordEntity2(wake_word.WakeWordDetectionEntity):
             if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(
                     wake_word_id=wake_words[0].id,
+                    wake_word_phrase=wake_words[0].name,
                     timestamp=timestamp,
                     queued_audio=[(b"queued audio", 0)],
                 )
@@ -249,13 +256,13 @@ class MockWakeWordEntity2(wake_word.WakeWordDetectionEntity):
 
 
 @pytest.fixture
-async def mock_wake_word_provider_entity(hass) -> MockWakeWordEntity:
+async def mock_wake_word_provider_entity() -> MockWakeWordEntity:
     """Mock wake word provider."""
     return MockWakeWordEntity()
 
 
 @pytest.fixture
-async def mock_wake_word_provider_entity2(hass) -> MockWakeWordEntity2:
+async def mock_wake_word_provider_entity2() -> MockWakeWordEntity2:
     """Mock wake word provider."""
     return MockWakeWordEntity2()
 
@@ -265,7 +272,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, "test.config_flow")
 
@@ -372,13 +379,14 @@ async def init_components(hass: HomeAssistant, init_supporting_components):
 
 
 @pytest.fixture
-async def assist_device(hass: HomeAssistant, init_components) -> dr.DeviceEntry:
+async def assist_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, init_components
+) -> dr.DeviceEntry:
     """Create an assist device."""
     config_entry = MockConfigEntry(domain="test_assist_device")
     config_entry.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         name="Test Device",
         config_entry_id=config_entry.entry_id,
         identifiers={("test_assist_device", "test")},

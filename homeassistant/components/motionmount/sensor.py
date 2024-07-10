@@ -1,4 +1,5 @@
 """Support for MotionMount sensors."""
+
 import motionmount
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity

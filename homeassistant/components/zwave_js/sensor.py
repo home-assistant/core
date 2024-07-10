@@ -1,10 +1,11 @@
 """Representation of Z-Wave sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -19,7 +20,6 @@ from zwave_js_server.model.controller.statistics import ControllerStatisticsData
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.statistics import NodeStatisticsDataType
-from zwave_js_server.model.value import ConfigurationValue
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
@@ -530,7 +530,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
     driver = client.driver
     assert driver is not None  # Driver is ready before platforms are loaded.
 
@@ -689,6 +689,23 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 class ZWaveNumericSensor(ZwaveSensor):
     """Representation of a Z-Wave Numeric sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo,
+        entity_description: SensorEntityDescription,
+        unit_of_measurement: str | None = None,
+    ) -> None:
+        """Initialize a ZWaveBasicSensor entity."""
+        super().__init__(
+            config_entry, driver, info, entity_description, unit_of_measurement
+        )
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            self._attr_name = self.generate_name(
+                include_value_name=True, alternate_value_name="Basic"
+            )
+
     @callback
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
@@ -799,7 +816,6 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
         super().__init__(
             config_entry, driver, info, entity_description, unit_of_measurement
         )
-        self._primary_value = cast(ConfigurationValue, self.info.primary_value)
 
         property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes

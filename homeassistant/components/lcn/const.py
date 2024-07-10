@@ -1,4 +1,5 @@
 """Constants for the LCN component."""
+
 from itertools import product
 
 from homeassistant.const import Platform

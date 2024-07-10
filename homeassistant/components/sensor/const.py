@@ -1,4 +1,5 @@
 """Constants for sensor."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -17,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -45,6 +47,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -134,6 +137,12 @@ class SensorDeviceClass(StrEnum):
     """Carbon Dioxide gas concentration.
 
     Unit of measurement: `ppm` (parts per million)
+    """
+
+    CONDUCTIVITY = "conductivity"
+    """Conductivity.
+
+    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
     """
 
     CURRENT = "current"
@@ -344,6 +353,7 @@ class SensorDeviceClass(StrEnum):
     - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`
+    - Beaufort: `Beaufort`
     """
 
     SULPHUR_DIOXIDE = "sulphur_dioxide"
@@ -431,6 +441,7 @@ class SensorDeviceClass(StrEnum):
     - SI /metric: `m/s`, `km/h`
     - USCS / imperial: `ft/s`, `mph`
     - Nautical: `kn`
+    - Beaufort: `Beaufort`
     """
 
 
@@ -482,6 +493,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DATA_SIZE: InformationConverter,
@@ -514,6 +526,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
     SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
@@ -588,6 +601,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.CONDUCTIVITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CURRENT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_SIZE: set(SensorStateClass),

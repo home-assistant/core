@@ -1,4 +1,5 @@
 """The tests for the webdav todo component."""
+
 from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -90,9 +91,9 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-def set_tz(hass: HomeAssistant) -> None:
+async def set_tz(hass: HomeAssistant) -> None:
     """Fixture to set timezone with fixed offset year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture(name="todos")
@@ -623,7 +624,7 @@ async def test_remove_item(
     assert state.state == "1"
 
     def lookup(uid: str) -> Mock:
-        assert uid == "2" or uid == "3"
+        assert uid in ("2", "3")
         if uid == "2":
             return item1
         return item2

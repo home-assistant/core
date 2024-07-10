@@ -1,5 +1,7 @@
 """deCONZ light platform tests."""
-from unittest.mock import patch
+
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -28,6 +30,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -37,25 +40,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_lights_or_groups(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no lights or groups entities are created."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
-
 @pytest.mark.parametrize(
-    ("input", "expected"),
+    ("light_0_payload", "expected"),
     [
         (  # RGB light in color temp color mode
             {
@@ -308,16 +299,125 @@ async def test_no_lights_or_groups(
                 },
             },
         ),
+        (  # Gradient light
+            {
+                "capabilities": {
+                    "alerts": [
+                        "none",
+                        "select",
+                        "lselect",
+                        "blink",
+                        "breathe",
+                        "okay",
+                        "channelchange",
+                        "finish",
+                        "stop",
+                    ],
+                    "bri": {"min_dim_level": 0.01},
+                    "color": {
+                        "ct": {"computes_xy": True, "max": 500, "min": 153},
+                        "effects": [
+                            "none",
+                            "colorloop",
+                            "candle",
+                            "fireplace",
+                            "prism",
+                            "sunrise",
+                        ],
+                        "gamut_type": "C",
+                        "gradient": {
+                            "max_segments": 9,
+                            "pixel_count": 16,
+                            "pixel_length": 1250,
+                            "styles": ["linear", "mirrored"],
+                        },
+                        "modes": ["ct", "effect", "gradient", "hs", "xy"],
+                        "xy": {
+                            "blue": [0.1532, 0.0475],
+                            "green": [0.17, 0.7],
+                            "red": [0.6915, 0.3083],
+                        },
+                    },
+                },
+                "colorcapabilities": 31,
+                "config": {
+                    "bri": {
+                        "couple_ct": False,
+                        "execute_if_off": True,
+                        "startup": "previous",
+                    },
+                    "color": {
+                        "ct": {"startup": "previous"},
+                        "execute_if_off": True,
+                        "gradient": {"reversed": False},
+                        "xy": {"startup": "previous"},
+                    },
+                    "groups": ["36", "39", "45", "46", "47", "51", "57", "59"],
+                    "on": {"startup": "previous"},
+                },
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "077fb97dd6145f10a3c190f0a1ade499",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2024-02-29T18:36Z",
+                "manufacturername": "Signify Netherlands B.V.",
+                "modelid": "LCX004",
+                "name": "Gradient light",
+                "productid": "Philips-LCX004-1-GALSECLv1",
+                "productname": "Hue gradient lightstrip",
+                "state": {
+                    "alert": "none",
+                    "bri": 184,
+                    "colormode": "gradient",
+                    "ct": 396,
+                    "effect": "none",
+                    "gradient": {
+                        "color_adjustment": 0,
+                        "offset": 0,
+                        "offset_adjustment": 0,
+                        "points": [
+                            [0.2728, 0.6226],
+                            [0.163, 0.4262],
+                            [0.1563, 0.1699],
+                            [0.1551, 0.1147],
+                            [0.1534, 0.0579],
+                        ],
+                        "segments": 5,
+                        "style": "linear",
+                    },
+                    "hue": 20566,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 254,
+                    "xy": [0.2727, 0.6226],
+                },
+                "swconfigid": "F03CAF4D",
+                "swversion": "1.104.2",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:0b:0c:0d:0e-0f",
+            },
+            {
+                "entity_id": "light.gradient_light",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_SUPPORTED_COLOR_MODES: [
+                        ColorMode.COLOR_TEMP,
+                        ColorMode.HS,
+                        ColorMode.XY,
+                    ],
+                    ATTR_COLOR_MODE: ColorMode.XY,
+                },
+            },
+        ),
     ],
 )
 async def test_lights(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+    hass: HomeAssistant,
+    config_entry_setup: ConfigEntry,
+    expected: dict[str, Any],
 ) -> None:
     """Test that different light entities are created with expected values."""
-    data = {"lights": {"0": input}}
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     assert len(hass.states.async_all()) == 1
 
     light = hass.states.get(expected["entity_id"])
@@ -325,23 +425,21 @@ async def test_lights(
     for attribute, expected_value in expected["attributes"].items():
         assert light.attributes[attribute] == expected_value
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
     states = hass.states.async_all()
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_light_state_change(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Verify light can change state on websocket event."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "0": {
                 "colorcapabilities": 31,
                 "ctmax": 500,
@@ -370,20 +468,21 @@ async def test_light_state_change(
                 "uniqueid": "00:17:88:01:01:23:45:67-00",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_light_state_change(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Verify light can change state on websocket event."""
     assert hass.states.get("light.hue_go").state == STATE_ON
 
     event_changed_light = {
-        "t": "event",
-        "e": "changed",
         "r": "lights",
-        "id": "0",
         "state": {"on": False},
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("light.hue_go").state == STATE_OFF
@@ -527,44 +626,47 @@ async def test_light_state_change(
     ],
 )
 async def test_light_service_calls(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: Callable[[], ConfigEntry],
+    light_payload: dict[str, Any],
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    input: dict[str, Any],
+    expected: dict[str, Any],
 ) -> None:
     """Verify light can change state on websocket event."""
-    data = {
-        "lights": {
-            "0": {
-                "colorcapabilities": 31,
-                "ctmax": 500,
-                "ctmin": 153,
-                "etag": "055485a82553e654f156d41c9301b7cf",
-                "hascolor": True,
-                "lastannounced": None,
-                "lastseen": "2021-06-10T20:25Z",
-                "manufacturername": "Philips",
-                "modelid": "LLC020",
-                "name": "Hue Go",
-                "state": {
-                    "alert": "none",
-                    "bri": 254,
-                    "colormode": "ct",
-                    "ct": 375,
-                    "effect": "none",
-                    "hue": 8348,
-                    "on": input["light_on"],
-                    "reachable": True,
-                    "sat": 147,
-                    "xy": [0.462, 0.4111],
-                },
-                "swversion": "5.127.1.26420",
-                "type": "Extended color light",
-                "uniqueid": "00:17:88:01:01:23:45:67-00",
-            }
+    light_payload |= {
+        "0": {
+            "colorcapabilities": 31,
+            "ctmax": 500,
+            "ctmin": 153,
+            "etag": "055485a82553e654f156d41c9301b7cf",
+            "hascolor": True,
+            "lastannounced": None,
+            "lastseen": "2021-06-10T20:25Z",
+            "manufacturername": "Philips",
+            "modelid": "LLC020",
+            "name": "Hue Go",
+            "state": {
+                "alert": "none",
+                "bri": 254,
+                "colormode": "ct",
+                "ct": 375,
+                "effect": "none",
+                "hue": 8348,
+                "on": input["light_on"],
+                "reachable": True,
+                "sat": 147,
+                "xy": [0.462, 0.4111],
+            },
+            "swversion": "5.127.1.26420",
+            "type": "Extended color light",
+            "uniqueid": "00:17:88:01:01:23:45:67-00",
         }
     }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    await config_entry_factory()
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -578,12 +680,10 @@ async def test_light_service_calls(
         assert len(aioclient_mock.mock_calls) == 1  # not called
 
 
-async def test_ikea_default_transition_time(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Verify that service calls to IKEA lights always extend with transition tinme 0 if absent."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "0": {
                 "colorcapabilities": 0,
                 "ctmax": 65535,
@@ -606,13 +706,17 @@ async def test_ikea_default_transition_time(
                 "swversion": "2.0.022",
                 "type": "Color temperature light",
                 "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
-            },
-        },
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_ikea_default_transition_time(
+    hass: HomeAssistant,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+) -> None:
+    """Verify that service calls to IKEA lights always extend with transition tinme 0 if absent."""
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -646,12 +750,10 @@ async def test_ikea_default_transition_time(
     }
 
 
-async def test_lidl_christmas_light(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that lights or groups entities are created."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "0": {
                 "etag": "87a89542bf9b9d0aa8134919056844f8",
                 "hascolor": True,
@@ -674,12 +776,15 @@ async def test_lidl_christmas_light(
                 "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
             }
         }
-    }
-
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_lidl_christmas_light(
+    hass: HomeAssistant,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+) -> None:
+    """Test that lights or groups entities are created."""
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -691,16 +796,13 @@ async def test_lidl_christmas_light(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "hue": 3640, "sat": 76}
-
     assert hass.states.get("light.lidl_xmas_light")
 
 
-async def test_configuration_tool(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Verify that configuration tool is not created."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "0": {
                 "etag": "26839cb118f5bf7ba1f2108256644010",
                 "hascolor": False,
@@ -715,13 +817,53 @@ async def test_configuration_tool(
                 "uniqueid": "00:21:2e:ff:ff:05:a7:a3-01",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_configuration_tool(hass: HomeAssistant) -> None:
+    """Verify that configuration tool is not created."""
     assert len(hass.states.async_all()) == 0
 
 
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "1": {
+                "name": "RGB light",
+                "state": {
+                    "on": True,
+                    "bri": 50,
+                    "colormode": "xy",
+                    "effect": "colorloop",
+                    "xy": (0.5, 0.5),
+                    "reachable": True,
+                },
+                "type": "Extended color light",
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+            "2": {
+                "ctmax": 454,
+                "ctmin": 155,
+                "name": "Tunable white light",
+                "state": {
+                    "on": True,
+                    "colormode": "ct",
+                    "ct": 2500,
+                    "reachable": True,
+                },
+                "type": "Tunable white light",
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            },
+            "3": {
+                "name": "Dimmable light",
+                "type": "Dimmable light",
+                "state": {"bri": 255, "on": True, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+        }
+    ],
+)
 @pytest.mark.parametrize(
     ("input", "expected"),
     [
@@ -793,42 +935,70 @@ async def test_configuration_tool(
     ],
 )
 async def test_groups(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+    hass: HomeAssistant,
+    config_entry_factory: Callable[[], ConfigEntry],
+    group_payload: dict[str, Any],
+    input: dict[str, list[str]],
+    expected: dict[str, Any],
 ) -> None:
     """Test that different group entities are created with expected values."""
-    data = {
-        "groups": {
-            "0": {
-                "id": "Light group id",
-                "name": "Group",
-                "type": "LightGroup",
-                "state": {"all_on": False, "any_on": True},
-                "action": {
-                    "alert": "none",
-                    "bri": 127,
-                    "colormode": "hs",
-                    "ct": 0,
-                    "effect": "none",
-                    "hue": 0,
-                    "on": True,
-                    "sat": 127,
-                    "scene": None,
-                    "xy": [0, 0],
-                },
-                "scenes": [],
-                "lights": input["lights"],
+    group_payload |= {
+        "0": {
+            "id": "Light group id",
+            "name": "Group",
+            "type": "LightGroup",
+            "state": {"all_on": False, "any_on": True},
+            "action": {
+                "alert": "none",
+                "bri": 127,
+                "colormode": "hs",
+                "ct": 0,
+                "effect": "none",
+                "hue": 0,
+                "on": True,
+                "sat": 127,
+                "scene": None,
+                "xy": [0, 0],
             },
+            "scenes": [],
+            "lights": input["lights"],
         },
-        "lights": {
+    }
+    config_entry = await config_entry_factory()
+
+    assert len(hass.states.async_all()) == 4
+
+    group = hass.states.get(expected["entity_id"])
+    assert group.state == expected["state"]
+    for attribute, expected_value in expected["attributes"].items():
+        assert group.attributes[attribute] == expected_value
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    states = hass.states.async_all()
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "name": "RGB light",
                 "state": {
-                    "on": True,
-                    "bri": 50,
+                    "bri": 255,
                     "colormode": "xy",
                     "effect": "colorloop",
-                    "xy": (0.5, 0.5),
+                    "hue": 53691,
+                    "on": True,
                     "reachable": True,
+                    "sat": 141,
+                    "xy": (0.5, 0.5),
                 },
                 "type": "Extended color light",
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
@@ -849,32 +1019,12 @@ async def test_groups(
             "3": {
                 "name": "Dimmable light",
                 "type": "Dimmable light",
-                "state": {"bri": 255, "on": True, "reachable": True},
+                "state": {"bri": 254, "on": True, "reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
-        },
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    assert len(hass.states.async_all()) == 4
-
-    group = hass.states.get(expected["entity_id"])
-    assert group.state == expected["state"]
-    for attribute, expected_value in expected["attributes"].items():
-        assert group.attributes[attribute] == expected_value
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    states = hass.states.async_all()
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-
+        }
+    ],
+)
 @pytest.mark.parametrize(
     ("input", "expected"),
     [
@@ -933,62 +1083,28 @@ async def test_groups(
     ],
 )
 async def test_group_service_calls(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    group_payload: dict[str, Any],
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    input: dict[str, Any],
+    expected: dict[str, Any],
 ) -> None:
     """Verify expected group web request from different service calls."""
-    data = {
-        "groups": {
-            "0": {
-                "id": "Light group id",
-                "name": "Group",
-                "type": "LightGroup",
-                "state": {"all_on": False, "any_on": input["group_on"]},
-                "action": {},
-                "scenes": [],
-                "lights": input["lights"],
-            },
-        },
-        "lights": {
-            "1": {
-                "name": "RGB light",
-                "state": {
-                    "bri": 255,
-                    "colormode": "xy",
-                    "effect": "colorloop",
-                    "hue": 53691,
-                    "on": True,
-                    "reachable": True,
-                    "sat": 141,
-                    "xy": (0.5, 0.5),
-                },
-                "type": "Extended color light",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            },
-            "2": {
-                "ctmax": 454,
-                "ctmin": 155,
-                "name": "Tunable white light",
-                "state": {
-                    "on": True,
-                    "colormode": "ct",
-                    "ct": 2500,
-                    "reachable": True,
-                },
-                "type": "Tunable white light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            },
-            "3": {
-                "name": "Dimmable light",
-                "type": "Dimmable light",
-                "state": {"bri": 254, "on": True, "reachable": True},
-                "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
+    group_payload |= {
+        "0": {
+            "id": "Light group id",
+            "name": "Group",
+            "type": "LightGroup",
+            "state": {"all_on": False, "any_on": input["group_on"]},
+            "action": {},
+            "scenes": [],
+            "lights": input["lights"],
         },
     }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    await config_entry_factory()
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/groups/0/action")
+    aioclient_mock = mock_put_request("/groups/0/action")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1002,12 +1118,10 @@ async def test_group_service_calls(
         assert len(aioclient_mock.mock_calls) == 1  # not called
 
 
-async def test_empty_group(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Verify that a group without a list of lights is not created."""
-    data = {
-        "groups": {
+@pytest.mark.parametrize(
+    "group_payload",
+    [
+        {
             "0": {
                 "id": "Empty group id",
                 "name": "Empty group",
@@ -1017,21 +1131,20 @@ async def test_empty_group(
                 "scenes": [],
                 "lights": [],
             },
-        },
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_empty_group(hass: HomeAssistant) -> None:
+    """Verify that a group without a list of lights is not created."""
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("light.empty_group")
 
 
-async def test_disable_light_groups(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test disallowing light groups work."""
-    data = {
-        "groups": {
+@pytest.mark.parametrize(
+    "group_payload",
+    [
+        {
             "1": {
                 "id": "Light group id",
                 "name": "Light group",
@@ -1050,8 +1163,13 @@ async def test_disable_light_groups(
                 "scenes": [],
                 "lights": [],
             },
-        },
-        "lights": {
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "ctmax": 454,
                 "ctmin": 155,
@@ -1060,22 +1178,22 @@ async def test_disable_light_groups(
                 "type": "Tunable white light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
-        },
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            options={CONF_ALLOW_DECONZ_GROUPS: False},
-        )
-
+        }
+    ],
+)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_DECONZ_GROUPS: False}])
+async def test_disable_light_groups(
+    hass: HomeAssistant,
+    config_entry_setup: ConfigEntry,
+) -> None:
+    """Test disallowing light groups work."""
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("light.tunable_white_light")
     assert not hass.states.get("light.light_group")
     assert not hass.states.get("light.empty_group")
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_ALLOW_DECONZ_GROUPS: True}
+        config_entry_setup, options={CONF_ALLOW_DECONZ_GROUPS: True}
     )
     await hass.async_block_till_done()
 
@@ -1083,7 +1201,7 @@ async def test_disable_light_groups(
     assert hass.states.get("light.light_group")
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_ALLOW_DECONZ_GROUPS: False}
+        config_entry_setup, options={CONF_ALLOW_DECONZ_GROUPS: False}
     )
     await hass.async_block_till_done()
 
@@ -1091,16 +1209,10 @@ async def test_disable_light_groups(
     assert not hass.states.get("light.light_group")
 
 
-async def test_non_color_light_reports_color(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Verify hs_color does not crash when a group gets updated with a bad color value.
-
-    After calling a scene color temp light of certain manufacturers
-    report color temp in color space.
-    """
-    data = {
-        "groups": {
+@pytest.mark.parametrize(
+    "group_payload",
+    [
+        {
             "0": {
                 "action": {
                     "alert": "none",
@@ -1122,8 +1234,13 @@ async def test_non_color_light_reports_color(
                 "state": {"all_on": False, "any_on": True},
                 "type": "LightGroup",
             }
-        },
-        "lights": {
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "0": {
                 "ctmax": 500,
                 "ctmin": 153,
@@ -1173,11 +1290,19 @@ async def test_non_color_light_reports_color(
                 "type": "Color temperature light",
                 "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
             },
-        },
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_non_color_light_reports_color(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Verify hs_color does not crash when a group gets updated with a bad color value.
 
+    After calling a scene color temp light of certain manufacturers
+    report color temp in color space.
+    """
     assert len(hass.states.async_all()) == 3
     assert hass.states.get("light.group").attributes[ATTR_SUPPORTED_COLOR_MODES] == [
         ColorMode.COLOR_TEMP,
@@ -1193,7 +1318,6 @@ async def test_non_color_light_reports_color(
     # Updating a scene will return a faulty color value
     # for a non-color light causing an exception in hs_color
     event_changed_light = {
-        "e": "changed",
         "id": "1",
         "r": "lights",
         "state": {
@@ -1204,26 +1328,21 @@ async def test_non_color_light_reports_color(
             "on": True,
             "reachable": True,
         },
-        "t": "event",
         "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.group").attributes[ATTR_COLOR_MODE] == ColorMode.XY
-    # Bug is fixed if we reach this point
-    # device won't have neither color temp nor color
-    with pytest.raises(AssertionError):
-        assert hass.states.get("light.group").attributes.get(ATTR_COLOR_TEMP) is None
-        assert hass.states.get("light.group").attributes.get(ATTR_HS_COLOR) is None
+    group = hass.states.get("light.group")
+    assert group.attributes[ATTR_COLOR_MODE] == ColorMode.XY
+    assert group.attributes[ATTR_HS_COLOR] == (40.571, 41.176)
+    assert group.attributes.get(ATTR_COLOR_TEMP) is None
 
 
-async def test_verify_group_supported_features(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that group supported features reflect what included lights support."""
-    data = {
-        "groups": {
+@pytest.mark.parametrize(
+    "group_payload",
+    [
+        {
             "1": {
                 "id": "Group1",
                 "name": "Group",
@@ -1233,8 +1352,13 @@ async def test_verify_group_supported_features(
                 "scenes": [],
                 "lights": ["1", "2", "3"],
             },
-        },
-        "lights": {
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "name": "Dimmable light",
                 "state": {"on": True, "bri": 255, "reachable": True},
@@ -1262,17 +1386,158 @@ async def test_verify_group_supported_features(
                 "type": "Tunable white light",
                 "uniqueid": "00:00:00:00:00:00:00:03-00",
             },
-        },
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_verify_group_supported_features(hass: HomeAssistant) -> None:
+    """Test that group supported features reflect what included lights support."""
     assert len(hass.states.async_all()) == 4
 
-    assert hass.states.get("light.group").state == STATE_ON
+    group_state = hass.states.get("light.group")
+    assert group_state.state == STATE_ON
+    assert group_state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert (
-        hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES]
+        group_state.attributes[ATTR_SUPPORTED_FEATURES]
         == LightEntityFeature.TRANSITION
         | LightEntityFeature.FLASH
         | LightEntityFeature.EFFECT
     )
+
+
+@pytest.mark.parametrize(
+    "group_payload",
+    [
+        {
+            "43": {
+                "action": {
+                    "alert": "none",
+                    "bri": 127,
+                    "colormode": "hs",
+                    "ct": 0,
+                    "effect": "none",
+                    "hue": 0,
+                    "on": True,
+                    "sat": 127,
+                    "scene": "4",
+                    "xy": [0, 0],
+                },
+                "devicemembership": [],
+                "etag": "4548e982c4cfff942f7af80958abb2a0",
+                "id": "43",
+                "lights": ["13"],
+                "name": "Opbergruimte",
+                "scenes": [
+                    {
+                        "id": "1",
+                        "lightcount": 1,
+                        "name": "Scene Normaal deCONZ",
+                        "transitiontime": 10,
+                    },
+                    {
+                        "id": "2",
+                        "lightcount": 1,
+                        "name": "Scene Fel deCONZ",
+                        "transitiontime": 10,
+                    },
+                    {
+                        "id": "3",
+                        "lightcount": 1,
+                        "name": "Scene Gedimd deCONZ",
+                        "transitiontime": 10,
+                    },
+                    {
+                        "id": "4",
+                        "lightcount": 1,
+                        "name": "Scene Uit deCONZ",
+                        "transitiontime": 10,
+                    },
+                ],
+                "state": {"all_on": False, "any_on": False},
+                "type": "LightGroup",
+            },
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "13": {
+                "capabilities": {
+                    "alerts": [
+                        "none",
+                        "select",
+                        "lselect",
+                        "blink",
+                        "breathe",
+                        "okay",
+                        "channelchange",
+                        "finish",
+                        "stop",
+                    ],
+                    "bri": {"min_dim_level": 5},
+                },
+                "config": {
+                    "bri": {"execute_if_off": True, "startup": "previous"},
+                    "groups": ["43"],
+                    "on": {"startup": "previous"},
+                },
+                "etag": "ca0ed7763eca37f5e6b24f6d46f8a518",
+                "hascolor": False,
+                "lastannounced": None,
+                "lastseen": "2024-03-02T20:08Z",
+                "manufacturername": "Signify Netherlands B.V.",
+                "modelid": "LWA001",
+                "name": "Opbergruimte Lamp Plafond",
+                "productid": "Philips-LWA001-1-A19DLv5",
+                "productname": "Hue white lamp",
+                "state": {
+                    "alert": "none",
+                    "bri": 76,
+                    "effect": "none",
+                    "on": False,
+                    "reachable": True,
+                },
+                "swconfigid": "87169548",
+                "swversion": "1.104.2",
+                "type": "Dimmable light",
+                "uniqueid": "00:17:88:01:08:11:22:33-01",
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_verify_group_color_mode_fallback(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Test that group supported features reflect what included lights support."""
+    group_state = hass.states.get("light.opbergruimte")
+    assert group_state.state == STATE_OFF
+    assert group_state.attributes[ATTR_COLOR_MODE] is None
+
+    await mock_websocket_data(
+        {
+            "id": "13",
+            "r": "lights",
+            "state": {
+                "alert": "none",
+                "bri": 76,
+                "effect": "none",
+                "on": True,
+                "reachable": True,
+            },
+            "uniqueid": "00:17:88:01:08:11:22:33-01",
+        }
+    )
+    await mock_websocket_data(
+        {
+            "id": "43",
+            "r": "groups",
+            "state": {"all_on": True, "any_on": True},
+        }
+    )
+    group_state = hass.states.get("light.opbergruimte")
+    assert group_state.state == STATE_ON
+    assert group_state.attributes[ATTR_COLOR_MODE] is ColorMode.BRIGHTNESS

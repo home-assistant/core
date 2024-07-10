@@ -1,4 +1,5 @@
 """The Wyoming integration."""
+
 from __future__ import annotations
 
 import logging
@@ -88,7 +89,7 @@ def _make_satellite(
         device_id=device.id,
     )
 
-    return WyomingSatellite(hass, service, satellite_device)
+    return WyomingSatellite(hass, config_entry, service, satellite_device)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
