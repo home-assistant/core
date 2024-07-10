@@ -476,6 +476,7 @@ FLOWS = {
         "rpi_power",
         "rtsp_to_webrtc",
         "ruckus_unleashed",
+        "russound_rio",
         "ruuvi_gateway",
         "ruuvitag_ble",
         "rympro",
