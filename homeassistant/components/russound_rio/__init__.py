@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import RUSSOUND_RIO_EXCEPTIONS
+from .const import CONNECT_TIMEOUT, RUSSOUND_RIO_EXCEPTIONS
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
     russ = Russound(hass.loop, entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     try:
-        async with asyncio.timeout(5):
+        async with asyncio.timeout(CONNECT_TIMEOUT):
             await russ.connect()
     except RUSSOUND_RIO_EXCEPTIONS as err:
         raise ConfigEntryError(err) from err

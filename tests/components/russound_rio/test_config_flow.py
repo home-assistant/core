@@ -2,19 +2,20 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.components.russound_rio.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_CONFIG, MOCK_DATA
+from .const import MOCK_CONFIG, MOCK_DATA, MODEL
 
 
 async def test_form(hass: HomeAssistant, mock_russound) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with (
@@ -31,10 +32,9 @@ async def test_form(hass: HomeAssistant, mock_russound) -> None:
             result["flow_id"],
             MOCK_CONFIG,
         )
-        await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "MCA-C5"
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == MODEL
     assert result2["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -42,7 +42,7 @@ async def test_form(hass: HomeAssistant, mock_russound) -> None:
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -66,9 +66,9 @@ async def test_no_primary_controller(hass: HomeAssistant, mock_russound) -> None
         return_value=mock_russound,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         mock_russound.enumerate_controllers.return_value = []
@@ -77,11 +77,11 @@ async def test_no_primary_controller(hass: HomeAssistant, mock_russound) -> None
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is data_entry_flow.FlowResultType.FORM
         assert result2["errors"] == {"base": "no_primary_controller"}
 
 
-async def test_import(hass: HomeAssistant, mock_russound, config_flow) -> None:
+async def test_import(hass: HomeAssistant, mock_russound) -> None:
     """Test we import a config entry."""
     with (
         patch(
@@ -95,13 +95,12 @@ async def test_import(hass: HomeAssistant, mock_russound, config_flow) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
+            context={"source": SOURCE_IMPORT},
             data=MOCK_CONFIG,
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "MCA-C5"
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == MODEL
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -114,9 +113,8 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
         side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_CONFIG
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
@@ -131,9 +129,8 @@ async def test_import_no_primary_controller(hass: HomeAssistant, mock_russound) 
         return_value=mock_russound,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_CONFIG
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_primary_controller"

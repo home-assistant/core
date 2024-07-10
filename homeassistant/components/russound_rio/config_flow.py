@@ -13,7 +13,12 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS, NoPrimaryControllerException
+from .const import (
+    CONNECT_TIMEOUT,
+    DOMAIN,
+    RUSSOUND_RIO_EXCEPTIONS,
+    NoPrimaryControllerException,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -53,7 +58,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             controllers = None
             russ = Russound(self.hass.loop, host, port)
             try:
-                async with asyncio.timeout(5):
+                async with asyncio.timeout(CONNECT_TIMEOUT):
                     await russ.connect()
                     controllers = await russ.enumerate_controllers()
                     metadata = find_primary_controller_metadata(controllers)
@@ -68,6 +73,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_primary_controller"
             else:
                 await self.async_set_unique_id(metadata[0])
+                self._abort_if_unique_id_configured()
                 data = {CONF_HOST: host, CONF_PORT: port, CONF_MODEL: metadata[1]}
                 return self.async_create_entry(title=metadata[1], data=data)
 
@@ -86,7 +92,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         # Connection logic is repeated here since this method will be removed in future releases
         russ = Russound(self.hass.loop, host, port)
         try:
-            async with asyncio.timeout(5):
+            async with asyncio.timeout(CONNECT_TIMEOUT):
                 await russ.connect()
                 controllers = await russ.enumerate_controllers()
                 metadata = find_primary_controller_metadata(controllers)
@@ -103,5 +109,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             )
         else:
             await self.async_set_unique_id(metadata[0])
+            self._abort_if_unique_id_configured()
             data = {CONF_HOST: host, CONF_PORT: port, CONF_MODEL: metadata[1]}
             return self.async_create_entry(title=metadata[1], data=data)
