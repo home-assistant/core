@@ -6,7 +6,7 @@ from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionE
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     try:
         about = await client.get_about()
     except MealieAuthenticationError as error:
-        raise ConfigEntryError("Authentication failed") from error
+        raise ConfigEntryAuthFailed from error
     except MealieConnectionError as error:
         raise ConfigEntryNotReady(error) from error
 
