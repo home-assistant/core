@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Coroutine
-from datetime import timedelta
 from pathlib import Path
 import re
 import sqlite3
@@ -14,26 +13,35 @@ from telethon.errors.common import AuthKeyNotFound
 from telethon.errors.rpcbaseerrors import AuthKeyError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     IntegrationError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    CLIENT_TYPE_CLIENT,
     CONF_API_HASH,
     CONF_API_ID,
+    CONF_CLIENT_TYPE,
     CONF_PHONE,
     CONF_TOKEN,
-    CONF_TYPE,
-    CONF_TYPE_CLIENT,
     DOMAIN,
+    EVENT_NEW_MESSAGE,
     LOGGER,
-    UPDATE_INTERVAL,
+    OPTION_BLACKLIST_CHATS,
+    OPTION_CHATS,
+    OPTION_EVENTS,
+    OPTION_FORWARDS,
+    OPTION_FROM_USERS,
+    OPTION_INCOMING,
+    OPTION_OUTGOING,
+    OPTION_PATTERN,
+    SCAN_INTERVAL,
 )
 
 type TelegramClientEntryConfigEntry = ConfigEntry[TelegramClientCoordinator]
@@ -44,6 +52,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     _unique_id: str | None
     _entry: TelegramClientEntryConfigEntry
+    _hass: HomeAssistant
     _client: TelegramClient
     _last_sent_message_id_sensor: Any
     _last_edited_message_id_sensor: Any
@@ -54,7 +63,8 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Initialize Telegram client coordinator."""
         self._unique_id = entry.unique_id
         self._entry = entry
-        name = f"Telegram {entry.data[CONF_TYPE]} ({entry.unique_id})"
+        self._hass = hass
+        name = f"Telegram {entry.data[CONF_CLIENT_TYPE]} ({entry.unique_id})"
         self._device_info = {
             "identifiers": {(DOMAIN, entry.unique_id)},
             "name": name,
@@ -65,7 +75,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             name=name,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=SCAN_INTERVAL,
         )
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
@@ -73,7 +83,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         )
         session_id = (
             re.sub(r"\D", "", self._entry.data[CONF_PHONE])
-            if self._entry.data[CONF_TYPE] == CONF_TYPE_CLIENT
+            if self._entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT
             else self._entry.data[CONF_TOKEN].split(":")[0]
         )
         self._client = TelegramClient(
@@ -83,28 +93,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         )
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][entry.entry_id] = self
-
-        @self._client.on(events.NewMessage)
-        async def on_new_message(event: events.newmessage.NewMessage.Event):
-            data = {
-                key: getattr(event.message, key)
-                for key in (
-                    "message",
-                    "raw_text",
-                    "sender_id",
-                    "chat_id",
-                    "is_channel",
-                    "is_group",
-                    "is_private",
-                    "silent",
-                    "post",
-                    "from_scheduled",
-                    "date",
-                )
-                if hasattr(event.message, key)
-            }
-            data["client"] = self.data
-            hass.bus.async_fire("telegram_client_new_message", data)
+        self._subscribe_listeners(entry)
 
     @property
     def device_info(self):
@@ -138,6 +127,29 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     @last_edited_message_id.setter
     def last_edited_message_id(self, sensor: Any):
         self._last_edited_message_id_sensor = sensor
+
+    @callback
+    async def on_new_message(self, event: events.newmessage.NewMessage.Event):
+        """Process new message event."""
+        data = {
+            key: getattr(event.message, key)
+            for key in (
+                "message",
+                "raw_text",
+                "sender_id",
+                "chat_id",
+                "is_channel",
+                "is_group",
+                "is_private",
+                "silent",
+                "post",
+                "from_scheduled",
+                "date",
+            )
+            if hasattr(event.message, key)
+        }
+        data["client"] = self.data
+        self._hass.bus.async_fire(f"{DOMAIN}_{EVENT_NEW_MESSAGE}", data)
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
@@ -191,7 +203,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Start the client."""
         if not self._client.is_connected():
             try:
-                if self._entry.data[CONF_TYPE] == CONF_TYPE_CLIENT:
+                if self._entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT:
                     await self._client.connect()
                     if not await self._client.is_user_authorized():
                         raise ConfigEntryAuthFailed("Credentials has expired")
@@ -211,3 +223,41 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Disconnect the client."""
         if self._client.is_connected():
             await self._client.disconnect()
+
+    def _subscribe_listeners(self, entry: ConfigEntry) -> None:
+        """Subscribe listeners."""
+        events_config = entry.options.get(OPTION_EVENTS, {})
+        if events_config.get(EVENT_NEW_MESSAGE):
+            new_message_options = entry.options.get(EVENT_NEW_MESSAGE, {})
+            self._client.add_event_handler(
+                self.on_new_message,
+                events.NewMessage(
+                    chats=list(
+                        map(
+                            int,
+                            cv.ensure_list_csv(new_message_options.get(OPTION_CHATS)),
+                        )
+                    )
+                    or None,
+                    blacklist_chats=new_message_options.get(OPTION_BLACKLIST_CHATS),
+                    incoming=new_message_options.get(OPTION_INCOMING),
+                    outgoing=new_message_options.get(OPTION_OUTGOING),
+                    from_users=cv.ensure_list_csv(
+                        new_message_options.get(OPTION_FROM_USERS)
+                    )
+                    or None,
+                    forwards=new_message_options.get(OPTION_FORWARDS),
+                    pattern=new_message_options.get(OPTION_PATTERN),
+                ),
+            )
+
+    def _unsubscribe_listeners(self, entry: ConfigEntry) -> None:
+        """Unsubscribe listeners."""
+        self._client.remove_event_handler(self.on_new_message, events.NewMessage)
+
+    async def resubscribe_listeners(
+        self, hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
+    ):
+        """Resubscribe listeners."""
+        self._unsubscribe_listeners(entry)
+        self._subscribe_listeners(entry)

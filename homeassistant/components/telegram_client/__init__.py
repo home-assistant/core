@@ -32,6 +32,7 @@ async def async_setup_entry(
     coordinator = TelegramClientCoordinator(hass, entry)
     await coordinator.async_client_start()
     entry.runtime_data = coordinator
+    entry.async_on_unload(entry.add_update_listener(coordinator.resubscribe_listeners))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_config_entry_first_refresh()
 

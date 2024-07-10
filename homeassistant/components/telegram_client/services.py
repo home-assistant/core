@@ -5,14 +5,14 @@ from typing import Any
 from telethon import Button
 
 from .const import (
-    ATTR_BUTTONS,
-    ATTR_FILE,
-    ATTR_INLINE_KEYBOARD,
-    ATTR_KEYBOARD,
-    ATTR_KEYBOARD_RESIZE,
-    ATTR_KEYBOARD_SINGLE_USE,
-    ATTR_TARGET_ID,
-    ATTR_TARGET_USERNAME,
+    FIELD_BUTTONS,
+    FIELD_FILE,
+    FIELD_INLINE_KEYBOARD,
+    FIELD_KEYBOARD,
+    FIELD_KEYBOARD_RESIZE,
+    FIELD_KEYBOARD_SINGLE_USE,
+    FIELD_TARGET_ID,
+    FIELD_TARGET_USERNAME,
     SERVICE_EDIT_MESSAGE,
     SERVICE_SEND_MESSAGE,
 )
@@ -33,33 +33,33 @@ async def async_telegram_call(
 
     hass = coordinator.hass
     client = coordinator.client
-    if keyboard := kwargs.pop(ATTR_KEYBOARD, None):
+    if keyboard := kwargs.pop(FIELD_KEYBOARD, None):
         if not isinstance(keyboard[0], list):
             keyboard = [keyboard]
-        kwargs[ATTR_BUTTONS] = [
+        kwargs[FIELD_BUTTONS] = [
             [
                 Button.text(
                     button,
-                    resize=kwargs.pop(ATTR_KEYBOARD_RESIZE, None),
-                    single_use=kwargs.pop(ATTR_KEYBOARD_SINGLE_USE, None),
+                    resize=kwargs.pop(FIELD_KEYBOARD_RESIZE, None),
+                    single_use=kwargs.pop(FIELD_KEYBOARD_SINGLE_USE, None),
                 )
                 for button in row
             ]
             for row in keyboard
         ]
-    if inline_keyboard := kwargs.pop(ATTR_INLINE_KEYBOARD, None):
+    if inline_keyboard := kwargs.pop(FIELD_INLINE_KEYBOARD, None):
         if not isinstance(inline_keyboard[0], list):
             inline_keyboard = [inline_keyboard]
-        kwargs[ATTR_BUTTONS] = [
+        kwargs[FIELD_BUTTONS] = [
             [inline_button(button) for button in row] for row in inline_keyboard
         ]
-    if file := kwargs.get(ATTR_FILE):
-        kwargs[ATTR_FILE] = list(map(hass.config.path, file))
+    if file := kwargs.get(FIELD_FILE):
+        kwargs[FIELD_FILE] = list(map(hass.config.path, file))
     if service == SERVICE_SEND_MESSAGE:
-        target_usernames = kwargs.pop(ATTR_TARGET_USERNAME, [])
+        target_usernames = kwargs.pop(FIELD_TARGET_USERNAME, [])
         if not isinstance(target_usernames, list):
             target_usernames = [target_usernames]
-        target_ids = kwargs.pop(ATTR_TARGET_ID, [])
+        target_ids = kwargs.pop(FIELD_TARGET_ID, [])
         if not isinstance(target_ids, list):
             target_ids = [target_ids]
         for target in target_usernames + target_ids:
@@ -71,7 +71,7 @@ async def async_telegram_call(
         return message
     if service == SERVICE_EDIT_MESSAGE:
         kwargs["entity"] = kwargs.pop(
-            ATTR_TARGET_USERNAME, kwargs.pop(ATTR_TARGET_ID, None)
+            FIELD_TARGET_USERNAME, kwargs.pop(FIELD_TARGET_ID, None)
         )
         message = await client.edit_message(**kwargs)
         coordinator.last_edited_message_id.set_state(message.id)

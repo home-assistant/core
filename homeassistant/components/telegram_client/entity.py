@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -55,13 +53,6 @@ class TelegramClientCoordinatorEntity(CoordinatorEntity):
         self._attr_unique_id = (
             f"{DOMAIN}_{coordinator.unique_id}_{entity_description.key}"
         )
-
-
-@dataclass(frozen=True, kw_only=True)
-class TelegramClientBinarySensorDescription(BinarySensorEntityDescription):
-    """Describes Telegram client sensor entity."""
-
-    data_key: str
 
 
 class TelegramClientBinarySensor(TelegramClientCoordinatorEntity, BinarySensorEntity):
