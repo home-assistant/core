@@ -6,7 +6,13 @@ from aiomealie.exceptions import MealieError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
+from homeassistant.components.todo import (
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -41,8 +47,8 @@ async def test_add_todo_list_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "Soda"},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Soda"},
         target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
@@ -63,8 +69,8 @@ async def test_add_todo_list_item_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
-            {"item": "Soda"},
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "Soda"},
             target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
@@ -80,8 +86,8 @@ async def test_update_todo_list_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "aubergine", "rename": "Eggplant", "status": "completed"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant", ATTR_STATUS: "completed"},
         target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
@@ -102,8 +108,8 @@ async def test_update_todo_list_item_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "update_item",
-            {"item": "aubergine", "rename": "Eggplant", "status": "completed"},
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant", ATTR_STATUS: "completed"},
             target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
@@ -119,8 +125,8 @@ async def test_delete_todo_list_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": "aubergine"},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: "aubergine"},
         target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
@@ -142,8 +148,8 @@ async def test_delete_todo_list_item_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "remove_item",
-            {"item": "aubergine"},
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: "aubergine"},
             target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )

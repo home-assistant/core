@@ -277,6 +277,8 @@ class AssistAPI(API):
         intent.INTENT_GET_STATE,
         intent.INTENT_NEVERMIND,
         intent.INTENT_TOGGLE,
+        intent.INTENT_GET_CURRENT_DATE,
+        intent.INTENT_GET_CURRENT_TIME,
     }
 
     def __init__(self, hass: HomeAssistant) -> None:

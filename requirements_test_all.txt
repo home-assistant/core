@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.25
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.0
+DoorBirdPy==3.0.1
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -338,7 +338,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.0.0
+aioshelly==11.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -876,7 +876,7 @@ habluetooth==3.1.3
 hass-nabucasa==0.81.1
 
 # homeassistant.components.conversation
-hassil==1.7.3
+hassil==1.7.4
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
@@ -904,7 +904,7 @@ holidays==0.52
 home-assistant-frontend==20240710.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.7.3
+home-assistant-intents==2024.7.10
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2126,7 +2126,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.tessie
-tessie-api==0.0.9
+tessie-api==0.1.1
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.7.0
