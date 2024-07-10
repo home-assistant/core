@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'email': '**REDACTED**',
+      'password': '**REDACTED**',
+    }),
+    'sites_data': list([
+      dict({
+        'site_health': 'OK',
+        'site_id': 1,
+        'site_name': 'test-system',
+        'solar': dict({
+          'energy_production_month': 58,
+          'energy_production_today': 4,
+          'energy_production_total': 10379,
+          'power_production': 200,
+        }),
+      }),
+    ]),
+  })
+# ---
