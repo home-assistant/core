@@ -62,7 +62,7 @@ dependencies    = [
     "requests==2.32.3",
     "SQLAlchemy==2.0.31",
     "typing-extensions>=4.12.2,<5.0",
-    "ulid-transform==0.9.0",
+    "ulid-transform==0.10.1",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
@@ -673,6 +673,23 @@ filterwarnings = [
     "ignore:defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead:DeprecationWarning:rxv.ssdp",
     # https://pypi.org/project/webrtcvad/ - v2.0.10 - 2017-01-08
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
+]
+
+[tool.coverage.run]
+source = ["homeassistant"]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # TYPE_CHECKING and @overload blocks are never executed during pytest run
+    "if TYPE_CHECKING:",
+    "@overload",
 ]
 
 [tool.ruff]

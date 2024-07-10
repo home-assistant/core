@@ -1,9 +1,7 @@
 """deCONZ sensor platform tests."""
 
-from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -26,19 +24,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_no_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no sensors in deconz results in no sensor entities."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
 
 TEST_DATA = [
     (  # Air quality sensor
@@ -911,23 +899,17 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_1_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
 async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    mock_deconz_websocket,
-    sensor_data,
-    expected,
+    config_entry_setup: ConfigEntry,
+    mock_websocket_data: WebsocketDataType,
+    expected: dict[str, Any],
 ) -> None:
     """Test successful creation of sensor entities."""
-
-    with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
-        config_entry = await setup_deconz_integration(
-            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
-        )
-
     # Enable in entity registry
     if expected.get("enable_entity"):
         entity_registry.async_update_entity(
@@ -960,26 +942,30 @@ async def test_sensors(
 
     # Verify device registry
     assert (
-        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
         == expected["device_count"]
     )
 
     # Change state
 
-    event_changed_sensor = {"t": "event", "e": "changed", "r": "sensors", "id": "1"}
+    event_changed_sensor = {"r": "sensors", "id": "1"}
     event_changed_sensor |= expected["websocket_event"]
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Unload entry
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
 
     # Remove entry
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
@@ -1071,10 +1057,12 @@ async def test_allow_clip_sensors(
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_add_new_sensor(hass: HomeAssistant, mock_deconz_websocket) -> None:
+async def test_add_new_sensor(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
@@ -1090,7 +1078,7 @@ async def test_add_new_sensor(hass: HomeAssistant, mock_deconz_websocket) -> Non
 
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
@@ -1108,7 +1096,7 @@ BAD_SENSOR_DATA = [
 @pytest.mark.parametrize(("sensor_type", "sensor_property"), BAD_SENSOR_DATA)
 async def test_dont_add_sensor_if_state_is_none(
     hass: HomeAssistant,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     sensor_payload: dict[str, Any],
     sensor_type: str,
     sensor_property: str,
@@ -1182,7 +1170,10 @@ async def test_air_quality_sensor_without_ppb(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_add_battery_later(hass: HomeAssistant, mock_deconz_websocket) -> None:
+async def test_add_battery_later(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
     """Test that a battery sensor can be created later on.
 
     Without an initial battery state a battery sensor
@@ -1191,25 +1182,23 @@ async def test_add_battery_later(hass: HomeAssistant, mock_deconz_websocket) -> 
     assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "2",
         "config": {"battery": 50},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
         "config": {"battery": 50},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
@@ -1220,7 +1209,7 @@ async def test_add_battery_later(hass: HomeAssistant, mock_deconz_websocket) -> 
 @pytest.mark.parametrize("model_id", ["0x8030", "0x8031", "0x8034", "0x8035"])
 async def test_special_danfoss_battery_creation(
     hass: HomeAssistant,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     sensor_payload: dict[str, Any],
     model_id: str,
 ) -> None:

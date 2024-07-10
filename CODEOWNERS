@@ -237,6 +237,8 @@ build.json @home-assistant/supervisor
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren
 /tests/components/cert_expiry/ @jjlawren
+/homeassistant/components/chacon_dio/ @cnico
+/tests/components/chacon_dio/ @cnico
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
@@ -396,8 +398,8 @@ build.json @home-assistant/supervisor
 /tests/components/enigma2/ @autinerd
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
-/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
-/tests/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
+/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @joostlek @catsmanac
+/tests/components/enphase_envoy/ @bdraco @cgarwood @joostlek @catsmanac
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
@@ -429,6 +431,8 @@ build.json @home-assistant/supervisor
 /tests/components/fan/ @home-assistant/core
 /homeassistant/components/fastdotcom/ @rohankapoorcom @erwindouna
 /tests/components/fastdotcom/ @rohankapoorcom @erwindouna
+/homeassistant/components/feedreader/ @mib1185
+/tests/components/feedreader/ @mib1185
 /homeassistant/components/fibaro/ @rappenze
 /tests/components/fibaro/ @rappenze
 /homeassistant/components/file/ @fabaff
@@ -777,6 +781,8 @@ build.json @home-assistant/supervisor
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
+/homeassistant/components/lifx/ @Djelibeybi
+/tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linear_garage_door/ @IceBotYT
@@ -821,13 +827,15 @@ build.json @home-assistant/supervisor
 /tests/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
+/homeassistant/components/madvr/ @iloveicedgreentea
+/tests/components/madvr/ @iloveicedgreentea
 /homeassistant/components/mastodon/ @fabaff
 /homeassistant/components/matrix/ @PaarthShah
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
-/homeassistant/components/mealie/ @joostlek
-/tests/components/mealie/ @joostlek
+/homeassistant/components/mealie/ @joostlek @andrew-codechimp
+/tests/components/mealie/ @joostlek @andrew-codechimp
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/medcom_ble/ @elafargue
@@ -985,8 +993,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
-/homeassistant/components/omnilogic/ @oliver84 @djtimca @gentoosu
-/tests/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /homeassistant/components/onboarding/ @home-assistant/core
 /tests/components/onboarding/ @home-assistant/core
 /homeassistant/components/oncue/ @bdraco @peterager

@@ -16,6 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import WebsocketDataType
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -41,7 +43,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_sirens(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
     """Test that siren entities are created."""
@@ -50,13 +52,11 @@ async def test_sirens(
     assert not hass.states.get("siren.unsupported_siren")
 
     event_changed_light = {
-        "t": "event",
-        "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"alert": None},
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("siren.warning_device").state == STATE_OFF
