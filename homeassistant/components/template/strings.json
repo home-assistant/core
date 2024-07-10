@@ -25,6 +25,18 @@
         },
         "title": "Template button"
       },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template image"
+      },
       "sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -44,6 +56,7 @@
         "menu_options": {
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
+          "image": "Template a image",
           "sensor": "Template a sensor",
           "switch": "Template a switch"
         },
@@ -85,6 +98,17 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::button::title%]"
+      },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::image::title%]"
       },
       "sensor": {
         "data": {

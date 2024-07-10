@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_push",
   "loggers": ["knocki"],
-  "requirements": ["knocki==0.2.0"]
+  "requirements": ["knocki==0.3.1"]
 }

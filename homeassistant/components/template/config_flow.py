@@ -24,7 +24,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_URL,
     CONF_VALUE_TEMPLATE,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -84,6 +86,13 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.IMAGE:
+        schema |= {
+            vol.Required(CONF_URL): selector.TemplateSelector(),
+            vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        }
 
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
@@ -222,6 +231,7 @@ def validate_user_input(
 TEMPLATE_TYPES = [
     "binary_sensor",
     "button",
+    "image",
     "sensor",
     "switch",
 ]
@@ -236,6 +246,10 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.IMAGE: SchemaFlowFormStep(
+        config_schema(Platform.IMAGE),
+        validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
         config_schema(Platform.SENSOR),
@@ -260,6 +274,10 @@ OPTIONS_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.IMAGE: SchemaFlowFormStep(
+        options_schema(Platform.IMAGE),
+        validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
         options_schema(Platform.SENSOR),

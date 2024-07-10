@@ -155,6 +155,8 @@ build.json @home-assistant/supervisor
 /tests/components/aurora_abb_powerone/ @davet2001
 /homeassistant/components/aussie_broadband/ @nickw444 @Bre77
 /tests/components/aussie_broadband/ @nickw444 @Bre77
+/homeassistant/components/autarco/ @klaasnicolaas
+/tests/components/autarco/ @klaasnicolaas
 /homeassistant/components/auth/ @home-assistant/core
 /tests/components/auth/ @home-assistant/core
 /homeassistant/components/automation/ @home-assistant/core
@@ -1208,6 +1210,8 @@ build.json @home-assistant/supervisor
 /tests/components/rtsp_to_webrtc/ @allenporter
 /homeassistant/components/ruckus_unleashed/ @lanrat @ms264556 @gabe565
 /tests/components/ruckus_unleashed/ @lanrat @ms264556 @gabe565
+/homeassistant/components/russound_rio/ @noahhusby
+/tests/components/russound_rio/ @noahhusby
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
@@ -1275,6 +1279,8 @@ build.json @home-assistant/supervisor
 /tests/components/sighthound/ @robmarkcole
 /homeassistant/components/signal_messenger/ @bbernhard
 /tests/components/signal_messenger/ @bbernhard
+/homeassistant/components/simplefin/ @scottg489 @jeeftor
+/tests/components/simplefin/ @scottg489 @jeeftor
 /homeassistant/components/simplepush/ @engrbm87
 /tests/components/simplepush/ @engrbm87
 /homeassistant/components/simplisafe/ @bachya

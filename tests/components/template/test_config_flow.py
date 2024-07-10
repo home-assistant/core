@@ -82,6 +82,16 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         (
+            "image",
+            {"url": "{{ states('sensor.one') }}"},
+            "2024-07-09T00:00:00+00:00",
+            {"one": "http://www.test.com", "two": ""},
+            {},
+            {"verify_ssl": True},
+            {"verify_ssl": True},
+            {},
+        ),
+        (
             "switch",
             {"value_template": "{{ states('switch.one') }}"},
             "on",
@@ -93,6 +103,7 @@ from tests.typing import WebSocketGenerator
         ),
     ],
 )
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_config_flow(
     hass: HomeAssistant,
     template_type,
@@ -196,6 +207,14 @@ async def test_config_flow(
             {},
             {},
             {},
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+            },
+            {"verify_ssl": True},
+            {"verify_ssl": True},
         ),
     ],
 )
@@ -360,8 +379,25 @@ def get_suggested(schema, key):
             {},
             "value_template",
         ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+            },
+            {
+                "url": "{{ states('sensor.two') }}",
+            },
+            ["2024-07-09T00:00:00+00:00", "2024-07-09T00:00:00+00:00"],
+            {"one": "http://www.test.com", "two": "http://www.test2.com"},
+            {"verify_ssl": True},
+            {
+                "url": "{{ states('sensor.two') }}",
+                "verify_ssl": True,
+            },
+        ),
     ],
 )
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_options(
     hass: HomeAssistant,
     template_type,
@@ -1081,6 +1117,15 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         (
             "button",
             {},
+            {},
+            {},
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+                "verify_ssl": True,
+            },
             {},
             {},
         ),
