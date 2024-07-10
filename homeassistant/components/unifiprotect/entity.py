@@ -189,7 +189,6 @@ class BaseProtectEntity(Entity):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._async_set_device_info()
-        self._async_update_device_from_protect(device)
         self._state_getters = tuple(
             partial(attrgetter(attr), self) for attr in self._state_attrs
         )
@@ -264,6 +263,7 @@ class BaseProtectEntity(Entity):
         self.async_on_remove(
             self.data.async_subscribe(self.device.mac, self._async_updated_event)
         )
+        self._async_update_device_from_protect(self.device)
 
 
 class ProtectDeviceEntity(BaseProtectEntity):
