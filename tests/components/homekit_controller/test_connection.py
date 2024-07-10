@@ -118,7 +118,7 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     bridge = device_registry.async_get(bridge.id)
 
     assert bridge.identifiers == variant.before
-    assert bridge.config_entries == [entry.entry_id]
+    assert bridge.config_entries == {entry.entry_id}
 
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)

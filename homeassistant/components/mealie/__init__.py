@@ -2,26 +2,70 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
+
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.typing import ConfigType
 
-from .coordinator import MealieCoordinator
+from .const import DOMAIN
+from .coordinator import (
+    MealieConfigEntry,
+    MealieData,
+    MealieMealplanCoordinator,
+    MealieShoppingListCoordinator,
+)
+from .services import setup_services
 
-PLATFORMS: list[Platform] = [Platform.CALENDAR]
+PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-type MealieConfigEntry = ConfigEntry[MealieCoordinator]
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Mealie component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bool:
     """Set up Mealie from a config entry."""
+    client = MealieClient(
+        entry.data[CONF_HOST],
+        token=entry.data[CONF_API_TOKEN],
+        session=async_get_clientsession(hass),
+    )
+    try:
+        about = await client.get_about()
+    except MealieAuthenticationError as error:
+        raise ConfigEntryError("Authentication failed") from error
+    except MealieConnectionError as error:
+        raise ConfigEntryNotReady(error) from error
 
-    coordinator = MealieCoordinator(hass)
+    assert entry.unique_id
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        entry_type=DeviceEntryType.SERVICE,
+        sw_version=about.version,
+    )
 
-    await coordinator.async_config_entry_first_refresh()
+    mealplan_coordinator = MealieMealplanCoordinator(hass, client)
+    shoppinglist_coordinator = MealieShoppingListCoordinator(hass, client)
 
-    entry.runtime_data = coordinator
+    await mealplan_coordinator.async_config_entry_first_refresh()
+
+    await shoppinglist_coordinator.async_get_shopping_lists()
+    await shoppinglist_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = MealieData(
+        client, mealplan_coordinator, shoppinglist_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

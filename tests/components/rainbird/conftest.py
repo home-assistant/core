@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from http import HTTPStatus
 import json
 from typing import Any
@@ -9,7 +10,6 @@ from unittest.mock import patch
 
 from pyrainbird import encryption
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.rainbird import DOMAIN
 from homeassistant.components.rainbird.const import (

@@ -1,10 +1,10 @@
 """Tests for the sensor platform of the A. O. Smith integration."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

@@ -54,6 +54,7 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
         assert timer.start_minutes is None
         assert timer.start_seconds == 0
         assert timer.seconds_left == 0
+        assert timer.created_seconds == 0
 
         if event_type == TimerEventType.STARTED:
             timer_id = timer.id
@@ -218,6 +219,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     timer_name = "test timer"
     timer_id: str | None = None
     original_total_seconds = -1
+    seconds_added = 0
 
     @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
@@ -238,12 +240,14 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
                 + (60 * timer.start_minutes)
                 + timer.start_seconds
             )
+            assert timer.created_seconds == original_total_seconds
             started_event.set()
         elif event_type == TimerEventType.UPDATED:
             assert timer.id == timer_id
 
             # Timer was increased
             assert timer.seconds_left > original_total_seconds
+            assert timer.created_seconds == original_total_seconds + seconds_added
             updated_event.set()
         elif event_type == TimerEventType.CANCELLED:
             assert timer.id == timer_id
@@ -270,6 +274,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
         await started_event.wait()
 
     # Adding 0 seconds has no effect
+    seconds_added = 0
     result = await intent.async_handle(
         hass,
         "test",
@@ -288,6 +293,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     assert not updated_event.is_set()
 
     # Add 30 seconds to the timer
+    seconds_added = (1 * 60 * 60) + (5 * 60) + 30
     result = await intent.async_handle(
         hass,
         "test",
@@ -357,6 +363,7 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
 
             # Timer was decreased
             assert timer.seconds_left <= (original_total_seconds - 30)
+            assert timer.created_seconds == original_total_seconds
 
             updated_event.set()
         elif event_type == TimerEventType.CANCELLED:

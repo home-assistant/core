@@ -356,7 +356,6 @@ async def test_image_from_url_content_type(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     content_type: str,
     setup_ok: bool,
 ) -> None:
@@ -425,7 +424,6 @@ async def test_image_from_url_fails(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     side_effect: Exception,
 ) -> None:
     """Test setup with minimum configuration."""
@@ -501,9 +499,8 @@ async def test_image_from_url_fails(
         ),
     ],
 )
+@pytest.mark.usefixtures("hass", "hass_client_no_auth")
 async def test_image_config_fails(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     error_msg: str,
@@ -576,11 +573,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        image.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, image.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -591,11 +584,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        image.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, image.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -721,11 +710,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass,
-        mqtt_mock_entry,
-        image.DOMAIN,
-        DEFAULT_CONFIG,
-        ["test_topic"],
+        hass, mqtt_mock_entry, image.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
     )
 
 
@@ -754,8 +739,7 @@ async def test_entity_debug_info_message(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = image.DOMAIN
@@ -774,8 +758,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = image.DOMAIN
