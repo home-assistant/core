@@ -16,7 +16,7 @@ Adax-local==0.1.5
 BlinkStick==1.2.0
 
 # homeassistant.components.doorbird
-DoorBirdPy==2.1.0
+DoorBirdPy==3.0.0
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
