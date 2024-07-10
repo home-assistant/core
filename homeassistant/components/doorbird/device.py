@@ -165,7 +165,7 @@ class ConfiguredDoorBird:
         """Get events and unconfigured favorites from http favorites."""
         device = self.device
         schedule = await device.schedule()
-        favorite_input_type: dict[str, str] = {
+        favorite_input_type = {
             output.param: entry.input
             for entry in schedule
             for output in entry.output
