@@ -2700,3 +2700,20 @@ async def test_all_tables_use_default_table_args(hass: HomeAssistant) -> None:
     """Test that all tables use the default table args."""
     for table in db_schema.Base.metadata.tables.values():
         assert table.kwargs.items() >= db_schema._DEFAULT_TABLE_ARGS.items()
+
+
+async def test_empty_entity_id(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the recorder can handle an empty entity_id."""
+    await async_setup_recorder_instance(
+        hass,
+        {
+            "exclude": {"domains": "hidden_domain"},
+        },
+    )
+    hass.bus.async_fire("hello", {"entity_id": ""})
+    await async_wait_recording_done(hass)
+    assert "Invalid entity ID" not in caplog.text
