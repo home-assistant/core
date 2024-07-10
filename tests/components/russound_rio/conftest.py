@@ -1,6 +1,7 @@
 """Test fixtures for Russound RIO integration."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -28,11 +29,17 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="mock_russound")
-def mock_russound():
-    """Mock the Russound RIO library."""
-    with patch(
-        "homeassistant.components.russound_rio.Russound", autospec=True
-    ) as russound_mock:
-        russound_mock.enumerate_controllers.return_value = [(1, HARDWARE_MAC, MODEL)]
-        yield russound_mock
+@pytest.fixture
+def mock_russound() -> Generator[AsyncMock]:
+    """Mock the Russound RIO client."""
+    with (
+        patch(
+            "homeassistant.components.russound_rio.Russound", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.russound_rio.config_flow.Russound",
+            new=mock_client,
+        ),
+    ):
+        mock_client.enumerate_controllers.return_value = [(1, HARDWARE_MAC, MODEL)]
+        yield mock_client
