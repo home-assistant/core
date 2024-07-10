@@ -13,10 +13,15 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import MealieConfigEntry, MealieCoordinator
+from .coordinator import (
+    MealieConfigEntry,
+    MealieData,
+    MealieMealplanCoordinator,
+    MealieShoppingListCoordinator,
+)
 from .services import setup_services
 
-PLATFORMS: list[Platform] = [Platform.CALENDAR]
+PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -50,11 +55,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
         sw_version=about.version,
     )
 
-    coordinator = MealieCoordinator(hass, client)
+    mealplan_coordinator = MealieMealplanCoordinator(hass, client)
+    shoppinglist_coordinator = MealieShoppingListCoordinator(hass, client)
 
-    await coordinator.async_config_entry_first_refresh()
+    await mealplan_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    await shoppinglist_coordinator.async_get_shopping_lists()
+    await shoppinglist_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = MealieData(
+        client, mealplan_coordinator, shoppinglist_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

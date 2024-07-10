@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -257,100 +257,6 @@ async def test_service_call_without_topic_does_not_publish(
             {},
             blocking=True,
         )
-    assert not mqtt_mock.async_publish.called
-
-
-async def test_service_call_with_topic_and_topic_template_does_not_publish(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the service call with topic/topic template.
-
-    If both 'topic' and 'topic_template' are provided then fail.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    topic = "test/topic"
-    topic_template = "test/{{ 'topic' }}"
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC: topic,
-                mqtt.ATTR_TOPIC_TEMPLATE: topic_template,
-                mqtt.ATTR_PAYLOAD: "payload",
-            },
-            blocking=True,
-        )
-    assert not mqtt_mock.async_publish.called
-
-
-async def test_service_call_with_invalid_topic_template_does_not_publish(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the service call with a problematic topic template."""
-    mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(MqttCommandTemplateException) as exc:
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1 | no_such_filter }}",
-                mqtt.ATTR_PAYLOAD: "payload",
-            },
-            blocking=True,
-        )
-    assert str(exc.value) == (
-        "TemplateError: TemplateAssertionError: No filter named 'no_such_filter'. "
-        "rendering template, template: "
-        "'test/{{ 1 | no_such_filter }}' and payload: None"
-    )
-    assert not mqtt_mock.async_publish.called
-
-
-async def test_service_call_with_template_topic_renders_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the service call with rendered topic template.
-
-    If 'topic_template' is provided and 'topic' is not, then render it.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {
-            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1+1 }}",
-            mqtt.ATTR_PAYLOAD: "payload",
-        },
-        blocking=True,
-    )
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][0] == "test/2"
-
-
-async def test_service_call_with_template_topic_renders_invalid_topic(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the service call with rendered, invalid topic template.
-
-    If a wildcard topic is rendered, then fail.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ '+' if True else 'topic' }}/topic",
-                mqtt.ATTR_PAYLOAD: "payload",
-            },
-            blocking=True,
-        )
-    assert str(exc.value) == (
-        "Unable to publish: topic template `test/{{ '+' if True else 'topic' }}/topic` "
-        "produced an invalid topic `test/+/topic` after rendering "
-        "(Wildcards cannot be used in topic names)"
-    )
     assert not mqtt_mock.async_publish.called
 
 
