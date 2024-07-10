@@ -1,0 +1,6 @@
+{
+  "services": {
+    "list_devices": "mdi:view-list",
+    "send_command": "mdi:email-fast-outline"
+  }
+}

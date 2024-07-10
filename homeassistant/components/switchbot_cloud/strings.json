@@ -16,5 +16,33 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "list_devices": {
+      "name": "List devices",
+      "description": "List all devices registered to the Switchbot account."
+    },
+    "send_command": {
+      "name": "Send command",
+      "description": "Send control command to device as specified in https://github.com/OpenWonderLabs/SwitchBotAPI?tab=readme-ov-file#send-device-control-commands",
+      "fields": {
+        "unique_id": {
+          "name": "Id",
+          "description": "Switchbot unique id."
+        },
+        "command_type": {
+          "name": "Command type",
+          "description": "Command type to set (usually \"command\")"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Command to use."
+        },
+        "parameter": {
+          "name": "Parameter",
+          "description": "Parameter to set (optional)."
+        }
+      }
+    }
   }
 }
