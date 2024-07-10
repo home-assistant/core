@@ -2,28 +2,26 @@
 
 from unittest.mock import MagicMock, patch
 
-from autarco import Solar
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.autarco.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_solar_sensors(
     hass: HomeAssistant,
     mock_autarco_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Autarco - Solar sensor."""
     with patch("homeassistant.components.autarco.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
-    mock_autarco_client.get_solar.return_value = Solar.from_dict(
-        load_json_object_fixture("solar.json", DOMAIN)
-    )
 
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
