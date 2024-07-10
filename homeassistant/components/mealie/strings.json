@@ -52,6 +52,9 @@
     "recipe_not_found": {
       "message": "Recipe with ID or slug `{recipe_id}` not found."
     },
+    "could_not_import_recipe": {
+      "message": "Mealie could not import the recipe from the URL."
+    },
     "add_item_error": {
       "message": "An error occurred adding an item to {shopping_list_name}."
     },
@@ -95,6 +98,24 @@
         "recipe_id": {
           "name": "Recipe ID or slug",
           "description": "The recipe ID or the slug of the recipe to get."
+        }
+      }
+    },
+    "import_recipe": {
+      "name": "Import recipe",
+      "description": "Import recipe from an URL",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "url": {
+          "name": "URL to the recipe",
+          "description": "The URL to the recipe to import."
+        },
+        "include_tags": {
+          "name": "Include tags",
+          "description": "Include tags from the website to the recipe."
         }
       }
     }
