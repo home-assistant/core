@@ -174,5 +174,9 @@
       }
     }
   },
-  "exceptions": {}
+  "exceptions": {
+    "update_failed": {
+      "message": "{endpoint} data request failed. {message}"
+    }
+  }
 }

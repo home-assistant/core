@@ -17,7 +17,6 @@ async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
 ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
     """Return auth implementation."""
-    logging.getLogger(__name__).debug("async_get_auth_implementation")
     return TeslaOAuth2Implementation(
         hass,
         DOMAIN,

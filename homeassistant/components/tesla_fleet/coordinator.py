@@ -6,9 +6,10 @@ from typing import Any
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
-    Forbidden,
     InvalidToken,
-    SubscriptionRequired,
+    LoginRequired,
+    OAuthExpired,
+    RateLimited,
     TeslaFleetError,
     VehicleOffline,
 )
@@ -19,10 +20,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL = timedelta(minutes=5)
+VEHICLE_INTERVAL_SECONDS = 300
+VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
-ENERGY_LIVE_INTERVAL = timedelta(minutes=5)
-ENERGY_INFO_INTERVAL = timedelta(minutes=5)
+
+ENERGY_INTERVAL_SECONDS = 300
+ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -61,8 +64,8 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
-            name="TeslaFleet Vehicle",
-            update_interval=VEHICLE_INTERVAL,
+            name="Tesla Fleet Vehicle",
+            update_interval=timedelta(seconds=5),
         )
         self.api = api
         self.data = flatten(product)
@@ -79,9 +82,16 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.OFFLINE
             return self.data
-        except InvalidToken as e:
-            raise ConfigEntryAuthFailed from e
-        except SubscriptionRequired as e:
+        except RateLimited as e:
+            LOGGER.warning(
+                "%s rate limited, will retry in %s seconds",
+                self.name,
+                e.data.get("after"),
+            )
+            if "after" in e.data:
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
+            return self.data
+        except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -119,17 +129,30 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         super().__init__(
             hass,
             LOGGER,
-            name="TeslaFleet Energy Site Live",
-            update_interval=ENERGY_LIVE_INTERVAL,
+            name="Tesla Fleet Energy Site Live",
+            update_interval=timedelta(seconds=10),
         )
         self.api = api
+        self.data = {}
+        self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""
 
+        self.update_interval = ENERGY_INTERVAL
+
         try:
             data = (await self.api.live_status())["response"]
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except RateLimited as e:
+            LOGGER.warning(
+                "%s rate limited, will retry in %s seconds",
+                self.name,
+                e.data.get("after"),
+            )
+            if "after" in e.data:
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
+            return self.data
+        except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -139,6 +162,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             wc["din"]: wc for wc in (data.get("wall_connectors") or [])
         }
 
+        self.updated_once = True
         return data
 
 
@@ -152,20 +176,33 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         super().__init__(
             hass,
             LOGGER,
-            name="TeslaFleet Energy Site Info",
-            update_interval=ENERGY_INFO_INTERVAL,
+            name="Tesla Fleet Energy Site Info",
+            update_interval=timedelta(seconds=15),
         )
         self.api = api
-        self.data = product
+        self.data = flatten(product)
+        self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""
 
+        self.update_interval = ENERGY_INTERVAL
+
         try:
             data = (await self.api.site_info())["response"]
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except RateLimited as e:
+            LOGGER.warning(
+                "%s rate limited, will retry in %s seconds",
+                self.name,
+                e.data.get("after"),
+            )
+            if "after" in e.data:
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
+            return self.data
+        except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        self.updated_once = True
         return flatten(data)
