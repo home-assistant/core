@@ -66,7 +66,6 @@ async def test_duplicate_entry(
     assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.parametrize(("field"), ["get_account"])
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
@@ -78,12 +77,11 @@ async def test_exceptions(
     hass: HomeAssistant,
     mock_autarco_client: AsyncMock,
     mock_setup_entry: AsyncMock,
-    field: str,
     exception: Exception,
     error: str,
 ) -> None:
     """Test exceptions."""
-    getattr(mock_autarco_client, field).side_effect = exception
+    getattr(mock_autarco_client, "get_account").side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -91,13 +89,13 @@ async def test_exceptions(
         result["flow_id"],
         user_input={CONF_EMAIL: "test@autarco.com", CONF_PASSWORD: "test-password"},
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": error}
 
-    getattr(mock_autarco_client, field).side_effect = None
+    getattr(mock_autarco_client, "get_account").side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_EMAIL: "test@autarco.com", CONF_PASSWORD: "test-password"},
     )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
