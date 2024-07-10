@@ -158,6 +158,8 @@ async def test_climate_set_temperature_turn_off_turn_on(
     )
     state = hass.states.get(climate.entity_id)
 
+    assert state.attributes["temperature"] == 24
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_TURN_OFF,
