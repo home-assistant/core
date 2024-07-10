@@ -165,11 +165,12 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                if config_entry.state is ConfigEntryState.LOADED:
-                    hub = config_entry.runtime_data
-
-                    if hub.available:
-                        return self.async_abort(reason="already_configured")
+                if (
+                    config_entry.state is ConfigEntryState.LOADED
+                    and (hub := config_entry.runtime_data)
+                    and hub.available
+                ):
+                    return self.async_abort(reason="already_configured")
 
                 return self.async_update_reload_and_abort(
                     config_entry, data=self.config, reason=abort_reason
