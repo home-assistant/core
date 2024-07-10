@@ -10,7 +10,7 @@ from aiorussound import Russound
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -74,7 +74,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(metadata[0])
                 self._abort_if_unique_id_configured()
-                data = {CONF_HOST: host, CONF_PORT: port, CONF_MODEL: metadata[1]}
+                data = {CONF_HOST: host, CONF_PORT: port}
                 return self.async_create_entry(title=metadata[1], data=data)
 
         return self.async_show_form(
@@ -110,5 +110,5 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             await self.async_set_unique_id(metadata[0])
             self._abort_if_unique_id_configured()
-            data = {CONF_HOST: host, CONF_PORT: port, CONF_MODEL: metadata[1]}
+            data = {CONF_HOST: host, CONF_PORT: port}
             return self.async_create_entry(title=metadata[1], data=data)

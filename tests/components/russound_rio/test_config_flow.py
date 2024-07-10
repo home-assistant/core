@@ -7,7 +7,7 @@ from homeassistant.components.russound_rio.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from .const import MOCK_CONFIG, MOCK_DATA, MODEL
+from .const import MOCK_CONFIG, MODEL
 
 
 async def test_form(hass: HomeAssistant, mock_russound) -> None:
@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant, mock_russound) -> None:
 
     assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == MODEL
-    assert result2["data"] == MOCK_DATA
+    assert result2["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -101,7 +101,7 @@ async def test_import(hass: HomeAssistant, mock_russound) -> None:
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL
-    assert result["data"] == MOCK_DATA
+    assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
 
 

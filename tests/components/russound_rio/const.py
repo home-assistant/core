@@ -9,9 +9,3 @@ MOCK_CONFIG = {
     "host": HOST,
     "port": PORT,
 }
-
-MOCK_DATA = {
-    "host": HOST,
-    "port": PORT,
-    "model": MODEL,
-}
