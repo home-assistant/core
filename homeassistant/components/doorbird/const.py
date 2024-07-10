@@ -22,3 +22,7 @@ DOORBIRD_INFO_KEY_WIFI_MAC_ADDR = "WIFI_MAC_ADDR"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 API_URL = f"/api/{DOMAIN}"
+
+
+DEFAULT_DOORBELL_EVENT = "ha_doorbell"
+DEFAULT_MOTION_EVENT = "ha_motion"
