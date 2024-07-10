@@ -110,7 +110,7 @@ class MatterLock(MatterEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
         if self._attr_is_locked:
-            # optimistically signal locking to state machine
+            # optimistically signal unlocking to state machine
             self._attr_is_unlocking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
@@ -134,7 +134,7 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        # optimistically signal locking to state machine
+        # optimistically signal opening to state machine
         self._attr_is_opening = True
         self.async_write_ha_state()
         # the lock should acknowledge the command with an attribute update
