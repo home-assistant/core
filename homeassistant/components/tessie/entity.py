@@ -42,6 +42,7 @@ class TessieBaseEntity(
         self.key = key
         self._attr_translation_key = key
         super().__init__(coordinator)
+        self._async_update_attrs()
 
     @property
     def _value(self) -> Any:
@@ -132,7 +133,6 @@ class TessieEnergyEntity(TessieBaseEntity):
         self._attr_device_info = data.device
 
         super().__init__(coordinator, key)
-        self._async_update_attrs()
 
 
 class TessieWallConnectorEntity(TessieBaseEntity):
