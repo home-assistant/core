@@ -29,11 +29,11 @@
       "energy_production_today": {
         "name": "Energy production today"
       },
-      "energy_production_tomorrow": {
-        "name": "Energy production tomorrow"
+      "energy_production_month": {
+        "name": "Energy production month"
       },
       "energy_production_total": {
-        "name": "Total energy production"
+        "name": "ENergy production total"
       }
     }
   }

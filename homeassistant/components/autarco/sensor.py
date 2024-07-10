@@ -87,6 +87,7 @@ class AutarcoSolarSensorEntity(
     """Defines an Autarco solar sensor."""
 
     entity_description: AutarcoSolarSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
