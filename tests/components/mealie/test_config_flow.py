@@ -87,6 +87,7 @@ async def test_flow_errors(
     ("version"),
     [
         ("v1.0.0beta-5"),
+        ("v1.0.0-RC2"),
         ("v0.1.0"),
         ("something"),
     ],
