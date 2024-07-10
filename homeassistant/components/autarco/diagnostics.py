@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from . import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
-
-TO_REDACT = {CONF_EMAIL, CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
@@ -20,7 +16,6 @@ async def async_get_config_entry_diagnostics(
     autarco_data: list[AutarcoDataUpdateCoordinator] = config_entry.runtime_data
 
     return {
-        "config_entry_data": async_redact_data(dict(config_entry.data), TO_REDACT),
         "sites_data": [
             {
                 "id": coordinator.site.site_id,
