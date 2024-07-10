@@ -10,7 +10,6 @@ from iottycloud.lightswitch import LightSwitch
 from iottycloud.verbs import LS_DEVICE_TYPE_UID
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,7 +31,7 @@ async def async_setup_entry(
     """Activate the iotty LightSwitch component."""
     _LOGGER.debug("Setup SWITCH entry id is %s", config_entry.entry_id)
 
-    coordinator: IottyDataUpdateCoordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data.coordinator
     entities = [
         IottyLightSwitch(
             coordinator=coordinator, iotty_cloud=coordinator.iotty, iotty_device=d
@@ -93,7 +92,7 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[IottyDataUpdateCoordinato
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_category = None
     _attr_device_class = SwitchDeviceClass.SWITCH
     _iotty_cloud: IottyProxy
     _iotty_device: LightSwitch
@@ -127,7 +126,7 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[IottyDataUpdateCoordinato
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, cast(str, self._attr_unique_id))},
-            name=self.name,
+            name=self._iotty_device.name,
             manufacturer="iotty",
         )
 
@@ -140,11 +139,6 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[IottyDataUpdateCoordinato
             self._iotty_device.is_on,
         )
         return self._iotty_device.is_on
-
-    @property
-    def name(self) -> str:
-        """Get the name of this iotty Device."""
-        return self._iotty_device.name
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LightSwitch on."""

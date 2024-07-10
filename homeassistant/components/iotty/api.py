@@ -2,21 +2,16 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aiohttp import ClientSession
 from iottycloud.cloudapi import CloudApi
 
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import IOTTYAPI_BASE, OAUTH2_CLIENT_ID
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+OAUTH2_CLIENT_ID = "hass-iotty"
+IOTTYAPI_BASE = "https://homeassistant.iotty.com/"
 
 
 class IottyProxy(CloudApi):

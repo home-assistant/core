@@ -32,7 +32,7 @@ class IottyConfigEntryData:
     coordinator: coordinator.IottyDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IottyConfigEntry) -> bool:
     """Set up iotty from a config entry."""
     _LOGGER.debug("async_setup_entry entry_id=%s", entry.entry_id)
 

@@ -5,7 +5,8 @@ from __future__ import annotations
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
 
-from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+OAUTH2_AUTHORIZE = "https://auth.iotty.com/.auth/oauth2/login"
+OAUTH2_TOKEN = "https://auth.iotty.com/.auth/oauth2/token"
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:

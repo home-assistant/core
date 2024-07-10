@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
 
         super().__init__(
             hass,
-            LOGGER,
+            _LOGGER,
             name=f"{DOMAIN}_coordinator",
             update_interval=UPDATE_INTERVAL,
         )

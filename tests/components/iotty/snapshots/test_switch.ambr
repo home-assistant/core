@@ -47,7 +47,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'switch.test_light_switch_0_test_serial_0',
     'has_entity_name': True,
     'hidden_by': None,
@@ -60,7 +60,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': '[TEST] Light switch 0 (TEST_SERIAL_0)',
+    'original_name': None,
     'platform': 'iotty',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -73,7 +73,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': '[TEST] Light switch 0 (TEST_SERIAL_0) [TEST] Light switch 0 (TEST_SERIAL_0)',
+      'friendly_name': '[TEST] Light switch 0 (TEST_SERIAL_0)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_light_switch_0_test_serial_0',
