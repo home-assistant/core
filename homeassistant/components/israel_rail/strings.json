@@ -12,7 +12,7 @@
           "from": "Start station",
           "to": "End station"
         },
-        "description": "Provide start and end station for your connection\n\nCheck https://www.rail.co.il for valid stations.",
+        "description": "Provide start and end station for your connection from the provided list",
         "title": "Israel Rail"
       }
     }
