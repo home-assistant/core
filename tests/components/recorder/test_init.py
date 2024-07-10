@@ -2729,3 +2729,20 @@ async def test_update_entity_filter(
     assert instance.entity_filter is not None
     assert instance.entity_filter("switch.domain") is False
     assert instance.entity_filter("sensor.not_mentioned") is True
+
+
+async def test_empty_entity_id(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the recorder can handle an empty entity_id."""
+    await async_setup_recorder_instance(
+        hass,
+        {
+            "exclude": {"domains": "hidden_domain"},
+        },
+    )
+    hass.bus.async_fire("hello", {"entity_id": ""})
+    await async_wait_recording_done(hass)
+    assert "Invalid entity ID" not in caplog.text

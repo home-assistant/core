@@ -5432,6 +5432,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "simplefin": {
+      "name": "SimpleFin",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "simplepush": {
       "name": "Simplepush",
       "integration_type": "hub",

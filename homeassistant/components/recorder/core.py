@@ -351,9 +351,8 @@ class Recorder(threading.Thread):
                 return
 
             entity_filter = self.entity_filter
-            if (
-                entity_filter is None
-                or (entity_id := event.data.get(ATTR_ENTITY_ID)) is None
+            if entity_filter is None or not (
+                entity_id := event.data.get(ATTR_ENTITY_ID)
             ):
                 queue_put(event)
                 return

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from russound_rio import Russound
+from aiorussound import Russound
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
