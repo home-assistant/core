@@ -1,5 +1,7 @@
 """Tests for Broadlink climate."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.broadlink.climate import SensorMode
@@ -20,73 +22,65 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import get_device
 
-testdata = [
-    (
-        SensorMode.INNER_SENSOR_CONTROL,
-        1,
-        0,
-        1,
-        22,
-        23,
-        30,
-        HVACMode.HEAT,
-        22,
-        23,
-        HVACAction.HEATING,
-    ),
-    (
-        SensorMode.OUTER_SENSOR_CONTROL,
-        1,
-        1,
-        0,
-        22,
-        23,
-        30,
-        HVACMode.AUTO,
-        30,
-        23,
-        HVACAction.IDLE,
-    ),
-    (
-        SensorMode.INNER_SENSOR_CONTROL,
-        0,
-        0,
-        0,
-        22,
-        23,
-        30,
-        HVACMode.OFF,
-        22,
-        23,
-        HVACAction.OFF,
-    ),
-]
-
 
 @pytest.mark.parametrize(
     (
-        "sensor",
-        "power",
-        "auto_mode",
-        "active",
-        "room_temp",
-        "thermostat_temp",
-        "external_temp",
+        "api_return_value",
         "expected_state",
         "expected_current_temperature",
         "expected_temperature",
         "expected_hvac_action",
     ),
-    testdata,
+    [
+        (
+            {
+                "sensor": SensorMode.INNER_SENSOR_CONTROL.value,
+                "power": 1,
+                "auto_mode": 0,
+                "active": 1,
+                "room_temp": 22,
+                "thermostat_temp": 23,
+                "external_temp": 30,
+            },
+            HVACMode.HEAT,
+            22,
+            23,
+            HVACAction.HEATING,
+        ),
+        (
+            {
+                "sensor": SensorMode.OUTER_SENSOR_CONTROL.value,
+                "power": 1,
+                "auto_mode": 1,
+                "active": 0,
+                "room_temp": 22,
+                "thermostat_temp": 23,
+                "external_temp": 30,
+            },
+            HVACMode.AUTO,
+            30,
+            23,
+            HVACAction.IDLE,
+        ),
+        (
+            {
+                "sensor": SensorMode.INNER_SENSOR_CONTROL.value,
+                "power": 0,
+                "auto_mode": 0,
+                "active": 0,
+                "room_temp": 22,
+                "thermostat_temp": 23,
+                "external_temp": 30,
+            },
+            HVACMode.OFF,
+            22,
+            23,
+            HVACAction.OFF,
+        ),
+    ],
 )
 async def test_climate(
-    sensor,
-    power,
-    auto_mode,
-    active,
-    room_temp,
-    thermostat_temp,
-    external_temp,
+    api_return_value: dict[str, Any],
     expected_state,
     expected_current_temperature,
     expected_temperature,
@@ -109,15 +103,7 @@ async def test_climate(
 
     climate = climates[0]
 
-    mock_setup.api.get_full_status.return_value = {
-        "sensor": sensor.value,
-        "power": power,
-        "auto_mode": auto_mode,
-        "active": active,
-        "room_temp": room_temp,
-        "thermostat_temp": thermostat_temp,
-        "external_temp": external_temp,
-    }
+    mock_setup.api.get_full_status.return_value = api_return_value
 
     await async_update_entity(hass, climate.entity_id)
     assert mock_setup.api.get_full_status.call_count == 2
@@ -158,6 +144,9 @@ async def test_climate_set_temperature_turn_off_turn_on(
     )
     state = hass.states.get(climate.entity_id)
 
+    assert mock_setup.api.set_temp.call_count == 1
+    assert mock_setup.api.set_power.call_count == 0
+    assert mock_setup.api.set_mode.call_count == 0
     assert state.attributes["temperature"] == 24
 
     await hass.services.async_call(
@@ -170,6 +159,9 @@ async def test_climate_set_temperature_turn_off_turn_on(
     )
     state = hass.states.get(climate.entity_id)
 
+    assert mock_setup.api.set_temp.call_count == 1
+    assert mock_setup.api.set_power.call_count == 1
+    assert mock_setup.api.set_mode.call_count == 0
     assert state.state == HVACMode.OFF
 
     await hass.services.async_call(
@@ -182,4 +174,7 @@ async def test_climate_set_temperature_turn_off_turn_on(
     )
     state = hass.states.get(climate.entity_id)
 
+    assert mock_setup.api.set_temp.call_count == 1
+    assert mock_setup.api.set_power.call_count == 2
+    assert mock_setup.api.set_mode.call_count == 1
     assert state.state == HVACMode.HEAT
