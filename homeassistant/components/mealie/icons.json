@@ -8,6 +8,7 @@
   },
   "services": {
     "get_mealplan": "mdi:food",
-    "get_recipe": "mdi:map"
+    "get_recipe": "mdi:map",
+    "import_recipe": "mdi:map-search"
   }
 }

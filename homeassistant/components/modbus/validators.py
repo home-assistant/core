@@ -12,14 +12,11 @@ import voluptuous as vol
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ADDRESS,
-    CONF_COMMAND_OFF,
-    CONF_COMMAND_ON,
     CONF_COUNT,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
-    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -29,8 +26,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import (
     CONF_DATA_TYPE,
-    CONF_DEVICE_ADDRESS,
-    CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_ONOFF_REGISTER,
@@ -43,11 +38,8 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
-    CONF_SWING_MODE_REGISTER,
     CONF_SWING_MODE_VALUES,
-    CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
-    CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
@@ -274,6 +266,7 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
     return config
 
 
+<<<<<<< HEAD
 def check_hvac_target_temp_registers(config: dict) -> dict:
     """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes, Swing Modes."""
 
@@ -314,6 +307,8 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
     return config
 
 
+=======
+>>>>>>> cd4358ed9ef28f883950f6828af95c039e118e9e
 def register_int_list_validator(value: Any) -> Any:
     """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
     if isinstance(value, int) and value >= 0:
@@ -424,7 +419,6 @@ def validate_entity(
             "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
         )
     name = f"{component}.{entity[CONF_NAME]}"
-    addr = f"{hub_name}{entity[CONF_ADDRESS]}"
     scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     if 0 < scan_interval < 5:
         err = (
@@ -434,44 +428,6 @@ def validate_entity(
         _LOGGER.warning(err)
     entity[CONF_SCAN_INTERVAL] = scan_interval
     minimum_scan_interval = min(scan_interval, minimum_scan_interval)
-    for conf_type in (
-        CONF_INPUT_TYPE,
-        CONF_WRITE_TYPE,
-        CONF_COMMAND_ON,
-        CONF_COMMAND_OFF,
-    ):
-        if conf_type in entity:
-            addr += f"_{entity[conf_type]}"
-    inx = entity.get(CONF_SLAVE) or entity.get(CONF_DEVICE_ADDRESS, 0)
-    addr += f"_{inx}"
-    loc_addr: set[str] = {addr}
-    if CONF_TARGET_TEMP in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
-    if CONF_HVAC_MODE_REGISTER in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
-    if CONF_FAN_MODE_REGISTER in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
-    if CONF_SWING_MODE_REGISTER in entity:
-        loc_addr.add(
-            f"{hub_name}{entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
-                         if isinstance(entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS],int)
-                         else entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]}_{inx}"
-        )
-
-    dup_addrs = ent_addr.intersection(loc_addr)
-    if len(dup_addrs) > 0:
-        for addr in dup_addrs:
-            modbus_create_issue(
-                hass,
-                "duplicate_entity_entry",
-                [
-                    f"{hub_name}/{name}",
-                    addr,
-                    "",
-                ],
-                f"Modbus {hub_name}/{name} address {addr} is duplicate, second entry not loaded!",
-            )
-        return False
     if name in ent_names:
         modbus_create_issue(
             hass,
@@ -485,7 +441,6 @@ def validate_entity(
         )
         return False
     ent_names.add(name)
-    ent_addr.update(loc_addr)
     return True
 
 

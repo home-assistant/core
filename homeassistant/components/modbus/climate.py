@@ -479,14 +479,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # in the mode register.
 
         if self._hvac_onoff_register is not None:
-            _call_type = CALL_TYPE_REGISTER_HOLDING
-
             if self._hvac_onoff_register_type == CALL_TYPE_WRITE_COILS:
-                _call_type = CALL_TYPE_COIL
+                onoff = await self._async_read_register(
+                    CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
+                )
+            else :
+                onoff = await self._async_read_register(
+                    CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
+                )
 
-            onoff = await self._async_read_register(
-                _call_type, self._hvac_onoff_register, raw=True
-            )
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
 
