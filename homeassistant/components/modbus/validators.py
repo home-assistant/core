@@ -265,50 +265,6 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
         del config[CONF_SWING_MODE_VALUES][key]
     return config
 
-
-<<<<<<< HEAD
-def check_hvac_target_temp_registers(config: dict) -> dict:
-    """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes, Swing Modes."""
-
-    if (
-        CONF_HVAC_MODE_REGISTER in config
-        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!1"
-        _LOGGER.warning(wrn)
-        del config[CONF_HVAC_MODE_REGISTER]
-    if (
-        CONF_HVAC_ONOFF_REGISTER in config
-        and config[CONF_HVAC_ONOFF_REGISTER_TYPE] == "input"
-        and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!2"
-        _LOGGER.warning(wrn)
-        del config[CONF_HVAC_ONOFF_REGISTER]
-    if (
-        CONF_FAN_MODE_REGISTER in config
-        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!3"
-        _LOGGER.warning(wrn)
-        del config[CONF_FAN_MODE_REGISTER]
-
-    if CONF_SWING_MODE_REGISTER in config:
-        regToTest = (
-            config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
-            if isinstance(config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS], int)
-            else config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]
-        )
-        if regToTest in config[CONF_TARGET_TEMP]:
-            wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!4"
-            _LOGGER.warning(wrn)
-            del config[CONF_SWING_MODE_REGISTER]
-
-    return config
-
-
-=======
->>>>>>> cd4358ed9ef28f883950f6828af95c039e118e9e
 def register_int_list_validator(value: Any) -> Any:
     """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
     if isinstance(value, int) and value >= 0:
