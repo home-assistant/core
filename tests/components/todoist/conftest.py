@@ -1,5 +1,6 @@
 """Common fixtures for the todoist tests."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
@@ -7,7 +8,6 @@ import pytest
 from requests.exceptions import HTTPError
 from requests.models import Response
 from todoist_api_python.models import Collaborator, Due, Label, Project, Task
-from typing_extensions import Generator
 
 from homeassistant.components.todoist import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform

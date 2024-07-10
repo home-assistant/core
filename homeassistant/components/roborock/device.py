@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from roborock.api import RoborockClient
 from roborock.command_cache import CacheableAttribute
 from roborock.containers import Consumable, Status
 from roborock.exceptions import RoborockException
@@ -9,6 +10,7 @@ from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
 from roborock.version_1_apis.roborock_client_v1 import AttributeCache, RoborockClientV1
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
+from roborock.version_a01_apis import RoborockClientA01
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
 
 
 class RoborockEntity(Entity):
@@ -28,17 +30,24 @@ class RoborockEntity(Entity):
         self,
         unique_id: str,
         device_info: DeviceInfo,
-        api: RoborockClientV1,
+        api: RoborockClient,
     ) -> None:
-        """Initialize the coordinated Roborock Device."""
+        """Initialize the Roborock Device."""
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._api = api
 
-    @property
-    def api(self) -> RoborockClientV1:
-        """Returns the api."""
-        return self._api
+
+class RoborockEntityV1(RoborockEntity):
+    """Representation of a base Roborock V1 Entity."""
+
+    _api: RoborockClientV1
+
+    def __init__(
+        self, unique_id: str, device_info: DeviceInfo, api: RoborockClientV1
+    ) -> None:
+        """Initialize the Roborock Device."""
+        super().__init__(unique_id, device_info, api)
 
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
         """Get an item from the api cache."""
@@ -66,9 +75,26 @@ class RoborockEntity(Entity):
             ) from err
         return response
 
+    @property
+    def api(self) -> RoborockClientV1:
+        """Returns the api."""
+        return self._api
 
-class RoborockCoordinatedEntity(
-    RoborockEntity, CoordinatorEntity[RoborockDataUpdateCoordinator]
+
+class RoborockEntityA01(RoborockEntity):
+    """Representation of a base Roborock Entity for A01 devices."""
+
+    _api: RoborockClientA01
+
+    def __init__(
+        self, unique_id: str, device_info: DeviceInfo, api: RoborockClientA01
+    ) -> None:
+        """Initialize the Roborock Device."""
+        super().__init__(unique_id, device_info, api)
+
+
+class RoborockCoordinatedEntityV1(
+    RoborockEntityV1, CoordinatorEntity[RoborockDataUpdateCoordinator]
 ):
     """Representation of a base a coordinated Roborock Entity."""
 
@@ -83,7 +109,7 @@ class RoborockCoordinatedEntity(
         | None = None,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
-        RoborockEntity.__init__(
+        RoborockEntityV1.__init__(
             self,
             unique_id=unique_id,
             device_info=coordinator.device_info,
@@ -138,3 +164,24 @@ class RoborockCoordinatedEntity(
             self.coordinator.roborock_device_info.props.consumable = value
         self.coordinator.data = self.coordinator.roborock_device_info.props
         self.schedule_update_ha_state()
+
+
+class RoborockCoordinatedEntityA01(
+    RoborockEntityA01, CoordinatorEntity[RoborockDataUpdateCoordinatorA01]
+):
+    """Representation of a base a coordinated Roborock Entity."""
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockDataUpdateCoordinatorA01,
+    ) -> None:
+        """Initialize the coordinated Roborock Device."""
+        RoborockEntityA01.__init__(
+            self,
+            unique_id=unique_id,
+            device_info=coordinator.device_info,
+            api=coordinator.api,
+        )
+        CoordinatorEntity.__init__(self, coordinator=coordinator)
+        self._attr_unique_id = unique_id

@@ -13,7 +13,7 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import DOMAIN
 from .schema import ga_validator
@@ -32,7 +32,7 @@ CONF_KNX_INCOMING: Final = "incoming"
 CONF_KNX_OUTGOING: Final = "outgoing"
 
 
-TELEGRAM_TRIGGER_SCHEMA: Final = {
+TELEGRAM_TRIGGER_SCHEMA: VolDictType = {
     vol.Optional(CONF_KNX_DESTINATION): vol.All(cv.ensure_list, [ga_validator]),
     vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,

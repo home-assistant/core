@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from awesomeversion import AwesomeVersion
-from typing_extensions import Generator
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
@@ -1106,7 +1106,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # light for Basic CC
+    # light for Basic CC with target
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=ZWaveValueDiscoverySchema(
@@ -1116,9 +1116,24 @@ DISCOVERY_SCHEMAS = [
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
+                command_class={CommandClass.BASIC},
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
+    ),
+    # sensor for Basic CC without target
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        absent_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.BASIC},
                 type={ValueType.NUMBER},
                 property={TARGET_VALUE_PROPERTY},
             )
