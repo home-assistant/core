@@ -395,7 +395,7 @@
             'unit_id': None,
           }),
         ]),
-        'list': dict({
+        'shopping_list': dict({
           'list_id': '27edbaab-2ec6-441f-8490-0283ea77585f',
           'name': 'Supermarket',
         }),
@@ -445,7 +445,7 @@
             'unit_id': None,
           }),
         ]),
-        'list': dict({
+        'shopping_list': dict({
           'list_id': 'e9d78ff2-4b23-4b77-a3a8-464827100b46',
           'name': 'Freezer',
         }),
@@ -495,7 +495,7 @@
             'unit_id': None,
           }),
         ]),
-        'list': dict({
+        'shopping_list': dict({
           'list_id': 'f8438635-8211-4be8-80d0-0aa42e37a5f2',
           'name': 'Special groceries',
         }),
