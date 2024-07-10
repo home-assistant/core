@@ -165,7 +165,6 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                hub = None
                 if config_entry.state is ConfigEntryState.LOADED:
                     hub = config_entry.runtime_data
 
