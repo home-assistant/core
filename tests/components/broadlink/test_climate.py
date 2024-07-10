@@ -81,10 +81,10 @@ from . import get_device
 )
 async def test_climate(
     api_return_value: dict[str, Any],
-    expected_state,
-    expected_current_temperature,
-    expected_temperature,
-    expected_hvac_action,
+    expected_state: HVACMode,
+    expected_current_temperature: int,
+    expected_temperature: int,
+    expected_hvac_action: HVACAction,
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
