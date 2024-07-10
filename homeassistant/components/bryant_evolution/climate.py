@@ -216,7 +216,6 @@ class BryantEvolutionClimate(ClimateEntity):
                     translation_domain=DOMAIN, translation_key="failed_to_set_clsp"
                 )
             self._attr_target_temperature_high = temp
-            self._async_write_ha_state()
 
         if kwargs.get("target_temp_low"):
             temp = int(kwargs["target_temp_low"])
@@ -225,7 +224,6 @@ class BryantEvolutionClimate(ClimateEntity):
                     translation_domain=DOMAIN, translation_key="failed_to_set_htsp"
                 )
             self._attr_target_temperature_low = temp
-            self._async_write_ha_state()
 
         if kwargs.get("temperature"):
             temp = int(kwargs["temperature"])
@@ -239,7 +237,10 @@ class BryantEvolutionClimate(ClimateEntity):
                     translation_domain=DOMAIN, translation_key="failed_to_set_temp"
                 )
             self._attr_target_temperature = temp
-            self._async_write_ha_state()
+
+        # If we get here, we must have changed something unless HA allowed an
+        # invalid service call (without any recognized kwarg).
+        self._async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
