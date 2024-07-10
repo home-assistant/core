@@ -226,7 +226,6 @@ async def test_setup_multiple_systems_zones(hass: HomeAssistant) -> None:
 
     # Check that the created devices are wired to each other as expected.
     device_registry = dr.async_get(hass)
-    _LOGGER.error("XXX mock entryid: %s", mock_evolution_entry.entry_id)
 
     def find_device(name):
         return next(filter(lambda x: x.name == name, device_registry.devices.values()))

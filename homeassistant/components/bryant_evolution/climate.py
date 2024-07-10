@@ -15,12 +15,11 @@ from homeassistant.components.climate import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BryantEvolutionConfigEntry
+from . import BryantEvolutionConfigEntry, names
 from .const import CONF_SYSTEM_ZONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,43 +35,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
 
-    # Manually create a device entry for the SAM itself, which has no associated
-    # entity.
-    sam_unique_id = config_entry.entry_id
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, sam_unique_id)},
-        manufacturer="Bryant",
-        name="System Access Module",
-    )
-    entities: list[Entity] = []
-    systems = {}
-    # Add an entity for each system
-    for sys_id in (1, 2):
-        if not any(sz[0] == sys_id for sz in config_entry.data[CONF_SYSTEM_ZONE]):
-            _LOGGER.info(
-                "Skipping system %s because it is not configured for this integration: %s",
-                sys_id,
-                config_entry.data[CONF_SYSTEM_ZONE],
-            )
-            continue
-        system_entity = BryantEvolutionSystem(sys_id, sam_unique_id)
-        entities.append(system_entity)
-        systems[sys_id] = system_entity
-
     # Add a climate entity for each system/zone.
+    sam_uid = names.sam_device_uid(config_entry)
+    entities: list[Entity] = []
     for sz in config_entry.data[CONF_SYSTEM_ZONE]:
         system_id = sz[0]
         zone_id = sz[1]
-        system_uid = systems[system_id].unique_id
-        assert system_uid, f"Cannot find system {system_id} in {systems}"
         client = config_entry.runtime_data.get(tuple(sz))
         climate = BryantEvolutionClimate(
             client,
             system_id,
             zone_id,
-            system_uid,
+            sam_uid,
         )
         entities.append(climate)
     async_add_entities(entities, update_before_add=True)
@@ -110,16 +84,16 @@ class BryantEvolutionClimate(ClimateEntity):
         client: BryantEvolutionLocalClient,
         system_id: int,
         zone_id: int,
-        parent_id: str,
+        sam_uid: str,
     ) -> None:
         """Initialize an entity from parts."""
         self._client = client
         self._attr_name = None
-        self._attr_unique_id = f"{parent_id}-Z{zone_id}"
+        self._attr_unique_id = names.zone_entity_uid(sam_uid, system_id, zone_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Bryant",
-            via_device=(DOMAIN, parent_id),
+            via_device=(DOMAIN, names.system_device_uid(sam_uid, system_id)),
             name=f"System {system_id} Zone {zone_id}",
         )
 
@@ -275,19 +249,3 @@ class BryantEvolutionClimate(ClimateEntity):
             )
         self._attr_fan_mode = fan_mode.lower()
         self.async_write_ha_state()
-
-
-class BryantEvolutionSystem(Entity):
-    """Entity representing an HVAC system in Bryant Evolution."""
-
-    def __init__(self, system_id: int, sam_uid: str) -> None:
-        """Create an instance from parts."""
-        self._attr_name = f"System {system_id}"
-        self._system_id = system_id
-        self._attr_unique_id = f"{sam_uid}-S{system_id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            via_device=(DOMAIN, sam_uid),
-            manufacturer="Bryant",
-            name=f"System {system_id}",
-        )

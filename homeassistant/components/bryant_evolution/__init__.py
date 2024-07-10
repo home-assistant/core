@@ -10,12 +10,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_SYSTEM_ZONE
+from . import names
+from .const import CONF_SYSTEM_ZONE, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-type BryantEvolutionConfigEntry = ConfigEntry[BryantEvolutionLocalClient]
+type BryantEvolutionLocalClients = dict[tuple[int, int], BryantEvolutionLocalClient]
+type BryantEvolutionConfigEntry = ConfigEntry[BryantEvolutionLocalClients]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,6 +33,35 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: BryantEvolutionConfigEntry
 ) -> bool:
     """Set up Bryant Evolution from a config entry."""
+
+    # Add a device for the SAM itself.
+    sam_uid = names.sam_device_uid(entry)
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, sam_uid)},
+        manufacturer="Bryant",
+        name="System Access Module",
+    )
+
+    # Add a device for each system.
+    for sys_id in (1, 2):
+        if not any(sz[0] == sys_id for sz in entry.data[CONF_SYSTEM_ZONE]):
+            _LOGGER.debug(
+                "Skipping system %s because it is not configured for this integration: %s",
+                sys_id,
+                entry.data[CONF_SYSTEM_ZONE],
+            )
+            continue
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, names.system_device_uid(sam_uid, sys_id))},
+            via_device=(DOMAIN, names.sam_device_uid(entry)),
+            manufacturer="Bryant",
+            name=f"System {sys_id}",
+        )
+
+    # Create a client for every zone.
     entry.runtime_data = {}
     for sz in entry.data[CONF_SYSTEM_ZONE]:
         try:
