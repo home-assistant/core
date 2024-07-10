@@ -20,20 +20,19 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_PORT, default=9621): cv.port,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def find_primary_controller_metadata(controllers):
+def find_primary_controller_metadata(controllers: list[tuple[int, str, str]]):
     """Find the mac address of the primary Russound controller."""
     for controller_id, mac_address, controller_type in controllers:
         # The integration only cares about the primary controller linked by IP and not any downstream controllers
         if controller_id == 1:
             return (mac_address, controller_type)
-    return None
+    raise NoPrimaryControllerException
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -51,35 +50,29 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             name = user_input[CONF_NAME]
             port = user_input[CONF_PORT]
 
+            controllers = None
             try:
                 russ = Russound(self.hass.loop, host, port)
                 async with asyncio.timeout(5):
                     await russ.connect()
                     controllers = await russ.enumerate_controllers()
                     metadata = find_primary_controller_metadata(controllers)
-                    if metadata:
-                        await self.async_set_unique_id(metadata[0])
-                    else:
-                        raise NoPrimaryControllerException
                     await russ.close()
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: host, CONF_PORT: port}
-                    )
-            except RUSSOUND_RIO_EXCEPTIONS as err:
-                _LOGGER.error("Could not connect to Russound RIO: %s", err)
+            except RUSSOUND_RIO_EXCEPTIONS:
+                _LOGGER.exception("Could not connect to Russound RIO")
                 errors["base"] = "cannot_connect"
-            except NoPrimaryControllerException as err:
-                _LOGGER.error(
-                    "Russound RIO device doesn't have a primary controller: %s", err
+            except NoPrimaryControllerException:
+                _LOGGER.exception(
+                    "Russound RIO device doesn't have a primary controller",
                 )
                 errors["base"] = "no_primary_controller"
             else:
+                await self.async_set_unique_id(metadata[0])
                 data = {
                     CONF_HOST: host,
                     CONF_NAME: name,
                     CONF_PORT: port,
                 }
-
                 return self.async_create_entry(title=name, data=data)
 
         return self.async_show_form(
@@ -102,22 +95,19 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 await russ.connect()
                 controllers = await russ.enumerate_controllers()
                 metadata = find_primary_controller_metadata(controllers)
-                if metadata:
-                    await self.async_set_unique_id(metadata[0])
-                else:
-                    return self.async_abort(
-                        reason="no_primary_controller", description_placeholders={}
-                    )
                 await russ.close()
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: host, CONF_PORT: port}
-                )
-        except RUSSOUND_RIO_EXCEPTIONS as err:
-            _LOGGER.error("Could not connect to Russound RIO: %s", err)
+        except RUSSOUND_RIO_EXCEPTIONS:
+            _LOGGER.exception("Could not connect to Russound RIO")
             return self.async_abort(
                 reason="cannot_connect", description_placeholders={}
             )
+        except NoPrimaryControllerException:
+            _LOGGER.exception("Russound RIO device doesn't have a primary controller")
+            return self.async_abort(
+                reason="no_primary_controller", description_placeholders={}
+            )
         else:
+            await self.async_set_unique_id(metadata[0])
             data = {
                 CONF_HOST: host,
                 CONF_NAME: name,

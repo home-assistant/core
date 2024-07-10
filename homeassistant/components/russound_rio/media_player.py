@@ -10,14 +10,15 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import RussoundConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,24 +37,34 @@ async def async_setup_platform(
         context={"source": SOURCE_IMPORT},
         data=config,
     )
-    issue_key = f"deprecated_yaml_{DOMAIN}"
-    translation_key = "deprecated_yaml"
-    if not (
+    if (
         result["type"] is FlowResultType.CREATE_ENTRY
         or result["reason"] == "single_instance_allowed"
     ):
-        issue_key = f"deprecated_yaml_import_issue_{result['reason']}"
-        translation_key = f"deprecated_yaml_import_issue_{result['reason']}"
-
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2025.1.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Russound RIO",
+            },
+        )
+        return
     async_create_issue(
         hass,
         DOMAIN,
-        issue_key,
+        f"deprecated_yaml_import_issue_{result['reason']}",
         breaks_in_ha_version="2025.1.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
-        translation_key=translation_key,
+        translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
         translation_placeholders={
             "domain": DOMAIN,
             "integration_title": "Russound RIO",
@@ -62,7 +73,9 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RussoundConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Russound RIO platform."""
     russ = entry.runtime_data

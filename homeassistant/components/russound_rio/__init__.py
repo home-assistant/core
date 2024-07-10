@@ -16,8 +16,10 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
+type RussoundConfigEntry = ConfigEntry[Russound]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
     """Set up a config entry."""
 
     russ = Russound(hass.loop, entry.data[CONF_HOST], entry.data[CONF_PORT])
