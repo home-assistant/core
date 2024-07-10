@@ -238,7 +238,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self._current_position is None:
             return None
 
-        if (position := self.device.status.get(self._current_position.dpcode)) is None:
+        if (
+            position := float(self.device.status.get(self._current_position.dpcode))
+        ) is None:
             return None
 
         return round(
@@ -254,7 +256,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self._tilt is None:
             return None
 
-        if (angle := self.device.status.get(self._tilt.dpcode)) is None:
+        if (angle := float(self.device.status.get(self._tilt.dpcode))) is None:
             return None
 
         return round(self._tilt.remap_value_to(angle, 0, 100))
