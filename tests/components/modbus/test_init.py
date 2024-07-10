@@ -478,7 +478,6 @@ async def test_check_config_sensor(hass: HomeAssistant, do_config) -> None:
                 ],
             }
         ],
-<<<<<<< HEAD
         [
             {
                 CONF_NAME: TEST_MODBUS_NAME,
