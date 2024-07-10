@@ -138,12 +138,7 @@ async def test_number_entities(
 
     # Change state
 
-    event_changed_sensor = {
-        "t": "event",
-        "e": "changed",
-        "r": "sensors",
-        "id": "0",
-    } | expected["websocket_event"]
+    event_changed_sensor = {"r": "sensors"} | expected["websocket_event"]
     await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]

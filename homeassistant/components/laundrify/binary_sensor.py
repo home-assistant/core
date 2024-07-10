@@ -45,7 +45,7 @@ class LaundrifyPowerPlug(
     _attr_unique_id: str
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_translation_key = "laundrify_power_plug"
+    _attr_translation_key = "wash_cycle"
 
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
