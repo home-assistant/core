@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.text import (
     ATTR_VALUE,
-    DOMAIN as TEXT_DOMAIN,
+    DOMAIN as TEXT_PLATFORM,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -61,7 +61,7 @@ async def test_rpc_device_virtual_text(
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "sed do eiusmod")
     await hass.services.async_call(
-        TEXT_DOMAIN,
+        TEXT_PLATFORM,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: "sed do eiusmod"},
         blocking=True,
@@ -90,7 +90,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        TEXT_DOMAIN,
+        TEXT_PLATFORM,
         "test_name_text_200",
         "text:200-text",
         config_entry,
@@ -115,7 +115,7 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        TEXT_DOMAIN,
+        TEXT_PLATFORM,
         "test_name_text_200",
         "text:200-text",
         config_entry,
