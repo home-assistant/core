@@ -34,6 +34,7 @@ from .const import (
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER_TYPE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_RETRIES,
@@ -280,21 +281,22 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
         CONF_HVAC_MODE_REGISTER in config
         and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
     ):
-        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!"
+        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!1"
         _LOGGER.warning(wrn)
         del config[CONF_HVAC_MODE_REGISTER]
     if (
         CONF_HVAC_ONOFF_REGISTER in config
+        and config[CONF_HVAC_ONOFF_REGISTER_TYPE] == "input"
         and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
     ):
-        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!"
+        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!2"
         _LOGGER.warning(wrn)
         del config[CONF_HVAC_ONOFF_REGISTER]
     if (
         CONF_FAN_MODE_REGISTER in config
         and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
     ):
-        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
+        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!3"
         _LOGGER.warning(wrn)
         del config[CONF_FAN_MODE_REGISTER]
 
@@ -305,7 +307,7 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
             else config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]
         )
         if regToTest in config[CONF_TARGET_TEMP]:
-            wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!"
+            wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!4"
             _LOGGER.warning(wrn)
             del config[CONF_SWING_MODE_REGISTER]
 

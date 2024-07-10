@@ -57,6 +57,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER_TYPE,
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
@@ -718,6 +719,51 @@ async def test_check_config_sensor(hass: HomeAssistant, do_config) -> None:
                             },
                         },
                         CONF_HVAC_ONOFF_REGISTER: 122,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " TEST RUTGER",
+                        CONF_ADDRESS: 118,
+                        CONF_TARGET_TEMP: [130, 131, 132, 133, 134, 135, 136],
+                        CONF_SLAVE: 0,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 130,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 2,
+                                CONF_HVAC_MODE_DRY: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 122,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " TEST RUTGER 2",
+                        CONF_ADDRESS: 118,
+                        CONF_TARGET_TEMP: [130, 131, 132, 133, 134, 135, 136],
+                        CONF_SLAVE: 0,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 130,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 2,
+                                CONF_HVAC_MODE_DRY: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 122,
+                        CONF_HVAC_ONOFF_REGISTER_TYPE: "single_coil",
                         CONF_FAN_MODE_REGISTER: {
                             CONF_ADDRESS: 120,
                             CONF_FAN_MODE_VALUES: {
