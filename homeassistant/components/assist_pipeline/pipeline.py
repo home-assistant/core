@@ -260,6 +260,22 @@ async def async_create_default_pipeline(
 
 
 @callback
+def _async_get_pipeline_from_conversation_entity(
+    hass: HomeAssistant, entity_id: str
+) -> Pipeline:
+    """Get a pipeline by conversation entity ID."""
+    entity = hass.states.get(entity_id)
+    settings = _async_resolve_default_pipeline_settings(
+        hass,
+        pipeline_name=entity.name if entity else entity_id,
+        conversation_engine_id=entity_id,
+    )
+    settings["id"] = entity_id
+
+    return Pipeline.from_json(settings)
+
+
+@callback
 def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> Pipeline:
     """Get a pipeline by id or the preferred pipeline."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -267,6 +283,9 @@ def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> P
     if pipeline_id is None:
         # A pipeline was not specified, use the preferred one
         pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
+
+    if pipeline_id.startswith("conversation."):
+        return _async_get_pipeline_from_conversation_entity(hass, pipeline_id)
 
     pipeline = pipeline_data.pipeline_store.data.get(pipeline_id)
 
@@ -865,6 +884,15 @@ class PipelineRun:
         stream: AsyncIterable[ProcessedAudioChunk],
     ) -> str:
         """Run speech-to-text portion of pipeline. Returns the spoken text."""
+        # Create a background task to prepare the conversation agent
+        if self.end_stage >= PipelineStage.INTENT:
+            self.hass.async_create_background_task(
+                conversation.async_prepare_agent(
+                    self.hass, self.intent_agent, self.language
+                ),
+                f"prepare conversation agent {self.intent_agent}",
+            )
+
         if isinstance(self.stt_provider, stt.Provider):
             engine = self.stt_provider.name
         else:
@@ -967,8 +995,6 @@ class PipelineRun:
         """Prepare recognizing an intent."""
         agent_info = conversation.async_get_agent_info(
             self.hass,
-            # If no conversation engine is set, use the Home Assistant agent
-            # (the conversation integration default is currently the last one set)
             self.pipeline.conversation_engine or conversation.HOME_ASSISTANT_AGENT,
         )
 
@@ -1662,6 +1688,12 @@ class PipelineStorageCollectionWebsocket(
         item_id = msg.get(self.item_id_key)
         if item_id is None:
             item_id = self.storage_collection.async_get_preferred_item()
+
+        if item_id.startswith("conversation.") and hass.states.get(item_id):
+            connection.send_result(
+                msg["id"], _async_get_pipeline_from_conversation_entity(hass, item_id)
+            )
+            return
 
         if item_id not in self.storage_collection.data:
             connection.send_error(
