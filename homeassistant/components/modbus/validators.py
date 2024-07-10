@@ -33,6 +33,7 @@ from .const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_RETRIES,
@@ -415,6 +416,9 @@ def validate_entity(
     if CONF_HVAC_MODE_REGISTER in entity:
         regCounter = regCounter + 1
         loc_addr.add(f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+    if CONF_HVAC_ONOFF_REGISTER in entity:
+        regCounter = regCounter + 1
+        loc_addr.add(f"{hub_name}{entity[CONF_HVAC_ONOFF_REGISTER]}_{inx}")
     if CONF_FAN_MODE_REGISTER in entity:
         regCounter = regCounter + 1
         loc_addr.add(
