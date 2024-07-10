@@ -46,6 +46,14 @@ TEST_ITEM_NUMBER = "1111111"
 TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.beosound_balance_11111111"
 
+TEST_FRIENDLY_NAME_2 = "Laundry room Balance"
+TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.22222222@products.bang-olufsen.com"
+TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.beosound_balance_22222222"
+
+TEST_FRIENDLY_NAME_3 = "Lego room Balance"
+TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.33333333@products.bang-olufsen.com"
+TEST_MEDIA_PLAYER_ENTITY_ID_3 = "media_player.beosound_balance_33333333"
+
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
 TEST_NAME_ZEROCONF = TEST_NAME.replace(" ", "-") + "." + TEST_TYPE_ZEROCONF

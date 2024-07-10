@@ -27,7 +27,11 @@ from homeassistant.core import HomeAssistant
 from .const import (
     TEST_DATA_CREATE_ENTRY,
     TEST_FRIENDLY_NAME,
+    TEST_FRIENDLY_NAME_2,
+    TEST_FRIENDLY_NAME_3,
     TEST_JID_1,
+    TEST_JID_2,
+    TEST_JID_3,
     TEST_NAME,
     TEST_SERIAL_NUMBER,
 )
@@ -223,6 +227,17 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id="64c9da45-3682-44a4-8030-09ed3ef44160",
             ),
         }
+        client.get_beolink_peers = AsyncMock()
+        client.get_beolink_peers.return_value = [
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2),
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3),
+        ]
+        client.get_beolink_listeners = AsyncMock()
+        client.get_beolink_listeners.return_value = [
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2),
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3),
+        ]
+
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()
@@ -237,6 +252,12 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.add_to_queue = AsyncMock()
         client.post_remote_trigger = AsyncMock()
         client.set_active_source = AsyncMock()
+        client.post_beolink_expand = AsyncMock()
+        client.join_beolink_peer = AsyncMock()
+        client.post_beolink_unexpand = AsyncMock()
+        client.post_beolink_leave = AsyncMock()
+        client.post_beolink_allstandby = AsyncMock()
+        client.join_latest_beolink_experience = AsyncMock()
 
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()

@@ -508,9 +508,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._remote_leader = self._playback_metadata.remote_leader
 
         # Temp fix for mismatch in WebSocket metadata and "real" REST endpoint where the remote leader is not deleted.
-        if self.source in (
-            BangOlufsenSource.LINE_IN,
-            BangOlufsenSource.URI_STREAMER,
+        if self._source_change.id in (
+            BangOlufsenSource.LINE_IN.id,
+            BangOlufsenSource.URI_STREAMER.id,
         ):
             self._remote_leader = None
 
@@ -634,8 +634,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Return the current playback progress."""
         # Don't show progress if the the device is a Beolink listener.
         if self._remote_leader is None:
-            return None
-        return self._playback_progress.progress
+            return self._playback_progress.progress
+        return None
 
     @property
     def media_image_url(self) -> str | None:
