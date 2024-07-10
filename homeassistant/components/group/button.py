@@ -122,7 +122,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
 
     @callback
     def async_update_group_state(self) -> None:
-        """Query all members and determine the switch group state."""
+        """Query all members and determine the button group state."""
         # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(
             state.state != STATE_UNAVAILABLE
