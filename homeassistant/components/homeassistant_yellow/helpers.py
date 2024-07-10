@@ -50,18 +50,21 @@ def _read_gpio_pins[_PinsT: int](pins: Sequence[_PinsT]) -> dict[_PinsT, bool]:
     # pylint: disable-next=import-outside-toplevel
     import gpiod
 
-    chip = gpiod.chip("/dev/gpiochip0", gpiod.chip.OPEN_BY_PATH)
-    lines = chip.get_lines(list(pins))
+    # pylint: disable-next=import-outside-toplevel
+    from gpiod.line import Bias, Direction, Value
 
-    config = gpiod.line_request()
-    config.consumer = "core-yellow"
-    config.request_type = gpiod.line_request.DIRECTION_INPUT
-
-    try:
-        lines.request(config)
-        return {p: bool(v) for p, v in zip(pins, lines.get_values(), strict=True)}
-    finally:
-        lines.release()
+    with gpiod.request_lines(
+        path="/dev/gpiochip0",
+        consumer="core-yellow",
+        config={
+            pin: gpiod.LineSettings(direction=Direction.INPUT, bias=Bias.DISABLED)
+            for pin in pins
+        },
+    ) as request:
+        return {
+            p: (v == Value.ACTIVE)
+            for p, v in zip(pins, request.get_values(), strict=True)
+        }
 
 
 async def async_validate_gpio_states(hass: HomeAssistant) -> bool:

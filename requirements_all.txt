@@ -1004,7 +1004,7 @@ govee-ble==0.31.3
 govee-local-api==1.5.1
 
 # homeassistant.components.homeassistant_yellow
-gpiod==1.5.4
+gpiod==2.2.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
