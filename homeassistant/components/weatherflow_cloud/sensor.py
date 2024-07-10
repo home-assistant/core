@@ -178,17 +178,11 @@ async def async_setup_entry(
 
     stations = coordinator.data.keys()
 
-    for sensor_description in WF_SENSORS:
-        for station_id in stations:
-            async_add_entities(
-                [
-                    WeatherFlowCloudSensor(
-                        coordinator,
-                        sensor_description,
-                        station_id,
-                    )
-                ],
-            )
+    async_add_entities(
+        WeatherFlowCloudSensor(coordinator, sensor_description, station_id)
+        for station_id in stations
+        for sensor_description in WF_SENSORS
+    )
 
 
 class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
