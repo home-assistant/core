@@ -65,6 +65,8 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         self._entry = entry
         self._hass = hass
         name = f"Telegram {entry.data[CONF_CLIENT_TYPE]} ({entry.unique_id})"
+        self._hass = hass
+        name = f"Telegram {entry.data[CONF_CLIENT_TYPE]} ({entry.unique_id})"
         self._device_info = {
             "identifiers": {(DOMAIN, entry.unique_id)},
             "name": name,
@@ -93,6 +95,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         )
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][entry.entry_id] = self
+        self._subscribe_listeners(entry)
         self._subscribe_listeners(entry)
 
     @property
