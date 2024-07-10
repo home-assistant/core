@@ -725,6 +725,7 @@ select = [
     "E", # pycodestyle
     "F", # pyflakes/autoflake
     "FLY", # flynt
+    "FURB", # refurb
     "G", # flake8-logging-format
     "I", # isort
     "INP", # flake8-no-pep420
