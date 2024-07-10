@@ -81,7 +81,7 @@ async def test_exceptions(
     error: str,
 ) -> None:
     """Test exceptions."""
-    getattr(mock_autarco_client, "get_account").side_effect = exception
+    mock_autarco_client.get_account.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
