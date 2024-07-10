@@ -67,6 +67,9 @@
     },
     "item_not_found_error": {
       "message": "Item {shopping_list_item} not found."
+    },
+    "version_error": {
+      "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
     }
   },
   "services": {

@@ -15,10 +15,4 @@ ATTR_RECIPE_ID = "recipe_id"
 ATTR_URL = "url"
 ATTR_INCLUDE_TAGS = "include_tags"
 
-MIN_REQUIRED_MEALIE_V = AwesomeVersion("v1.0.0")
-OUTDATED_LOG_MESSAGE = (
-    "You are running %s of Mealie. Minimum required version is %s. Please"
-    " upgrade Mealie and then retry."
-)
-BETA_STRATEGY_MEALIE = "beta-"
-BETA_STRATEGY_PEP440 = "b"
+MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v1.0.0")

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
-from awesomeversion import AwesomeVersion
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -13,14 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    BETA_STRATEGY_MEALIE,
-    BETA_STRATEGY_PEP440,
-    DOMAIN,
-    LOGGER,
-    MIN_REQUIRED_MEALIE_V,
-    OUTDATED_LOG_MESSAGE,
-)
+from .const import DOMAIN, MIN_REQUIRED_MEALIE_VERSION
 from .coordinator import (
     MealieConfigEntry,
     MealieData,
@@ -28,6 +20,7 @@ from .coordinator import (
     MealieShoppingListCoordinator,
 )
 from .services import setup_services
+from .utils import create_version
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
@@ -55,13 +48,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     except MealieConnectionError as error:
         raise ConfigEntryNotReady(error) from error
 
-    if not version.valid or version < MIN_REQUIRED_MEALIE_V:
-        LOGGER.error(
-            OUTDATED_LOG_MESSAGE,
-            about.version,
-            MIN_REQUIRED_MEALIE_V,
+    if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="version_error",
+            translation_placeholders={
+                "mealie_version": about.version,
+                "min_version": MIN_REQUIRED_MEALIE_VERSION,
+            },
         )
-        return False
 
     assert entry.unique_id
     device_registry = dr.async_get(hass)
@@ -92,8 +87,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def create_version(version: str) -> AwesomeVersion:
-    """Convert beta versions to PEP440."""
-    return AwesomeVersion(version.replace(BETA_STRATEGY_MEALIE, BETA_STRATEGY_PEP440))

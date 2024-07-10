@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import create_version
-from .const import DOMAIN, LOGGER, MIN_REQUIRED_MEALIE_V, OUTDATED_LOG_MESSAGE
+from .const import DOMAIN, LOGGER, MIN_REQUIRED_MEALIE_VERSION
+from .utils import create_version
 
 SCHEMA = vol.Schema(
     {
@@ -46,12 +46,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
-                if not version.valid or version < MIN_REQUIRED_MEALIE_V:
-                    LOGGER.debug(
-                        OUTDATED_LOG_MESSAGE,
-                        about.version,
-                        MIN_REQUIRED_MEALIE_V,
-                    )
+                if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
                     errors["base"] = "mealie_version"
                 else:
                     await self.async_set_unique_id(info.user_id)
