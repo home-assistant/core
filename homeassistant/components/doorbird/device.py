@@ -20,7 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import API_URL, DEFAULT_EVENT_TYPES, HTTP_EVENT_TYPE
+from .const import (
+    API_URL,
+    DEFAULT_EVENT_TYPES,
+    HTTP_EVENT_TYPE,
+    MAX_WEEKDAY,
+    MIN_WEEKDAY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,17 +98,57 @@ class ConfiguredDoorBird:
 
     async def async_register_events(self, hass: HomeAssistant) -> None:
         """Register events on device."""
+        if not self.door_station_events:
+            # User may not have permission to get the favorites
+            return
+
+        http_fav = await self._async_register_events(hass)
+        event_config = await self._async_get_event_config(http_fav)
+        if event_config.unconfigured_favorites:
+            await self._configure_unconfigured_favorites(event_config)
+            event_config = await self._async_get_event_config(http_fav)
+
+        self.event_descriptions = event_config.events
+
+    async def _configure_unconfigured_favorites(
+        self, event_config: DoorbirdEventConfig
+    ) -> None:
+        """Configure unconfigured favorites."""
+        for entry in event_config.schedule:
+            modified_schedule = False
+            for identifier in event_config.unconfigured_favorites.get(entry.input, ()):
+                schedule = DoorBirdScheduleEntrySchedule()
+                schedule.add_weekday(MIN_WEEKDAY, MAX_WEEKDAY)
+                entry.output.append(
+                    DoorBirdScheduleEntryOutput(
+                        enabled=True,
+                        event=HTTP_EVENT_TYPE,
+                        param=identifier,
+                        schedule=schedule,
+                    )
+                )
+                modified_schedule = True
+
+            if modified_schedule:
+                update_ok, code = await self.device.change_schedule(entry)
+                if not update_ok:
+                    _LOGGER.error(
+                        "Unable to update schedule entry %s to %s. Error code: %s",
+                        self.name,
+                        entry.export,
+                        code,
+                    )
+
+    async def _async_register_events(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Register events on device."""
         device = self.device
+
         # Override url if another is specified in the configuration
         if custom_url := self.custom_url:
             hass_url = custom_url
         else:
             # Get the URL of this server
             hass_url = get_url(hass, prefer_external=False)
-
-        if not self.door_station_events:
-            # User may not have permission to get the favorites
-            return
 
         favorites = await device.favorites()
         http_fav = favorites.get(HTTP_EVENT_TYPE) or {}
@@ -117,36 +163,7 @@ class ConfiguredDoorBird:
         if favorites_changed:
             http_fav = (await device.favorites()).get(HTTP_EVENT_TYPE) or {}
 
-        event_config = await self._async_get_event_config(http_fav)
-        if unconfigured_favs := event_config.unconfigured_favorites:
-            for entry in event_config.schedule:
-                modified_schedule = False
-                for identifier in unconfigured_favs.get(entry.input, ()):
-                    schedule = DoorBirdScheduleEntrySchedule()
-                    schedule.add_weekday(104400, 104399)
-                    entry.output.append(
-                        DoorBirdScheduleEntryOutput(
-                            enabled=True,
-                            event=HTTP_EVENT_TYPE,
-                            param=identifier,
-                            schedule=schedule,
-                        )
-                    )
-                    modified_schedule = True
-
-                if modified_schedule:
-                    update_ok, code = await device.change_schedule(entry)
-                    if not update_ok:
-                        _LOGGER.error(
-                            "Unable to update schedule entry %s to %s. Error code: %s",
-                            self.name,
-                            entry.export,
-                            code,
-                        )
-
-            event_config = await self._async_get_event_config(http_fav)
-
-        self.event_descriptions = event_config.events
+        return http_fav
 
     async def _async_get_event_config(
         self, http_fav: dict[str, dict[str, Any]]
