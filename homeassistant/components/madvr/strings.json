@@ -39,16 +39,16 @@
     },
     "sensor": {
       "temp_gpu": {
-        "name": "Temp gpu"
+        "name": "GPU temperature"
       },
       "temp_hdmi": {
-        "name": "Temp hdmi"
+        "name": "HDMI temperature"
       },
       "temp_cpu": {
-        "name": "Temp cpu"
+        "name": "CPU temperature"
       },
       "temp_mainboard": {
-        "name": "Temp mainboard"
+        "name": "Mainboard temperature"
       },
       "incoming_res": {
         "name": "Incoming res"

@@ -13,7 +13,7 @@ import homeassistant.helpers.entity_registry as er
 from . import setup_integration
 from .conftest import get_update_callback
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensor_setup_and_states(
@@ -64,11 +64,7 @@ async def test_sensor_setup_and_states(
     await hass.async_block_till_done()
 
     # Snapshot all entity states
-    assert snapshot == {
-        entity_id: hass.states.get(entity_id)
-        for entity_id in hass.states.async_entity_ids("sensor")
-        if entity_id.startswith("sensor.madvr_envy_")
-    }
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Test invalid temperature value
     update_callback({"temp_gpu": -1})
