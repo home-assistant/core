@@ -48,7 +48,22 @@ async def test_auth_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_update_failed(
+async def test_update_failed_project(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_devops_client: MagicMock,
+) -> None:
+    """Test a failed update entry."""
+    mock_devops_client.get_project.side_effect = aiohttp.ClientError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_devops_client.get_project.call_count == 1
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_update_failed_builds(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_devops_client: MagicMock,

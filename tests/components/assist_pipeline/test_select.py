@@ -53,7 +53,7 @@ async def init_select(hass: HomeAssistant, init_components) -> ConfigEntry:
         domain="assist_pipeline", state=ConfigEntryState.LOADED
     )
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_late_forward_entry_setups(config_entry, ["select"])
+    await hass.config_entries.async_forward_entry_setups(config_entry, ["select"])
     return config_entry
 
 
@@ -161,7 +161,7 @@ async def test_select_entity_changing_pipelines(
 
     # Reload config entry to test selected option persists
     assert await hass.config_entries.async_forward_entry_unload(config_entry, "select")
-    await hass.config_entries.async_late_forward_entry_setups(config_entry, ["select"])
+    await hass.config_entries.async_forward_entry_setups(config_entry, ["select"])
 
     state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
     assert state is not None
@@ -209,7 +209,7 @@ async def test_select_entity_changing_vad_sensitivity(
 
     # Reload config entry to test selected option persists
     assert await hass.config_entries.async_forward_entry_unload(config_entry, "select")
-    await hass.config_entries.async_late_forward_entry_setups(config_entry, ["select"])
+    await hass.config_entries.async_forward_entry_setups(config_entry, ["select"])
 
     state = hass.states.get("select.assist_pipeline_test_vad_sensitivity")
     assert state is not None

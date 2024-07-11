@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass, field
 import time
@@ -14,7 +14,6 @@ from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.event_media import CachePolicy
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
@@ -93,13 +92,13 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     stop_calls = 0
 
-    def __init__(self):
+    def __init__(self):  # pylint: disable=super-init-not-called
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
 
-    def set_update_callback(self, callback: Callable[[EventMessage], Awaitable[None]]):
+    def set_update_callback(self, target: Callable[[EventMessage], Awaitable[None]]):
         """Capture the callback set by Home Assistant."""
-        self._device_manager.set_update_callback(callback)
+        self._device_manager.set_update_callback(target)
 
     async def create_subscription(self):
         """Create the subscription."""

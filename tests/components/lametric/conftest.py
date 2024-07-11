@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from demetriek import CloudDevice, Device
-from pydantic import parse_raw_as
+from pydantic import parse_raw_as  # pylint: disable=no-name-in-module
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,

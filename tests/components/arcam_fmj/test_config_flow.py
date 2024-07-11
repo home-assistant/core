@@ -1,11 +1,11 @@
 """Tests for the Arcam FMJ config flow module."""
 
+from collections.abc import Generator
 from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from arcam.fmj.client import ConnectionFailed
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import ssdp
 from homeassistant.components.arcam_fmj.config_flow import get_entry_client

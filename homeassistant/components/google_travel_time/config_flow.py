@@ -180,6 +180,28 @@ class GoogleOptionsFlow(OptionsFlow):
         )
 
 
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> dict[str, str] | None:
+    """Validate the user input allows us to connect."""
+    try:
+        await hass.async_add_executor_job(
+            validate_config_entry,
+            hass,
+            user_input[CONF_API_KEY],
+            user_input[CONF_ORIGIN],
+            user_input[CONF_DESTINATION],
+        )
+    except InvalidApiKeyException:
+        return {"base": "invalid_auth"}
+    except TimeoutError:
+        return {"base": "timeout_connect"}
+    except UnknownException:
+        return {"base": "cannot_connect"}
+
+    return None
+
+
 class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Maps Travel Time."""
 
@@ -195,24 +217,11 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] | None = None
         user_input = user_input or {}
         if user_input:
-            try:
-                await self.hass.async_add_executor_job(
-                    validate_config_entry,
-                    self.hass,
-                    user_input[CONF_API_KEY],
-                    user_input[CONF_ORIGIN],
-                    user_input[CONF_DESTINATION],
-                )
-            except InvalidApiKeyException:
-                errors["base"] = "invalid_auth"
-            except TimeoutError:
-                errors["base"] = "timeout_connect"
-            except UnknownException:
-                errors["base"] = "cannot_connect"
-            else:
+            errors = await validate_input(self.hass, user_input)
+            if not errors:
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
@@ -233,24 +242,11 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert entry
 
-        errors = {}
+        errors: dict[str, str] | None = None
         user_input = user_input or {}
         if user_input:
-            try:
-                await self.hass.async_add_executor_job(
-                    validate_config_entry,
-                    self.hass,
-                    user_input[CONF_API_KEY],
-                    user_input[CONF_ORIGIN],
-                    user_input[CONF_DESTINATION],
-                )
-            except InvalidApiKeyException:
-                errors["base"] = "invalid_auth"
-            except TimeoutError:
-                errors["base"] = "timeout_connect"
-            except UnknownException:
-                errors["base"] = "cannot_connect"
-            else:
+            errors = await validate_input(self.hass, user_input)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     entry,
                     data=user_input,

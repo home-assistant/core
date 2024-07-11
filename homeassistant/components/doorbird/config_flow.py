@@ -6,8 +6,8 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
+from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
-import requests
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -20,6 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_door_station_info
@@ -40,18 +41,17 @@ def _schema_with_defaults(
     )
 
 
-def _check_device(device: DoorBird) -> tuple[tuple[bool, int], dict[str, Any]]:
-    """Verify we can connect to the device and return the status."""
-    return device.ready(), device.info()
-
-
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
-    device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
+    session = async_get_clientsession(hass)
+    device = DoorBird(
+        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], http_session=session
+    )
     try:
-        status, info = await hass.async_add_executor_job(_check_device, device)
-    except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
+        status = await device.ready()
+        info = await device.info()
+    except ClientResponseError as err:
+        if err.status == HTTPStatus.UNAUTHORIZED:
             raise InvalidAuth from err
         raise CannotConnect from err
     except OSError as err:
@@ -68,11 +68,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 async def async_verify_supported_device(hass: HomeAssistant, host: str) -> bool:
     """Verify the doorbell state endpoint returns a 401."""
-    device = DoorBird(host, "", "")
+    session = async_get_clientsession(hass)
+    device = DoorBird(host, "", "", http_session=session)
     try:
-        await hass.async_add_executor_job(device.doorbell_state)
-    except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
+        await device.doorbell_state()
+    except ClientResponseError as err:
+        if err.status == HTTPStatus.UNAUTHORIZED:
             return True
     except OSError:
         return False

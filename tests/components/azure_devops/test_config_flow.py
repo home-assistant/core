@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant import config_entries
@@ -218,9 +217,6 @@ async def test_reauth_flow(
 
     mock_devops_client.authorize.return_value = True
     mock_devops_client.authorized = True
-    mock_devops_client.get_project.return_value = DevOpsProject(
-        "abcd-abcd-abcd-abcd", FIXTURE_USER_INPUT[CONF_PROJECT]
-    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

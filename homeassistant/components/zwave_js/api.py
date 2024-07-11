@@ -166,65 +166,6 @@ STRATEGY = "strategy"
 MINIMUM_QR_STRING_LENGTH = 52
 
 
-def convert_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
-    """Handle provisioning entry dict to ProvisioningEntry."""
-    return ProvisioningEntry(
-        dsk=info[DSK],
-        security_classes=info[SECURITY_CLASSES],
-        status=info[STATUS],
-        requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
-        additional_properties={
-            k: v
-            for k, v in info.items()
-            if k not in (DSK, SECURITY_CLASSES, STATUS, REQUESTED_SECURITY_CLASSES)
-        },
-    )
-
-
-def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation:
-    """Convert QR provisioning information dict to QRProvisioningInformation."""
-    ## Remove this when we have fix for QRProvisioningInformation.from_dict()
-    return QRProvisioningInformation(
-        version=info[VERSION],
-        security_classes=info[SECURITY_CLASSES],
-        dsk=info[DSK],
-        generic_device_class=info[GENERIC_DEVICE_CLASS],
-        specific_device_class=info[SPECIFIC_DEVICE_CLASS],
-        installer_icon_type=info[INSTALLER_ICON_TYPE],
-        manufacturer_id=info[MANUFACTURER_ID],
-        product_type=info[PRODUCT_TYPE],
-        product_id=info[PRODUCT_ID],
-        application_version=info[APPLICATION_VERSION],
-        max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
-        uuid=info.get(UUID),
-        supported_protocols=info.get(SUPPORTED_PROTOCOLS),
-        status=info[STATUS],
-        requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
-        additional_properties={
-            k: v
-            for k, v in info.items()
-            if k
-            not in (
-                VERSION,
-                SECURITY_CLASSES,
-                DSK,
-                GENERIC_DEVICE_CLASS,
-                SPECIFIC_DEVICE_CLASS,
-                INSTALLER_ICON_TYPE,
-                MANUFACTURER_ID,
-                PRODUCT_TYPE,
-                PRODUCT_ID,
-                APPLICATION_VERSION,
-                MAX_INCLUSION_REQUEST_INTERVAL,
-                UUID,
-                SUPPORTED_PROTOCOLS,
-                STATUS,
-                REQUESTED_SECURITY_CLASSES,
-            )
-        },
-    )
-
-
 # Helper schemas
 PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
     vol.Schema(
@@ -244,7 +185,7 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
         # Provisioning entries can have extra keys for SmartStart
         extra=vol.ALLOW_EXTRA,
     ),
-    convert_planned_provisioning_entry,
+    ProvisioningEntry.from_dict,
 )
 
 QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
@@ -278,7 +219,7 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
         },
         extra=vol.ALLOW_EXTRA,
     ),
-    convert_qr_provisioning_information,
+    QRProvisioningInformation.from_dict,
 )
 
 QR_CODE_STRING_SCHEMA = vol.All(str, vol.Length(min=MINIMUM_QR_STRING_LENGTH))
@@ -773,6 +714,18 @@ async def websocket_add_node(
         )
 
     @callback
+    def node_found(event: dict) -> None:
+        node = event["node"]
+        node_details = {
+            "node_id": node["nodeId"],
+        }
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": "node found", "node": node_details}
+            )
+        )
+
+    @callback
     def node_added(event: dict) -> None:
         node = event["node"]
         interview_unsubs = [
@@ -815,6 +768,7 @@ async def websocket_add_node(
         controller.on("inclusion stopped", forward_event),
         controller.on("validate dsk and enter pin", forward_dsk),
         controller.on("grant security classes", forward_requested_grant),
+        controller.on("node found", node_found),
         controller.on("node added", node_added),
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
@@ -1297,6 +1251,18 @@ async def websocket_replace_failed_node(
         )
 
     @callback
+    def node_found(event: dict) -> None:
+        node = event["node"]
+        node_details = {
+            "node_id": node["nodeId"],
+        }
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": "node found", "node": node_details}
+            )
+        )
+
+    @callback
     def node_added(event: dict) -> None:
         node = event["node"]
         interview_unsubs = [
@@ -1352,6 +1318,7 @@ async def websocket_replace_failed_node(
         controller.on("validate dsk and enter pin", forward_dsk),
         controller.on("grant security classes", forward_requested_grant),
         controller.on("node removed", node_removed),
+        controller.on("node found", node_found),
         controller.on("node added", node_added),
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered

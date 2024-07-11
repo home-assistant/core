@@ -180,5 +180,6 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
-        if self.device_id:
-            del self.hass.data[DATA_MQTT].tags[self.device_id][discovery_id]
+        tags = self.hass.data[DATA_MQTT].tags
+        if self.device_id in tags and discovery_id in tags[self.device_id]:
+            del tags[self.device_id][discovery_id]

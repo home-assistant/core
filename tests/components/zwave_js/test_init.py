@@ -368,6 +368,7 @@ async def test_existing_node_not_ready(
 
 async def test_existing_node_not_replaced_when_not_ready(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     zp3111,
@@ -375,7 +376,6 @@ async def test_existing_node_not_replaced_when_not_ready(
     zp3111_state,
     client,
     integration,
-    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test when a node added event with a non-ready node is received.
 

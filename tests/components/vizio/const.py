@@ -196,8 +196,7 @@ MOCK_INCLUDE_NO_APPS = {
 
 VIZIO_ZEROCONF_SERVICE_TYPE = "_viziocast._tcp.local."
 ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
-ZEROCONF_HOST = HOST.split(":")[0]
-ZEROCONF_PORT = HOST.split(":")[1]
+ZEROCONF_HOST, ZEROCONF_PORT = HOST.split(":", maxsplit=2)
 
 MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
     ip_address=ip_address(ZEROCONF_HOST),

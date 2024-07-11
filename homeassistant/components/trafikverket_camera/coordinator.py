@@ -14,7 +14,8 @@ from pytrafikverket.exceptions import (
     NoCameraFound,
     UnknownError,
 )
-from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
+from pytrafikverket.models import CameraInfoModel
+from pytrafikverket.trafikverket_camera import TrafikverketCamera
 
 from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.core import HomeAssistant
@@ -35,7 +36,7 @@ TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 class CameraData:
     """Dataclass for Camera data."""
 
-    data: CameraInfo
+    data: CameraInfoModel
     image: bytes | None
 
 
@@ -60,7 +61,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
 
     async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
-        camera_data: CameraInfo
+        camera_data: CameraInfoModel
         image: bytes | None = None
         try:
             camera_data = await self._camera_api.async_get_camera(self._id)

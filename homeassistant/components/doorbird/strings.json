@@ -38,6 +38,14 @@
     }
   },
   "entity": {
+    "button": {
+      "reset_favorites": {
+        "name": "Reset favorites"
+      },
+      "ir": {
+        "name": "IR"
+      }
+    },
     "camera": {
       "live": {
         "name": "live"
@@ -47,6 +55,26 @@
       },
       "last_motion": {
         "name": "Last motion"
+      }
+    },
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      },
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
       }
     }
   }

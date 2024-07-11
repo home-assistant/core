@@ -11,7 +11,7 @@ from typing import Any
 from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED, Homeworks
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -29,14 +29,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
-from .const import (
-    CONF_ADDR,
-    CONF_CONTROLLER_ID,
-    CONF_DIMMERS,
-    CONF_KEYPADS,
-    CONF_RATE,
-    DOMAIN,
-)
+from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_KEYPADS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,35 +44,7 @@ DEFAULT_FADE_RATE = 1.0
 
 KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
-CV_FADE_RATE = vol.All(vol.Coerce(float), vol.Range(min=0, max=20))
-
-DIMMER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ADDR): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_RATE, default=DEFAULT_FADE_RATE): CV_FADE_RATE,
-    }
-)
-
-KEYPAD_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ADDR): cv.string, vol.Required(CONF_NAME): cv.string}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PORT): cv.port,
-                vol.Required(CONF_DIMMERS): vol.All(cv.ensure_list, [DIMMER_SCHEMA]),
-                vol.Optional(CONF_KEYPADS, default=[]): vol.All(
-                    cv.ensure_list, [KEYPAD_SCHEMA]
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
     {
@@ -157,14 +122,6 @@ async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> No
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start Homeworks controller."""
-
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-            )
-        )
-
     async_setup_services(hass)
 
     return True

@@ -1,12 +1,12 @@
 """Contains fixtures for Loqed tests."""
 
+from collections.abc import AsyncGenerator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from loqedAPI import loqed
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.loqed import DOMAIN
 from homeassistant.components.loqed.const import CONF_CLOUDHOOK_URL
