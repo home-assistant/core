@@ -409,7 +409,7 @@ class Recorder(threading.Thread):
         return cast(int, self._psutil.psutil.virtual_memory().available)
 
     def _reached_max_backlog_percentage(self, percentage: int) -> bool:
-        """Check if the system has reached the max queue backlog and return the maximum if it has."""
+        """Check if the system has reached the max queue backlog and return True if it has."""
         percentage_modifier = percentage / 100
         current_backlog = self.backlog
         # First check the minimum value since its cheap
