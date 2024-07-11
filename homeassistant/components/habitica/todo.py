@@ -115,6 +115,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a Habitica todo."""
+        refresh_required = False
         current_item = next(
             (task for task in (self.todo_items or []) if task.uid == item.uid),
             None,
@@ -123,7 +124,6 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         if TYPE_CHECKING:
             assert item.uid
             assert current_item
-            assert item.due
 
         if (
             self.entity_description.key is HabiticaTodoList.TODOS
@@ -144,6 +144,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                     notes=item.description or "",
                     date=date,
                 )
+                refresh_required = True
             except ClientResponseError as e:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -160,6 +161,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["up"].post()
                 )
+                refresh_required = True
             elif (
                 current_item.status is TodoItemStatus.COMPLETED
                 and item.status == TodoItemStatus.NEEDS_ACTION
@@ -167,6 +169,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["down"].post()
                 )
+                refresh_required = True
             else:
                 score_result = None
 
@@ -185,8 +188,8 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             persistent_notification.async_create(
                 self.hass, message=msg, title="Habitica"
             )
-
-        await self.coordinator.async_request_refresh()
+        if refresh_required:
+            await self.coordinator.async_request_refresh()
 
 
 class HabiticaTodosListEntity(BaseHabiticaListEntity):
