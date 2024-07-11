@@ -118,10 +118,11 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         existing_entry = self.reauth_entry
         assert existing_entry
         existing_data = existing_entry.data
-        description_placeholders: dict[str, str] = {
+        placeholders: dict[str, str] = {
             CONF_NAME: existing_data[CONF_NAME],
             CONF_HOST: existing_data[CONF_HOST],
         }
+        self.context["title_placeholders"] = placeholders
         if user_input is not None:
             new_config = {
                 **existing_data,
@@ -135,7 +136,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            description_placeholders=description_placeholders,
+            description_placeholders=placeholders,
             step_id="reauth_confirm",
             data_schema=AUTH_SCHEMA,
             errors=errors,
