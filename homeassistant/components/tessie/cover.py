@@ -189,11 +189,9 @@ class TessieSunroofEntity(TessieEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
         await self.run(vent_sunroof)
-        self._attr_is_closed = False
-        self.async_write_ha_state()
+        self.set((self.key, TessieCoverStates.OPEN))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         await self.run(close_sunroof)
-        self._attr_is_closed = True
-        self.async_write_ha_state()
+        self.set((self.key, TessieCoverStates.CLOSED))
