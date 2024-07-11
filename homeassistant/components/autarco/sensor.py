@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from autarco import Solar
+from autarco import Inverter, Solar
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -66,20 +66,58 @@ SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class AutarcoInverterSensorEntityDescription(SensorEntityDescription):
+    """Describes an Autarco inverter sensor entity."""
+
+    state: Callable[[Inverter], StateType]
+
+
+SENSORS_INVERTER: tuple[AutarcoInverterSensorEntityDescription, ...] = (
+    AutarcoInverterSensorEntityDescription(
+        key="out_ac_power",
+        translation_key="out_ac_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        state=lambda inverter: inverter.out_ac_power,
+    ),
+    AutarcoInverterSensorEntityDescription(
+        key="out_ac_energy_total",
+        translation_key="out_ac_energy_total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        state=lambda inverter: inverter.out_ac_energy_total,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutarcoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Autarco sensors based on a config entry."""
+    entities: list[SensorEntity] = []
     for coordinator in entry.runtime_data:
-        async_add_entities(
+        entities.extend(
             AutarcoSolarSensorEntity(
                 coordinator=coordinator,
                 description=description,
             )
             for description in SENSORS_SOLAR
         )
+        for inverter in coordinator.data.inverters.values():
+            entities.extend(
+                AutarcoInverterSensorEntity(
+                    coordinator=coordinator,
+                    description=description,
+                    serial_number=inverter.serial_number,
+                )
+                for description in SENSORS_INVERTER
+            )
+    async_add_entities(entities)
 
 
 class AutarcoSolarSensorEntity(
@@ -112,3 +150,40 @@ class AutarcoSolarSensorEntity(
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.state(self.coordinator.data.solar)
+
+
+class AutarcoInverterSensorEntity(
+    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
+):
+    """Defines an Autarco inverter sensor."""
+
+    entity_description: AutarcoInverterSensorEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        *,
+        coordinator: AutarcoDataUpdateCoordinator,
+        description: AutarcoInverterSensorEntityDescription,
+        serial_number: str,
+    ) -> None:
+        """Initialize Autarco sensor."""
+        super().__init__(coordinator)
+
+        self.entity_description = description
+        self._serial_number = serial_number
+        self._attr_unique_id = f"{serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            name=f"Inverter {serial_number}",
+            manufacturer="Autarco",
+            model="Inverter",
+            serial_number=serial_number,
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.state(
+            self.coordinator.data.inverters[self._serial_number]
+        )
