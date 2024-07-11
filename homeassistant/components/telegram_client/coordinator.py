@@ -32,6 +32,7 @@ from .const import (
     CONF_TOKEN,
     DOMAIN,
     EVENT_NEW_MESSAGE,
+    KEY_CLIENT,
     LOGGER,
     OPTION_BLACKLIST_CHATS,
     OPTION_CHATS,
@@ -42,6 +43,13 @@ from .const import (
     OPTION_OUTGOING,
     OPTION_PATTERN,
     SCAN_INTERVAL,
+    SENSOR_FIRST_NAME,
+    SENSOR_LAST_NAME,
+    SENSOR_PHONE,
+    SENSOR_PREMIUM,
+    SENSOR_RESTRICTED,
+    SENSOR_USER_ID,
+    SENSOR_USERNAME,
 )
 
 type TelegramClientEntryConfigEntry = ConfigEntry[TelegramClientCoordinator]
@@ -64,9 +72,9 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         self._unique_id = entry.unique_id
         self._entry = entry
         self._hass = hass
-        name = f"Telegram {entry.data[CONF_CLIENT_TYPE]} ({entry.unique_id})"
+        name = f"Telegram {entry.data.get(CONF_CLIENT_TYPE)} ({entry.unique_id})"
         self._hass = hass
-        name = f"Telegram {entry.data[CONF_CLIENT_TYPE]} ({entry.unique_id})"
+        name = f"Telegram {entry.data.get(CONF_CLIENT_TYPE)} ({entry.unique_id})"
         self._device_info = {
             "identifiers": {(DOMAIN, entry.unique_id)},
             "name": name,
@@ -85,17 +93,16 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         )
         session_id = (
             re.sub(r"\D", "", self._entry.data[CONF_PHONE])
-            if self._entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT
-            else self._entry.data[CONF_TOKEN].split(":")[0]
+            if self._entry.data.get(CONF_CLIENT_TYPE) == CLIENT_TYPE_CLIENT
+            else self._entry.data.get(CONF_TOKEN, "").split(":")[0]
         )
         self._client = TelegramClient(
             Path(hass.config.path(STORAGE_DIR, DOMAIN, f"{session_id}.session")),
-            entry.data[CONF_API_ID],
-            entry.data[CONF_API_HASH],
+            entry.data.get(CONF_API_ID),
+            entry.data.get(CONF_API_HASH),
         )
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][entry.entry_id] = self
-        self._subscribe_listeners(entry)
         self._subscribe_listeners(entry)
 
     @property
@@ -151,20 +158,20 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             )
             if hasattr(event.message, key)
         }
-        data["client"] = self.data
+        data[KEY_CLIENT] = self.data
         self._hass.bus.async_fire(f"{DOMAIN}_{EVENT_NEW_MESSAGE}", data)
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         me = await self.async_client_call(self._client.get_me())
         return {
-            "user_id": me.id,
-            "username": me.username,
-            "restricted": me.restricted,
-            "premium": me.premium,
-            "last_name": me.last_name,
-            "first_name": me.first_name,
-            "phone": me.phone,
+            SENSOR_USER_ID: me.id,
+            SENSOR_USERNAME: me.username,
+            SENSOR_RESTRICTED: me.restricted,
+            SENSOR_PREMIUM: me.premium,
+            SENSOR_LAST_NAME: me.last_name,
+            SENSOR_FIRST_NAME: me.first_name,
+            SENSOR_PHONE: me.phone,
         }
 
     async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:

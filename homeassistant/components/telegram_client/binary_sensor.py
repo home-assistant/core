@@ -45,7 +45,7 @@ async def async_setup_entry(
     binary_sensors = [
         TelegramClientBinarySensor(coordinator, entity_description)
         for entity_description in BINARY_SENSORS
-        if entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT
+        if entry.data.get(CONF_CLIENT_TYPE) == CLIENT_TYPE_CLIENT
         or entity_description.key not in [SENSOR_PREMIUM]
     ]
     async_add_entities(binary_sensors)

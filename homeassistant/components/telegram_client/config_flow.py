@@ -55,16 +55,16 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram client."""
 
     VERSION = 1
-    _config_entry: ConfigEntry
-    _client: TelegramClient
-    _session: str
-    _api_id: str
     _api_hash: str
-    _type: str
-    _phone: str
+    _api_id: str
+    _client: TelegramClient
+    _config_entry: ConfigEntry
+    _password: str = ""
+    _phone: str = ""
     _phone_code_hash: str
-    _token: str
-    _password: str
+    _session: str
+    _token: str = ""
+    _type: str
 
     def create_client(self) -> TelegramClient:
         """Create Telegram client."""
@@ -203,7 +203,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id=CONF_PASSWORD,
             data_schema=step_password_data_schema(
-                default_password=entry.data[CONF_PASSWORD] if entry else None
+                default_password=entry.data.get(CONF_PASSWORD) if entry else None
             ),
             errors=errors,
             last_step=True,
@@ -255,11 +255,11 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-auth."""
-        self._session = entry_data[CONF_SESSION_ID]
-        self._api_id = entry_data[CONF_API_ID]
-        self._api_hash = entry_data[CONF_API_HASH]
-        self._type = entry_data[CONF_CLIENT_TYPE]
-        self._phone = entry_data[CONF_PHONE]
+        self._session = entry_data.get(CONF_SESSION_ID, "")
+        self._api_id = entry_data.get(CONF_API_ID, "")
+        self._api_hash = entry_data.get(CONF_API_HASH, "")
+        self._type = entry_data.get(CONF_CLIENT_TYPE, CLIENT_TYPE_CLIENT)
+        self._phone = entry_data.get(CONF_PHONE, "")
 
         if self._type == CLIENT_TYPE_CLIENT:
             self._client = self.create_client()

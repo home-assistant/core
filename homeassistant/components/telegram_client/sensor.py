@@ -9,44 +9,56 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CLIENT_TYPE_CLIENT,
     CONF_CLIENT_TYPE,
-    CONF_PHONE,
-    CONF_USER_ID,
-    CONF_USERNAME,
+    ICON_LAST_EDITED_MESSAGE_ID,
+    ICON_LAST_SENT_MESSAGE_ID,
+    ICON_PHONE,
+    ICON_USER_ID,
+    ICON_USERNAME,
     SENSOR_FIRST_NAME,
     SENSOR_LAST_EDITED_MESSAGE_ID,
     SENSOR_LAST_NAME,
     SENSOR_LAST_SENT_MESSAGE_ID,
+    SENSOR_PHONE,
+    SENSOR_USER_ID,
+    SENSOR_USERNAME,
+    STRING_FIRST_NAME,
+    STRING_LAST_EDITED_MESSAGE_ID,
+    STRING_LAST_NAME,
+    STRING_LAST_SENT_MESSAGE_ID,
+    STRING_PHONE,
+    STRING_USER_ID,
+    STRING_USERNAME,
 )
 from .entity import TelegramClientCoordinatorSensor, TelegramClientSensor
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=CONF_USER_ID,
-        translation_key=CONF_USER_ID,
-        name="User ID",
-        icon="mdi:id-card",
+        key=SENSOR_USER_ID,
+        translation_key=SENSOR_USER_ID,
+        name=STRING_USER_ID,
+        icon=ICON_USER_ID,
     ),
     SensorEntityDescription(
-        key=CONF_USERNAME,
-        translation_key=CONF_USERNAME,
-        name="Username",
-        icon="mdi:account",
+        key=SENSOR_USERNAME,
+        translation_key=SENSOR_USERNAME,
+        name=STRING_USERNAME,
+        icon=ICON_USERNAME,
     ),
     SensorEntityDescription(
         key=SENSOR_LAST_NAME,
         translation_key=SENSOR_LAST_NAME,
-        name="Last name",
+        name=STRING_LAST_NAME,
     ),
     SensorEntityDescription(
         key=SENSOR_FIRST_NAME,
         translation_key=SENSOR_FIRST_NAME,
-        name="First name",
+        name=STRING_FIRST_NAME,
     ),
     SensorEntityDescription(
-        key=CONF_PHONE,
-        translation_key=CONF_PHONE,
-        name="Phone",
-        icon="mdi:card-account-phone",
+        key=SENSOR_PHONE,
+        translation_key=SENSOR_PHONE,
+        name=STRING_PHONE,
+        icon=ICON_PHONE,
     ),
 )
 
@@ -62,15 +74,15 @@ async def async_setup_entry(
         TelegramClientCoordinatorSensor(coordinator, entity_description)
         for entity_description in SENSORS
         if entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT
-        or entity_description.key not in [CONF_PHONE, SENSOR_LAST_NAME]
+        or entity_description.key not in [SENSOR_PHONE, SENSOR_LAST_NAME]
     )
     coordinator.last_sent_message_id = TelegramClientSensor(
         coordinator,
         SensorEntityDescription(
             key=SENSOR_LAST_SENT_MESSAGE_ID,
             translation_key=SENSOR_LAST_SENT_MESSAGE_ID,
-            name="Last sent message ID",
-            icon="mdi:message-arrow-right",
+            name=STRING_LAST_SENT_MESSAGE_ID,
+            icon=ICON_LAST_SENT_MESSAGE_ID,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     )
@@ -79,8 +91,8 @@ async def async_setup_entry(
         SensorEntityDescription(
             key=SENSOR_LAST_EDITED_MESSAGE_ID,
             translation_key=SENSOR_LAST_EDITED_MESSAGE_ID,
-            name="Last edited message ID",
-            icon="mdi:message-draw",
+            name=STRING_LAST_EDITED_MESSAGE_ID,
+            icon=ICON_LAST_EDITED_MESSAGE_ID,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     )

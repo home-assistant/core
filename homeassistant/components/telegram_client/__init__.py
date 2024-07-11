@@ -7,7 +7,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    EVENT_CALLBACK_QUERY,
+    EVENT_CHAT_ACTION,
+    EVENT_INLINE_QUERY,
+    EVENT_MESSAGE_DELETED,
+    EVENT_MESSAGE_EDITED,
+    EVENT_MESSAGE_READ,
+    EVENT_NEW_MESSAGE,
+    EVENT_USER_UPDATE,
+    OPTION_BLACKLIST_CHATS,
+    OPTION_DATA,
+    OPTION_EVENTS,
+    OPTION_FORWARDS,
+    OPTION_INBOX,
+    OPTION_INCOMING,
+    OPTION_OUTGOING,
+    OPTION_PATTERN,
+)
 from .coordinator import TelegramClientCoordinator, TelegramClientEntryConfigEntry
 
 PLATFORMS = [
@@ -29,6 +47,52 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
 ) -> bool:
     """Handle Telegram client entry setup."""
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                OPTION_EVENTS: {
+                    EVENT_NEW_MESSAGE: True,
+                    EVENT_MESSAGE_EDITED: True,
+                },
+                EVENT_NEW_MESSAGE: {
+                    OPTION_BLACKLIST_CHATS: False,
+                    OPTION_FORWARDS: True,
+                    OPTION_INCOMING: True,
+                    OPTION_OUTGOING: True,
+                    OPTION_PATTERN: "",
+                },
+                EVENT_MESSAGE_EDITED: {
+                    OPTION_BLACKLIST_CHATS: False,
+                    OPTION_FORWARDS: True,
+                    OPTION_INCOMING: True,
+                    OPTION_OUTGOING: True,
+                    OPTION_PATTERN: "",
+                },
+                EVENT_MESSAGE_READ: {
+                    OPTION_BLACKLIST_CHATS: False,
+                    OPTION_INBOX: False,
+                },
+                EVENT_MESSAGE_DELETED: {
+                    OPTION_BLACKLIST_CHATS: False,
+                },
+                EVENT_CALLBACK_QUERY: {
+                    OPTION_BLACKLIST_CHATS: False,
+                    OPTION_DATA: "",
+                    OPTION_PATTERN: "",
+                },
+                EVENT_INLINE_QUERY: {
+                    OPTION_BLACKLIST_CHATS: False,
+                    OPTION_PATTERN: "",
+                },
+                EVENT_CHAT_ACTION: {
+                    OPTION_BLACKLIST_CHATS: False,
+                },
+                EVENT_USER_UPDATE: {
+                    OPTION_BLACKLIST_CHATS: False,
+                },
+            },
+        )
     coordinator = TelegramClientCoordinator(hass, entry)
     await coordinator.async_client_start()
     entry.runtime_data = coordinator

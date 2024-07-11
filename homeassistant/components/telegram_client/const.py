@@ -18,13 +18,11 @@ CLIENT_TYPE_CLIENT: Final = "client"
 # region configuration
 CONF_API_HASH: Final = "api_hash"
 CONF_API_ID: Final = "api_id"
+CONF_CLIENT_TYPE: Final = "client_type"
 CONF_OTP: Final = "otp"
 CONF_PHONE: Final = "phone"
 CONF_SESSION_ID: Final = "session_id"
 CONF_TOKEN: Final = "token"
-CONF_CLIENT_TYPE: Final = "type"
-CONF_USERNAME: Final = "username"
-CONF_USER_ID: Final = "user_id"
 # endregion
 
 # region events
@@ -41,9 +39,11 @@ EVENT_USER_UPDATE: Final = "user_update"
 # region options
 OPTION_BLACKLIST_CHATS: Final = "blacklist_chats"
 OPTION_CHATS: Final = "chats"
+OPTION_DATA: Final = "data"
 OPTION_EVENTS: Final = "events"
 OPTION_FORWARDS: Final = "forwards"
 OPTION_FROM_USERS: Final = "from_users"
+OPTION_INBOX: Final = "inbox"
 OPTION_INCOMING: Final = "incoming"
 OPTION_OUTGOING: Final = "outgoing"
 OPTION_PATTERN: Final = "pattern"
@@ -54,8 +54,11 @@ SENSOR_FIRST_NAME: Final = "first_name"
 SENSOR_LAST_EDITED_MESSAGE_ID: Final = "last_edited_message_id"
 SENSOR_LAST_NAME: Final = "last_name"
 SENSOR_LAST_SENT_MESSAGE_ID: Final = "last_sent_message_id"
+SENSOR_PHONE: Final = "phone"
 SENSOR_PREMIUM: Final = "premium"
 SENSOR_RESTRICTED: Final = "restricted"
+SENSOR_USERNAME: Final = "username"
+SENSOR_USER_ID: Final = "user_id"
 # endregion
 
 # region services
@@ -90,6 +93,7 @@ FIELD_USER_ID: Final = "user_id"
 
 # region keys
 KEY_BASE: Final = "base"
+KEY_CLIENT: Final = "client"
 KEY_ENTRY_ID: Final = "entry_id"
 KEY_SUGGESTED_VALUE: Final = "suggested_value"
 # endregion
@@ -99,10 +103,18 @@ STRING_FIRST_NAME: Final = "First name"
 STRING_LAST_EDITED_MESSAGE_ID: Final = "Last edited message ID"
 STRING_LAST_NAME: Final = "Last name"
 STRING_LAST_SENT_MESSAGE_ID: Final = "Last sent message ID"
+STRING_PHONE: Final = "Phone"
 STRING_PREMIUM: Final = "Premium"
 STRING_RESTRICTED: Final = "Restricted"
+STRING_USERNAME: Final = "Username"
+STRING_USER_ID: Final = "User ID"
 # endregion
 
 # region icons
+ICON_LAST_EDITED_MESSAGE_ID: Final = "mdi:message-draw"
+ICON_LAST_SENT_MESSAGE_ID: Final = "mdi:message-arrow-right"
+ICON_PHONE: Final = "mdi:card-account-phone"
 ICON_PREMIUM: Final = "mdi:star"
+ICON_USERNAME: Final = "mdi:account"
+ICON_USER_ID: Final = "mdi:id-card"
 # endregion

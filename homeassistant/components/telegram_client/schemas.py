@@ -14,8 +14,14 @@ from .const import (
     CONF_OTP,
     CONF_PHONE,
     CONF_TOKEN,
+    EVENT_CALLBACK_QUERY,
+    EVENT_CHAT_ACTION,
+    EVENT_INLINE_QUERY,
+    EVENT_MESSAGE_DELETED,
     EVENT_MESSAGE_EDITED,
+    EVENT_MESSAGE_READ,
     EVENT_NEW_MESSAGE,
+    EVENT_USER_UPDATE,
     FIELD_CLEAR_DRAFT,
     FIELD_COMMENT_TO,
     FIELD_FILE,
@@ -38,8 +44,10 @@ from .const import (
     KEY_SUGGESTED_VALUE,
     OPTION_BLACKLIST_CHATS,
     OPTION_CHATS,
+    OPTION_DATA,
     OPTION_FORWARDS,
     OPTION_FROM_USERS,
+    OPTION_INBOX,
     OPTION_INCOMING,
     OPTION_OUTGOING,
     OPTION_PATTERN,
@@ -102,12 +110,36 @@ def step_events_data_schema(data):
                 EVENT_MESSAGE_EDITED,
                 default=data.get(EVENT_MESSAGE_EDITED, True),
             ): cv.boolean,
+            vol.Required(
+                EVENT_MESSAGE_READ,
+                default=data.get(EVENT_MESSAGE_READ, True),
+            ): cv.boolean,
+            vol.Required(
+                EVENT_MESSAGE_DELETED,
+                default=data.get(EVENT_MESSAGE_DELETED, True),
+            ): cv.boolean,
+            vol.Required(
+                EVENT_CALLBACK_QUERY,
+                default=data.get(EVENT_CALLBACK_QUERY, True),
+            ): cv.boolean,
+            vol.Required(
+                EVENT_INLINE_QUERY,
+                default=data.get(EVENT_INLINE_QUERY, True),
+            ): cv.boolean,
+            vol.Required(
+                EVENT_CHAT_ACTION,
+                default=data.get(EVENT_CHAT_ACTION, True),
+            ): cv.boolean,
+            vol.Required(
+                EVENT_USER_UPDATE,
+                default=data.get(EVENT_USER_UPDATE, True),
+            ): cv.boolean,
         }
     )
 
 
 def step_new_message_data_schema(data):
-    """Step New message data schema."""
+    """Step new message data schema."""
     return vol.Schema(
         {
             vol.Required(
@@ -143,7 +175,7 @@ def step_new_message_data_schema(data):
 
 
 def step_message_edited_data_schema(data):
-    """Step New message data schema."""
+    """Step message edited data schema."""
     return vol.Schema(
         {
             vol.Required(
@@ -173,6 +205,118 @@ def step_message_edited_data_schema(data):
             vol.Optional(
                 OPTION_PATTERN,
                 description={KEY_SUGGESTED_VALUE: data.get(OPTION_PATTERN, "")},
+            ): cv.string,
+        }
+    )
+
+
+def step_message_read_data_schema(data):
+    """Step message read data schema."""
+    return vol.Schema(
+        {
+            vol.Required(
+                OPTION_INBOX,
+                default=data.get(OPTION_INBOX, True),
+            ): cv.boolean,
+            vol.Required(
+                OPTION_BLACKLIST_CHATS,
+                default=data.get(OPTION_BLACKLIST_CHATS, False),
+            ): cv.boolean,
+            vol.Optional(
+                OPTION_CHATS,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_CHATS, "")},
+            ): cv.string,
+        }
+    )
+
+
+def step_message_deleted_data_schema(data):
+    """Step message deleted data schema."""
+    return vol.Schema(
+        {
+            vol.Required(
+                OPTION_BLACKLIST_CHATS,
+                default=data.get(OPTION_BLACKLIST_CHATS, False),
+            ): cv.boolean,
+            vol.Optional(
+                OPTION_CHATS,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_CHATS, "")},
+            ): cv.string,
+        }
+    )
+
+
+def step_callback_query_data_schema(data):
+    """Step callback query data schema."""
+    return vol.Schema(
+        {
+            vol.Required(
+                OPTION_BLACKLIST_CHATS,
+                default=data.get(OPTION_BLACKLIST_CHATS, False),
+            ): cv.boolean,
+            vol.Optional(
+                OPTION_CHATS,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_CHATS, "")},
+            ): cv.string,
+            vol.Optional(
+                OPTION_DATA,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_DATA, "")},
+            ): cv.string,
+            vol.Optional(
+                OPTION_PATTERN,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_PATTERN, "")},
+            ): cv.string,
+        }
+    )
+
+
+def step_inline_query_data_schema(data):
+    """Step inline query data schema."""
+    return vol.Schema(
+        {
+            vol.Required(
+                OPTION_BLACKLIST_CHATS,
+                default=data.get(OPTION_BLACKLIST_CHATS, False),
+            ): cv.boolean,
+            vol.Optional(
+                OPTION_CHATS,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_CHATS, "")},
+            ): cv.string,
+            vol.Optional(
+                OPTION_PATTERN,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_PATTERN, "")},
+            ): cv.string,
+        }
+    )
+
+
+def step_chat_action_data_schema(data):
+    """Step chat action data schema."""
+    return vol.Schema(
+        {
+            vol.Required(
+                OPTION_BLACKLIST_CHATS,
+                default=data.get(OPTION_BLACKLIST_CHATS, False),
+            ): cv.boolean,
+            vol.Optional(
+                OPTION_CHATS,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_CHATS, "")},
+            ): cv.string,
+        }
+    )
+
+
+def step_user_update_data_schema(data):
+    """Step user update data schema."""
+    return vol.Schema(
+        {
+            vol.Required(
+                OPTION_BLACKLIST_CHATS,
+                default=data.get(OPTION_BLACKLIST_CHATS, False),
+            ): cv.boolean,
+            vol.Optional(
+                OPTION_CHATS,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_CHATS, "")},
             ): cv.string,
         }
     )

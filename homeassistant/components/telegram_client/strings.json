@@ -67,7 +67,13 @@
       "init": {
         "data": {
           "new_message": "New message",
-          "edited_message": "Edited message"
+          "message_edited": "Message edited",
+          "message_read": "Message read",
+          "message_deleted": "Message deleted",
+          "callback_query": "Callback query",
+          "inline_query": "Inline query",
+          "chat_action": "Chat action",
+          "user_update": "User update"
         },
         "title": "Events to listen",
         "description": "Here you can set whitch events you want to listen and fire to Home Assistant event bus."
@@ -95,8 +101,60 @@
           "forwards": "Forwards",
           "pattern": "Pattern"
         },
-        "title": "Edited message event",
-        "description": "Here you can set parameters for edited message events."
+        "title": "Message edited event",
+        "description": "Here you can set parameters for message edited events."
+      },
+      "message_read": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist chats",
+          "inbox": "Inbox"
+        },
+        "title": "Message read event",
+        "description": "Here you can set parameters for message read events."
+      },
+      "message_deleted": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist chats"
+        },
+        "title": "Message deleted event",
+        "description": "Here you can set parameters for message deleted events."
+      },
+      "callback_query": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist chats",
+          "data": "Data",
+          "pattern": "Pattern"
+        },
+        "title": "Callback query event",
+        "description": "Here you can set parameters for callback query events."
+      },
+      "inline_query": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist chats",
+          "pattern": "Pattern"
+        },
+        "title": "Inline query event",
+        "description": "Here you can set parameters for inline query events."
+      },
+      "chat_action": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist chats"
+        },
+        "title": "Chat action event",
+        "description": "Here you can set parameters for chat action events."
+      },
+      "user_update": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist chats"
+        },
+        "title": "User update event",
+        "description": "Here you can set parameters for user update events."
       }
     }
   },
