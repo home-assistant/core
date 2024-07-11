@@ -30,13 +30,9 @@ class SmData:
 class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
     """Class to manage fetching SMLIGHT data."""
 
-    config_entry: ConfigEntry
-    hostname: str | None = None
-    unique_id: str | None = None
-    _internet: bool = False
-
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
+        self.config_entry: ConfigEntry
         super().__init__(
             hass,
             LOGGER,
@@ -44,7 +40,10 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
             update_interval=SCAN_INTERVAL,
         )
 
+        self._internet: bool = False
         self.hostname: str | None = self.get_hostname()
+        self.unique_id: str | None = None
+
         self.client = Api2(
             host=entry.data[CONF_HOST], session=async_get_clientsession(hass)
         )
