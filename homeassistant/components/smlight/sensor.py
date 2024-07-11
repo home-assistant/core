@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
+from .const import LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
 from .coordinator import SmData, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -97,7 +97,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
-    coordinator: SmDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SmDataUpdateCoordinator = entry.runtime_data
 
     sensors = [SmSensorEntity(coordinator, description) for description in SENSORS]
     async_add_entities(sensors)
