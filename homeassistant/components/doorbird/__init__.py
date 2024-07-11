@@ -52,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
 
     device = DoorBird(device_ip, username, password, http_session=session)
     try:
-        status = await device.ready()
         info = await device.info()
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
@@ -60,15 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
         raise ConfigEntryNotReady from err
     except OSError as oserr:
         raise ConfigEntryNotReady from oserr
-
-    if not status[0]:
-        _LOGGER.error(
-            "Could not connect to DoorBird as %s@%s: Error %s",
-            username,
-            device_ip,
-            str(status[1]),
-        )
-        raise ConfigEntryNotReady
 
     token: str = door_station_config.get(CONF_TOKEN, config_entry_id)
     custom_url: str | None = door_station_config.get(CONF_CUSTOM_URL)

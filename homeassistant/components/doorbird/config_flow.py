@@ -64,7 +64,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], http_session=session
     )
     try:
-        status = await device.ready()
         info = await device.info()
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
@@ -72,9 +71,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise CannotConnect from err
     except OSError as err:
         raise CannotConnect from err
-
-    if not status[0]:
-        raise CannotConnect
 
     mac_addr = get_mac_address_from_door_station_info(info)
 
