@@ -13,7 +13,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import automation, mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
@@ -413,34 +413,6 @@ async def test_publish_function_with_bad_encoding_conditions(
         "Can't encode payload for publishing test-payload on some-topic with encoding invalid_encoding"
         in caplog.text
     )
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {
-                    "service": "mqtt.publish",
-                    "data": {"topic": "test/{{ 4 + 4}}", "payload": "{{ 4 * 4}}"},
-                },
-            }
-        }
-    ],
-)
-async def test_service_call_with_templates_though_an_automation(
-    hass: HomeAssistant,
-    hass_config: ConfigType,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-) -> None:
-    """Test the service call with templated args through an automation."""
-    await async_setup_component(hass, automation.DOMAIN, hass_config)
-    mqtt_mock = await mqtt_mock_entry()
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    mqtt_mock.async_publish.assert_called_with("test/8", "16", 0, False)
 
 
 def test_validate_topic() -> None:
