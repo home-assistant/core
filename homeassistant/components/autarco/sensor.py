@@ -112,10 +112,10 @@ async def async_setup_entry(
             AutarcoInverterSensorEntity(
                 coordinator=coordinator,
                 description=description,
-                serial_number=inverter.serial_number,
+                serial_number=inverter,
             )
             for description in SENSORS_INVERTER
-            for inverter in coordinator.data.inverters.values()
+            for inverter in coordinator.data.inverters
         )
     async_add_entities(entities)
 
