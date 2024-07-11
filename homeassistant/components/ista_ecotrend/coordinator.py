@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -20,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Ista EcoTrend data update coordinator."""
+
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, ista: PyEcotrendIsta) -> None:
         """Initialize ista EcoTrend data update coordinator."""
@@ -48,14 +51,12 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Unable to connect and retrieve data from ista EcoTrend, try again later"
             ) from e
         except (LoginError, KeycloakError) as e:
-            if TYPE_CHECKING:
-                assert self.config_entry
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
                 translation_placeholders={
                     CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
-                },  # noqa: SLF001
+                },
             ) from e
 
     def get_consumption_data(self) -> dict[str, Any]:
