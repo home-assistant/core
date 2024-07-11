@@ -117,13 +117,13 @@ async def async_setup_entry(
     # Register services.
     platform = async_get_current_platform()
 
+    jid_regex = vol.Match(
+        r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
+    )
+
     platform.async_register_entity_service(
         name="beolink_join",
-        schema={
-            vol.Optional("beolink_jid"): vol.Match(
-                r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
-            )
-        },
+        schema={vol.Optional("beolink_jid"): jid_regex},
         func="async_beolink_join",
         supports_response=SupportsResponse.OPTIONAL,
     )
@@ -138,11 +138,7 @@ async def async_setup_entry(
                 "Define either specific Beolink JIDs or all discovered",
             ): vol.All(
                 cv.ensure_list,
-                [
-                    vol.Match(
-                        r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
-                    )
-                ],
+                [jid_regex],
             ),
         },
         func="async_beolink_expand",
@@ -154,11 +150,7 @@ async def async_setup_entry(
         schema={
             vol.Required("beolink_jids"): vol.All(
                 cv.ensure_list,
-                [
-                    vol.Match(
-                        r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
-                    )
-                ],
+                [jid_regex],
             ),
         },
         func="async_beolink_unexpand",
@@ -1006,8 +998,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         response: dict[str, Any] = {"not_on_network": []}
 
         # Ensure that the current source is expandable
-        if not self._beolink_sources[cast(str, self._source_change.id)]:
-            return {"invalid_source": self.source}
+        with contextlib.suppress(KeyError):
+            if not self._beolink_sources[cast(str, self._source_change.id)]:
+                return {"invalid_source": self.source}
 
         # Expand to all discovered devices
         if all_discovered:

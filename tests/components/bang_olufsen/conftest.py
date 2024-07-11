@@ -26,6 +26,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     TEST_DATA_CREATE_ENTRY,
+    TEST_DATA_CREATE_ENTRY_2,
     TEST_FRIENDLY_NAME,
     TEST_FRIENDLY_NAME_2,
     TEST_FRIENDLY_NAME_3,
@@ -33,7 +34,9 @@ from .const import (
     TEST_JID_2,
     TEST_JID_3,
     TEST_NAME,
+    TEST_NAME_2,
     TEST_SERIAL_NUMBER,
+    TEST_SERIAL_NUMBER_2,
 )
 
 from tests.common import MockConfigEntry
@@ -47,6 +50,17 @@ def mock_config_entry():
         unique_id=TEST_SERIAL_NUMBER,
         data=TEST_DATA_CREATE_ENTRY,
         title=TEST_NAME,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_2():
+    """Mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_2,
+        data=TEST_DATA_CREATE_ENTRY_2,
+        title=TEST_NAME_2,
     )
 
 
@@ -101,12 +115,18 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     is_enabled=True,
                     is_multiroom_available=False,
                 ),
-                # The only available source
+                # The only available beolink source
                 Source(
                     name="Tidal",
                     id="tidal",
                     is_enabled=True,
                     is_multiroom_available=True,
+                ),
+                Source(
+                    name="Line-In",
+                    id="lineIn",
+                    is_enabled=True,
+                    is_multiroom_available=False,
                 ),
                 # Is disabled, so should not be user selectable
                 Source(
