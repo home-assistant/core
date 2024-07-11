@@ -22,10 +22,18 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
+from .const import (
+    CONF_EVENTS,
+    DEFAULT_DOORBELL_EVENT,
+    DEFAULT_MOTION_EVENT,
+    DOMAIN,
+    DOORBIRD_OUI,
+)
 from .util import get_mac_address_from_door_station_info
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_OPTIONS = {CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]}
 
 
 def _schema_with_defaults(
@@ -99,7 +107,9 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 await self.async_set_unique_id(info["mac_addr"])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=info["title"], data=user_input, options=DEFAULT_OPTIONS
+                )
 
         data = self.discovery_schema or _schema_with_defaults()
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
@@ -176,7 +186,6 @@ class OptionsFlowHandler(OptionsFlow):
         """Handle options flow."""
         if user_input is not None:
             events = [event.strip() for event in user_input[CONF_EVENTS].split(",")]
-
             return self.async_create_entry(title="", data={CONF_EVENTS: events})
 
         current_events = self.config_entry.options.get(CONF_EVENTS, [])
