@@ -883,6 +883,25 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     await hass.async_block_till_done()
     assert char.value is False
 
+    # Ensure re-adding does not fire an event
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # But a second update does
+    broker.reset_mock()
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
+
 
 async def test_camera_with_a_missing_linked_motion_sensor(
     hass: HomeAssistant, run_driver
@@ -1147,6 +1166,26 @@ async def test_camera_with_linked_doorbell_event(
     await hass.async_block_till_done()
     assert char.value is None
     assert char2.value is None
+
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        doorbell_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    # Ensure re-adding does not fire an event
+    assert not broker.mock_calls
+    broker.reset_mock()
+
+    # But a second update does
+    hass.states.async_set(
+        doorbell_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
 
 
 async def test_camera_with_a_missing_linked_doorbell_sensor(
