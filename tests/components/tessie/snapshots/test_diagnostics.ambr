@@ -329,7 +329,7 @@
           'vehicle_config_roof_color': 'RoofColorGlass',
           'vehicle_config_seat_type': None,
           'vehicle_config_spoiler_type': 'None',
-          'vehicle_config_sun_roof_installed': None,
+          'vehicle_config_sun_roof_installed': True,
           'vehicle_config_supports_qr_pairing': False,
           'vehicle_config_third_row_seats': 'None',
           'vehicle_config_timestamp': 1701139037461,
