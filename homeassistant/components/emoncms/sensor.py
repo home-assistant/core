@@ -112,7 +112,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the emoncms sensors."""
-    LOGGER.debug(f"WE ARE IN ASYNC_STEP_ENTRY : {entry}")
     config = entry.data
     apikey = config[CONF_API_KEY]
     url = config[CONF_URL]
@@ -144,7 +143,7 @@ async def async_setup_entry(
             translation_key="migrate_database",
             translation_placeholders={"url": url},
         )
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     await coordinator.async_refresh()
     elems = coordinator.data
     if elems is None:
