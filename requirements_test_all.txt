@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.48.0
+PySwitchbot==0.48.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
