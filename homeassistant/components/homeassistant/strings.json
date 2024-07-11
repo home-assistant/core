@@ -71,6 +71,10 @@
           }
         }
       }
+    },
+    "ssl_configured_without_external_url": {
+      "title": "SSL is configured without an external URL",
+      "description": "SSL is configured, but no external URL is set. Please set `external_url` in your configuration."
     }
   },
   "system_health": {
