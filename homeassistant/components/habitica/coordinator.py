@@ -85,4 +85,4 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 translation_key="service_call_exception",
             ) from e
         else:
-            await self.async_refresh()
+            await self.async_request_refresh()
