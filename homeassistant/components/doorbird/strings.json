@@ -38,6 +38,14 @@
     }
   },
   "entity": {
+    "button": {
+      "reset_favorites": {
+        "name": "Reset favorites"
+      },
+      "ir": {
+        "name": "IR"
+      }
+    },
     "camera": {
       "live": {
         "name": "live"
