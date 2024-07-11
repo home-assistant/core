@@ -32,22 +32,24 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, PLATFORMS
+from . import HistoryStatsConfigEntry
+from .const import (
+    CONF_DURATION,
+    CONF_END,
+    CONF_PERIOD_KEYS,
+    CONF_START,
+    CONF_TYPE_COUNT,
+    CONF_TYPE_KEYS,
+    CONF_TYPE_RATIO,
+    CONF_TYPE_TIME,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
 from .helpers import pretty_ratio
 
-CONF_START = "start"
-CONF_END = "end"
-CONF_DURATION = "duration"
-CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
-
-CONF_TYPE_TIME = "time"
-CONF_TYPE_RATIO = "ratio"
-CONF_TYPE_COUNT = "count"
-CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
-
-DEFAULT_NAME = "unnamed statistics"
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
@@ -82,7 +84,6 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-# noinspection PyUnusedLocal
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -111,6 +112,20 @@ async def async_setup_platform(
     if not coordinator.last_update_success:
         raise PlatformNotReady from coordinator.last_exception
     async_add_entities([HistoryStatsSensor(coordinator, sensor_type, name, unique_id)])
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HistoryStatsConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the History stats sensor entry."""
+
+    sensor_type: str = entry.options[CONF_TYPE]
+    coordinator = entry.runtime_data
+    async_add_entities(
+        [HistoryStatsSensor(coordinator, sensor_type, entry.title, entry.entry_id)]
+    )
 
 
 class HistoryStatsSensorBase(

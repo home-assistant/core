@@ -104,7 +104,7 @@ def encode_access_token() -> str:
 
 
 @pytest.fixture(name="access_token")
-def access_token_fixture(requests_mock: Mocker) -> Generator[None, None, None]:
+def access_token_fixture(requests_mock: Mocker) -> Generator[None]:
     """Fixture to setup the access token."""
     token_response = {
         "refresh_token": REFRESH_TOKEN,

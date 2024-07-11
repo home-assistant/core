@@ -97,6 +97,7 @@ homeassistant.components.assist_pipeline.*
 homeassistant.components.asterisk_cdr.*
 homeassistant.components.asterisk_mbox.*
 homeassistant.components.asuswrt.*
+homeassistant.components.autarco.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
@@ -287,6 +288,7 @@ homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
+homeassistant.components.madvr.*
 homeassistant.components.mailbox.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*
