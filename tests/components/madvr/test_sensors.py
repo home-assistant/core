@@ -69,7 +69,7 @@ async def test_sensor_setup_and_states(
     # Test invalid temperature value
     update_callback({"temp_gpu": -1})
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.madvr_envy_temp_gpu").state == "unknown"
+    assert hass.states.get("sensor.madvr_envy_gpu_temperature").state == "unknown"
 
     # Test sensor unavailability
     update_callback({"incoming_res": None})
