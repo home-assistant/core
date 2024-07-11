@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import StateType
 
 from . import HabiticaConfigEntry
 from .const import DOMAIN, UNIT_TASKS
-from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .util import entity_used_in
 
@@ -38,7 +37,6 @@ class HabitipySensorEntityDescription(SensorEntityDescription):
     """Habitipy Sensor Description."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
-    ctx: str
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -72,7 +70,6 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         key=HabitipySensorEntity.DISPLAY_NAME,
         translation_key=HabitipySensorEntity.DISPLAY_NAME,
         value_fn=lambda user: user.get("profile", {}).get("name"),
-        ctx="profile",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH,
@@ -80,7 +77,6 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         native_unit_of_measurement="HP",
         suggested_display_precision=0,
         value_fn=lambda user: user.get("stats", {}).get("hp"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH_MAX,
@@ -88,7 +84,6 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         native_unit_of_measurement="HP",
         entity_registry_enabled_default=False,
         value_fn=lambda user: user.get("stats", {}).get("maxHealth"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA,
@@ -96,34 +91,29 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         native_unit_of_measurement="MP",
         suggested_display_precision=0,
         value_fn=lambda user: user.get("stats", {}).get("mp"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA_MAX,
         translation_key=HabitipySensorEntity.MANA_MAX,
         native_unit_of_measurement="MP",
         value_fn=lambda user: user.get("stats", {}).get("maxMP"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE,
         translation_key=HabitipySensorEntity.EXPERIENCE,
         native_unit_of_measurement="XP",
         value_fn=lambda user: user.get("stats", {}).get("exp"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE_MAX,
         translation_key=HabitipySensorEntity.EXPERIENCE_MAX,
         native_unit_of_measurement="XP",
         value_fn=lambda user: user.get("stats", {}).get("toNextLevel"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.LEVEL,
         translation_key=HabitipySensorEntity.LEVEL,
         value_fn=lambda user: user.get("stats", {}).get("lvl"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.GOLD,
@@ -131,7 +121,6 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         native_unit_of_measurement="GP",
         suggested_display_precision=2,
         value_fn=lambda user: user.get("stats", {}).get("gp"),
-        ctx="stats",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.CLASS,
@@ -139,7 +128,6 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         value_fn=lambda user: user.get("stats", {}).get("class"),
         device_class=SensorDeviceClass.ENUM,
         options=["warrior", "healer", "wizard", "rogue"],
-        ctx="stats",
     ),
 )
 
@@ -225,18 +213,6 @@ class HabitipySensor(HabiticaBase, SensorEntity):
     """A generic Habitica sensor."""
 
     entity_description: HabitipySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: HabiticaDataUpdateCoordinator,
-        entity_description: HabitipySensorEntityDescription,
-    ) -> None:
-        """Initialize a generic Habitica sensor."""
-        super().__init__(
-            coordinator,
-            entity_description,
-            context=entity_description.ctx,
-        )
 
     @property
     def native_value(self) -> StateType:
