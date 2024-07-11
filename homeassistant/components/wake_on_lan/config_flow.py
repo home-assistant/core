@@ -1,17 +1,11 @@
 """Config flow for Wake on lan integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_BROADCAST_PORT,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -19,14 +13,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 from homeassistant.helpers.selector import (
-    ActionSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
     TextSelector,
 )
 
-from .const import CONF_OFF_ACTION, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 
 async def validate(
@@ -55,8 +48,6 @@ async def validate_options(
 
 DATA_SCHEMA = {vol.Required(CONF_MAC): TextSelector()}
 OPTIONS_SCHEMA = {
-    vol.Optional(CONF_HOST): TextSelector(),
-    vol.Optional(CONF_OFF_ACTION): ActionSelector(),
     vol.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
     vol.Optional(CONF_BROADCAST_PORT): NumberSelector(
         NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
@@ -68,11 +59,7 @@ CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=vol.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
         validate_user_input=validate,
-    ),
-    "import": SchemaFlowFormStep(
-        schema=vol.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
-        validate_user_input=validate,
-    ),
+    )
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
@@ -89,8 +76,5 @@ class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        if CONF_NAME in options:
-            # Only if imported
-            return cast(str, options[CONF_NAME])
         mac: str = options[CONF_MAC]
         return f"{DEFAULT_NAME} {mac}"
