@@ -4,10 +4,17 @@ from datetime import timedelta
 import logging
 from typing import Final
 
+from homeassistant.const import __version__ as ha_version
+
 # region general
 DOMAIN: Final = "telegram_client"
 LOGGER: Final = logging.getLogger(__name__)
 SCAN_INTERVAL: Final = timedelta(seconds=10)
+CLIENT_PARAMS: Final = {
+    "device_model": "Home Assistant",
+    "system_version": ha_version,
+    "app_version": "1.0",
+}
 # endregion
 
 # region client types
@@ -172,12 +179,14 @@ KEY_WITHIN_WEEKS: Final = "within_weeks"
 # endregion
 
 # region strings
+STRING_BOT: Final = "Bot"
+STRING_CLIENT: Final = "Client"
 STRING_FIRST_NAME: Final = "First name"
 STRING_FORWARDS_DEFAULT: Final = "Default (both)"
-STRING_FORWARDS_ONLY_FORWARDS: Final = "Only forwards"
 STRING_FORWARDS_NON_FORWARDS: Final = "Only non-forwards"
-STRING_LAST_EDITED_MESSAGE_ID: Final = "Last edited message ID"
+STRING_FORWARDS_ONLY_FORWARDS: Final = "Only forwards"
 STRING_LAST_DELETED_MESSAGE_ID: Final = "Last deleted message ID"
+STRING_LAST_EDITED_MESSAGE_ID: Final = "Last edited message ID"
 STRING_LAST_NAME: Final = "Last name"
 STRING_LAST_SENT_MESSAGE_ID: Final = "Last sent message ID"
 STRING_PHONE: Final = "Phone"

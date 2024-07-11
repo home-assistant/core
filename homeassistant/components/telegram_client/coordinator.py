@@ -24,6 +24,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    CLIENT_PARAMS,
     CLIENT_TYPE_CLIENT,
     CONF_API_HASH,
     CONF_API_ID,
@@ -178,6 +179,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             Path(hass.config.path(STORAGE_DIR, DOMAIN, f"{session_id}.session")),
             entry.data.get(CONF_API_ID),
             entry.data.get(CONF_API_HASH),
+            **CLIENT_PARAMS,
         )
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][entry.entry_id] = self
@@ -313,31 +315,33 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     @callback
     async def on_callback_query(self, event: events.callbackquery.CallbackQuery.Event):
         """Process callback query event."""
-        self._hass.bus.async_fire(
-            f"{DOMAIN}_{EVENT_CALLBACK_QUERY}",
-            self._data_to_dict(
-                event,
-                [
-                    KEY_CHAT,
-                    KEY_CHAT_ID,
-                    KEY_CHAT_INSTANCE,
-                    KEY_DATA,
-                    KEY_DATA_MATCH,
-                    KEY_ID,
-                    KEY_INPUT_CHAT,
-                    KEY_INPUT_SENDER,
-                    KEY_IS_CHANNEL,
-                    KEY_IS_GROUP,
-                    KEY_IS_PRIVATE,
-                    KEY_MESSAGE_ID,
-                    KEY_PATTERN_MATCH,
-                    KEY_QUERY,
-                    KEY_SENDER,
-                    KEY_SENDER_ID,
-                    KEY_VIA_INLINE,
-                ],
-            ),
+        data = self._data_to_dict(
+            event,
+            [
+                KEY_CHAT,
+                KEY_CHAT_ID,
+                KEY_CHAT_INSTANCE,
+                KEY_DATA,
+                KEY_DATA_MATCH,
+                KEY_ID,
+                KEY_INPUT_CHAT,
+                KEY_INPUT_SENDER,
+                KEY_IS_CHANNEL,
+                KEY_IS_GROUP,
+                KEY_IS_PRIVATE,
+                KEY_MESSAGE_ID,
+                KEY_PATTERN_MATCH,
+                KEY_QUERY,
+                KEY_SENDER,
+                KEY_SENDER_ID,
+                KEY_VIA_INLINE,
+            ],
         )
+        if bdata := data.get(KEY_DATA):
+            data[KEY_DATA] = bdata.decode("UTF-8")
+        if bdata := data.get(KEY_QUERY, {}).get(KEY_DATA):
+            data[KEY_QUERY][KEY_DATA] = bdata.decode("UTF-8")
+        self._hass.bus.async_fire(f"{DOMAIN}_{EVENT_CALLBACK_QUERY}", data)
 
     @callback
     async def on_inline_query(self, event: events.inlinequery.InlineQuery.Event):

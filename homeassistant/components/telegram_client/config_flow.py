@@ -30,6 +30,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CLIENT_PARAMS,
     CLIENT_TYPE_CLIENT,
     CONF_API_HASH,
     CONF_API_ID,
@@ -77,6 +78,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             path,
             self._api_id,
             self._api_hash,
+            **CLIENT_PARAMS,
         )
 
     def get_config_entry(self) -> ConfigEntry | None:

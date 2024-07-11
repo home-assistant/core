@@ -53,6 +53,8 @@ from .const import (
     OPTION_INCOMING,
     OPTION_OUTGOING,
     OPTION_PATTERN,
+    STRING_BOT,
+    STRING_CLIENT,
     STRING_FORWARDS_DEFAULT,
     STRING_FORWARDS_NON_FORWARDS,
     STRING_FORWARDS_ONLY_FORWARDS,
@@ -74,7 +76,9 @@ STEP_API_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_ID): cv.string,
         vol.Required(CONF_API_HASH): cv.string,
-        vol.Required(CONF_CLIENT_TYPE): vol.In([CLIENT_TYPE_CLIENT, CLIENT_TYPE_BOT]),
+        vol.Required(CONF_CLIENT_TYPE): vol.In(
+            {CLIENT_TYPE_CLIENT: STRING_CLIENT, CLIENT_TYPE_BOT: STRING_BOT}
+        ),
     }
 )
 STEP_PHONE_DATA_SCHEMA = vol.Schema(

@@ -8,6 +8,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CLIENT_PARAMS,
     DOMAIN,
     EVENT_CALLBACK_QUERY,
     EVENT_CHAT_ACTION,
@@ -38,6 +39,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Telegram client component."""
+    CLIENT_PARAMS["lang_code"] = CLIENT_PARAMS["system_lang_code"] = (
+        hass.config.language
+    )
 
     return True
 
