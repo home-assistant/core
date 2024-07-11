@@ -104,7 +104,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         name: str,
         entity_ids: list[str],
     ) -> None:
-        """Initialize an event group."""
+        """Initialize a button group."""
         self._entity_ids = entity_ids
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
