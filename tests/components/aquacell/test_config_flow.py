@@ -11,7 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TEST_CONFIG_ENTRY, TEST_USER_INPUT
+from . import TEST_BRAND_INPUT, TEST_CONFIG_ENTRY, TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -33,6 +33,14 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_BRAND_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -51,7 +59,17 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_BRAND_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud"
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -86,6 +104,11 @@ async def test_form_exceptions(
     """Test we handle form exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_BRAND_INPUT,
     )
 
     mock_aquacell_api.authenticate.side_effect = exception
