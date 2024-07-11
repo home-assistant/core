@@ -41,7 +41,7 @@ SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Optional(WORKSHEET): cv.string,
-        vol.Required(DATA): vol.Any(dict, list[dict]),
+        vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
     },
 )
 
@@ -108,14 +108,11 @@ async def async_setup_service(hass: HomeAssistant) -> None:
             raise HomeAssistantError("Failed to write data") from ex
 
         worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-        data = (
-            [call.data[DATA]] if isinstance(call.data[DATA], dict) else call.data[DATA]
-        )
         columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
         now = str(datetime.now())
-        rows_data = [{"created": now} | d for d in data]
         rows = []
         for row_data in rows_data:
+            row_data = {"created": now} | d
             row = [row_data.get(column, "") for column in columns]
             for key, value in row_data.items():
                 if key not in columns:
