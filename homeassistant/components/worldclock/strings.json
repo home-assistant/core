@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "incorrect_time_format": "the provided time format is incorrect"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "time_zone": "Timezone",
+          "time_format": "Time format"
+        },
+        "data_description": {
+          "time_zone": "Select timezone from list",
+          "time_format": "Change the time format if needed, by default is represented by hours and minutes."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "incorrect_time_format": "[%key:component::worldclock::config::error::incorrect_time_format%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "time_format": "[%key:component::worldclock::config::step::user::data::time_format%]"
+        },
+        "data_description": {
+          "time_format": "[%key:component::worldclock::config::step::user::data_description::time_format%]"
+        }
+      }
+    }
+  }
+}

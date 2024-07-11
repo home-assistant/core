@@ -642,6 +642,7 @@ FLOWS = {
         "wled",
         "wolflink",
         "workday",
+        "worldclock",
         "ws66i",
         "wyoming",
         "xbox",
