@@ -15,6 +15,13 @@
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         }
+      },
+      "reconfigure_confirm": {
+        "description": "Please reconfigure with Mealie.",
+        "data": {
+          "host": "[%key:common::config_flow::data::url%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
       }
     },
     "error": {
@@ -26,6 +33,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "You have to use the same account that was used to configure the integration."
     }
   },
