@@ -130,6 +130,7 @@ async def test_browsing(
     """Test browsing the Reolink three."""
     entry_id = config_entry.entry_id
     reolink_connect.api_version.return_value = 1
+    reolink_connect.model = "Reolink TrackMix PoE"
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
