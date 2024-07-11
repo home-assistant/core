@@ -31,7 +31,15 @@
           "name": "Min target temperature"
         },
         "operation_mode": {
-          "name": "Operation mode"
+          "name": "Operation mode",
+          "state": {
+            "eco": "[%key:component::water_heater::entity_component::_::state::eco%]",
+            "electric": "[%key:component::water_heater::entity_component::_::state::electric%]",
+            "gas": "[%key:component::water_heater::entity_component::_::state::gas%]",
+            "high_demand": "[%key:component::water_heater::entity_component::_::state::high_demand%]",
+            "heat_pump": "[%key:component::water_heater::entity_component::_::state::heat_pump%]",
+            "performance": "[%key:component::water_heater::entity_component::_::state::performance%]"
+          }
         },
         "operation_list": {
           "name": "Operation modes"

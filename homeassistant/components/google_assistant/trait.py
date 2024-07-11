@@ -52,6 +52,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_STATE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CAST_APP_ID_HOMEASSISTANT_MEDIA,
@@ -1916,8 +1917,8 @@ class ModesTrait(_Trait):
         media_player.DOMAIN: {
             media_player.ATTR_SOUND_MODE: media_player.ATTR_SOUND_MODE_LIST
         },
-        input_select.DOMAIN: {input_select.ATTR_OPTION: input_select.ATTR_OPTIONS},
-        select.DOMAIN: {select.ATTR_OPTION: select.ATTR_OPTIONS},
+        input_select.DOMAIN: {ATTR_STATE: input_select.ATTR_OPTIONS},
+        select.DOMAIN: {ATTR_STATE: select.ATTR_OPTIONS},
         humidifier.DOMAIN: {humidifier.ATTR_MODE: humidifier.ATTR_AVAILABLE_MODES},
         light.DOMAIN: {light.ATTR_EFFECT: light.ATTR_EFFECT_LIST},
         water_heater.DOMAIN: {
@@ -1954,13 +1955,21 @@ class ModesTrait(_Trait):
 
         return features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
+    def _attr_is_state(self, attr_name: str) -> bool:
+        return attr_name is ATTR_STATE
+
     def _generate(self, attr: str, settings: list[str]):
         """Generate a list of modes."""
+
+        attr_name: str | UndefinedType = attr
+        if attr is ATTR_STATE:
+            attr_name = UNDEFINED
+
         return {
             "name": attr,
             "name_values": [
                 {"name_synonym": synonyms, "lang": language}
-                for language, synonyms in self._synonyms(attr=attr).items()
+                for language, synonyms in self._synonyms(attr=attr_name).items()
             ],
             "settings": [
                 {
@@ -1968,7 +1977,7 @@ class ModesTrait(_Trait):
                     "setting_values": [
                         {"setting_synonym": synonyms, "lang": language}
                         for language, synonyms in self._synonyms(
-                            value=setting, attr=attr
+                            value=setting, attr=attr_name
                         ).items()
                     ],
                 }
@@ -1994,7 +2003,7 @@ class ModesTrait(_Trait):
         mode_settings = {}
 
         for attr_name in self.ATTRIBUTES.get(self.state.domain, {}):
-            if attr_name is input_select.ATTR_OPTION or attr_name is select.ATTR_OPTION:
+            if attr_name is ATTR_STATE:
                 mode_settings[attr_name] = self.state.state
             elif (value := attrs.get(attr_name)) is not None:
                 mode_settings[attr_name] = value
@@ -2024,7 +2033,7 @@ class ModesTrait(_Trait):
             return
 
         if self.state.domain == input_select.DOMAIN:
-            option = settings[input_select.ATTR_OPTION]
+            option = settings[ATTR_STATE]
             await self.hass.services.async_call(
                 input_select.DOMAIN,
                 input_select.SERVICE_SELECT_OPTION,
@@ -2038,7 +2047,7 @@ class ModesTrait(_Trait):
             return
 
         if self.state.domain == select.DOMAIN:
-            option = settings[select.ATTR_OPTION]
+            option = settings[ATTR_STATE]
             await self.hass.services.async_call(
                 select.DOMAIN,
                 select.SERVICE_SELECT_OPTION,

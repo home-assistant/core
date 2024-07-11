@@ -2547,10 +2547,10 @@ async def test_modes_input_select(hass: HomeAssistant) -> None:
     assert attribs == {
         "availableModes": [
             {
-                "name": "option",
+                "name": "state",
                 "name_values": [
                     {
-                        "name_synonym": ["Option"],
+                        "name_synonym": ["Input select"],
                         "lang": "en",
                     }
                 ],
@@ -2574,13 +2574,13 @@ async def test_modes_input_select(hass: HomeAssistant) -> None:
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"option": "abc"},
+        "currentModeSettings": {"state": "abc"},
         "on": True,
     }
 
     assert trt.can_execute(
         trait.COMMAND_MODES,
-        params={"updateModeSettings": {"option": "xyz"}},
+        params={"updateModeSettings": {"state": "xyz"}},
     )
 
     calls = async_mock_service(
@@ -2589,7 +2589,7 @@ async def test_modes_input_select(hass: HomeAssistant) -> None:
     await trt.execute(
         trait.COMMAND_MODES,
         BASIC_DATA,
-        {"updateModeSettings": {"option": "xyz"}},
+        {"updateModeSettings": {"state": "xyz"}},
         {},
     )
 
@@ -2623,10 +2623,10 @@ async def test_modes_select(hass: HomeAssistant) -> None:
     assert attribs == {
         "availableModes": [
             {
-                "name": "option",
+                "name": "state",
                 "name_values": [
                     {
-                        "name_synonym": ["Option"],
+                        "name_synonym": ["Select"],
                         "lang": "en",
                     }
                 ],
@@ -2650,20 +2650,20 @@ async def test_modes_select(hass: HomeAssistant) -> None:
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"option": "abc"},
+        "currentModeSettings": {"state": "abc"},
         "on": True,
     }
 
     assert trt.can_execute(
         trait.COMMAND_MODES,
-        params={"updateModeSettings": {"option": "xyz"}},
+        params={"updateModeSettings": {"state": "xyz"}},
     )
 
     calls = async_mock_service(hass, select.DOMAIN, select.SERVICE_SELECT_OPTION)
     await trt.execute(
         trait.COMMAND_MODES,
         BASIC_DATA,
-        {"updateModeSettings": {"option": "xyz"}},
+        {"updateModeSettings": {"state": "xyz"}},
         {},
     )
 
@@ -2784,17 +2784,17 @@ async def test_modes_water_heater(hass: HomeAssistant) -> None:
                 "settings": [
                     {
                         "setting_name": "eco",
-                        "setting_values": [{"setting_synonym": ["eco"], "lang": "en"}],
+                        "setting_values": [{"setting_synonym": ["Eco"], "lang": "en"}],
                     },
                     {
                         "setting_name": "heat_pump",
                         "setting_values": [
-                            {"setting_synonym": ["heat_pump"], "lang": "en"}
+                            {"setting_synonym": ["Heat Pump"], "lang": "en"}
                         ],
                     },
                     {
                         "setting_name": "gas",
-                        "setting_values": [{"setting_synonym": ["gas"], "lang": "en"}],
+                        "setting_values": [{"setting_synonym": ["Gas"], "lang": "en"}],
                     },
                 ],
                 "ordered": False,
