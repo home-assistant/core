@@ -51,6 +51,9 @@ from .const import (
     OPTION_INCOMING,
     OPTION_OUTGOING,
     OPTION_PATTERN,
+    STRING_FORWARDS_DEFAULT,
+    STRING_FORWARDS_NON_FORWARDS,
+    STRING_FORWARDS_ONLY_FORWARDS,
 )
 from .validators import (
     allow_keyboard_if_file_not_defined,
@@ -153,7 +156,13 @@ def step_new_message_data_schema(data):
             vol.Required(
                 OPTION_FORWARDS,
                 default=data.get(OPTION_FORWARDS, True),
-            ): cv.boolean,
+            ): vol.In(
+                {
+                    None: STRING_FORWARDS_DEFAULT,
+                    True: STRING_FORWARDS_ONLY_FORWARDS,
+                    False: STRING_FORWARDS_NON_FORWARDS,
+                }
+            ),
             vol.Required(
                 OPTION_BLACKLIST_CHATS,
                 default=data.get(OPTION_BLACKLIST_CHATS, False),

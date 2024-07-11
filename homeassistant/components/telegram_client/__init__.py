@@ -20,7 +20,6 @@ from .const import (
     OPTION_BLACKLIST_CHATS,
     OPTION_DATA,
     OPTION_EVENTS,
-    OPTION_FORWARDS,
     OPTION_INBOX,
     OPTION_INCOMING,
     OPTION_OUTGOING,
@@ -57,14 +56,12 @@ async def async_setup_entry(
                 },
                 EVENT_NEW_MESSAGE: {
                     OPTION_BLACKLIST_CHATS: False,
-                    OPTION_FORWARDS: True,
                     OPTION_INCOMING: True,
                     OPTION_OUTGOING: True,
                     OPTION_PATTERN: "",
                 },
                 EVENT_MESSAGE_EDITED: {
                     OPTION_BLACKLIST_CHATS: False,
-                    OPTION_FORWARDS: True,
                     OPTION_INCOMING: True,
                     OPTION_OUTGOING: True,
                     OPTION_PATTERN: "",

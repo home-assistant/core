@@ -17,8 +17,10 @@ from .const import (
     EVENT_USER_UPDATE,
     KEY_BASE,
     OPTION_EVENTS,
+    OPTION_FORWARDS,
     OPTION_INCOMING,
     OPTION_OUTGOING,
+    STRING_FORWARDS_ONLY_FORWARDS,
 )
 from .schemas import (
     step_callback_query_data_schema,
@@ -88,10 +90,23 @@ class TelegramClientOptionsFlow(OptionsFlow):
         if not self._events_options.get(EVENT_NEW_MESSAGE):
             return await self.async_step_message_edited()
         if user_input is not None:
-            if user_input.get(OPTION_INCOMING) or user_input.get(OPTION_OUTGOING):
+            if (
+                not user_input.get(OPTION_INCOMING)
+                and not user_input.get(OPTION_OUTGOING)
+                and not user_input.get(OPTION_FORWARDS)
+            ):
+                errors[KEY_BASE] = (
+                    "You should select at least one of 'Incoming' and 'Outgoing'"
+                )
+            if user_input.get(OPTION_FORWARDS) and (
+                user_input.get(OPTION_INCOMING) or user_input.get(OPTION_OUTGOING)
+            ):
+                errors[OPTION_FORWARDS] = (
+                    f"You can't select Forwards='{STRING_FORWARDS_ONLY_FORWARDS}' if you selected 'Incoming' or 'Outgoing'"
+                )
+            if not errors:
                 self._new_message_options = user_input
                 return await self.async_step_message_edited()
-            errors[KEY_BASE] = "You should select at least one of Incoming and Outgoing"
 
         return self.async_show_form(
             step_id=EVENT_NEW_MESSAGE,

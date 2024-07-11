@@ -141,25 +141,10 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     @callback
     async def on_new_message(self, event: events.newmessage.NewMessage.Event):
         """Process new message event."""
-        data = {
-            key: getattr(event.message, key)
-            for key in (
-                "message",
-                "raw_text",
-                "sender_id",
-                "chat_id",
-                "is_channel",
-                "is_group",
-                "is_private",
-                "silent",
-                "post",
-                "from_scheduled",
-                "date",
-            )
-            if hasattr(event.message, key)
-        }
-        data[KEY_CLIENT] = self.data
-        self._hass.bus.async_fire(f"{DOMAIN}_{EVENT_NEW_MESSAGE}", data)
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_NEW_MESSAGE}",
+            dict(event.message.to_dict(), **{KEY_CLIENT: self.data}),
+        )
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""

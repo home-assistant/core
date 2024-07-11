@@ -100,6 +100,9 @@ KEY_SUGGESTED_VALUE: Final = "suggested_value"
 
 # region strings
 STRING_FIRST_NAME: Final = "First name"
+STRING_FORWARDS_DEFAULT: Final = "Default (both)"
+STRING_FORWARDS_ONLY_FORWARDS: Final = "Only forwards"
+STRING_FORWARDS_NON_FORWARDS: Final = "Only non-forwards"
 STRING_LAST_EDITED_MESSAGE_ID: Final = "Last edited message ID"
 STRING_LAST_NAME: Final = "Last name"
 STRING_LAST_SENT_MESSAGE_ID: Final = "Last sent message ID"
