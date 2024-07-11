@@ -108,15 +108,15 @@ async def async_setup_entry(
             )
             for description in SENSORS_SOLAR
         )
-        for inverter in coordinator.data.inverters.values():
-            entities.extend(
-                AutarcoInverterSensorEntity(
-                    coordinator=coordinator,
-                    description=description,
-                    serial_number=inverter.serial_number,
-                )
-                for description in SENSORS_INVERTER
+        entities.extend(
+            AutarcoInverterSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                serial_number=inverter.serial_number,
             )
+            for description in SENSORS_INVERTER
+            for inverter in coordinator.data.inverters.values()
+        )
     async_add_entities(entities)
 
 
