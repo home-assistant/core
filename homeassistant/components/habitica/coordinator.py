@@ -41,7 +41,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=60),
         )
         self.api = habitipy
 
@@ -53,6 +53,9 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             tasks_response = await self.api.tasks.user.get()
             tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
         except ClientResponseError as error:
+            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
+                _LOGGER.debug("Currently rate limited, skipping update")
+                return self.data
             raise UpdateFailed(f"Error communicating with API: {error}") from error
 
         return HabiticaData(user=user_response, tasks=tasks_response)

@@ -133,18 +133,23 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         else:
             date = None
 
-        try:
-            await self.coordinator.api.tasks[item.uid].put(
-                text=item.summary,
-                notes=item.description or "",
-                date=date,
-            )
-        except ClientResponseError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key=f"update_{self.entity_description.key}_item_failed",
-                translation_placeholders={"name": item.summary or ""},
-            ) from e
+        if (
+            item.summary != current_item.summary
+            or item.description != current_item.description
+            or item.due != current_item.due
+        ):
+            try:
+                await self.coordinator.api.tasks[item.uid].put(
+                    text=item.summary,
+                    notes=item.description or "",
+                    date=date,
+                )
+            except ClientResponseError as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key=f"update_{self.entity_description.key}_item_failed",
+                    translation_placeholders={"name": item.summary or ""},
+                ) from e
 
         try:
             # Score up or down if item status changed
