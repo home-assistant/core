@@ -529,16 +529,16 @@
 # name: test_select[select_option]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat cooler left',
+      'friendly_name': 'Test Seat heater left',
       'options': list([
-        <TessieSeatCoolerOptions.OFF: 'off'>,
-        <TessieSeatCoolerOptions.LOW: 'low'>,
-        <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
-        <TessieSeatCoolerOptions.HIGH: 'high'>,
+        <TessieSeatHeaterOptions.OFF: 'off'>,
+        <TessieSeatHeaterOptions.LOW: 'low'>,
+        <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
+        <TessieSeatHeaterOptions.HIGH: 'high'>,
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.test_seat_cooler_left',
+    'entity_id': 'select.test_seat_heater_left',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -99,7 +99,6 @@ async def test_select(
         mock_set.assert_called_once()
     assert mock_set.call_args[1]["seat"] == "front_left"
     assert mock_set.call_args[1]["level"] == 1
-    assert hass.states.get(entity_id) == snapshot(name=SERVICE_SELECT_OPTION)
 
 
 async def test_errors(hass: HomeAssistant) -> None:
