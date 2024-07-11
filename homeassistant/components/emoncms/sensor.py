@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -21,13 +20,11 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
-    Platform,
     UnitOfPower,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, template
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -39,7 +36,6 @@ from .const import (
     CONF_ONLY_INCLUDE_FEEDID,
     CONF_SENSOR_NAMES,
     DOMAIN,
-    LOGGER,
 )
 from .coordinator import EmoncmsCoordinator
 
@@ -113,8 +109,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the emoncms sensors."""
     config = entry.data
-    apikey = config[CONF_API_KEY]
-    url = config[CONF_URL]
     sensorid = config[CONF_ID]
     value_template = None
     if config.get(CONF_VALUE_TEMPLATE) is not None:
@@ -130,25 +124,12 @@ async def async_setup_entry(
     if value_template is not None:
         value_template.hass = hass
 
-    emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
-    emoncms_unique_id = await emoncms_client.async_get_uuid()
-    if emoncms_unique_id is None:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "migrate_database",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="migrate_database",
-            translation_placeholders={"url": url},
-        )
     coordinator = entry.runtime_data
     await coordinator.async_refresh()
     elems = coordinator.data
     if elems is None:
         return
-    ent_reg = er.async_get(hass)
+
     sensors: list[EmonCmsSensor] = []
 
     for idx, elem in enumerate(elems):
@@ -158,14 +139,6 @@ async def async_setup_entry(
         if include_only_feeds is not None and elem["id"] not in include_only_feeds:
             continue
 
-        entity_id = ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{entry.entry_id}-{elem['id']}"
-        )
-        if entity_id is not None and emoncms_unique_id is not None:
-            LOGGER.debug(f"{entity_id} exists and needs to be migrated")
-            ent_reg.async_update_entity(
-                entity_id, new_unique_id=f"{emoncms_unique_id}-{elem['id']}"
-            )
         name = None
         if sensor_names is not None:
             name = sensor_names.get(int(elem["id"]), None)
@@ -178,7 +151,6 @@ async def async_setup_entry(
         sensors.append(
             EmonCmsSensor(
                 coordinator,
-                emoncms_unique_id,
                 entry.entry_id,
                 name,
                 value_template,
@@ -196,8 +168,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: EmoncmsCoordinator,
-        emoncms_unique_id: str,
-        unique_id: str,
+        entry_id: str,
         name: str | None,
         value_template: template.Template | None,
         unit_of_measurement: str | None,
@@ -223,10 +194,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
-        if emoncms_unique_id:
-            self._attr_unique_id = f"{emoncms_unique_id}-{elem['id']}"
-        else:
-            self._attr_unique_id = f"{unique_id}-{elem['id']}"
+        self._attr_unique_id = f"{entry_id}-{elem['id']}"
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING

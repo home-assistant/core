@@ -9,12 +9,11 @@ from homeassistant.components.emoncms.const import (
     CONF_ONLY_INCLUDE_FEEDID,
     CONF_SENSOR_NAMES,
     DOMAIN,
-    FEED_ID,
     FEED_NAME,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
@@ -45,7 +44,7 @@ async def test_deprecated_yaml(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     emoncms_yaml_config: ConfigType,
-    emoncms_client_no_uuid: AsyncMock,
+    emoncms_client: AsyncMock,
 ) -> None:
     """Test an issue is created when we import from yaml config."""
 
@@ -103,36 +102,6 @@ async def test_no_feed_broadcast(
     assert entity_entries == []
 
 
-async def test_migrate_uuid(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    emoncms_client: AsyncMock,
-) -> None:
-    """Test migration from home assistant uuid to emoncms uuid."""
-    config_entry.add_to_hass(hass)
-    for _, feed in enumerate(FEEDS):
-        entity_registry.async_get_or_create(
-            Platform.SENSOR,
-            DOMAIN,
-            f"{config_entry.entry_id}-{feed[FEED_ID]}",
-            config_entry=config_entry,
-            suggested_object_id=f"{DOMAIN}_{feed[FEED_NAME]}",
-        )
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    emoncms_uuid = emoncms_client.async_get_uuid.return_value
-    for nb, feed in enumerate(FEEDS):
-        assert entity_entries[nb].unique_id == f"{emoncms_uuid}-{feed[FEED_ID]}"
-        assert (
-            entity_entries[nb].previous_unique_id
-            == f"{config_entry.entry_id}-{feed[FEED_ID]}"
-        )
-
-
 FLOW_RESULT_SENSOR_NAME = copy.deepcopy(FLOW_RESULT)
 FLOW_RESULT_SENSOR_NAME[CONF_SENSOR_NAMES] = {2: "energy_kitchen"}
 
@@ -160,9 +129,8 @@ async def test_sensor_name(
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_sensor_name.entry_id
     )
-    emoncms_uuid = emoncms_client.async_get_uuid.return_value
     for nb, feed in enumerate(FEEDS):
-        if entity_entries[nb].unique_id == f"{emoncms_uuid}-2":
+        if entity_entries[nb].unique_id.endswith("-2"):
             assert entity_entries[nb].original_name == "energy_kitchen"
         else:
             assert entity_entries[nb].original_name == f"EmonCMS {feed[FEED_NAME]}"

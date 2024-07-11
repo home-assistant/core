@@ -81,20 +81,11 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     with (
         patch(f"{PATH}.{LIB}", autospec=True) as mock_client,
         patch(f"{PATH}.config_flow.{LIB}", new=mock_client),
-        patch(f"{PATH}.sensor.{LIB}", new=mock_client),
     ):
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}
         client.async_list_feeds.return_value = FEEDS
-        client.async_get_uuid.return_value = "123-53535292"
         yield client
-
-
-@pytest.fixture
-def emoncms_client_no_uuid(emoncms_client):
-    """Mock pyemoncms success response with no uuid."""
-    emoncms_client.async_get_uuid.return_value = None
-    return emoncms_client
 
 
 @pytest.fixture
