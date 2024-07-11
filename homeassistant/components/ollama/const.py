@@ -81,6 +81,11 @@ DEFAULT_TIMEOUT = 5.0  # seconds
 CONF_MAX_HISTORY = "max_history"
 DEFAULT_MAX_HISTORY = 20
 
+CONF_NUM_CTX = "num_ctx"
+DEFAULT_NUM_CTX = 2048
+MAX_NUM_CTX = 65536
+MIN_NUM_CTX = 1024
+
 MAX_HISTORY_SECONDS = 60 * 60  # 1 hour
 
 MODEL_NAMES = [  # https://ollama.com/library

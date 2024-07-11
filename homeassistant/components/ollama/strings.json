@@ -26,7 +26,8 @@
         "data": {
           "prompt": "Prompt template",
           "max_history": "Max history messages",
-          "keep_alive": "Keep alive"
+          "keep_alive": "Keep alive",
+          "num_ctx": "Context tokens"
         },
         "data_description": {
           "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never."
