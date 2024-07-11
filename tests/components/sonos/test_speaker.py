@@ -5,6 +5,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import sonos
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    SERVICE_MEDIA_PLAY,
+)
 from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -12,7 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, load_fixture, load_json_value_fixture
 
 
 async def test_fallback_to_polling(
@@ -103,6 +107,22 @@ def _load_zgs(
     return event
 
 
+def _load_avtransport(fixture_file: str, soco: MockSoCo) -> SonosMockEvent:
+    variables = load_json_value_fixture(fixture_file, "sonos")
+    return SonosMockEvent(soco, soco.avTransport, variables)
+
+
+async def _media_play(hass: HomeAssistant, entity: str) -> None:
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {
+            "entity_id": entity,
+        },
+        blocking=True,
+    )
+
+
 async def test_zgs_event_group_speakers(
     hass: HomeAssistant, soco_factory: SoCoMockFactory
 ) -> None:
@@ -117,6 +137,15 @@ async def test_zgs_event_group_speakers(
     assert state.attributes["group_members"] == ["media_player.living_room"]
     state = hass.states.get("media_player.bedroom")
     assert state.attributes["group_members"] == ["media_player.bedroom"]
+
+    # Calls should route to each speakers Soco
+    await _media_play(hass, "media_player.living_room")
+    assert soco_1.play.call_count == 1
+    await _media_play(hass, "media_player.bedroom")
+    assert soco_2.play.call_count == 1
+
+    soco_1.play.reset_mock()
+    soco_2.play.reset_mock()
 
     # Group the speakers, living room is the coordinator and should be first
     event = _load_zgs("zgs_group.xml", soco_1, soco_2, create_uui_ds=True)
@@ -133,6 +162,14 @@ async def test_zgs_event_group_speakers(
         "media_player.living_room",
         "media_player.bedroom",
     ]
+    # Calls should all route to the group coordinator
+    await _media_play(hass, "media_player.living_room")
+    await _media_play(hass, "media_player.bedroom")
+    assert soco_1.play.call_count == 2
+    assert soco_2.play.call_count == 0
+
+    soco_1.play.reset_mock()
+    soco_2.play.reset_mock()
 
     # Ungroup the speakers
     event = _load_zgs("zgs_two_single.xml", soco_1, soco_2, create_uui_ds=False)
@@ -143,3 +180,47 @@ async def test_zgs_event_group_speakers(
     assert state.attributes["group_members"] == ["media_player.living_room"]
     state = hass.states.get("media_player.bedroom")
     assert state.attributes["group_members"] == ["media_player.bedroom"]
+
+    # Calls should route to each speakers Soco
+    await _media_play(hass, "media_player.living_room")
+    assert soco_1.play.call_count == 1
+    await _media_play(hass, "media_player.bedroom")
+    assert soco_2.play.call_count == 1
+
+    soco_1.play.reset_mock()
+    soco_2.play.reset_mock()
+
+
+async def test_zgs_event_group_speakers_1(
+    hass: HomeAssistant, soco_factory: SoCoMockFactory
+) -> None:
+    """Test grouping two speaker together."""
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+
+    await _setup_hass(hass)
+
+    # Send a transport event that changes the coordinator for the Living Room speaker
+    # to the bedroom speaker.
+    event = _load_avtransport("av_transport.json", soco_lr)
+    soco_lr.avTransport.subscribe.return_value._callback(event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Calls should route to the new coodinator which is the bedroom
+    await _media_play(hass, "media_player.living_room")
+    assert soco_lr.play.call_count == 0
+    assert soco_br.play.call_count == 1
+
+    soco_lr.play.reset_mock()
+    soco_br.play.reset_mock()
+
+    # Send a zgs event that return the living room to it's own group
+    event = _load_zgs("zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False)
+    soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
+    soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Calls should route to the living room
+    await _media_play(hass, "media_player.living_room")
+    assert soco_lr.play.call_count == 1
+    assert soco_br.play.call_count == 0

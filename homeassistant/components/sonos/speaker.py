@@ -508,7 +508,7 @@ class SonosSpeaker:
         ):
             new_coordinator_uid = av_transport_uri.split(":")[-1]
             if new_coordinator_speaker := self.data.discovered.get(new_coordinator_uid):
-                _LOGGER.debug(
+                _LOGGER.error(
                     "Media update coordinator (%s) received for %s",
                     new_coordinator_speaker.zone_name,
                     self.zone_name,
@@ -809,9 +809,6 @@ class SonosSpeaker:
         """Handle callback for topology change event."""
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
-            # _LOGGER.debug(
-            #     "async_update_groups zone_group_state self [%s]",
-            #     self.zone_name)
             for vanished_device in zgs.find("VanishedDevices") or []:
                 if (
                     reason := vanished_device.get("Reason")
@@ -853,18 +850,10 @@ class SonosSpeaker:
                         if p.uid != coordinator_uid and p.is_visible
                     ]
 
-            # _LOGGER.debug(
-            #     "_get_soco_group self [%s] coordinator [%s] joined [%s]",
-            #     self.zone_name,
-            #     coordinator_uid,
-            #     joined_uids,
-            # )
-
             return [coordinator_uid, *joined_uids]
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
-            #            await asyncio.sleep(1)
             try:
                 group = event and event.zone_player_uui_ds_in_group
                 if group:
@@ -877,7 +866,7 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
-
+            _LOGGER.error("async_regroup %s %s", self.zone_name, group)
             if (
                 group == [self.soco.uid]
                 and self.sonos_group == [self]
@@ -885,8 +874,13 @@ class SonosSpeaker:
             ):
                 # A single speaker should not have a coordinator
                 if self.coordinator is not None:
+                    _LOGGER.debug(
+                        "Zone %s Cleared coordinator [%s]",
+                        self.zone_name,
+                        self.coordinator.zone_name,
+                    )
                     self.coordinator = None
-                    _LOGGER.debug("Cleared coordinator [%s]", self.zone_name)
+                    self.async_write_entity_states()
                 return
 
             entity_registry = er.async_get(self.hass)
@@ -926,12 +920,11 @@ class SonosSpeaker:
                     joined_speaker.coordinator = self
                     joined_speaker.sonos_group = sonos_group
                     joined_speaker.sonos_group_entities = sonos_group_entities
-                    # _LOGGER.debug(
-                    #     "_async_regroup joined self [%s] joined [%s] group [%s]",
-                    #     self.zone_name,
-                    #     joined_uid,
-                    #     sonos_group,
-                    # )
+                    _LOGGER.debug(
+                        "Zone %s Set coordinator [%s]",
+                        joined_speaker.zone_name,
+                        self.zone_name,
+                    )
                     joined_speaker.async_write_entity_states()
 
             _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)
