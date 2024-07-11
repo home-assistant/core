@@ -2181,7 +2181,7 @@ unifi-discovery==1.2.0
 universal-silabs-flasher==0.0.20
 
 # homeassistant.components.upb
-upb-lib==0.5.7
+upb-lib==0.5.8
 
 # homeassistant.components.upcloud
 upcloud-api==2.5.1
