@@ -8,19 +8,22 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
     format_mac,
 )
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import SmDataUpdateCoordinator
 
 
-class SmEntity:
+class SmEntity(CoordinatorEntity[SmDataUpdateCoordinator]):
     """Base class for all SMLight entities."""
 
-    _attr_device_info: DeviceInfo | None
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize entity with device."""
-        self._attr_device_info = DeviceInfo(
+        super().__init__(coordinator)
+
+        self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.info.MAC)},
             configuration_url=f"http://{coordinator.client.host}",
             manufacturer=ATTR_MANUFACTURER,
