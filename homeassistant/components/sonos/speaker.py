@@ -508,7 +508,7 @@ class SonosSpeaker:
         ):
             new_coordinator_uid = av_transport_uri.split(":")[-1]
             if new_coordinator_speaker := self.data.discovered.get(new_coordinator_uid):
-                _LOGGER.error(
+                _LOGGER.debug(
                     "Media update coordinator (%s) received for %s",
                     new_coordinator_speaker.zone_name,
                     self.zone_name,
@@ -866,7 +866,7 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
-            _LOGGER.error("async_regroup %s %s", self.zone_name, group)
+            _LOGGER.debug("async_regroup %s %s", self.zone_name, group)
             if (
                 group == [self.soco.uid]
                 and self.sonos_group == [self]
