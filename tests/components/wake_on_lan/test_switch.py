@@ -65,7 +65,7 @@ async def test_broadcast_config_ip_and_port(
     hass: HomeAssistant, mock_send_magic_packet: AsyncMock
 ) -> None:
     """Test with broadcast address and broadcast port config."""
-    mac = "00-01-02-03-04-05"
+    mac = "00:01:02:03:04:05"
     broadcast_address = "255.255.255.255"
     port = 999
 
@@ -104,7 +104,7 @@ async def test_broadcast_config_ip(
 ) -> None:
     """Test with only broadcast address."""
 
-    mac = "00-01-02-03-04-05"
+    mac = "00:01:02:03:04:05"
     broadcast_address = "255.255.255.255"
 
     assert await async_setup_component(
@@ -139,7 +139,7 @@ async def test_broadcast_config_port(
 ) -> None:
     """Test with only broadcast port config."""
 
-    mac = "00-01-02-03-04-05"
+    mac = "00:01:02:03:04:05"
     port = 999
 
     assert await async_setup_component(

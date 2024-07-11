@@ -8,19 +8,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.wake_on_lan.const import CONF_OFF_ACTION, DOMAIN
+from homeassistant.components.wake_on_lan.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_BROADCAST_PORT,
-    CONF_HOST,
-    CONF_MAC,
-)
+from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-DEFAULT_MAC = "00:01:02:03:04:05:06"
+DEFAULT_MAC = "00:01:02:03:04:05"
 
 
 @pytest.fixture
@@ -63,8 +58,6 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     """
     return {
         CONF_MAC: DEFAULT_MAC,
-        CONF_HOST: "192.168.10.10",
-        CONF_OFF_ACTION: [{"service: wake_on_lan.send_magic_packet"}],
         CONF_BROADCAST_ADDRESS: "255.255.255.255",
         CONF_BROADCAST_PORT: 9,
     }

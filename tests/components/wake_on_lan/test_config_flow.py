@@ -5,20 +5,10 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wake_on_lan.const import CONF_OFF_ACTION, DOMAIN
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_BROADCAST_PORT,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    STATE_OFF,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.components.wake_on_lan.const import DOMAIN
+from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from .conftest import DEFAULT_MAC
 
@@ -38,8 +28,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result["flow_id"],
         {
             CONF_MAC: DEFAULT_MAC,
-            CONF_HOST: "192.168.10.10",
-            CONF_OFF_ACTION: [{"service: wake_on_lan.send_magic_packet"}],
             CONF_BROADCAST_ADDRESS: "255.255.255.255",
             CONF_BROADCAST_PORT: 9,
         },
@@ -50,8 +38,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["version"] == 1
     assert result["options"] == {
         CONF_MAC: DEFAULT_MAC,
-        CONF_HOST: "192.168.10.10",
-        CONF_OFF_ACTION: [{"service: wake_on_lan.send_magic_packet"}],
         CONF_BROADCAST_ADDRESS: "255.255.255.255",
         CONF_BROADCAST_PORT: 9,
     }
@@ -70,9 +56,7 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "192.168.10.10",
-            CONF_OFF_ACTION: [{"service: wake_on_lan.send_magic_packet"}],
-            CONF_BROADCAST_ADDRESS: "255.255.255.255",
+            CONF_BROADCAST_ADDRESS: "192.168.255.255",
             CONF_BROADCAST_PORT: 10,
         },
     )
@@ -81,18 +65,22 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_MAC: DEFAULT_MAC,
-        CONF_HOST: "192.168.10.10",
-        CONF_OFF_ACTION: [{"service: wake_on_lan.send_magic_packet"}],
-        CONF_BROADCAST_ADDRESS: "255.255.255.255",
+        CONF_BROADCAST_ADDRESS: "192.168.255.255",
         CONF_BROADCAST_PORT: 10,
     }
 
     await hass.async_block_till_done()
 
+    assert loaded_entry.options == {
+        CONF_MAC: DEFAULT_MAC,
+        CONF_BROADCAST_ADDRESS: "192.168.255.255",
+        CONF_BROADCAST_PORT: 10,
+    }
+
     # Check the entity was updated, no new entity was created
     assert len(hass.states.async_all()) == 1
 
-    state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05_06")
+    state = hass.states.get("button.wake_on_lan_00_01_02_03_04_05")
     assert state is not None
 
 
@@ -111,8 +99,6 @@ async def test_entry_already_exist(
         result["flow_id"],
         {
             CONF_MAC: DEFAULT_MAC,
-            CONF_HOST: "192.168.10.10",
-            CONF_OFF_ACTION: [{"service: wake_on_lan.send_magic_packet"}],
             CONF_BROADCAST_ADDRESS: "255.255.255.255",
             CONF_BROADCAST_PORT: 9,
         },
@@ -121,46 +107,3 @@ async def test_entry_already_exist(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_import(
-    hass: HomeAssistant,
-    mock_send_magic_packet: AsyncMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test importing."""
-
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            "switch": {
-                "platform": "wake_on_lan",
-                "name": "Test WOL",
-                "mac": DEFAULT_MAC,
-                "scan_interval": 60,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_wol")
-    assert state.state == STATE_OFF
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry
-    assert entry.title == "Test WOL"
-    assert entry.data == {}
-    assert entry.options == {
-        CONF_MAC: DEFAULT_MAC,
-        CONF_NAME: "Test WOL",
-    }
-
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue
-    assert (
-        issue.learn_more_url
-        == "https://www.home-assistant.io/integrations/wake_on_lan/"
-    )
