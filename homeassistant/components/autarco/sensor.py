@@ -29,7 +29,7 @@ from .coordinator import AutarcoDataUpdateCoordinator
 class AutarcoSolarSensorEntityDescription(SensorEntityDescription):
     """Describes an Autarco sensor entity."""
 
-    state: Callable[[Solar], StateType]
+    value_fn: Callable[[Solar], StateType]
 
 
 SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
@@ -39,21 +39,21 @@ SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        state=lambda solar: solar.power_production,
+        value_fn=lambda solar: solar.power_production,
     ),
     AutarcoSolarSensorEntityDescription(
         key="energy_production_today",
         translation_key="energy_production_today",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state=lambda solar: solar.energy_production_today,
+        value_fn=lambda solar: solar.energy_production_today,
     ),
     AutarcoSolarSensorEntityDescription(
         key="energy_production_month",
         translation_key="energy_production_month",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state=lambda solar: solar.energy_production_month,
+        value_fn=lambda solar: solar.energy_production_month,
     ),
     AutarcoSolarSensorEntityDescription(
         key="energy_production_total",
@@ -61,7 +61,7 @@ SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        state=lambda solar: solar.energy_production_total,
+        value_fn=lambda solar: solar.energy_production_total,
     ),
 )
 
@@ -70,7 +70,7 @@ SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
 class AutarcoInverterSensorEntityDescription(SensorEntityDescription):
     """Describes an Autarco inverter sensor entity."""
 
-    state: Callable[[Inverter], StateType]
+    value_fn: Callable[[Inverter], StateType]
 
 
 SENSORS_INVERTER: tuple[AutarcoInverterSensorEntityDescription, ...] = (
@@ -80,7 +80,7 @@ SENSORS_INVERTER: tuple[AutarcoInverterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        state=lambda inverter: inverter.out_ac_power,
+        value_fn=lambda inverter: inverter.out_ac_power,
     ),
     AutarcoInverterSensorEntityDescription(
         key="out_ac_energy_total",
@@ -88,7 +88,7 @@ SENSORS_INVERTER: tuple[AutarcoInverterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        state=lambda inverter: inverter.out_ac_energy_total,
+        value_fn=lambda inverter: inverter.out_ac_energy_total,
     ),
 )
 
@@ -149,7 +149,7 @@ class AutarcoSolarSensorEntity(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.state(self.coordinator.data.solar)
+        return self.entity_description.value_fn(self.coordinator.data.solar)
 
 
 class AutarcoInverterSensorEntity(
@@ -184,6 +184,6 @@ class AutarcoInverterSensorEntity(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.state(
+        return self.entity_description.value_fn(
             self.coordinator.data.inverters[self._serial_number]
         )
