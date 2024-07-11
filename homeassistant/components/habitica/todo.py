@@ -84,7 +84,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                     translation_key=f"delete_{self.entity_description.key}_failed",
                 ) from e
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -186,7 +186,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 self.hass, message=msg, title="Habitica"
             )
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
 
 class HabiticaTodosListEntity(BaseHabiticaListEntity):
@@ -250,7 +250,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
 
 class HabiticaDailiesListEntity(BaseHabiticaListEntity):

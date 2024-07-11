@@ -15,6 +15,7 @@ from habitipy.aio import HabitipyAsync
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ADDITIONAL_USER_FIELDS, DOMAIN
@@ -42,6 +43,12 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=5,
+                immediate=False,
+            ),
         )
         self.api = habitipy
 
