@@ -86,6 +86,19 @@ async def test_setup_too_old(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_setup_invalid(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup of Mealie entry with too old version of Mealie."""
+    mock_mealie_client.get_about.return_value = About(version="nightly")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_load_unload_entry(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
