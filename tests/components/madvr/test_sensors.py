@@ -74,9 +74,9 @@ async def test_sensor_setup_and_states(
     # Test sensor unknown
     update_callback({"incoming_res": None})
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.madvr_envy_incoming_res").state == "unknown"
+    assert hass.states.get("sensor.madvr_envy_incoming_resolution").state == "unknown"
 
     # Test sensor becomes known again
     update_callback({"incoming_res": "1920x1080"})
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.madvr_envy_incoming_res").state == "1920x1080"
+    assert hass.states.get("sensor.madvr_envy_incoming_resolution").state == "1920x1080"

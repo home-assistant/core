@@ -51,7 +51,7 @@
         "name": "Mainboard temperature"
       },
       "incoming_res": {
-        "name": "Incoming res"
+        "name": "Incoming resolution"
       },
       "incoming_signal_type": {
         "name": "Incoming signal type"
@@ -75,7 +75,7 @@
         "name": "Incoming aspect ratio"
       },
       "outgoing_res": {
-        "name": "Outgoing res"
+        "name": "Outgoing resolution"
       },
       "outgoing_signal_type": {
         "name": "Outgoing signal type"
@@ -96,25 +96,25 @@
         "name": "Outgoing black levels"
       },
       "aspect_res": {
-        "name": "Aspect res"
+        "name": "Aspect resolution"
       },
       "aspect_dec": {
-        "name": "Aspect dec"
+        "name": "Aspect decimal"
       },
       "aspect_int": {
-        "name": "Aspect int"
+        "name": "Aspect integer"
       },
       "aspect_name": {
         "name": "Aspect name"
       },
       "masking_res": {
-        "name": "Masking res"
+        "name": "Masking resolution"
       },
       "masking_dec": {
-        "name": "Masking dec"
+        "name": "Masking decimal"
       },
       "masking_int": {
-        "name": "Masking int"
+        "name": "Masking integer"
       }
     }
   }
