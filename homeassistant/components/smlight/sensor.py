@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
@@ -103,13 +102,10 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class SmSensorEntity(
-    SmEntity, CoordinatorEntity[SmDataUpdateCoordinator], SensorEntity
-):
+class SmSensorEntity(SmEntity, SensorEntity):
     """Representation of a slzb sensor."""
 
-    entity_description: SmSensorEntityDescription
-    _attr_has_entity_name = True
+    # entity_description: SmSensorEntityDescription
 
     def __init__(
         self,
@@ -118,9 +114,9 @@ class SmSensorEntity(
     ) -> None:
         """Initiate slzb sensor."""
         super().__init__(coordinator)
-        CoordinatorEntity.__init__(self, coordinator)
+        # CoordinatorEntity.__init__(self, coordinator)
 
-        self.entity_description = description
+        self.entity_description: SmSensorEntityDescription = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._last_uptime: datetime | None = None
 
