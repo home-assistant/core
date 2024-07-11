@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'sites_data': list([
+      dict({
+        'health': 'OK',
+        'id': 1,
+        'name': 'test-system',
+        'solar': dict({
+          'energy_production_month': 58,
+          'energy_production_today': 4,
+          'energy_production_total': 10379,
+          'power_production': 200,
+        }),
+      }),
+    ]),
+  })
+# ---

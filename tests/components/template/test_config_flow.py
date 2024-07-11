@@ -81,8 +81,29 @@ from tests.typing import WebSocketGenerator
             },
             {},
         ),
+        (
+            "image",
+            {"url": "{{ states('sensor.one') }}"},
+            "2024-07-09T00:00:00+00:00",
+            {"one": "http://www.test.com", "two": ""},
+            {},
+            {"verify_ssl": True},
+            {"verify_ssl": True},
+            {},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            {},
+            {},
+        ),
     ],
 )
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_config_flow(
     hass: HomeAssistant,
     template_type,
@@ -176,10 +197,24 @@ async def test_config_flow(
             {},
         ),
         (
+            "switch",
+            {"value_template": "{{ false }}"},
+            {},
+            {},
+        ),
+        (
             "button",
             {},
             {},
             {},
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+            },
+            {"verify_ssl": True},
+            {"verify_ssl": True},
         ),
     ],
 )
@@ -276,6 +311,7 @@ def get_suggested(schema, key):
         "input_states",
         "extra_options",
         "options_options",
+        "key_template",
     ),
     [
         (
@@ -290,6 +326,7 @@ def get_suggested(schema, key):
             {"one": "on", "two": "off"},
             {},
             {},
+            "state",
         ),
         (
             "sensor",
@@ -303,6 +340,7 @@ def get_suggested(schema, key):
             {"one": "30.0", "two": "20.0"},
             {},
             {},
+            "state",
         ),
         (
             "button",
@@ -329,9 +367,38 @@ def get_suggested(schema, key):
                     }
                 ],
             },
+            "state",
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+            },
+            {
+                "url": "{{ states('sensor.two') }}",
+            },
+            ["2024-07-09T00:00:00+00:00", "2024-07-09T00:00:00+00:00"],
+            {"one": "http://www.test.com", "two": "http://www.test2.com"},
+            {"verify_ssl": True},
+            {
+                "url": "{{ states('sensor.two') }}",
+                "verify_ssl": True,
+            },
+            "url",
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            {"value_template": "{{ states('switch.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            "value_template",
         ),
     ],
 )
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_options(
     hass: HomeAssistant,
     template_type,
@@ -341,6 +408,7 @@ async def test_options(
     input_states,
     extra_options,
     options_options,
+    key_template,
 ) -> None:
     """Test reconfiguring."""
     input_entities = ["one", "two"]
@@ -375,13 +443,16 @@ async def test_options(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
     assert get_suggested(
-        result["data_schema"].schema, "state"
-    ) == old_state_template.get("state")
+        result["data_schema"].schema, key_template
+    ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={**new_state_template, **options_options},
+        user_input={
+            **new_state_template,
+            **options_options,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -419,7 +490,7 @@ async def test_options(
     assert result["step_id"] == template_type
 
     assert get_suggested(result["data_schema"].schema, "name") is None
-    assert get_suggested(result["data_schema"].schema, "state") is None
+    assert get_suggested(result["data_schema"].schema, key_template) is None
 
 
 @pytest.mark.parametrize(
@@ -1047,6 +1118,21 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         (
             "button",
             {},
+            {},
+            {},
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+                "verify_ssl": True,
+            },
+            {},
+            {},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ false }}"},
             {},
             {},
         ),

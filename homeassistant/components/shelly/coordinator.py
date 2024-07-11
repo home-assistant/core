@@ -551,7 +551,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
-            if event_type == "config_changed":
+            if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()
                 LOGGER.info(
                     "Config for %s changed, reloading entry in %s seconds",
@@ -739,6 +739,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.update_status()
+            await self.device.get_dynamic_components()
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {err!r}") from err
         except InvalidAuthError:
