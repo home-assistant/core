@@ -2275,7 +2275,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.3
+python-kasa[speedups]==0.7.0.4
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
