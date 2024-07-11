@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
+    CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     Platform,
 )
@@ -39,8 +40,9 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .binary_sensor import async_create_preview_binary_sensor
-from .const import CONF_PRESS, DOMAIN
+from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .sensor import async_create_preview_sensor
+from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
@@ -130,6 +132,13 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     sort=True,
                 ),
             ),
+        }
+
+    if domain == Platform.SWITCH:
+        schema |= {
+            vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
+            vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
     schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
@@ -224,6 +233,7 @@ TEMPLATE_TYPES = [
     "button",
     "image",
     "sensor",
+    "switch",
 ]
 
 CONFIG_FLOW = {
@@ -245,6 +255,11 @@ CONFIG_FLOW = {
         config_schema(Platform.SENSOR),
         preview="template",
         validate_user_input=validate_user_input(Platform.SENSOR),
+    ),
+    Platform.SWITCH: SchemaFlowFormStep(
+        config_schema(Platform.SWITCH),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.SWITCH),
     ),
 }
 
@@ -269,6 +284,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.SENSOR),
     ),
+    Platform.SWITCH: SchemaFlowFormStep(
+        options_schema(Platform.SWITCH),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.SWITCH),
+    ),
 }
 
 CREATE_PREVIEW_ENTITY: dict[
@@ -277,6 +297,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
     "sensor": async_create_preview_sensor,
+    "switch": async_create_preview_switch,
 }
 
 

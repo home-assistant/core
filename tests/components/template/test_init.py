@@ -314,6 +314,16 @@ async def async_yaml_patch_helper(hass, filename):
             },
             {},
         ),
+        (
+            {
+                "template_type": "switch",
+                "name": "My template",
+                "value_template": "{{ true }}",
+            },
+            {
+                "value_template": "{{ true }}",
+            },
+        ),
     ],
 )
 async def test_change_device(

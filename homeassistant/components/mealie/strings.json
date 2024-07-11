@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::url%]",
-          "api_token": "[%key:common::config_flow::data::api_token%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The URL of your Mealie instance."
@@ -20,7 +21,8 @@
         "description": "Please reconfigure with Mealie.",
         "data": {
           "host": "[%key:common::config_flow::data::url%]",
-          "api_token": "[%key:common::config_flow::data::api_token%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
