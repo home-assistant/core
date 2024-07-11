@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
 
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -38,13 +42,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     client = MealieClient(
         entry.data[CONF_HOST],
         token=entry.data[CONF_API_TOKEN],
-        session=async_get_clientsession(hass),
+        session=async_get_clientsession(
+            hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, True)
+        ),
     )
     try:
         about = await client.get_about()
         version = create_version(about.version)
     except MealieAuthenticationError as error:
-        raise ConfigEntryError("Authentication failed") from error
+        raise ConfigEntryAuthFailed from error
     except MealieConnectionError as error:
         raise ConfigEntryNotReady(error) from error
 
@@ -71,8 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     shoppinglist_coordinator = MealieShoppingListCoordinator(hass, client)
 
     await mealplan_coordinator.async_config_entry_first_refresh()
-
-    await shoppinglist_coordinator.async_get_shopping_lists()
     await shoppinglist_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = MealieData(
