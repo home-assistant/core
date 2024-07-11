@@ -315,7 +315,11 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         char = self._char_motion_detected
         assert char is not None
         if self.motion_is_event:
-            if old_state is None or state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if (
+                old_state is None
+                or old_state.state == STATE_UNAVAILABLE
+                or state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            ):
                 return
             _LOGGER.debug(
                 "%s: Set linked motion %s sensor to True/False",
@@ -359,6 +363,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         if state == STATE_ON or (
             self.doorbell_is_event
             and old_state is not None
+            and old_state.state != STATE_UNAVAILABLE
             and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
