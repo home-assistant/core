@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     except MealieConnectionError as error:
         raise ConfigEntryNotReady(error) from error
 
-    if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
+    if version.valid and version < MIN_REQUIRED_MEALIE_VERSION:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="version_error",

@@ -70,7 +70,6 @@ async def test_setup_failure(
         ("v1.0.0beta-5"),
         ("v1.0.0-RC2"),
         ("v0.1.0"),
-        ("something"),
     ],
 )
 async def test_setup_too_old(
