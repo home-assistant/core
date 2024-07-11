@@ -253,9 +253,7 @@ def ollama_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
         ),
         vol.Optional(
             CONF_NUM_CTX,
-            description={
-                "suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)
-            },
+            description={"suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
         ): NumberSelector(
             NumberSelectorConfig(
                 min=MIN_NUM_CTX, max=MAX_NUM_CTX, step=1, mode=NumberSelectorMode.BOX
