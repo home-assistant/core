@@ -389,7 +389,7 @@ class Recorder(threading.Thread):
         """
         size = self.backlog
         _LOGGER.debug("Recorder queue size is: %s", size)
-        if not self._reached_max_backlog(100):
+        if not self._reached_max_backlog():
             return
         _LOGGER.error(
             (
@@ -408,12 +408,10 @@ class Recorder(threading.Thread):
             self._psutil = ha_psutil.PsutilWrapper()
         return cast(int, self._psutil.psutil.virtual_memory().available)
 
-    def _reached_max_backlog(self, percentage: int) -> bool:
+    def _reached_max_backlog(self) -> bool:
         """Check if the system has reached the max queue backlog and return True if it has."""
-        percentage_modifier = percentage / 100
-        current_backlog = self.backlog
         # First check the minimum value since its cheap
-        if current_backlog < (MAX_QUEUE_BACKLOG_MIN_VALUE * percentage_modifier):
+        if self.backlog < MAX_QUEUE_BACKLOG_MIN_VALUE:
             return False
         # If they have more RAM available, keep filling the backlog
         # since we do not want to stop recording events or give the
@@ -1014,13 +1012,12 @@ class Recorder(threading.Thread):
             # Notify that lock is being held, wait until database can be used again.
             hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
-                if self._reached_max_backlog(90):
+                if self._reached_max_backlog():
                     _LOGGER.warning(
-                        "Database queue backlog reached more than %s (%s events) of maximum queue "
-                        "length while waiting for backup to finish; recorder will now "
+                        "Database queue backlog reached more than %s events "
+                        "while waiting for backup to finish; recorder will now "
                         "resume writing to database. The backup cannot be trusted and "
                         "must be restarted",
-                        "90%",
                         self.backlog,
                     )
                     task.queue_overflow = True
