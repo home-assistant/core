@@ -112,6 +112,18 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 translation_key=f"move_{self.entity_description.key}_item_failed",
                 translation_placeholders={"pos": str(pos)},
             ) from e
+        else:
+            # move tasks in the coordinator until we have fresh data
+            tasks = self.coordinator.data.tasks
+            new_pos = (
+                tasks.index(next(task for task in tasks if task["id"] == previous_uid))
+                + 1
+                if previous_uid
+                else 0
+            )
+            old_pos = tasks.index(next(task for task in tasks if task["id"] == uid))
+            tasks.insert(new_pos, tasks.pop(old_pos))
+            await self.coordinator.async_request_refresh()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a Habitica todo."""
