@@ -148,10 +148,7 @@ async def test_options_reconfigure(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # The value of the "upcoming_shabbat_candle_lighting" sensor should be the default value
-    entry = hass.data[DOMAIN][mock_config_entry.entry_id]
-    assert entry[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT
+    assert CONF_CANDLE_LIGHT_MINUTES not in mock_config_entry.options
 
     # Update the CONF_CANDLE_LIGHT_MINUTES option to a new value
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -161,7 +158,9 @@ async def test_options_reconfigure(
             CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT + 1,
         },
     )
+    assert result["result"]
 
     # The value of the "upcoming_shabbat_candle_lighting" sensor should be the new value
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries[0].options[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1
+    assert (
+        mock_config_entry.options[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1
+    )
