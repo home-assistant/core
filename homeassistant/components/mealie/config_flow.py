@@ -113,3 +113,39 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=REAUTH_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration confirmation."""
+        errors: dict[str, str] = {}
+        if user_input:
+            self.host = user_input[CONF_HOST]
+            errors, user_id = await self.check_connection(
+                user_input[CONF_API_TOKEN],
+            )
+            if not errors:
+                assert self.entry
+                if self.entry.unique_id == user_id:
+                    return self.async_update_reload_and_abort(
+                        self.entry,
+                        data={
+                            **self.entry.data,
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                        },
+                        reason="reconfigure_successful",
+                    )
+                return self.async_abort(reason="wrong_account")
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=USER_SCHEMA,
+            errors=errors,
+        )
