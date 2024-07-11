@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.file.async_setup_entry", return_value=True
@@ -24,9 +24,7 @@ def is_allowed() -> bool:
 
 
 @pytest.fixture
-def mock_is_allowed_path(
-    hass: HomeAssistant, is_allowed: bool
-) -> Generator[None, MagicMock]:
+def mock_is_allowed_path(hass: HomeAssistant, is_allowed: bool) -> Generator[MagicMock]:
     """Mock is_allowed_path method."""
     with patch.object(
         hass.config, "is_allowed_path", return_value=is_allowed

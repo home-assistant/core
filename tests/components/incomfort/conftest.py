@@ -4,6 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from incomfortclient import DisplayCode
 import pytest
 
 from homeassistant.components.incomfort import DOMAIN
@@ -18,9 +19,26 @@ MOCK_CONFIG = {
     "password": "verysecret",
 }
 
+MOCK_HEATER_STATUS = {
+    "display_code": DisplayCode(126),
+    "display_text": "standby",
+    "fault_code": None,
+    "is_burning": False,
+    "is_failed": False,
+    "is_pumping": False,
+    "is_tapping": False,
+    "heater_temp": 35.34,
+    "tap_temp": 30.21,
+    "pressure": 1.86,
+    "serial_no": "c0ffeec0ffee",
+    "nodenr": 249,
+    "rf_message_rssi": 30,
+    "rfstatus_cntr": 0,
+}
+
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.incomfort.async_setup_entry",
@@ -48,22 +66,7 @@ def mock_config_entry(
 @pytest.fixture
 def mock_heater_status() -> dict[str, Any]:
     """Mock heater status."""
-    return {
-        "display_code": 126,
-        "display_text": "standby",
-        "fault_code": None,
-        "is_burning": False,
-        "is_failed": False,
-        "is_pumping": False,
-        "is_tapping": False,
-        "heater_temp": 35.34,
-        "tap_temp": 30.21,
-        "pressure": 1.86,
-        "serial_no": "c0ffeec0ffee",
-        "nodenr": 249,
-        "rf_message_rssi": 30,
-        "rfstatus_cntr": 0,
-    }
+    return dict(MOCK_HEATER_STATUS)
 
 
 @pytest.fixture
@@ -74,10 +77,9 @@ def mock_room_status() -> dict[str, Any]:
 
 @pytest.fixture
 def mock_incomfort(
-    hass: HomeAssistant,
     mock_heater_status: dict[str, Any],
     mock_room_status: dict[str, Any],
-) -> Generator[MagicMock, None]:
+) -> Generator[MagicMock]:
     """Mock the InComfort gateway client."""
 
     class MockRoom:

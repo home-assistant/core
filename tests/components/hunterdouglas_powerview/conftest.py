@@ -12,7 +12,7 @@ from tests.common import load_json_object_fixture, load_json_value_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
@@ -29,7 +29,7 @@ def mock_hunterdouglas_hub(
     rooms_json: str,
     scenes_json: str,
     shades_json: str,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Return a mocked Powerview Hub with all data populated."""
     with (
         patch(

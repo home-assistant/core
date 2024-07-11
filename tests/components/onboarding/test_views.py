@@ -28,7 +28,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass):
+def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
     hass.loop.run_until_complete(
         register_auth_provider(hass, {"type": "homeassistant"})
@@ -70,7 +70,7 @@ async def no_rpi_fixture(
 @pytest.fixture(name="mock_supervisor")
 async def mock_supervisor_fixture(
     aioclient_mock: AiohttpClientMocker,
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})

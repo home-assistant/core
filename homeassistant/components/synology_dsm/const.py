@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from aiohttp import ClientTimeout
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
@@ -40,10 +41,12 @@ DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
-DEFAULT_TIMEOUT = 30  # sec
+DEFAULT_TIMEOUT = ClientTimeout(total=60, connect=15)
 DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"
+
+SHARED_SUFFIX = "_shared"
 
 # Signals
 SIGNAL_CAMERA_SOURCE_CHANGED = "synology_dsm.camera_stream_source_changed"

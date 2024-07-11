@@ -586,7 +586,10 @@ async def test_entity_without_progress_support(
 
     events = []
     async_track_state_change_event(
-        hass, "update.update_available", callback(lambda event: events.append(event))
+        hass,
+        "update.update_available",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     await hass.services.async_call(
@@ -624,7 +627,10 @@ async def test_entity_without_progress_support_raising(
 
     events = []
     async_track_state_change_event(
-        hass, "update.update_available", callback(lambda event: events.append(event))
+        hass,
+        "update.update_available",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     with (
@@ -767,7 +773,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 

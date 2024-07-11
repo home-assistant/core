@@ -1,10 +1,10 @@
 """Test the DoorBird config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import aiohttp
 import pytest
-import requests
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -25,18 +25,20 @@ VALID_CONFIG = {
 
 def _get_mock_doorbirdapi_return_values(ready=None, info=None):
     doorbirdapi_mock = MagicMock()
-    type(doorbirdapi_mock).ready = MagicMock(return_value=ready)
-    type(doorbirdapi_mock).info = MagicMock(return_value=info)
-    type(doorbirdapi_mock).doorbell_state = MagicMock(
-        side_effect=requests.exceptions.HTTPError(response=Mock(status_code=401))
+    type(doorbirdapi_mock).ready = AsyncMock(return_value=ready)
+    type(doorbirdapi_mock).info = AsyncMock(return_value=info)
+    type(doorbirdapi_mock).doorbell_state = AsyncMock(
+        side_effect=aiohttp.ClientResponseError(
+            request_info=Mock(), history=Mock(), status=401
+        )
     )
     return doorbirdapi_mock
 
 
 def _get_mock_doorbirdapi_side_effects(ready=None, info=None):
     doorbirdapi_mock = MagicMock()
-    type(doorbirdapi_mock).ready = MagicMock(side_effect=ready)
-    type(doorbirdapi_mock).info = MagicMock(side_effect=info)
+    type(doorbirdapi_mock).ready = AsyncMock(side_effect=ready)
+    type(doorbirdapi_mock).info = AsyncMock(side_effect=info)
 
     return doorbirdapi_mock
 
@@ -234,7 +236,7 @@ async def test_form_zeroconf_correct_oui(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "doorbell_state_side_effect",
     [
-        requests.exceptions.HTTPError(response=Mock(status_code=404)),
+        aiohttp.ClientResponseError(request_info=Mock(), history=Mock(), status=404),
         OSError,
         None,
     ],
@@ -246,7 +248,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
-    type(doorbirdapi).doorbell_state = MagicMock(side_effect=doorbell_state_side_effect)
+    type(doorbirdapi).doorbell_state = AsyncMock(side_effect=doorbell_state_side_effect)
 
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
@@ -296,7 +298,9 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_error = requests.exceptions.HTTPError(response=Mock(status_code=401))
+    mock_error = aiohttp.ClientResponseError(
+        request_info=Mock(), history=Mock(), status=401
+    )
     doorbirdapi = _get_mock_doorbirdapi_side_effects(ready=mock_error)
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",

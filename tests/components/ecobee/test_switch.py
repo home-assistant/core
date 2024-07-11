@@ -12,9 +12,8 @@ from homeassistant.components.switch import DOMAIN, SERVICE_TURN_OFF, SERVICE_TU
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
+from . import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
 from .common import setup_platform
-
-from tests.components.ecobee import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
 
 VENTILATOR_20MIN_ID = "switch.ecobee_ventilator_20m_timer"
 THERMOSTAT_ID = 0
@@ -113,3 +112,34 @@ async def test_turn_off_20min_ventilator(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         mock_set_20min_ventilator.assert_called_once_with(THERMOSTAT_ID, False)
+
+
+DEVICE_ID = "switch.ecobee2_aux_heat_only"
+
+
+async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:
+    """Test the switch can be turned on."""
+    with patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_on:
+        await setup_platform(hass, DOMAIN)
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: DEVICE_ID},
+            blocking=True,
+        )
+        mock_turn_on.assert_called_once_with(1, "auxHeatOnly")
+
+
+async def test_aux_heat_only_turn_off(hass: HomeAssistant) -> None:
+    """Test the switch can be turned off."""
+    with patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_off:
+        await setup_platform(hass, DOMAIN)
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: DEVICE_ID},
+            blocking=True,
+        )
+        mock_turn_off.assert_called_once_with(1, "auto")

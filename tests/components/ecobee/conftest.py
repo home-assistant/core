@@ -25,7 +25,7 @@ def requests_mock_fixture(requests_mock: Mocker) -> None:
 
 
 @pytest.fixture
-def mock_ecobee() -> Generator[None, MagicMock]:
+def mock_ecobee() -> Generator[MagicMock]:
     """Mock an Ecobee object."""
     ecobee = MagicMock()
     ecobee.request_pin.return_value = True

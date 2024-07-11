@@ -36,7 +36,7 @@ def mock_auth():
 
 
 @pytest.fixture(params=list(Status))
-def mock_status(request: pytest.FixtureRequest) -> Generator[None, None, None]:
+def mock_status(request: pytest.FixtureRequest) -> Generator[None]:
     """Mock the status of the alarm."""
 
     install = AsyncMock()

@@ -118,7 +118,7 @@ def session_scope(
     session: Session | None = None,
     exception_filter: Callable[[Exception], bool] | None = None,
     read_only: bool = False,
-) -> Generator[Session, None, None]:
+) -> Generator[Session]:
     """Provide a transactional scope around a series of operations.
 
     read_only is used to indicate that the session is only used for reading
@@ -714,7 +714,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
 
 
 @contextmanager
-def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
+def write_lock_db_sqlite(instance: Recorder) -> Generator[None]:
     """Lock database for writes."""
     assert instance.engine is not None
     with instance.engine.connect() as connection:

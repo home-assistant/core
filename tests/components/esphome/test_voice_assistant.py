@@ -37,14 +37,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent as intent_helper
 import homeassistant.helpers.device_registry as dr
 
-from .conftest import MockESPHomeDevice
+from .conftest import _ONE_SECOND, MockESPHomeDevice
 
 _TEST_INPUT_TEXT = "This is an input test"
 _TEST_OUTPUT_TEXT = "This is an output test"
 _TEST_OUTPUT_URL = "output.mp3"
 _TEST_MEDIA_ID = "12345"
-
-_ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
 
 @pytest.fixture
@@ -186,9 +184,8 @@ async def test_pipeline_events(
         )
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -313,9 +310,8 @@ async def test_error_calls_handle_finished(
     voice_assistant_udp_pipeline_v1.handle_finished.assert_called()
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server_multiple(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -336,9 +332,8 @@ async def test_udp_server_multiple(
         await voice_assistant_udp_pipeline_v1.start_server()
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server_after_stopped(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -632,12 +627,9 @@ async def test_send_tts_wrong_sample_rate(
             wav_file.writeframes(bytes(_ONE_SECOND))
 
         wav_bytes = wav_io.getvalue()
-    with (
-        patch(
-            "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-            return_value=("wav", wav_bytes),
-        ),
-        pytest.raises(ValueError),
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+        return_value=("wav", wav_bytes),
     ):
         voice_assistant_api_pipeline.started = True
         voice_assistant_api_pipeline.transport = Mock(spec=asyncio.DatagramTransport)
@@ -652,7 +644,8 @@ async def test_send_tts_wrong_sample_rate(
         )
 
         assert voice_assistant_api_pipeline._tts_task is not None
-        await voice_assistant_api_pipeline._tts_task  # raises ValueError
+        with pytest.raises(ValueError):
+            await voice_assistant_api_pipeline._tts_task
 
 
 async def test_send_tts_wrong_format(
@@ -665,7 +658,6 @@ async def test_send_tts_wrong_format(
             "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
             return_value=("raw", bytes(1024)),
         ),
-        pytest.raises(ValueError),
     ):
         voice_assistant_api_pipeline.started = True
         voice_assistant_api_pipeline.transport = Mock(spec=asyncio.DatagramTransport)
@@ -680,7 +672,8 @@ async def test_send_tts_wrong_format(
         )
 
         assert voice_assistant_api_pipeline._tts_task is not None
-        await voice_assistant_api_pipeline._tts_task  # raises ValueError
+        with pytest.raises(ValueError):
+            await voice_assistant_api_pipeline._tts_task
 
 
 async def test_send_tts_not_started(
@@ -818,6 +811,7 @@ async def test_wake_word_abort_exception(
 
 async def test_timer_events(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -836,11 +830,12 @@ async def test_timer_events(
             | VoiceAssistantFeature.TIMERS
         },
     )
-    dev_reg = dr.async_get(hass)
-    dev = dev_reg.async_get_device(
+    await hass.async_block_till_done()
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
     )
 
+    total_seconds = (1 * 60 * 60) + (2 * 60) + 3
     await intent_helper.async_handle(
         hass,
         "test",
@@ -858,14 +853,39 @@ async def test_timer_events(
         VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED,
         ANY,
         "test timer",
-        3723,
-        3723,
+        total_seconds,
+        total_seconds,
+        True,
+    )
+
+    # Increase timer beyond original time and check total_seconds has increased
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    total_seconds += 5 * 60
+    await intent_helper.async_handle(
+        hass,
+        "test",
+        intent_helper.INTENT_INCREASE_TIMER,
+        {
+            "name": {"value": "test timer"},
+            "minutes": {"value": 5},
+        },
+        device_id=dev.id,
+    )
+
+    mock_client.send_voice_assistant_timer_event.assert_called_with(
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED,
+        ANY,
+        "test timer",
+        total_seconds,
+        ANY,
         True,
     )
 
 
 async def test_unknown_timer_event(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -884,8 +904,8 @@ async def test_unknown_timer_event(
             | VoiceAssistantFeature.TIMERS
         },
     )
-    dev_reg = dr.async_get(hass)
-    dev = dev_reg.async_get_device(
+    await hass.async_block_till_done()
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
     )
 

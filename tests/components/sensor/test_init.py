@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-import logging
 from types import ModuleType
 from typing import Any
 
@@ -51,6 +50,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .common import MockRestoreSensor, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     MockEntityPlatform,
@@ -65,7 +66,6 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
-from tests.components.sensor.common import MockRestoreSensor, MockSensor
 
 TEST_DOMAIN = "test"
 
@@ -418,7 +418,7 @@ async def test_restore_sensor_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == expected_extra_data
-    assert type(extra_data["native_value"]) == native_value_type
+    assert type(extra_data["native_value"]) is native_value_type
 
 
 @pytest.mark.parametrize(
@@ -479,7 +479,7 @@ async def test_restore_sensor_restore_state(
     assert hass.states.get(entity0.entity_id)
 
     assert entity0.native_value == native_value
-    assert type(entity0.native_value) == native_value_type
+    assert type(entity0.native_value) is native_value_type
     assert entity0.native_unit_of_measurement == uom
 
 
@@ -942,7 +942,21 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        )
+        ),
+        # Volume Storage (subclass of Volume)
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfVolume.LITERS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.FLUID_OUNCES,
+            1000,
+            "1000",
+            "264",
+            "264",
+            "33814",
+            SensorDeviceClass.VOLUME_STORAGE,
+        ),
     ],
 )
 async def test_unit_conversion_priority(
@@ -2384,7 +2398,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -2633,25 +2647,13 @@ async def test_suggested_unit_guard_invalid_unit(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    # Unit of measurement should be native one
-    state = hass.states.get(entity.entity_id)
-    assert int(state.state) == state_value
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert not hass.states.get("sensor.invalid")
+    assert not entity_registry.async_get("sensor.invalid")
 
-    # Assert the suggested unit is ignored and not stored in the entity registry
-    entry = entity_registry.async_get(entity.entity_id)
-    assert entry.unit_of_measurement == native_unit
-    assert entry.options == {}
     assert (
-        "homeassistant.components.sensor",
-        logging.WARNING,
-        (
-            "<class 'tests.components.sensor.common.MockSensor'> sets an"
-            " invalid suggested_unit_of_measurement. Please create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test%22."
-            " This warning will become an error in Home Assistant Core 2024.5"
-        ),
-    ) in caplog.record_tuples
+        "Entity <class 'tests.components.sensor.common.MockSensor'> suggest an incorrect unit of measurement: invalid_unit"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(

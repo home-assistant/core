@@ -125,7 +125,7 @@ class MockImagePlatform:
 
 
 @pytest.fixture(name="config_flow")
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
 
     class MockFlow(ConfigFlow):

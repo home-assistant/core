@@ -16,14 +16,14 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_plenticore_client() -> Generator[ApiClient, None, None]:
+def mock_plenticore_client() -> Generator[ApiClient]:
     """Return a patched ExtendedApiClient."""
     with patch(
         "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",
@@ -95,6 +95,7 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_all_entries(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
@@ -106,14 +107,16 @@ async def test_setup_all_entries(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    ent_reg = async_get(hass)
-    assert ent_reg.async_get("number.scb_battery_min_soc") is not None
-    assert ent_reg.async_get("number.scb_battery_min_home_consumption") is not None
+    assert entity_registry.async_get("number.scb_battery_min_soc") is not None
+    assert (
+        entity_registry.async_get("number.scb_battery_min_home_consumption") is not None
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_no_entries(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
@@ -140,9 +143,8 @@ async def test_setup_no_entries(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    ent_reg = async_get(hass)
-    assert ent_reg.async_get("number.scb_battery_min_soc") is None
-    assert ent_reg.async_get("number.scb_battery_min_home_consumption") is None
+    assert entity_registry.async_get("number.scb_battery_min_soc") is None
+    assert entity_registry.async_get("number.scb_battery_min_home_consumption") is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -6,7 +6,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from demetriek import CloudDevice, Device
-from pydantic import parse_raw_as
+from pydantic import parse_raw_as  # pylint: disable=no-name-in-module
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -46,7 +46,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.lametric.async_setup_entry", return_value=True
@@ -55,7 +55,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric_cloud() -> Generator[MagicMock, None, None]:
+def mock_lametric_cloud() -> Generator[MagicMock]:
     """Return a mocked LaMetric Cloud client."""
     with patch(
         "homeassistant.components.lametric.config_flow.LaMetricCloud", autospec=True
@@ -74,7 +74,7 @@ def device_fixture() -> str:
 
 
 @pytest.fixture
-def mock_lametric(device_fixture: str) -> Generator[MagicMock, None, None]:
+def mock_lametric(device_fixture: str) -> Generator[MagicMock]:
     """Return a mocked LaMetric TIME client."""
     with (
         patch(

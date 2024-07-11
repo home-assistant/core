@@ -30,7 +30,7 @@ MOCK_DIRECT_BASE_URI = (
 
 
 @pytest.fixture(autouse=True)
-def httpx_mock_cloud_fixture() -> Generator[respx.MockRouter, None, None]:
+def httpx_mock_cloud_fixture() -> Generator[respx.MockRouter]:
     """Configure httpx fixture for cloud API communication."""
     with respx.mock(base_url=BASE_URL, assert_all_called=False) as respx_mock:
         # Mock Login POST.
@@ -57,7 +57,7 @@ def httpx_mock_cloud_fixture() -> Generator[respx.MockRouter, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def httpx_mock_direct_fixture() -> Generator[respx.MockRouter, None, None]:
+def httpx_mock_direct_fixture() -> Generator[respx.MockRouter]:
     """Configure httpx fixture for direct Panel-API communication."""
     with respx.mock(
         base_url=MOCK_DIRECT_BASE_URI, assert_all_called=False
@@ -80,7 +80,7 @@ def httpx_mock_direct_fixture() -> Generator[respx.MockRouter, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def elmax_mock_direct_cert() -> Generator[AsyncMock, None, None]:
+def elmax_mock_direct_cert() -> Generator[AsyncMock]:
     """Patch elmax library to return a specific PEM for SSL communication."""
     with patch(
         "elmax_api.http.GenericElmax.retrieve_server_certificate",

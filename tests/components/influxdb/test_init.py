@@ -43,7 +43,7 @@ class FilterTest:
 
 
 @pytest.fixture(autouse=True)
-def mock_batch_timeout(hass, monkeypatch):
+def mock_batch_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock the event bus listener and the batch timeout for tests."""
     monkeypatch.setattr(
         f"{INFLUX_PATH}.InfluxThread.batch_timeout",
@@ -54,7 +54,7 @@ def mock_batch_timeout(hass, monkeypatch):
 @pytest.fixture(name="mock_client")
 def mock_client_fixture(
     request: pytest.FixtureRequest,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
         client_target = f"{INFLUX_CLIENT_PATH}V2"
@@ -79,7 +79,6 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
 
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
-    # pylint: disable-next=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
 

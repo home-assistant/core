@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_device() -> Generator[AsyncMock, None, None]:
+def mock_device() -> Generator[AsyncMock]:
     """Mock a functioning RAVEn device."""
     device = create_mock_device()
     with patch(
@@ -55,7 +55,7 @@ def mock_device_timeout(mock_device: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture
-def mock_comports() -> Generator[list[ListPortInfo], None, None]:
+def mock_comports() -> Generator[list[ListPortInfo]]:
     """Mock serial port list."""
     port = ListPortInfo(DISCOVERY_INFO.device)
     port.serial_number = DISCOVERY_INFO.serial_number

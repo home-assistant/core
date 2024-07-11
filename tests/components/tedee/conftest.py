@@ -37,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.tedee.async_setup_entry", return_value=True
@@ -46,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_tedee() -> Generator[MagicMock, None, None]:
+def mock_tedee() -> Generator[MagicMock]:
     """Return a mocked Tedee client."""
     with (
         patch(

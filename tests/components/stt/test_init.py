@@ -131,7 +131,7 @@ def config_flow_test_domain_fixture() -> str:
 @pytest.fixture(autouse=True)
 def config_flow_fixture(
     hass: HomeAssistant, config_flow_test_domain: str
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{config_flow_test_domain}.config_flow")
 

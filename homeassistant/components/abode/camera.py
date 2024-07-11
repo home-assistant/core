@@ -8,7 +8,6 @@ from typing import Any, cast
 from jaraco.abode.devices.base import Device
 from jaraco.abode.devices.camera import Camera as AbodeCam
 from jaraco.abode.helpers import timeline
-from jaraco.abode.helpers.constants import TYPE_CAMERA
 import requests
 from requests.models import Response
 
@@ -34,7 +33,7 @@ async def async_setup_entry(
 
     async_add_entities(
         AbodeCamera(data, device, timeline.CAPTURE_IMAGE)
-        for device in data.abode.get_devices(generic_type=TYPE_CAMERA)
+        for device in data.abode.get_devices(generic_type="camera")
     )
 
 

@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_device() -> Generator[AsyncMock, None, None]:
+def mock_device() -> Generator[AsyncMock]:
     """Mock a functioning RAVEn device."""
     mock_device = create_mock_device()
     with patch(

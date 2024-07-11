@@ -41,7 +41,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def mock_client() -> Generator[Mock, None, None]:
+async def mock_client() -> Generator[Mock]:
     """Fixture to setup a fake spreadsheet client library."""
     with patch(
         "homeassistant.components.google_sheets.config_flow.Client"

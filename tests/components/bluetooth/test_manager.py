@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+
+# pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
@@ -54,7 +56,7 @@ from tests.common import async_fire_time_changed, load_fixture
 
 
 @pytest.fixture
-def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
+def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
     """Register an hci0 scanner."""
     hci0_scanner = FakeScanner("hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
@@ -63,7 +65,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
+def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
     """Register an hci1 scanner."""
     hci1_scanner = FakeScanner("hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
@@ -744,8 +746,9 @@ async def test_switching_adapters_when_one_stop_scanning(
     cancel_hci2()
 
 
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_goes_unavailable_connectable_only_and_recovers(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
+    hass: HomeAssistant,
 ) -> None:
     """Test all connectable scanners go unavailable, and than recover when there is a non-connectable scanner."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -907,8 +910,9 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     unsetup_not_connectable_scanner()
 
 
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
+    hass: HomeAssistant,
 ) -> None:
     """Test that unavailable will dismiss any active discoveries and make device discoverable again."""
     mock_bt = [

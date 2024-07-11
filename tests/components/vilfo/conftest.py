@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.vilfo.async_setup_entry",
@@ -22,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_vilfo_client() -> Generator[AsyncMock, None, None]:
+def mock_vilfo_client() -> Generator[AsyncMock]:
     """Mock a Vilfo client."""
     with patch(
         "homeassistant.components.vilfo.config_flow.VilfoClient",
@@ -38,7 +38,7 @@ def mock_vilfo_client() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_is_valid_host() -> Generator[AsyncMock, None, None]:
+def mock_is_valid_host() -> Generator[AsyncMock]:
     """Mock is_valid_host."""
     with patch(
         "homeassistant.components.vilfo.config_flow.is_host_valid",

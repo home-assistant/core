@@ -16,7 +16,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant, ServiceCall
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import assert_setup_component, async_capture_events
 
@@ -133,7 +133,7 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
 
 
 async def test_templates_with_entities(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
 ) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
@@ -189,8 +189,7 @@ async def test_templates_with_entities(
     await hass.async_start()
     await hass.async_block_till_done()
 
-    ent_reg = async_get(hass)
-    entry = ent_reg.async_get(_TEST_SELECT)
+    entry = entity_registry.async_get(_TEST_SELECT)
     assert entry
     assert entry.unique_id == "b-a"
 

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytrydan.models.trydan import TrydanData
 
-from homeassistant.components.v2c import DOMAIN
+from homeassistant.components.v2c.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.json import json_dumps
 
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.v2c.async_setup_entry", return_value=True
@@ -34,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_v2c_client() -> Generator[AsyncMock, None, None]:
+def mock_v2c_client() -> Generator[AsyncMock]:
     """Mock a V2C client."""
     with (
         patch(

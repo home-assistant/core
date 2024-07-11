@@ -32,7 +32,7 @@ def user_identifier() -> str:
 
 
 @pytest.fixture
-def setup_userinfo(user_identifier: str) -> Generator[Mock, None, None]:
+def setup_userinfo(user_identifier: str) -> Generator[Mock]:
     """Set up userinfo."""
     with patch("homeassistant.components.google_tasks.config_flow.build") as mock:
         mock.return_value.userinfo.return_value.get.return_value.execute.return_value = {

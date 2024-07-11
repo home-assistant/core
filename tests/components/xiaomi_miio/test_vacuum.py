@@ -57,8 +57,6 @@ from . import TEST_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-# pylint: disable=consider-using-tuple
-
 # calls made when device status is requested
 STATUS_CALLS = [
     mock.call.status(),
@@ -143,7 +141,7 @@ new_fanspeeds = {
 @pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
 def mirobo_old_speeds_fixture(
     request: pytest.FixtureRequest,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Fixture for testing both types of fanspeeds."""
     mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32
@@ -423,7 +421,7 @@ async def test_xiaomi_vacuum_services(
                 "segments": ["1", "2"],
             },
             "segment_clean",
-            mock.call(segments=[int(i) for i in ["1", "2"]]),
+            mock.call(segments=[int(i) for i in ("1", "2")]),
         ),
         (
             SERVICE_CLEAN_SEGMENT,
@@ -495,7 +493,7 @@ async def test_xiaomi_vacuum_fanspeeds(
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
     fanspeeds = state.attributes.get(ATTR_FAN_SPEED_LIST)
-    for speed in ["Silent", "Standard", "Medium", "Turbo"]:
+    for speed in ("Silent", "Standard", "Medium", "Turbo"):
         assert speed in fanspeeds
 
     # Set speed service:

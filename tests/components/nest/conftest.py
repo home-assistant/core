@@ -109,7 +109,7 @@ async def auth(aiohttp_client: ClientSessionGenerator) -> FakeAuth:
 
 
 @pytest.fixture(autouse=True)
-def cleanup_media_storage(hass):
+def cleanup_media_storage(hass: HomeAssistant) -> Generator[None]:
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
     with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
@@ -298,7 +298,7 @@ async def setup_platform(
 
 
 @pytest.fixture(autouse=True)
-def reset_diagnostics() -> Generator[None, None, None]:
+def reset_diagnostics() -> Generator[None]:
     """Fixture to reset client library diagnostic counters."""
     yield
     diagnostics.reset()
