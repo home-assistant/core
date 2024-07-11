@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from itertools import chain
 
 from pysmlight.web import Sensors
 
@@ -23,8 +24,6 @@ from homeassistant.util.dt import utcnow
 from .const import LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
 from .coordinator import SmDataUpdateCoordinator
 from .entity import SmEntity
-
-UPTIME_DEVIATION = 5  # seconds
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,20 +54,6 @@ SENSORS = [
         value_fn=lambda x: x.zb_temp,
     ),
     SmSensorEntityDescription(
-        key="core_uptime",
-        translation_key="core_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
-        value_fn=lambda x: x.uptime,
-    ),
-    SmSensorEntityDescription(
-        key="socket_uptime",
-        translation_key="socket_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
-        value_fn=lambda x: x.socket_uptime,
-    ),
-    SmSensorEntityDescription(
         key="ram_usage",
         translation_key="ram_usage",
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -85,6 +70,22 @@ SENSORS = [
         value_fn=lambda x: x.fs_used,
     ),
 ]
+UPTIME = [
+    SmSensorEntityDescription(
+        key="core_uptime",
+        translation_key="core_uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.uptime,
+    ),
+    SmSensorEntityDescription(
+        key="socket_uptime",
+        translation_key="socket_uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.socket_uptime,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -96,7 +97,10 @@ async def async_setup_entry(
     coordinator: SmDataUpdateCoordinator = entry.runtime_data
 
     async_add_entities(
-        SmSensorEntity(coordinator, description) for description in SENSORS
+        chain(
+            (SmSensorEntity(coordinator, description) for description in SENSORS),
+            (SmUptimeSensorEntity(coordinator, description) for description in UPTIME),
+        )
     )
 
 
@@ -113,20 +117,40 @@ class SmSensorEntity(SmEntity, SensorEntity):
 
         self.entity_description: SmSensorEntityDescription = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
-        self._last_uptime: datetime | None = None
 
-    def get_device_uptime(self, uptime: float | None) -> datetime:
-        """Return device uptime string, tolerate up to 5 seconds deviation."""
-        uptime = 0 if uptime is None else uptime
+    @property
+    def native_value(self) -> float | datetime | None:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self.coordinator.data.sensors)
+
+
+class SmUptimeSensorEntity(SmSensorEntity):
+    """Helper class to process uptime sensors."""
+
+    MAX_DEVIATION = 5  # seconds
+
+    def __init__(
+        self,
+        coordinator: SmDataUpdateCoordinator,
+        description: SmSensorEntityDescription,
+    ) -> None:
+        "Initialize uptime sensor instance."
+        super().__init__(coordinator, description)
+        self.last_uptime: datetime | None = None
+
+    def get_uptime(self, uptime: float | None) -> datetime | None:
+        """Return device uptime, tolerate up to 5 seconds deviation."""
+        if uptime == 0 or uptime is None:
+            self.last_uptime = None
+            return None
+
         delta = timedelta(seconds=uptime)
-        last_uptime = self._last_uptime
 
         if "core_uptime" in self.entity_description.key and delta <= SCAN_INTERVAL:
             self.coordinator.hass.bus.async_fire(
                 SMLIGHT_SLZB_REBOOT_EVENT,
                 {
                     "device_id": self.coordinator.unique_id,
-                    "uptime": delta.total_seconds(),
                 },
             )
             LOGGER.debug("SLZB device reboot detected")
@@ -134,21 +158,17 @@ class SmSensorEntity(SmEntity, SensorEntity):
         delta_uptime = utcnow() - delta
 
         if (
-            not last_uptime
-            or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
+            not self.last_uptime
+            or abs((delta_uptime - self.last_uptime).total_seconds())
+            > SmUptimeSensorEntity.MAX_DEVIATION
         ):
-            return delta_uptime
+            self.last_uptime = delta_uptime
 
-        return last_uptime
+        return self.last_uptime
 
     @property
     def native_value(self) -> float | datetime | None:
         """Return the sensor value."""
         value = self.entity_description.value_fn(self.coordinator.data.sensors)
 
-        if "uptime" in self.entity_description.key:
-            if value:
-                self._last_uptime = self.get_device_uptime(value)
-            return self._last_uptime
-
-        return value
+        return self.get_uptime(value)
