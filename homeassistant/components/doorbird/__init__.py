@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -56,13 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
         info = await device.info()
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.error(
-                "Authorization rejected by DoorBird for %s@%s", username, device_ip
-            )
-            return False
+            raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
     except OSError as oserr:
-        _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, oserr)
         raise ConfigEntryNotReady from oserr
 
     if not status[0]:
