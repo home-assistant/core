@@ -222,6 +222,9 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# https://github.com/home-assistant/core/issues/117599
+pyserial-asyncio-fast>=0.13
 """
 
 GENERATED_MESSAGE = (
