@@ -95,9 +95,9 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
-        return (
-            self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE)
-            == OverkizCommandParam.ON
+        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE) in (
+            OverkizCommandParam.ON,
+            OverkizCommandParam.PROG,
         )
 
     @property
@@ -158,9 +158,16 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             )
 
     async def async_turn_away_mode_on(self) -> None:
-        """Turn away mode on."""
+        """Turn away mode on. This requires the start date and the end date to be set beforehand."""
+        now_date = cast(
+            dict,
+            self.executor.select_state("core:DateTimeState"),
+        )
+        await self.executor.async_execute_command("setAbsenceStartDate", now_date)
+        now_date["year"] = now_date["year"] + 1
+        await self.executor.async_execute_command("setAbsenceEndDate", now_date)
         await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_MODE, OverkizCommandParam.ON
+            OverkizCommand.SET_ABSENCE_MODE, OverkizCommandParam.PROG
         )
 
     async def async_turn_away_mode_off(self) -> None:
