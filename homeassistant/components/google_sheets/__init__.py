@@ -108,10 +108,13 @@ async def async_setup_service(hass: HomeAssistant) -> None:
             raise HomeAssistantError("Failed to write data") from ex
 
         worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
+        data = (
+            [call.data[DATA]] if isinstance(call.data[DATA], dict) else call.data[DATA]
+        )
         columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
         now = str(datetime.now())
         rows = []
-        for row_data in rows_data:
+        for d in data:
             row_data = {"created": now} | d
             row = [row_data.get(column, "") for column in columns]
             for key, value in row_data.items():
