@@ -284,14 +284,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
-                self._update_beolink,
+                self._async_update_beolink,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
-                self._update_name_and_beolink,
+                self._async_update_name_and_beolink,
             )
         )
 
@@ -340,7 +340,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         await self._async_update_sources()
 
         # Update beolink attributes and device name.
-        await self._update_name_and_beolink()
+        await self._async_update_name_and_beolink()
 
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
@@ -423,7 +423,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Update current artwork and remote_leader.
         self._media_image = get_highest_resolution_artwork(self._playback_metadata)
-        await self._update_beolink()
+        await self._async_update_beolink()
 
     @callback
     def _async_update_playback_error(self, data: PlaybackError) -> None:
@@ -470,7 +470,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    async def _update_name_and_beolink(self) -> None:
+    @callback
+    async def _async_update_name_and_beolink(self) -> None:
         """Update the device friendly name."""
         beolink_self = await self._client.get_beolink_self()
 
@@ -481,9 +482,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             name=beolink_self.friendly_name,
         )
 
-        await self._update_beolink()
+        await self._async_update_beolink()
 
-    async def _update_beolink(self) -> None:
+    @callback
+    async def _async_update_beolink(self) -> None:
         """Update the current Beolink leader, listeners, peers and self."""
 
         self._beolink_attribute = {}
