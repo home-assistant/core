@@ -1,0 +1,373 @@
+# serializer version: 1
+# name: test_api_calendar
+  list([
+    dict({
+      'entity_id': 'calendar.mealie_breakfast',
+      'name': 'Mealie Breakfast',
+    }),
+    dict({
+      'entity_id': 'calendar.mealie_dinner',
+      'name': 'Mealie Dinner',
+    }),
+    dict({
+      'entity_id': 'calendar.mealie_lunch',
+      'name': 'Mealie Lunch',
+    }),
+    dict({
+      'entity_id': 'calendar.mealie_side',
+      'name': 'Mealie Side',
+    }),
+  ])
+# ---
+# name: test_api_events
+  list([
+    dict({
+      'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+      'end': dict({
+        'date': '2024-01-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-22',
+      }),
+      'summary': 'Zoete aardappel curry traybake',
+      'uid': None,
+    }),
+    dict({
+      'description': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο από τον Άκη Πετρετζίκη. Φτιάξτε την πιο εύκολη μακαρονάδα με κεφτεδάκια σε μόνο ένα σκεύος.',
+      'end': dict({
+        'date': '2024-01-24',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-23',
+      }),
+      'summary': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο (1)',
+      'uid': None,
+    }),
+    dict({
+      'description': 'Delicious Greek turkey meatballs with lemon orzo, tender veggies, and a creamy feta yogurt sauce. These healthy baked Greek turkey meatballs are filled with tons of wonderful herbs and make the perfect protein-packed weeknight meal!',
+      'end': dict({
+        'date': '2024-01-24',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-23',
+      }),
+      'summary': 'Greek Turkey Meatballs with Lemon Orzo & Creamy Feta Yogurt Sauce',
+      'uid': None,
+    }),
+    dict({
+      'description': 'This is a modified Pampered Chef recipe. You can use a trifle bowl or large glass punch/salad bowl to show it off. It is really easy to make and I never have any leftovers. Cook time includes chill time.',
+      'end': dict({
+        'date': '2024-01-24',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-23',
+      }),
+      'summary': 'Pampered Chef Double Chocolate Mocha Trifle',
+      'uid': None,
+    }),
+    dict({
+      'description': 'Cheeseburger Sliders are juicy, cheesy and beefy - everything we love about classic burgers! These sliders are quick and easy plus they are make-ahead and reheat really well.',
+      'end': dict({
+        'date': '2024-01-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-22',
+      }),
+      'summary': 'Cheeseburger Sliders (Easy, 30-min Recipe)',
+      'uid': None,
+    }),
+    dict({
+      'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
+      'end': dict({
+        'date': '2024-01-24',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-23',
+      }),
+      'summary': 'All-American Beef Stew Recipe',
+      'uid': None,
+    }),
+    dict({
+      'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
+      'end': dict({
+        'date': '2024-01-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-22',
+      }),
+      'summary': 'Einfacher Nudelauflauf mit Brokkoli',
+      'uid': None,
+    }),
+    dict({
+      'description': 'Simple to prepare and ready in 25 minutes, this vegetarian miso noodle recipe can be eaten on its own or served as a side.',
+      'end': dict({
+        'date': '2024-01-24',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-23',
+      }),
+      'summary': 'Miso Udon Noodles with Spinach and Tofu',
+      'uid': None,
+    }),
+    dict({
+      'description': 'Avis aux nostalgiques des années 1980, la mousse de saumon est de retour dans une présentation adaptée au goût du jour. On utilise une technique sans faille : un saumon frais cuit au micro-ondes et mélangé au robot avec du fromage à la crème et de la crème sure. On obtient ainsi une texture onctueuse à tartiner, qui n’a rien à envier aux préparations gélatineuses d’antan !',
+      'end': dict({
+        'date': '2024-01-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-22',
+      }),
+      'summary': 'Mousse de saumon',
+      'uid': None,
+    }),
+    dict({
+      'description': 'Dineren met de boys',
+      'end': dict({
+        'date': '2024-01-22',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-21',
+      }),
+      'summary': 'Aquavite',
+      'uid': None,
+    }),
+  ])
+# ---
+# name: test_entities[calendar.mealie_breakfast-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.mealie_breakfast',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Breakfast',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'breakfast',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_breakfast',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.mealie_breakfast-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'The BEST Roast Chicken recipe is simple, budget friendly, and gives you a tender, mouth-watering chicken full of flavor! Served with roasted vegetables, this recipe is simple enough for any cook!',
+      'end_time': '2024-01-24 00:00:00',
+      'friendly_name': 'Mealie Breakfast',
+      'location': '',
+      'message': 'Roast Chicken',
+      'start_time': '2024-01-23 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.mealie_breakfast',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[calendar.mealie_dinner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.mealie_dinner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dinner',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dinner',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_dinner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.mealie_dinner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'Dineren met de boys',
+      'end_time': '2024-01-22 00:00:00',
+      'friendly_name': 'Mealie Dinner',
+      'location': '',
+      'message': 'Aquavite',
+      'start_time': '2024-01-21 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.mealie_dinner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[calendar.mealie_lunch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.mealie_lunch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lunch',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lunch',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_lunch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.mealie_lunch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
+      'end_time': '2024-01-23 00:00:00',
+      'friendly_name': 'Mealie Lunch',
+      'location': '',
+      'message': 'All-American Beef Stew Recipe',
+      'start_time': '2024-01-22 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.mealie_lunch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[calendar.mealie_side-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.mealie_side',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Side',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'side',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_side',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.mealie_side-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
+      'end_time': '2024-01-24 00:00:00',
+      'friendly_name': 'Mealie Side',
+      'location': '',
+      'message': 'Einfacher Nudelauflauf mit Brokkoli',
+      'start_time': '2024-01-23 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.mealie_side',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

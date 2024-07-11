@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -59,7 +60,7 @@ MOCK_HISTORY = [
 ]
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the NZBGet integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
     entry.add_to_hass(hass)

@@ -171,8 +171,8 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
     events = []
     async_track_state_change_event(
         hass,
-        # pylint: disable-next=unnecessary-lambda
         "update.demo_update_with_progress",
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda event: events.append(event)),
     )
 

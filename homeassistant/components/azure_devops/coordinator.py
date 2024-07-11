@@ -5,9 +5,9 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
-from aioazuredevops.core import DevOpsProject
+from aioazuredevops.models.builds import Build
+from aioazuredevops.models.core import Project
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,7 +44,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
 
     client: DevOpsClient
     organization: str
-    project: DevOpsProject
+    project: Project
 
     def __init__(
         self,
@@ -78,8 +78,9 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
         )
         if not self.client.authorized:
             raise ConfigEntryAuthFailed(
-                "Could not authorize with Azure DevOps. You will need to update your"
-                " token"
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={"title": self.title},
             )
 
         return True
@@ -88,7 +89,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
     async def get_project(
         self,
         project: str,
-    ) -> DevOpsProject | None:
+    ) -> Project | None:
         """Get the project."""
         return await self.client.get_project(
             self.organization,
@@ -96,7 +97,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
         )
 
     @ado_exception_none_handler
-    async def _get_builds(self, project_name: str) -> list[DevOpsBuild] | None:
+    async def _get_builds(self, project_name: str) -> list[Build] | None:
         """Get the builds."""
         return await self.client.get_builds(
             self.organization,

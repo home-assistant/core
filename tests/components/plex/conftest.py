@@ -1,13 +1,14 @@
 """Fixtures for Plex tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 import requests_mock
-from typing_extensions import Generator
 
 from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import websocket_connected
@@ -546,7 +547,7 @@ def mock_plex_calls(
 
 @pytest.fixture
 def setup_plex_server(
-    hass,
+    hass: HomeAssistant,
     entry,
     livetv_sessions,
     mock_websocket,

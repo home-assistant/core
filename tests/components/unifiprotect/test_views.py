@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientResponse
 import pytest
-from uiprotect.data import Camera, Event, EventType
+from uiprotect.data import Camera, Event, EventType, ModelType
 from uiprotect.exceptions import ClientError
 
 from homeassistant.components.unifiprotect.views import (
@@ -179,6 +179,7 @@ async def test_video_bad_event(
     await init_entry(hass, ufp, [camera])
 
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id="test_id",
         start=fixed_now - timedelta(seconds=30),
@@ -205,6 +206,7 @@ async def test_video_bad_event_ongoing(
     await init_entry(hass, ufp, [camera])
 
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=fixed_now - timedelta(seconds=30),
@@ -232,6 +234,7 @@ async def test_video_bad_perms(
     await init_entry(hass, ufp, [camera])
 
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=fixed_now - timedelta(seconds=30),
@@ -260,6 +263,7 @@ async def test_video_bad_nvr_id(
     await init_entry(hass, ufp, [camera])
 
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=fixed_now - timedelta(seconds=30),
@@ -294,6 +298,7 @@ async def test_video_bad_camera_id(
     await init_entry(hass, ufp, [camera])
 
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=fixed_now - timedelta(seconds=30),
@@ -328,6 +333,7 @@ async def test_video_bad_camera_perms(
     await init_entry(hass, ufp, [camera])
 
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=fixed_now - timedelta(seconds=30),
@@ -368,6 +374,7 @@ async def test_video_bad_params(
 
     event_start = fixed_now - timedelta(seconds=30)
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=event_start,
@@ -405,6 +412,7 @@ async def test_video_bad_video(
 
     event_start = fixed_now - timedelta(seconds=30)
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=event_start,
@@ -447,6 +455,7 @@ async def test_video(
 
     event_start = fixed_now - timedelta(seconds=30)
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=event_start,
@@ -490,6 +499,7 @@ async def test_video_entity_id(
 
     event_start = fixed_now - timedelta(seconds=30)
     event = Event(
+        model=ModelType.EVENT,
         api=ufp.api,
         camera_id=camera.id,
         start=event_start,

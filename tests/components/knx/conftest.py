@@ -44,7 +44,7 @@ class KNXTestKit:
 
     INDIVIDUAL_ADDRESS = "1.2.3"
 
-    def __init__(self, hass: HomeAssistant, mock_config_entry: MockConfigEntry):
+    def __init__(self, hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
         """Init KNX test helper class."""
         self.hass: HomeAssistant = hass
         self.mock_config_entry: MockConfigEntry = mock_config_entry

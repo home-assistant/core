@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import ApSystemsDataCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
 
 
 @dataclass

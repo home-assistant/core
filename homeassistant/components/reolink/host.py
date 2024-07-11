@@ -74,9 +74,13 @@ class ReolinkHost:
         )
 
         self.last_wake: float = 0
-        self._update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
+        self.update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
+        self.firmware_ch_list: list[int | None] = []
+
+        self.starting: bool = True
+        self.credential_errors: int = 0
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
@@ -96,16 +100,16 @@ class ReolinkHost:
     @callback
     def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:
         """Register the command to update the state."""
-        self._update_cmd[cmd][channel] += 1
+        self.update_cmd[cmd][channel] += 1
 
     @callback
     def async_unregister_update_cmd(self, cmd: str, channel: int | None = None) -> None:
         """Unregister the command to update the state."""
-        self._update_cmd[cmd][channel] -= 1
-        if not self._update_cmd[cmd][channel]:
-            del self._update_cmd[cmd][channel]
-        if not self._update_cmd[cmd]:
-            del self._update_cmd[cmd]
+        self.update_cmd[cmd][channel] -= 1
+        if not self.update_cmd[cmd][channel]:
+            del self.update_cmd[cmd][channel]
+        if not self.update_cmd[cmd]:
+            del self.update_cmd[cmd]
 
     @property
     def unique_id(self) -> str:
@@ -190,7 +194,10 @@ class ReolinkHost:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "enable_port")
 
-        self._unique_id = format_mac(self._api.mac_address)
+        if self._api.supported(None, "UID"):
+            self._unique_id = self._api.uid
+        else:
+            self._unique_id = format_mac(self._api.mac_address)
 
         if self._onvif_push_supported:
             try:
@@ -236,25 +243,35 @@ class ReolinkHost:
                     self._async_check_onvif_long_poll,
                 )
 
-        if self._api.sw_version_update_required:
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "firmware_update",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="firmware_update",
-                translation_placeholders={
-                    "required_firmware": self._api.sw_version_required.version_string,
-                    "current_firmware": self._api.sw_version,
-                    "model": self._api.model,
-                    "hw_version": self._api.hardware_version,
-                    "name": self._api.nvr_name,
-                    "download_link": "https://reolink.com/download-center/",
-                },
-            )
-        else:
-            ir.async_delete_issue(self._hass, DOMAIN, "firmware_update")
+        ch_list: list[int | None] = [None]
+        if self._api.is_nvr:
+            ch_list.extend(self._api.channels)
+        for ch in ch_list:
+            if not self._api.supported(ch, "firmware"):
+                continue
+
+            key = ch if ch is not None else "host"
+            if self._api.camera_sw_version_update_required(ch):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"firmware_update_{key}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="firmware_update",
+                    translation_placeholders={
+                        "required_firmware": self._api.camera_sw_version_required(
+                            ch
+                        ).version_string,
+                        "current_firmware": self._api.camera_sw_version(ch),
+                        "model": self._api.camera_model(ch),
+                        "hw_version": self._api.camera_hardware_version(ch),
+                        "name": self._api.camera_name(ch),
+                        "download_link": "https://reolink.com/download-center/",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, f"firmware_update_{key}")
 
     async def _async_check_onvif(self, *_) -> None:
         """Check the ONVIF subscription."""
@@ -349,7 +366,7 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
-        await self._api.get_states(cmd_list=self._update_cmd, wake=wake)
+        await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""

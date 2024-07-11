@@ -89,9 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
 
     def check_entry_id(interface: str) -> str:
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if "port" in entry.data and entry.data["port"] == interface:
-                return entry.entry_id
+        for config_entry in hass.config_entries.async_entries(DOMAIN):
+            if "port" in config_entry.data and config_entry.data["port"] == interface:
+                return config_entry.entry_id
         raise vol.Invalid(
             "The interface provided is not defined as a port in a Velbus integration"
         )

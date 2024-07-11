@@ -315,17 +315,17 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         """Update name of area."""
         old = self.areas[area_id]
 
-        new_values = {}
-
-        for attr_name, value in (
-            ("aliases", aliases),
-            ("icon", icon),
-            ("labels", labels),
-            ("picture", picture),
-            ("floor_id", floor_id),
-        ):
-            if value is not UNDEFINED and value != getattr(old, attr_name):
-                new_values[attr_name] = value
+        new_values = {
+            attr_name: value
+            for attr_name, value in (
+                ("aliases", aliases),
+                ("icon", icon),
+                ("labels", labels),
+                ("picture", picture),
+                ("floor_id", floor_id),
+            )
+            if value is not UNDEFINED and value != getattr(old, attr_name)
+        }
 
         if name is not UNDEFINED and name != old.name:
             new_values["name"] = name

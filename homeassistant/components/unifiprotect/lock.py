@@ -10,14 +10,13 @@ from uiprotect.data import (
     LockStatusType,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
 )
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +38,9 @@ async def async_setup_entry(
     data.async_subscribe_adopt(_add_new_device)
 
     async_add_entities(
-        ProtectLock(data, cast(Doorlock, device))
+        ProtectLock(
+            data, cast(Doorlock, device), LockEntityDescription(key="lock", name="Lock")
+        )
         for device in data.get_by_types({ModelType.DOORLOCK})
     )
 
@@ -49,39 +50,16 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
 
     device: Doorlock
     entity_description: LockEntityDescription
-
-    def __init__(
-        self,
-        data: ProtectData,
-        doorlock: Doorlock,
-    ) -> None:
-        """Initialize an UniFi lock."""
-        super().__init__(
-            data,
-            doorlock,
-            LockEntityDescription(key="lock"),
-        )
-
-        self._attr_name = f"{self.device.display_name} Lock"
+    _state_attrs = (
+        "_attr_available",
+        "_attr_is_locked",
+        "_attr_is_locking",
+        "_attr_is_unlocking",
+        "_attr_is_jammed",
+    )
 
     @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (
-            self._attr_available,
-            self._attr_is_locked,
-            self._attr_is_locking,
-            self._attr_is_unlocking,
-            self._attr_is_jammed,
-        )
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         lock_status = self.device.lock_status
 
