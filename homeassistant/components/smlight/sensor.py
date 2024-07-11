@@ -37,7 +37,7 @@ class SmSensorEntityDescription(SensorEntityDescription):
 
 SENSORS = [
     SmSensorEntityDescription(
-        key="esp32_temperature",
+        key="core_temperature",
         translation_key="core_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -46,7 +46,7 @@ SENSORS = [
         value_fn=lambda x: x.esp32_temp,
     ),
     SmSensorEntityDescription(
-        key="zb_temperature",
+        key="zigbee_temperature",
         translation_key="zigbee_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
