@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for Smlight."""
 
 from dataclasses import dataclass
-import logging
 import socket
 
 from pysmlight.const import Events as SmEvents
@@ -17,8 +16,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -13,8 +11,6 @@ from homeassistant.helpers.device_registry import (
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import SmDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SmEntity:

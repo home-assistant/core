@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,13 +19,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
 from .coordinator import SmData, SmDataUpdateCoordinator
 from .entity import SmEntity
 
 UPTIME_DEVIATION = 5  # seconds
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -141,7 +138,7 @@ class SmSensorEntity(
                     "uptime": delta.total_seconds(),
                 },
             )
-            _LOGGER.debug("SLZB device reboot detected")
+            LOGGER.debug("SLZB device reboot detected")
 
         delta_uptime = utcnow() - delta
 

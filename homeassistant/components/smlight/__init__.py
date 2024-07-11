@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from pysmlight.exceptions import SmlightAuthError
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,8 +12,6 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 from .coordinator import SmDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
