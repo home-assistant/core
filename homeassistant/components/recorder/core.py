@@ -387,8 +387,7 @@ class Recorder(threading.Thread):
 
         The queue grows during migration or if something really goes wrong.
         """
-        size = self.backlog
-        _LOGGER.debug("Recorder queue size is: %s", size)
+        _LOGGER.debug("Recorder queue size is: %s", self.backlog)
         if not self._reached_max_backlog():
             return
         _LOGGER.error(
