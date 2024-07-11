@@ -1,0 +1,12 @@
+# This extend our general Ruff rules specifically for tests
+extend = "../pyproject.toml"
+
+[lint]
+extend-ignore = [
+    "INP001", # File is part of an implicit namespace package. Add an `__init__.py`.
+]
+
+[lint.isort]
+known-third-party = [
+    "pylint",
+]

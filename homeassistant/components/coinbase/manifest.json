@@ -1,10 +1,10 @@
 {
   "domain": "coinbase",
   "name": "Coinbase",
-  "documentation": "https://www.home-assistant.io/integrations/coinbase",
-  "requirements": ["coinbase==2.1.0"],
   "codeowners": ["@tombrien"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/coinbase",
   "iot_class": "cloud_polling",
-  "loggers": ["coinbase"]
+  "loggers": ["coinbase"],
+  "requirements": ["coinbase==2.1.0"]
 }

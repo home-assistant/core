@@ -1,8 +1,9 @@
 """Support for IQVIA sensors."""
+
 from __future__ import annotations
 
 from statistics import mean
-from typing import NamedTuple
+from typing import Any, NamedTuple, cast
 
 import numpy as np
 
@@ -47,7 +48,6 @@ ATTR_ZIP_CODE = "zip_code"
 API_CATEGORY_MAPPING = {
     TYPE_ALLERGY_TODAY: TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
-    TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
     TYPE_ASTHMA_TODAY: TYPE_ASTHMA_INDEX,
     TYPE_ASTHMA_TOMORROW: TYPE_ASTHMA_INDEX,
     TYPE_DISEASE_TODAY: TYPE_DISEASE_INDEX,
@@ -79,17 +79,17 @@ TREND_SUBSIDING = "Subsiding"
 FORECAST_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_FORECAST,
-        name="Allergy Index: Forecasted Average",
+        name="Allergy index: forecasted average",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_FORECAST,
-        name="Asthma Index: Forecasted Average",
+        name="Asthma index: forecasted average",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_FORECAST,
-        name="Cold & Flu: Forecasted Average",
+        name="Cold & flu: forecasted average",
         icon="mdi:snowflake",
     ),
 )
@@ -97,29 +97,29 @@ FORECAST_SENSOR_DESCRIPTIONS = (
 INDEX_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_TODAY,
-        name="Allergy Index: Today",
+        name="Allergy index: today",
         icon="mdi:flower",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ALLERGY_TOMORROW,
-        name="Allergy Index: Tomorrow",
+        name="Allergy index: tomorrow",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TODAY,
-        name="Asthma Index: Today",
+        name="Asthma index: today",
         icon="mdi:flower",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TOMORROW,
-        name="Asthma Index: Tomorrow",
+        name="Asthma index: tomorrow",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
-        name="Cold & Flu Index: Today",
+        name="Cold & flu index: today",
         icon="mdi:pill",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -161,7 +161,7 @@ def calculate_trend(indices: list[float]) -> str:
     """Calculate the "moving average" of a set of indices."""
     index_range = np.arange(0, len(indices))
     index_array = np.array(indices)
-    linear_fit = np.polyfit(index_range, index_array, 1)  # type: ignore[no-untyped-call]
+    linear_fit = np.polyfit(index_range, index_array, 1)
     slope = round(linear_fit[0], 2)
 
     if slope > 0:
@@ -212,12 +212,12 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
             if not outlook_coordinator.last_update_success:
                 return
 
-            self._attr_extra_state_attributes[
-                ATTR_OUTLOOK
-            ] = outlook_coordinator.data.get("Outlook")
-            self._attr_extra_state_attributes[
-                ATTR_SEASON
-            ] = outlook_coordinator.data.get("Season")
+            self._attr_extra_state_attributes[ATTR_OUTLOOK] = (
+                outlook_coordinator.data.get("Outlook")
+            )
+            self._attr_extra_state_attributes[ATTR_SEASON] = (
+                outlook_coordinator.data.get("Season")
+            )
 
 
 class IndexSensor(IQVIAEntity, SensorEntity):
@@ -233,14 +233,10 @@ class IndexSensor(IQVIAEntity, SensorEntity):
             if self.entity_description.key in (
                 TYPE_ALLERGY_TODAY,
                 TYPE_ALLERGY_TOMORROW,
-            ):
-                data = self.coordinator.data.get("Location")
-            elif self.entity_description.key in (
                 TYPE_ASTHMA_TODAY,
                 TYPE_ASTHMA_TOMORROW,
+                TYPE_DISEASE_TODAY,
             ):
-                data = self.coordinator.data.get("Location")
-            elif self.entity_description.key == TYPE_DISEASE_TODAY:
                 data = self.coordinator.data.get("Location")
         except KeyError:
             return
@@ -248,10 +244,11 @@ class IndexSensor(IQVIAEntity, SensorEntity):
         key = self.entity_description.key.split("_")[-1].title()
 
         try:
-            [period] = [p for p in data["periods"] if p["Type"] == key]
-        except ValueError:
+            [period] = [p for p in data["periods"] if p["Type"] == key]  # type: ignore[index]
+        except TypeError:
             return
 
+        data = cast(dict[str, Any], data)
         [rating] = [
             i.label for i in RATING_MAPPING if i.minimum <= period["Index"] <= i.maximum
         ]
@@ -286,8 +283,8 @@ class IndexSensor(IQVIAEntity, SensorEntity):
                 )
         elif self.entity_description.key == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attr_extra_state_attributes[
-                    f"{attrs['Name'].lower()}_index"
-                ] = attrs["Index"]
+                self._attr_extra_state_attributes[f"{attrs['Name'].lower()}_index"] = (
+                    attrs["Index"]
+                )
 
         self._attr_native_value = period["Index"]

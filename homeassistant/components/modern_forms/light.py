@@ -1,4 +1,5 @@
 """Support for Modern Forms Fan lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,11 +7,7 @@ from typing import Any
 from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
@@ -20,11 +17,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import ModernFormsDeviceEntity, modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -34,6 +27,7 @@ from .const import (
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
+from .coordinator import ModernFormsDataUpdateCoordinator
 
 BRIGHTNESS_RANGE = (1, 255)
 
@@ -83,6 +77,10 @@ async def async_setup_entry(
 class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
     """Defines a Modern Forms light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_translation_key = "light"
+
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
     ) -> None:
@@ -90,12 +88,8 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
-            name=f"{coordinator.data.info.device_name} Light",
-            icon=None,
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     @property
     def brightness(self) -> int | None:

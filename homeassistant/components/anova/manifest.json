@@ -1,0 +1,10 @@
+{
+  "domain": "anova",
+  "name": "Anova",
+  "codeowners": ["@Lash-L"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/anova",
+  "iot_class": "cloud_push",
+  "loggers": ["anova_wifi"],
+  "requirements": ["anova-wifi==0.17.0"]
+}

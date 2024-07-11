@@ -54,10 +54,10 @@
       "nodeId": 54,
       "index": 0,
       "installerIcon": 6400,
-      "userIcon": 6400
+      "userIcon": 6400,
+      "commandClasses": []
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "endpoint": 0,

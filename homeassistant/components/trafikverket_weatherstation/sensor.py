@@ -1,8 +1,12 @@
 """Weather information for air and road temperature (by Trafikverket)."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+
+from pytrafikverket.models import WeatherStationInfoModel
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,129 +14,185 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import as_utc, get_time_zone
+from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION, CONF_STATION, DOMAIN, NONE_IS_ZERO_SENSORS
+from . import TVWeatherConfigEntry
+from .const import ATTRIBUTION, CONF_STATION, DOMAIN
 from .coordinator import TVDataUpdateCoordinator
 
-STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
+PRECIPITATION_TYPE = [
+    "no",
+    "rain",
+    "freezing_rain",
+    "snow",
+    "sleet",
+    "yes",
+]
 
 
-@dataclass
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    api_key: str
-
-
-@dataclass
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
     """Describes Trafikverket sensor entity."""
+
+    value_fn: Callable[[WeatherStationInfoModel], StateType | datetime]
+
+
+def add_utc_timezone(date_time: datetime | None) -> datetime | None:
+    """Add UTC timezone if datetime."""
+    if date_time:
+        return date_time.replace(tzinfo=dt_util.UTC)
+    return None
 
 
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="air_temp",
-        api_key="air_temp",
-        name="Air temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        icon="mdi:thermometer",
+        translation_key="air_temperature",
+        value_fn=lambda data: data.air_temp or 0,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="road_temp",
-        api_key="road_temp",
-        name="Road temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        icon="mdi:thermometer",
+        translation_key="road_temperature",
+        value_fn=lambda data: data.road_temp or 0,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation",
-        api_key="precipitationtype",
-        name="Precipitation type",
-        icon="mdi:weather-snowy-rainy",
+        translation_key="precipitation",
+        value_fn=lambda data: data.precipitationtype,
         entity_registry_enabled_default=False,
+        options=PRECIPITATION_TYPE,
+        device_class=SensorDeviceClass.ENUM,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction",
-        api_key="winddirection",
-        name="Wind direction",
+        translation_key="wind_direction",
+        value_fn=lambda data: data.winddirection,
         native_unit_of_measurement=DEGREE,
-        icon="mdi:flag-triangle",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
-        key="wind_direction_text",
-        api_key="winddirectiontext",
-        name="Wind direction text",
-        icon="mdi:flag-triangle",
-    ),
-    TrafikverketSensorEntityDescription(
         key="wind_speed",
-        api_key="windforce",
-        name="Wind speed",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
-        icon="mdi:weather-windy",
+        value_fn=lambda data: data.windforce or 0,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed_max",
-        api_key="windforcemax",
-        name="Wind speed max",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
-        icon="mdi:weather-windy-variant",
+        translation_key="wind_speed_max",
+        value_fn=lambda data: data.windforcemax or 0,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="humidity",
-        api_key="humidity",
-        name="Humidity",
+        value_fn=lambda data: data.humidity or 0,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:water-percent",
         device_class=SensorDeviceClass.HUMIDITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amount",
-        api_key="precipitation_amount",
-        name="Precipitation amount",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:cup-water",
+        value_fn=lambda data: data.precipitation_amount or 0,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
-        key="precipitation_amountname",
-        api_key="precipitation_amountname",
-        name="Precipitation name",
-        icon="mdi:weather-pouring",
+        key="measure_time",
+        translation_key="measure_time",
+        value_fn=lambda data: data.measure_time,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="dew_point",
+        translation_key="dew_point",
+        value_fn=lambda data: data.dew_point or 0,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="visible_distance",
+        translation_key="visible_distance",
+        value_fn=lambda data: data.visible_distance,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     TrafikverketSensorEntityDescription(
-        key="measure_time",
-        api_key="measure_time",
-        name="Measure Time",
-        icon="mdi:clock",
+        key="road_ice_depth",
+        translation_key="road_ice_depth",
+        value_fn=lambda data: data.road_ice_depth,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="road_snow_depth",
+        translation_key="road_snow_depth",
+        value_fn=lambda data: data.road_snow_depth,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="road_water_depth",
+        translation_key="road_water_depth",
+        value_fn=lambda data: data.road_water_depth,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="road_water_equivalent_depth",
+        translation_key="road_water_equivalent_depth",
+        value_fn=lambda data: data.road_water_equivalent_depth,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="wind_height",
+        translation_key="wind_height",
+        value_fn=lambda data: data.wind_height,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="modified_time",
+        translation_key="modified_time",
+        value_fn=lambda data: add_utc_timezone(data.modified_time),
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -140,11 +200,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TVWeatherConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         TrafikverketWeatherStation(
@@ -154,12 +216,6 @@ async def async_setup_entry(
     )
 
 
-def _to_datetime(measuretime: str) -> datetime:
-    """Return isoformatted utc time."""
-    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S")
-    return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE))
-
-
 class TrafikverketWeatherStation(
     CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity
 ):
@@ -167,6 +223,7 @@ class TrafikverketWeatherStation(
 
     entity_description: TrafikverketSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -178,13 +235,12 @@ class TrafikverketWeatherStation(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{sensor_station} {description.name}"
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Trafikverket",
-            model="v1.2",
+            model="v2.0",
             name=sensor_station,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
@@ -192,19 +248,4 @@ class TrafikverketWeatherStation(
     @property
     def native_value(self) -> StateType | datetime:
         """Return state of sensor."""
-        if self.entity_description.api_key == "measure_time":
-            return _to_datetime(self.coordinator.data.measure_time)
-
-        state: StateType = getattr(
-            self.coordinator.data, self.entity_description.api_key
-        )
-
-        # For zero value state the api reports back None for certain sensors.
-        if state is None and self.entity_description.key in NONE_IS_ZERO_SENSORS:
-            return 0
-        return state
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.data.active and super().available
+        return self.entity_description.value_fn(self.coordinator.data)

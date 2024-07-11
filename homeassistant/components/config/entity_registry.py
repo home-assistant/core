@@ -1,37 +1,92 @@
 """HTTP views to interact with the entity registry."""
+
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
+from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import require_admin
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.json import json_dumps
 
 
-async def async_setup(hass):
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
-    websocket_api.async_register_command(hass, websocket_list_entities)
+
+    websocket_api.async_register_command(hass, websocket_get_entities)
     websocket_api.async_register_command(hass, websocket_get_entity)
-    websocket_api.async_register_command(hass, websocket_update_entity)
+    websocket_api.async_register_command(hass, websocket_list_entities_for_display)
+    websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_remove_entity)
+    websocket_api.async_register_command(hass, websocket_update_entity)
     return True
 
 
 @websocket_api.websocket_command({vol.Required("type"): "config/entity_registry/list"})
 @callback
-def websocket_list_entities(hass, connection, msg):
+def websocket_list_entities(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle list registry entries command."""
     registry = er.async_get(hass)
-    connection.send_message(
-        websocket_api.result_message(
-            msg["id"], [_entry_dict(entry) for entry in registry.entities.values()]
-        )
+    # Build start of response message
+    msg_json_prefix = (
+        f'{{"id":{msg["id"]},"type": "{websocket_api.TYPE_RESULT}",'
+        '"success":true,"result": ['
+    ).encode()
+    # Concatenate cached entity registry item JSON serializations
+    inner = b",".join(
+        [
+            entry.partial_json_repr
+            for entry in registry.entities.values()
+            if entry.partial_json_repr is not None
+        ]
     )
+    msg_json = b"".join((msg_json_prefix, inner, b"]}"))
+    connection.send_message(msg_json)
+
+
+_ENTITY_CATEGORIES_JSON = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "config/entity_registry/list_for_display"}
+)
+@callback
+def websocket_list_entities_for_display(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list registry entries command."""
+    registry = er.async_get(hass)
+    # Build start of response message
+    msg_json_prefix = (
+        f'{{"id":{msg["id"]},"type":"{websocket_api.TYPE_RESULT}","success":true,'
+        f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
+    ).encode()
+    # Concatenate cached entity registry item JSON serializations
+    inner = b",".join(
+        [
+            entry.display_json_repr
+            for entry in registry.entities.values()
+            if entry.disabled_by is None and entry.display_json_repr is not None
+        ]
+    )
+    msg_json = b"".join((msg_json_prefix, inner, b"]}}"))
+    connection.send_message(msg_json)
 
 
 @websocket_api.websocket_command(
@@ -41,7 +96,11 @@ def websocket_list_entities(hass, connection, msg):
     }
 )
 @callback
-def websocket_get_entity(hass, connection, msg):
+def websocket_get_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle get entity registry entry command.
 
     Async friendly.
@@ -55,8 +114,35 @@ def websocket_get_entity(hass, connection, msg):
         return
 
     connection.send_message(
-        websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
+        websocket_api.result_message(msg["id"], entry.extended_dict)
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/get_entries",
+        vol.Required("entity_ids"): cv.entity_ids,
+    }
+)
+@callback
+def websocket_get_entities(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get entity registry entries command.
+
+    Async friendly.
+    """
+    registry = er.async_get(hass)
+
+    entity_ids = msg["entity_ids"]
+    entries: dict[str, dict[str, Any] | None] = {}
+    for entity_id in entity_ids:
+        entry = registry.entities.get(entity_id)
+        entries[entity_id] = entry.extended_dict if entry else None
+
+    connection.send_message(websocket_api.result_message(msg["id"], entries))
 
 
 @require_admin
@@ -65,9 +151,21 @@ def websocket_get_entity(hass, connection, msg):
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
+        vol.Optional("aliases"): list,
         vol.Optional("area_id"): vol.Any(str, None),
+        # Categories is a mapping of key/value (scope/category_id) pairs.
+        # If passed in, we update/adjust only the provided scope(s).
+        # Other category scopes in the entity, are left as is.
+        #
+        # Categorized items such as entities
+        # can only be in 1 category ID per scope at a time.
+        # Therefore, passing in a category ID will either add or move
+        # the entity to that specific category. Passing in None will
+        # remove the entity from the category.
+        vol.Optional("categories"): cv.schema_with_slug_keys(vol.Any(str, None)),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
@@ -91,7 +189,11 @@ def websocket_get_entity(hass, connection, msg):
     }
 )
 @callback
-def websocket_update_entity(hass, connection, msg):
+def websocket_update_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle update entity websocket command.
 
     Async friendly.
@@ -107,34 +209,50 @@ def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    for key in ("area_id", "device_class", "disabled_by", "hidden_by", "icon", "name"):
+    for key in (
+        "area_id",
+        "device_class",
+        "disabled_by",
+        "hidden_by",
+        "icon",
+        "name",
+        "new_entity_id",
+    ):
         if key in msg:
             changes[key] = msg[key]
 
-    if "new_entity_id" in msg and msg["new_entity_id"] != entity_id:
-        changes["new_entity_id"] = msg["new_entity_id"]
-        if hass.states.get(msg["new_entity_id"]) is not None:
-            connection.send_message(
-                websocket_api.error_message(
-                    msg["id"],
-                    "invalid_info",
-                    "Entity with this ID is already registered",
-                )
-            )
-            return
+    if "aliases" in msg:
+        # Convert aliases to a set
+        changes["aliases"] = set(msg["aliases"])
+
+    if "labels" in msg:
+        # Convert labels to a set
+        changes["labels"] = set(msg["labels"])
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
         if entity_entry.device_id:
             device_registry = dr.async_get(hass)
             device = device_registry.async_get(entity_entry.device_id)
-            if device.disabled:
+            if device and device.disabled:
                 connection.send_message(
                     websocket_api.error_message(
                         msg["id"], "invalid_info", "Device is disabled"
                     )
                 )
                 return
+
+    # Update the categories if provided
+    if "categories" in msg:
+        categories = entity_entry.categories.copy()
+        for scope, category_id in msg["categories"].items():
+            if scope in categories and category_id is None:
+                # Remove the category from the scope as it was unset
+                del categories[scope]
+            elif category_id is not None:
+                # Add or update the category for the given scope
+                categories[scope] = category_id
+        changes["categories"] = categories
 
     try:
         if changes:
@@ -159,11 +277,14 @@ def websocket_update_entity(hass, connection, msg):
         )
         return
 
-    result = {"entity_entry": _entry_ext_dict(entity_entry)}
+    result: dict[str, Any] = {"entity_entry": entity_entry.extended_dict}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         # Enabling an entity requires a config entry reload, or HA restart
-        config_entry = hass.config_entries.async_get_entry(entity_entry.config_entry_id)
-        if config_entry and not config_entry.supports_unload:
+        if (
+            not (config_entry_id := entity_entry.config_entry_id)
+            or (config_entry := hass.config_entries.async_get_entry(config_entry_id))
+            and not config_entry.supports_unload
+        ):
             result["require_restart"] = True
         else:
             result["reload_delay"] = config_entries.RELOAD_AFTER_UPDATE_DELAY
@@ -178,7 +299,11 @@ def websocket_update_entity(hass, connection, msg):
     }
 )
 @callback
-def websocket_remove_entity(hass, connection, msg):
+def websocket_remove_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle remove entity websocket command.
 
     Async friendly.
@@ -193,34 +318,3 @@ def websocket_remove_entity(hass, connection, msg):
 
     registry.async_remove(msg["entity_id"])
     connection.send_message(websocket_api.result_message(msg["id"]))
-
-
-@callback
-def _entry_dict(entry):
-    """Convert entry to API format."""
-    return {
-        "area_id": entry.area_id,
-        "config_entry_id": entry.config_entry_id,
-        "device_id": entry.device_id,
-        "disabled_by": entry.disabled_by,
-        "entity_category": entry.entity_category,
-        "entity_id": entry.entity_id,
-        "hidden_by": entry.hidden_by,
-        "icon": entry.icon,
-        "name": entry.name,
-        "platform": entry.platform,
-    }
-
-
-@callback
-def _entry_ext_dict(entry):
-    """Convert entry to API format."""
-    data = _entry_dict(entry)
-    data["capabilities"] = entry.capabilities
-    data["device_class"] = entry.device_class
-    data["options"] = entry.options
-    data["original_device_class"] = entry.original_device_class
-    data["original_icon"] = entry.original_icon
-    data["original_name"] = entry.original_name
-    data["unique_id"] = entry.unique_id
-    return data

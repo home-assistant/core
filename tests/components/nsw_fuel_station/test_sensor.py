@@ -1,10 +1,12 @@
 """The tests for the NSW Fuel Station sensor platform."""
+
 from unittest.mock import patch
 
 from nsw_fuel import FuelCheckError
 
 from homeassistant.components import sensor
 from homeassistant.components.nsw_fuel_station import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -73,7 +75,7 @@ MOCK_FUEL_PRICES_RESPONSE = MockGetFuelPricesResponse(
     "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
-async def test_setup(get_fuel_prices, hass):
+async def test_setup(get_fuel_prices, hass: HomeAssistant) -> None:
     """Test the setup with custom settings."""
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
@@ -88,14 +90,14 @@ async def test_setup(get_fuel_prices, hass):
 
 def raise_fuel_check_error():
     """Raise fuel check error for testing error cases."""
-    raise FuelCheckError()
+    raise FuelCheckError
 
 
 @patch(
     "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     side_effect=raise_fuel_check_error,
 )
-async def test_setup_error(get_fuel_prices, hass):
+async def test_setup_error(get_fuel_prices, hass: HomeAssistant) -> None:
     """Test the setup with client throwing error."""
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
@@ -112,7 +114,7 @@ async def test_setup_error(get_fuel_prices, hass):
     "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
-async def test_setup_error_no_station(get_fuel_prices, hass):
+async def test_setup_error_no_station(get_fuel_prices, hass: HomeAssistant) -> None:
     """Test the setup with specified station not existing."""
     with assert_setup_component(2, sensor.DOMAIN):
         assert await async_setup_component(
@@ -143,7 +145,7 @@ async def test_setup_error_no_station(get_fuel_prices, hass):
     "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
-async def test_sensor_values(get_fuel_prices, hass):
+async def test_sensor_values(get_fuel_prices, hass: HomeAssistant) -> None:
     """Test retrieval of sensor values."""
     assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})

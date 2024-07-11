@@ -1,6 +1,6 @@
 """Support for the MAX! Cube LAN Gateway."""
+
 import logging
-from socket import timeout
 from threading import Lock
 import time
 
@@ -65,11 +65,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             cube = MaxCube(host, port, now=now)
             hass.data[DATA_KEY][host] = MaxCubeHandle(cube, scan_interval)
-        except timeout as ex:
+        except TimeoutError as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
             persistent_notification.create(
                 hass,
-                f"Error: {ex}<br />You will need to restart Home Assistant after fixing.",
+                (
+                    f"Error: {ex}<br />You will need to restart Home Assistant after"
+                    " fixing."
+                ),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )
@@ -105,7 +108,7 @@ class MaxCubeHandle:
 
                 try:
                     self.cube.update()
-                except timeout:
+                except TimeoutError:
                     _LOGGER.error("Max!Cube connection failed")
                     return False
 

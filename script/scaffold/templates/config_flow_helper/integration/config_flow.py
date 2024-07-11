@@ -1,4 +1,5 @@
 """Config flow for NEW_NAME integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,40 +7,41 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
 )
 
 from .const import DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): selector.selector(
-            {"entity": {"domain": "sensor"}}
+        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
         ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.selector({"text": {}}),
+        vol.Required("name"): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
 }
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for NEW_NAME."""
 
     config_flow = CONFIG_FLOW

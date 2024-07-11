@@ -1,6 +1,11 @@
 """Config flow for Bosch Smart Home Controller integration."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
 import logging
 from os import makedirs
+from typing import Any, cast
 
 from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
@@ -11,10 +16,10 @@ from boschshcpy.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_HOSTNAME,
@@ -34,14 +39,19 @@ HOST_SCHEMA = vol.Schema(
 )
 
 
-def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> None:
+def write_tls_asset(hass: HomeAssistant, filename: str, asset: bytes) -> None:
     """Write the tls assets to disk."""
     makedirs(hass.config.path(DOMAIN), exist_ok=True)
     with open(hass.config.path(DOMAIN, filename), "w", encoding="utf8") as file_handle:
         file_handle.write(asset.decode("utf-8"))
 
 
-def create_credentials_and_validate(hass, host, user_input, zeroconf_instance):
+def create_credentials_and_validate(
+    hass: HomeAssistant,
+    host: str,
+    user_input: dict[str, Any],
+    zeroconf_instance: zeroconf.HaZeroconf,
+) -> dict[str, Any] | None:
     """Create and store credentials and validate session."""
     helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
     result = helper.register(host, "HomeAssistant")
@@ -62,7 +72,9 @@ def create_credentials_and_validate(hass, host, user_input, zeroconf_instance):
     return result
 
 
-def get_info_from_host(hass, host, zeroconf_instance):
+def get_info_from_host(
+    hass: HomeAssistant, host: str, zeroconf_instance: zeroconf.HaZeroconf
+) -> dict[str, str | None]:
     """Get information from host."""
     session = SHCSession(
         host,
@@ -75,54 +87,60 @@ def get_info_from_host(hass, host, zeroconf_instance):
     return {"title": information.name, "unique_id": information.unique_id}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch SHC."""
 
     VERSION = 1
-    info = None
-    host = None
-    hostname = None
+    info: dict[str, str | None]
+    host: str
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=HOST_SCHEMA,
             )
-        self.host = host = user_input[CONF_HOST]
-        self.info = await self._get_info(host)
+        self.host = user_input[CONF_HOST]
+        self.info = await self._get_info(self.host)
         return await self.async_step_credentials()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            self.host = user_input[CONF_HOST]
             try:
-                self.info = info = await self._get_info(host)
+                self.info = await self._get_info(self.host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["unique_id"])
-                self._abort_if_unique_id_configured({CONF_HOST: host})
-                self.host = host
+                await self.async_set_unique_id(self.info["unique_id"])
+                self._abort_if_unique_id_configured({CONF_HOST: self.host})
                 return await self.async_step_credentials()
 
         return self.async_show_form(
             step_id="user", data_schema=HOST_SCHEMA, errors=errors
         )
 
-    async def async_step_credentials(self, user_input=None):
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the credentials step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             zeroconf_instance = await zeroconf.async_get_instance(self.hass)
             try:
@@ -143,10 +161,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SHCRegistrationError as err:
                 _LOGGER.warning("Registration error: %s", err.message)
                 errors["base"] = "pairing_failed"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                assert result
                 entry_data = {
                     CONF_SSL_CERTIFICATE: self.hass.config.path(DOMAIN, CONF_SHC_CERT),
                     CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
@@ -164,7 +183,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
-                    title=self.info["title"],
+                    title=cast(str, self.info["title"]),
                     data=entry_data,
                 )
         else:
@@ -184,7 +203,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if not discovery_info.name.startswith("Bosch SHC"):
             return self.async_abort(reason="not_bosch_shc")
@@ -196,16 +215,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = discovery_info.host
 
         local_name = discovery_info.hostname[:-1]
-        node_name = local_name[: -len(".local")]
+        node_name = local_name.removesuffix(".local")
 
         await self.async_set_unique_id(self.info["unique_id"])
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
         self.context["title_placeholders"] = {"name": node_name}
         return await self.async_step_confirm_discovery()
 
-    async def async_step_confirm_discovery(self, user_input=None):
+    async def async_step_confirm_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle discovery confirm."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             return await self.async_step_credentials()
 
@@ -218,7 +239,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _get_info(self, host):
+    async def _get_info(self, host: str) -> dict[str, str | None]:
         """Get additional information."""
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
 

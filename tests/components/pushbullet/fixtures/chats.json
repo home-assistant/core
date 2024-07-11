@@ -1,0 +1,18 @@
+{
+  "chats": [
+    {
+      "active": true,
+      "created": 1412047948.579029,
+      "iden": "ujpah72o0sjAoRtnM0jc",
+      "modified": 1412047948.579031,
+      "with": {
+        "email": "someone@example.com",
+        "email_normalized": "someone@example.com",
+        "iden": "ujlMns72k",
+        "image_url": "https://dl.pushbulletusercontent.com/acb123/example.jpg",
+        "name": "Someone",
+        "type": "user"
+      }
+    }
+  ]
+}

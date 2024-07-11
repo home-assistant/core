@@ -1,4 +1,5 @@
 """Constants used for arcam."""
+
 DOMAIN = "arcam_fmj"
 
 SIGNAL_CLIENT_STARTED = "arcam.client_started"
@@ -12,4 +13,3 @@ DEFAULT_NAME = "Arcam FMJ"
 DEFAULT_SCAN_INTERVAL = 5
 
 DOMAIN_DATA_ENTRIES = f"{DOMAIN}.entries"
-DOMAIN_DATA_TASKS = f"{DOMAIN}.tasks"

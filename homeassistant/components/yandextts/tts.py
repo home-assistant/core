@@ -1,13 +1,17 @@
 """Support for the yandex speechkit tts  service."""
+
 import asyncio
 from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -64,7 +68,7 @@ DEFAULT_VOICE = "zahar"
 DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
@@ -114,14 +118,13 @@ class YandexSpeechKitProvider(Provider):
         """Return list of supported options."""
         return SUPPORTED_OPTIONS
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
         actual_language = language
-        options = options or {}
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 url_param = {
                     "text": message,
                     "lang": actual_language,
@@ -141,7 +144,7 @@ class YandexSpeechKitProvider(Provider):
                     return (None, None)
                 data = await request.read()
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for yandex speech kit API")
             return (None, None)
 

@@ -1,0 +1,28 @@
+{
+  "listeners": [
+    {
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "definition_id": 24,
+      "created_at": "2019-06-17T03:29:45.722Z",
+      "type": "sensor",
+      "model_version": "1.0",
+      "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "status_localized": {
+        "state": "Idle",
+        "description": "Jun 18 at 12:17am"
+      },
+      "insights": {
+        "primary": {
+          "origin": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "type": "Sensor"
+          },
+          "value": "idle",
+          "data_received_at": "2023-06-18T06:17:00.697Z"
+        }
+      },
+      "configuration": {},
+      "pro_monitoring_status": "ineligible"
+    }
+  ]
+}

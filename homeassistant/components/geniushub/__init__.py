@@ -1,4 +1,5 @@
 """Support for a Genius Hub system."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -17,11 +18,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
@@ -146,7 +147,7 @@ def setup_service_functions(hass: HomeAssistant, broker):
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         registry_entry = registry.async_get(entity_id)
 
         if registry_entry is None or registry_entry.platform != DOMAIN:
@@ -174,7 +175,9 @@ def setup_service_functions(hass: HomeAssistant, broker):
 class GeniusBroker:
     """Container for geniushub client and data."""
 
-    def __init__(self, hass, client, hub_uid) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: GeniusHub, hub_uid: str | None
+    ) -> None:
         """Initialize the geniushub client."""
         self.hass = hass
         self.client = client
@@ -182,7 +185,7 @@ class GeniusBroker:
         self._connect_error = False
 
     @property
-    def hub_uid(self) -> int:
+    def hub_uid(self) -> str:
         """Return the Hub UID (MAC address)."""
         return self._hub_uid if self._hub_uid is not None else self.client.uid
 
@@ -210,16 +213,17 @@ class GeniusBroker:
 
     def make_debug_log_entries(self) -> None:
         """Make any useful debug log entries."""
-        # pylint: disable=protected-access
         _LOGGER.debug(
             "Raw JSON: \n\nclient._zones = %s \n\nclient._devices = %s",
-            self.client._zones,
-            self.client._devices,
+            self.client._zones,  # noqa: SLF001
+            self.client._devices,  # noqa: SLF001
         )
 
 
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
+
+    _attr_should_poll = False
 
     def __init__(self) -> None:
         """Initialize the entity."""
@@ -237,11 +241,6 @@ class GeniusEntity(Entity):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as geniushub entities should not be polled."""
-        return False
 
 
 class GeniusDevice(GeniusEntity):
@@ -310,10 +309,9 @@ class GeniusZone(GeniusEntity):
 
         mode = payload["data"][ATTR_ZONE_MODE]
 
-        # pylint: disable=protected-access
-        if mode == "footprint" and not self._zone._has_pir:
+        if mode == "footprint" and not self._zone._has_pir:  # noqa: SLF001
             raise TypeError(
-                f"'{self.entity_id}' can not support footprint mode (it has no PIR)"
+                f"'{self.entity_id}' cannot support footprint mode (it has no PIR)"
             )
 
         await self._zone.set_mode(mode)
@@ -335,7 +333,6 @@ class GeniusHeatingZone(GeniusZone):
 
     _max_temp: float
     _min_temp: float
-    _supported_features: int
 
     @property
     def current_temperature(self) -> float | None:
@@ -360,12 +357,7 @@ class GeniusHeatingZone(GeniusZone):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the bitmask of supported features."""
-        return self._supported_features
+        return UnitOfTemperature.CELSIUS
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""

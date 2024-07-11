@@ -1,4 +1,5 @@
 """Support for Tomato routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -30,7 +31,7 @@ CONF_HTTP_ID = "http_id"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
@@ -43,13 +44,13 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
     """Validate the configuration and returns a Tomato scanner."""
     return TomatoDeviceScanner(config[DOMAIN])
 
 
 class TomatoDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running Tomato firmware."""
+    """Class which queries a wireless router running Tomato firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -100,17 +101,15 @@ class TomatoDeviceScanner(DeviceScanner):
         try:
             if self.ssl:
                 response = requests.Session().send(
-                    self.req, timeout=3, verify=self.verify_ssl
+                    self.req, timeout=60, verify=self.verify_ssl
                 )
             else:
-                response = requests.Session().send(self.req, timeout=3)
+                response = requests.Session().send(self.req, timeout=60)
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
             if response.status_code == HTTPStatus.OK:
-
                 for param, value in self.parse_api_pattern.findall(response.text):
-
                     if param in ("wldev", "dhcpd_lease"):
                         self.last_results[param] = json.loads(value.replace("'", '"'))
                 return True

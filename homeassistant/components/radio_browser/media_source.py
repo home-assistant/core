@@ -1,17 +1,13 @@
 """Expose Radio Browser as a media source."""
+
 from __future__ import annotations
 
 import mimetypes
 
 from radios import FilterBy, Order, RadioBrowser, Station
+from radios.radio_browser import pycountry
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_TYPE_MUSIC,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -19,9 +15,9 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
+from . import RadioBrowserConfigEntry
 from .const import DOMAIN
 
 CODEC_TO_MIMETYPE = {
@@ -34,7 +30,7 @@ CODEC_TO_MIMETYPE = {
 
 async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
     """Set up Radio Browser media source."""
-    # Radio browser support only a single config entry
+    # Radio browser supports only a single config entry
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     return RadioMediaSource(hass, entry)
@@ -45,23 +41,20 @@ class RadioMediaSource(MediaSource):
 
     name = "Radio Browser"
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize CameraMediaSource."""
+    def __init__(self, hass: HomeAssistant, entry: RadioBrowserConfigEntry) -> None:
+        """Initialize RadioMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
         self.entry = entry
 
     @property
-    def radios(self) -> RadioBrowser | None:
+    def radios(self) -> RadioBrowser:
         """Return the radio browser."""
-        return self.hass.data.get(DOMAIN)
+        return self.entry.runtime_data
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
         radios = self.radios
-
-        if radios is None:
-            raise Unresolvable("Radio Browser not initialized")
 
         station = await radios.station(uuid=item.identifier)
         if not station:
@@ -82,18 +75,15 @@ class RadioMediaSource(MediaSource):
         """Return media."""
         radios = self.radios
 
-        if radios is None:
-            raise BrowseError("Radio Browser not initialized")
-
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_CHANNEL,
-            media_content_type=MEDIA_TYPE_MUSIC,
+            media_class=MediaClass.CHANNEL,
+            media_content_type=MediaType.MUSIC,
             title=self.entry.title,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
             children=[
                 *await self._async_build_popular(radios, item),
                 *await self._async_build_by_tag(radios, item),
@@ -128,7 +118,7 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=station.uuid,
-                    media_class=MEDIA_CLASS_MUSIC,
+                    media_class=MediaClass.MUSIC,
                     media_content_type=mime_type,
                     title=station.name,
                     can_play=True,
@@ -156,13 +146,15 @@ class RadioMediaSource(MediaSource):
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
+            # Trigger the lazy loading of the country database to happen inside the executor
+            await self.hass.async_add_executor_job(lambda: len(pycountry.countries))
             countries = await radios.countries(order=Order.NAME)
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"country/{country.code}",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title=country.name,
                     can_play=False,
                     can_expand=True,
@@ -194,8 +186,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"language/{language.code}",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title=language.name,
                     can_play=False,
                     can_expand=True,
@@ -209,8 +201,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier="language",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title="By Language",
                     can_play=False,
                     can_expand=True,
@@ -237,8 +229,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier="popular",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title="Popular",
                     can_play=False,
                     can_expand=True,
@@ -277,8 +269,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"tag/{tag.name}",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title=tag.name.title(),
                     can_play=False,
                     can_expand=True,
@@ -291,8 +283,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier="tag",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title="By Category",
                     can_play=False,
                     can_expand=True,

@@ -1,4 +1,5 @@
 """The Bosch Smart Home Controller integration."""
+
 import logging
 
 from boschshcpy import SHCSession
@@ -19,7 +20,12 @@ from .const import (
     DOMAIN,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.COVER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,16 +69,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=shc_info.version,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def stop_polling(event):
         """Stop polling service."""
         await hass.async_add_executor_job(session.stop_polling)
 
     await hass.async_add_executor_job(session.start_polling)
-    hass.data[DOMAIN][entry.entry_id][
-        DATA_POLLING_HANDLER
-    ] = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
+    hass.data[DOMAIN][entry.entry_id][DATA_POLLING_HANDLER] = (
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
+    )
 
     return True
 

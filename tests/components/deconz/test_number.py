@@ -1,6 +1,7 @@
 """deCONZ number platform tests."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -9,42 +10,37 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .conftest import WebsocketDataType
 
-
-async def test_no_number_entities(hass, aioclient_mock):
-    """Test that no sensors in deconz results in no number entities."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_DATA = [
     (  # Presence sensor - delay configuration
         {
-            "name": "Presence sensor",
-            "type": "ZHAPresence",
-            "state": {"dark": False, "presence": False},
-            "config": {
-                "delay": 0,
-                "on": True,
-                "reachable": True,
-                "temperature": 10,
-            },
-            "uniqueid": "00:00:00:00:00:00:00:00-00",
+            "0": {
+                "name": "Presence sensor",
+                "type": "ZHAPresence",
+                "state": {"dark": False, "presence": False},
+                "config": {
+                    "delay": 0,
+                    "on": True,
+                    "reachable": True,
+                    "temperature": 10,
+                },
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            }
         },
         {
             "entity_count": 3,
             "device_count": 3,
             "entity_id": "number.presence_sensor_delay",
-            "unique_id": "00:00:00:00:00:00:00:00-delay",
+            "unique_id": "00:00:00:00:00:00:00:00-00-delay",
             "state": "0",
             "entity_category": EntityCategory.CONFIG,
             "attributes": {
@@ -62,21 +58,59 @@ TEST_DATA = [
             "unsupported_service_response": {"delay": 0},
             "out_of_range_service_value": 66666,
         },
-    )
+    ),
+    (  # Presence sensor - duration configuration
+        {
+            "0": {
+                "name": "Presence sensor",
+                "type": "ZHAPresence",
+                "state": {"dark": False, "presence": False},
+                "config": {
+                    "duration": 0,
+                    "on": True,
+                    "reachable": True,
+                    "temperature": 10,
+                },
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            }
+        },
+        {
+            "entity_count": 3,
+            "device_count": 3,
+            "entity_id": "number.presence_sensor_duration",
+            "unique_id": "00:00:00:00:00:00:00:00-00-duration",
+            "state": "0",
+            "entity_category": EntityCategory.CONFIG,
+            "attributes": {
+                "min": 0,
+                "max": 65535,
+                "step": 1,
+                "mode": "auto",
+                "friendly_name": "Presence sensor Duration",
+            },
+            "websocket_event": {"config": {"duration": 10}},
+            "next_state": "10",
+            "supported_service_value": 111,
+            "supported_service_response": {"duration": 111},
+            "unsupported_service_value": 0.1,
+            "unsupported_service_response": {"duration": 0},
+            "out_of_range_service_value": 66666,
+        },
+    ),
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 async def test_number_entities(
-    hass, aioclient_mock, mock_deconz_websocket, sensor_data, expected
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: ConfigEntry,
+    mock_websocket_data: WebsocketDataType,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    expected: dict[str, Any],
+) -> None:
     """Test successful creation of number entities."""
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
-    with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"0": sensor_data}}):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     assert len(hass.states.async_all()) == expected["entity_count"]
 
     # Verify state data
@@ -87,33 +121,31 @@ async def test_number_entities(
 
     # Verify entity registry data
 
-    ent_reg_entry = ent_reg.async_get(expected["entity_id"])
+    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
 
     # Verify device registry data
 
     assert (
-        len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
         == expected["device_count"]
     )
 
     # Change state
 
-    event_changed_sensor = {
-        "t": "event",
-        "e": "changed",
-        "r": "sensors",
-        "id": "0",
-        "config": {"delay": 10},
-    }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    event_changed_sensor = {"r": "sensors"} | expected["websocket_event"]
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Verify service calls
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
+    aioclient_mock = mock_put_request("/sensors/0/config")
 
     # Service set supported value
 
@@ -143,7 +175,7 @@ async def test_number_entities(
 
     # Service set value beyond the supported range
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -156,11 +188,11 @@ async def test_number_entities(
 
     # Unload entry
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
 
     # Remove entry
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0

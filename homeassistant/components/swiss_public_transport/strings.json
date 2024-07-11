@@ -1,0 +1,60 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "Cannot connect to server",
+      "bad_config": "Request failed due to bad config: Check at [stationboard]({stationboard_url}) if your station names are valid",
+      "too_many_via_stations": "Too many via stations, only up to 5 via stations are allowed per connection.",
+      "unknown": "An unknown error was raised by python-opendata-transport"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "Cannot connect to server",
+      "bad_config": "Request failed due to bad config: Check the [stationboard]({stationboard_url}) for valid stations.",
+      "unknown": "An unknown error was raised by python-opendata-transport"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "from": "Start station",
+          "to": "End station",
+          "via": "List of up to 5 via stations"
+        },
+        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "title": "Swiss Public Transport"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure0": {
+        "name": "Departure"
+      },
+      "departure1": {
+        "name": "Departure +1"
+      },
+      "departure2": {
+        "name": "Departure +2"
+      },
+      "duration": {
+        "name": "Duration"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "platform": {
+        "name": "Platform"
+      },
+      "delay": {
+        "name": "Delay"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_data": {
+      "message": "Setup failed for entry {config_title} with invalid data, check at the [stationboard]({stationboard_url}) if your station names are valid.\n{error}"
+    },
+    "request_timeout": {
+      "message": "Timeout while connecting for entry {config_title}.\n{error}"
+    }
+  }
+}

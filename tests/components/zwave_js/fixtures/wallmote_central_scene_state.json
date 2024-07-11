@@ -68,7 +68,11 @@
       "inclusion": "To add the ZP3111 to the Z-Wave network (inclusion), place the Z-Wave primary controller into inclusion mode. Press the Program Switch of ZP3111 for sending the NIF. After sending NIF, Z-Wave will send the auto inclusion, otherwise, ZP3111 will go to sleep after 20 seconds.",
       "exclusion": "To remove the ZP3111 from the Z-Wave network (exclusion), place the Z-Wave primary controller into \u201cexclusion\u201d mode, and following its instruction to delete the ZP3111 to the controller. Press the Program Switch of ZP3111 once to be excluded.",
       "reset": "Remove cover to triggered tamper switch, LED flash once & send out Alarm Report. Press Program Switch 10 times within 10 seconds, ZP3111 will send the \u201cDevice Reset Locally Notification\u201d command and reset to the factory default. (Remark: This is to be used only in the case of primary controller being inoperable or otherwise unavailable.)",
-      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2479/ZP3111-5_R2_20170316.pdf"
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2479/ZP3111-5_R2_20170316.pdf",
+      "comments": {
+        "level": "info",
+        "text": "test"
+      }
     },
     "isEmbedded": true
   },

@@ -1,4 +1,5 @@
 """Support for Firmata binary sensor input."""
+
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -40,8 +41,7 @@ async def async_setup_entry(
         binary_sensor_entity = FirmataBinarySensor(api, config_entry, name, pin)
         new_entities.append(binary_sensor_entity)
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
 
 class FirmataBinarySensor(FirmataPinEntity, BinarySensorEntity):

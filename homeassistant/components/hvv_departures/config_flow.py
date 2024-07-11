@@ -1,11 +1,15 @@
 """Config flow for HVV integration."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pygti.auth import GTI_DEFAULT_HOST
 from pygti.exceptions import CannotConnect, InvalidAuth
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -35,7 +39,7 @@ SCHEMA_STEP_OPTIONS = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HVV."""
 
     VERSION = 1
@@ -78,7 +82,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_station(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
         if user_input is not None:
-
             errors = {}
 
             check_name = await self.hub.gti.checkName(
@@ -122,33 +125,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get options flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Options flow handler."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize HVV Departures options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
-        self.departure_filters = {}
-        self.hub = None
+        self.departure_filters: dict[str, Any] = {}
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         errors = {}
         if not self.departure_filters:
-
             departure_list = {}
-            self.hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
+            hub: GTIHub = self.hass.data[DOMAIN][self.config_entry.entry_id]
 
             try:
-                departure_list = await self.hub.gti.departureList(
+                departure_list = await hub.gti.departureList(
                     {
-                        "station": self.config_entry.data[CONF_STATION],
+                        "station": {
+                            "type": "STATION",
+                            "id": self.config_entry.data[CONF_STATION].get("id"),
+                        },
                         "time": {"date": "heute", "time": "jetzt"},
                         "maxList": 5,
                         "maxTimeOffset": 200,
@@ -168,7 +174,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
 
         if user_input is not None and not errors:
-
             options = {
                 CONF_FILTER: [
                     self.departure_filters[x] for x in user_input[CONF_FILTER]
@@ -194,7 +199,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
                         {
-                            key: f"{departure_filter['serviceName']}, {departure_filter['label']}"
+                            key: (
+                                f"{departure_filter['serviceName']},"
+                                f" {departure_filter['label']}"
+                            )
                             for key, departure_filter in self.departure_filters.items()
                         }
                     ),

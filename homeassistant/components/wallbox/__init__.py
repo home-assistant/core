@@ -1,140 +1,27 @@
 """The Wallbox integration."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-from http import HTTPStatus
-import logging
-from typing import Any
-
-import requests
 from wallbox import Wallbox
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from ...helpers.entity import DeviceInfo
-from .const import (
-    CONF_CURRENT_VERSION_KEY,
-    CONF_DATA_KEY,
-    CONF_LOCKED_UNLOCKED_KEY,
-    CONF_MAX_CHARGING_CURRENT_KEY,
-    CONF_NAME_KEY,
-    CONF_PART_NUMBER_KEY,
-    CONF_SERIAL_NUMBER_KEY,
-    CONF_SOFTWARE_KEY,
-    CONF_STATION,
-    DOMAIN,
-)
+from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL
+from .coordinator import InvalidAuth, WallboxCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK]
-UPDATE_INTERVAL = 30
-
-
-class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Wallbox Coordinator class."""
-
-    def __init__(self, station: str, wallbox: Wallbox, hass: HomeAssistant) -> None:
-        """Initialize."""
-        self._station = station
-        self._wallbox = wallbox
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
-        )
-
-    def _authenticate(self) -> None:
-        """Authenticate using Wallbox API."""
-        try:
-            self._wallbox.authenticate()
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
-                raise ConfigEntryAuthFailed from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
-
-    def _validate(self) -> None:
-        """Authenticate using Wallbox API."""
-        try:
-            self._wallbox.authenticate()
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
-
-    async def async_validate_input(self) -> None:
-        """Get new sensor data for Wallbox component."""
-        await self.hass.async_add_executor_job(self._validate)
-
-    def _get_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component."""
-        try:
-            self._authenticate()
-            data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
-            data[CONF_MAX_CHARGING_CURRENT_KEY] = data[CONF_DATA_KEY][
-                CONF_MAX_CHARGING_CURRENT_KEY
-            ]
-            data[CONF_LOCKED_UNLOCKED_KEY] = data[CONF_DATA_KEY][
-                CONF_LOCKED_UNLOCKED_KEY
-            ]
-
-            return data
-
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            raise ConnectionError from wallbox_connection_error
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component."""
-        return await self.hass.async_add_executor_job(self._get_data)
-
-    def _set_charging_current(self, charging_current: float) -> None:
-        """Set maximum charging current for Wallbox."""
-        try:
-            self._authenticate()
-            self._wallbox.setMaxChargingCurrent(self._station, charging_current)
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
-
-    async def async_set_charging_current(self, charging_current: float) -> None:
-        """Set maximum charging current for Wallbox."""
-        await self.hass.async_add_executor_job(
-            self._set_charging_current, charging_current
-        )
-        await self.async_request_refresh()
-
-    def _set_lock_unlock(self, lock: bool) -> None:
-        """Set wallbox to locked or unlocked."""
-        try:
-            self._authenticate()
-            if lock:
-                self._wallbox.lockCharger(self._station)
-            else:
-                self._wallbox.unlockCharger(self._station)
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
-
-    async def async_set_lock_unlock(self, lock: bool) -> None:
-        """Set wallbox to locked or unlocked."""
-        await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
-        await self.async_request_refresh()
+PLATFORMS = [Platform.LOCK, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
-    wallbox = Wallbox(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+    wallbox = Wallbox(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        jwtTokenDrift=UPDATE_INTERVAL,
+    )
     wallbox_coordinator = WallboxCoordinator(
         entry.data[CONF_STATION],
         wallbox,
@@ -151,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = wallbox_coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -163,26 +50,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
-    """Defines a base Wallbox entity."""
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Wallbox device."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY])
-            },
-            name=f"Wallbox - {self.coordinator.data[CONF_NAME_KEY]}",
-            manufacturer="Wallbox",
-            model=self.coordinator.data[CONF_DATA_KEY][CONF_PART_NUMBER_KEY],
-            sw_version=self.coordinator.data[CONF_DATA_KEY][CONF_SOFTWARE_KEY][
-                CONF_CURRENT_VERSION_KEY
-            ],
-        )

@@ -1,4 +1,5 @@
 """Support for Snips on-device ASR and NLU."""
+
 from datetime import timedelta
 import json
 import logging
@@ -91,6 +92,11 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
 
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     async def async_set_feedback(site_ids, state):
         """Set Feedback sound state."""
         site_ids = site_ids if site_ids else config[DOMAIN].get(CONF_SITE_IDS)
@@ -171,7 +177,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def snips_say_action(call: ServiceCall) -> None:
         """Send a Snips action message."""
@@ -188,7 +193,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def feedback_on(call: ServiceCall) -> None:
         """Turn feedback sounds on."""

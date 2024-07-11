@@ -1,9 +1,11 @@
 """Provides the Toon DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import logging
 import secrets
 
+from aiohttp import web
 from toonapi import Status, Toon, ToonError
 
 from homeassistant.components import cloud, webhook
@@ -47,11 +49,6 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
-
     async def register_webhook(self, event: Event | None = None) -> None:
         """Register a webhook with Toon to get live updates."""
         if CONF_WEBHOOK_ID not in self.entry.data:
@@ -59,7 +56,6 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
         if cloud.async_active_subscription(self.hass):
-
             if CONF_CLOUDHOOK_URL not in self.entry.data:
                 try:
                     webhook_url = await cloud.async_create_cloudhook(
@@ -103,7 +99,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
         )
 
     async def handle_webhook(
-        self, hass: HomeAssistant, webhook_id: str, request
+        self, hass: HomeAssistant, webhook_id: str, request: web.Request
     ) -> None:
         """Handle webhook callback."""
         try:
@@ -128,7 +124,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
 
         try:
             await self.toon.update(data["updateDataSet"])
-            self.update_listeners()
+            self.async_update_listeners()
         except ToonError as err:
             _LOGGER.error("Could not process data received from Toon webhook - %s", err)
 

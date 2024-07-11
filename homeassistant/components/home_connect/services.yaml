@@ -1,0 +1,113 @@
+start_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    program:
+      example: "Dishcare.Dishwasher.Program.Auto2"
+      required: true
+      selector:
+        text:
+    key:
+      example: "BSH.Common.Option.StartInRelative"
+      selector:
+        text:
+    value:
+      example: 1800
+      selector:
+        object:
+    unit:
+      example: "seconds"
+      selector:
+        text:
+select_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    program:
+      example: "Dishcare.Dishwasher.Program.Auto2"
+      required: true
+      selector:
+        text:
+    key:
+      example: "BSH.Common.Option.StartInRelative"
+      selector:
+        text:
+    value:
+      example: 1800
+      selector:
+        object:
+    unit:
+      example: "seconds"
+      selector:
+        text:
+pause_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+resume_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+set_option_active:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    key:
+      example: "LaundryCare.Dryer.Option.DryingTarget"
+      required: true
+      selector:
+        text:
+    value:
+      example: "LaundryCare.Dryer.EnumType.DryingTarget.IronDry"
+      required: true
+      selector:
+        object:
+set_option_selected:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    key:
+      example: "LaundryCare.Dryer.Option.DryingTarget"
+      required: true
+      selector:
+        text:
+    value:
+      example: "LaundryCare.Dryer.EnumType.DryingTarget.IronDry"
+      required: true
+      selector:
+        object:
+change_setting:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    key:
+      example: "BSH.Common.Setting.ChildLock"
+      required: true
+      selector:
+        text:
+    value:
+      example: "true"
+      required: true
+      selector:
+        object:

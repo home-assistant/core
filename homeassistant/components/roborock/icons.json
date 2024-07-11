@@ -1,0 +1,124 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "mop_drying_status": {
+        "default": "mdi:heat-wave"
+      },
+      "mop_attached": {
+        "default": "mdi:square-rounded"
+      },
+      "water_box_attached": {
+        "default": "mdi:water"
+      },
+      "water_shortage": {
+        "default": "mdi:water"
+      },
+      "in_cleaning": {
+        "default": "mdi:vacuum"
+      }
+    },
+    "button": {
+      "reset_sensor_consumable": {
+        "default": "mdi:eye-outline"
+      },
+      "reset_air_filter_consumable": {
+        "default": "mdi:air-filter"
+      },
+      "reset_side_brush_consumable": {
+        "default": "mdi:brush"
+      },
+      "reset_main_brush_consumable": {
+        "default": "mdi:brush"
+      }
+    },
+    "number": {
+      "volume": {
+        "default": "mdi:volume-source"
+      }
+    },
+    "sensor": {
+      "main_brush_time_left": {
+        "default": "mdi:brush"
+      },
+      "side_brush_time_left": {
+        "default": "mdi:brush"
+      },
+      "filter_time_left": {
+        "default": "mdi:air-filter"
+      },
+      "sensor_time_left": {
+        "default": "mdi:eye-outline"
+      },
+      "total_cleaning_time": {
+        "default": "mdi:history"
+      },
+      "status": {
+        "default": "mdi:information-outline"
+      },
+      "cleaning_area": {
+        "default": "mdi:texture-box"
+      },
+      "total_cleaning_area": {
+        "default": "mdi:texture-box"
+      },
+      "vacuum_error": {
+        "default": "mdi:alert-circle"
+      },
+      "last_clean_start": {
+        "default": "mdi:clock-time-twelve"
+      },
+      "last_clean_end": {
+        "default": "mdi:clock-time-twelve"
+      },
+      "clean_percent": {
+        "default": "mdi:progress-check"
+      },
+      "dock_error": {
+        "default": "mdi:garage-open"
+      },
+      "zeo_error": {
+        "default": "mdi:alert-circle"
+      },
+      "zeo_state": {
+        "default": "mdi:information-outline"
+      },
+      "washing_left": {
+        "default": "mdi:clock-outline"
+      },
+      "countdown": {
+        "default": "mdi:clock-outline"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
+      "status_indicator": {
+        "default": "mdi:alarm-light-outline"
+      },
+      "dnd_switch": {
+        "default": "mdi:bell-cancel"
+      },
+      "off_peak_switch": {
+        "default": "mdi:power-plug"
+      }
+    },
+    "time": {
+      "dnd_start_time": {
+        "default": "mdi:bell-cancel"
+      },
+      "dnd_end_time": {
+        "default": "mdi:bell-ring"
+      },
+      "off_peak_start": {
+        "default": "mdi:power-plug"
+      },
+      "off_peak_end": {
+        "default": "mdi:power-plug-off"
+      }
+    }
+  },
+  "services": {
+    "get_maps": "mdi:floor-plan"
+  }
+}

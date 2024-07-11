@@ -1,4 +1,5 @@
 """Tests for the Abode binary sensor device."""
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.abode.const import ATTRIBUTION
 from homeassistant.components.binary_sensor import (
@@ -17,10 +18,11 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_platform
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, BINARY_SENSOR_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("binary_sensor.front_door")
     assert entry.unique_id == "2834013428b6035fba7d4054aa7b25a3"

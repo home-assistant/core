@@ -1,10 +1,12 @@
 """Support for Rflink devices."""
+
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
 
-import async_timeout
-from rflink.protocol import create_rflink_connection
+from rflink.protocol import ProtocolBase, create_rflink_connection
 from serial import SerialException
 import voluptuous as vol
 
@@ -18,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
+from homeassistant.core import CoreState, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -26,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -206,7 +209,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     TMP_ENTITY.format(event_id)
                 )
                 hass.async_create_task(
-                    hass.data[DATA_DEVICE_REGISTER][event_type](event)
+                    hass.data[DATA_DEVICE_REGISTER][event_type](event),
+                    eager_start=False,
                 )
             else:
                 _LOGGER.debug("device_id not known and automatic add disabled")
@@ -223,9 +227,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
         if keepalive_idle_timer < 0:
             _LOGGER.error(
-                "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
-                "it will be disabled. "
-                "Recommended values: 60-3600 (seconds)",
+                (
+                    "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+                    "it will be disabled. "
+                    "Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
             keepalive_idle_timer = None
@@ -233,14 +239,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             keepalive_idle_timer = None
         elif keepalive_idle_timer <= 30:
             _LOGGER.warning(
-                "A very short TCP Keepalive IDLE timer was provided (%d secs) "
-                "and may produce unexpected disconnections from RFlink device."
-                " Recommended values: 60-3600 (seconds)",
+                (
+                    "A very short TCP Keepalive IDLE timer was provided (%d secs) "
+                    "and may produce unexpected disconnections from RFlink device."
+                    " Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
 
     @callback
-    def reconnect(exc=None):
+    def reconnect(_: Exception | None = None) -> None:
         """Schedule reconnect after connection has been unexpectedly lost."""
         # Reset protocol binding before starting reconnect
         RflinkCommand.set_rflink_protocol(None)
@@ -248,9 +256,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
         # If HA is not stopping, initiate new connection
-        if hass.state != CoreState.stopping:
+        if hass.state is not CoreState.stopping:
             _LOGGER.warning("Disconnected from Rflink, reconnecting")
-            hass.async_create_task(connect())
+            hass.async_create_task(connect(), eager_start=False)
+
+    _reconnect_job = HassJob(reconnect, "Rflink reconnect", cancel_on_shutdown=True)
 
     async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
@@ -271,14 +281,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         try:
-            async with async_timeout.timeout(CONNECTION_TIMEOUT):
+            async with asyncio.timeout(CONNECTION_TIMEOUT):
                 transport, protocol = await connection
 
         except (
             SerialException,
             OSError,
-            asyncio.TimeoutError,
-        ) as exc:
+            TimeoutError,
+        ):
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
             _LOGGER.exception(
                 "Error connecting to Rflink, reconnecting in %s", reconnect_interval
@@ -286,7 +296,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # Connection to Rflink device is lost, make entities unavailable
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
-            hass.loop.call_later(reconnect_interval, reconnect, exc)
+            async_call_later(hass, reconnect_interval, _reconnect_job)
             return
 
         # There is a valid connection to a Rflink device now so
@@ -303,7 +313,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         _LOGGER.info("Connected to Rflink")
 
-    hass.async_create_task(connect())
+    hass.async_create_task(connect(), eager_start=False)
     async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
     return True
 
@@ -314,9 +324,9 @@ class RflinkDevice(Entity):
     Contains the common logic for Rflink entities.
     """
 
-    platform = None
-    _state = None
+    _state: bool | None = None
     _available = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -334,6 +344,7 @@ class RflinkDevice(Entity):
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
+        self._attr_unique_id = device_id
         if name:
             self._name = name
         else:
@@ -367,12 +378,7 @@ class RflinkDevice(Entity):
 
     def _handle_event(self, event):
         """Platform specific event handler."""
-        raise NotImplementedError()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+        raise NotImplementedError
 
     @property
     def name(self):
@@ -475,12 +481,16 @@ class RflinkCommand(RflinkDevice):
 
     # Keep repetition tasks to cancel if state is changed before repetitions
     # are sent
-    _repetition_task = None
+    _repetition_task: asyncio.Task[None] | None = None
 
-    _protocol = None
+    _protocol: ProtocolBase | None = None
+
+    _wait_ack: bool | None = None
 
     @classmethod
-    def set_rflink_protocol(cls, protocol, wait_ack=None):
+    def set_rflink_protocol(
+        cls, protocol: ProtocolBase | None, wait_ack: bool | None = None
+    ) -> None:
         """Set the Rflink asyncio protocol as a class variable."""
         cls._protocol = protocol
         if wait_ack is not None:
@@ -571,7 +581,7 @@ class RflinkCommand(RflinkDevice):
 
         if repetitions > 1:
             self._repetition_task = self.hass.async_create_task(
-                self._async_send_command(cmd, repetitions - 1)
+                self._async_send_command(cmd, repetitions - 1), eager_start=False
             )
 
 

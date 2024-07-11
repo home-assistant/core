@@ -1,10 +1,10 @@
 {
   "domain": "prosegur",
   "name": "Prosegur Alarm",
+  "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prosegur",
-  "requirements": ["pyprosegur==0.0.5"],
-  "codeowners": ["@dgomes"],
   "iot_class": "cloud_polling",
-  "loggers": ["pyprosegur"]
+  "loggers": ["pyprosegur"],
+  "requirements": ["pyprosegur==0.0.9"]
 }

@@ -1,4 +1,5 @@
 """Support for exposing Concord232 elements as sensors."""
+
 from __future__ import annotations
 
 import datetime
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -35,7 +36,7 @@ SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
             cv.ensure_list, [cv.positive_int]
@@ -133,7 +134,7 @@ class Concord232ZoneSensor(BinarySensorEntity):
         # True means "faulted" or "open" or "abnormal state"
         return bool(self._zone["state"] != "Normal")
 
-    def update(self):
+    def update(self) -> None:
         """Get updated stats from API."""
         last_update = dt_util.utcnow() - self._client.last_zone_update
         _LOGGER.debug("Zone: %s ", self._zone)

@@ -1,4 +1,5 @@
 """Support for the Hitron CODA-4582U, provided by Rogers."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TYPE = "rogers"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -32,7 +33,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(_hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    _hass: HomeAssistant, config: ConfigType
+) -> HitronCODADeviceScanner | None:
     """Validate the configuration and return a Hitron CODA-4582U scanner."""
     scanner = HitronCODADeviceScanner(config[DOMAIN])
 
@@ -43,7 +46,7 @@ Device = namedtuple("Device", ["mac", "name"])
 
 
 class HitronCODADeviceScanner(DeviceScanner):
-    """This class scans for devices using the CODA's web interface."""
+    """Scanner for devices using the CODA's web interface."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -92,10 +95,10 @@ class HitronCODADeviceScanner(DeviceScanner):
             return False
         try:
             self._userid = res.cookies["userid"]
-            return True
         except KeyError:
             _LOGGER.error("Failed to log in to router")
             return False
+        return True
 
     def _update_info(self):
         """Get ARP from router."""

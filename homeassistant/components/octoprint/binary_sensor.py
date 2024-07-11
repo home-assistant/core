@@ -1,4 +1,5 @@
 """Support for monitoring OctoPrint binary sensors."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -52,11 +53,7 @@ class OctoPrintBinarySensorBase(
         self._device_id = device_id
         self._attr_name = f"OctoPrint {sensor_type}"
         self._attr_unique_id = f"{sensor_type}-{device_id}"
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return self.coordinator.device_info
+        self._attr_device_info = coordinator.device_info
 
     @property
     def is_on(self):

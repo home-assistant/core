@@ -1,0 +1,231 @@
+# serializer version: 1
+# name: test_sensor_next
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Departure time',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T12:00:00+00:00',
+  })
+# ---
+# name: test_sensor_next.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'enum',
+      'friendly_name': 'Stockholm C to Uppsala C Departure state',
+      'options': list([
+        'on_time',
+        'delayed',
+        'canceled',
+      ]),
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_time',
+  })
+# ---
+# name: test_sensor_next.10
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Departure time next',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time_next',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T17:15:00+00:00',
+  })
+# ---
+# name: test_sensor_next.11
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Departure time next after',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time_next_after',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T17:30:00+00:00',
+  })
+# ---
+# name: test_sensor_next.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Actual time',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_actual_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T12:00:00+00:00',
+  })
+# ---
+# name: test_sensor_next.3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'friendly_name': 'Stockholm C to Uppsala C Other information',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_other_information',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Some other info',
+  })
+# ---
+# name: test_sensor_next.4
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Departure time next',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time_next',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T12:15:00+00:00',
+  })
+# ---
+# name: test_sensor_next.5
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Departure time next after',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time_next_after',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T12:30:00+00:00',
+  })
+# ---
+# name: test_sensor_next.6
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Departure time',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T17:00:00+00:00',
+  })
+# ---
+# name: test_sensor_next.7
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'enum',
+      'friendly_name': 'Stockholm C to Uppsala C Departure state',
+      'options': list([
+        'on_time',
+        'delayed',
+        'canceled',
+      ]),
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_time',
+  })
+# ---
+# name: test_sensor_next.8
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Actual time',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_actual_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T17:00:00+00:00',
+  })
+# ---
+# name: test_sensor_next.9
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'friendly_name': 'Stockholm C to Uppsala C Other information',
+      'product_filter': 'Regionaltåg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_other_information',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_single_stop
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Trafikverket',
+      'device_class': 'timestamp',
+      'friendly_name': 'Stockholm C to Uppsala C Departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-05-01T11:00:00+00:00',
+  })
+# ---
+# name: test_sensor_update_auth_failure
+  FlowResultSnapshot({
+    'context': dict({
+      'entry_id': '1',
+      'source': 'reauth',
+      'title_placeholders': dict({
+        'name': 'Mock Title',
+      }),
+      'unique_id': "stockholmc-uppsalac--['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
+    }),
+    'flow_id': <ANY>,
+    'handler': 'trafikverket_train',
+    'step_id': 'reauth_confirm',
+  })
+# ---

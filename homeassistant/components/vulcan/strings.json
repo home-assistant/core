@@ -3,16 +3,17 @@
     "abort": {
       "already_configured": "That student has already been added.",
       "all_student_already_configured": "All students have already been added.",
-      "reauth_successful": "Reauth successful"
+      "reauth_successful": "Reauth successful",
+      "no_matching_entries": "No matching entries found, please use different account or remove integration with outdated student."
     },
     "error": {
-      "unknown": "Unknown error occurred",
-      "invalid_token": "Invalid token",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "expired_token": "Expired token - please generate a new token",
       "invalid_pin": "Invalid pin",
       "invalid_symbol": "Invalid symbol",
       "expired_credentials": "Expired credentials - please create new on Vulcan mobile app registration page",
-      "cannot_connect": "Connection error - please check your internet connection"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "auth": {
@@ -20,15 +21,15 @@
         "data": {
           "token": "Token",
           "region": "Symbol",
-          "pin": "Pin"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
-      "reauth": {
-        "description": "Login to your Vulcan Account using mobile app registration page.",
+      "reauth_confirm": {
+        "description": "[%key:component::vulcan::config::step::auth::description%]",
         "data": {
           "token": "Token",
-          "region": "Symbol",
-          "pin": "Pin"
+          "region": "[%key:component::vulcan::config::step::auth::data::region%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "select_student": {
@@ -51,18 +52,10 @@
       }
     }
   },
-  "options": {
-    "error": {
-      "error": "Error occurred"
-    },
-    "step": {
-      "init": {
-        "data": {
-          "message_notify": "Show notifications when new message received",
-          "attendance_notify": "Show notifications about the latest attendance entries",
-          "grade_notify": "Show notifications about the latest grades",
-          "scan_interval": "Update interval (in minutes)"
-        }
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "name": "[%key:component::calendar::title%]"
       }
     }
   }

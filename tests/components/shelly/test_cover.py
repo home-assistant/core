@@ -1,4 +1,9 @@
-"""The scene tests for the myq platform."""
+"""Tests for Shelly cover platform."""
+
+from unittest.mock import Mock
+
+import pytest
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -12,181 +17,173 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
+
+from . import init_integration, mutate_rpc_device_status
 
 ROLLER_BLOCK_ID = 1
 
 
-async def test_block_device_services(hass, coap_wrapper, monkeypatch):
+async def test_block_device_services(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
     """Test block device cover services."""
-    assert coap_wrapper
-
-    monkeypatch.setitem(coap_wrapper.device.settings, "mode", "roller")
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, COVER_DOMAIN)
-    )
-    await hass.async_block_till_done()
+    entity_id = "cover.test_name"
+    monkeypatch.setitem(mock_block_device.settings, "mode", "roller")
+    await init_integration(hass, 1)
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_name", ATTR_POSITION: 50},
+        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
         blocking=True,
     )
-    state = hass.states.get("cover.test_name")
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_name"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get("cover.test_name").state == STATE_OPENING
+    assert hass.states.get(entity_id).state == STATE_OPENING
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_name"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get("cover.test_name").state == STATE_CLOSING
+    assert hass.states.get(entity_id).state == STATE_CLOSING
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.test_name"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get("cover.test_name").state == STATE_CLOSED
+    assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-roller_0"
 
 
-async def test_block_device_update(hass, coap_wrapper, monkeypatch):
+async def test_block_device_update(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test block device update."""
-    assert coap_wrapper
+    monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "rollerPos", 0)
+    await init_integration(hass, 1)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, COVER_DOMAIN)
-    )
-    await hass.async_block_till_done()
-
-    monkeypatch.setattr(coap_wrapper.device.blocks[ROLLER_BLOCK_ID], "rollerPos", 0)
-    await async_update_entity(hass, "cover.test_name")
-    await hass.async_block_till_done()
     assert hass.states.get("cover.test_name").state == STATE_CLOSED
 
-    monkeypatch.setattr(coap_wrapper.device.blocks[ROLLER_BLOCK_ID], "rollerPos", 100)
-    await async_update_entity(hass, "cover.test_name")
-    await hass.async_block_till_done()
+    monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "rollerPos", 100)
+    mock_block_device.mock_update()
     assert hass.states.get("cover.test_name").state == STATE_OPEN
 
 
-async def test_block_device_no_roller_blocks(hass, coap_wrapper, monkeypatch):
+async def test_block_device_no_roller_blocks(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test block device without roller blocks."""
-    assert coap_wrapper
-
-    monkeypatch.setattr(coap_wrapper.device.blocks[ROLLER_BLOCK_ID], "type", None)
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, COVER_DOMAIN)
-    )
-    await hass.async_block_till_done()
+    monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "type", None)
+    await init_integration(hass, 1)
     assert hass.states.get("cover.test_name") is None
 
 
-async def test_rpc_device_services(hass, rpc_wrapper, monkeypatch):
+async def test_rpc_device_services(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
     """Test RPC device cover services."""
-    assert rpc_wrapper
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, COVER_DOMAIN)
-    )
-    await hass.async_block_till_done()
+    entity_id = "cover.test_cover_0"
+    await init_integration(hass, 2)
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_cover_0", ATTR_POSITION: 50},
+        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
         blocking=True,
     )
-    state = hass.states.get("cover.test_cover_0")
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
-    monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "state", "opening")
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "state", "opening"
+    )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover_0"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    rpc_wrapper.async_set_updated_data("")
-    assert hass.states.get("cover.test_cover_0").state == STATE_OPENING
+    mock_rpc_device.mock_update()
+    assert hass.states.get(entity_id).state == STATE_OPENING
 
-    monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "state", "closing")
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "state", "closing"
+    )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover_0"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    rpc_wrapper.async_set_updated_data("")
-    assert hass.states.get("cover.test_cover_0").state == STATE_CLOSING
+    mock_rpc_device.mock_update()
+    assert hass.states.get(entity_id).state == STATE_CLOSING
 
-    monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "state", "closed")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover_0"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    rpc_wrapper.async_set_updated_data("")
-    assert hass.states.get("cover.test_cover_0").state == STATE_CLOSED
+    mock_rpc_device.mock_update()
+    assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-cover:0"
 
 
-async def test_rpc_device_no_cover_keys(hass, rpc_wrapper, monkeypatch):
+async def test_rpc_device_no_cover_keys(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test RPC device without cover keys."""
-    assert rpc_wrapper
-
-    monkeypatch.delitem(rpc_wrapper.device.status, "cover:0")
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, COVER_DOMAIN)
-    )
-    await hass.async_block_till_done()
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    await init_integration(hass, 2)
     assert hass.states.get("cover.test_cover_0") is None
 
 
-async def test_rpc_device_update(hass, rpc_wrapper, monkeypatch):
+async def test_rpc_device_update(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test RPC device update."""
-    assert rpc_wrapper
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, COVER_DOMAIN)
-    )
-    await hass.async_block_till_done()
-
-    monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "state", "closed")
-    await async_update_entity(hass, "cover.test_cover_0")
-    await hass.async_block_till_done()
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
+    await init_integration(hass, 2)
     assert hass.states.get("cover.test_cover_0").state == STATE_CLOSED
 
-    monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "state", "open")
-    await async_update_entity(hass, "cover.test_cover_0")
-    await hass.async_block_till_done()
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "open")
+    mock_rpc_device.mock_update()
     assert hass.states.get("cover.test_cover_0").state == STATE_OPEN
 
 
-async def test_rpc_device_no_position_control(hass, rpc_wrapper, monkeypatch):
+async def test_rpc_device_no_position_control(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test RPC device with no position control."""
-    assert rpc_wrapper
-
-    monkeypatch.setitem(rpc_wrapper.device.status["cover:0"], "pos_control", False)
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, COVER_DOMAIN)
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "pos_control", False
     )
-    await hass.async_block_till_done()
-
-    await async_update_entity(hass, "cover.test_cover_0")
-    await hass.async_block_till_done()
-    assert hass.states.get("cover.test_cover_0").state == STATE_UNKNOWN
+    await init_integration(hass, 2)
+    assert hass.states.get("cover.test_cover_0").state == STATE_OPEN

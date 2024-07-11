@@ -1,4 +1,5 @@
 """Config flow for P1 Monitor integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,10 +7,10 @@ from typing import Any
 from p1monitor import P1Monitor, P1MonitorError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector
 
 from .const import DOMAIN
 
@@ -21,7 +22,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors = {}
@@ -37,7 +38,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title="P1 Monitor",
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                     },
@@ -47,10 +48,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
-                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_HOST): TextSelector(),
                 }
             ),
             errors=errors,

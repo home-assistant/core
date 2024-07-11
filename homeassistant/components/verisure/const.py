@@ -1,4 +1,5 @@
 """Constants for the Verisure integration."""
+
 from datetime import timedelta
 import logging
 
@@ -36,6 +37,9 @@ DEVICE_TYPE_NAME = {
     "SMOKE3": "Smoke detector",
     "VOICEBOX1": "VoiceBox",
     "WATER1": "Water detector",
+    "SMOKE": "Smoke detector",
+    "SIREN": "Siren",
+    "VOICEBOX": "VoiceBox",
 }
 
 ALARM_STATE_TO_HA = {

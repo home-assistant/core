@@ -1,14 +1,16 @@
 """The tests for the Rfxtrx siren platform."""
+
 from unittest.mock import call
 
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .conftest import create_rfx_test_cfg
 
 from tests.common import MockConfigEntry
 
 
-async def test_one_chime(hass, rfxtrx, timestep):
+async def test_one_chime(hass: HomeAssistant, rfxtrx, timestep) -> None:
     """Test with 1 entity."""
     entry_data = create_rfx_test_cfg(
         devices={"0a16000000000000000000": {"off_delay": 2.0}}
@@ -64,7 +66,7 @@ async def test_one_chime(hass, rfxtrx, timestep):
     ]
 
 
-async def test_one_security1(hass, rfxtrx, timestep):
+async def test_one_security1(hass: HomeAssistant, rfxtrx, timestep) -> None:
     """Test with 1 entity."""
     entry_data = create_rfx_test_cfg(devices={"08200300a109000670": {"off_delay": 2.0}})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -119,7 +121,7 @@ async def test_one_security1(hass, rfxtrx, timestep):
     ]
 
 
-async def test_discover_siren(hass, rfxtrx_automatic):
+async def test_discover_siren(hass: HomeAssistant, rfxtrx_automatic) -> None:
     """Test with discovery."""
     rfxtrx = rfxtrx_automatic
 

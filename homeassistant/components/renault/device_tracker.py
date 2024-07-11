@@ -1,29 +1,26 @@
 """Support for Renault device trackers."""
+
 from __future__ import annotations
 
 from renault_api.kamereon.models import KamereonVehicleLocationData
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
+from . import RenaultConfigEntry
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RenaultConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultDeviceTracker] = [
         RenaultDeviceTracker(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in DEVICE_TRACKER_TYPES
         if description.coordinator in vehicle.coordinators
     ]
@@ -46,16 +43,15 @@ class RenaultDeviceTracker(
         return self.coordinator.data.gpsLongitude if self.coordinator.data else None
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
 
 DEVICE_TRACKER_TYPES: tuple[RenaultDataEntityDescription, ...] = (
     RenaultDataEntityDescription(
         key="location",
         coordinator="location",
-        icon="mdi:car",
-        name="Location",
+        translation_key="location",
     ),
 )

@@ -1,28 +1,34 @@
 """Backup manager for the Backup integration."""
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
+import io
 import json
 from pathlib import Path
 import tarfile
 from tarfile import TarError
-from tempfile import TemporaryDirectory
-from typing import Any, Protocol
+import time
+from typing import Any, Protocol, cast
 
 from securetar import SecureTarFile, atomic_contents_add
 
 from homeassistant.const import __version__ as HAVERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
-from homeassistant.util import dt, json as json_util
+from homeassistant.helpers.json import json_bytes
+from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 
+BUF_SIZE = 2**20 * 4  # 4MB
 
-@dataclass
+
+@dataclass(slots=True)
 class Backup:
     """Backup class."""
 
@@ -60,7 +66,8 @@ class BackupManager:
         self.loaded_backups = False
         self.loaded_platforms = False
 
-    async def _add_platform(
+    @callback
+    def _add_platform(
         self,
         hass: HomeAssistant,
         integration_domain: str,
@@ -77,6 +84,38 @@ class BackupManager:
             return
         self.platforms[integration_domain] = platform
 
+    async def pre_backup_actions(self) -> None:
+        """Perform pre backup actions."""
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
+        pre_backup_results = await asyncio.gather(
+            *(
+                platform.async_pre_backup(self.hass)
+                for platform in self.platforms.values()
+            ),
+            return_exceptions=True,
+        )
+        for result in pre_backup_results:
+            if isinstance(result, Exception):
+                raise result
+
+    async def post_backup_actions(self) -> None:
+        """Perform post backup actions."""
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
+        post_backup_results = await asyncio.gather(
+            *(
+                platform.async_post_backup(self.hass)
+                for platform in self.platforms.values()
+            ),
+            return_exceptions=True,
+        )
+        for result in post_backup_results:
+            if isinstance(result, Exception):
+                raise result
+
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self.hass.async_add_executor_job(self._read_backups)
@@ -87,7 +126,7 @@ class BackupManager:
     async def load_platforms(self) -> None:
         """Load backup platforms."""
         await integration_platform.async_process_integration_platforms(
-            self.hass, DOMAIN, self._add_platform
+            self.hass, DOMAIN, self._add_platform, wait_for_platforms=True
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         self.loaded_platforms = True
@@ -97,18 +136,18 @@ class BackupManager:
         backups: dict[str, Backup] = {}
         for backup_path in self.backup_dir.glob("*.tar"):
             try:
-                with tarfile.open(backup_path, "r:") as backup_file:
+                with tarfile.open(backup_path, "r:", bufsize=BUF_SIZE) as backup_file:
                     if data_file := backup_file.extractfile("./backup.json"):
-                        data = json.loads(data_file.read())
+                        data = json_loads_object(data_file.read())
                         backup = Backup(
-                            slug=data["slug"],
-                            name=data["name"],
-                            date=data["date"],
+                            slug=cast(str, data["slug"]),
+                            name=cast(str, data["name"]),
+                            date=cast(str, data["date"]),
                             path=backup_path,
                             size=round(backup_path.stat().st_size / 1_048_576, 2),
                         )
                         backups[backup.slug] = backup
-            except (OSError, TarError, json.JSONDecodeError) as err:
+            except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups
 
@@ -129,7 +168,10 @@ class BackupManager:
 
         if not backup.path.exists():
             LOGGER.debug(
-                "Removing tracked backup (%s) that does not exists on the expected path %s",
+                (
+                    "Removing tracked backup (%s) that does not exists on the expected"
+                    " path %s"
+                ),
                 backup.slug,
                 backup.path,
             )
@@ -152,24 +194,11 @@ class BackupManager:
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
 
-        if not self.loaded_platforms:
-            await self.load_platforms()
-
         try:
             self.backing_up = True
-            pre_backup_results = await asyncio.gather(
-                *(
-                    platform.async_pre_backup(self.hass)
-                    for platform in self.platforms.values()
-                ),
-                return_exceptions=True,
-            )
-            for result in pre_backup_results:
-                if isinstance(result, Exception):
-                    raise result
-
+            await self.pre_backup_actions()
             backup_name = f"Core {HAVERSION}"
-            date_str = dt.now().isoformat()
+            date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
 
             backup_data = {
@@ -182,13 +211,8 @@ class BackupManager:
                 "compressed": True,
             }
             tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
-
-            if not self.backup_dir.exists():
-                LOGGER.debug("Creating backup directory")
-                self.hass.async_add_executor_job(self.backup_dir.mkdir)
-
-            await self.hass.async_add_executor_job(
-                self._generate_backup_contents,
+            size_in_bytes = await self.hass.async_add_executor_job(
+                self._mkdir_and_generate_backup_contents,
                 tar_file_path,
                 backup_data,
             )
@@ -197,7 +221,7 @@ class BackupManager:
                 name=backup_name,
                 date=date_str,
                 path=tar_file_path,
-                size=round(tar_file_path.stat().st_size / 1_048_576, 2),
+                size=round(size_in_bytes / 1_048_576, 2),
             )
             if self.loaded_backups:
                 self.backups[slug] = backup
@@ -205,34 +229,30 @@ class BackupManager:
             return backup
         finally:
             self.backing_up = False
-            post_backup_results = await asyncio.gather(
-                *(
-                    platform.async_post_backup(self.hass)
-                    for platform in self.platforms.values()
-                ),
-                return_exceptions=True,
-            )
-            for result in post_backup_results:
-                if isinstance(result, Exception):
-                    raise result
+            await self.post_backup_actions()
 
-    def _generate_backup_contents(
+    def _mkdir_and_generate_backup_contents(
         self,
         tar_file_path: Path,
         backup_data: dict[str, Any],
-    ) -> None:
-        """Generate backup contents."""
-        with TemporaryDirectory() as tmp_dir, SecureTarFile(
-            tar_file_path, "w", gzip=False
-        ) as tar_file:
-            tmp_dir_path = Path(tmp_dir)
-            json_util.save_json(
-                tmp_dir_path.joinpath("./backup.json").as_posix(),
-                backup_data,
-            )
-            with SecureTarFile(
-                tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
-                "w",
+    ) -> int:
+        """Generate backup contents and return the size."""
+        if not self.backup_dir.exists():
+            LOGGER.debug("Creating backup directory")
+            self.backup_dir.mkdir()
+
+        outer_secure_tarfile = SecureTarFile(
+            tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
+        )
+        with outer_secure_tarfile as outer_secure_tarfile_tarfile:
+            raw_bytes = json_bytes(backup_data)
+            fileobj = io.BytesIO(raw_bytes)
+            tar_info = tarfile.TarInfo(name="./backup.json")
+            tar_info.size = len(raw_bytes)
+            tar_info.mtime = int(time.time())
+            outer_secure_tarfile_tarfile.addfile(tar_info, fileobj=fileobj)
+            with outer_secure_tarfile.create_inner_tar(
+                "./homeassistant.tar.gz", gzip=True
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,
@@ -240,7 +260,8 @@ class BackupManager:
                     excludes=EXCLUDE_FROM_BACKUP,
                     arcname="data",
                 )
-            tar_file.add(tmp_dir_path, arcname=".")
+
+        return tar_file_path.stat().st_size
 
 
 def _generate_slug(date: str, name: str) -> str:

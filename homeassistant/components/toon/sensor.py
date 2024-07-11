@@ -1,4 +1,5 @@
 """Support for Toon sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,11 +12,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -114,14 +115,14 @@ class ToonDisplayDeviceSensor(ToonSensor, ToonDisplayDeviceEntity):
     """Defines a Display sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSensorRequiredKeysMixin(ToonRequiredKeysMixin):
     """Mixin for sensor required keys."""
 
     cls: type[ToonSensor]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSensorEntityDescription(SensorEntityDescription, ToonSensorRequiredKeysMixin):
     """Describes Toon sensor entity."""
 
@@ -132,7 +133,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Temperature",
         section="thermostat",
         measurement="current_display_temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -164,7 +165,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         section="gas_usage",
         measurement="day_average",
         device_class=SensorDeviceClass.GAS,
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         entity_registry_enabled_default=False,
         cls=ToonGasMeterDeviceSensor,
     ),
@@ -174,7 +175,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         section="gas_usage",
         measurement="day_usage",
         device_class=SensorDeviceClass.GAS,
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         cls=ToonGasMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -182,6 +183,8 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Gas Cost Today",
         section="gas_usage",
         measurement="day_cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EUR,
         icon="mdi:gas-cylinder",
         cls=ToonGasMeterDeviceSensor,
@@ -191,7 +194,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Gas Meter",
         section="gas_usage",
         measurement="meter",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.GAS,
         cls=ToonGasMeterDeviceSensor,
@@ -210,7 +213,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Average Power Usage",
         section="power_usage",
         measurement="average",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
@@ -220,7 +223,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Average Daily Energy Usage",
         section="power_usage",
         measurement="day_average",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
@@ -230,6 +233,8 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Energy Cost Today",
         section="power_usage",
         measurement="day_cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EUR,
         icon="mdi:power-plug",
         cls=ToonElectricityMeterDeviceSensor,
@@ -239,7 +244,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Energy Usage Today",
         section="power_usage",
         measurement="day_usage",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         cls=ToonElectricityMeterDeviceSensor,
     ),
@@ -248,7 +253,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Electricity Meter Feed IN Tariff 1",
         section="power_usage",
         measurement="meter_high",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
@@ -258,7 +263,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Electricity Meter Feed IN Tariff 2",
         section="power_usage",
         measurement="meter_low",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
@@ -268,7 +273,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Current Power Usage",
         section="power_usage",
         measurement="current",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         cls=ToonElectricityMeterDeviceSensor,
@@ -278,7 +283,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Electricity Meter Feed OUT Tariff 1",
         section="power_usage",
         measurement="meter_produced_high",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
@@ -288,7 +293,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Electricity Meter Feed OUT Tariff 2",
         section="power_usage",
         measurement="meter_produced_low",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
@@ -308,31 +313,34 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Average Daily Water Usage",
         section="water_usage",
         measurement="day_average",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         icon="mdi:water",
         entity_registry_enabled_default=False,
         cls=ToonWaterMeterDeviceSensor,
+        device_class=SensorDeviceClass.WATER,
     ),
     ToonSensorEntityDescription(
         key="water_daily_usage",
         name="Water Usage Today",
         section="water_usage",
         measurement="day_usage",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         icon="mdi:water",
         entity_registry_enabled_default=False,
         cls=ToonWaterMeterDeviceSensor,
+        device_class=SensorDeviceClass.WATER,
     ),
     ToonSensorEntityDescription(
         key="water_meter_reading",
         name="Water Meter",
         section="water_usage",
         measurement="meter",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         icon="mdi:water",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonWaterMeterDeviceSensor,
+        device_class=SensorDeviceClass.WATER,
     ),
     ToonSensorEntityDescription(
         key="water_value",
@@ -350,6 +358,8 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Water Cost Today",
         section="water_usage",
         measurement="day_cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EUR,
         icon="mdi:water-pump",
         entity_registry_enabled_default=False,
@@ -363,7 +373,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         name="Current Solar Power Production",
         section="power_usage",
         measurement="current_solar",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         cls=ToonSolarDeviceSensor,
@@ -373,7 +383,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         name="Max Solar Power Production Today",
         section="power_usage",
         measurement="day_max_solar",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         cls=ToonSolarDeviceSensor,
     ),
@@ -382,7 +392,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         name="Solar Power Production to Grid",
         section="power_usage",
         measurement="current_produced",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         cls=ToonSolarDeviceSensor,
@@ -392,7 +402,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         name="Solar Energy Produced Today",
         section="power_usage",
         measurement="day_produced_solar",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonSolarDeviceSensor,
@@ -402,7 +412,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         name="Energy Produced To Grid Today",
         section="power_usage",
         measurement="day_to_grid_usage",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_enabled_default=False,
         cls=ToonSolarDeviceSensor,
@@ -412,7 +422,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         name="Energy Usage From Grid Today",
         section="power_usage",
         measurement="day_from_grid_usage",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_enabled_default=False,
         cls=ToonSolarDeviceSensor,
@@ -422,7 +432,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         name="Average Solar Power Production to Grid",
         section="power_usage",
         measurement="average_produced",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         cls=ToonSolarDeviceSensor,

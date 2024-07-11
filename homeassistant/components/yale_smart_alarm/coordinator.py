@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Yale integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, YALE_BASE_ERRORS
 
 
-class YaleDataUpdateCoordinator(DataUpdateCoordinator):
+class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A Yale Data Update Coordinator."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -28,6 +29,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            always_update=False,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -37,6 +39,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
         locks = []
         door_windows = []
+        temp_sensors = []
 
         for device in updates["cycle"]["device_status"]:
             state = device["status1"]
@@ -105,19 +108,24 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 device["_state"] = "unavailable"
                 door_windows.append(device)
                 continue
+            if device["type"] == "device_type.temperature_sensor":
+                temp_sensors.append(device)
 
         _sensor_map = {
             contact["address"]: contact["_state"] for contact in door_windows
         }
         _lock_map = {lock["address"]: lock["_state"] for lock in locks}
+        _temp_map = {temp["address"]: temp["status_temp"] for temp in temp_sensors}
 
         return {
             "alarm": updates["arm_status"],
             "locks": locks,
             "door_windows": door_windows,
+            "temp_sensors": temp_sensors,
             "status": updates["status"],
             "online": updates["online"],
             "sensor_map": _sensor_map,
+            "temp_map": _temp_map,
             "lock_map": _lock_map,
             "panel_info": updates["panel_info"],
         }

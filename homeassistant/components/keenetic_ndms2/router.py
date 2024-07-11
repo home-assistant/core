@@ -1,4 +1,5 @@
 """The Keenetic Client class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,8 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
 

@@ -1,24 +1,24 @@
 """Support for Spider thermostats."""
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+
+from typing import Any
+
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 HA_STATE_TO_SPIDER = {
-    HVAC_MODE_COOL: "Cool",
-    HVAC_MODE_HEAT: "Heat",
-    HVAC_MODE_OFF: "Idle",
+    HVACMode.COOL: "Cool",
+    HVACMode.HEAT: "Heat",
+    HVACMode.OFF: "Idle",
 }
 
 SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
@@ -41,6 +41,11 @@ async def async_setup_entry(
 class SpiderThermostat(ClimateEntity):
     """Representation of a thermostat."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
+
     def __init__(self, api, thermostat):
         """Initialize the thermostat."""
         self.api = api
@@ -50,6 +55,13 @@ class SpiderThermostat(ClimateEntity):
         for operation_value in thermostat.operation_values:
             if operation_value in SPIDER_STATE_TO_HA:
                 self.support_hvac.append(SPIDER_STATE_TO_HA[operation_value])
+        self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+        if thermostat.has_fan_mode:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -63,26 +75,9 @@ class SpiderThermostat(ClimateEntity):
         )
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        if self.thermostat.has_fan_mode:
-            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-        return SUPPORT_TARGET_TEMPERATURE
-
-    @property
     def unique_id(self):
         """Return the id of the thermostat, if any."""
         return self.thermostat.id
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.thermostat.name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -110,23 +105,23 @@ class SpiderThermostat(ClimateEntity):
         return self.thermostat.maximum_temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         return SPIDER_STATE_TO_HA[self.thermostat.operation_mode]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return self.support_hvac
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         self.thermostat.set_temperature(temperature)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         self.thermostat.set_operation_mode(HA_STATE_TO_SPIDER.get(hvac_mode))
 
@@ -135,7 +130,7 @@ class SpiderThermostat(ClimateEntity):
         """Return the fan setting."""
         return self.thermostat.current_fan_speed
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         self.thermostat.set_fan_speed(fan_mode)
 
@@ -144,6 +139,6 @@ class SpiderThermostat(ClimateEntity):
         """List of available fan modes."""
         return self.support_fan
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.thermostat = self.api.get_thermostat(self.unique_id)

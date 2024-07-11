@@ -1,16 +1,17 @@
 """Support for switch controlled using a telnet connection."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -48,7 +49,7 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
 
@@ -141,19 +142,18 @@ class TelnetSwitch(SwitchEntity):
         response = self._telnet_command(self._command_state)
         if response and self._value_template:
             rendered = self._value_template.render_with_possible_json_value(response)
+            self._attr_is_on = rendered == "True"
         else:
             _LOGGER.warning("Empty response for command: %s", self._command_state)
-            return None
-        self._attr_is_on = rendered == "True"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._telnet_command(self._command_on)
         if self.assumed_state:
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._telnet_command(self._command_off)
         if self.assumed_state:

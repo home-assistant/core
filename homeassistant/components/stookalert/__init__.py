@@ -1,4 +1,5 @@
 """The Stookalert integration."""
+
 from __future__ import annotations
 
 import stookalert
@@ -16,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Stookalert from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = stookalert.stookalert(entry.data[CONF_PROVINCE])
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

@@ -1,4 +1,5 @@
 """Support for UPC ConnectBox router."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = "192.168.0.1"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
@@ -32,7 +33,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
+) -> UPCDeviceScanner | None:
     """Return the UPC device scanner."""
     conf = config[DOMAIN]
     session = async_get_clientsession(hass)
@@ -57,7 +58,7 @@ async def async_get_scanner(
 
 
 class UPCDeviceScanner(DeviceScanner):
-    """This class queries a router running UPC ConnectBox firmware."""
+    """Class which queries a router running UPC ConnectBox firmware."""
 
     def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""

@@ -1,10 +1,13 @@
 """Support for iOS push notifications."""
+
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import requests
 
-from homeassistant.components import ios
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -13,19 +16,24 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+
+from .. import ios
 
 _LOGGER = logging.getLogger(__name__)
 
 PUSH_URL = "https://ios-push.home-assistant.io/push"
 
 
-# pylint: disable=invalid-name
-def log_rate_limits(hass, target, resp, level=20):
+def log_rate_limits(
+    hass: HomeAssistant, target: str, resp: dict[str, Any], level: int = 20
+) -> None:
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
     resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
-    resetsAtTime = resetsAt - dt_util.utcnow()
+    resetsAtTime = resetsAt - dt_util.utcnow() if resetsAt is not None else "---"
     rate_limit_msg = (
         "iOS push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -42,11 +50,15 @@ def log_rate_limits(hass, target, resp, level=20):
     )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> iOSNotificationService | None:
     """Get the iOS notification service."""
-    if "notify.ios" not in hass.config.components:
+    if "ios.notify" not in hass.config.components:
         # Need this to enable requirements checking in the app.
-        hass.config.components.add("notify.ios")
+        hass.config.components.add("ios.notify")
 
     if not ios.devices_with_push(hass):
         return None
@@ -57,17 +69,17 @@ def get_service(hass, config, discovery_info=None):
 class iOSNotificationService(BaseNotificationService):
     """Implement the notification service for iOS."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the service."""
 
     @property
-    def targets(self):
+    def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return ios.devices_with_push(self.hass)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
-        data = {ATTR_MESSAGE: message}
+        data: dict[str, Any] = {ATTR_MESSAGE: message}
 
         # Remove default title from notifications.
         if (

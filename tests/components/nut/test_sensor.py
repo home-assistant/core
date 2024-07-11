@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -10,44 +12,33 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import _get_mock_pynutclient, async_init_integration
+from .util import _get_mock_nutclient, async_init_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_pr3000rt2u(hass):
-    """Test creation of PR3000RT2U sensors."""
+@pytest.mark.parametrize(
+    "model",
+    [
+        "CP1350C",
+        "5E650I",
+        "5E850I",
+        "CP1500PFCLCD",
+        "DL650ELCD",
+        "EATON5P1550",
+        "blazer_usb",
+    ],
+)
+async def test_devices(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, model: str
+) -> None:
+    """Test creation of device sensors."""
 
-    await async_init_integration(hass, "PR3000RT2U")
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert entry.unique_id == "CPS_PR3000RT2U_PYVJO2000034_battery.charge"
-
-    state = hass.states.get("sensor.ups1_battery_charge")
-    assert state.state == "100"
-
-    expected_attributes = {
-        "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
-        "unit_of_measurement": PERCENTAGE,
-    }
-    # Only test for a subset of attributes in case
-    # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == attr for key, attr in expected_attributes.items()
-    )
-
-
-async def test_cp1350c(hass):
-    """Test creation of CP1350C sensors."""
-
-    config_entry = await async_init_integration(hass, "CP1350C")
-
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
+    config_entry = await async_init_integration(hass, model)
+    entry = entity_registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
 
@@ -56,7 +47,7 @@ async def test_cp1350c(hass):
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -66,21 +57,32 @@ async def test_cp1350c(hass):
     )
 
 
-async def test_5e850i(hass):
-    """Test creation of 5E850I sensors."""
+@pytest.mark.parametrize(
+    ("model", "unique_id"),
+    [
+        ("PR3000RT2U", "CPS_PR3000RT2U_PYVJO2000034_battery.charge"),
+        (
+            "BACKUPSES600M1",
+            "American Power Conversion_Back-UPS ES 600M1_4B1713P32195 _battery.charge",
+        ),
+    ],
+)
+async def test_devices_with_unique_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, model: str, unique_id: str
+) -> None:
+    """Test creation of device sensors with unique ids."""
 
-    config_entry = await async_init_integration(hass, "5E850I")
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
+    await async_init_integration(hass, model)
+    entry = entity_registry.async_get("sensor.ups1_battery_charge")
     assert entry
-    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
+    assert entry.unique_id == unique_id
 
     state = hass.states.get("sensor.ups1_battery_charge")
     assert state.state == "100"
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -90,130 +92,7 @@ async def test_5e850i(hass):
     )
 
 
-async def test_5e650i(hass):
-    """Test creation of 5E650I sensors."""
-
-    config_entry = await async_init_integration(hass, "5E650I")
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
-
-    state = hass.states.get("sensor.ups1_battery_charge")
-    assert state.state == "100"
-
-    expected_attributes = {
-        "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
-        "unit_of_measurement": PERCENTAGE,
-    }
-    # Only test for a subset of attributes in case
-    # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == attr for key, attr in expected_attributes.items()
-    )
-
-
-async def test_backupsses600m1(hass):
-    """Test creation of BACKUPSES600M1 sensors."""
-
-    await async_init_integration(hass, "BACKUPSES600M1")
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert (
-        entry.unique_id
-        == "American Power Conversion_Back-UPS ES 600M1_4B1713P32195 _battery.charge"
-    )
-
-    state = hass.states.get("sensor.ups1_battery_charge")
-    assert state.state == "100"
-
-    expected_attributes = {
-        "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
-        "unit_of_measurement": PERCENTAGE,
-    }
-    # Only test for a subset of attributes in case
-    # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == attr for key, attr in expected_attributes.items()
-    )
-
-
-async def test_cp1500pfclcd(hass):
-    """Test creation of CP1500PFCLCD sensors."""
-
-    config_entry = await async_init_integration(hass, "CP1500PFCLCD")
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
-
-    state = hass.states.get("sensor.ups1_battery_charge")
-    assert state.state == "100"
-
-    expected_attributes = {
-        "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
-        "unit_of_measurement": PERCENTAGE,
-    }
-    # Only test for a subset of attributes in case
-    # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == attr for key, attr in expected_attributes.items()
-    )
-
-
-async def test_dl650elcd(hass):
-    """Test creation of DL650ELCD sensors."""
-
-    config_entry = await async_init_integration(hass, "DL650ELCD")
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
-
-    state = hass.states.get("sensor.ups1_battery_charge")
-    assert state.state == "100"
-
-    expected_attributes = {
-        "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
-        "unit_of_measurement": PERCENTAGE,
-    }
-    # Only test for a subset of attributes in case
-    # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == attr for key, attr in expected_attributes.items()
-    )
-
-
-async def test_blazer_usb(hass):
-    """Test creation of blazer_usb sensors."""
-
-    config_entry = await async_init_integration(hass, "blazer_usb")
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
-
-    state = hass.states.get("sensor.ups1_battery_charge")
-    assert state.state == "100"
-
-    expected_attributes = {
-        "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
-        "unit_of_measurement": PERCENTAGE,
-    }
-    # Only test for a subset of attributes in case
-    # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == attr for key, attr in expected_attributes.items()
-    )
-
-
-async def test_state_sensors(hass):
+async def test_state_sensors(hass: HomeAssistant) -> None:
     """Test creation of status display sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -221,12 +100,12 @@ async def test_state_sensors(hass):
     )
     entry.add_to_hass(hass)
 
-    mock_pynut = _get_mock_pynutclient(
+    mock_pynut = _get_mock_nutclient(
         list_ups={"ups1": "UPS 1"}, list_vars={"ups.status": "OL"}
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -238,7 +117,7 @@ async def test_state_sensors(hass):
         assert state2.state == "OL"
 
 
-async def test_unknown_state_sensors(hass):
+async def test_unknown_state_sensors(hass: HomeAssistant) -> None:
     """Test creation of unknown status display sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -246,12 +125,12 @@ async def test_unknown_state_sensors(hass):
     )
     entry.add_to_hass(hass)
 
-    mock_pynut = _get_mock_pynutclient(
+    mock_pynut = _get_mock_nutclient(
         list_ups={"ups1": "UPS 1"}, list_vars={"ups.status": "OQ"}
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -263,7 +142,9 @@ async def test_unknown_state_sensors(hass):
         assert state2.state == "OQ"
 
 
-async def test_stale_options(hass):
+async def test_stale_options(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test creation of sensors with stale options to remove."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -276,19 +157,18 @@ async def test_stale_options(hass):
     )
     config_entry.add_to_hass(hass)
 
-    mock_pynut = _get_mock_pynutclient(
+    mock_pynut = _get_mock_nutclient(
         list_ups={"ups1": "UPS 1"}, list_vars={"battery.charge": "10"}
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        registry = er.async_get(hass)
-        entry = registry.async_get("sensor.ups1_battery_charge")
+        entry = entity_registry.async_get("sensor.ups1_battery_charge")
         assert entry
         assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
         assert config_entry.data[CONF_RESOURCES] == ["battery.charge"]

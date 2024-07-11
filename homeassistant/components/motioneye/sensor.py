@@ -1,4 +1,5 @@
 """Sensor platform for motionEye."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,7 @@ from types import MappingProxyType
 from typing import Any
 
 from motioneye_client.client import MotionEyeClient
-from motioneye_client.const import KEY_ACTIONS, KEY_NAME
+from motioneye_client.const import KEY_ACTIONS
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -48,6 +49,8 @@ async def async_setup_entry(
 class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
     """motionEye action sensor camera."""
 
+    _attr_translation_key = "actions"
+
     def __init__(
         self,
         config_entry_id: str,
@@ -68,12 +71,6 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
                 key=TYPE_MOTIONEYE_ACTION_SENSOR, entity_registry_enabled_default=False
             ),
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        camera_prepend = f"{self._camera[KEY_NAME]} " if self._camera else ""
-        return f"{camera_prepend}Actions"
 
     @property
     def native_value(self) -> StateType:

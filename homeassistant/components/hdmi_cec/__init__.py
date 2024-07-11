@@ -1,4 +1,5 @@
 """Support for HDMI CEC."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -17,11 +18,6 @@ from pycec.const import (
     KEY_MUTE_TOGGLE,
     KEY_VOLUME_DOWN,
     KEY_VOLUME_UP,
-    POWER_OFF,
-    POWER_ON,
-    STATUS_PLAY,
-    STATUS_STILL,
-    STATUS_STOP,
 )
 from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
@@ -35,14 +31,8 @@ from homeassistant.const import (
     CONF_PLATFORM,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -134,11 +124,12 @@ SERVICE_SELECT_DEVICE = "select_device"
 SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
 
-# pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.All(cv.positive_int): vol.Any(
-            lambda devices: DEVICE_SCHEMA(devices), cv.string
+            # pylint: disable-next=unnecessary-lambda
+            lambda devices: DEVICE_SCHEMA(devices),
+            cv.string,
         )
     }
 )
@@ -181,7 +172,7 @@ def parse_mapping(mapping, parents=None):
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
             yield (addr, PhysicalAddress(val))
         else:
-            cur = parents + [addr]
+            cur = [*parents, addr]
             if isinstance(val, dict):
                 yield from parse_mapping(val, cur)
             elif isinstance(val, str):
@@ -205,9 +196,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     loop = (
         # Create own thread if more than 1 CPU
-        hass.loop
-        if multiprocessing.cpu_count() < 2
-        else None
+        hass.loop if multiprocessing.cpu_count() < 2 else None
     )
     host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
@@ -219,16 +208,18 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
-        event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
         if not adapter.initialized:
             _LOGGER.info("Adapter not initialized; Trying to restart")
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
 
+    _adapter_watchdog_job = HassJob(_adapter_watchdog, cancel_on_shutdown=True)
+
     @callback
     def _async_initialized_callback(*_: Any):
         """Add watchdog on initialization."""
-        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
 
     hdmi_network.set_initialized_callback(_async_initialized_callback)
 
@@ -262,7 +253,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
             hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
         else:
             att = 1 if att == "" else int(att)
-            for _ in range(0, att):
+            for _ in range(att):
                 hdmi_network.send_command(KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
 
@@ -272,14 +263,8 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         if ATTR_RAW in data:
             command = CecCommand(data[ATTR_RAW])
         else:
-            if ATTR_SRC in data:
-                src = data[ATTR_SRC]
-            else:
-                src = ADDR_UNREGISTERED
-            if ATTR_DST in data:
-                dst = data[ATTR_DST]
-            else:
-                dst = ADDR_BROADCAST
+            src = data.get(ATTR_SRC, ADDR_UNREGISTERED)
+            dst = data.get(ATTR_DST, ADDR_BROADCAST)
             if ATTR_CMD in data:
                 cmd = data[ATTR_CMD]
             else:
@@ -325,8 +310,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     def _update(call: ServiceCall) -> None:
-        """
-        Update if device update is needed.
+        """Update if device update is needed.
 
         Called by service, requests CEC network to update data.
         """
@@ -382,14 +366,10 @@ class CecEntity(Entity):
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self._state: str | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
-        if self._device.type in ICONS_BY_TYPE:
-            self._attr_icon = ICONS_BY_TYPE[self._device.type]
-        else:
-            self._attr_icon = ICON_UNKNOWN
+        self._attr_icon = ICONS_BY_TYPE.get(self._device.type, ICON_UNKNOWN)
 
     def _set_attr_name(self):
         """Set name."""
@@ -405,26 +385,8 @@ class CecEntity(Entity):
             self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
 
     def _hdmi_cec_unavailable(self, callback_event):
-        # Change state to unavailable. Without this, entity would remain in
-        # its last state, since the state changes are pushed.
-        self._state = STATE_UNAVAILABLE
+        self._attr_available = False
         self.schedule_update_ha_state(False)
-
-    def update(self):
-        """Update device status."""
-        device = self._device
-        if device.power_status in [POWER_OFF, 3]:
-            self._state = STATE_OFF
-        elif device.status == STATUS_PLAY:
-            self._state = STATE_PLAYING
-        elif device.status == STATUS_STOP:
-            self._state = STATE_IDLE
-        elif device.status == STATUS_STILL:
-            self._state = STATE_PAUSED
-        elif device.power_status in [POWER_ON, 4]:
-            self._state = STATE_ON
-        else:
-            _LOGGER.warning("Unknown state: %d", device.power_status)
 
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
@@ -435,6 +397,7 @@ class CecEntity(Entity):
 
     def _update(self, device=None):
         """Device status changed, schedule an update."""
+        self._attr_available = True
         self.schedule_update_ha_state(True)
 
     @property

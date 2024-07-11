@@ -8,14 +8,14 @@ echo '================================================='
 echo '=                FILES CHANGED                  ='
 echo '================================================='
 if [ -z "$files" ] ; then
-  echo "No python file changed. Rather use: tox -e lint\n"
+  echo "No python file changed.\n"
   exit
 fi
 printf "%s\n" $files
-echo "================"
-echo "LINT with flake8"
-echo "================"
-pre-commit run flake8 --files $files
+echo "=============="
+echo "LINT with ruff"
+echo "=============="
+pre-commit run ruff --files $files
 echo "================"
 echo "LINT with pylint"
 echo "================"

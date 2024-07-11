@@ -1,4 +1,5 @@
 """Component for controlling Pandora stations through the pianobar client."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -11,15 +12,11 @@ import signal
 import pexpect
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -28,10 +25,6 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_UP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,16 +32,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-# SUPPORT_VOLUME_SET is close to available but we need volume up/down
-# controls in the GUI.
-PANDORA_SUPPORT = (
-    SUPPORT_PAUSE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-)
 
 CMD_MAP = {
     SERVICE_MEDIA_NEXT_TRACK: "n",
@@ -85,32 +68,34 @@ def setup_platform(
 class PandoraMediaPlayer(MediaPlayerEntity):
     """A media player that uses the Pianobar interface to Pandora."""
 
+    _attr_media_content_type = MediaType.MUSIC
+    # MediaPlayerEntityFeature.VOLUME_SET is close to available
+    # but we need volume up/down controls in the GUI.
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
+    )
+
     def __init__(self, name):
         """Initialize the Pandora device."""
-        self._name = name
-        self._player_state = STATE_OFF
-        self._station = ""
-        self._media_title = ""
-        self._media_artist = ""
-        self._media_album = ""
-        self._stations = []
+        self._attr_name = name
+        self._attr_state = MediaPlayerState.OFF
+        self._attr_source = ""
+        self._attr_media_title = ""
+        self._attr_media_artist = ""
+        self._attr_media_album_name = ""
+        self._attr_source_list = []
         self._time_remaining = 0
-        self._media_duration = 0
+        self._attr_media_duration = 0
         self._pianobar = None
 
-    @property
-    def name(self):
-        """Return the name of the media player."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the player."""
-        return self._player_state
-
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
-        if self._player_state != STATE_OFF:
+        if self.state != MediaPlayerState.OFF:
             return
         self._pianobar = pexpect.spawn("pianobar")
         _LOGGER.info("Started pianobar subprocess")
@@ -135,10 +120,10 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._update_stations()
         self.update_playing_status()
 
-        self._player_state = STATE_IDLE
+        self._attr_state = MediaPlayerState.IDLE
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         if self._pianobar is None:
             _LOGGER.info("Pianobar subprocess already stopped")
@@ -152,71 +137,38 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             os.killpg(os.getpgid(self._pianobar.pid), signal.SIGTERM)
             _LOGGER.debug("Killed Pianobar subprocess")
         self._pianobar = None
-        self._player_state = STATE_OFF
+        self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
-        self._player_state = STATE_PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
-        self._player_state = STATE_PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
         self.schedule_update_ha_state()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Go to next track."""
         self._send_pianobar_command(SERVICE_MEDIA_NEXT_TRACK)
         self.schedule_update_ha_state()
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return PANDORA_SUPPORT
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._station
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._stations
-
-    @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         self.update_playing_status()
-        return self._media_title
+        return self._attr_media_title
 
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self._media_artist
-
-    @property
-    def media_album_name(self):
-        """Album name of current playing media, music track only."""
-        return self._media_album
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self._media_duration
-
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Choose a different Pandora station and play it."""
+        if self.source_list is None:
+            return
         try:
-            station_index = self._stations.index(source)
+            station_index = self.source_list.index(source)
         except ValueError:
             _LOGGER.warning("Station %s is not in list", source)
             return
@@ -224,7 +176,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._send_station_list_command()
         self._pianobar.sendline(f"{station_index}")
         self._pianobar.expect("\r\n")
-        self._player_state = STATE_PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     def _send_station_list_command(self):
         """Send a station list command."""
@@ -272,11 +224,9 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol("m")  # press enter
             self._pianobar.sendcontrol("m")  # do it again b/c an 'i' got in
-            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         elif match_idx == 3:
             _LOGGER.debug("Received new playlist list")
-            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         else:
             response = self._pianobar.before.decode("utf-8")
@@ -285,8 +235,8 @@ class PandoraMediaPlayer(MediaPlayerEntity):
     def _update_current_station(self, response):
         """Update current station."""
         if station_match := re.search(STATION_PATTERN, response):
-            self._station = station_match.group(1)
-            _LOGGER.debug("Got station as: %s", self._station)
+            self._attr_source = station_match.group(1)
+            _LOGGER.debug("Got station as: %s", self._attr_source)
         else:
             _LOGGER.warning("No station match")
 
@@ -294,18 +244,17 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         """Update info about current song."""
         if song_match := re.search(CURRENT_SONG_PATTERN, response):
             (
-                self._media_title,
-                self._media_artist,
-                self._media_album,
+                self._attr_media_title,
+                self._attr_media_artist,
+                self._attr_media_album_name,
             ) = song_match.groups()
-            _LOGGER.debug("Got song as: %s", self._media_title)
+            _LOGGER.debug("Got song as: %s", self._attr_media_title)
         else:
             _LOGGER.warning("No song match")
 
     @util.Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_song_position(self):
-        """
-        Get the song position and duration.
+        """Get the song position and duration.
 
         It's hard to predict whether or not the music will start during init
         so we have to detect state by checking the ticker.
@@ -318,12 +267,12 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             total_seconds,
         ) = self._pianobar.match.groups()
         time_remaining = int(cur_minutes) * 60 + int(cur_seconds)
-        self._media_duration = int(total_minutes) * 60 + int(total_seconds)
+        self._attr_media_duration = int(total_minutes) * 60 + int(total_seconds)
 
-        if time_remaining not in (self._time_remaining, self._media_duration):
-            self._player_state = STATE_PLAYING
-        elif self._player_state == STATE_PLAYING:
-            self._player_state = STATE_PAUSED
+        if time_remaining not in (self._time_remaining, self._attr_media_duration):
+            self._attr_state = MediaPlayerState.PLAYING
+        elif self.state == MediaPlayerState.PLAYING:
+            self._attr_state = MediaPlayerState.PAUSED
         self._time_remaining = time_remaining
 
     def _log_match(self):
@@ -349,20 +298,19 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._send_station_list_command()
         station_lines = self._pianobar.before.decode("utf-8")
         _LOGGER.debug("Getting stations: %s", station_lines)
-        self._stations = []
+        self._attr_source_list = []
         for line in station_lines.split("\r\n"):
             if match := re.search(r"\d+\).....(.+)", line):
                 station = match.group(1).strip()
                 _LOGGER.debug("Found station %s", station)
-                self._stations.append(station)
+                self._attr_source_list.append(station)
             else:
                 _LOGGER.debug("No station match on %s", line)
         self._pianobar.sendcontrol("m")  # press enter with blank line
         self._pianobar.sendcontrol("m")  # do it twice in case an 'i' got in
 
     def _clear_buffer(self):
-        """
-        Clear buffer from pexpect.
+        """Clear buffer from pexpect.
 
         This is necessary because there are a bunch of 00:00 in the buffer
 

@@ -1,9 +1,0 @@
-{
-    "state": {
-        "xiaomi_miio__led_brightness": {
-            "bright": "Bright",
-            "dim": "Dim",
-            "off": "Off"
-        }
-    }
-}

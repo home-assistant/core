@@ -1,5 +1,7 @@
 """Config flow for Yeelight integration."""
-import asyncio
+
+from __future__ import annotations
+
 import logging
 from urllib.parse import urlparse
 
@@ -8,12 +10,17 @@ import yeelight
 from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
-from homeassistant import config_entries, exceptions
-from homeassistant.components import dhcp, ssdp, zeroconf
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -39,14 +46,14 @@ MODEL_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yeelight."""
 
     VERSION = 1
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
@@ -58,19 +65,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery from homekit."""
         self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery from dhcp."""
         self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery from zeroconf."""
         self._discovered_ip = discovery_info.host
         await self.async_set_unique_id(
@@ -78,7 +87,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery_with_unique_id()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery from ssdp."""
         self._discovered_ip = urlparse(discovery_info.ssdp_headers["location"]).hostname
         await self.async_set_unique_id(discovery_info.ssdp_headers["id"])
@@ -96,11 +107,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_HOST: self._discovered_ip}
                 )
-                reload = True
-            if reload:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
+                reload = entry.state in (
+                    ConfigEntryState.SETUP_RETRY,
+                    ConfigEntryState.LOADED,
                 )
+            if reload:
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery()
 
@@ -129,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(self, user_input=None):
         """Confirm discovery."""
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(
                 title=async_format_model_id(self._discovered_model, self.unique_id),
                 data={
@@ -263,17 +275,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_listen(lambda _: True)
             await bulb.async_get_properties()
             await bulb.async_stop_listening()
-        except (asyncio.TimeoutError, yeelight.BulbException) as err:
-            _LOGGER.error("Failed to get properties from %s: %s", host, err)
+        except (TimeoutError, yeelight.BulbException) as err:
+            _LOGGER.debug("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get properties: %s", bulb.last_properties)
         return MODEL_UNKNOWN
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Yeelight."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the option flow."""
         self._config_entry = config_entry
 
@@ -321,5 +333,5 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

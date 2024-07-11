@@ -1,4 +1,5 @@
 """Support for Firmata sensor input."""
+
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -40,8 +41,7 @@ async def async_setup_entry(
         sensor_entity = FirmataSensor(api, config_entry, name, pin)
         new_entities.append(sensor_entity)
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
 
 class FirmataSensor(FirmataPinEntity, SensorEntity):

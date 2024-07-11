@@ -1,10 +1,11 @@
 """Support the binary sensors of a BloomSky weather station."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -18,7 +19,7 @@ from . import DOMAIN
 
 SENSOR_TYPES = {"Rain": BinarySensorDeviceClass.MOISTURE, "Night": None}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
@@ -49,7 +50,7 @@ def setup_platform(
 class BloomSkySensor(BinarySensorEntity):
     """Representation of a single binary sensor in a BloomSky device."""
 
-    def __init__(self, bs, device, sensor_name):  # pylint: disable=invalid-name
+    def __init__(self, bs, device, sensor_name):
         """Initialize a BloomSky binary sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
@@ -58,7 +59,7 @@ class BloomSkySensor(BinarySensorEntity):
         self._attr_unique_id = f"{self._device_id}-{sensor_name}"
         self._attr_device_class = SENSOR_TYPES.get(sensor_name)
 
-    def update(self):
+    def update(self) -> None:
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
 

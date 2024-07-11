@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_DEVICE not in entry.data:
         config_updates = {
             **entry.data,
-            **{CONF_DEVICE: DEVICE_TYPE_GOGOGATE2},
+            CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
         }
 
     if config_updates:
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_update_coordinator = get_data_update_coordinator(hass, entry)
     await data_update_coordinator.async_config_entry_first_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

@@ -1,11 +1,11 @@
 {
   "domain": "mysensors",
   "name": "MySensors",
-  "documentation": "https://www.home-assistant.io/integrations/mysensors",
-  "requirements": ["pymysensors==0.22.1"],
   "after_dependencies": ["mqtt"],
   "codeowners": ["@MartinHjelmare", "@functionpointer"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mysensors",
   "iot_class": "local_push",
-  "loggers": ["mysensors"]
+  "loggers": ["mysensors"],
+  "requirements": ["pymysensors==0.24.0"]
 }

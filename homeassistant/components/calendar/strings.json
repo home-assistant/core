@@ -1,9 +1,125 @@
 {
   "title": "Calendar",
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::calendar::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "all_day": {
+          "name": "All day",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "description": {
+          "name": "Description"
+        },
+        "end_time": {
+          "name": "End time"
+        },
+        "location": {
+          "name": "Location"
+        },
+        "message": {
+          "name": "Message"
+        },
+        "start_time": {
+          "name": "Start time"
+        }
+      }
+    }
+  },
+  "services": {
+    "create_event": {
+      "name": "Create event",
+      "description": "Adds a new calendar event.",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "description": "Defines the short summary or subject for the event."
+        },
+        "description": {
+          "name": "Description",
+          "description": "A more complete description of the event than the one provided by the summary."
+        },
+        "start_date_time": {
+          "name": "Start time",
+          "description": "The date and time the event should start."
+        },
+        "end_date_time": {
+          "name": "End time",
+          "description": "The date and time the event should end."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "The date the all-day event should start."
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "The date the all-day event should end (exclusive)."
+        },
+        "in": {
+          "name": "In",
+          "description": "Days or weeks that you want to create the event in."
+        },
+        "location": {
+          "name": "Location",
+          "description": "The location of the event."
+        }
+      }
+    },
+    "get_events": {
+      "name": "Get events",
+      "description": "Get events on a calendar within a time range.",
+      "fields": {
+        "start_date_time": {
+          "name": "Start time",
+          "description": "Returns active events after this time (exclusive). When not set, defaults to now."
+        },
+        "end_date_time": {
+          "name": "End time",
+          "description": "Returns active events before this time (exclusive). Cannot be used with 'duration'."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Returns active events from start_date_time until the specified duration."
+        }
+      }
+    },
+    "list_events": {
+      "name": "List event",
+      "description": "Lists events on a calendar within a time range.",
+      "fields": {
+        "start_date_time": {
+          "name": "[%key:component::calendar::services::get_events::fields::start_date_time::name%]",
+          "description": "[%key:component::calendar::services::get_events::fields::start_date_time::description%]"
+        },
+        "end_date_time": {
+          "name": "[%key:component::calendar::services::get_events::fields::end_date_time::name%]",
+          "description": "[%key:component::calendar::services::get_events::fields::end_date_time::description%]"
+        },
+        "duration": {
+          "name": "[%key:component::calendar::services::get_events::fields::duration::name%]",
+          "description": "[%key:component::calendar::services::get_events::fields::duration::description%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_service_calendar_list_events": {
+      "title": "Detected use of deprecated service `calendar.list_events`",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::calendar::issues::deprecated_service_calendar_list_events::title%]",
+            "description": "Use `calendar.get_events` instead which supports multiple entities.\n\nPlease replace this service and adjust your automations and scripts and select **submit** to close this issue."
+          }
+        }
+      }
     }
   }
 }

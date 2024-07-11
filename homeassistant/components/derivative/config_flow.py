@@ -1,4 +1,5 @@
 """Config flow for Derivative integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,20 +7,22 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_SOURCE,
-    CONF_UNIT_OF_MEASUREMENT,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
 )
 
 from .const import (
@@ -31,63 +34,103 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    {"value": "none", "label": "none"},
-    {"value": "n", "label": "n (nano)"},
-    {"value": "µ", "label": "µ (micro)"},
-    {"value": "m", "label": "m (milli)"},
-    {"value": "k", "label": "k (kilo)"},
-    {"value": "M", "label": "M (mega)"},
-    {"value": "G", "label": "T (tera)"},
-    {"value": "T", "label": "P (peta)"},
+    selector.SelectOptionDict(value="n", label="n (nano)"),
+    selector.SelectOptionDict(value="µ", label="µ (micro)"),
+    selector.SelectOptionDict(value="m", label="m (milli)"),
+    selector.SelectOptionDict(value="k", label="k (kilo)"),
+    selector.SelectOptionDict(value="M", label="M (mega)"),
+    selector.SelectOptionDict(value="G", label="G (giga)"),
+    selector.SelectOptionDict(value="T", label="T (tera)"),
+    selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
 TIME_UNITS = [
-    {"value": TIME_SECONDS, "label": "Seconds"},
-    {"value": TIME_MINUTES, "label": "Minutes"},
-    {"value": TIME_HOURS, "label": "Hours"},
-    {"value": TIME_DAYS, "label": "Days"},
+    UnitOfTime.SECONDS,
+    UnitOfTime.MINUTES,
+    UnitOfTime.HOURS,
+    UnitOfTime.DAYS,
 ]
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {
-                "number": {
-                    "min": 0,
-                    "max": 6,
-                    "mode": "box",
-                    CONF_UNIT_OF_MEASUREMENT: "decimals",
-                }
-            }
+ALLOWED_DOMAINS = [COUNTER_DOMAIN, INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN]
+
+
+@callback
+def entity_selector_compatible(
+    handler: SchemaOptionsFlowHandler,
+) -> selector.EntitySelector:
+    """Return an entity selector which compatible entities."""
+    current = handler.hass.states.get(handler.options[CONF_SOURCE])
+    unit_of_measurement = (
+        current.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if current else None
+    )
+
+    entities = [
+        ent.entity_id
+        for ent in handler.hass.states.async_all(ALLOWED_DOMAINS)
+        if ent.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit_of_measurement
+        and ent.domain in ALLOWED_DOMAINS
+    ]
+
+    return selector.EntitySelector(
+        selector.EntitySelectorConfig(include_entities=entities)
+    )
+
+
+async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
+    if handler is None or not isinstance(
+        handler.parent_handler, SchemaOptionsFlowHandler
+    ):
+        entity_selector = selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=ALLOWED_DOMAINS)
+        )
+    else:
+        entity_selector = entity_selector_compatible(handler.parent_handler)
+
+    return {
+        vol.Required(CONF_SOURCE): entity_selector,
+        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0,
+                max=6,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="decimals",
+            ),
         ),
-        vol.Required(CONF_TIME_WINDOW): selector.selector({"duration": {}}),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
-            {"select": {"options": UNIT_PREFIXES}}
+        vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
+        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
-        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
-            {"select": {"options": TIME_UNITS}}
+        vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=TIME_UNITS, translation_key="time_unit"
+            ),
         ),
     }
-)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): selector.selector({"text": {}}),
-        vol.Required(CONF_SOURCE): selector.selector(
-            {"entity": {"domain": "sensor"}},
-        ),
-    }
-).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(CONFIG_SCHEMA)
+async def _get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    return vol.Schema(await _get_options_dict(handler))
+
+
+async def _get_config_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    options = await _get_options_dict(handler)
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME): selector.TextSelector(),
+            **options,
+        }
+    )
+
+
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(_get_config_schema),
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(_get_options_schema),
 }
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Derivative."""
 
     config_flow = CONFIG_FLOW

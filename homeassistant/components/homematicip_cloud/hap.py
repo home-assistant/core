@@ -1,4 +1,5 @@
 """Access point for the HomematicIP Cloud component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -27,7 +28,7 @@ class HomematicipAuth:
 
     auth: AsyncAuth
 
-    def __init__(self, hass, config) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict[str, str]) -> None:
         """Initialize HomematicIP Cloud client registration."""
         self.hass = hass
         self.config = config
@@ -38,9 +39,9 @@ class HomematicipAuth:
             self.auth = await self.get_auth(
                 self.hass, self.config.get(HMIPC_HAPID), self.config.get(HMIPC_PIN)
             )
-            return self.auth is not None
         except HmipcConnectionError:
             return False
+        return self.auth is not None
 
     async def async_checkbutton(self) -> bool:
         """Check blue butten has been pressed."""
@@ -54,13 +55,12 @@ class HomematicipAuth:
         try:
             authtoken = await self.auth.requestAuthToken()
             await self.auth.confirmAuthToken(authtoken)
-            return authtoken
         except HmipConnectionError:
             return False
+        return authtoken
 
     async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
-        # pylint: disable=no-self-use
         auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
         try:
             await auth.init(hapid)
@@ -100,7 +100,7 @@ class HomematicipHAP:
             )
         except HmipcConnectionError as err:
             raise ConfigEntryNotReady from err
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
             return False
 
@@ -108,7 +108,9 @@ class HomematicipHAP:
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         return True
 
@@ -191,8 +193,10 @@ class HomematicipHAP:
                 await hmip_events
             except HmipConnectionError:
                 _LOGGER.error(
-                    "Error connecting to HomematicIP with HAP %s. "
-                    "Retrying in %d seconds",
+                    (
+                        "Error connecting to HomematicIP with HAP %s. "
+                        "Retrying in %d seconds"
+                    ),
                     self.config_entry.unique_id,
                     retry_delay,
                 )

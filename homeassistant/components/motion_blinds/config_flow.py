@@ -1,14 +1,21 @@
-"""Config flow to configure Motion Blinds using their WLAN API."""
-from socket import gaierror
+"""Config flow to configure Motionblinds using their WLAN API."""
 
-from motionblinds import AsyncMotionMulticast, MotionDiscovery
+from __future__ import annotations
+
+from typing import Any
+
+from motionblinds import MotionDiscovery, MotionGateway
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp, network
+from homeassistant.components import dhcp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -28,16 +35,18 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
@@ -57,28 +66,42 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a Motion Blinds config flow."""
+class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a Motionblinds config flow."""
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize the Motion Blinds flow."""
-        self._host = None
-        self._ips = []
-        self._config_settings = None
+    def __init__(self) -> None:
+        """Initialize the Motionblinds flow."""
+        self._host: str | None = None
+        self._ips: list[str] = []
+        self._config_settings: vol.Schema | None = None
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         mac_address = format_mac(discovery_info.macaddress).replace(":", "")
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        gateway = MotionGateway(ip=discovery_info.ip, key="abcd1234-56ef-78")
+        try:
+            # key not needed for GetDeviceList request
+            await self.hass.async_add_executor_job(gateway.GetDeviceList)
+        except Exception:  # noqa: BLE001
+            return self.async_abort(reason="not_motionblinds")
+
+        if not gateway.available:
+            return self.async_abort(reason="not_motionblinds")
 
         short_mac = mac_address[-6:].upper()
         self.context["title_placeholders"] = {
@@ -89,7 +112,9 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = discovery_info.ip
         return await self.async_step_connect()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -116,7 +141,9 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_select(self, user_input=None):
+    async def async_step_select(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle multiple motion gateways found."""
         if user_input is not None:
             self._host = user_input["select_ip"]
@@ -126,31 +153,26 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="select", data_schema=select_schema)
 
-    async def async_step_connect(self, user_input=None):
+    async def async_step_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Connect to the Motion Gateway."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             key = user_input[CONF_API_KEY]
-            multicast_interface = user_input[CONF_INTERFACE]
 
-            # check socket interface
-            if multicast_interface != DEFAULT_INTERFACE:
-                motion_multicast = AsyncMotionMulticast(interface=multicast_interface)
-                try:
-                    await motion_multicast.Start_listen()
-                    motion_multicast.Stop_listen()
-                except gaierror:
-                    errors[CONF_INTERFACE] = "invalid_interface"
-                    return self.async_show_form(
-                        step_id="connect",
-                        data_schema=self._config_settings,
-                        errors=errors,
-                    )
-
-            connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
+            connect_gateway_class = ConnectMotionGateway(self.hass)
             if not await connect_gateway_class.async_connect_gateway(self._host, key):
                 return self.async_abort(reason="connection_error")
             motion_gateway = connect_gateway_class.gateway_device
+
+            # check socket interface
+            check_multicast_class = ConnectMotionGateway(
+                self.hass, interface=DEFAULT_INTERFACE
+            )
+            multicast_interface = await check_multicast_class.async_check_interface(
+                self._host, key
+            )
 
             mac_address = motion_gateway.mac
 
@@ -172,38 +194,12 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        (interfaces, default_interface) = await self.async_get_interfaces()
-
         self._config_settings = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): vol.All(str, vol.Length(min=16, max=16)),
-                vol.Optional(CONF_INTERFACE, default=default_interface): vol.In(
-                    interfaces
-                ),
             }
         )
 
         return self.async_show_form(
             step_id="connect", data_schema=self._config_settings, errors=errors
         )
-
-    async def async_get_interfaces(self):
-        """Get list of interface to use."""
-        interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
-        enabled_interfaces = []
-        default_interface = DEFAULT_INTERFACE
-
-        adapters = await network.async_get_adapters(self.hass)
-        for adapter in adapters:
-            if ipv4s := adapter["ipv4"]:
-                ip4 = ipv4s[0]["address"]
-                interfaces.append(ip4)
-                if adapter["enabled"]:
-                    enabled_interfaces.append(ip4)
-                    if adapter["default"]:
-                        default_interface = ip4
-
-        if len(enabled_interfaces) == 1:
-            default_interface = enabled_interfaces[0]
-
-        return (interfaces, default_interface)

@@ -1,4 +1,5 @@
 """Support for Atlantic Electrical Heater."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -6,25 +7,26 @@ from typing import cast
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
-    HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
-    ClimateEntity,
-)
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.components.overkiz.entity import OverkizEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 
+from ..const import DOMAIN
+from ..entity import OverkizEntity
+
+PRESET_COMFORT1 = "comfort-1"
+PRESET_COMFORT2 = "comfort-2"
 PRESET_FROST_PROTECTION = "frost_protection"
 
-OVERKIZ_TO_HVAC_MODES: dict[str, str] = {
-    OverkizCommandParam.ON: HVAC_MODE_HEAT,
-    OverkizCommandParam.COMFORT: HVAC_MODE_HEAT,
-    OverkizCommandParam.OFF: HVAC_MODE_OFF,
+OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
+    OverkizCommandParam.ON: HVACMode.HEAT,
+    OverkizCommandParam.COMFORT: HVACMode.HEAT,
+    OverkizCommandParam.OFF: HVACMode.OFF,
 }
 HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
@@ -33,6 +35,8 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
     OverkizCommandParam.ECO: PRESET_ECO,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
+    OverkizCommandParam.COMFORT_1: PRESET_COMFORT1,
+    OverkizCommandParam.COMFORT_2: PRESET_COMFORT2,
 }
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
@@ -43,17 +47,23 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
 
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
-    _attr_supported_features = SUPPORT_PRESET_MODE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODES[
             cast(str, self.executor.select_state(OverkizState.CORE_ON_OFF))
         ]
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_HEATING_LEVEL, HVAC_MODES_TO_OVERKIZ[hvac_mode]

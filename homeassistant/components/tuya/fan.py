@@ -1,20 +1,17 @@
 """Support for Tuya Fan."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,35 +20,36 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import HomeAssistantTuyaData
+from . import TuyaConfigEntry
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
     "fsd",  # Fan with Light
     "fskg",  # Fan wall switch
     "kj",  # Air Purifier
+    "cs",  # Dehumidifier
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up tuya fan dynamically through tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya fan."""
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if device and device.category in TUYA_SUPPORT_TYPE:
-                entities.append(TuyaFanEntity(device, hass_data.device_manager))
+                entities.append(TuyaFanEntity(device, hass_data.manager))
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -67,17 +65,18 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     _speed: IntegerTypeData | None = None
     _speeds: EnumTypeData | None = None
     _switch: DPCode | None = None
+    _attr_name = None
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
 
         self._switch = self.find_dpcode(
-            (DPCode.SWITCH_FAN, DPCode.SWITCH), prefer_function=True
+            (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH), prefer_function=True
         )
 
         self._attr_preset_modes = []
@@ -85,7 +84,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             (DPCode.FAN_MODE, DPCode.MODE), dptype=DPType.ENUM, prefer_function=True
         ):
             self._presets = enum_type
-            self._attr_supported_features |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = enum_type.range
 
         # Find speed controls, can be either percentage or a set of speeds
@@ -98,25 +97,25 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if int_type := self.find_dpcode(
             dpcodes, dptype=DPType.INTEGER, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speed = int_type
         elif enum_type := self.find_dpcode(
             dpcodes, dptype=DPType.ENUM, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
 
         if dpcode := self.find_dpcode(
             (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL), prefer_function=True
         ):
             self._oscillate = dpcode
-            self._attr_supported_features |= SUPPORT_OSCILLATE
+            self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
         if enum_type := self.find_dpcode(
             DPCode.FAN_DIRECTION, dptype=DPType.ENUM, prefer_function=True
         ):
             self._direction = enum_type
-            self._attr_supported_features |= SUPPORT_DIRECTION
+            self._attr_supported_features |= FanEntityFeature.DIRECTION
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
@@ -161,8 +160,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
@@ -180,7 +179,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
                     "value": int(self._speed.remap_value_from(percentage, 1, 100)),
                 }
             )
-            return
 
         if percentage is not None and self._speeds is not None:
             commands.append(

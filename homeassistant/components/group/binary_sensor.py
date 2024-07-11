@@ -1,12 +1,16 @@
-"""This platform allows several binary sensor to be grouped into one binary sensor."""
+"""Platform allowing several binary sensor to be grouped into one binary sensor."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -20,20 +24,19 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 
 DEFAULT_NAME = "Binary Sensor Group"
 
 CONF_ALL = "all"
 REG_KEY = f"{BINARY_SENSOR_DOMAIN}_registry"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(BINARY_SENSOR_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -85,16 +88,32 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_binary_sensor(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> BinarySensorGroup:
+    """Create a preview sensor."""
+    return BinarySensorGroup(
+        None,
+        name,
+        None,
+        validated_config[CONF_ENTITIES],
+        validated_config[CONF_ALL],
+    )
+
+
 class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     """Representation of a BinarySensorGroup."""
+
+    _attr_available: bool = False
 
     def __init__(
         self,
         unique_id: str | None,
         name: str,
-        device_class: str | None,
+        device_class: BinarySensorDeviceClass | None,
         entity_ids: list[str],
-        mode: str | None,
+        mode: bool | None,
     ) -> None:
         """Initialize a BinarySensorGroup entity."""
         super().__init__()
@@ -107,49 +126,29 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         if mode:
             self.mode = all
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def async_state_changed_listener(event: Event) -> None:
-            """Handle child updates."""
-            self.async_set_context(event.context)
-            self.async_defer_or_update_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
-
-        await super().async_added_to_hass()
-
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the binary sensor group state."""
-        all_states = [self.hass.states.get(x) for x in self._entity_ids]
+        states = [
+            state.state
+            for entity_id in self._entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
 
-        # filtered_states are members currently in the state machine
-        filtered_states: list[str] = [x.state for x in all_states if x is not None]
-
-        # Set group as unavailable if all members are unavailable
-        self._attr_available = any(
-            state != STATE_UNAVAILABLE for state in filtered_states
-        )
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
 
         valid_state = self.mode(
-            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in filtered_states
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
         if not valid_state:
             # Set as unknown if any / all member is not unknown or unavailable
             self._attr_is_on = None
         else:
             # Set as ON if any / all member is ON
-            states = list(map(lambda x: x == STATE_ON, filtered_states))
-            state = self.mode(states)
-            self._attr_is_on = state
+            self._attr_is_on = self.mode(state == STATE_ON for state in states)
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the sensor class of the binary sensor."""
         return self._device_class

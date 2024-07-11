@@ -3,21 +3,22 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
     "step": {
       "authenticate": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "Please enter the API Key you set in your configuration for {name}."
+        "description": "Please enter the token set in your configuration for {name}."
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "token": "Token"
         },
         "description": "Please enter your connection details."
       }
@@ -26,6 +27,200 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "camera_in_use": {
+        "name": "Camera in use"
+      },
+      "pending_reboot": {
+        "name": "Pending reboot"
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "Media"
+      }
+    },
+    "sensor": {
+      "boot_time": {
+        "name": "Boot time"
+      },
+      "cpu_power_package": {
+        "name": "CPU package power"
+      },
+      "cpu_speed": {
+        "name": "CPU speed"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "cpu_voltage": {
+        "name": "CPU voltage"
+      },
+      "kernel": {
+        "name": "Kernel"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_used": {
+        "name": "Memory used"
+      },
+      "amount_memory_used": {
+        "name": "Amount of memory used"
+      },
+      "os": {
+        "name": "Operating system"
+      },
+      "processes": {
+        "name": "Processes"
+      },
+      "load": {
+        "name": "Load"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "version_latest": {
+        "name": "Latest version"
+      },
+      "battery_time_remaining": {
+        "name": "Battery time remaining"
+      },
+      "displays_connected": {
+        "name": "Displays connected"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed for {title} ({host})"
+    },
+    "connection_failed": {
+      "message": "A connection error occurred for {title} ({host})"
+    },
+    "device_not_found": {
+      "message": "Could not find device {device}"
+    },
+    "no_data_received": {
+      "message": "No data received from {host}"
+    },
+    "process_not_found": {
+      "message": "Could not find process with id {id}."
+    },
+    "timeout": {
+      "message": "A timeout occurred for {title} ({host})"
+    },
+    "unsupported_version": {
+      "message": "You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the latest version"
+    }
+  },
+  "issues": {
+    "unsupported_version": {
+      "title": "System Bridge Upgrade Required",
+      "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version."
+    }
+  },
+  "services": {
+    "open_path": {
+      "name": "Open path",
+      "description": "Opens a file on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "name": "Bridge",
+          "description": "The server to talk to."
+        },
+        "path": {
+          "name": "[%key:common::config_flow::data::path%]",
+          "description": "Path to open."
+        }
+      }
+    },
+    "get_process_by_id": {
+      "name": "Get process by ID",
+      "description": "Gets a process by the ID.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "id": {
+          "name": "ID",
+          "description": "ID of the process to get."
+        }
+      }
+    },
+    "get_processes_by_name": {
+      "name": "Get processes by name",
+      "description": "Gets a list of processes by the name.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of the process to get."
+        }
+      }
+    },
+    "open_url": {
+      "name": "Open URL",
+      "description": "Opens a URL on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL to open."
+        }
+      }
+    },
+    "send_keypress": {
+      "name": "Send keyboard keypress",
+      "description": "Sends a keyboard keypress.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "The server to send the command to."
+        },
+        "key": {
+          "name": "Key",
+          "description": "Key to press. List available here: http://robotjs.io/docs/syntax#keys."
+        }
+      }
+    },
+    "send_text": {
+      "name": "Send keyboard text",
+      "description": "Sends text for the server to type.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "text": {
+          "name": "Text",
+          "description": "Text to type."
+        }
+      }
+    },
+    "power_command": {
+      "name": "Power command",
+      "description": "Sends a power command to the system.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Command to call."
+        }
+      }
     }
   }
 }

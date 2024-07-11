@@ -1,4 +1,7 @@
 """Cisco Webex Teams notify component."""
+
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -6,24 +9,29 @@ from webexteamssdk import ApiError, WebexTeamsAPI, exceptions
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_TOKEN
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ROOM_ID = "room_id"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_ROOM_ID): cv.string}
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> CiscoWebexTeamsNotificationService | None:
     """Get the CiscoWebexTeams notification service."""
-
     client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
     try:
         # Validate the token & room_id

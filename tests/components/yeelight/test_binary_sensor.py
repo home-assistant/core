@@ -1,4 +1,5 @@
 """Test the Yeelight binary sensor."""
+
 from unittest.mock import patch
 
 from homeassistant.components.yeelight import DOMAIN
@@ -18,7 +19,7 @@ from . import (
 ENTITY_BINARY_SENSOR = f"binary_sensor.{NAME}_nightlight"
 
 
-async def test_nightlight(hass: HomeAssistant):
+async def test_nightlight(hass: HomeAssistant) -> None:
     """Test nightlight sensor."""
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):

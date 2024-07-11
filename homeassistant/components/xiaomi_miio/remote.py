@@ -1,10 +1,12 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 
 from miio import ChuangmiIr, DeviceException
 import voluptuous as vol
@@ -14,7 +16,7 @@ from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as REMOTE_PLATFORM_SCHEMA,
     RemoteEntity,
 )
 from homeassistant.const import (
@@ -47,7 +49,7 @@ COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -136,8 +138,8 @@ async def async_setup_platform(
             message = await hass.async_add_executor_job(device.read, slot)
             _LOGGER.debug("Message received from device: '%s'", message)
 
-            if "code" in message and message["code"]:
-                log_msg = "Received command is: {}".format(message["code"])
+            if code := message.get("code"):
+                log_msg = f"Received command is: {code}"
                 _LOGGER.info(log_msg)
                 persistent_notification.async_create(
                     hass, log_msg, title="Xiaomi Miio Remote"
@@ -181,6 +183,8 @@ async def async_setup_platform(
 class XiaomiMiioRemote(RemoteEntity):
     """Representation of a Xiaomi Miio Remote device."""
 
+    _attr_should_poll = False
+
     def __init__(self, friendly_name, device, unique_id, slot, timeout, commands):
         """Initialize the remote."""
         self._name = friendly_name
@@ -221,23 +225,18 @@ class XiaomiMiioRemote(RemoteEntity):
         """Return False if device is unreachable, else True."""
         try:
             self.device.info()
-            return True
         except DeviceException:
             return False
+        return True
 
-    @property
-    def should_poll(self):
-        """We should not be polled for device up state."""
-        return False
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         _LOGGER.error(
             "Device does not support turn_on, "
             "please use 'remote.send_command' to send commands"
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGER.error(
             "Device does not support turn_off, "

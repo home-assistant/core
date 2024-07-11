@@ -1,8 +1,9 @@
 """Support for w800rf32 devices."""
+
 import logging
 
-import W800rf32 as w800
 import voluptuous as vol
+import W800rf32 as w800
 
 from homeassistant.const import (
     CONF_DEVICE,

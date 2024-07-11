@@ -1,48 +1,45 @@
 set_zone_moisture_percent:
-  name: Set zone moisture percent
-  description: Set the moisture percentage of a zone or list of zones.
   target:
     entity:
       integration: rachio
       domain: switch
   fields:
     percent:
-      name: Percent
-      description: Set the desired zone moisture percentage.
       required: true
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
-start_multiple_zone_schedule:
-  name: Start multiple zones
-  description: Create a custom schedule of zones and runtimes. Note that all zones should be on the same controller to avoid issues.
+start_watering:
   target:
     entity:
       integration: rachio
       domain: switch
   fields:
     duration:
-      name: Duration
-      description: Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zones listed above.
+      example: 15
+      required: false
+      selector:
+        object:
+start_multiple_zone_schedule:
+  target:
+    entity:
+      integration: rachio
+      domain: switch
+  fields:
+    duration:
       example: 15, 20
       required: true
       selector:
         object:
 pause_watering:
-  name: Pause watering
-  description: Pause any currently running zones or schedules.
   fields:
     devices:
-      name: Devices
-      description: Name of controllers to pause. Defaults to all controllers on the account if not provided.
       example: "Main House"
       selector:
         text:
     duration:
-      name: Duration
-      description: The time to pause running schedules.
       default: 60
       selector:
         number:
@@ -50,22 +47,14 @@ pause_watering:
           max: 60
           unit_of_measurement: "minutes"
 resume_watering:
-  name: Resume watering
-  description: Resume any paused zone runs or schedules.
   fields:
     devices:
-      name: Devices
-      description: Name of controllers to resume. Defaults to all controllers on the account if not provided.
       example: "Main House"
       selector:
         text:
 stop_watering:
-  name: Stop watering
-  description: Stop any currently running zones or schedules.
   fields:
     devices:
-      name: Devices
-      description: Name of controllers to stop. Defaults to all controllers on the account if not provided.
       example: "Main House"
       selector:
         text:

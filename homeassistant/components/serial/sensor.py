@@ -1,4 +1,5 @@
 """Support for reading data from a serial port."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,10 +7,13 @@ import json
 import logging
 
 from serial import SerialException
-import serial_asyncio
+import serial_asyncio_fast as serial_asyncio
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +40,7 @@ DEFAULT_XONXOFF = False
 DEFAULT_RTSCTS = False
 DEFAULT_DSRDTR = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
@@ -113,6 +117,8 @@ async def async_setup_platform(
 class SerialSensor(SensorEntity):
     """Representation of a Serial sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name,
@@ -141,7 +147,7 @@ class SerialSensor(SensorEntity):
         self._template = value_template
         self._attributes = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         self._serial_loop_task = self.hass.loop.create_task(
             self.serial_read(
@@ -184,12 +190,10 @@ class SerialSensor(SensorEntity):
                     **kwargs,
                 )
 
-            except SerialException as exc:
+            except SerialException:
                 if not logged_error:
                     _LOGGER.exception(
-                        "Unable to connect to the serial device %s: %s. Will retry",
-                        device,
-                        exc,
+                        "Unable to connect to the serial device %s. Will retry", device
                     )
                     logged_error = True
                 await self._handle_error()
@@ -198,9 +202,9 @@ class SerialSensor(SensorEntity):
                 while True:
                     try:
                         line = await reader.readline()
-                    except SerialException as exc:
+                    except SerialException:
                         _LOGGER.exception(
-                            "Error while reading serial device %s: %s", device, exc
+                            "Error while reading serial device %s", device
                         )
                         await self._handle_error()
                         break
@@ -241,11 +245,6 @@ class SerialSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

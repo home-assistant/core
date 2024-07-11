@@ -1,42 +1,49 @@
 """Test the habitica config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
 
 from homeassistant import config_entries
 from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_obj = MagicMock()
     mock_obj.user.get = AsyncMock()
 
-    with patch(
-        "homeassistant.components.habitica.config_flow.HabitipyAsync",
-        return_value=mock_obj,
-    ), patch(
-        "homeassistant.components.habitica.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.habitica.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.habitica.config_flow.HabitipyAsync",
+            return_value=mock_obj,
+        ),
+        patch(
+            "homeassistant.components.habitica.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.habitica.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"api_user": "test-api-user", "api_key": "test-api-key"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Default username"
     assert result2["data"] == {
         "url": DEFAULT_URL,
@@ -47,7 +54,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_credentials(hass):
+async def test_form_invalid_credentials(hass: HomeAssistant) -> None:
     """Test we handle invalid credentials error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -69,11 +76,11 @@ async def test_form_invalid_credentials(hass):
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_credentials"}
 
 
-async def test_form_unexpected_exception(hass):
+async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle unexpected exception error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -95,11 +102,11 @@ async def test_form_unexpected_exception(hass):
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_manual_flow_config_exist(hass):
+async def test_manual_flow_config_exist(hass: HomeAssistant) -> None:
     """Test config flow discovers only already configured config."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -111,7 +118,7 @@ async def test_manual_flow_config_exist(hass):
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_obj = MagicMock()
@@ -130,5 +137,5 @@ async def test_manual_flow_config_exist(hass):
             },
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

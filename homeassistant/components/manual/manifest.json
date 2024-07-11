@@ -1,8 +1,8 @@
 {
   "domain": "manual",
   "name": "Manual Alarm Control Panel",
-  "documentation": "https://www.home-assistant.io/integrations/manual",
   "codeowners": [],
-  "quality_scale": "internal",
-  "iot_class": "calculated"
+  "documentation": "https://www.home-assistant.io/integrations/manual",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
 }

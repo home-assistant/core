@@ -1,22 +1,23 @@
 """Config flow utilities."""
+
 from collections import OrderedDict
 
 from pyvesync import VeSync
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import DOMAIN
 
 
-class VeSyncFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Instantiate config flow."""
         self._username = None
         self._password = None

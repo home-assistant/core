@@ -1,73 +1,174 @@
 """Support for monitoring an SABnzbd NZB client."""
+
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from dataclasses import dataclass
 
-from . import (
-    DATA_SABNZBD,
-    SENSOR_TYPES,
-    SIGNAL_SABNZBD_UPDATED,
-    SabnzbdSensorEntityDescription,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfDataRate, UnitOfInformation
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import DOMAIN, SabnzbdUpdateCoordinator
+from .const import DEFAULT_NAME
+
+
+@dataclass(frozen=True, kw_only=True)
+class SabnzbdSensorEntityDescription(SensorEntityDescription):
+    """Describes Sabnzbd sensor entity."""
+
+    key: str
+
+
+SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
+    SabnzbdSensorEntityDescription(
+        key="status",
+        translation_key="status",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="kbpersec",
+        translation_key="speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="mb",
+        translation_key="queue",
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="mbleft",
+        translation_key="left",
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="diskspacetotal1",
+        translation_key="total_disk_space",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="diskspace1",
+        translation_key="free_disk_space",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="noofslots_total",
+        translation_key="queue_count",
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="day_size",
+        translation_key="daily_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="week_size",
+        translation_key="weekly_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="month_size",
+        translation_key="monthly_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SabnzbdSensorEntityDescription(
+        key="total_size",
+        translation_key="overall_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
 )
 
+OLD_SENSOR_KEYS = [
+    "current_status",
+    "speed",
+    "queue_size",
+    "queue_remaining",
+    "disk_size",
+    "disk_free",
+    "queue_count",
+    "day_size",
+    "week_size",
+    "month_size",
+    "total_size",
+]
 
-async def async_setup_platform(
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the SABnzbd sensors."""
-    if discovery_info is None:
-        return
+    """Set up a Sabnzbd sensor entry."""
 
-    sab_api_data = hass.data[DATA_SABNZBD]
-    sensors = sab_api_data.sensors
-    client_name = sab_api_data.name
+    entry_id = config_entry.entry_id
+    coordinator: SabnzbdUpdateCoordinator = hass.data[DOMAIN][entry_id]
+
     async_add_entities(
-        [
-            SabnzbdSensor(sab_api_data, client_name, description)
-            for description in SENSOR_TYPES
-            if description.key in sensors
-        ]
+        [SabnzbdSensor(coordinator, sensor, entry_id) for sensor in SENSOR_TYPES]
     )
 
 
-class SabnzbdSensor(SensorEntity):
+class SabnzbdSensor(CoordinatorEntity[SabnzbdUpdateCoordinator], SensorEntity):
     """Representation of an SABnzbd sensor."""
 
     entity_description: SabnzbdSensorEntityDescription
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
-        self, sabnzbd_api_data, client_name, description: SabnzbdSensorEntityDescription
-    ):
+        self,
+        coordinator: SabnzbdUpdateCoordinator,
+        description: SabnzbdSensorEntityDescription,
+        entry_id,
+    ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
-        self._sabnzbd_api = sabnzbd_api_data
-        self._attr_name = f"{client_name} {description.name}"
-
-    async def async_added_to_hass(self):
-        """Call when entity about to be added to hass."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_SABNZBD_UPDATED, self.update_state
-            )
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            name=DEFAULT_NAME,
         )
 
-    def update_state(self, args):
-        """Get the latest data and updates the states."""
-        self._attr_native_value = self._sabnzbd_api.get_queue_field(
-            self.entity_description.field_name
-        )
-
-        if self.entity_description.key == "speed":
-            self._attr_native_value = round(float(self._attr_native_value) / 1024, 1)
-        elif "size" in self.entity_description.key:
-            self._attr_native_value = round(float(self._attr_native_value), 2)
-
-        self.schedule_update_ha_state()
+    @property
+    def native_value(self) -> StateType:
+        """Return latest sensor data."""
+        return self.coordinator.data.get(self.entity_description.key)

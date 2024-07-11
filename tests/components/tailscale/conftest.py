@@ -1,4 +1,5 @@
 """Fixtures for Tailscale integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -26,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.tailscale.async_setup_entry", return_value=True
@@ -35,26 +36,26 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_tailscale_config_flow() -> Generator[None, MagicMock, None]:
+def mock_tailscale_config_flow() -> Generator[MagicMock]:
     """Return a mocked Tailscale client."""
     with patch(
         "homeassistant.components.tailscale.config_flow.Tailscale", autospec=True
     ) as tailscale_mock:
         tailscale = tailscale_mock.return_value
-        tailscale.devices.return_value = Devices.parse_raw(
+        tailscale.devices.return_value = Devices.from_json(
             load_fixture("tailscale/devices.json")
         ).devices
         yield tailscale
 
 
 @pytest.fixture
-def mock_tailscale(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_tailscale(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Tailscale client."""
     fixture: str = "tailscale/devices.json"
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    devices = Devices.parse_raw(load_fixture(fixture)).devices
+    devices = Devices.from_json(load_fixture(fixture)).devices
     with patch(
         "homeassistant.components.tailscale.coordinator.Tailscale", autospec=True
     ) as tailscale_mock:

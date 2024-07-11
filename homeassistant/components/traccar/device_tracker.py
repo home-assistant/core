@@ -1,38 +1,50 @@
 """Support for Traccar device tracking."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+from typing import Any
 
-from pytraccar.api import API
-from stringcase import camelcase
+from pytraccar import ApiClient, TraccarException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SOURCE_TYPE_GPS,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
+    SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker.legacy import (
+    YAML_DEVICES,
+    remove_device_from_config,
+)
+from homeassistant.config import load_yaml_config_file
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STARTED,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
@@ -40,19 +52,12 @@ from homeassistant.util import slugify
 from . import DOMAIN, TRACKER_UPDATE
 from .const import (
     ATTR_ACCURACY,
-    ATTR_ADDRESS,
     ATTR_ALTITUDE,
     ATTR_BATTERY,
     ATTR_BEARING,
-    ATTR_CATEGORY,
-    ATTR_GEOFENCE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_MOTION,
     ATTR_SPEED,
-    ATTR_STATUS,
-    ATTR_TRACCAR_ID,
-    ATTR_TRACKER,
     CONF_MAX_ACCURACY,
     CONF_SKIP_ACCURACY_ON,
     EVENT_ALARM,
@@ -99,7 +104,7 @@ EVENTS = [
     EVENT_ALL_EVENTS,
 ]
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -139,17 +144,16 @@ async def async_setup_entry(
             [TraccarEntity(device, latitude, longitude, battery, accuracy, attrs)]
         )
 
-    hass.data[DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
     # Restore previously loaded devices
-    dev_reg = await device_registry.async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.values()
+        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
         for identifier in device.identifiers
-        if identifier[0] == DOMAIN
     }
     if not dev_ids:
         return
@@ -166,187 +170,85 @@ async def async_setup_entry(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
-    """Validate the configuration and return a Traccar scanner."""
-
-    session = async_get_clientsession(hass, config[CONF_VERIFY_SSL])
-
-    api = API(
-        hass.loop,
-        session,
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_HOST],
-        config[CONF_PORT],
-        config[CONF_SSL],
+    """Import configuration to the new integration."""
+    api = ApiClient(
+        host=config[CONF_HOST],
+        port=config[CONF_PORT],
+        ssl=config[CONF_SSL],
+        username=config[CONF_USERNAME],
+        password=config[CONF_PASSWORD],
+        client_session=async_get_clientsession(hass, config[CONF_VERIFY_SSL]),
     )
 
-    scanner = TraccarScanner(
-        api,
-        hass,
-        async_see,
-        config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
-        config[CONF_MAX_ACCURACY],
-        config[CONF_SKIP_ACCURACY_ON],
-        config[CONF_MONITORED_CONDITIONS],
-        config[CONF_EVENT],
-    )
-
-    return await scanner.async_init()
-
-
-class TraccarScanner:
-    """Define an object to retrieve Traccar data."""
-
-    def __init__(
-        self,
-        api,
-        hass,
-        async_see,
-        scan_interval,
-        max_accuracy,
-        skip_accuracy_on,
-        custom_attributes,
-        event_types,
-    ):
-        """Initialize."""
-
-        if EVENT_ALL_EVENTS in event_types:
-            event_types = EVENTS
-        self._event_types = {camelcase(evt): evt for evt in event_types}
-        self._custom_attributes = custom_attributes
-        self._scan_interval = scan_interval
-        self._async_see = async_see
-        self._api = api
-        self.connected = False
-        self._hass = hass
-        self._max_accuracy = max_accuracy
-        self._skip_accuracy_on = skip_accuracy_on
-
-    async def async_init(self):
-        """Further initialize connection to Traccar."""
-        await self._api.test_connection()
-        if self._api.connected and not self._api.authenticated:
-            _LOGGER.error("Authentication for Traccar failed")
-            return False
-
-        await self._async_update()
-        async_track_time_interval(self._hass, self._async_update, self._scan_interval)
-        return True
-
-    async def _async_update(self, now=None):
-        """Update info from Traccar."""
-        if not self.connected:
-            _LOGGER.debug("Testing connection to Traccar")
-            await self._api.test_connection()
-            self.connected = self._api.connected
-            if self.connected:
-                _LOGGER.info("Connection to Traccar restored")
-            else:
-                return
-        _LOGGER.debug("Updating device data")
-        await self._api.get_device_info(self._custom_attributes)
-        self._hass.async_create_task(self.import_device_data())
-        if self._event_types:
-            self._hass.async_create_task(self.import_events())
-        self.connected = self._api.connected
-
-    async def import_device_data(self):
-        """Import device data from Traccar."""
-        for device_unique_id in self._api.device_info:
-            device_info = self._api.device_info[device_unique_id]
-            device = None
-            attr = {}
-            skip_accuracy_filter = False
-
-            attr[ATTR_TRACKER] = "traccar"
-            if device_info.get("address") is not None:
-                attr[ATTR_ADDRESS] = device_info["address"]
-            if device_info.get("geofence") is not None:
-                attr[ATTR_GEOFENCE] = device_info["geofence"]
-            if device_info.get("category") is not None:
-                attr[ATTR_CATEGORY] = device_info["category"]
-            if device_info.get("speed") is not None:
-                attr[ATTR_SPEED] = device_info["speed"]
-            if device_info.get("motion") is not None:
-                attr[ATTR_MOTION] = device_info["motion"]
-            if device_info.get("traccar_id") is not None:
-                attr[ATTR_TRACCAR_ID] = device_info["traccar_id"]
-                for dev in self._api.devices:
-                    if dev["id"] == device_info["traccar_id"]:
-                        device = dev
-                        break
-            if device is not None and device.get("status") is not None:
-                attr[ATTR_STATUS] = device["status"]
-            for custom_attr in self._custom_attributes:
-                if device_info.get(custom_attr) is not None:
-                    attr[custom_attr] = device_info[custom_attr]
-                    if custom_attr in self._skip_accuracy_on:
-                        skip_accuracy_filter = True
-
-            accuracy = 0.0
-            if device_info.get("accuracy") is not None:
-                accuracy = device_info["accuracy"]
-            if (
-                not skip_accuracy_filter
-                and self._max_accuracy > 0
-                and accuracy > self._max_accuracy
-            ):
-                _LOGGER.debug(
-                    "Excluded position by accuracy filter: %f (%s)",
-                    accuracy,
-                    attr[ATTR_TRACCAR_ID],
-                )
-                continue
-
-            await self._async_see(
-                dev_id=slugify(device_info["device_id"]),
-                gps=(device_info.get("latitude"), device_info.get("longitude")),
-                gps_accuracy=accuracy,
-                battery=device_info.get("battery"),
-                attributes=attr,
+    async def _run_import(_: Event):
+        known_devices: dict[str, dict[str, Any]] = {}
+        try:
+            known_devices = await hass.async_add_executor_job(
+                load_yaml_config_file, hass.config.path(YAML_DEVICES)
+            )
+        except (FileNotFoundError, HomeAssistantError):
+            _LOGGER.debug(
+                "No valid known_devices.yaml found, "
+                "skip removal of devices from known_devices.yaml"
             )
 
-    async def import_events(self):
-        """Import events from Traccar."""
-        device_ids = [device["id"] for device in self._api.devices]
-        end_interval = datetime.utcnow()
-        start_interval = end_interval - self._scan_interval
-        events = await self._api.get_events(
-            device_ids=device_ids,
-            from_time=start_interval,
-            to_time=end_interval,
-            event_types=self._event_types.keys(),
+        if known_devices:
+            traccar_devices: list[str] = []
+            try:
+                resp = await api.get_devices()
+                traccar_devices = [slugify(device["name"]) for device in resp]
+            except TraccarException as exception:
+                _LOGGER.error("Error while getting device data: %s", exception)
+                return
+
+            for dev_name in traccar_devices:
+                if dev_name in known_devices:
+                    await hass.async_add_executor_job(
+                        remove_device_from_config, hass, dev_name
+                    )
+                    _LOGGER.debug("Removed device %s from known_devices.yaml", dev_name)
+
+                if not hass.states.async_available(f"device_tracker.{dev_name}"):
+                    hass.states.async_remove(f"device_tracker.{dev_name}")
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "traccar_server",
+                context={"source": SOURCE_IMPORT},
+                data=config,
+            )
         )
-        if events is not None:
-            for event in events:
-                device_name = next(
-                    (
-                        dev.get("name")
-                        for dev in self._api.devices
-                        if dev.get("id") == event["deviceId"]
-                    ),
-                    None,
-                )
-                self._hass.bus.async_fire(
-                    f"traccar_{self._event_types.get(event['type'])}",
-                    {
-                        "device_traccar_id": event["deviceId"],
-                        "device_name": device_name,
-                        "type": event["type"],
-                        "serverTime": event.get("eventTime") or event.get("serverTime"),
-                        "attributes": event["attributes"],
-                    },
-                )
+
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Traccar",
+            },
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _run_import)
+    return True
 
 
 class TraccarEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, device, latitude, longitude, battery, accuracy, attributes):
-        """Set up Geofency entity."""
+        """Set up Traccar entity."""
         self._accuracy = accuracy
         self._attributes = attributes
         self._name = device
@@ -382,26 +284,24 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         return self._accuracy
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def unique_id(self):
         """Return the unique ID."""
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(DOMAIN, self._unique_id)}}
+        return DeviceInfo(
+            name=self._name,
+            identifiers={(DOMAIN, self._unique_id)},
+        )
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
         self._unsub_dispatcher = async_dispatcher_connect(
@@ -435,7 +335,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         }
         self._battery = attr.get(ATTR_BATTERY)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()
         self._unsub_dispatcher()
@@ -445,7 +345,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         self, device, latitude, longitude, battery, accuracy, attributes
     ):
         """Mark the device as seen."""
-        if device != self.name:
+        if device != self._name:
             return
 
         self._latitude = latitude

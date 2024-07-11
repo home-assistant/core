@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OSO Energy Auth",
+        "description": "Enter the generated 'Subscription Key' for your account at 'https://portal.osoenergy.no/'",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reauth": {
+        "title": "OSO Energy Auth",
+        "description": "Generate and enter a new 'Subscription Key' for your account at 'https://portal.osoenergy.no/'.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "power_save": {
+        "name": "Power save"
+      },
+      "extra_energy": {
+        "name": "Extra energy"
+      },
+      "heating": {
+        "name": "Heating"
+      }
+    },
+    "sensor": {
+      "tapping_capacity": {
+        "name": "Tapping capacity"
+      },
+      "capacity_mixed_water_40": {
+        "name": "Capacity mixed water 40°C"
+      },
+      "v40_min": {
+        "name": "Mixed water at 40°C"
+      },
+      "v40_level_min": {
+        "name": "Minimum level of mixed water at 40°C"
+      },
+      "v40_level_max": {
+        "name": "Maximum level of mixed water at 40°C"
+      },
+      "heater_mode": {
+        "name": "Heater mode",
+        "state": {
+          "auto": "Auto",
+          "extraenergy": "Extra energy",
+          "ffr": "Fast frequency reserve",
+          "legionella": "Legionella",
+          "manual": "Manual",
+          "off": "Off",
+          "powersave": "Power save",
+          "voltage": "Voltage"
+        }
+      },
+      "optimization_mode": {
+        "name": "Optimization mode",
+        "state": {
+          "advanced": "Advanced",
+          "gridcompany": "Grid company",
+          "off": "Off",
+          "oso": "OSO",
+          "smartcompany": "Smart company"
+        }
+      },
+      "profile": {
+        "name": "Profile local"
+      },
+      "temperature_top": {
+        "name": "Temperature top"
+      },
+      "temperature_mid": {
+        "name": "Temperature middle"
+      },
+      "temperature_low": {
+        "name": "Temperature bottom"
+      },
+      "temperature_one": {
+        "name": "Temperature one"
+      }
+    }
+  }
+}

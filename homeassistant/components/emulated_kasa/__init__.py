@@ -1,4 +1,5 @@
 """Support for local power state reporting of entities by emulating TP-Link Kasa smart plugs."""
+
 import logging
 
 from sense_energy import PlugInstance, SenseLink
@@ -14,8 +15,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.typing import ConfigType
 
@@ -79,7 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def validate_configs(hass, entity_configs):
     """Validate that entities exist and ensure templates are ready to use."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     for entity_id, entity_config in entity_configs.items():
         if (state := hass.states.get(entity_id)) is None:
             _LOGGER.debug("Entity not found: %s", entity_id)
@@ -108,7 +109,7 @@ async def validate_configs(hass, entity_configs):
             _LOGGER.debug("No power value defined for: %s", entity_id)
 
 
-def get_system_unique_id(entity: RegistryEntry):
+def get_system_unique_id(entity: er.RegistryEntry):
     """Determine the system wide unique_id for an entity."""
     return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
 

@@ -1,4 +1,5 @@
 """Support for scenes through the SmartThings cloud API."""
+
 from typing import Any
 
 from homeassistant.components.scene import Scene
@@ -16,7 +17,7 @@ async def async_setup_entry(
 ) -> None:
     """Add switches for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    async_add_entities([SmartThingsScene(scene) for scene in broker.scenes.values()])
+    async_add_entities(SmartThingsScene(scene) for scene in broker.scenes.values())
 
 
 class SmartThingsScene(Scene):
@@ -25,6 +26,8 @@ class SmartThingsScene(Scene):
     def __init__(self, scene):
         """Init the scene class."""
         self._scene = scene
+        self._attr_name = scene.name
+        self._attr_unique_id = scene.scene_id
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
@@ -38,13 +41,3 @@ class SmartThingsScene(Scene):
             "color": self._scene.color,
             "location_id": self._scene.location_id,
         }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._scene.name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._scene.scene_id

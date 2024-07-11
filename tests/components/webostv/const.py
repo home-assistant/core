@@ -1,4 +1,5 @@
 """Constants for LG webOS Smart TV tests."""
+
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
 
@@ -7,8 +8,6 @@ TV_NAME = "fake_webos"
 ENTITY_ID = f"{MP_DOMAIN}.{TV_NAME}"
 HOST = "1.2.3.4"
 CLIENT_KEY = "some-secret"
-MOCK_CLIENT_KEYS = {HOST: CLIENT_KEY}
-MOCK_JSON = '{"1.2.3.4": "some-secret"}'
 
 CHANNEL_1 = {
     "channelNumber": "1",

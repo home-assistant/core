@@ -1,21 +1,45 @@
-"""Test Waze Travel Time initialization."""
-from homeassistant.components.waze_travel_time.const import DOMAIN
-from homeassistant.helpers.entity_registry import async_get
+"""Test waze_travel_time services."""
 
-from tests.common import MockConfigEntry
+import pytest
+
+from homeassistant.components.waze_travel_time.const import DEFAULT_OPTIONS
+from homeassistant.core import HomeAssistant
+
+from .const import MOCK_CONFIG
 
 
-async def test_migration(hass, bypass_platform_setup):
-    """Test migration logic for unique id."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, version=1, entry_id="test", unique_id="test"
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
+async def test_service_get_travel_times(hass: HomeAssistant) -> None:
+    """Test service get_travel_times."""
+    response_data = await hass.services.async_call(
+        "waze_travel_time",
+        "get_travel_times",
+        {
+            "origin": "location1",
+            "destination": "location2",
+            "vehicle_type": "car",
+            "region": "us",
+        },
+        blocking=True,
+        return_response=True,
     )
-    ent_reg = async_get(hass)
-    ent_entry = ent_reg.async_get_or_create(
-        "sensor", DOMAIN, unique_id="replaceable_unique_id", config_entry=config_entry
-    )
-    entity_id = ent_entry.entity_id
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.unique_id is None
-    assert ent_reg.async_get(entity_id).unique_id == config_entry.entry_id
+    assert response_data == {
+        "routes": [
+            {
+                "distance": 300,
+                "duration": 150,
+                "name": "E1337 - Teststreet",
+                "street_names": ["E1337", "IncludeThis", "Teststreet"],
+            },
+            {
+                "distance": 500,
+                "duration": 600,
+                "name": "E0815 - Otherstreet",
+                "street_names": ["E0815", "ExcludeThis", "Otherstreet"],
+            },
+        ]
+    }

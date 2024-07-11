@@ -1,10 +1,12 @@
 """Config flow for Plaato."""
+
+from __future__ import annotations
+
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import cloud, webhook
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +26,7 @@ from .const import (
 )
 
 
-class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handles a Plaato config flow."""
 
     VERSION = 1
@@ -125,7 +127,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _show_api_method_form(
-        self, device_type: PlaatoDeviceType, errors: dict = None
+        self, device_type: PlaatoDeviceType, errors: dict | None = None
     ):
         data_schema = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
 
@@ -161,12 +163,12 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> PlaatoOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlaatoOptionsFlowHandler(config_entry)
 
 
-class PlaatoOptionsFlowHandler(config_entries.OptionsFlow):
+class PlaatoOptionsFlowHandler(OptionsFlow):
     """Handle Plaato options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:

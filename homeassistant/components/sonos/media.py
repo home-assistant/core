@@ -1,8 +1,8 @@
 """Support for media metadata handling."""
+
 from __future__ import annotations
 
 import datetime
-import logging
 from typing import Any
 
 from soco.core import (
@@ -43,14 +43,12 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 DURATION_SECONDS = "duration_in_s"
 POSITION_SECONDS = "position_in_s"
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def _timespan_secs(timespan: str | None) -> None | float:
+def _timespan_secs(timespan: str | None) -> int | None:
     """Parse a time-span into number of seconds."""
     if timespan in UNAVAILABLE_VALUES:
         return None
-    return time_period_str(timespan).total_seconds()  # type: ignore[arg-type]
+    return int(time_period_str(timespan).total_seconds())  # type: ignore[arg-type]
 
 
 class SonosMedia:
@@ -76,7 +74,7 @@ class SonosMedia:
         self.title: str | None = None
         self.uri: str | None = None
 
-        self.position: float | None = None
+        self.position: int | None = None
         self.position_updated_at: datetime.datetime | None = None
 
     def clear(self) -> None:
@@ -105,8 +103,8 @@ class SonosMedia:
 
     @soco_error()
     def poll_track_info(self) -> dict[str, Any]:
-        """Poll the speaker for current track info, add converted position values, and return."""
-        track_info = self.soco.get_current_track_info()
+        """Poll the speaker for current track info, add converted position values."""
+        track_info: dict[str, Any] = self.soco.get_current_track_info()
         track_info[DURATION_SECONDS] = _timespan_secs(track_info.get("duration"))
         track_info[POSITION_SECONDS] = _timespan_secs(track_info.get("position"))
         return track_info
@@ -120,6 +118,8 @@ class SonosMedia:
         self.clear()
 
         track_info = self.poll_track_info()
+        if not track_info["uri"]:
+            return
         self.uri = track_info["uri"]
 
         audio_source = self.soco.music_source_from_uri(self.uri)
@@ -135,7 +135,7 @@ class SonosMedia:
         self.title = track_info.get("title")
         self.image_url = track_info.get("album_art")
 
-        playlist_position = int(track_info.get("playlist_position"))
+        playlist_position = int(track_info.get("playlist_position", -1))
         if playlist_position > 0:
             self.queue_position = playlist_position
 
@@ -172,7 +172,8 @@ class SonosMedia:
             if et_uri_md:
                 self.channel = et_uri_md.title
 
-            if ct_md and ct_md.radio_show:
+            # Extra guards for S1 compatibility
+            if ct_md and hasattr(ct_md, "radio_show") and ct_md.radio_show:
                 radio_show = ct_md.radio_show.split(",")[0]
                 self.channel = " • ".join(filter(None, [self.channel, radio_show]))
 
@@ -202,13 +203,15 @@ class SonosMedia:
         self, position_info: dict[str, int], force_update: bool = False
     ) -> None:
         """Update state when playing music tracks."""
-        if (duration := position_info.get(DURATION_SECONDS)) == 0:
+        duration = position_info.get(DURATION_SECONDS)
+        current_position = position_info.get(POSITION_SECONDS)
+
+        if not (duration or current_position):
             self.clear_position()
             return
 
         should_update = force_update
         self.duration = duration
-        current_position = position_info.get(POSITION_SECONDS)
 
         # player started reporting position?
         if current_position is not None and self.position is None:

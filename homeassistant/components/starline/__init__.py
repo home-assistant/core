@@ -1,4 +1,5 @@
 """The StarLine component."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -7,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .account import StarlineAccount
 from .const import (
@@ -33,13 +35,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = account
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     for device in account.api.devices.values():
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id, **account.device_info(device)
         )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def async_set_scan_interval(call: ServiceCall) -> None:
         """Set scan interval."""

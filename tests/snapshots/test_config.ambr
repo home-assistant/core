@@ -1,0 +1,503 @@
+# serializer version: 1
+# name: test_component_config_error_processing[exception_info_list0-bla-messages0-False-component_import_err]
+  'Unable to import test_domain: bla'
+# ---
+# name: test_component_config_error_processing[exception_info_list1-bla-messages1-True-config_validation_err]
+  'Invalid config for integration test_domain at configuration.yaml, line 140: bla'
+# ---
+# name: test_component_config_error_processing[exception_info_list2-bla @ data['path']-messages2-False-config_validation_err]
+  "Invalid config for integration test_domain at configuration.yaml, line 140: bla @ data['path']"
+# ---
+# name: test_component_config_error_processing[exception_info_list3-bla @ data['path']-messages3-False-platform_config_validation_err]
+  "Invalid config for test_domain from integration test_domain at file configuration.yaml, line 140: bla @ data['path']. Check the logs for more information"
+# ---
+# name: test_component_config_error_processing[exception_info_list4-bla-messages4-False-platform_component_load_err]
+  'Platform error: test_domain - bla'
+# ---
+# name: test_component_config_validation_error[basic]
+  list([
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid domain 'iot_domain ' at configuration.yaml, line 61",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid domain '' at configuration.yaml, line 62",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid domain '5' at configuration.yaml, line 1",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' at configuration.yaml, line 6: required key 'platform' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 9: expected str for dictionary value 'option1', got 123",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 12: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 18: required key 'option1' not provided
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 19: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 20: expected str for dictionary value 'option2', got 123
+      ''',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_2' at configuration.yaml, line 27: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_3' at configuration.yaml, line 32: expected int for dictionary value 'adr_0007_3->port', got 'foo'",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_4' at configuration.yaml, line 37: 'no_such_option' is an invalid option for 'adr_0007_4', check: adr_0007_4->no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'adr_0007_5' at configuration.yaml, line 43: required key 'host' not provided
+        Invalid config for 'adr_0007_5' at configuration.yaml, line 44: 'no_such_option' is an invalid option for 'adr_0007_5', check: adr_0007_5->no_such_option
+        Invalid config for 'adr_0007_5' at configuration.yaml, line 45: expected int for dictionary value 'adr_0007_5->port', got 'foo'
+      ''',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 52: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 55: broken",
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': 'config_validator_unknown_err',
+    }),
+  ])
+# ---
+# name: test_component_config_validation_error[basic_include]
+  list([
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid domain 'iot_domain ' at configuration.yaml, line 11",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid domain '' at configuration.yaml, line 12",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid domain '5' at configuration.yaml, line 1",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' at integrations/iot_domain.yaml, line 5: required key 'platform' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 8: expected str for dictionary value 'option1', got 123",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 11: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 17: required key 'option1' not provided
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 18: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 19: expected str for dictionary value 'option2', got 123
+      ''',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_2' at configuration.yaml, line 3: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_3' at integrations/adr_0007_3.yaml, line 3: expected int for dictionary value 'adr_0007_3->port', got 'foo'",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_4' at integrations/adr_0007_4.yaml, line 3: 'no_such_option' is an invalid option for 'adr_0007_4', check: adr_0007_4->no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'adr_0007_5' at configuration.yaml, line 6: required key 'host' not provided
+        Invalid config for 'adr_0007_5' at integrations/adr_0007_5.yaml, line 5: 'no_such_option' is an invalid option for 'adr_0007_5', check: adr_0007_5->no_such_option
+        Invalid config for 'adr_0007_5' at integrations/adr_0007_5.yaml, line 6: expected int for dictionary value 'adr_0007_5->port', got 'foo'
+      ''',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 8: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 9: broken",
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': 'config_validator_unknown_err',
+    }),
+  ])
+# ---
+# name: test_component_config_validation_error[include_dir_list]
+  list([
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' at iot_domain/iot_domain_2.yaml, line 2: required key 'platform' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_3.yaml, line 3: expected str for dictionary value 'option1', got 123",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_4.yaml, line 3: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_5.yaml, line 5: required key 'option1' not provided
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_5.yaml, line 6: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_5.yaml, line 7: expected str for dictionary value 'option2', got 123
+      ''',
+    }),
+  ])
+# ---
+# name: test_component_config_validation_error[include_dir_merge_list]
+  list([
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' at iot_domain/iot_domain_1.yaml, line 5: required key 'platform' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_2.yaml, line 3: expected str for dictionary value 'option1', got 123",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_2.yaml, line 6: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_2.yaml, line 12: required key 'option1' not provided
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_2.yaml, line 13: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at iot_domain/iot_domain_2.yaml, line 14: expected str for dictionary value 'option2', got 123
+      ''',
+    }),
+  ])
+# ---
+# name: test_component_config_validation_error[packages]
+  list([
+    dict({
+      'has_exc_info': False,
+      'message': "Setup of package 'pack_iot_domain_space' at configuration.yaml, line 72 failed: Invalid domain 'iot_domain '",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Setup of package 'pack_empty' at configuration.yaml, line 74 failed: Invalid domain ''",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Setup of package 'pack_5' at configuration.yaml, line 76 failed: Invalid domain '5'",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' at configuration.yaml, line 11: required key 'platform' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 16: expected str for dictionary value 'option1', got 123",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 21: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 29: required key 'option1' not provided
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 30: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 31: expected str for dictionary value 'option2', got 123
+      ''',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_2' at configuration.yaml, line 38: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_3' at configuration.yaml, line 43: expected int for dictionary value 'adr_0007_3->port', got 'foo'",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_4' at configuration.yaml, line 48: 'no_such_option' is an invalid option for 'adr_0007_4', check: adr_0007_4->no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'adr_0007_5' at configuration.yaml, line 54: required key 'host' not provided
+        Invalid config for 'adr_0007_5' at configuration.yaml, line 55: 'no_such_option' is an invalid option for 'adr_0007_5', check: adr_0007_5->no_such_option
+        Invalid config for 'adr_0007_5' at configuration.yaml, line 56: expected int for dictionary value 'adr_0007_5->port', got 'foo'
+      ''',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 64: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 67: broken",
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': 'config_validator_unknown_err',
+    }),
+  ])
+# ---
+# name: test_component_config_validation_error[packages_include_dir_named]
+  list([
+    dict({
+      'has_exc_info': False,
+      'message': "Setup of package 'pack_5' at integrations/pack_5.yaml, line 1 failed: Invalid domain '5'",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Setup of package 'pack_empty' at integrations/pack_empty.yaml, line 1 failed: Invalid domain ''",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Setup of package 'pack_iot_domain_space' at integrations/pack_iot_domain_space.yaml, line 1 failed: Invalid domain 'iot_domain '",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_2' at integrations/adr_0007_2.yaml, line 2: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_3' at integrations/adr_0007_3.yaml, line 4: expected int for dictionary value 'adr_0007_3->port', got 'foo'",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'adr_0007_4' at integrations/adr_0007_4.yaml, line 4: 'no_such_option' is an invalid option for 'adr_0007_4', check: adr_0007_4->no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'adr_0007_5' at integrations/adr_0007_5.yaml, line 5: required key 'host' not provided
+        Invalid config for 'adr_0007_5' at integrations/adr_0007_5.yaml, line 6: 'no_such_option' is an invalid option for 'adr_0007_5', check: adr_0007_5->no_such_option
+        Invalid config for 'adr_0007_5' at integrations/adr_0007_5.yaml, line 7: expected int for dictionary value 'adr_0007_5->port', got 'foo'
+      ''',
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': "Invalid config for 'custom_validator_bad_1' at integrations/custom_validator_bad_1.yaml, line 2: broken",
+    }),
+    dict({
+      'has_exc_info': True,
+      'message': 'config_validator_unknown_err',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'custom_validator_ok_2' at integrations/custom_validator_ok_2.yaml, line 2: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' at integrations/iot_domain.yaml, line 6: required key 'platform' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 9: expected str for dictionary value 'option1', got 123",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 12: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 18: required key 'option1' not provided
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 19: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option
+        Invalid config for 'iot_domain' from integration 'non_adr_0007' at integrations/iot_domain.yaml, line 20: expected str for dictionary value 'option2', got 123
+      ''',
+    }),
+  ])
+# ---
+# name: test_component_config_validation_error_with_docs[basic]
+  list([
+    "Invalid domain 'iot_domain ' at configuration.yaml, line 61",
+    "Invalid domain '' at configuration.yaml, line 62",
+    "Invalid domain '5' at configuration.yaml, line 1",
+    "Invalid config for 'iot_domain' at configuration.yaml, line 6: required key 'platform' not provided, please check the docs at https://www.home-assistant.io/integrations/iot_domain",
+    "Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 9: expected str for dictionary value 'option1', got 123, please check the docs at https://www.home-assistant.io/integrations/non_adr_0007",
+    "Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 12: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option, please check the docs at https://www.home-assistant.io/integrations/non_adr_0007",
+    '''
+      Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 18: required key 'option1' not provided, please check the docs at https://www.home-assistant.io/integrations/non_adr_0007
+      Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 19: 'no_such_option' is an invalid option for 'non_adr_0007.iot_domain', check: no_such_option, please check the docs at https://www.home-assistant.io/integrations/non_adr_0007
+      Invalid config for 'iot_domain' from integration 'non_adr_0007' at configuration.yaml, line 20: expected str for dictionary value 'option2', got 123, please check the docs at https://www.home-assistant.io/integrations/non_adr_0007
+    ''',
+    "Invalid config for 'adr_0007_2' at configuration.yaml, line 27: required key 'host' not provided, please check the docs at https://www.home-assistant.io/integrations/adr_0007_2",
+    "Invalid config for 'adr_0007_3' at configuration.yaml, line 32: expected int for dictionary value 'adr_0007_3->port', got 'foo', please check the docs at https://www.home-assistant.io/integrations/adr_0007_3",
+    "Invalid config for 'adr_0007_4' at configuration.yaml, line 37: 'no_such_option' is an invalid option for 'adr_0007_4', check: adr_0007_4->no_such_option, please check the docs at https://www.home-assistant.io/integrations/adr_0007_4",
+    '''
+      Invalid config for 'adr_0007_5' at configuration.yaml, line 43: required key 'host' not provided, please check the docs at https://www.home-assistant.io/integrations/adr_0007_5
+      Invalid config for 'adr_0007_5' at configuration.yaml, line 44: 'no_such_option' is an invalid option for 'adr_0007_5', check: adr_0007_5->no_such_option, please check the docs at https://www.home-assistant.io/integrations/adr_0007_5
+      Invalid config for 'adr_0007_5' at configuration.yaml, line 45: expected int for dictionary value 'adr_0007_5->port', got 'foo', please check the docs at https://www.home-assistant.io/integrations/adr_0007_5
+    ''',
+    "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 52: required key 'host' not provided, please check the docs at https://www.home-assistant.io/integrations/custom_validator_ok_2",
+    "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 55: broken, please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1",
+    'config_validator_unknown_err',
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_dict]
+  list([
+    "Setup of package 'should_be_a_dict' at configuration.yaml, line 3 failed: Invalid package definition 'should_be_a_dict': expected a dictionary. Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_include_dir_named_dict]
+  list([
+    "Setup of package 'should_be_a_dict' at packages/expected_dict.yaml, line 1 failed: Invalid package definition 'should_be_a_dict': expected a dictionary. Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_include_dir_named_slug]
+  list([
+    "Setup of package 'this is not a slug but it should be one' at packages/expected_slug.yaml, line 1 failed: Invalid package definition 'this is not a slug but it should be one': invalid slug this is not a slug but it should be one (try this_is_not_a_slug_but_it_should_be_one). Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_slug]
+  list([
+    "Setup of package 'this is not a slug but it should be one' at configuration.yaml, line 3 failed: Invalid package definition 'this is not a slug but it should be one': invalid slug this is not a slug but it should be one (try this_is_not_a_slug_but_it_should_be_one). Package will not be initialized",
+  ])
+# ---
+# name: test_package_merge_error[packages]
+  list([
+    "Setup of package 'pack_1' at configuration.yaml, line 7 failed: integration 'adr_0007_1' cannot be merged, dict expected in main config",
+    "Setup of package 'pack_2' at configuration.yaml, line 11 failed: integration 'adr_0007_2' cannot be merged, expected a dict",
+    "Setup of package 'pack_4' at configuration.yaml, line 19 failed: integration 'adr_0007_3' has duplicate key 'host'",
+    "Setup of package 'pack_5' at configuration.yaml, line 22 failed: Integration 'unknown_integration' not found.",
+  ])
+# ---
+# name: test_package_merge_error[packages_include_dir_named]
+  list([
+    "Setup of package 'adr_0007_1' at integrations/adr_0007_1.yaml, line 2 failed: integration 'adr_0007_1' cannot be merged, dict expected in main config",
+    "Setup of package 'adr_0007_2' at integrations/adr_0007_2.yaml, line 2 failed: integration 'adr_0007_2' cannot be merged, expected a dict",
+    "Setup of package 'adr_0007_3_2' at integrations/adr_0007_3_2.yaml, line 1 failed: integration 'adr_0007_3' has duplicate key 'host'",
+    "Setup of package 'unknown_integration' at integrations/unknown_integration.yaml, line 2 failed: Integration 'unknown_integration' not found.",
+  ])
+# ---
+# name: test_package_merge_exception[packages-error0]
+  list([
+    "Setup of package 'pack_1' at configuration.yaml, line 3 failed: Integration test_domain caused error: No such file or directory: b'liblibc.a'",
+  ])
+# ---
+# name: test_package_merge_exception[packages-error1]
+  list([
+    "Setup of package 'pack_1' at configuration.yaml, line 3 failed: Integration test_domain caused error: ModuleNotFoundError: No module named 'not_installed_something'",
+  ])
+# ---
+# name: test_package_merge_exception[packages_include_dir_named-error0]
+  list([
+    "Setup of package 'unknown_integration' at integrations/unknown_integration.yaml, line 1 failed: Integration test_domain caused error: No such file or directory: b'liblibc.a'",
+  ])
+# ---
+# name: test_package_merge_exception[packages_include_dir_named-error1]
+  list([
+    "Setup of package 'unknown_integration' at integrations/unknown_integration.yaml, line 1 failed: Integration test_domain caused error: ModuleNotFoundError: No module named 'not_installed_something'",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_a_list]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 2: expected a dictionary",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_a_value]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 2: expected a dictionary",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_null]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 3: expected a dictionary",
+  ])
+# ---
+# name: test_yaml_error[basic]
+  '''
+  mapping values are not allowed here
+    in "configuration.yaml", line 4, column 14
+  '''
+# ---
+# name: test_yaml_error[basic].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic/configuration.yaml", line 4, column 14
+    ''',
+  ])
+# ---
+# name: test_yaml_error[basic_include]
+  '''
+  mapping values are not allowed here
+    in "integrations/iot_domain.yaml", line 3, column 12
+  '''
+# ---
+# name: test_yaml_error[basic_include].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic_include/integrations/iot_domain.yaml", line 3, column 12
+    ''',
+  ])
+# ---
+# name: test_yaml_error[include_dir_list]
+  '''
+  mapping values are not allowed here
+    in "iot_domain/iot_domain_1.yaml", line 3, column 10
+  '''
+# ---
+# name: test_yaml_error[include_dir_list].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_list/iot_domain/iot_domain_1.yaml", line 3, column 10
+    ''',
+  ])
+# ---
+# name: test_yaml_error[include_dir_merge_list]
+  '''
+  mapping values are not allowed here
+    in "iot_domain/iot_domain_1.yaml", line 3, column 12
+  '''
+# ---
+# name: test_yaml_error[include_dir_merge_list].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_merge_list/iot_domain/iot_domain_1.yaml", line 3, column 12
+    ''',
+  ])
+# ---
+# name: test_yaml_error[packages_include_dir_named]
+  '''
+  mapping values are not allowed here
+    in "integrations/adr_0007_1.yaml", line 4, column 9
+  '''
+# ---
+# name: test_yaml_error[packages_include_dir_named].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/packages_include_dir_named/integrations/adr_0007_1.yaml", line 4, column 9
+    ''',
+  ])
+# ---

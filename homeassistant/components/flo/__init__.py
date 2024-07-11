@@ -1,4 +1,5 @@
 """The flo integration."""
+
 import asyncio
 import logging
 
@@ -12,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT, DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tasks = [device.async_refresh() for device in devices]
     await asyncio.gather(*tasks)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

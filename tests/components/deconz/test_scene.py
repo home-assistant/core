@@ -1,41 +1,31 @@
 """deCONZ scene platform tests."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .conftest import WebsocketDataType
 
-
-async def test_no_scenes(hass, aioclient_mock):
-    """Test that scenes can be loaded without scenes being available."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_DATA = [
     (  # Scene
         {
-            "groups": {
-                "1": {
-                    "id": "Light group id",
-                    "name": "Light group",
-                    "type": "LightGroup",
-                    "state": {"all_on": False, "any_on": True},
-                    "action": {},
-                    "scenes": [{"id": "1", "name": "Scene"}],
-                    "lights": [],
-                }
+            "1": {
+                "id": "Light group id",
+                "name": "Light group",
+                "type": "LightGroup",
+                "state": {"all_on": False, "any_on": True},
+                "action": {},
+                "scenes": [{"id": "1", "name": "Scene"}],
+                "lights": [],
             }
         },
         {
@@ -53,15 +43,16 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("raw_data, expected", TEST_DATA)
-async def test_scenes(hass, aioclient_mock, raw_data, expected):
+@pytest.mark.parametrize(("group_payload", "expected"), TEST_DATA)
+async def test_scenes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: ConfigEntry,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    expected: dict[str, Any],
+) -> None:
     """Test successful creation of scene entities."""
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
-    with patch.dict(DECONZ_WEB_REQUEST, raw_data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     assert len(hass.states.async_all()) == expected["entity_count"]
 
     # Verify state data
@@ -71,20 +62,24 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
 
     # Verify entity registry data
 
-    ent_reg_entry = ent_reg.async_get(expected["entity_id"])
+    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
 
     # Verify device registry data
 
     assert (
-        len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
         == expected["device_count"]
     )
 
     # Verify button press
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, expected["request"])
+    aioclient_mock = mock_put_request(expected["request"])
 
     await hass.services.async_call(
         SCENE_DOMAIN,
@@ -96,20 +91,20 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
 
     # Unload entry
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
 
     # Remove entry
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_only_new_scenes_are_created(hass, aioclient_mock):
-    """Test that scenes works."""
-    data = {
-        "groups": {
+@pytest.mark.parametrize(
+    "group_payload",
+    [
+        {
             "1": {
                 "id": "Light group id",
                 "name": "Light group",
@@ -120,14 +115,22 @@ async def test_only_new_scenes_are_created(hass, aioclient_mock):
                 "lights": [],
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_only_new_scenes_are_created(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Test that scenes works."""
     assert len(hass.states.async_all()) == 2
 
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    async_dispatcher_send(hass, gateway.signal_new_scene)
+    event_changed_group = {
+        "r": "groups",
+        "id": "1",
+        "scenes": [{"id": "1", "name": "Scene"}],
+    }
+    await mock_websocket_data(event_changed_group)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2

@@ -1,4 +1,5 @@
 """Config flow to configure the Netgear integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,8 +9,13 @@ from urllib.parse import urlparse
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,7 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_ipv4_address
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -54,10 +60,10 @@ def _ordered_shared_schema(schema_input):
     }
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Init object."""
         self.config_entry = config_entry
 
@@ -80,12 +86,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=settings_schema)
 
 
-class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the netgear config flow."""
         self.placeholders = {
             CONF_HOST: DEFAULT_HOST,
@@ -98,7 +104,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
@@ -120,7 +126,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=self.placeholders,
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Initialize flow from ssdp."""
         updated_data: dict[str, str | int | bool] = {}
 
@@ -129,7 +137,13 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             hostname = cast(str, hostname)
             updated_data[CONF_HOST] = hostname
 
+        if not is_ipv4_address(str(hostname)):
+            return self.async_abort(reason="not_ipv4_address")
+
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
+
+        if ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp:
+            return self.async_abort(reason="no_serial")
 
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
@@ -183,14 +197,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except CannotLoginException:
             errors["base"] = "config"
-
-        if errors:
             return await self._show_setup_form(user_input, errors)
-
-        # Check if already configured
-        info = await self.hass.async_add_executor_job(api.get_info)
-        await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
-        self._abort_if_unique_id_configured()
 
         config_data = {
             CONF_USERNAME: username,
@@ -199,6 +206,15 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: api.port,
             CONF_SSL: api.ssl,
         }
+
+        # Check if already configured
+        info = await self.hass.async_add_executor_job(api.get_info)
+        if info is None:
+            errors["base"] = "info"
+            return await self._show_setup_form(user_input, errors)
+
+        await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates=config_data)
 
         if info.get("ModelName") is not None and info.get("DeviceName") is not None:
             name = f"{info['ModelName']} - {info['DeviceName']}"

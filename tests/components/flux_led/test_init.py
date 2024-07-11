@@ -1,11 +1,13 @@
 """Tests for the flux_led component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
     CONF_REMOTE_ACCESS_ENABLED,
@@ -18,7 +20,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_HOST,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -27,6 +30,7 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    DHCP_DISCOVERY,
     FLUX_DISCOVERY,
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
@@ -43,23 +47,23 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.mark.usefixtures("mock_single_broadcast_address")
 async def test_configuring_flux_led_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
-    with patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
-    ) as scan, patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
-    ) as discover:
+    with (
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
+        ) as scan,
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
+        ) as discover,
+    ):
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
         assert len(scan.mock_calls) == 1
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 2
 
         async_fire_time_changed(hass, utcnow() + flux_led.DISCOVERY_INTERVAL)
         await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 3
+        assert len(scan.mock_calls) == 2
 
 
 @pytest.mark.usefixtures("mock_multiple_broadcast_addresses")
@@ -67,23 +71,22 @@ async def test_configuring_flux_led_causes_discovery_multiple_addresses(
     hass: HomeAssistant,
 ) -> None:
     """Test that specifying empty config does discovery."""
-    with patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
-    ) as scan, patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
-    ) as discover:
+    with (
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
+        ) as scan,
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
+        ) as discover,
+    ):
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-
         assert len(scan.mock_calls) == 2
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 4
 
         async_fire_time_changed(hass, utcnow() + flux_led.DISCOVERY_INTERVAL)
         await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 6
+        assert len(scan.mock_calls) == 4
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:
@@ -95,10 +98,10 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_wifibulb():
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:
@@ -110,11 +113,74 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
     with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_retry_right_away_on_discovery(hass: HomeAssistant) -> None:
+    """Test discovery makes the config entry reload if its in a retry state."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    with _patch_discovery(), _patch_wifibulb():
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_coordinator_retry_right_away_on_discovery_already_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test discovery makes the coordinator force poll if its already setup."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = "light.bulb_rgbcw_ddeeff"
+    assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    now = utcnow()
+    bulb.async_update = AsyncMock(side_effect=RuntimeError)
+    async_fire_time_changed(hass, now + timedelta(seconds=50))
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    bulb.async_update = AsyncMock()
+
+    with _patch_discovery(), _patch_wifibulb():
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
-    "discovery,title",
+    ("discovery", "title"),
     [
         (FLUX_DISCOVERY, DEFAULT_ENTRY_TITLE),
         (FLUX_DISCOVERY_PARTIAL, DEFAULT_ENTRY_TITLE),
@@ -140,16 +206,20 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         nonlocal last_address
         return [discovery] if last_address == IP_ADDRESS else []
 
-    with patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
-        new=_discovery,
-    ), patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
-        new=_mock_getBulbInfo,
-    ), _patch_wifibulb():
+    with (
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+            new=_discovery,
+        ),
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+            new=_mock_getBulbInfo,
+        ),
+        _patch_wifibulb(),
+    ):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
     assert config_entry.unique_id == MAC_ADDRESS
     assert config_entry.title == title
@@ -165,7 +235,7 @@ async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(bulb.async_set_time.mock_calls) == 1
     async_fire_time_changed(hass, utcnow() + timedelta(hours=24))
@@ -173,7 +243,9 @@ async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
     assert len(bulb.async_set_time.mock_calls) == 2
 
 
-async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> None:
+async def test_unique_id_migrate_when_mac_discovered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique id migrated when mac discovered."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -192,7 +264,6 @@ async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert not config_entry.unique_id
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
         == config_entry.entry_id
@@ -217,7 +288,7 @@ async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> Non
 
 
 async def test_unique_id_migrate_when_mac_discovered_via_discovery(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique id migrated when mac discovered via discovery and the mac address from dhcp was one off."""
     config_entry = MockConfigEntry(
@@ -238,7 +309,6 @@ async def test_unique_id_migrate_when_mac_discovered_via_discovery(
         await hass.async_block_till_done()
 
     assert config_entry.unique_id == MAC_ADDRESS_ONE_OFF
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
         == MAC_ADDRESS_ONE_OFF

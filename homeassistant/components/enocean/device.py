@@ -1,8 +1,9 @@
 """Representation of an EnOcean device."""
+
 from enocean.protocol.packet import Packet
 from enocean.utils import combine_hex
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
@@ -11,10 +12,9 @@ from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 class EnOceanEntity(Entity):
     """Parent class for all entities associated with the EnOcean component."""
 
-    def __init__(self, dev_id, dev_name="EnOcean device"):
+    def __init__(self, dev_id: list[int]) -> None:
         """Initialize the device."""
         self.dev_id = dev_id
-        self.dev_name = dev_name
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -37,4 +37,4 @@ class EnOceanEntity(Entity):
         """Send a command via the EnOcean dongle."""
 
         packet = Packet(packet_type, data=data, optional=optional)
-        self.hass.helpers.dispatcher.dispatcher_send(SIGNAL_SEND_MESSAGE, packet)
+        dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)

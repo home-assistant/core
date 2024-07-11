@@ -1,30 +1,39 @@
 """The tests the for Traccar device tracker platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import traccar, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.traccar import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
 
 
 @pytest.fixture(autouse=True)
-def mock_dev_track(mock_device_tracker_conf):
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
 @pytest.fixture(name="client")
-async def traccar_client(loop, hass, hass_client_no_auth):
+async def traccar_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Mock client for Traccar (unauthenticated)."""
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -36,7 +45,7 @@ async def traccar_client(loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture(autouse=True)
-async def setup_zones(loop, hass):
+async def setup_zones(hass: HomeAssistant) -> None:
     """Set up Zone config in HA."""
     assert await async_setup_component(
         hass,
@@ -63,16 +72,16 @@ async def webhook_id_fixture(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     return result["result"].data["webhook_id"]
 
 
-async def test_missing_data(hass, client, webhook_id):
+async def test_missing_data(hass: HomeAssistant, client, webhook_id) -> None:
     """Test missing data."""
     url = f"/api/webhook/{webhook_id}"
     data = {"lat": "1.0", "lon": "1.1", "id": "123"}
@@ -97,7 +106,13 @@ async def test_missing_data(hass, client, webhook_id):
     assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_enter_and_exit(hass, client, webhook_id):
+async def test_enter_and_exit(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client,
+    webhook_id,
+) -> None:
     """Test when there is a known zone."""
     url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
@@ -132,14 +147,12 @@ async def test_enter_and_exit(hass, client, webhook_id):
     ).state
     assert state_name == STATE_NOT_HOME
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == 1
+    assert len(device_registry.devices) == 1
 
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
 
 
-async def test_enter_with_attrs(hass, client, webhook_id):
+async def test_enter_with_attrs(hass: HomeAssistant, client, webhook_id) -> None:
     """Test when additional attributes are present."""
     url = f"/api/webhook/{webhook_id}"
     data = {
@@ -152,6 +165,7 @@ async def test_enter_with_attrs(hass, client, webhook_id):
         "speed": 100,
         "bearing": "105.32",
         "altitude": 102,
+        "charge": "true",
     }
 
     req = await client.post(url, params=data)
@@ -164,6 +178,7 @@ async def test_enter_with_attrs(hass, client, webhook_id):
     assert state.attributes["speed"] == 100.0
     assert state.attributes["bearing"] == 105.32
     assert state.attributes["altitude"] == 102.0
+    assert "charge" not in state.attributes
 
     data = {
         "lat": str(HOME_LATITUDE),
@@ -188,7 +203,7 @@ async def test_enter_with_attrs(hass, client, webhook_id):
     assert state.attributes["altitude"] == 123
 
 
-async def test_two_devices(hass, client, webhook_id):
+async def test_two_devices(hass: HomeAssistant, client, webhook_id) -> None:
     """Test updating two different devices."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -220,7 +235,7 @@ async def test_two_devices(hass, client, webhook_id):
 @pytest.mark.xfail(
     reason="The device_tracker component does not support unloading yet."
 )
-async def test_load_unload_entry(hass, client, webhook_id):
+async def test_load_unload_entry(hass: HomeAssistant, client, webhook_id) -> None:
     """Test that the appropriate dispatch signals are added and removed."""
     url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}

@@ -5,11 +5,14 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your SiteSage Emonitor device."
         }
       },
       "confirm": {
-        "title": "Setup SiteSage Emonitor",
-        "description": "Do you want to setup {name} ({host})?"
+        "title": "Set up SiteSage Emonitor",
+        "description": "Do you want to set up {name} ({host})?"
       }
     },
     "error": {
@@ -18,6 +21,16 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "average": {
+        "name": "{label} average"
+      },
+      "max": {
+        "name": "{label} max"
+      }
     }
   }
 }

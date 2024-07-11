@@ -2,7 +2,7 @@
 
 import requests_mock
 
-from homeassistant.components.climate.const import DOMAIN
+from homeassistant.components.climate import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -47,14 +47,13 @@ async def async_init_integration(
     skip_setup: bool = False,
 ):
     """Set up the venstar integration in Home Assistant."""
-    platform_config = []
-    for model in TEST_MODELS:
-        platform_config.append(
-            {
-                CONF_PLATFORM: "venstar",
-                CONF_HOST: f"venstar-{model}.localdomain",
-            }
-        )
+    platform_config = [
+        {
+            CONF_PLATFORM: "venstar",
+            CONF_HOST: f"venstar-{model}.localdomain",
+        }
+        for model in TEST_MODELS
+    ]
     config = {DOMAIN: platform_config}
 
     await async_setup_component(hass, DOMAIN, config)

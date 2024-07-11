@@ -1,10 +1,11 @@
-"""Config flow for Huisbaasje integration."""
+"""Config flow for EnergyFlip integration."""
+
 import logging
 
-from huisbaasje import Huisbaasje, HuisbaasjeConnectionException, HuisbaasjeException
+from energyflip import EnergyFlip, EnergyFlipConnectionException, EnergyFlipException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
 
@@ -17,8 +18,8 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Huisbaasje."""
+class EnergyFlipConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for EnergyFlip."""
 
     VERSION = 1
 
@@ -31,15 +32,15 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             user_id = await self._validate_input(user_input)
-        except HuisbaasjeConnectionException as exception:
+        except EnergyFlipConnectionException as exception:
             _LOGGER.warning(exception)
             errors["base"] = "cannot_connect"
-        except HuisbaasjeException as exception:
+        except EnergyFlipException as exception:
             _LOGGER.warning(exception)
             errors["base"] = "invalid_auth"
         except AbortFlow:
             raise
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -69,13 +70,15 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-        # pylint: disable=no-self-use
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
-        huisbaasje = Huisbaasje(username, password)
+        energyflip = EnergyFlip(username, password)
 
-        # Attempt authentication. If this fails, an HuisbaasjeException will be thrown
-        await huisbaasje.authenticate()
+        # Attempt authentication. If this fails, an EnergyFlipException will be thrown
+        await energyflip.authenticate()
 
-        return huisbaasje.get_user_id()
+        # Request customer overview. This also sets the user id on the client
+        await energyflip.customer_overview()
+
+        return energyflip.get_user_id()

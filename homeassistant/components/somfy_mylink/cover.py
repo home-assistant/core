@@ -1,11 +1,13 @@
 """Cover Platform for the Somfy MyLink component."""
+
 import logging
+from typing import Any
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -64,6 +66,8 @@ class SomfyShade(RestoreEntity, CoverEntity):
 
     _attr_should_poll = False
     _attr_assumed_state = True
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -77,7 +81,6 @@ class SomfyShade(RestoreEntity, CoverEntity):
         self.somfy_mylink = somfy_mylink
         self._target_id = target_id
         self._attr_unique_id = target_id
-        self._attr_name = name
         self._reverse = reverse
         self._attr_is_closed = None
         self._attr_device_class = device_class
@@ -87,7 +90,7 @@ class SomfyShade(RestoreEntity, CoverEntity):
             name=name,
         )
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._attr_is_closing = True
         self.async_write_ha_state()
@@ -102,7 +105,7 @@ class SomfyShade(RestoreEntity, CoverEntity):
             self._attr_is_closing = None
             self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._attr_is_opening = True
         self.async_write_ha_state()
@@ -117,11 +120,11 @@ class SomfyShade(RestoreEntity, CoverEntity):
             self._attr_is_opening = None
             self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.somfy_mylink.move_stop(self._target_id)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Complete the initialization."""
         await super().async_added_to_hass()
         # Restore the last state

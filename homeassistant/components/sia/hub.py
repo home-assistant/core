@@ -1,4 +1,5 @@
 """The sia hub."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -28,7 +29,6 @@ from .utils import get_event_data_from_sia_event
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEBAND = (80, 40)
-IGNORED_TIMEBAND = (3600, 1800)
 
 
 class SIAHub:
@@ -47,7 +47,7 @@ class SIAHub:
         self._accounts: list[dict[str, Any]] = deepcopy(entry.data[CONF_ACCOUNTS])
         self._protocol: str = entry.data[CONF_PROTOCOL]
         self.sia_accounts: list[SIAAccount] | None = None
-        self.sia_client: SIAClient = None
+        self.sia_client: SIAClient | None = None
 
     @callback
     def async_setup_hub(self) -> None:
@@ -68,9 +68,10 @@ class SIAHub:
             self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
         )
 
-    async def async_shutdown(self, _: Event = None) -> None:
+    async def async_shutdown(self, _: Event | None = None) -> None:
         """Shutdown the SIA server."""
-        await self.sia_client.stop()
+        if self.sia_client:
+            await self.sia_client.async_stop()
 
     async def async_create_and_fire_event(self, event: SIAEvent) -> None:
         """Create a event on HA dispatcher and then on HA's bus, with the data from the SIAEvent.
@@ -99,7 +100,7 @@ class SIAHub:
             SIAAccount(
                 account_id=a[CONF_ACCOUNT],
                 key=a.get(CONF_ENCRYPTION_KEY),
-                allowed_timeband=IGNORED_TIMEBAND
+                allowed_timeband=None
                 if a[CONF_IGNORE_TIMESTAMPS]
                 else DEFAULT_TIMEBAND,
             )
@@ -108,6 +109,7 @@ class SIAHub:
         if self.sia_client is not None:
             self.sia_client.accounts = self.sia_accounts
             return
+        # the new client class method creates a subclass based on protocol, hence the type ignore
         self.sia_client = SIAClient(
             host="",
             port=self._port,
@@ -141,4 +143,4 @@ class SIAHub:
             return
         hub.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-        hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

@@ -1,50 +1,42 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components import mysensors
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 DICT_HA_TO_MYS = {
-    HVAC_MODE_AUTO: "AutoChangeOver",
-    HVAC_MODE_COOL: "CoolOn",
-    HVAC_MODE_HEAT: "HeatOn",
-    HVAC_MODE_OFF: "Off",
+    HVACMode.AUTO: "AutoChangeOver",
+    HVACMode.COOL: "CoolOn",
+    HVACMode.HEAT: "HeatOn",
+    HVACMode.OFF: "Off",
 }
 DICT_MYS_TO_HA = {
-    "AutoChangeOver": HVAC_MODE_AUTO,
-    "CoolOn": HVAC_MODE_COOL,
-    "HeatOn": HVAC_MODE_HEAT,
-    "Off": HVAC_MODE_OFF,
+    "AutoChangeOver": HVACMode.AUTO,
+    "CoolOn": HVACMode.COOL,
+    "HeatOn": HVACMode.HEAT,
+    "Off": HVACMode.OFF,
 }
 
 FAN_LIST = ["Auto", "Min", "Normal", "Max"]
-OPERATION_LIST = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT]
+OPERATION_LIST = [HVACMode.OFF, HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT]
 
 
 async def async_setup_entry(
@@ -75,29 +67,36 @@ async def async_setup_entry(
     )
 
 
-class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
+class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
+    _attr_hvac_modes = OPERATION_LIST
+    _enable_turn_on_off_backwards_compatibility = False
+
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = 0
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SPEED in self._values:
-            features = features | SUPPORT_FAN_MODE
+            features = features | ClimateEntityFeature.FAN_MODE
         if (
             set_req.V_HVAC_SETPOINT_COOL in self._values
             and set_req.V_HVAC_SETPOINT_HEAT in self._values
         ):
-            features = features | SUPPORT_TARGET_TEMPERATURE_RANGE
+            features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
-            features = features | SUPPORT_TARGET_TEMPERATURE
+            features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return TEMP_CELSIUS if self.hass.config.units.is_metric else TEMP_FAHRENHEIT
+        return (
+            UnitOfTemperature.CELSIUS
+            if self.hass.config.units is METRIC_SYSTEM
+            else UnitOfTemperature.FAHRENHEIT
+        )
 
     @property
     def current_temperature(self) -> float | None:
@@ -145,14 +144,9 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
         return None
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
-        return self._values.get(self.value_type, HVAC_MODE_HEAT)
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """List of available operation modes."""
-        return OPERATION_LIST
+        return self._values.get(self.value_type, HVACMode.HEAT)  # type: ignore[no-any-return]
 
     @property
     def fan_mode(self) -> str | None:
@@ -207,7 +201,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
             self._values[set_req.V_HVAC_SPEED] = fan_mode
             self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target temperature."""
         self.gateway.set_child_value(
             self.node_id,
@@ -221,7 +215,8 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
             self._values[self.value_type] = hvac_mode
             self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._values[self.value_type] = DICT_MYS_TO_HA[self._values[self.value_type]]

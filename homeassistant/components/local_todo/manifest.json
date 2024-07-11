@@ -1,0 +1,9 @@
+{
+  "domain": "local_todo",
+  "name": "Local To-do",
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/local_todo",
+  "iot_class": "local_polling",
+  "requirements": ["ical==8.1.1"]
+}

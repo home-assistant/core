@@ -1,4 +1,5 @@
 """Common methods used across tests for Rituals Perfume Genie."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -7,7 +8,7 @@ from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, D
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def mock_config_entry(unique_id: str, entry_id: str = "an_entry_id") -> MockConfigEntry:
@@ -58,6 +59,7 @@ def mock_diffuser(
     diffuser_mock.update_data = AsyncMock()
     diffuser_mock.version = version
     diffuser_mock.wifi_percentage = wifi_percentage
+    diffuser_mock.data = load_json_object_fixture("data.json", DOMAIN)
     return diffuser_mock
 
 
@@ -83,7 +85,7 @@ def mock_diffuser_v2_no_battery_no_cartridge() -> MagicMock:
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_diffusers: list[MagicMock] = [mock_diffuser(hublot="lot123")],
+    mock_diffusers: list[MagicMock],
 ) -> None:
     """Initialize the Rituals Perfume Genie integration with the given Config Entry and Diffuser list."""
     mock_config_entry.add_to_hass(hass)

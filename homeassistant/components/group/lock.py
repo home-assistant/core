@@ -1,4 +1,5 @@
-"""This platform allows several locks to be grouped into one lock."""
+"""Platform allowing several locks to be grouped into one lock."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN, PLATFORM_SCHEMA, LockEntity
+from homeassistant.components.lock import (
+    DOMAIN,
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
+    LockEntity,
+    LockEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,24 +25,25 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKING,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 
 DEFAULT_NAME = "Lock Group"
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -86,6 +93,18 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_lock(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> LockGroup:
+    """Create a preview sensor."""
+    return LockGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+    )
+
+
 class LockGroup(GroupEntity, LockEntity):
     """Representation of a lock group."""
 
@@ -100,27 +119,11 @@ class LockGroup(GroupEntity, LockEntity):
     ) -> None:
         """Initialize a lock group."""
         self._entity_ids = entity_ids
+        self._attr_supported_features = LockEntityFeature.OPEN
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def async_state_changed_listener(event: Event) -> None:
-            """Handle child updates."""
-            self.async_set_context(event.context)
-            self.async_defer_or_update_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
-
-        await super().async_added_to_hass()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Forward the lock command to all locks in the group."""
@@ -166,7 +169,7 @@ class LockGroup(GroupEntity, LockEntity):
             if (state := self.hass.states.get(entity_id)) is not None
         ]
 
-        valid_state = all(
+        valid_state = any(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
 
@@ -174,12 +177,16 @@ class LockGroup(GroupEntity, LockEntity):
             # Set as unknown if any member is unknown or unavailable
             self._attr_is_jammed = None
             self._attr_is_locking = None
+            self._attr_is_opening = None
+            self._attr_is_open = None
             self._attr_is_unlocking = None
             self._attr_is_locked = None
         else:
             # Set attributes based on member states and let the lock entity sort out the correct state
             self._attr_is_jammed = STATE_JAMMED in states
             self._attr_is_locking = STATE_LOCKING in states
+            self._attr_is_opening = STATE_OPENING in states
+            self._attr_is_open = STATE_OPEN in states
             self._attr_is_unlocking = STATE_UNLOCKING in states
             self._attr_is_locked = all(state == STATE_LOCKED for state in states)
 

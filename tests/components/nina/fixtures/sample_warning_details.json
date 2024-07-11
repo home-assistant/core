@@ -30,7 +30,7 @@
         ],
         "headline": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen",
         "description": "Die Zahl der mit dem Corona-Virus infizierten Menschen steigt gegenwärtig stark an. Es wächst daher die Gefahr einer weiteren Verbreitung der Infektion und - je nach Einzelfall - auch von schweren Erkrankungen.",
-        "instruction": "Waschen Sie sich regelmäßig und gründlich die Hände.<br/>- Beachten Sie die AHA + A + L - Regeln:<br/>Abstand halten - 1,5 m Mindestabstand beachten, Körperkontakt vermeiden!<br/>Hygiene - regelmäßiges Händewaschen, Husten- und Nieshygiene beachten!<br/>Alltagsmaske (Mund-Nase-Bedeckung) tragen!<br/>App - installieren und nutzen Sie die Corona-Warn-App!<br/>Lüften: Sorgen Sie für eine regelmäßige und gründliche Lüftung von Räumen - auch und gerade in der kommenden kalten Jahreszeit!<br/>- Bitte folgen Sie den behördlichen Anordnungen.<br/>- Husten und niesen Sie in ein Taschentuch oder in die Armbeuge.<br/>- Bleiben Sie bei Erkältungssymptomen nach Möglichkeit zu Hause. Kontaktieren Sie Ihre Hausarztpraxis per Telefon oder wenden sich an die Telefonnummer 116117 des Ärztlichen Bereitschaftsdienstes und besprechen Sie das weitere Vorgehen. Gehen Sie nicht unaufgefordert in eine Arztpraxis oder ins Krankenhaus.<br/>- Seien Sie kritisch: Informieren Sie sich nur aus gesicherten Quellen.",
+        "instruction": "Waschen sich regelmäßig und gründlich die Hände.",
         "contact": "Weitere Informationen und Empfehlungen finden Sie im Corona-Informations-Bereich der Warn-App NINA. Beachten Sie auch die Internetseiten der örtlichen Gesundheitsbehörde (Stadt- bzw. Kreisverwaltung) Ihres Aufenthaltsortes",
         "parameter": [
           {
@@ -43,7 +43,7 @@
           },
           {
             "valueName": "instructionCode",
-            "value": "BBK-ISC-132"
+            "value": "BBK-ISC-082"
           },
           {
             "valueName": "sender_langname",
@@ -125,6 +125,87 @@
         "senderName": "Deutscher Wetterdienst",
         "headline": "Ausfall Notruf 112",
         "description": "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.",
+        "web": "https://www.wettergefahren.de",
+        "contact": "Deutscher Wetterdienst",
+        "parameter": [
+          {
+            "valueName": "gusts",
+            "value": "70-85 [km/h]"
+          },
+          {
+            "valueName": "exposed gusts",
+            "value": "<90 [km/h]"
+          },
+          {
+            "valueName": "wind direction",
+            "value": "west"
+          },
+          {
+            "valueName": "PHGEM",
+            "value": "3243+168,3413+1,3424+52,3478+1,3495+2,3499,3639+2527,6168+1,6175+22,6199+36,6238,6241+7,6256,9956+184,10142,10154,10164+7,10173,10176+6,10186+1,10195+2,10199,10201+6,10214+4,10220,10249+117,10368,10373+2,10425+9,10436+1,10440+8,10450+1,10453+7,10462+1,10467+5,10474+2,10484+5,10773+68,10843+2,10847+9,10858,10867+8,10878+1,10882+68,10952+7,10961+2,11046,11056+1"
+          },
+          {
+            "valueName": "ZGEM",
+            "value": "3243+168,3413+1,3424+52,3478+1,3495+2,3499,3639+2527,6168+1,6175+22,6199+36,6238,6241+7,6256,9956+184,10142,10154,10164+7,10173,10176+6,10186+1,10195+2,10199,10201+6,10214+4,10220,10249+117,10368,10373+2,10425+9,10436+1,10440+8,10450+1,10453+7,10462+1,10467+5,10474+2,10484+5,10773+68,10843+2,10847+9,10858,10867+8,10878+1,10882+68,10952+7,10961+2,11046,11056+1"
+          }
+        ],
+        "area": [
+          {
+            "areaDesc": "Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere."
+          }
+        ]
+      }
+    ]
+  },
+  "mow.DE-NW-BN-SE030-20201014-30-011": {
+    "identifier": "mow.DE-NW-BN-SE030-20201014-30-011",
+    "sender": "opendata@dwd.de",
+    "sent": "2021-10-11T05:21:00+01:00",
+    "status": "Actual",
+    "msgType": "Alert",
+    "source": "PVW",
+    "scope": "Public",
+    "code": [
+      "DVN:2",
+      "id:2.49.0.0.276.0.DWD.PVW.1645004040000.5a168da8-ac20-4b6d-86be-d616526a7914"
+    ],
+    "info": [
+      {
+        "language": "de-DE",
+        "category": ["Met"],
+        "event": "STURMBÖEN",
+        "responseType": ["Prepare"],
+        "urgency": "Immediate",
+        "severity": "Moderate",
+        "certainty": "Likely",
+        "eventCode": [
+          {
+            "valueName": "PROFILE_VERSION",
+            "value": "2.1.11"
+          },
+          {
+            "valueName": "LICENSE",
+            "value": "© GeoBasis-DE / BKG 2019  (Daten modifiziert)"
+          },
+          {
+            "valueName": "II",
+            "value": "52"
+          },
+          {
+            "valueName": "GROUP",
+            "value": "WIND"
+          },
+          {
+            "valueName": "AREA_COLOR",
+            "value": "251 140 0"
+          }
+        ],
+        "effective": "2021-11-01T03:20:00+01:00",
+        "onset": "2021-11-01T05:20:00+01:00",
+        "expires": "3021-11-22T05:19:00+01:00",
+        "senderName": "Deutscher Wetterdienst",
+        "headline": "Ausfall Notruf 112",
+        "description": "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.",
         "instruction": "ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. Achten Sie besonders auf herabfallende Gegenstände.",
         "web": "https://www.wettergefahren.de",
         "contact": "Deutscher Wetterdienst",
@@ -153,6 +234,53 @@
         "area": [
           {
             "areaDesc": "Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere."
+          }
+        ]
+      }
+    ]
+  },
+  "biw.BIWAPP-69634": {
+    "identifier": "biw.BIWAPP-69634",
+    "sender": "CAP@biwapp.de",
+    "sent": "1999-08-07T10:59:00+02:00",
+    "status": "Actual",
+    "msgType": "Alert",
+    "scope": "Public",
+    "code": ["DVN:2", "BIWAPP"],
+    "info": [
+      {
+        "language": "DE",
+        "category": ["Other"],
+        "event": "4",
+        "urgency": "Unknown",
+        "severity": "Minor",
+        "certainty": "Unknown",
+        "expires": "2002-08-07T10:59:00+02:00",
+        "headline": "Geflügelpest im Landkreis Cuxhaven - Teile des Landkreises Osterholz zur Überwachungszone erklärt",
+        "description": "In Beverstedt im Landkreis Cuxhaven ist am 20. Juli 2022 in einer Geflügelhaltung der Ausbruch der Geflügelpest (Vogelgrippe, Aviäre Influenza) amtlich festgestellt worden. Durch die geografische Nähe des Ausbruchsbetriebes zum Gebiet des Landkreises Osterholz musste das Veterinäramt des Landkreises zum Schutz vor einer Ausbreitung der Geflügelpest auch für sein Gebiet ein Restriktionsgebiet festlegen. Rund um den Ausbruchsort wurde eine Überwachungszone ausgewiesen. Eine entsprechende Tierseuchenbehördliche Allgemeinverfügung wurde vom Landkreis Osterholz erlassen und tritt am 23.07.2022 in Kraft.<br>&nbsp;<br>Die Überwachungszone mit einem Radius von mindestens zehn Kilometern um den Ausbruchsbetrieb erstreckt sich im Landkreis Osterholz innerhalb der Samtgemeinde Hambergen auf die Mitgliedsgemeinden Axstedt, Holste und Lübberstedt. Die vorgenannten Gemeinden sind vollständig zur Überwachungszone erklärt worden. Der genaue Grenzverlauf des Gebietes kann auch der interaktiven Karte im Internet entnommen werden.<br>&nbsp;<br>In der Überwachungszone liegen im Landkreis Osterholz rund 70 Geflügelhaltungen mit einem Gesamtbestand von rund 1.800 Tieren. Sie alle unterliegen mit der Allgemeinverfügung der sogenannten amtlichen Beobachtung. Für die Betriebe sind die Biosicherheitsmaßnahmen einzuhalten. Dazu zählen insbesondere Hygienemaßnahmen im laufenden Betrieb und eine ordnungsgemäße Schadnagerbekämpfung.<br>&nbsp;<br>Das Verbringen von Vögeln, Fleisch von Geflügel, Eiern und sonstige Nebenprodukte von Geflügel in und aus Betrieben in der Überwachungszone ist verboten. Auch Geflügeltransporte sind in der Überwachungszone verboten. Jeder Verdacht der Erkrankung auf Geflügelpest ist zudem dem Veterinäramt des Landkreises Osterholz unter der E-Mail-Adresse veterinaeramt@landkreis-osterholz.de sofort zu melden. Alle Hinweise, die innerhalb der Überwachungszone zu beachten sind, sind unter www.landkreis-osterholz.de/gefluegelpest zusammengefasst dargestellt.<br>&nbsp;<br>Die Veterinärbehörde weist zudem darauf hin, dass sämtliche Geflügelhaltungen – Hühner, Enten, Gänse, Fasane, Perlhühner, Rebhühner, Truthühner, Wachteln oder Laufvögel – der zuständigen Behörde angezeigt werden müssen. Wer dies bisher noch nicht gemacht hat und über keine Registriernummer für seinen Geflügelbestand verfügt, sollte die Meldung über das Veterinäramt umgehend nachholen.<br>&nbsp;<br>Das Beobachtungsgebiet kann frühestens 30 Tage nach der Grobreinigung des Ausbruchsbetriebes wieder aufgehoben werden. Hierüber wird der Landkreis Osterholz informieren.<br>&nbsp;<br>Die Allgemeinverfügung, eine Übersicht zur Überwachungszone und weitere Hinweise sind auf der Internetseite unter www.landkreis-osterholz.de/gefluegelpest zu finden.",
+        "parameter": [
+          {
+            "valueName": "sender_langname",
+            "value": "Landkreis Osterholz"
+          },
+          {
+            "valueName": "PHGEM",
+            "value": "740+10,770,792,817,100001"
+          },
+          {
+            "valueName": "GRID",
+            "value": "101346,101954+7,102566+9,103177+13,103774,103790+13,104387+1,104403+13,105000+1,105016+15,105612+2,105630+15,106225+2,106241+18,106838+2,106853+18,107451+1,107464+22,108064+9,108075+23,108677+34,109290+34,109903+35,110516+35,111129+35,111742+35,112355,112357+34,112971+33,113587+30,114200+30,114814,114818+26,115432,115436+22,116050+21,116669+15,117283+5,117290+7,117897+3,117904+6,500001"
+          }
+        ],
+        "area": [
+          {
+            "areaDesc": "Axstedt, Gnarrenburg, Grasberg, Hagen im Bremischen, Hambergen, Hepstedt, Holste, Lilienthal, Lübberstedt, Osterholz-Scharmbeck, Ritterhude, Schwanewede, Vollersode, Worpswede",
+            "geocode": [
+              {
+                "valueName": "AreaId",
+                "value": "0"
+              }
+            ]
           }
         ]
       }

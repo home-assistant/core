@@ -1,13 +1,16 @@
 """Test the Google Domains component."""
+
 from datetime import timedelta
 
 import pytest
 
 from homeassistant.components import google_domains
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DOMAIN = "test.example.com"
 USERNAME = "abc123"
@@ -17,7 +20,9 @@ UPDATE_URL = f"https://{USERNAME}:{PASSWORD}@domains.google.com/nic/update"
 
 
 @pytest.fixture
-def setup_google_domains(hass, aioclient_mock):
+def setup_google_domains(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Fixture that sets up NamecheapDNS."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="ok 0.0.0.0")
 
@@ -36,7 +41,7 @@ def setup_google_domains(hass, aioclient_mock):
     )
 
 
-async def test_setup(hass, aioclient_mock):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup works if update passes."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="nochg 0.0.0.0")
 
@@ -59,7 +64,9 @@ async def test_setup(hass, aioclient_mock):
     assert aioclient_mock.call_count == 2
 
 
-async def test_setup_fails_if_update_fails(hass, aioclient_mock):
+async def test_setup_fails_if_update_fails(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup fails if first update fails."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="nohost")
 

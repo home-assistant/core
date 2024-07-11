@@ -1,9 +1,9 @@
 {
   "domain": "raspyrfm",
   "name": "RaspyRFM",
-  "documentation": "https://www.home-assistant.io/integrations/raspyrfm",
-  "requirements": ["raspyrfm-client==1.2.8"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/raspyrfm",
   "iot_class": "assumed_state",
-  "loggers": ["raspyrfm_client"]
+  "loggers": ["raspyrfm_client"],
+  "requirements": ["raspyrfm-client==1.2.8"]
 }

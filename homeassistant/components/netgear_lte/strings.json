@@ -1,0 +1,128 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "services": {
+    "delete_sms": {
+      "name": "Delete SMS",
+      "description": "Deletes messages from the modem inbox.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "The modem that should have a message deleted."
+        },
+        "sms_id": {
+          "name": "SMS ID",
+          "description": "Integer or list of integers with inbox IDs of messages to delete."
+        }
+      }
+    },
+    "set_option": {
+      "name": "Set option",
+      "description": "Sets options on the modem.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "The modem to set options on."
+        },
+        "failover": {
+          "name": "Failover",
+          "description": "Failover mode."
+        },
+        "autoconnect": {
+          "name": "Auto-connect",
+          "description": "Auto-connect mode."
+        }
+      }
+    },
+    "connect_lte": {
+      "name": "Connect LTE",
+      "description": "Asks the modem to establish the LTE connection.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "The modem that should connect."
+        }
+      }
+    },
+    "disconnect_lte": {
+      "name": "Disconnect LTE",
+      "description": "Asks the modem to close the LTE connection.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "The modem that should disconnect."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "mobile_connected": {
+        "name": "Mobile connected"
+      },
+      "roaming": {
+        "name": "Roaming"
+      },
+      "wire_connected": {
+        "name": "Wire connected"
+      }
+    },
+    "sensor": {
+      "band": {
+        "name": "Current band"
+      },
+      "cell_id": {
+        "name": "Cell ID"
+      },
+      "connection_text": {
+        "name": "Connection text"
+      },
+      "connection_type": {
+        "name": "Connection type"
+      },
+      "radio_quality": {
+        "name": "Radio quality"
+      },
+      "register_network_display": {
+        "name": "Register network display"
+      },
+      "rx_level": {
+        "name": "Rx level"
+      },
+      "service_type": {
+        "name": "Service type"
+      },
+      "sms": {
+        "name": "SMS"
+      },
+      "sms_total": {
+        "name": "SMS total"
+      },
+      "tx_level": {
+        "name": "Tx level"
+      },
+      "upstream": {
+        "name": "Upstream"
+      },
+      "usage": {
+        "name": "Usage"
+      }
+    }
+  }
+}

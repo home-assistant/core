@@ -1,4 +1,5 @@
 """Support for Verizon FiOS Quantum Gateways."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "myfiosgateway.com"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_SSL, default=True): cv.boolean,
@@ -30,7 +31,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> QuantumGatewayDeviceScanner | None:
     """Validate the configuration and return a Quantum Gateway scanner."""
     scanner = QuantumGatewayDeviceScanner(config[DOMAIN])
 
@@ -38,7 +41,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class QuantumGatewayDeviceScanner(DeviceScanner):
-    """This class queries a Quantum Gateway."""
+    """Class which queries a Quantum Gateway."""
 
     def __init__(self, config):
         """Initialize the scanner."""

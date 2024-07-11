@@ -1,9 +1,15 @@
 """Support for switches using GC100."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -14,7 +20,7 @@ from . import CONF_PORTS, DATA_GC100
 
 _SWITCH_SCHEMA = vol.Schema({cv.string: cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PORTS): vol.All(cv.ensure_list, [_SWITCH_SCHEMA])}
 )
 
@@ -54,15 +60,15 @@ class GC100Switch(SwitchEntity):
         """Return the state of the entity."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._gc100.write_switch(self._port_addr, 1, self.set_state)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._gc100.write_switch(self._port_addr, 0, self.set_state)
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor state."""
         self._gc100.read_sensor(self._port_addr, self.set_state)
 

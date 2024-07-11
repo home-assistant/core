@@ -1,4 +1,5 @@
 """The Growatt server PV inverter sensor integration."""
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,7 +12,7 @@ async def async_setup_entry(
 ) -> bool:
     """Load the saved entities."""
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

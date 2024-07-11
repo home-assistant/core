@@ -1,15 +1,16 @@
 """Diagnostics support for Kostal Plenticore."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import ATTR_IDENTIFIERS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .helper import Plenticore
+from .coordinator import Plenticore
 
 TO_REDACT = {CONF_PASSWORD}
 
@@ -36,7 +37,7 @@ async def async_get_config_entry_diagnostics(
     }
 
     device_info = {**plenticore.device_info}
-    device_info["identifiers"] = REDACTED  # contains serial number
+    device_info[ATTR_IDENTIFIERS] = REDACTED  # contains serial number
     data["device"] = device_info
 
     return data

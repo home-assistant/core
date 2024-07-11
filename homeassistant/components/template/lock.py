@@ -1,16 +1,20 @@
 """Support for locks which integrates with other components."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.lock import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     STATE_JAMMED,
     STATE_LOCKING,
     STATE_UNLOCKING,
     LockEntity,
 )
 from homeassistant.const import (
+    ATTR_CODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_UNIQUE_ID,
@@ -20,7 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import ServiceValidationError, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -33,18 +37,20 @@ from .template_entity import (
     rewrite_common_legacy_to_modern_conf,
 )
 
+CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
 
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_CODE_FORMAT_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -70,6 +76,8 @@ async def async_setup_platform(
 class TemplateLock(TemplateEntity, LockEntity):
     """Representation of a template lock."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -85,35 +93,35 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
+        self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
+        self._code_format = None
+        self._code_format_template_error = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
+        self._attr_assumed_state = bool(self._optimistic)
 
     @property
-    def assumed_state(self):
-        """Return true if we do optimistic updates."""
-        return self._optimistic
-
-    @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state in ("true", STATE_ON, STATE_LOCKED)
 
     @property
-    def is_jammed(self):
+    def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._state == STATE_JAMMED
 
     @property
-    def is_unlocking(self):
+    def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
         return self._state == STATE_UNLOCKING
 
     @property
-    def is_locking(self):
+    def is_locking(self) -> bool:
         """Return true if lock is locking."""
         return self._state == STATE_LOCKING
 
     @callback
     def _update_state(self, result):
+        """Update the state from the template."""
         super()._update_state(result)
         if isinstance(result, TemplateError):
             self._state = None
@@ -129,23 +137,75 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         self._state = None
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
+    @property
+    def code_format(self) -> str | None:
+        """Regex for code format or None if no code is required."""
+        return self._code_format
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute(
             "_state", self._state_template, None, self._update_state
         )
-        await super().async_added_to_hass()
+        if self._code_format_template:
+            self.add_template_attribute(
+                "_code_format_template",
+                self._code_format_template,
+                None,
+                self._update_code_format,
+            )
+        super()._async_setup_templates()
 
-    async def async_lock(self, **kwargs):
+    @callback
+    def _update_code_format(self, render: str | TemplateError | None):
+        """Update code format from the template."""
+        if isinstance(render, TemplateError):
+            self._code_format = None
+            self._code_format_template_error = render
+        elif render in (None, "None", ""):
+            self._code_format = None
+            self._code_format_template_error = None
+        else:
+            self._code_format = render
+            self._code_format_template_error = None
+
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
+        self._raise_template_error_if_available()
+
         if self._optimistic:
             self._state = True
             self.async_write_ha_state()
-        await self._command_lock.async_run(context=self._context)
 
-    async def async_unlock(self, **kwargs):
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
+
+        await self.async_run_script(
+            self._command_lock, run_variables=tpl_vars, context=self._context
+        )
+
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
+        self._raise_template_error_if_available()
+
         if self._optimistic:
             self._state = False
             self.async_write_ha_state()
-        await self._command_unlock.async_run(context=self._context)
+
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
+
+        await self.async_run_script(
+            self._command_unlock, run_variables=tpl_vars, context=self._context
+        )
+
+    def _raise_template_error_if_available(self):
+        if self._code_format_template_error is not None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="code_format_template_error",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_format_template": self._code_format_template.template,
+                    "cause": str(self._code_format_template_error),
+                },
+            )

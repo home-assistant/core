@@ -1,12 +1,17 @@
 """Config flow to configure the LCN integration."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import pypck
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
@@ -15,17 +20,15 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
+from .helpers import purge_device_registry, purge_entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_config_entry(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> config_entries.ConfigEntry | None:
+def get_config_entry(hass: HomeAssistant, data: ConfigType) -> ConfigEntry | None:
     """Check config entries for already configured entries based on the ip address/port."""
     return next(
         (
@@ -38,7 +41,7 @@ def get_config_entry(
     )
 
 
-async def validate_connection(host_name: str, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_connection(host_name: str, data: ConfigType) -> ConfigType:
     """Validate if a connection to LCN can be established."""
     host = data[CONF_IP_ADDRESS]
     port = data[CONF_PORT]
@@ -65,12 +68,12 @@ async def validate_connection(host_name: str, data: dict[str, Any]) -> dict[str,
     return data
 
 
-class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LcnFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
     VERSION = 1
 
-    async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, data: ConfigType) -> ConfigFlowResult:
         """Import existing configuration from LCN."""
         host_name = data[CONF_HOST]
         # validate the imported connection parameters
@@ -81,8 +84,10 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="authentication_error")
         except pypck.connection.PchkLicenseError:
             _LOGGER.warning(
-                'Maximum number of connections on PCHK "%s" was '
-                "reached. An additional license key is required",
+                (
+                    'Maximum number of connections on PCHK "%s" was '
+                    "reached. An additional license key is required"
+                ),
                 host_name,
             )
             return self.async_abort(reason="license_error")
@@ -92,14 +97,11 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # check if we already have a host with the same address configured
         if entry := get_config_entry(self.hass, data):
-            entry.source = config_entries.SOURCE_IMPORT
-
+            entry.source = SOURCE_IMPORT
             # Cleanup entity and device registry, if we imported from configuration.yaml to
             # remove orphans when entities were removed from configuration
-            entity_registry = er.async_get(self.hass)
-            entity_registry.async_clear_config_entry(entry.entry_id)
-            device_registry = dr.async_get(self.hass)
-            device_registry.async_clear_config_entry(entry.entry_id)
+            purge_entity_registry(self.hass, entry.entry_id, data)
+            purge_device_registry(self.hass, entry.entry_id, data)
 
             self.hass.config_entries.async_update_entry(entry, data=data)
             return self.async_abort(reason="existing_configuration_updated")

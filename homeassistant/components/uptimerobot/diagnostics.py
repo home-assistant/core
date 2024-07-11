@@ -1,4 +1,5 @@
 """Diagnostics support for UptimeRobot."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,8 +9,8 @@ from pyuptimerobot import UptimeRobotException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import UptimeRobotDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import UptimeRobotDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(

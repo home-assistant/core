@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
-from pydeconz.group import Scene as PydeconzScene
+from pydeconz.models.event import EventType
 
 from homeassistant.components.scene import DOMAIN, Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzSceneMixin
-from .gateway import get_gateway_from_config_entry
+from .hub import DeconzHub
 
 
 async def async_setup_entry(
@@ -22,37 +20,20 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up scenes for deCONZ component."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    """Set up scenes for deCONZ integration."""
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[DOMAIN] = set()
 
     @callback
-    def async_add_scene(
-        scenes: list[PydeconzScene]
-        | ValuesView[PydeconzScene] = gateway.api.scenes.values(),
-    ) -> None:
+    def async_add_scene(_: EventType, scene_id: str) -> None:
         """Add scene from deCONZ."""
-        entities = []
+        scene = hub.api.scenes[scene_id]
+        async_add_entities([DeconzScene(scene, hub)])
 
-        for scene in scenes:
-
-            known_entities = set(gateway.entities[DOMAIN])
-            new_entity = DeconzScene(scene, gateway)
-            if new_entity.unique_id not in known_entities:
-                entities.append(new_entity)
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_scene,
-            async_add_scene,
-        )
+    hub.register_platform_add_device_callback(
+        async_add_scene,
+        hub.api.scenes,
     )
-
-    async_add_scene()
 
 
 class DeconzScene(DeconzSceneMixin, Scene):
@@ -62,4 +43,7 @@ class DeconzScene(DeconzSceneMixin, Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._device.recall()
+        await self.hub.api.scenes.recall(
+            self._device.group_id,
+            self._device.id,
+        )

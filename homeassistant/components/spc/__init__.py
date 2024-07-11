@@ -1,4 +1,5 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
+
 import logging
 
 from pyspcwebgw import SpcWebGateway
@@ -41,7 +42,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SPC component."""
 
     async def async_upate_callback(spc_object):
-
         if isinstance(spc_object, Area):
             async_dispatcher_send(hass, SIGNAL_UPDATE_ALARM.format(spc_object.id))
         elif isinstance(spc_object, Zone):

@@ -1,4 +1,5 @@
 """Support for Cisco Mobility Express."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoMEDeviceScanner | None:
     """Validate the configuration and return a Cisco ME scanner."""
 
     config = config[DOMAIN]
@@ -56,7 +57,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class CiscoMEDeviceScanner(DeviceScanner):
-    """This class scans for devices associated to a Cisco ME controller."""
+    """Scanner for devices associated to a Cisco ME controller."""
 
     def __init__(self, controller):
         """Initialize the scanner."""
@@ -71,15 +72,13 @@ class CiscoMEDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.clId for result in self.last_results if result.macaddr == device),
             None,
         )
-        return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include SSID, PT (eg 802.11ac), devtype (eg iPhone 7) among others.

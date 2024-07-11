@@ -1,4 +1,5 @@
 """Support for information from HP iLO sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,7 +8,10 @@ import logging
 import hpilo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -46,7 +50,7 @@ SENSOR_TYPES = {
     "network_settings": ["Network Settings", "get_network_settings"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -157,7 +161,7 @@ class HpIloSensor(SensorEntity):
         """Return the device state attributes."""
         return self._state_attributes
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from HP iLO and updates the states."""
         # Call the API for new data. Each sensor will re-trigger this
         # same exact call, but that's fine. Results should be cached for

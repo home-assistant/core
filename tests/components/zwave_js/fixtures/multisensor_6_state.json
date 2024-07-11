@@ -61,10 +61,17 @@
       "nodeId": 52,
       "index": 0,
       "installerIcon": 3079,
-      "userIcon": 3079
+      "userIcon": 3079,
+      "commandClasses": [
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": false
+        }
+      ]
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "commandClassName": "Basic",

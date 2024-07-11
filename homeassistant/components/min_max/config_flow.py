@@ -1,4 +1,5 @@
 """Config flow for Min/Max integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,48 +7,66 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
 )
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
-_STATISTIC_MEASURES = ["last", "max", "mean", "min", "median"]
+_STATISTIC_MEASURES = [
+    "min",
+    "max",
+    "mean",
+    "median",
+    "last",
+    "range",
+    "sum",
+]
+
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_IDS): selector.selector(
-            {"entity": {"domain": "sensor", "multiple": True}}
+        vol.Required(CONF_ENTITY_IDS): selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                domain=[SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN],
+                multiple=True,
+            ),
         ),
-        vol.Required(CONF_TYPE): selector.selector(
-            {"select": {"options": _STATISTIC_MEASURES}}
+        vol.Required(CONF_TYPE): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+            ),
         ),
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {"number": {"min": 0, "max": 6, "mode": "box"}}
+        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, max=6, mode=selector.NumberSelectorMode.BOX
+            ),
         ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.selector({"text": {}}),
+        vol.Required("name"): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Min/Max."""
 
     config_flow = CONFIG_FLOW

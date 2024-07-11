@@ -1,7 +1,7 @@
 """Test samsungtv diagnostics."""
+
 from unittest.mock import Mock
 
-from aiohttp import ClientSession
 import pytest
 from samsungtvws.exceptions import HttpApiError
 
@@ -10,18 +10,19 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_samsungtv_entry
 from .const import (
+    MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_UE48JU6400,
     SAMPLE_DEVICE_INFO_WIFI,
 )
-from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_WS_WITH_MAC)
@@ -41,6 +42,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
+            "minor_version": 2,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -55,7 +57,7 @@ async def test_entry_diagnostics(
 
 @pytest.mark.usefixtures("remoteencws")
 async def test_entry_diagnostics_encrypted(
-    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSession
+    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
@@ -77,6 +79,7 @@ async def test_entry_diagnostics_encrypted(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
+            "minor_version": 2,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -91,7 +94,7 @@ async def test_entry_diagnostics_encrypted(
 
 @pytest.mark.usefixtures("remoteencws")
 async def test_entry_diagnostics_encrypte_offline(
-    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSession
+    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     rest_api.rest_device_info.side_effect = HttpApiError
@@ -112,6 +115,7 @@ async def test_entry_diagnostics_encrypte_offline(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
+            "minor_version": 2,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,

@@ -1,19 +1,23 @@
 """Test Trace websocket API."""
+
 import asyncio
+from collections import defaultdict
 import json
-from typing import DefaultDict
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context, CoreState, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.uuid import random_uuid_hex
 
-from tests.common import assert_lists_same, load_fixture
+from tests.common import load_fixture
+from tests.typing import WebSocketGenerator
 
 
 def _find_run_id(traces, trace_type, item_id):
@@ -87,7 +91,14 @@ async def _assert_contexts(client, next_id, contexts, domain=None, item_id=None)
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, extra_trace_keys, trigger, context_key, condition_results",
+    (
+        "domain",
+        "prefix",
+        "extra_trace_keys",
+        "trigger",
+        "context_key",
+        "condition_results",
+    ),
     [
         (
             "automation",
@@ -108,25 +119,26 @@ async def _assert_contexts(client, next_id, contexts, domain=None, item_id=None)
         ("script", "sequence", [set(), set()], [UNDEFINED, UNDEFINED], "id", []),
     ],
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_trace(
-    hass,
-    hass_storage,
-    hass_ws_client,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
     domain,
     prefix,
     extra_trace_keys,
     trigger,
     context_key,
     condition_results,
-    enable_custom_integrations,
-):
+) -> None:
     """Test tracing a script or automation."""
-    id = 1
+    await async_setup_component(hass, "homeassistant", {})
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -147,7 +159,6 @@ async def test_get_trace(
     }
 
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",
@@ -196,7 +207,7 @@ async def test_get_trace(
     _assert_raw_config(domain, sun_config, trace)
     assert trace["blueprint_inputs"] is None
     assert trace["context"]
-    assert trace["error"] == "Unable to find service test.automation"
+    assert trace["error"] == "Service test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
@@ -383,7 +394,7 @@ async def test_get_trace(
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     for trace in trace_list:
         item_id = trace["item_id"]
         run_id = trace["run_id"]
@@ -413,15 +424,20 @@ async def test_get_trace(
 
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
-async def test_restore_traces(hass, hass_storage, hass_ws_client, domain):
+async def test_restore_traces(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+) -> None:
     """Test restored traces."""
-    hass.state = CoreState.not_running
-    id = 1
+    hass.set_state(CoreState.not_running)
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
     hass_storage["trace.saved_traces"] = saved_traces
@@ -438,7 +454,7 @@ async def test_restore_traces(hass, hass_storage, hass_ws_client, domain):
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     contexts = {}
     for trace in trace_list:
         item_id = trace["item_id"]
@@ -481,7 +497,9 @@ async def test_restore_traces(hass, hass_storage, hass_ws_client, domain):
 
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
-async def test_get_invalid_trace(hass, hass_ws_client, domain):
+async def test_get_invalid_trace(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain
+) -> None:
     """Test getting a non-existing trace."""
     assert await async_setup_component(hass, domain, {domain: {}})
     client = await hass_ws_client()
@@ -500,12 +518,14 @@ async def test_get_invalid_trace(hass, hass_ws_client, domain):
 
 
 @pytest.mark.parametrize(
-    "domain,stored_traces",
+    ("domain", "stored_traces"),
     [("automation", None), ("automation", 10), ("script", None), ("script", 10)],
 )
-async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
+async def test_trace_overflow(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, stored_traces
+) -> None:
     """Test the number of stored traces per script or automation is limited."""
-    id = 1
+    msg_id = 1
 
     trace_uuids = []
 
@@ -515,9 +535,9 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
         return trace_uuids[-1]
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -554,7 +574,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
 
     # Trigger "moon" enough times to overflow the max number of stored traces
     with patch(
-        "homeassistant.components.trace.uuid_util.random_uuid_hex",
+        "homeassistant.components.trace.models.uuid_util.random_uuid_hex",
         wraps=mock_random_uuid_hex,
     ):
         for _ in range(stored_traces or DEFAULT_STORED_TRACES):
@@ -573,14 +593,18 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
 
 
 @pytest.mark.parametrize(
-    "domain,num_restored_moon_traces", [("automation", 3), ("script", 1)]
+    ("domain", "num_restored_moon_traces"), [("automation", 3), ("script", 1)]
 )
 async def test_restore_traces_overflow(
-    hass, hass_storage, hass_ws_client, domain, num_restored_moon_traces
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    num_restored_moon_traces: int,
+) -> None:
     """Test restored traces are evicted first."""
-    hass.state = CoreState.not_running
-    id = 1
+    hass.set_state(CoreState.not_running)
+    msg_id = 1
 
     trace_uuids = []
 
@@ -590,9 +614,9 @@ async def test_restore_traces_overflow(
         return trace_uuids[-1]
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
     hass_storage["trace.saved_traces"] = saved_traces
@@ -628,7 +652,7 @@ async def test_restore_traces_overflow(
 
     # Trigger "moon" enough times to overflow the max number of stored traces
     with patch(
-        "homeassistant.components.trace.uuid_util.random_uuid_hex",
+        "homeassistant.components.trace.models.uuid_util.random_uuid_hex",
         wraps=mock_random_uuid_hex,
     ):
         for _ in range(DEFAULT_STORED_TRACES - num_restored_moon_traces + 1):
@@ -648,20 +672,20 @@ async def test_restore_traces_overflow(
 
 
 @pytest.mark.parametrize(
-    "domain,num_restored_moon_traces,restored_run_id",
+    ("domain", "num_restored_moon_traces", "restored_run_id"),
     [("automation", 3, "e2c97432afe9b8a42d7983588ed5e6ef"), ("script", 1, "")],
 )
 async def test_restore_traces_late_overflow(
-    hass,
-    hass_storage,
-    hass_ws_client,
-    domain,
-    num_restored_moon_traces,
-    restored_run_id,
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    num_restored_moon_traces: int,
+    restored_run_id: str,
+) -> None:
     """Test restored traces are evicted first."""
-    hass.state = CoreState.not_running
-    id = 1
+    hass.set_state(CoreState.not_running)
+    msg_id = 1
 
     trace_uuids = []
 
@@ -671,9 +695,9 @@ async def test_restore_traces_late_overflow(
         return trace_uuids[-1]
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
     hass_storage["trace.saved_traces"] = saved_traces
@@ -698,7 +722,7 @@ async def test_restore_traces_late_overflow(
 
     # Trigger "moon" enough times to overflow the max number of stored traces
     with patch(
-        "homeassistant.components.trace.uuid_util.random_uuid_hex",
+        "homeassistant.components.trace.models.uuid_util.random_uuid_hex",
         wraps=mock_random_uuid_hex,
     ):
         for _ in range(DEFAULT_STORED_TRACES - num_restored_moon_traces + 1):
@@ -718,14 +742,16 @@ async def test_restore_traces_late_overflow(
 
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
-async def test_trace_no_traces(hass, hass_ws_client, domain):
+async def test_trace_no_traces(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain
+) -> None:
     """Test the storing traces for a script or automation can be disabled."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -753,7 +779,7 @@ async def test_trace_no_traces(hass, hass_ws_client, domain):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, trigger, last_step, script_execution",
+    ("domain", "prefix", "trigger", "last_step", "script_execution"),
     [
         (
             "automation",
@@ -777,15 +803,22 @@ async def test_trace_no_traces(hass, hass_ws_client, domain):
     ],
 )
 async def test_list_traces(
-    hass, hass_ws_client, domain, prefix, trigger, last_step, script_execution
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain,
+    prefix,
+    trigger,
+    last_step,
+    script_execution,
+) -> None:
     """Test listing script and automation traces."""
-    id = 1
+    await async_setup_component(hass, "homeassistant", {})
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -866,7 +899,7 @@ async def test_list_traces(
     assert len(_find_traces(response["result"], domain, "sun")) == 1
     trace = _find_traces(response["result"], domain, "sun")[0]
     assert trace["last_step"] == last_step[0].format(prefix=prefix)
-    assert trace["error"] == "Unable to find service test.automation"
+    assert trace["error"] == "Service test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == script_execution[0]
     assert trace["timestamp"]
@@ -902,17 +935,23 @@ async def test_list_traces(
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, extra_trace_keys",
+    ("domain", "prefix", "extra_trace_keys"),
     [("automation", "action", {"trigger/0"}), ("script", "sequence", set())],
 )
-async def test_nested_traces(hass, hass_ws_client, domain, prefix, extra_trace_keys):
+async def test_nested_traces(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain,
+    prefix,
+    extra_trace_keys,
+) -> None:
     """Test nested automation and script traces."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -961,16 +1000,18 @@ async def test_nested_traces(hass, hass_ws_client, domain, prefix, extra_trace_k
 
 
 @pytest.mark.parametrize(
-    "domain, prefix", [("automation", "action"), ("script", "sequence")]
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
 )
-async def test_breakpoints(hass, hass_ws_client, domain, prefix):
+async def test_breakpoints(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, prefix
+) -> None:
     """Test script and automation breakpoints."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     async def assert_last_step(item_id, expected_action, expected_state):
         await client.send_json(
@@ -1052,8 +1093,7 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
     await client.send_json({"id": next_id(), "type": "trace/debug/breakpoint/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert_lists_same(
-        response["result"],
+    assert response["result"] == unordered(
         [
             {"node": f"{prefix}/1", "run_id": "*", "domain": domain, "item_id": "sun"},
             {"node": f"{prefix}/5", "run_id": "*", "domain": domain, "item_id": "sun"},
@@ -1130,16 +1170,18 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix", [("automation", "action"), ("script", "sequence")]
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
 )
-async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
+async def test_breakpoints_2(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, prefix
+) -> None:
     """Test execution resumes and breakpoints are removed after subscription removed."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     async def assert_last_step(item_id, expected_action, expected_state):
         await client.send_json(
@@ -1233,16 +1275,18 @@ async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix", [("automation", "action"), ("script", "sequence")]
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
 )
-async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
+async def test_breakpoints_3(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, prefix
+) -> None:
     """Test breakpoints can be cleared."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     async def assert_last_step(item_id, expected_action, expected_state):
         await client.send_json(
@@ -1379,22 +1423,26 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize(
-    "script_mode,max_runs,script_execution",
+    ("script_mode", "max_runs", "script_execution"),
     [
         ({"mode": "single"}, 1, "failed_single"),
         ({"mode": "parallel", "max": 2}, 2, "failed_max_runs"),
     ],
 )
 async def test_script_mode(
-    hass, hass_ws_client, script_mode, max_runs, script_execution
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    script_mode,
+    max_runs,
+    script_execution,
+) -> None:
     """Test overlapping runs with max_runs > 1."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     flag = asyncio.Event()
 
@@ -1447,17 +1495,22 @@ async def test_script_mode(
 
 
 @pytest.mark.parametrize(
-    "script_mode,script_execution",
+    ("script_mode", "script_execution"),
     [("restart", "cancelled"), ("parallel", "finished")],
 )
-async def test_script_mode_2(hass, hass_ws_client, script_mode, script_execution):
+async def test_script_mode_2(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    script_mode,
+    script_execution,
+) -> None:
     """Test overlapping runs with max_runs > 1."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     flag = asyncio.Event()
 
@@ -1520,16 +1573,19 @@ async def test_script_mode_2(hass, hass_ws_client, script_mode, script_execution
     assert trace["script_execution"] == "finished"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_trace_blueprint_automation(
-    hass, hass_ws_client, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test trace of blueprint automation."""
-    id = 1
+    await async_setup_component(hass, "homeassistant", {})
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     domain = "automation"
     sun_config = {
@@ -1539,11 +1595,11 @@ async def test_trace_blueprint_automation(
             "input": {
                 "trigger_event": "blueprint_event",
                 "service_to_call": "test.automation",
+                "a_number": 5,
             },
         },
     }
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",
@@ -1583,7 +1639,7 @@ async def test_trace_blueprint_automation(
     assert trace["config"]["id"] == "sun"
     assert trace["blueprint_inputs"] == sun_config
     assert trace["context"]
-    assert trace["error"] == "Unable to find service test.automation"
+    assert trace["error"] == "Service test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"

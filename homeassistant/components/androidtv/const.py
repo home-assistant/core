@@ -1,8 +1,6 @@
-"""Android TV component constants."""
-DOMAIN = "androidtv"
+"""Android Debug Bridge component constants."""
 
-ANDROID_DEV = DOMAIN
-ANDROID_DEV_OPT = "androidtv_opt"
+DOMAIN = "androidtv"
 
 CONF_ADB_SERVER_IP = "adb_server_ip"
 CONF_ADB_SERVER_PORT = "adb_server_port"

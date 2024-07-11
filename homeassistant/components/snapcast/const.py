@@ -1,6 +1,8 @@
 """Constants for Snapcast."""
 
-DATA_KEY = "snapcast"
+from homeassistant.const import Platform
+
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 GROUP_PREFIX = "snapcast_group_"
 GROUP_SUFFIX = "Snapcast Group"
@@ -15,3 +17,6 @@ SERVICE_SET_LATENCY = "set_latency"
 
 ATTR_MASTER = "master"
 ATTR_LATENCY = "latency"
+
+DOMAIN = "snapcast"
+DEFAULT_TITLE = "Snapcast"

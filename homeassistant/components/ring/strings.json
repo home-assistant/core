@@ -13,6 +13,13 @@
         "data": {
           "2fa": "Two-factor code"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Ring integration needs to re-authenticate your account {username}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -20,7 +27,83 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ding": {
+        "name": "Ding"
+      }
+    },
+    "button": {
+      "open_door": {
+        "name": "Open door"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    },
+    "sensor": {
+      "last_activity": {
+        "name": "Last activity"
+      },
+      "last_ding": {
+        "name": "Last ding"
+      },
+      "last_motion": {
+        "name": "Last motion"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "doorbell_volume": {
+        "name": "Doorbell volume"
+      },
+      "mic_volume": {
+        "name": "Mic volume"
+      },
+      "voice_volume": {
+        "name": "Voice volume"
+      },
+      "wifi_signal_category": {
+        "name": "Wi-Fi signal category"
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
+    "switch": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    }
+  },
+  "services": {
+    "update": {
+      "name": "Update",
+      "description": "Updates the data we have for all your ring devices."
+    }
+  },
+  "issues": {
+    "deprecated_service_ring_update": {
+      "title": "Detected use of deprecated service `ring.update`",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::ring::issues::deprecated_service_ring_update::title%]",
+            "description": "Use `homeassistant.update_entity` instead which will update all ring entities.\n\nPlease replace calls to this service and adjust your automations and scripts and select **submit** to close this issue."
+          }
+        }
+      }
     }
   }
 }

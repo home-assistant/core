@@ -1,4 +1,5 @@
 """Binary sensors for Yale Alarm."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -6,13 +7,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN
+from . import YaleConfigEntry
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity, YaleEntity
 
@@ -21,42 +20,41 @@ SENSOR_TYPES = (
         key="acfail",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Power Loss",
+        translation_key="power_loss",
     ),
     BinarySensorEntityDescription(
         key="battery",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Battery",
+        translation_key="battery",
     ),
     BinarySensorEntityDescription(
         key="tamper",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Tamper",
+        translation_key="tamper",
     ),
     BinarySensorEntityDescription(
         key="jam",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Jam",
+        translation_key="jam",
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Yale binary sensor entry."""
 
-    coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
+    coordinator = entry.runtime_data
+    sensors: list[YaleDoorSensor | YaleProblemSensor] = [
+        YaleDoorSensor(coordinator, data) for data in coordinator.data["door_windows"]
     ]
-    sensors: list[YaleDoorSensor | YaleProblemSensor] = []
-    for data in coordinator.data["door_windows"]:
-        sensors.append(YaleDoorSensor(coordinator, data))
-    for description in SENSOR_TYPES:
-        sensors.append(YaleProblemSensor(coordinator, description))
+    sensors.extend(
+        YaleProblemSensor(coordinator, description) for description in SENSOR_TYPES
+    )
 
     async_add_entities(sensors)
 
@@ -85,9 +83,6 @@ class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
         """Initiate Yale Problem Sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = (
-            f"{coordinator.entry.data[CONF_NAME]} {entity_description.name}"
-        )
         self._attr_unique_id = f"{coordinator.entry.entry_id}-{entity_description.key}"
 
     @property

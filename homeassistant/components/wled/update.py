@@ -1,4 +1,5 @@
 """Support for WLED updates."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -8,24 +9,22 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-from .models import WLEDEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WLEDConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED update based on a config entry."""
-    coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([WLEDUpdateEntity(coordinator)])
+    async_add_entities([WLEDUpdateEntity(entry.runtime_data)])
 
 
 class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
@@ -40,12 +39,11 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = f"{coordinator.data.info.name} Firmware"
         self._attr_unique_id = coordinator.data.info.mac_address
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version currently installed and in use."""
         if (version := self.coordinator.data.info.version) is None:
             return None
         return str(version)

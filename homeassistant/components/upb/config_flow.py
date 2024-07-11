@@ -1,15 +1,16 @@
 """Config flow for UPB PIM integration."""
+
 import asyncio
 from contextlib import suppress
 import logging
 from urllib.parse import urlparse
 
-import async_timeout
 import upb_lib
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS, CONF_FILE_PATH, CONF_HOST, CONF_PROTOCOL
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -38,14 +39,16 @@ async def _validate_input(data):
     url = _make_url_from_data(data)
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file_path})
+
+    upb.connect(_connected_callback)
+
     if not upb.config_ok:
         _LOGGER.error("Missing or invalid UPB file: %s", file_path)
         raise InvalidUpbFile
 
-    upb.connect(_connected_callback)
-
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(VALIDATE_TIMEOUT):
-        await connected_event.wait()
+    with suppress(TimeoutError):
+        async with asyncio.timeout(VALIDATE_TIMEOUT):
+            await connected_event.wait()
 
     upb.disconnect()
 
@@ -70,12 +73,12 @@ def _make_url_from_data(data):
     return f"{protocol}{address}"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UPB PIM."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the UPB config flow."""
         self.importing = False
 
@@ -91,7 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidUpbFile:
                 errors["base"] = "invalid_upb_file"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -128,9 +131,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return urlparse(url).hostname in existing_hosts
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidUpbFile(exceptions.HomeAssistantError):
+class InvalidUpbFile(HomeAssistantError):
     """Error to indicate there is invalid or missing UPB config file."""

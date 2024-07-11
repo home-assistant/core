@@ -1,15 +1,16 @@
 """Support for the Amazon Polly text to speech service."""
+
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Any, Final
 
 import boto3
 import botocore
 import voluptuous as vol
 
 from homeassistant.components.tts import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TtsAudioType,
 )
@@ -48,7 +49,7 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(SUPPORTED_REGIONS),
         vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
@@ -166,13 +167,10 @@ class AmazonPollyProvider(Provider):
     def get_tts_audio(
         self,
         message: str,
-        language: str | None = None,
-        options: dict[str, str] | None = None,
+        language: str,
+        options: dict[str, Any],
     ) -> TtsAudioType:
         """Request TTS file from Polly."""
-        if options is None or language is None:
-            _LOGGER.debug("language and/or options were missing")
-            return None, None
         voice_id = options.get(CONF_VOICE, self.default_voice)
         voice_in_dict = self.all_voices[voice_id]
         if language != voice_in_dict.get("LanguageCode"):

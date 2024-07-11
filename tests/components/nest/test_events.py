@@ -13,11 +13,13 @@ from unittest.mock import patch
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
+import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from .common import async_setup_sdm_platform
+from .common import CreateDevice
 
 from tests.common import async_capture_events
 
@@ -31,27 +33,44 @@ EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
 EVENT_KEYS = {"device_id", "type", "timestamp", "zones"}
 
 
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture for platforms to setup."""
+    return [PLATFORM]
+
+
+@pytest.fixture
+def device_type() -> str:
+    """Fixture for the type of device under test."""
+    return "sdm.devices.types.DOORBELL"
+
+
+@pytest.fixture
+def device_traits() -> list[str]:
+    """Fixture for the present traits of the device under test."""
+    return ["sdm.devices.traits.DoorbellChime"]
+
+
+@pytest.fixture(autouse=True)
+def device(
+    device_type: str, device_traits: list[str], create_device: CreateDevice
+) -> None:
+    """Fixture to create a device under test."""
+    return create_device.create(
+        raw_data={
+            "name": DEVICE_ID,
+            "type": device_type,
+            "traits": create_device_traits(device_traits),
+        }
+    )
+
+
 def event_view(d: Mapping[str, Any]) -> Mapping[str, Any]:
     """View of an event with relevant keys for testing."""
     return {key: value for key, value in d.items() if key in EVENT_KEYS}
 
 
-async def async_setup_devices(hass, device_type, traits={}, auth=None):
-    """Set up the platform and prerequisites."""
-    devices = {
-        DEVICE_ID: Device.MakeDevice(
-            {
-                "name": DEVICE_ID,
-                "type": device_type,
-                "traits": traits,
-            },
-            auth=auth,
-        ),
-    }
-    return await async_setup_sdm_platform(hass, PLATFORM, devices=devices)
-
-
-def create_device_traits(event_traits=[]):
+def create_device_traits(event_traits: list[str]) -> dict[str, Any]:
     """Create fake traits for a device."""
     result = {
         "sdm.devices.traits.Info": {
@@ -85,7 +104,7 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
     """Create an EventMessage for events."""
     if not timestamp:
         timestamp = utcnow()
-    return EventMessage(
+    return EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -98,137 +117,90 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
     )
 
 
-async def test_doorbell_chime_event(hass, auth):
+@pytest.mark.parametrize(
+    ("device_type", "device_traits", "event_trait", "expected_model", "expected_type"),
+    [
+        (
+            "sdm.devices.types.DOORBELL",
+            ["sdm.devices.traits.DoorbellChime"],
+            "sdm.devices.events.DoorbellChime.Chime",
+            "Doorbell",
+            "doorbell_chime",
+        ),
+        (
+            "sdm.devices.types.CAMERA",
+            ["sdm.devices.traits.CameraMotion"],
+            "sdm.devices.events.CameraMotion.Motion",
+            "Camera",
+            "camera_motion",
+        ),
+        (
+            "sdm.devices.types.CAMERA",
+            ["sdm.devices.traits.CameraPerson"],
+            "sdm.devices.events.CameraPerson.Person",
+            "Camera",
+            "camera_person",
+        ),
+        (
+            "sdm.devices.types.CAMERA",
+            ["sdm.devices.traits.CameraSound"],
+            "sdm.devices.events.CameraSound.Sound",
+            "Camera",
+            "camera_sound",
+        ),
+    ],
+)
+async def test_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    auth,
+    setup_platform,
+    subscriber,
+    event_trait,
+    expected_model,
+    expected_type,
+) -> None:
     """Test a pubsub message for a doorbell event."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
-        auth,
-    )
+    await setup_platform()
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
+    entry = entity_registry.async_get("camera.front")
     assert entry is not None
     assert entry.unique_id == "some-device-id-camera"
-    assert entry.original_name == "Front"
     assert entry.domain == "camera"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "Front"
-    assert device.model == "Doorbell"
+    assert device.model == expected_model
     assert device.identifiers == {("nest", DEVICE_ID)}
 
     timestamp = utcnow()
-    await subscriber.async_receive_event(
-        create_event("sdm.devices.events.DoorbellChime.Chime", timestamp=timestamp)
-    )
+    await subscriber.async_receive_event(create_event(event_trait, timestamp=timestamp))
     await hass.async_block_till_done()
 
     event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
     assert event_view(events[0].data) == {
         "device_id": entry.device_id,
-        "type": "doorbell_chime",
+        "type": expected_type,
         "timestamp": event_time,
     }
 
 
-async def test_camera_motion_event(hass):
-    """Test a pubsub message for a camera motion event."""
-    events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.CAMERA",
-        create_device_traits(["sdm.devices.traits.CameraMotion"]),
-    )
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
-    assert entry is not None
-
-    timestamp = utcnow()
-    await subscriber.async_receive_event(
-        create_event("sdm.devices.events.CameraMotion.Motion", timestamp=timestamp)
-    )
-    await hass.async_block_till_done()
-
-    event_time = timestamp.replace(microsecond=0)
-    assert len(events) == 1
-    assert event_view(events[0].data) == {
-        "device_id": entry.device_id,
-        "type": "camera_motion",
-        "timestamp": event_time,
-    }
-
-
-async def test_camera_sound_event(hass):
-    """Test a pubsub message for a camera sound event."""
-    events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.CAMERA",
-        create_device_traits(["sdm.devices.traits.CameraSound"]),
-    )
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
-    assert entry is not None
-
-    timestamp = utcnow()
-    await subscriber.async_receive_event(
-        create_event("sdm.devices.events.CameraSound.Sound", timestamp=timestamp)
-    )
-    await hass.async_block_till_done()
-
-    event_time = timestamp.replace(microsecond=0)
-    assert len(events) == 1
-    assert event_view(events[0].data) == {
-        "device_id": entry.device_id,
-        "type": "camera_sound",
-        "timestamp": event_time,
-    }
-
-
-async def test_camera_person_event(hass):
+@pytest.mark.parametrize(
+    "device_traits",
+    [
+        ["sdm.devices.traits.CameraMotion", "sdm.devices.traits.CameraPerson"],
+    ],
+)
+async def test_camera_multiple_event(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for a camera person event."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(["sdm.devices.traits.CameraPerson"]),
-    )
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
-    assert entry is not None
-
-    timestamp = utcnow()
-    await subscriber.async_receive_event(
-        create_event("sdm.devices.events.CameraPerson.Person", timestamp=timestamp)
-    )
-    await hass.async_block_till_done()
-
-    event_time = timestamp.replace(microsecond=0)
-    assert len(events) == 1
-    assert event_view(events[0].data) == {
-        "device_id": entry.device_id,
-        "type": "camera_person",
-        "timestamp": event_time,
-    }
-
-
-async def test_camera_multiple_event(hass):
-    """Test a pubsub message for a camera person event."""
-    events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(
-            ["sdm.devices.traits.CameraMotion", "sdm.devices.traits.CameraPerson"]
-        ),
-    )
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
+    await setup_platform()
+    entry = entity_registry.async_get("camera.front")
     assert entry is not None
 
     event_map = {
@@ -260,28 +232,22 @@ async def test_camera_multiple_event(hass):
     }
 
 
-async def test_unknown_event(hass):
+async def test_unknown_event(hass: HomeAssistant, subscriber, setup_platform) -> None:
     """Test a pubsub message for an unknown event type."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
-    )
+    await setup_platform()
     await subscriber.async_receive_event(create_event("some-event-id"))
     await hass.async_block_till_done()
 
     assert len(events) == 0
 
 
-async def test_unknown_device_id(hass):
+async def test_unknown_device_id(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for an unknown event type."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
-    )
+    await setup_platform()
     await subscriber.async_receive_event(
         create_event("sdm.devices.events.DoorbellChime.Chime", "invalid-device-id")
     )
@@ -290,16 +256,14 @@ async def test_unknown_device_id(hass):
     assert len(events) == 0
 
 
-async def test_event_message_without_device_event(hass):
+async def test_event_message_without_device_event(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for an unknown event type."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
-    )
+    await setup_platform()
     timestamp = utcnow()
-    event = EventMessage(
+    event = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -312,22 +276,19 @@ async def test_event_message_without_device_event(hass):
     assert len(events) == 0
 
 
-async def test_doorbell_event_thread(hass, auth):
+@pytest.mark.parametrize(
+    "device_traits",
+    [
+        ["sdm.devices.traits.CameraClipPreview", "sdm.devices.traits.CameraPerson"],
+    ],
+)
+async def test_doorbell_event_thread(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subscriber, setup_platform
+) -> None:
     """Test a series of pubsub messages in the same thread."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(
-            [
-                "sdm.devices.traits.CameraClipPreview",
-                "sdm.devices.traits.CameraPerson",
-            ]
-        ),
-        auth,
-    )
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
+    await setup_platform()
+    entry = entity_registry.async_get("camera.front")
     assert entry is not None
 
     event_message_data = {
@@ -358,7 +319,9 @@ async def test_doorbell_event_thread(hass, auth):
             "eventThreadState": "STARTED",
         }
     )
-    await subscriber.async_receive_event(EventMessage(message_data_1, auth=None))
+    await subscriber.async_receive_event(
+        EventMessage.create_event(message_data_1, auth=None)
+    )
 
     # Publish message #2 that sends a no-op update to end the event thread
     timestamp2 = timestamp1 + datetime.timedelta(seconds=1)
@@ -369,7 +332,9 @@ async def test_doorbell_event_thread(hass, auth):
             "eventThreadState": "ENDED",
         }
     )
-    await subscriber.async_receive_event(EventMessage(message_data_2, auth=None))
+    await subscriber.async_receive_event(
+        EventMessage.create_event(message_data_2, auth=None)
+    )
     await hass.async_block_till_done()
 
     # The event is only published once
@@ -381,23 +346,23 @@ async def test_doorbell_event_thread(hass, auth):
     }
 
 
-async def test_doorbell_event_session_update(hass, auth):
+@pytest.mark.parametrize(
+    "device_traits",
+    [
+        [
+            "sdm.devices.traits.CameraClipPreview",
+            "sdm.devices.traits.CameraPerson",
+            "sdm.devices.traits.CameraMotion",
+        ],
+    ],
+)
+async def test_doorbell_event_session_update(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subscriber, setup_platform
+) -> None:
     """Test a pubsub message with updates to an existing session."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(
-            [
-                "sdm.devices.traits.CameraClipPreview",
-                "sdm.devices.traits.CameraPerson",
-                "sdm.devices.traits.CameraMotion",
-            ]
-        ),
-        auth,
-    )
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
+    await setup_platform()
+    entry = entity_registry.async_get("camera.front")
     assert entry is not None
 
     # Message #1 has a motion event
@@ -454,18 +419,15 @@ async def test_doorbell_event_session_update(hass, auth):
     }
 
 
-async def test_structure_update_event(hass):
+async def test_structure_update_event(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for a new device being added."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
-    )
+    await setup_platform()
 
     # Entity for first device is registered
-    registry = er.async_get(hass)
-    assert registry.async_get("camera.front")
+    assert entity_registry.async_get("camera.front")
 
     new_device = Device.MakeDevice(
         {
@@ -484,10 +446,10 @@ async def test_structure_update_event(hass):
     device_manager.add_device(new_device)
 
     # Entity for new devie has not yet been loaded
-    assert not registry.async_get("camera.back")
+    assert not entity_registry.async_get("camera.back")
 
     # Send a message that triggers the device to be loaded
-    message = EventMessage(
+    message = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": utcnow().isoformat(timespec="seconds"),
@@ -499,11 +461,12 @@ async def test_structure_update_event(hass):
         },
         auth=None,
     )
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=subscriber,
+    with (
+        patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber",
+            return_value=subscriber,
+        ),
     ):
         await subscriber.async_receive_event(message)
         await hass.async_block_till_done()
@@ -511,21 +474,24 @@ async def test_structure_update_event(hass):
     # No home assistant events published
     assert not events
 
-    assert registry.async_get("camera.front")
+    assert entity_registry.async_get("camera.front")
     # Currently need a manual reload to detect the new entity
-    assert not registry.async_get("camera.back")
+    assert not entity_registry.async_get("camera.back")
 
 
-async def test_event_zones(hass):
+@pytest.mark.parametrize(
+    "device_traits",
+    [
+        ["sdm.devices.traits.CameraMotion"],
+    ],
+)
+async def test_event_zones(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subscriber, setup_platform
+) -> None:
     """Test events published with zone information."""
     events = async_capture_events(hass, NEST_EVENT)
-    subscriber = await async_setup_devices(
-        hass,
-        "sdm.devices.types.DOORBELL",
-        create_device_traits(["sdm.devices.traits.CameraMotion"]),
-    )
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.front")
+    await setup_platform()
+    entry = entity_registry.async_get("camera.front")
     assert entry is not None
 
     event_map = {

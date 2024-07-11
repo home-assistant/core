@@ -1,54 +1,66 @@
 """Support for Tuya number."""
+
 from __future__ import annotations
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantTuyaData
+from . import TuyaConfigEntry
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import DEVICE_CLASS_UNITS, DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            translation_key="time",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Kettle
     # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
     "bh": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Temperature",
-            icon="mdi:thermometer",
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
-            name="Temperature",
-            icon="mdi:thermometer",
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_C,
-            name="Temperature After Boiling",
-            icon="mdi:thermometer",
+            translation_key="temperature_after_boiling",
+            device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_F,
-            name="Temperature After Boiling",
-            icon="mdi:thermometer",
+            translation_key="temperature_after_boiling",
+            device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
-            name="Heat Preservation Time",
-            icon="mdi:timer",
+            translation_key="heat_preservation_time",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -57,13 +69,11 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "cwwsq": (
         NumberEntityDescription(
             key=DPCode.MANUAL_FEED,
-            name="Feed",
-            icon="mdi:bowl",
+            translation_key="feed",
         ),
         NumberEntityDescription(
             key=DPCode.VOICE_TIMES,
-            name="Voice Times",
-            icon="mdi:microphone",
+            translation_key="voice_times",
         ),
     ),
     # Human Presence Sensor
@@ -71,19 +81,17 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "hps": (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
-            name="Sensitivity",
+            translation_key="sensitivity",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.NEAR_DETECTION,
-            name="Near Detection",
-            icon="mdi:signal-distance-variant",
+            translation_key="near_detection",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.FAR_DETECTION,
-            name="Far Detection",
-            icon="mdi:signal-distance-variant",
+            translation_key="far_detection",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -92,25 +100,43 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "kfj": (
         NumberEntityDescription(
             key=DPCode.WATER_SET,
-            name="Water Level",
-            icon="mdi:cup-water",
+            translation_key="water_level",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Temperature",
-            icon="mdi:thermometer",
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
-            name="Heat Preservation Time",
-            icon="mdi:timer",
+            translation_key="heat_preservation_time",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
-            name="Powder",
+            translation_key="powder",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE,
+            translation_key="cook_temperature",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COOK_TIME,
+            translation_key="cook_time",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CLOUD_RECIPE_NUMBER,
+            translation_key="cloud_recipe",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -119,8 +145,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "sd": (
         NumberEntityDescription(
             key=DPCode.VOLUME_SET,
-            name="Volume",
-            icon="mdi:volume-high",
+            translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -129,7 +154,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "sgbj": (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
-            name="Time",
+            translation_key="time",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -138,8 +163,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "sp": (
         NumberEntityDescription(
             key=DPCode.BASIC_DEVICE_VOLUME,
-            name="Volume",
-            icon="mdi:volume-high",
+            translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -148,38 +172,32 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgkg": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            name="Minimum Brightness",
-            icon="mdi:lightbulb-outline",
+            translation_key="minimum_brightness",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            name="Maximum Brightness",
-            icon="mdi:lightbulb-on-outline",
+            translation_key="maximum_brightness",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            name="Minimum Brightness 2",
-            icon="mdi:lightbulb-outline",
+            translation_key="minimum_brightness_2",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            name="Maximum Brightness 2",
-            icon="mdi:lightbulb-on-outline",
+            translation_key="maximum_brightness_2",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_3,
-            name="Minimum Brightness 3",
-            icon="mdi:lightbulb-outline",
+            translation_key="minimum_brightness_3",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_3,
-            name="Maximum Brightness 3",
-            icon="mdi:lightbulb-on-outline",
+            translation_key="maximum_brightness_3",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -188,26 +206,22 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgq": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            name="Minimum Brightness",
-            icon="mdi:lightbulb-outline",
+            translation_key="minimum_brightness",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            name="Maximum Brightness",
-            icon="mdi:lightbulb-on-outline",
+            translation_key="maximum_brightness",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            name="Minimum Brightness 2",
-            icon="mdi:lightbulb-outline",
+            translation_key="minimum_brightness_2",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            name="Maximum Brightness 2",
-            icon="mdi:lightbulb-on-outline",
+            translation_key="maximum_brightness_2",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -216,7 +230,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "zd": (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
-            name="Sensitivity",
+            translation_key="sensitivity",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -224,20 +238,19 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "szjqr": (
         NumberEntityDescription(
             key=DPCode.ARM_DOWN_PERCENT,
-            name="Move Down %",
-            icon="mdi:arrow-down-bold",
+            translation_key="move_down",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.ARM_UP_PERCENT,
-            name="Move Up %",
-            icon="mdi:arrow-up-bold",
+            translation_key="move_up",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.CLICK_SUSTAIN_TIME,
-            name="Down Delay",
-            icon="mdi:timer",
+            translation_key="down_delay",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -246,8 +259,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "fs": (
         NumberEntityDescription(
             key=DPCode.TEMP,
-            name="Temperature",
-            icon="mdi:thermometer-lines",
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
     # Humidifier
@@ -255,42 +268,48 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "jsq": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Temperature",
-            icon="mdi:thermometer-lines",
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
-            name="Temperature",
-            icon="mdi:thermometer-lines",
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
+        ),
+    ),
+    # Pool HeatPump
+    "znrb": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET,
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya number dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya number."""
         entities: list[TuyaNumberEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaNumberEntity(
-                                device, hass_data.device_manager, description
-                            )
-                        )
+                entities.extend(
+                    TuyaNumberEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -304,8 +323,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: NumberEntityDescription,
     ) -> None:
         """Init Tuya sensor."""
@@ -317,26 +336,56 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             description.key, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._number = int_type
-            self._attr_max_value = self._number.max_scaled
-            self._attr_min_value = self._number.min_scaled
-            self._attr_step = self._number.step_scaled
-            if description.unit_of_measurement is None:
-                self._attr_unit_of_measurement = self._number.unit
+            self._attr_native_max_value = self._number.max_scaled
+            self._attr_native_min_value = self._number.min_scaled
+            self._attr_native_step = self._number.step_scaled
+
+        # Logic to ensure the set device class and API received Unit Of Measurement
+        # match Home Assistants requirements.
+        if (
+            self.device_class is not None
+            and not self.device_class.startswith(DOMAIN)
+            and description.native_unit_of_measurement is None
+        ):
+            # We cannot have a device class, if the UOM isn't set or the
+            # device class cannot be found in the validation mapping.
+            if (
+                self.native_unit_of_measurement is None
+                or self.device_class not in DEVICE_CLASS_UNITS
+            ):
+                self._attr_device_class = None
+                return
+
+            uoms = DEVICE_CLASS_UNITS[self.device_class]
+            self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
+                self.native_unit_of_measurement.lower()
+            )
+
+            # Unknown unit of measurement, device class should not be used.
+            if self._uom is None:
+                self._attr_device_class = None
+                return
+
+            # Found unit of measurement, use the standardized Unit
+            # Use the target conversion unit (if set)
+            self._attr_native_unit_of_measurement = (
+                self._uom.conversion_unit or self._uom.unit
+            )
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         # Unknown or unsupported data type
         if self._number is None:
             return None
 
         # Raw value
-        if not (value := self.device.status.get(self.entity_description.key)):
+        if (value := self.device.status.get(self.entity_description.key)) is None:
             return None
 
         return self._number.scale_value(value)
 
-    def set_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._number is None:
             raise RuntimeError("Cannot set value, device doesn't provide type data")

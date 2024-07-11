@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "title": "The Aladdin Connect integration has been removed",
+      "description": "The Aladdin Connect integration has been removed from Home Assistant.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Aladdin Connect integration entries]({entries})."
+    }
+  }
+}

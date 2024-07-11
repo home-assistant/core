@@ -1,8 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "reauth_successful": "\u00c5terautentisering lyckades",
-            "reauth_wrong_account": "Du kan bara \u00e5terautentisera denna post med samma Overkiz-konto och hub"
-        }
-    }
-}

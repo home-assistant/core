@@ -1,4 +1,5 @@
 """Support for SimpliSafe alarm control panels."""
+
 from __future__ import annotations
 
 from simplipy.errors import SimplipyError
@@ -13,24 +14,21 @@ from simplipy.websocket import (
     EVENT_ARMED_HOME,
     EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
     EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-    EVENT_DISARMED_BY_MASTER_PIN,
+    EVENT_DISARMED_BY_KEYPAD,
     EVENT_DISARMED_BY_REMOTE,
+    EVENT_ENTRY_DELAY,
     EVENT_HOME_EXIT_DELAY,
+    EVENT_SECRET_ALERT_TRIGGERED,
+    EVENT_USER_INITIATED_TEST,
     WebsocketEvent,
 )
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_CODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
@@ -70,9 +68,12 @@ STATE_MAP_FROM_REST_API = {
     SystemStates.ALARM_COUNT: STATE_ALARM_PENDING,
     SystemStates.AWAY: STATE_ALARM_ARMED_AWAY,
     SystemStates.AWAY_COUNT: STATE_ALARM_ARMING,
+    SystemStates.ENTRY_DELAY: STATE_ALARM_PENDING,
     SystemStates.EXIT_DELAY: STATE_ALARM_ARMING,
     SystemStates.HOME: STATE_ALARM_ARMED_HOME,
+    SystemStates.HOME_COUNT: STATE_ALARM_ARMING,
     SystemStates.OFF: STATE_ALARM_DISARMED,
+    SystemStates.TEST: STATE_ALARM_DISARMED,
 }
 
 STATE_MAP_FROM_WEBSOCKET_EVENT = {
@@ -84,9 +85,12 @@ STATE_MAP_FROM_WEBSOCKET_EVENT = {
     EVENT_ARMED_HOME: STATE_ALARM_ARMED_HOME,
     EVENT_AWAY_EXIT_DELAY_BY_KEYPAD: STATE_ALARM_ARMING,
     EVENT_AWAY_EXIT_DELAY_BY_REMOTE: STATE_ALARM_ARMING,
-    EVENT_DISARMED_BY_MASTER_PIN: STATE_ALARM_DISARMED,
+    EVENT_DISARMED_BY_KEYPAD: STATE_ALARM_DISARMED,
     EVENT_DISARMED_BY_REMOTE: STATE_ALARM_DISARMED,
+    EVENT_ENTRY_DELAY: STATE_ALARM_PENDING,
     EVENT_HOME_EXIT_DELAY: STATE_ALARM_ARMING,
+    EVENT_SECRET_ALERT_TRIGGERED: STATE_ALARM_TRIGGERED,
+    EVENT_USER_INITIATED_TEST: STATE_ALARM_DISARMED,
 }
 
 WEBSOCKET_EVENTS_TO_LISTEN_FOR = (
@@ -98,7 +102,7 @@ WEBSOCKET_EVENTS_TO_LISTEN_FOR = (
     EVENT_ARMED_HOME,
     EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
     EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-    EVENT_DISARMED_BY_MASTER_PIN,
+    EVENT_DISARMED_BY_KEYPAD,
     EVENT_DISARMED_BY_REMOTE,
     EVENT_HOME_EXIT_DELAY,
 )
@@ -118,6 +122,13 @@ async def async_setup_entry(
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
+    _attr_code_arm_required = False
+    _attr_name = None
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
         """Initialize the SimpliSafe alarm."""
         super().__init__(
@@ -126,49 +137,23 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
         )
 
-        if code := self._simplisafe.entry.options.get(CONF_CODE):
-            if code.isdigit():
-                self._attr_code_format = FORMAT_NUMBER
-            else:
-                self._attr_code_format = FORMAT_TEXT
-        self._attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
         self._last_event = None
-
         self._set_state_from_system_data()
-
-    @callback
-    def _is_code_valid(self, code: str | None, state: str) -> bool:
-        """Validate that a code matches the required one."""
-        if not self._simplisafe.entry.options.get(CONF_CODE):
-            return True
-
-        if not code or code != self._simplisafe.entry.options[CONF_CODE]:
-            LOGGER.warning(
-                "Incorrect alarm code entered (target state: %s): %s", state, code
-            )
-            return False
-
-        return True
 
     @callback
     def _set_state_from_system_data(self) -> None:
         """Set the state based on the latest REST API data."""
         if self._system.alarm_going_off:
             self._attr_state = STATE_ALARM_TRIGGERED
-        elif self._system.state == SystemStates.ERROR:
-            self.async_increment_error_count()
         elif state := STATE_MAP_FROM_REST_API.get(self._system.state):
             self._attr_state = state
             self.async_reset_error_count()
         else:
-            LOGGER.error("Unknown system state (REST API): %s", self._system.state)
+            LOGGER.warning("Unexpected system state (REST API): %s", self._system.state)
             self.async_increment_error_count()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if not self._is_code_valid(code, STATE_ALARM_DISARMED):
-            return
-
         try:
             await self._system.async_set_off()
         except SimplipyError as err:
@@ -181,9 +166,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if not self._is_code_valid(code, STATE_ALARM_ARMED_HOME):
-            return
-
         try:
             await self._system.async_set_home()
         except SimplipyError as err:
@@ -196,9 +178,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if not self._is_code_valid(code, STATE_ALARM_ARMED_AWAY):
-            return
-
         try:
             await self._system.async_set_away()
         except SimplipyError as err:
@@ -216,9 +195,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             self._attr_extra_state_attributes.update(
                 {
                     ATTR_ALARM_DURATION: self._system.alarm_duration,
-                    ATTR_ALARM_VOLUME: self._system.alarm_volume.name.lower(),
-                    ATTR_BATTERY_BACKUP_POWER_LEVEL: self._system.battery_backup_power_level,
-                    ATTR_CHIME_VOLUME: self._system.chime_volume.name.lower(),
+                    ATTR_BATTERY_BACKUP_POWER_LEVEL: (
+                        self._system.battery_backup_power_level
+                    ),
                     ATTR_ENTRY_DELAY_AWAY: self._system.entry_delay_away,
                     ATTR_ENTRY_DELAY_HOME: self._system.entry_delay_home,
                     ATTR_EXIT_DELAY_AWAY: self._system.exit_delay_away,
@@ -226,11 +205,19 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
                     ATTR_GSM_STRENGTH: self._system.gsm_strength,
                     ATTR_LIGHT: self._system.light,
                     ATTR_RF_JAMMING: self._system.rf_jamming,
-                    ATTR_VOICE_PROMPT_VOLUME: self._system.voice_prompt_volume.name.lower(),
                     ATTR_WALL_POWER_LEVEL: self._system.wall_power_level,
                     ATTR_WIFI_STRENGTH: self._system.wifi_strength,
                 }
             )
+
+            for key, volume_prop in (
+                (ATTR_ALARM_VOLUME, self._system.alarm_volume),
+                (ATTR_CHIME_VOLUME, self._system.chime_volume),
+                (ATTR_VOICE_PROMPT_VOLUME, self._system.voice_prompt_volume),
+            ):
+                if not volume_prop:
+                    continue
+                self._attr_extra_state_attributes[key] = volume_prop.name.lower()
 
         self._set_state_from_system_data()
 

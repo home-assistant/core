@@ -1,40 +1,91 @@
 """Support for functionality to have conversations with Home Assistant."""
+
 from __future__ import annotations
 
-from http import HTTPStatus
 import logging
 import re
+from typing import Literal
 
 import voluptuous as vol
 
-from homeassistant import core
-from homeassistant.components import http, websocket_api
-from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MATCH_ALL
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .agent import AbstractConversationAgent
-from .default_agent import DefaultAgent, async_register
+from .agent_manager import (
+    AgentInfo,
+    agent_id_validator,
+    async_converse,
+    async_get_agent,
+    get_agent_manager,
+)
+from .const import (
+    ATTR_AGENT_ID,
+    ATTR_CONVERSATION_ID,
+    ATTR_LANGUAGE,
+    ATTR_TEXT,
+    DOMAIN,
+    HOME_ASSISTANT_AGENT,
+    OLD_HOME_ASSISTANT_AGENT,
+    SERVICE_PROCESS,
+    SERVICE_RELOAD,
+    ConversationEntityFeature,
+)
+from .default_agent import async_get_default_agent, async_setup_default_agent
+from .entity import ConversationEntity
+from .http import async_setup as async_setup_conversation_http
+from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+
+__all__ = [
+    "DOMAIN",
+    "HOME_ASSISTANT_AGENT",
+    "OLD_HOME_ASSISTANT_AGENT",
+    "async_converse",
+    "async_get_agent_info",
+    "async_set_agent",
+    "async_setup",
+    "async_unset_agent",
+    "ConversationEntity",
+    "ConversationInput",
+    "ConversationResult",
+    "ConversationEntityFeature",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TEXT = "text"
-
-DOMAIN = "conversation"
-
 REGEX_TYPE = type(re.compile(""))
-DATA_AGENT = "conversation_agent"
-DATA_CONFIG = "conversation_config"
 
-SERVICE_PROCESS = "process"
+SERVICE_PROCESS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_TEXT): cv.string,
+        vol.Optional(ATTR_LANGUAGE): cv.string,
+        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
+        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
+    }
+)
 
-SERVICE_PROCESS_SCHEMA = vol.Schema({vol.Required(ATTR_TEXT): cv.string})
+
+SERVICE_RELOAD_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_LANGUAGE): cv.string,
+        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        vol.Optional(DOMAIN): vol.Schema(
             {
                 vol.Optional("intents"): vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
@@ -45,138 +96,181 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-async_register = bind_hass(async_register)
 
-
-@core.callback
+@callback
 @bind_hass
-def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent | None):
+def async_set_agent(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    agent: AbstractConversationAgent,
+) -> None:
     """Set the agent to handle the conversations."""
-    hass.data[DATA_AGENT] = agent
+    get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
+
+
+@callback
+@bind_hass
+def async_unset_agent(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> None:
+    """Set the agent to handle the conversations."""
+    get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
+
+
+@callback
+def async_get_conversation_languages(
+    hass: HomeAssistant, agent_id: str | None = None
+) -> set[str] | Literal["*"]:
+    """Return languages supported by conversation agents.
+
+    If an agent is specified, returns a set of languages supported by that agent.
+    If no agent is specified, return a set with the union of languages supported by
+    all conversation agents.
+    """
+    agent_manager = get_agent_manager(hass)
+    entity_component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
+    agents: list[ConversationEntity | AbstractConversationAgent]
+
+    if agent_id:
+        agent = async_get_agent(hass, agent_id)
+
+        if agent is None:
+            raise ValueError(f"Agent {agent_id} not found")
+
+        # Shortcut
+        if agent.supported_languages == MATCH_ALL:
+            return MATCH_ALL
+
+        agents = [agent]
+
+    else:
+        agents = list(entity_component.entities)
+        for info in agent_manager.async_get_agent_info():
+            agent = agent_manager.async_get_agent(info.id)
+            assert agent is not None
+
+            # Shortcut
+            if agent.supported_languages == MATCH_ALL:
+                return MATCH_ALL
+
+            agents.append(agent)
+
+    languages: set[str] = set()
+
+    for agent in agents:
+        for language_tag in agent.supported_languages:
+            languages.add(language_tag)
+
+    return languages
+
+
+@callback
+def async_get_agent_info(
+    hass: HomeAssistant,
+    agent_id: str | None = None,
+) -> AgentInfo | None:
+    """Get information on the agent or None if not found."""
+    agent = async_get_agent(hass, agent_id)
+
+    if agent is None:
+        return None
+
+    if isinstance(agent, ConversationEntity):
+        name = agent.name
+        if not isinstance(name, str):
+            name = agent.entity_id
+        return AgentInfo(id=agent.entity_id, name=name)
+
+    manager = get_agent_manager(hass)
+
+    for agent_info in manager.async_get_agent_info():
+        if agent_info.id == agent_id:
+            return agent_info
+
+    return None
+
+
+async def async_prepare_agent(
+    hass: HomeAssistant, agent_id: str | None, language: str
+) -> None:
+    """Prepare given agent."""
+    agent = async_get_agent(hass, agent_id)
+
+    if agent is None:
+        raise ValueError("Invalid agent specified")
+
+    await agent.async_prepare(language)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    hass.data[DATA_CONFIG] = config
+    entity_component: EntityComponent[ConversationEntity] = EntityComponent(
+        _LOGGER, DOMAIN, hass
+    )
+    hass.data[DOMAIN] = entity_component
 
-    async def handle_service(service: core.ServiceCall) -> None:
+    await async_setup_default_agent(
+        hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
+    )
+
+    # Temporary migration. We can remove this in 2024.10
+    from homeassistant.components.assist_pipeline import (  # pylint: disable=import-outside-toplevel
+        async_migrate_engine,
+    )
+
+    async_migrate_engine(
+        hass, "conversation", OLD_HOME_ASSISTANT_AGENT, HOME_ASSISTANT_AGENT
+    )
+
+    async def handle_process(service: ServiceCall) -> ServiceResponse:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
-        agent = await _get_agent(hass)
         try:
-            await agent.async_process(text, service.context)
+            result = await async_converse(
+                hass=hass,
+                text=text,
+                conversation_id=service.data.get(ATTR_CONVERSATION_ID),
+                context=service.context,
+                language=service.data.get(ATTR_LANGUAGE),
+                agent_id=service.data.get(ATTR_AGENT_ID),
+            )
         except intent.IntentHandleError as err:
-            _LOGGER.error("Error processing %s: %s", text, err)
+            raise HomeAssistantError(f"Error processing {text}: {err}") from err
+
+        if service.return_response:
+            return result.as_dict()
+
+        return None
+
+    async def handle_reload(service: ServiceCall) -> None:
+        """Reload intents."""
+        agent = async_get_default_agent(hass)
+        await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_service, schema=SERVICE_PROCESS_SCHEMA
+        DOMAIN,
+        SERVICE_PROCESS,
+        handle_process,
+        schema=SERVICE_PROCESS_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
-    hass.http.register_view(ConversationProcessView())
-    websocket_api.async_register_command(hass, websocket_process)
-    websocket_api.async_register_command(hass, websocket_get_agent_info)
-    websocket_api.async_register_command(hass, websocket_set_onboarding)
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
+    )
+    async_setup_conversation_http(hass)
 
     return True
 
 
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str}
-)
-async def websocket_process(hass, connection, msg):
-    """Process text."""
-    connection.send_result(
-        msg["id"],
-        await _async_converse(
-            hass, msg["text"], msg.get("conversation_id"), connection.context(msg)
-        ),
-    )
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-@websocket_api.async_response
-@websocket_api.websocket_command({"type": "conversation/agent/info"})
-async def websocket_get_agent_info(hass, connection, msg):
-    """Do we need onboarding."""
-    agent = await _get_agent(hass)
-
-    connection.send_result(
-        msg["id"],
-        {
-            "onboarding": await agent.async_get_onboarding(),
-            "attribution": agent.attribution,
-        },
-    )
-
-
-@websocket_api.async_response
-@websocket_api.websocket_command({"type": "conversation/onboarding/set", "shown": bool})
-async def websocket_set_onboarding(hass, connection, msg):
-    """Set onboarding status."""
-    agent = await _get_agent(hass)
-
-    success = await agent.async_set_onboarding(msg["shown"])
-
-    if success:
-        connection.send_result(msg["id"])
-    else:
-        connection.send_error(msg["id"])
-
-
-class ConversationProcessView(http.HomeAssistantView):
-    """View to process text."""
-
-    url = "/api/conversation/process"
-    name = "api:conversation:process"
-
-    @RequestDataValidator(
-        vol.Schema({vol.Required("text"): str, vol.Optional("conversation_id"): str})
-    )
-    async def post(self, request, data):
-        """Send a request for processing."""
-        hass = request.app["hass"]
-
-        try:
-            intent_result = await _async_converse(
-                hass, data["text"], data.get("conversation_id"), self.context(request)
-            )
-        except intent.IntentError as err:
-            _LOGGER.error("Error handling intent: %s", err)
-            return self.json(
-                {
-                    "success": False,
-                    "error": {
-                        "code": str(err.__class__.__name__).lower(),
-                        "message": str(err),
-                    },
-                },
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
-        return self.json(intent_result)
-
-
-async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
-    """Get the active conversation agent."""
-    if (agent := hass.data.get(DATA_AGENT)) is None:
-        agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
-        await agent.async_initialize(hass.data.get(DATA_CONFIG))
-    return agent
-
-
-async def _async_converse(
-    hass: core.HomeAssistant, text: str, conversation_id: str, context: core.Context
-) -> intent.IntentResponse:
-    """Process text and get intent."""
-    agent = await _get_agent(hass)
-    try:
-        intent_result = await agent.async_process(text, context, conversation_id)
-    except intent.IntentHandleError as err:
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(str(err))
-
-    if intent_result is None:
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech("Sorry, I didn't understand that")
-
-    return intent_result
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)

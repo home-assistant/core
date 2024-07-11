@@ -1,4 +1,5 @@
 """Person detection using Sighthound cloud service."""
+
 from __future__ import annotations
 
 import io
@@ -10,7 +11,7 @@ import simplehound.core as hound
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -40,7 +41,7 @@ DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 DEV = "dev"
 PROD = "prod"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
@@ -86,6 +87,7 @@ def setup_platform(
 class SighthoundEntity(ImageProcessingEntity):
     """Create a sighthound entity."""
 
+    _attr_should_poll = False
     _attr_unit_of_measurement = ATTR_PEOPLE
 
     def __init__(
@@ -166,11 +168,6 @@ class SighthoundEntity(ImageProcessingEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def state(self):

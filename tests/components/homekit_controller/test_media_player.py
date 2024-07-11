@@ -1,4 +1,5 @@
 """Basic checks for HomeKit motion sensors and contact sensors."""
+
 from aiohomekit.model.characteristics import (
     CharacteristicPermissions,
     CharacteristicsTypes,
@@ -6,12 +7,14 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import ServicesTypes
 import pytest
 
-from tests.components.homekit_controller.common import setup_test_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .common import get_next_aid, setup_test_component
 
 
 def create_tv_service(accessory):
-    """
-    Define tv characteristics.
+    """Define tv characteristics.
 
     The TV is not currently documented publicly - this is based on observing really TV's that have HomeKit support.
     """
@@ -59,7 +62,7 @@ def create_tv_service_with_target_media_state(accessory):
     return service
 
 
-async def test_tv_read_state(hass, utcnow):
+async def test_tv_read_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit fan accessory."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -88,7 +91,7 @@ async def test_tv_read_state(hass, utcnow):
     assert state.state == "idle"
 
 
-async def test_tv_read_sources(hass, utcnow):
+async def test_tv_read_sources(hass: HomeAssistant) -> None:
     """Test that we can read the input source of a HomeKit TV."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -97,7 +100,7 @@ async def test_tv_read_sources(hass, utcnow):
     assert state.attributes["source_list"] == ["HDMI 1", "HDMI 2"]
 
 
-async def test_play_remote_key(hass, utcnow):
+async def test_play_remote_key(hass: HomeAssistant) -> None:
     """Test that we can play media on a media player."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -144,7 +147,7 @@ async def test_play_remote_key(hass, utcnow):
     )
 
 
-async def test_pause_remote_key(hass, utcnow):
+async def test_pause_remote_key(hass: HomeAssistant) -> None:
     """Test that we can pause a media player."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -191,7 +194,7 @@ async def test_pause_remote_key(hass, utcnow):
     )
 
 
-async def test_play(hass, utcnow):
+async def test_play(hass: HomeAssistant) -> None:
     """Test that we can play media on a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
@@ -240,7 +243,7 @@ async def test_play(hass, utcnow):
     )
 
 
-async def test_pause(hass, utcnow):
+async def test_pause(hass: HomeAssistant) -> None:
     """Test that we can turn pause a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
@@ -288,7 +291,7 @@ async def test_pause(hass, utcnow):
     )
 
 
-async def test_stop(hass, utcnow):
+async def test_stop(hass: HomeAssistant) -> None:
     """Test that we can  stop a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
@@ -329,7 +332,7 @@ async def test_stop(hass, utcnow):
     )
 
 
-async def test_tv_set_source(hass, utcnow):
+async def test_tv_set_source(hass: HomeAssistant) -> None:
     """Test that we can set the input source of a HomeKit TV."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -350,7 +353,7 @@ async def test_tv_set_source(hass, utcnow):
     assert state.attributes["source"] == "HDMI 2"
 
 
-async def test_tv_set_source_fail(hass, utcnow):
+async def test_tv_set_source_fail(hass: HomeAssistant) -> None:
     """Test that we can set the input source of a HomeKit TV."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -364,3 +367,21 @@ async def test_tv_set_source_fail(hass, utcnow):
 
     state = await helper.poll_and_get_state()
     assert state.attributes["source"] == "HDMI 1"
+
+
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a we can migrate a media_player unique id."""
+    aid = get_next_aid()
+    media_player_entry = entity_registry.async_get_or_create(
+        "media_player",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_tv_service_with_target_media_state)
+
+    assert (
+        entity_registry.async_get(media_player_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

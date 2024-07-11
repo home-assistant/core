@@ -62,7 +62,39 @@
         },
         "mandatorySupportedCCs": [32, 38],
         "mandatoryControlledCCs": []
-      }
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
     }
   ],
   "values": [
@@ -306,38 +338,6 @@
     "mandatorySupportedCCs": [32, 38],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [
-    {
-      "id": 38,
-      "name": "Multilevel Switch",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 113,
-      "name": "Notification",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 1,
-      "isSecure": false
-    }
-  ],
   "interviewStage": "Complete",
   "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0084:0x0313:0x010b:1.11",
   "statistics": {

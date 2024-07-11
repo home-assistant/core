@@ -1,15 +1,16 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
+
 from __future__ import annotations
 
 import logging
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 from typing import Final
 
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -22,7 +23,7 @@ from .model import Device
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -31,14 +32,16 @@ PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> ActiontecDeviceScanner | None:
     """Validate the configuration and return an Actiontec scanner."""
     scanner = ActiontecDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
 
 
 class ActiontecDeviceScanner(DeviceScanner):
-    """This class queries an actiontec router for connected devices."""
+    """Class which queries an actiontec router for connected devices."""
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""

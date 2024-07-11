@@ -1,4 +1,5 @@
 """Tests for the geonetnz_quakes component."""
+
 from unittest.mock import MagicMock
 
 

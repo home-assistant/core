@@ -1,46 +1,35 @@
 """Base Entity for Sonarr."""
+
 from __future__ import annotations
 
-from aiopyarr import SystemStatus
-from aiopyarr.models.host_configuration import PyArrHostConfiguration
-from aiopyarr.sonarr_client import SonarrClient
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, Entity
-
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
 
 
-class SonarrEntity(Entity):
+class SonarrEntity(CoordinatorEntity[SonarrDataUpdateCoordinator[SonarrDataT]]):
     """Defines a base Sonarr entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        *,
-        sonarr: SonarrClient,
-        host_config: PyArrHostConfiguration,
-        system_status: SystemStatus,
-        entry_id: str,
-        device_id: str,
+        coordinator: SonarrDataUpdateCoordinator[SonarrDataT],
+        description: EntityDescription,
     ) -> None:
         """Initialize the Sonarr entity."""
-        self._entry_id = entry_id
-        self._device_id = device_id
-        self.sonarr = sonarr
-        self.host_config = host_config
-        self.system_status = system_status
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information about the application."""
-        if self._device_id is None:
-            return None
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name="Activity Sensor",
-            manufacturer="Sonarr",
-            sw_version=self.system_status.version,
+        super().__init__(coordinator)
+        self.coordinator = coordinator
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url=self.host_config.base_url,
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            manufacturer=DEFAULT_NAME,
+            name=DEFAULT_NAME,
+            sw_version=coordinator.system_version,
         )

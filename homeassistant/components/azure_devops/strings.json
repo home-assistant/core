@@ -18,7 +18,7 @@
       },
       "reauth": {
         "data": {
-          "personal_access_token": "Personal Access Token (PAT)"
+          "personal_access_token": "[%key:component::azure_devops::config::step::user::data::personal_access_token%]"
         },
         "description": "Authentication failed for {project_url}. Please enter your current credentials.",
         "title": "Reauthentication"
@@ -27,6 +27,45 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "build_id": {
+        "name": "{definition_name} latest build id"
+      },
+      "finish_time": {
+        "name": "{definition_name} latest build finish time"
+      },
+      "latest_build": {
+        "name": "{definition_name} latest build"
+      },
+      "queue_time": {
+        "name": "{definition_name} latest build queue time"
+      },
+      "reason": {
+        "name": "{definition_name} latest build reason"
+      },
+      "result": {
+        "name": "{definition_name} latest build result"
+      },
+      "source_branch": {
+        "name": "{definition_name} latest build source branch"
+      },
+      "source_version": {
+        "name": "{definition_name} latest build source version"
+      },
+      "start_time": {
+        "name": "{definition_name} latest build start time"
+      },
+      "url": {
+        "name": "{definition_name} latest build url"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Could not authorize with Azure DevOps for {title}. You will need to update your personal access token."
     }
   }
 }

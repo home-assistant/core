@@ -1,4 +1,5 @@
 """Config flow to configure ecobee."""
+
 from pyecobee import (
     ECOBEE_API_KEY,
     ECOBEE_CONFIG_FILENAME,
@@ -7,20 +8,20 @@ from pyecobee import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.json import load_json
+from homeassistant.util.json import load_json_object
 
 from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 
 
-class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an ecobee config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ecobee flow."""
         self._ecobee = None
 
@@ -76,8 +77,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data):
-        """
-        Import ecobee config from configuration.yaml.
+        """Import ecobee config from configuration.yaml.
 
         Triggered by async_setup only if a config entry doesn't already exist.
         If ecobee.conf exists, we will attempt to validate the credentials
@@ -86,7 +86,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         try:
             legacy_config = await self.hass.async_add_executor_job(
-                load_json, self.hass.config.path(ECOBEE_CONFIG_FILENAME)
+                load_json_object, self.hass.config.path(ECOBEE_CONFIG_FILENAME)
             )
             config = {
                 ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
@@ -94,7 +94,8 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         except (HomeAssistantError, KeyError):
             _LOGGER.debug(
-                "No valid ecobee.conf configuration found for import, delegating to user step"
+                "No valid ecobee.conf configuration found for import, delegating to"
+                " user step"
             )
             return await self.async_step_user(
                 user_input={
@@ -106,7 +107,8 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
             # Credentials found and validated; create the entry.
             _LOGGER.debug(
-                "Valid ecobee configuration found for import, creating configuration entry"
+                "Valid ecobee configuration found for import, creating configuration"
+                " entry"
             )
             return self.async_create_entry(
                 title=DOMAIN,

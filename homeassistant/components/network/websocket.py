@@ -1,5 +1,8 @@
 """The Network Configuration integration websocket commands."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -24,7 +27,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
 async def websocket_network_adapters(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Return network preferences."""
     network = await async_get_network(hass)
@@ -48,7 +51,7 @@ async def websocket_network_adapters(
 async def websocket_network_adapters_configure(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Update network config."""
     network = await async_get_network(hass)

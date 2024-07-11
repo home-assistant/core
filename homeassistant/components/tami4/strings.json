@@ -1,0 +1,59 @@
+{
+  "entity": {
+    "sensor": {
+      "uv_last_replacement": {
+        "name": "UV last replacement"
+      },
+      "uv_upcoming_replacement": {
+        "name": "UV upcoming replacement"
+      },
+      "uv_installed": {
+        "name": "UV installed"
+      },
+      "filter_last_replacement": {
+        "name": "Filter last replacement"
+      },
+      "filter_upcoming_replacement": {
+        "name": "Filter upcoming replacement"
+      },
+      "filter_installed": {
+        "name": "Filter installed"
+      },
+      "filter_litters_passed": {
+        "name": "Filter water passed"
+      }
+    },
+    "button": {
+      "boil_water": {
+        "name": "Boil water"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "SMS Verification",
+        "description": "Enter your phone number (same as what you used to register to the tami4 app)",
+        "data": {
+          "phone": "Phone Number"
+        }
+      },
+      "otp": {
+        "title": "[%key:component::tami4::config::step::user::title%]",
+        "description": "Enter the code you received via SMS",
+        "data": {
+          "otp": "SMS Code"
+        }
+      }
+    },
+    "error": {
+      "invalid_phone": "Invalid phone number, please use the following format: +972xxxxxxxx",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

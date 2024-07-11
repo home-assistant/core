@@ -1,25 +1,36 @@
 """Commands part of Websocket API."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
-import datetime as dt
+from functools import lru_cache, partial
 import json
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
-from homeassistant.core import Context, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Context,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    ServiceResponse,
+    State,
+    callback,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
 )
@@ -30,18 +41,30 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.json import ExtendedJSONEncoder
-from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
-from homeassistant.util.json import (
+from homeassistant.helpers.json import (
+    JSON_DUMP,
+    ExtendedJSONEncoder,
     find_paths_unserializable_data,
-    format_unserializable_data,
+    json_bytes,
+    json_fragment,
 )
+from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.loader import (
+    IntegrationNotFound,
+    async_get_integration,
+    async_get_integration_descriptions,
+    async_get_integrations,
+)
+from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
+from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
-from .const import ERR_NOT_FOUND
+from .messages import construct_result_message
+
+ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -69,11 +92,43 @@ def async_register_commands(
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
+    async_reg(hass, handle_supported_features)
+    async_reg(hass, handle_integration_descriptions)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
     """Return a pong message."""
     return {"id": iden, "type": "pong"}
+
+
+@callback
+def _forward_events_check_permissions(
+    send_message: Callable[[bytes | str | dict[str, Any]], None],
+    user: User,
+    message_id_as_bytes: bytes,
+    event: Event,
+) -> None:
+    """Forward state changed events to websocket."""
+    # We have to lookup the permissions again because the user might have
+    # changed since the subscription was created.
+    permissions = user.permissions
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
+        return
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
+
+
+@callback
+def _forward_events_unconditional(
+    send_message: Callable[[bytes | str | dict[str, Any]], None],
+    message_id_as_bytes: bytes,
+    event: Event,
+) -> None:
+    """Forward events to websocket."""
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
 
 
 @callback
@@ -87,36 +142,29 @@ def handle_subscribe_events(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe events command."""
-    # Circular dep
-    # pylint: disable=import-outside-toplevel
-    from .permissions import SUBSCRIBE_ALLOWLIST
-
     event_type = msg["event_type"]
 
     if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
-        raise Unauthorized
+        _LOGGER.error(
+            "Refusing to allow %s to subscribe to event %s",
+            connection.user.name,
+            event_type,
+        )
+        raise Unauthorized(user_id=connection.user.id)
+
+    message_id_as_bytes = str(msg["id"]).encode()
 
     if event_type == EVENT_STATE_CHANGED:
-
-        @callback
-        def forward_events(event: Event) -> None:
-            """Forward state changed events to websocket."""
-            if not connection.user.permissions.check_entity(
-                event.data["entity_id"], POLICY_READ
-            ):
-                return
-
-            connection.send_message(messages.cached_event_message(msg["id"], event))
-
+        forward_events = partial(
+            _forward_events_check_permissions,
+            connection.send_message,
+            connection.user,
+            message_id_as_bytes,
+        )
     else:
-
-        @callback
-        def forward_events(event: Event) -> None:
-            """Forward events to websocket."""
-            if event.event_type == EVENT_TIME_CHANGED:
-                return
-
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+        forward_events = partial(
+            _forward_events_unconditional, connection.send_message, message_id_as_bytes
+        )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events
@@ -142,7 +190,7 @@ def handle_subscribe_bootstrap_integrations(
         connection.send_message(messages.event_message(msg["id"], message))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
+        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, forward_bootstrap_integrations
     )
 
     connection.send_result(msg["id"])
@@ -175,6 +223,7 @@ def handle_unsubscribe_events(
         vol.Required("service"): str,
         vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
+        vol.Optional("return_response", default=False): bool,
     }
 )
 @decorators.async_response
@@ -182,7 +231,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    blocking = True
     # We do not support templates.
     target = msg.get("target")
     if template.is_complex(target):
@@ -190,27 +238,70 @@ async def handle_call_service(
 
     try:
         context = connection.context(msg)
-        await hass.services.async_call(
-            msg["domain"],
-            msg["service"],
-            msg.get("service_data"),
-            blocking,
-            context,
+        response = await hass.services.async_call(
+            domain=msg["domain"],
+            service=msg["service"],
+            service_data=msg.get("service_data"),
+            blocking=True,
+            context=context,
             target=target,
+            return_response=msg["return_response"],
         )
-        connection.send_result(msg["id"], {"context": context})
+        result: dict[str, Context | ServiceResponse] = {"context": context}
+        if msg["return_response"]:
+            result["response"] = response
+        connection.send_result(msg["id"], result)
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
-            connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
+            connection.send_error(
+                msg["id"],
+                const.ERR_NOT_FOUND,
+                f"Service {err.domain}.{err.service} not found.",
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            )
         else:
-            connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+            # The called service called another service which does not exist
+            connection.send_error(
+                msg["id"],
+                const.ERR_HOME_ASSISTANT_ERROR,
+                f"Service {err.domain}.{err.service} called service "
+                f"{msg['domain']}.{msg['service']} which was not found.",
+                translation_domain=const.DOMAIN,
+                translation_key="child_service_not_found",
+                translation_placeholders={
+                    "domain": err.domain,
+                    "service": err.service,
+                    "child_domain": msg["domain"],
+                    "child_service": msg["service"],
+                },
+            )
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            f"Validation error: {err}",
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
     except HomeAssistantError as err:
-        connection.logger.exception(err)
-        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
-    except Exception as err:  # pylint: disable=broad-except
-        connection.logger.exception(err)
+        connection.logger.exception("Unexpected exception")
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+    except Exception as err:
+        connection.logger.exception("Unexpected exception")
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
 
 
@@ -218,13 +309,14 @@ async def handle_call_service(
 def _async_get_allowed_states(
     hass: HomeAssistant, connection: ActiveConnection
 ) -> list[State]:
-    if connection.user.permissions.access_all_entities("read"):
+    user = connection.user
+    if user.is_admin or user.permissions.access_all_entities(POLICY_READ):
         return hass.states.async_all()
     entity_perm = connection.user.permissions.check_entity
     return [
         state
         for state in hass.states.async_all()
-        if entity_perm(state.entity_id, "read")
+        if entity_perm(state.entity_id, POLICY_READ)
     ]
 
 
@@ -236,35 +328,63 @@ def handle_get_states(
     """Handle get states command."""
     states = _async_get_allowed_states(hass, connection)
 
-    # JSON serialize here so we can recover if it blows up due to the
-    # state machine containing unserializable data. This command is required
-    # to succeed for the UI to show.
-    response = messages.result_message(msg["id"], states)
     try:
-        connection.send_message(const.JSON_DUMP(response))
-        return
+        serialized_states = [state.as_dict_json for state in states]
     except (ValueError, TypeError):
-        connection.logger.error(
-            "Unable to serialize to JSON. Bad data found at %s",
-            format_unserializable_data(
-                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
-            ),
-        )
-    del response
+        pass
+    else:
+        _send_handle_get_states_response(connection, msg["id"], serialized_states)
+        return
 
     # If we can't serialize, we'll filter out unserializable states
-    serialized = []
+    serialized_states = []
     for state in states:
         try:
-            serialized.append(const.JSON_DUMP(state))
+            serialized_states.append(state.as_dict_json)
         except (ValueError, TypeError):
-            # Error is already logged above
-            pass
+            connection.logger.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(state, dump=JSON_DUMP)
+                ),
+            )
 
-    # We now have partially serialized states. Craft some JSON.
-    response2 = const.JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
-    response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
-    connection.send_message(response2)
+    _send_handle_get_states_response(connection, msg["id"], serialized_states)
+
+
+def _send_handle_get_states_response(
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
+) -> None:
+    """Send handle get states response."""
+    connection.send_message(
+        construct_result_message(
+            msg_id, b"".join((b"[", b",".join(serialized_states), b"]"))
+        )
+    )
+
+
+@callback
+def _forward_entity_changes(
+    send_message: Callable[[str | bytes | dict[str, Any]], None],
+    entity_ids: set[str],
+    user: User,
+    message_id_as_bytes: bytes,
+    event: Event[EventStateChangedData],
+) -> None:
+    """Forward entity state changed events to websocket."""
+    entity_id = event.data["entity_id"]
+    if entity_ids and entity_id not in entity_ids:
+        return
+    # We have to lookup the permissions again because the user might have
+    # changed since the subscription was created.
+    permissions = user.permissions
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
+        return
+    send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
 
 
 @callback
@@ -279,63 +399,83 @@ def handle_subscribe_entities(
 ) -> None:
     """Handle subscribe entities command."""
     entity_ids = set(msg.get("entity_ids", []))
-
-    @callback
-    def forward_entity_changes(event: Event) -> None:
-        """Forward entity state changed events to websocket."""
-        if not connection.user.permissions.check_entity(
-            event.data["entity_id"], POLICY_READ
-        ):
-            return
-        if entity_ids and event.data["entity_id"] not in entity_ids:
-            return
-
-        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
-
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
+    message_id_as_bytes = str(msg["id"]).encode()
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        "state_changed", forward_entity_changes
+        EVENT_STATE_CHANGED,
+        partial(
+            _forward_entity_changes,
+            connection.send_message,
+            entity_ids,
+            connection.user,
+            message_id_as_bytes,
+        ),
     )
     connection.send_result(msg["id"])
-    data: dict[str, dict[str, dict]] = {
-        messages.ENTITY_EVENT_ADD: {
-            state.entity_id: messages.compressed_state_dict_add(state)
-            for state in states
-            if not entity_ids or state.entity_id in entity_ids
-        }
-    }
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
-    response = messages.event_message(msg["id"], data)
     try:
-        connection.send_message(const.JSON_DUMP(response))
-        return
+        serialized_states = [
+            state.as_compressed_state_json
+            for state in states
+            if not entity_ids or state.entity_id in entity_ids
+        ]
     except (ValueError, TypeError):
-        connection.logger.error(
-            "Unable to serialize to JSON. Bad data found at %s",
-            format_unserializable_data(
-                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
-            ),
-        )
-    del response
+        pass
+    else:
+        _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+        return
 
-    add_entities = data[messages.ENTITY_EVENT_ADD]
-    cannot_serialize: list[str] = []
-    for entity_id, state_dict in add_entities.items():
+    serialized_states = []
+    for state in states:
         try:
-            const.JSON_DUMP(state_dict)
+            serialized_states.append(state.as_compressed_state_json)
         except (ValueError, TypeError):
-            cannot_serialize.append(entity_id)
+            connection.logger.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(state, dump=JSON_DUMP)
+                ),
+            )
 
-    for entity_id in cannot_serialize:
-        del add_entities[entity_id]
+    _send_handle_entities_init_response(connection, msg["id"], serialized_states)
 
-    connection.send_message(const.JSON_DUMP(messages.event_message(msg["id"], data)))
+
+def _send_handle_entities_init_response(
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
+) -> None:
+    """Send handle entities init response."""
+    connection.send_message(
+        b"".join(
+            (
+                b'{"id":',
+                str(msg_id).encode(),
+                b',"type":"event","event":{"a":{',
+                b",".join(serialized_states),
+                b"}}}",
+            )
+        )
+    )
+
+
+async def _async_get_all_descriptions_json(hass: HomeAssistant) -> bytes:
+    """Return JSON of descriptions (i.e. user documentation) for all service calls."""
+    descriptions = await async_get_all_descriptions(hass)
+    if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_SERVICE_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(descriptions)
+    hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
@@ -344,8 +484,8 @@ async def handle_get_services(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get services command."""
-    descriptions = await async_get_all_descriptions(hass)
-    connection.send_result(msg["id"], descriptions)
+    payload = await _async_get_all_descriptions_json(hass)
+    connection.send_message(construct_result_message(msg["id"], payload))
 
 
 @callback
@@ -357,19 +497,23 @@ def handle_get_config(
     connection.send_result(msg["id"], hass.config.as_dict())
 
 
-@decorators.websocket_command({vol.Required("type"): "manifest/list"})
+@decorators.websocket_command(
+    {vol.Required("type"): "manifest/list", vol.Optional("integrations"): [str]}
+)
 @decorators.async_response
 async def handle_manifest_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    loaded_integrations = async_get_loaded_integrations(hass)
-    integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in loaded_integrations)
+    ints_or_excs = await async_get_integrations(
+        hass, msg.get("integrations") or async_get_loaded_integrations(hass)
     )
-    connection.send_result(
-        msg["id"], [integration.manifest for integration in integrations]
-    )
+    manifest_json_fragments: list[json_fragment] = []
+    for int_or_exc in ints_or_excs.values():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        manifest_json_fragments.append(int_or_exc.manifest_json_fragment)
+    connection.send_result(msg["id"], manifest_json_fragments)
 
 
 @decorators.websocket_command(
@@ -382,24 +526,23 @@ async def handle_manifest_get(
     """Handle integrations command."""
     try:
         integration = await async_get_integration(hass, msg["integration"])
-        connection.send_result(msg["id"], integration.manifest)
     except IntegrationNotFound:
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
+    else:
+        connection.send_result(msg["id"], integration.manifest_json_fragment)
 
 
+@callback
 @decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
-@decorators.async_response
-async def handle_integration_setup_info(
+def handle_integration_setup_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
     connection.send_result(
         msg["id"],
         [
-            {"domain": integration, "seconds": timedelta.total_seconds()}
-            for integration, timedelta in cast(
-                dict[str, dt.timedelta], hass.data[DATA_SETUP_TIME]
-            ).items()
+            {"domain": integration, "seconds": seconds}
+            for integration, seconds in async_get_setup_timings(hass).items()
         ],
     )
 
@@ -413,6 +556,12 @@ def handle_ping(
     connection.send_message(pong_message(msg["id"]))
 
 
+@lru_cache
+def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
+
+
 @decorators.websocket_command(
     {
         vol.Required("type"): "render_template",
@@ -421,6 +570,7 @@ def handle_ping(
         vol.Optional("variables"): dict,
         vol.Optional("timeout"): vol.Coerce(float),
         vol.Optional("strict", default=False): bool,
+        vol.Optional("report_errors", default=False): bool,
     }
 )
 @decorators.async_response
@@ -429,19 +579,35 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = template.Template(template_str, hass)  # type: ignore[no-untyped-call]
+    report_errors: bool = msg["report_errors"]
+    if report_errors:
+        template_obj = template.Template(template_str, hass)
+    else:
+        template_obj = _cached_template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
-    info = None
+
+    @callback
+    def _error_listener(level: int, template_error: str) -> None:
+        connection.send_message(
+            messages.event_message(
+                msg["id"],
+                {"error": template_error, "level": logging.getLevelName(level)},
+            )
+        )
+
+    @callback
+    def _thread_safe_error_listener(level: int, template_error: str) -> None:
+        hass.loop.call_soon_threadsafe(_error_listener, level, template_error)
 
     if timeout:
         try:
+            log_fn = _thread_safe_error_listener if report_errors else None
             timed_out = await template_obj.async_render_will_timeout(
-                timeout, variables, strict=msg["strict"]
+                timeout, variables, strict=msg["strict"], log_fn=log_fn
             )
-        except TemplateError as ex:
-            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
-            return
+        except TemplateError:
+            timed_out = False
 
         if timed_out:
             connection.send_error(
@@ -453,28 +619,35 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: Event | None, updates: list[TrackTemplateResult]
+        event: Event[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
     ) -> None:
-        nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
-            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
+            if not report_errors:
+                return
+            connection.send_message(
+                messages.event_message(
+                    msg["id"], {"error": str(result), "level": "ERROR"}
+                )
+            )
             return
 
         connection.send_message(
             messages.event_message(
-                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore[attr-defined]
+                msg["id"], {"result": result, "listeners": info.listeners}
             )
         )
 
     try:
+        log_fn = _error_listener if report_errors else None
         info = async_track_template_result(
             hass,
             [TrackTemplate(template_obj, variables)],
             _template_listener,
-            raise_on_template_error=True,
             strict=msg["strict"],
+            log_fn=log_fn,
         )
     except TemplateError as ex:
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
@@ -487,47 +660,35 @@ async def handle_render_template(
     hass.loop.call_soon_threadsafe(info.async_refresh)
 
 
+def _serialize_entity_sources(
+    entity_infos: dict[str, entity.EntityInfo],
+) -> dict[str, Any]:
+    """Prepare a websocket response from a dict of entity sources."""
+    return {
+        entity_id: {"domain": entity_info["domain"]}
+        for entity_id, entity_info in entity_infos.items()
+    }
+
+
 @callback
-@decorators.websocket_command(
-    {vol.Required("type"): "entity/source", vol.Optional("entity_id"): [cv.entity_id]}
-)
+@decorators.websocket_command({vol.Required("type"): "entity/source"})
 def handle_entity_source(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle entity source command."""
-    raw_sources = entity.entity_sources(hass)
+    all_entity_sources = entity.entity_sources(hass)
     entity_perm = connection.user.permissions.check_entity
 
-    if "entity_id" not in msg:
-        if connection.user.permissions.access_all_entities("read"):
-            sources = raw_sources
-        else:
-            sources = {
-                entity_id: source
-                for entity_id, source in raw_sources.items()
-                if entity_perm(entity_id, "read")
-            }
+    if connection.user.permissions.access_all_entities(POLICY_READ):
+        entity_sources = all_entity_sources
+    else:
+        entity_sources = {
+            entity_id: source
+            for entity_id, source in all_entity_sources.items()
+            if entity_perm(entity_id, POLICY_READ)
+        }
 
-        connection.send_result(msg["id"], sources)
-        return
-
-    sources = {}
-
-    for entity_id in msg["entity_id"]:
-        if not entity_perm(entity_id, "read"):
-            raise Unauthorized(
-                context=connection.context(msg),
-                permission=POLICY_READ,
-                perm_category=CAT_ENTITIES,
-            )
-
-        if (source := raw_sources.get(entity_id)) is None:
-            connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
-            return
-
-        sources[entity_id] = source
-
-    connection.send_result(msg["id"], sources)
+    connection.send_result(msg["id"], _serialize_entity_sources(entity_sources))
 
 
 @decorators.websocket_command(
@@ -544,7 +705,7 @@ async def handle_subscribe_trigger(
 ) -> None:
     """Handle subscribe trigger command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import trigger
 
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
@@ -595,12 +756,11 @@ async def handle_test_condition(
 ) -> None:
     """Handle test condition command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition
 
     # Do static + dynamic validation of the condition
-    config = cv.CONDITION_SCHEMA(msg["condition"])
-    config = await condition.async_validate_condition_config(hass, config)
+    config = await condition.async_validate_condition_config(hass, msg["condition"])
     # Test the condition
     check_condition = await condition.async_from_config(hass, config)
     connection.send_result(
@@ -622,15 +782,39 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers.script import Script
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.helpers.script import Script, async_validate_actions_config
+
+    script_config = await async_validate_actions_config(hass, msg["sequence"])
 
     context = connection.context(msg)
-    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
-    await script_obj.async_run(msg.get("variables"), context=context)
-    connection.send_result(msg["id"], {"context": context})
+    script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
+    try:
+        script_result = await script_obj.async_run(
+            msg.get("variables"), context=context
+        )
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
+    connection.send_result(
+        msg["id"],
+        {
+            "context": context,
+            "response": script_result.service_response if script_result else None,
+        },
+    )
 
 
+@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "fire_event",
@@ -639,8 +823,7 @@ async def handle_execute_script(
     }
 )
 @decorators.require_admin
-@decorators.async_response
-async def handle_fire_event(
+def handle_fire_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle fire event command."""
@@ -664,24 +847,52 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition, script, trigger
 
     result = {}
 
     for key, schema, validator in (
         ("trigger", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
-        ("condition", cv.CONDITION_SCHEMA, condition.async_validate_condition_config),
+        ("condition", cv.CONDITIONS_SCHEMA, condition.async_validate_conditions_config),
         ("action", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):
         if key not in msg:
             continue
 
         try:
-            await validator(hass, schema(msg[key]))  # type: ignore[operator]
-        except vol.Invalid as err:
+            await validator(hass, schema(msg[key]))
+        except (
+            vol.Invalid,
+            HomeAssistantError,
+        ) as err:
             result[key] = {"valid": False, "error": str(err)}
         else:
             result[key] = {"valid": True, "error": None}
 
     connection.send_result(msg["id"], result)
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "supported_features",
+        vol.Required("features"): {str: int},
+    }
+)
+def handle_supported_features(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle setting supported features."""
+    connection.set_supported_features(msg["features"])
+    connection.send_result(msg["id"])
+
+
+@decorators.require_admin
+@decorators.websocket_command({"type": "integration/descriptions"})
+@decorators.async_response
+async def handle_integration_descriptions(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get metadata for all brands and integrations."""
+    connection.send_result(msg["id"], await async_get_integration_descriptions(hass))

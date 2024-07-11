@@ -1,4 +1,5 @@
 """Support for Kaiterra Air Quality Sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.air_quality import AirQualityEntity
@@ -37,6 +38,8 @@ async def async_setup_platform(
 class KaiterraAirQuality(AirQualityEntity):
     """Implementation of a Kaittera air quality sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, api, name, device_id):
         """Initialize the sensor."""
         self._api = api
@@ -49,11 +52,6 @@ class KaiterraAirQuality(AirQualityEntity):
     @property
     def _device(self):
         return self._api.data.get(self._device_id, {})
-
-    @property
-    def should_poll(self):
-        """Return that the sensor should not be polled."""
-        return False
 
     @property
     def available(self):
@@ -108,18 +106,15 @@ class KaiterraAirQuality(AirQualityEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        data = {}
-        attributes = [
-            (ATTR_VOC, self.volatile_organic_compounds),
-            (ATTR_AQI_LEVEL, self.air_quality_index_level),
-            (ATTR_AQI_POLLUTANT, self.air_quality_index_pollutant),
-        ]
-
-        for attr, value in attributes:
-            if value is not None:
-                data[attr] = value
-
-        return data
+        return {
+            attr: value
+            for attr, value in (
+                (ATTR_VOC, self.volatile_organic_compounds),
+                (ATTR_AQI_LEVEL, self.air_quality_index_level),
+                (ATTR_AQI_POLLUTANT, self.air_quality_index_pollutant),
+            )
+            if value is not None
+        }
 
     async def async_added_to_hass(self):
         """Register callback."""

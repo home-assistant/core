@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_generate_content_service_with_image
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'model_name': 'models/gemini-1.5-flash-latest',
+      }),
+    ),
+    tuple(
+      '().generate_content_async',
+      tuple(
+        list([
+          'Describe this image from my doorbell camera',
+          dict({
+            'data': b'image bytes',
+            'mime_type': 'image/jpeg',
+          }),
+        ]),
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_generate_content_service_without_images
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'model_name': 'models/gemini-1.5-flash-latest',
+      }),
+    ),
+    tuple(
+      '().generate_content_async',
+      tuple(
+        list([
+          'Write an opening speech for a Home Assistant release party',
+        ]),
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---

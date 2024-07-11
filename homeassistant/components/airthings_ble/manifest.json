@@ -1,0 +1,28 @@
+{
+  "domain": "airthings_ble",
+  "name": "Airthings BLE",
+  "bluetooth": [
+    {
+      "manufacturer_id": 820,
+      "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba"
+    },
+    {
+      "manufacturer_id": 820,
+      "service_uuid": "b42e4a8e-ade7-11e4-89d3-123b93f75cba"
+    },
+    {
+      "manufacturer_id": 820,
+      "service_uuid": "b42e1c08-ade7-11e4-89d3-123b93f75cba"
+    },
+    {
+      "manufacturer_id": 820,
+      "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba"
+    }
+  ],
+  "codeowners": ["@vincegio", "@LaStrada"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/airthings_ble",
+  "iot_class": "local_polling",
+  "requirements": ["airthings-ble==0.9.0"]
+}

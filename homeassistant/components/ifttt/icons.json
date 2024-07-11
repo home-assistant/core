@@ -1,0 +1,6 @@
+{
+  "services": {
+    "push_alarm_state": "mdi:security",
+    "trigger": "mdi:play"
+  }
+}

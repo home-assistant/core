@@ -1,68 +1,27 @@
 # Describes the format for available counter services
 
 decrement:
-  name: Decrement
-  description: Decrement a counter.
   target:
     entity:
       domain: counter
 
 increment:
-  name: Increment
-  description: Increment a counter.
   target:
     entity:
       domain: counter
 
 reset:
-  name: Reset
-  description: Reset a counter.
   target:
     entity:
       domain: counter
 
-configure:
-  name: Configure
-  description: Change counter parameters.
+set_value:
   target:
     entity:
       domain: counter
   fields:
-    minimum:
-      name: Minimum
-      description: New minimum value for the counter or None to remove minimum.
-      selector:
-        number:
-          min: -9223372036854775807
-          max: 9223372036854775807
-          mode: box
-    maximum:
-      name: Maximum
-      description: New maximum value for the counter or None to remove maximum.
-      selector:
-        number:
-          min: -9223372036854775807
-          max: 9223372036854775807
-          mode: box
-    step:
-      name: Step
-      description: New value for step.
-      selector:
-        number:
-          min: 1
-          max: 9223372036854775807
-          mode: box
-    initial:
-      name: Initial
-      description: New value for initial.
-      selector:
-        number:
-          min: 0
-          max: 9223372036854775807
-          mode: box
     value:
-      name: Value
-      description: New state value.
+      required: true
       selector:
         number:
           min: 0

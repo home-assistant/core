@@ -1,5 +1,5 @@
 """Support for Tibber."""
-import asyncio
+
 import logging
 
 import aiohttp
@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,8 +21,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
+from .services import async_setup_services
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -33,6 +34,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
 
     hass.data[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
+
     return True
 
 
@@ -42,30 +46,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tibber_connection = tibber.Tibber(
         access_token=entry.data[CONF_ACCESS_TOKEN],
         websession=async_get_clientsession(hass),
-        time_zone=dt_util.DEFAULT_TIME_ZONE,
+        time_zone=dt_util.get_default_time_zone(),
     )
     hass.data[DOMAIN] = tibber_connection
 
-    async def _close(event):
+    async def _close(event: Event) -> None:
         await tibber_connection.rt_disconnect()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
         await tibber_connection.update_info()
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
-        _LOGGER.error("Error connecting to Tibber: %s ", err)
-        return False
+
+    except (
+        TimeoutError,
+        aiohttp.ClientError,
+        tibber.RetryableHttpException,
+    ) as err:
+        raise ConfigEntryNotReady("Unable to connect") from err
     except tibber.InvalidLogin as exp:
         _LOGGER.error("Failed to login. %s", exp)
         return False
+    except tibber.FatalHttpException:
+        return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform.
+    # Use discovery to load platform legacy notify platform
+    # The use of the legacy notify service was deprecated with HA Core 2024.6
+    # Support will be removed with HA Core 2024.12
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
@@ -75,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DATA_HASS_CONFIG],
         )
     )
+
     return True
 
 

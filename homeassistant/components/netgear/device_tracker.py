@@ -1,17 +1,18 @@
 """Support for Netgear routers."""
+
 from __future__ import annotations
 
 import logging
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEVICE_ICONS, DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearBaseEntity, NetgearRouter
+from .entity import NetgearDeviceEntity
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +40,7 @@ async def async_setup_entry(
             new_entities.append(NetgearScannerEntity(coordinator, router, device))
             tracked.add(mac)
 
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
@@ -48,8 +48,10 @@ async def async_setup_entry(
     new_device_callback()
 
 
-class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
+class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     """Representation of a device connected to a Netgear router."""
+
+    _attr_has_entity_name = False
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
@@ -58,6 +60,7 @@ class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
         super().__init__(coordinator, router, device)
         self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
+        self._attr_name = self._device_name
 
     def get_hostname(self) -> str | None:
         """Return the hostname of the given device or None if we don't know."""
@@ -79,9 +82,9 @@ class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
         return self._active
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def ip_address(self) -> str:

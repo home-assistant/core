@@ -1,14 +1,16 @@
 """Tests for the litejet component."""
+
 from homeassistant.components import scene, switch
 from homeassistant.components.litejet import DOMAIN
 from homeassistant.const import CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 async def async_init_integration(
-    hass, use_switch=False, use_scene=False
+    hass: HomeAssistant, use_switch: bool = False, use_scene: bool = False
 ) -> MockConfigEntry:
     """Set up the LiteJet integration in Home Assistant."""
 
@@ -41,7 +43,7 @@ async def async_init_integration(
             scene.DOMAIN,
             DOMAIN,
             f"{entry.entry_id}_1",
-            suggested_object_id="mock_scene_1",
+            suggested_object_id="litejet_mock_scene_1",
             disabled_by=None,
         )
 

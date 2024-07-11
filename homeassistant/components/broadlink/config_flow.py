@@ -1,8 +1,11 @@
 """Config flow for Broadlink devices."""
+
+from collections.abc import Mapping
 import errno
 from functools import partial
 import logging
 import socket
+from typing import Any
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -12,9 +15,15 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
@@ -23,12 +32,12 @@ from .helpers import format_mac
 _LOGGER = logging.getLogger(__name__)
 
 
-class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Broadlink config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Broadlink flow."""
         self.device = None
 
@@ -36,11 +45,13 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define a device for the config flow."""
         if device.type not in DEVICE_TYPES:
             _LOGGER.error(
-                "Unsupported device: %s. If it worked before, please open "
-                "an issue at https://github.com/home-assistant/core/issues",
+                (
+                    "Unsupported device: %s. If it worked before, please open "
+                    "an issue at https://github.com/home-assistant/core/issues"
+                ),
                 hex(device.devtype),
             )
-            raise data_entry_flow.AbortFlow("not_supported")
+            raise AbortFlow("not_supported")
 
         await self.async_set_unique_id(
             device.mac.hex(), raise_on_progress=raise_on_progress
@@ -55,7 +66,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         host = discovery_info.ip
         unique_id = discovery_info.macaddress.lower().replace(":", "")
@@ -109,7 +120,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 device.timeout = timeout
 
-                if self.source != config_entries.SOURCE_REAUTH:
+                if self.source != SOURCE_REAUTH:
                     await self.async_set_device(device)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
@@ -128,7 +139,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
 
-            if self.source == config_entries.SOURCE_IMPORT:
+            if self.source == SOURCE_IMPORT:
                 return self.async_abort(reason=errors["base"])
 
         data_schema = {
@@ -172,11 +183,13 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         else:
             await self.async_set_unique_id(device.mac.hex())
-            if self.source == config_entries.SOURCE_IMPORT:
+            if self.source == SOURCE_IMPORT:
                 _LOGGER.warning(
-                    "%s (%s at %s) is ready to be configured. Click "
-                    "Configuration in the sidebar, click Integrations and "
-                    "click Configure on the device to complete the setup",
+                    (
+                        "%s (%s at %s) is ready to be configured. Click "
+                        "Configuration in the sidebar, click Integrations and "
+                        "click Configure on the device to complete the setup"
+                    ),
                     device.name,
                     device.model,
                     device.host[0],
@@ -188,9 +201,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(device.mac.hex())
         _LOGGER.error(
-            "Failed to authenticate to the device at %s: %s",
-            device.host[0],
-            err_msg,  # pylint: disable=used-before-assignment
+            "Failed to authenticate to the device at %s: %s", device.host[0], err_msg
         )
         return self.async_show_form(step_id="auth", errors=errors)
 
@@ -253,9 +264,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_finish()
 
             _LOGGER.error(
-                "Failed to unlock the device at %s: %s",
-                device.host[0],
-                err_msg,  # pylint: disable=used-before-assignment
+                "Failed to unlock the device at %s: %s", device.host[0], err_msg
             )
 
         else:
@@ -304,14 +313,16 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
         return await self.async_step_user(import_info)
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Reauthenticate to the device."""
         device = blk.gendevice(
-            data[CONF_TYPE],
-            (data[CONF_HOST], DEFAULT_PORT),
-            bytes.fromhex(data[CONF_MAC]),
-            name=data[CONF_NAME],
+            entry_data[CONF_TYPE],
+            (entry_data[CONF_HOST], DEFAULT_PORT),
+            bytes.fromhex(entry_data[CONF_MAC]),
+            name=entry_data[CONF_NAME],
         )
-        device.timeout = data[CONF_TIMEOUT]
+        device.timeout = entry_data[CONF_TIMEOUT]
         await self.async_set_device(device)
         return await self.async_step_reset()

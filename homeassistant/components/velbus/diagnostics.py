@@ -1,4 +1,5 @@
 """Diagnostics support for Velbus."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -48,7 +49,7 @@ def _build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
 
 
 def _build_channels_diagnostics_info(
-    channels: dict[str, VelbusChannel]
+    channels: dict[str, VelbusChannel],
 ) -> dict[str, Any]:
     """Build diagnostics info for all channels."""
     data: dict[str, Any] = {}

@@ -1,0 +1,13 @@
+{
+  "domain": "google_generative_ai_conversation",
+  "name": "Google Generative AI",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@tronikos"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/google_generative_ai_conversation",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "platinum",
+  "requirements": ["google-generativeai==0.6.0"]
+}

@@ -1,0 +1,45 @@
+{
+  "config": {
+    "error": {
+      "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
+      "client_connector_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_ip": "Invalid IPv4 address"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "model": "[%key:common::generic::model%]"
+        },
+        "description": "Manually configure your Bang & Olufsen device."
+      },
+      "zeroconf_confirm": {
+        "title": "Setup Bang & Olufsen device",
+        "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
+      }
+    }
+  },
+  "exceptions": {
+    "m3u_invalid_format": {
+      "message": "Media sources with the .m3u extension are not supported."
+    },
+    "non_deezer_seeking": {
+      "message": "Seeking is currently only supported when using Deezer"
+    },
+    "invalid_source": {
+      "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
+    },
+    "invalid_media_type": {
+      "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
+    },
+    "play_media_error": {
+      "message": "An error occurred while attempting to play {media_type}: {error_message}."
+    }
+  }
+}

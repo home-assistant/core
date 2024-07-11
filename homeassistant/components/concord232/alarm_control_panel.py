@@ -1,4 +1,5 @@
 """Support for Concord232 alarm control panels."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,13 +9,11 @@ from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     CONF_CODE,
@@ -40,7 +39,7 @@ DEFAULT_MODE = "audible"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -72,41 +71,28 @@ def setup_platform(
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
 
 
-class Concord232Alarm(alarm.AlarmControlPanelEntity):
+class Concord232Alarm(AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
+
+    _attr_code_format = CodeFormat.NUMBER
+    _attr_state: str | None
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     def __init__(self, url, name, code, mode):
         """Initialize the Concord232 alarm panel."""
 
-        self._state = None
-        self._name = name
+        self._attr_name = name
         self._code = code
+        self._alarm_control_panel_option_default_code = code
         self._mode = mode
         self._url = url
         self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def code_format(self):
-        """Return the characters if code is defined."""
-        return alarm.FORMAT_NUMBER
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    def update(self):
+    def update(self) -> None:
         """Update values from API."""
         try:
             part = self._alarm.list_partitions()[0]
@@ -121,19 +107,19 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
             return
 
         if part["arming_level"] == "Off":
-            self._state = STATE_ALARM_DISARMED
+            self._attr_state = STATE_ALARM_DISARMED
         elif "Home" in part["arming_level"]:
-            self._state = STATE_ALARM_ARMED_HOME
+            self._attr_state = STATE_ALARM_ARMED_HOME
         else:
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._attr_state = STATE_ALARM_ARMED_AWAY
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
             return
         self._alarm.disarm(code)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_HOME):
             return
@@ -142,7 +128,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         else:
             self._alarm.arm("stay")
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
             return
@@ -155,7 +141,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(from_state=self._state, to_state=state)
+            alarm_code = self._code.render(from_state=self._attr_state, to_state=state)
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)

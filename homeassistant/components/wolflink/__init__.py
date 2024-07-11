@@ -1,15 +1,17 @@
 """The Wolf SmartSet Service integration."""
+
 from datetime import timedelta
 import logging
 
-from httpx import ConnectError, ConnectTimeout
-from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import FetchFailed, ParameterReadError, WolfClient
+from httpx import RequestError
+from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -41,7 +43,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gateway_id,
     )
 
-    wolf_client = WolfClient(username, password)
+    wolf_client = WolfClient(
+        username,
+        password,
+        client=get_async_client(hass=hass, verify_ssl=False),
+    )
 
     parameters = await fetch_parameters_init(wolf_client, gateway_id, device_id)
 
@@ -50,8 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             nonlocal refetch_parameters
             nonlocal parameters
-            await wolf_client.update_session()
-            if not wolf_client.fetch_system_state_list(device_id, gateway_id):
+            if not await wolf_client.fetch_system_state_list(device_id, gateway_id):
                 refetch_parameters = True
                 raise UpdateFailed(
                     "Could not fetch values from server because device is Offline."
@@ -74,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for parameter in parameters
                 if parameter.value_id in values
             }
-        except ConnectError as exception:
+        except RequestError as exception:
             raise UpdateFailed(
                 f"Error communicating with API: {exception}"
             ) from exception
@@ -95,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(minutes=1),
+        update_interval=timedelta(seconds=60),
     )
 
     await coordinator.async_refresh()
@@ -106,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][DEVICE_ID] = device_id
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -121,8 +126,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
-    """
-    Fetch all available parameters with usage of WolfClient.
+    """Fetch all available parameters with usage of WolfClient.
 
     By default Reglertyp entity is removed because API will not provide value for this parameter.
     """
@@ -134,7 +138,7 @@ async def fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: 
     """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
     try:
         return await fetch_parameters(client, gateway_id, device_id)
-    except (ConnectError, ConnectTimeout, FetchFailed) as exception:
+    except (FetchFailed, RequestError) as exception:
         raise ConfigEntryNotReady(
             f"Error communicating with API: {exception}"
         ) from exception

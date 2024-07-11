@@ -1,18 +1,27 @@
 """Config flow for konnected.io integration."""
+
+from __future__ import annotations
+
 import asyncio
 import copy
 import logging
 import random
 import string
+from typing import Any
 from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorDeviceClass,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -30,7 +39,6 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -163,17 +171,17 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
 )
 
 
-class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Konnected Panels."""
 
     VERSION = 1
 
     # class variable to store/share discovered host information
-    discovered_hosts = {}
+    discovered_hosts: dict[str, dict[str, Any]] = {}
 
     def __init__(self) -> None:
         """Initialize the Konnected flow."""
-        self.data = {}
+        self.data: dict[str, Any] = {}
         self.options = OPTIONS_SCHEMA({CONF_IO: {}})
 
     async def async_gen_config(self, host, port):
@@ -188,11 +196,11 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
         except (CannotConnect, KeyError) as err:
             raise CannotConnect from err
-        else:
-            self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
-            self.data[CONF_ACCESS_TOKEN] = "".join(
-                random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
-            )
+
+        self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+        self.data[CONF_ACCESS_TOKEN] = "".join(
+            random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
+        )
 
     async def async_step_import(self, device_config):
         """Import a configuration.yaml config.
@@ -241,7 +249,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_user()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered konnected panel.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -269,6 +279,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Malformed Konnected SSDP info")
         else:
             # extract host/port from ssdp_location
+            assert discovery_info.ssdp_location
             netloc = urlparse(discovery_info.ssdp_location).netloc.split(":")
             self._async_abort_entries_match(
                 {CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
@@ -278,19 +289,17 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 status = await get_status(self.hass, netloc[0], int(netloc[1]))
             except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
-            else:
-                self.data[CONF_HOST] = netloc[0]
-                self.data[CONF_PORT] = int(netloc[1])
-                self.data[CONF_ID] = status.get(
-                    "chipId", status["mac"].replace(":", "")
-                )
-                self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
 
-                KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
-                    CONF_HOST: self.data[CONF_HOST],
-                    CONF_PORT: self.data[CONF_PORT],
-                }
-                return await self.async_step_confirm()
+            self.data[CONF_HOST] = netloc[0]
+            self.data[CONF_PORT] = int(netloc[1])
+            self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
+            self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+
+            KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
+                CONF_HOST: self.data[CONF_HOST],
+                CONF_PORT: self.data[CONF_PORT],
+            }
+            return await self.async_step_confirm()
 
         return self.async_abort(reason="unknown")
 
@@ -373,25 +382,27 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Return the Options Flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for a Konnected Panel."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.entry = config_entry
         self.model = self.entry.data[CONF_MODEL]
         self.current_opt = self.entry.options or self.entry.data[CONF_DEFAULT_OPTIONS]
 
         # as config proceeds we'll build up new options and then replace what's in the config entry
-        self.new_opt = {CONF_IO: {}}
+        self.new_opt: dict[str, dict[str, Any]] = {CONF_IO: {}}
         self.active_cfg = None
-        self.io_cfg = {}
-        self.current_states = []
+        self.io_cfg: dict[str, Any] = {}
+        self.current_states: list[dict[str, Any]] = []
         self.current_state = 1
 
     @callback
@@ -559,9 +570,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             zone = {"zone": self.active_cfg}
             zone.update(user_input)
-            self.new_opt[CONF_BINARY_SENSORS] = self.new_opt.get(
-                CONF_BINARY_SENSORS, []
-            ) + [zone]
+            self.new_opt[CONF_BINARY_SENSORS] = [
+                *self.new_opt.get(CONF_BINARY_SENSORS, []),
+                zone,
+            ]
             self.io_cfg.pop(self.active_cfg)
             self.active_cfg = None
 
@@ -634,7 +646,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             zone = {"zone": self.active_cfg}
             zone.update(user_input)
-            self.new_opt[CONF_SENSORS] = self.new_opt.get(CONF_SENSORS, []) + [zone]
+            self.new_opt[CONF_SENSORS] = [*self.new_opt.get(CONF_SENSORS, []), zone]
             self.io_cfg.pop(self.active_cfg)
             self.active_cfg = None
 
@@ -703,7 +715,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             zone = {"zone": self.active_cfg}
             zone.update(user_input)
             del zone[CONF_MORE_STATES]
-            self.new_opt[CONF_SWITCHES] = self.new_opt.get(CONF_SWITCHES, []) + [zone]
+            self.new_opt[CONF_SWITCHES] = [*self.new_opt.get(CONF_SWITCHES, []), zone]
 
             # iterate through multiple switch states
             if self.current_states:

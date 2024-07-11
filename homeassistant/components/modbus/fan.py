@@ -1,4 +1,5 @@
 """Support for Modbus fans."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -30,7 +31,7 @@ async def async_setup_platform(
 
     for entry in discovery_info[CONF_FANS]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        fans.append(ModbusFan(hub, entry))
+        fans.append(ModbusFan(hass, hub, entry))
     async_add_entities(fans)
 
 

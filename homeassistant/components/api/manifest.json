@@ -1,8 +1,9 @@
 {
   "domain": "api",
   "name": "Home Assistant API",
-  "documentation": "https://www.home-assistant.io/integrations/api",
-  "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/api",
+  "integration_type": "system",
   "quality_scale": "internal"
 }

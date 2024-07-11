@@ -1,4 +1,5 @@
 """Support for Sky Hub."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -19,12 +20,14 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_HOST): cv.string}
+)
 
 
 async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
+) -> SkyHubDeviceScanner | None:
     """Return a Sky Hub scanner if successful."""
     host = config[DOMAIN].get(CONF_HOST, "192.168.1.254")
     websession = async_get_clientsession(hass)
@@ -33,14 +36,13 @@ async def async_get_scanner(
     _LOGGER.debug("Initialising Sky Hub")
     await hub.async_connect()
     if hub.success_init:
-        scanner = SkyHubDeviceScanner(hub)
-        return scanner
+        return SkyHubDeviceScanner(hub)
 
     return None
 
 
 class SkyHubDeviceScanner(DeviceScanner):
-    """This class queries a Sky Hub router."""
+    """Class which queries a Sky Hub router."""
 
     def __init__(self, hub):
         """Initialise the scanner."""
@@ -54,11 +56,10 @@ class SkyHubDeviceScanner(DeviceScanner):
 
     async def async_get_device_name(self, device):
         """Return the name of the given device."""
-        name = next(
+        return next(
             (result.name for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
     async def async_get_extra_attributes(self, device):
         """Get extra attributes of a device."""

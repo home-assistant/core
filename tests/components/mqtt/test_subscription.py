@@ -1,4 +1,5 @@
 """The tests for the MQTT subscription component."""
+
 from unittest.mock import ANY
 
 from homeassistant.components.mqtt.subscription import (
@@ -6,13 +7,17 @@ from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClientGenerator
 
 
-async def test_subscribe_topics(hass, mqtt_mock, caplog):
+async def test_subscribe_topics(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
     """Test subscription to topics."""
+    await mqtt_mock_entry()
     calls1 = []
 
     @callback
@@ -59,8 +64,11 @@ async def test_subscribe_topics(hass, mqtt_mock, caplog):
     assert len(calls2) == 1
 
 
-async def test_modify_topics(hass, mqtt_mock, caplog):
+async def test_modify_topics(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
     """Test modification of topics."""
+    await mqtt_mock_entry()
     calls1 = []
 
     @callback
@@ -121,13 +129,15 @@ async def test_modify_topics(hass, mqtt_mock, caplog):
     assert len(calls2) == 1
 
 
-async def test_qos_encoding_default(hass, mqtt_mock, caplog):
+async def test_qos_encoding_default(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
     """Test default qos and encoding."""
+    mqtt_mock = await mqtt_mock_entry()
 
     @callback
     def msg_callback(*args):
         """Do nothing."""
-        pass
 
     sub_state = None
     sub_state = async_prepare_subscribe_topics(
@@ -136,16 +146,18 @@ async def test_qos_encoding_default(hass, mqtt_mock, caplog):
         {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8", None)
 
 
-async def test_qos_encoding_custom(hass, mqtt_mock, caplog):
+async def test_qos_encoding_custom(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
     """Test custom qos and encoding."""
+    mqtt_mock = await mqtt_mock_entry()
 
     @callback
     def msg_callback(*args):
         """Do nothing."""
-        pass
 
     sub_state = None
     sub_state = async_prepare_subscribe_topics(
@@ -161,11 +173,14 @@ async def test_qos_encoding_custom(hass, mqtt_mock, caplog):
         },
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 1, "utf-16")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16", None)
 
 
-async def test_no_change(hass, mqtt_mock, caplog):
+async def test_no_change(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
     """Test subscription to topics without change."""
+    mqtt_mock = await mqtt_mock_entry()
 
     calls = []
 

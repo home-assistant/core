@@ -1,4 +1,5 @@
 """Support for Linksys Smart Wifi routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -21,10 +22,14 @@ DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_HOST): cv.string}
+)
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> LinksysSmartWifiDeviceScanner | None:
     """Validate the configuration and return a Linksys AP scanner."""
     try:
         return LinksysSmartWifiDeviceScanner(config[DOMAIN])
@@ -33,7 +38,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class LinksysSmartWifiDeviceScanner(DeviceScanner):
-    """This class queries a Linksys Access Point."""
+    """Class which queries a Linksys Access Point."""
 
     def __init__(self, config):
         """Initialize the scanner."""

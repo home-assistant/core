@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
 from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME
@@ -42,15 +43,16 @@ STOP_COMMAND = "Stop"
 
 
 async def test_connection_state_changes(
-    harmony_client, mock_hc, hass, mock_write_config
-):
+    harmony_client,
+    mock_hc,
+    hass: HomeAssistant,
+    mock_write_config,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Ensure connection changes are reflected in the remote state."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
-    )
 
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # mocks start with current activity == Watch TV
@@ -81,14 +83,13 @@ async def test_connection_state_changes(
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
 
 
-async def test_remote_toggles(mock_hc, hass, mock_write_config):
+async def test_remote_toggles(
+    mock_hc, hass: HomeAssistant, mock_write_config, mock_config_entry: MockConfigEntry
+) -> None:
     """Ensure calls to the remote also updates the switches."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
-    )
 
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # mocks start remote with Watch TV default activity
@@ -149,14 +150,17 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     assert state.attributes.get("current_activity") == "Watch TV"
 
 
-async def test_async_send_command(mock_hc, harmony_client, hass, mock_write_config):
+async def test_async_send_command(
+    mock_hc,
+    harmony_client,
+    hass: HomeAssistant,
+    mock_write_config,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Ensure calls to send remote commands properly propagate to devices."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
-    )
 
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     send_commands_mock = harmony_client.send_commands
@@ -282,11 +286,16 @@ async def test_async_send_command(mock_hc, harmony_client, hass, mock_write_conf
 
 
 async def test_async_send_command_custom_delay(
-    mock_hc, harmony_client, hass, mock_write_config
-):
+    mock_hc,
+    harmony_client,
+    hass: HomeAssistant,
+    mock_write_config,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Ensure calls to send remote commands properly propagate to devices with custom delays."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="123",
         data={
             CONF_HOST: "192.0.2.0",
             CONF_NAME: HUB_NAME,
@@ -323,14 +332,17 @@ async def test_async_send_command_custom_delay(
     send_commands_mock.reset_mock()
 
 
-async def test_change_channel(mock_hc, harmony_client, hass, mock_write_config):
+async def test_change_channel(
+    mock_hc,
+    harmony_client,
+    hass: HomeAssistant,
+    mock_write_config,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test change channel commands."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
-    )
 
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     change_channel_mock = harmony_client.change_channel
@@ -347,14 +359,17 @@ async def test_change_channel(mock_hc, harmony_client, hass, mock_write_config):
     change_channel_mock.assert_awaited_once_with(100)
 
 
-async def test_sync(mock_hc, harmony_client, mock_write_config, hass):
+async def test_sync(
+    mock_hc,
+    harmony_client,
+    mock_write_config,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test the sync command."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
-    )
 
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     sync_mock = harmony_client.sync

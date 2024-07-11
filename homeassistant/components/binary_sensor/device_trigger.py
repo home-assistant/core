@@ -1,20 +1,21 @@
 """Provides device triggers for binary sensors."""
+
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.const import (
+from homeassistant.components.device_automation import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
+    DEVICE_TRIGGER_BASE_SCHEMA,
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, BinarySensorDeviceClass
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
 
@@ -70,62 +71,6 @@ CONF_OPENED = "opened"
 CONF_NOT_OPENED = "not_opened"
 
 
-TURNED_ON = [
-    CONF_BAT_LOW,
-    CONF_CO,
-    CONF_COLD,
-    CONF_CONNECTED,
-    CONF_GAS,
-    CONF_HOT,
-    CONF_LIGHT,
-    CONF_NOT_LOCKED,
-    CONF_MOIST,
-    CONF_MOTION,
-    CONF_MOVING,
-    CONF_OCCUPIED,
-    CONF_OPENED,
-    CONF_PLUGGED_IN,
-    CONF_POWERED,
-    CONF_PRESENT,
-    CONF_PROBLEM,
-    CONF_RUNNING,
-    CONF_SMOKE,
-    CONF_SOUND,
-    CONF_UNSAFE,
-    CONF_UPDATE,
-    CONF_VIBRATION,
-    CONF_TAMPERED,
-    CONF_TURNED_ON,
-]
-
-TURNED_OFF = [
-    CONF_NOT_BAT_LOW,
-    CONF_NOT_COLD,
-    CONF_NOT_CONNECTED,
-    CONF_NOT_HOT,
-    CONF_LOCKED,
-    CONF_NOT_MOIST,
-    CONF_NOT_MOVING,
-    CONF_NOT_OCCUPIED,
-    CONF_NOT_OPENED,
-    CONF_NOT_PLUGGED_IN,
-    CONF_NOT_POWERED,
-    CONF_NOT_PRESENT,
-    CONF_NOT_TAMPERED,
-    CONF_NOT_UNSAFE,
-    CONF_NO_CO,
-    CONF_NO_GAS,
-    CONF_NO_LIGHT,
-    CONF_NO_MOTION,
-    CONF_NO_PROBLEM,
-    CONF_NOT_RUNNING,
-    CONF_NO_SMOKE,
-    CONF_NO_SOUND,
-    CONF_NO_VIBRATION,
-    CONF_TURNED_OFF,
-]
-
-
 ENTITY_TRIGGERS = {
     BinarySensorDeviceClass.BATTERY: [
         {CONF_TYPE: CONF_BAT_LOW},
@@ -168,8 +113,8 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_NO_LIGHT},
     ],
     BinarySensorDeviceClass.LOCK: [
-        {CONF_TYPE: CONF_LOCKED},
         {CONF_TYPE: CONF_NOT_LOCKED},
+        {CONF_TYPE: CONF_LOCKED},
     ],
     BinarySensorDeviceClass.MOISTURE: [
         {CONF_TYPE: CONF_MOIST},
@@ -245,17 +190,25 @@ ENTITY_TRIGGERS = {
     ],
 }
 
+TURNED_ON = [trigger[0][CONF_TYPE] for trigger in ENTITY_TRIGGERS.values()]
+TURNED_OFF = [trigger[1][CONF_TYPE] for trigger in ENTITY_TRIGGERS.values()]
+
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
         vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
     if trigger_type in TURNED_ON:
@@ -273,18 +226,20 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
-        hass, state_config, action, automation_info, platform_type="device"
+        hass, state_config, action, trigger_info, platform_type="device"
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers."""
-    triggers = []
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    triggers: list[dict[str, str]] = []
+    entity_registry = er.async_get(hass)
 
     entries = [
         entry
-        for entry in async_entries_for_device(entity_registry, device_id)
+        for entry in er.async_entries_for_device(entity_registry, device_id)
         if entry.domain == DOMAIN
     ]
 
@@ -300,7 +255,7 @@ async def async_get_triggers(hass, device_id):
                 **automation,
                 "platform": "device",
                 "device_id": device_id,
-                "entity_id": entry.entity_id,
+                "entity_id": entry.id,
                 "domain": DOMAIN,
             }
             for automation in templates
@@ -309,7 +264,9 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, config):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

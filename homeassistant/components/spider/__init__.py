@@ -1,4 +1,5 @@
 """Support for Spider Smart devices."""
+
 import logging
 
 from spiderpy.spiderapi import SpiderApi, SpiderApiException, UnauthorizedException
@@ -70,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = api
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

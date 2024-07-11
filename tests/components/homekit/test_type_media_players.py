@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
@@ -16,15 +17,16 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
+    ReceiverMediaPlayer,
     TelevisionMediaPlayer,
 )
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -38,13 +40,15 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
 
-async def test_media_player_set_state(hass, hk_driver, events):
+async def test_media_player_set_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if accessory and HA are updated accordingly."""
     config = {
         CONF_FEATURE_LIST: {
@@ -55,15 +59,16 @@ async def test_media_player_set_state(hass, hk_driver, events):
         }
     }
     entity_id = "media_player.test"
+    base_attrs = {ATTR_SUPPORTED_FEATURES: 20873, ATTR_MEDIA_VOLUME_MUTED: False}
 
     hass.states.async_set(
         entity_id,
         None,
-        {ATTR_SUPPORTED_FEATURES: 20873, ATTR_MEDIA_VOLUME_MUTED: False},
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = MediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, config)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -74,33 +79,35 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert acc.chars[FEATURE_PLAY_STOP].value is False
     assert acc.chars[FEATURE_TOGGLE_MUTE].value is False
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
+    hass.states.async_set(
+        entity_id, STATE_ON, {**base_attrs, ATTR_MEDIA_VOLUME_MUTED: True}
+    )
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_ON_OFF].value is True
     assert acc.chars[FEATURE_TOGGLE_MUTE].value is True
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, STATE_OFF, base_attrs)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_ON_OFF].value is False
 
-    hass.states.async_set(entity_id, STATE_ON)
+    hass.states.async_set(entity_id, STATE_ON, base_attrs)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_ON_OFF].value is True
 
-    hass.states.async_set(entity_id, STATE_STANDBY)
+    hass.states.async_set(entity_id, STATE_STANDBY, base_attrs)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_ON_OFF].value is False
 
-    hass.states.async_set(entity_id, STATE_PLAYING)
+    hass.states.async_set(entity_id, STATE_PLAYING, base_attrs)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_PLAY_PAUSE].value is True
     assert acc.chars[FEATURE_PLAY_STOP].value is True
 
-    hass.states.async_set(entity_id, STATE_PAUSED)
+    hass.states.async_set(entity_id, STATE_PAUSED, base_attrs)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_PLAY_PAUSE].value is False
 
-    hass.states.async_set(entity_id, STATE_IDLE)
+    hass.states.async_set(entity_id, STATE_IDLE, base_attrs)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_PLAY_STOP].value is False
 
@@ -171,25 +178,31 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_media_player_television(hass, hk_driver, events, caplog):
+async def test_media_player_television(
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
 
     # Supports 'select_source', 'volume_step', 'turn_on', 'turn_off',
     #       'volume_mute', 'volume_set', 'pause'
+    base_attrs = {
+        ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+        ATTR_SUPPORTED_FEATURES: 3469,
+        ATTR_MEDIA_VOLUME_MUTED: False,
+        ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"],
+    }
     hass.states.async_set(
         entity_id,
         None,
-        {
-            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
-            ATTR_SUPPORTED_FEATURES: 3469,
-            ATTR_MEDIA_VOLUME_MUTED: False,
-            ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"],
-        },
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -200,32 +213,40 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert acc.char_input_source.value == 0
     assert acc.char_mute.value is False
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
+    hass.states.async_set(
+        entity_id, STATE_ON, {**base_attrs, ATTR_MEDIA_VOLUME_MUTED: True}
+    )
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
     assert acc.char_mute.value is True
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, STATE_OFF, base_attrs)
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
 
-    hass.states.async_set(entity_id, STATE_ON)
+    hass.states.async_set(entity_id, STATE_ON, base_attrs)
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
 
-    hass.states.async_set(entity_id, STATE_STANDBY)
+    hass.states.async_set(entity_id, STATE_STANDBY, base_attrs)
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 2"})
+    hass.states.async_set(
+        entity_id, STATE_ON, {**base_attrs, ATTR_INPUT_SOURCE: "HDMI 2"}
+    )
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 1
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 3"})
+    hass.states.async_set(
+        entity_id, STATE_ON, {**base_attrs, ATTR_INPUT_SOURCE: "HDMI 3"}
+    )
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 2
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 5"})
+    hass.states.async_set(
+        entity_id, STATE_ON, {**base_attrs, ATTR_INPUT_SOURCE: "HDMI 5"}
+    )
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 0
     assert caplog.records[-2].levelname == "DEBUG"
@@ -341,7 +362,6 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
 
     with pytest.raises(ValueError):
         acc.char_remote_key.client_update_value(20)
-        await hass.async_block_till_done()
 
     acc.char_remote_key.client_update_value(7)
     await hass.async_block_till_done()
@@ -350,34 +370,43 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert events[0].data[ATTR_KEY_NAME] == KEY_ARROW_RIGHT
 
 
-async def test_media_player_television_basic(hass, hk_driver, events, caplog):
+async def test_media_player_television_basic(
+    hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if basic television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
-
+    base_attrs = {
+        ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+        ATTR_SUPPORTED_FEATURES: 384,
+    }
     # Supports turn_on', 'turn_off'
     hass.states.async_set(
         entity_id,
         None,
-        {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV, ATTR_SUPPORTED_FEATURES: 384},
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.chars_tv == [CHAR_REMOTE_KEY]
     assert acc.chars_speaker == []
     assert acc.support_select_source is False
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
+    hass.states.async_set(
+        entity_id, STATE_ON, {**base_attrs, ATTR_MEDIA_VOLUME_MUTED: True}
+    )
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, STATE_OFF, base_attrs)
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 3"})
+    hass.states.async_set(
+        entity_id, STATE_ON, {**base_attrs, ATTR_INPUT_SOURCE: "HDMI 3"}
+    )
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
 
@@ -385,8 +414,8 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
 
 
 async def test_media_player_television_supports_source_select_no_sources(
-    hass, hk_driver, events, caplog
-):
+    hass: HomeAssistant, hk_driver
+) -> None:
     """Test if basic tv that supports source select but is missing a source list."""
     entity_id = "media_player.television"
 
@@ -398,26 +427,26 @@ async def test_media_player_television_supports_source_select_no_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.support_select_source is False
 
 
-async def test_tv_restore(hass, hk_driver, events):
+async def test_tv_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver
+) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "media_player",
         "generic",
         "1234",
         suggested_object_id="simple",
         original_device_class=MediaPlayerDeviceClass.TV,
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "media_player",
         "generic",
         "9012",
@@ -442,7 +471,7 @@ async def test_tv_restore(hass, hk_driver, events):
     assert not hasattr(acc, "char_input_source")
 
     acc = TelevisionMediaPlayer(
-        hass, hk_driver, "MediaPlayer", "media_player.all_info_set", 2, None
+        hass, hk_driver, "MediaPlayer", "media_player.all_info_set", 3, None
     )
     assert acc.category == 31
     assert acc.chars_tv == [CHAR_REMOTE_KEY]
@@ -457,7 +486,9 @@ async def test_tv_restore(hass, hk_driver, events):
     assert acc.char_input_source is not None
 
 
-async def test_media_player_television_max_sources(hass, hk_driver, events, caplog):
+async def test_media_player_television_max_sources(
+    hass: HomeAssistant, hk_driver
+) -> None:
     """Test if television accessory that reaches the maximum number of sources."""
     entity_id = "media_player.television"
     sources = [f"HDMI {i}" for i in range(1, 101)]
@@ -474,7 +505,7 @@ async def test_media_player_television_max_sources(hass, hk_driver, events, capl
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -512,3 +543,141 @@ async def test_media_player_television_max_sources(hass, hk_driver, events, capl
     )
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 0
+
+
+async def test_media_player_television_duplicate_sources(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test if television accessory with duplicate sources."""
+    entity_id = "media_player.television"
+    sources = ["MUSIC", "HDMI", "SCREEN MIRRORING", "HDMI", "MUSIC"]
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "HDMI",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 31  # Television
+
+    assert acc.char_active.value == 0
+    assert acc.char_remote_key.value == 0
+    assert acc.char_input_source.value == 1
+    assert acc.char_mute.value is False
+
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "MUSIC",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_input_source.value == 0
+
+
+async def test_media_player_television_unsafe_chars(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test if television accessory with unsafe characters."""
+    entity_id = "media_player.television"
+    sources = ["MUSIC", "HDMI 3/ARC", "SCREEN MIRRORING", "HDMI 2/MHL", "HDMI", "MUSIC"]
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "HDMI 2/MHL",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 31  # Television
+
+    assert acc.char_active.value == 0
+    assert acc.char_remote_key.value == 0
+    assert acc.char_input_source.value == 3
+    assert acc.char_mute.value is False
+
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "HDMI 3/ARC",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_input_source.value == 1
+
+    call_select_source = async_mock_service(hass, DOMAIN, "select_source")
+
+    acc.char_input_source.client_update_value(3)
+    await hass.async_block_till_done()
+    assert call_select_source
+    assert call_select_source[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_select_source[0].data[ATTR_INPUT_SOURCE] == "HDMI 2/MHL"
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    assert acc.char_input_source.value == 3
+
+    acc.char_input_source.client_update_value(4)
+    await hass.async_block_till_done()
+    assert call_select_source
+    assert call_select_source[1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_select_source[1].data[ATTR_INPUT_SOURCE] == "HDMI"
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
+
+    assert acc.char_input_source.value == 4
+
+
+async def test_media_player_receiver(
+    hass: HomeAssistant, hk_driver: HomeDriver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if television accessory with unsafe characters."""
+    entity_id = "media_player.receiver"
+    sources = ["MUSIC", "HDMI 3/ARC", "SCREEN MIRRORING", "HDMI 2/MHL", "HDMI", "MUSIC"]
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "HDMI 2/MHL",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = ReceiverMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 34  # Receiver

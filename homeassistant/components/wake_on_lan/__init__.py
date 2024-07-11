@@ -1,4 +1,5 @@
 """Support for sending Wake-On-LAN magic packets."""
+
 from functools import partial
 import logging
 
@@ -23,6 +24,8 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
         vol.Optional(CONF_BROADCAST_PORT): cv.port,
     }
 )
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

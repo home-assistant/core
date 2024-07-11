@@ -1,61 +1,50 @@
 {
-    "12:34:56:78:90:ab": {
-        1599152672: {
-            "id": "12345",
-            "type": "person",
-            "time": 1599152672,
-            "camera_id": "12:34:56:78:90:ab",
-            "snapshot": {
-                "url": "https://netatmocameraimage",
-            },
-            "video_id": "98765",
-            "video_status": "available",
-            "message": "<b>Paulus</b> seen",
-            "media_url": "http:///files/high/index.m3u8",
-        },
-        1599152673: {
-            "id": "12346",
-            "type": "person",
-            "time": 1599152673,
-            "camera_id": "12:34:56:78:90:ab",
-            "snapshot": {
-                "url": "https://netatmocameraimage",
-            },
-            "message": "<b>Tobias</b> seen",
-        },
-        1599152674: {
-            "id": "12347",
-            "type": "outdoor",
-            "time": 1599152674,
-            "camera_id": "12:34:56:78:90:ac",
-            "snapshot": {
-                "url": "https://netatmocameraimage",
-            },
-            "video_id": "98766",
-            "video_status": "available",
-            "event_list": [
-                {
-                    "type": "vehicle",
-                    "time": 1599152674,
-                    "id": "12347-0",
-                    "offset": 0,
-                    "message": "Vehicle detected",
-                    "snapshot": {
-                        "url": "https://netatmocameraimage",
-                    },
-                },
-                {
-                    "type": "human",
-                    "time": 1599152674,
-                    "id": "12347-1",
-                    "offset": 8,
-                    "message": "Person detected",
-                    "snapshot": {
-                        "url": "https://netatmocameraimage",
-                    },
-                },
-            ],
-            "media_url": "http:///files/high/index.m3u8",
-        },
+  "12:34:56:78:90:ab": {
+    1654191519: {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000001",
+      "event_type": "human",
+      "event_time": 1654191519,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "vignette": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0011",
+      "video_status": "available",
+      "message": "<b>Bewegung</b> erkannt",
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    1654189491: {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000002",
+      "event_type": "person",
+      "event_time": 1654189491,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0012",
+      "video_status": "available",
+      "message": "<b>Jane</b> gesehen",
+      "person_id": "1111",
+      "out_of_sight": False,
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    1654289891: {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000002",
+      "event_type": "person",
+      "event_time": 1654289891,
+      "module_id": "12:34:56:78:90:ab",
+      "message": "<b>Jane</b> gesehen",
+      "person_id": "1111",
+      "out_of_sight": False,
+      "subevents": []
     }
+  }
 }

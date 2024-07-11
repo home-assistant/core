@@ -1,13 +1,15 @@
 """Test the Kodi integration init."""
+
 from unittest.mock import patch
 
 from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     with patch(
         "homeassistant.components.kodi.media_player.async_setup_entry",

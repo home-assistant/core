@@ -1,40 +1,34 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
+
 from __future__ import annotations
 
 import logging
 from random import randrange
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -48,13 +42,14 @@ _LOGGER = logging.getLogger(__name__)
 
 IH_DEVICE_INTESISHOME = "IntesisHome"
 IH_DEVICE_AIRCONWITHME = "airconwithme"
+IH_DEVICE_ANYWAIR = "anywair"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DEVICE, default=IH_DEVICE_INTESISHOME): vol.In(
-            [IH_DEVICE_AIRCONWITHME, IH_DEVICE_INTESISHOME]
+            [IH_DEVICE_AIRCONWITHME, IH_DEVICE_ANYWAIR, IH_DEVICE_INTESISHOME]
         ),
     }
 )
@@ -68,12 +63,12 @@ class SwingSettings(NamedTuple):
 
 
 MAP_IH_TO_HVAC_MODE = {
-    "auto": HVAC_MODE_HEAT_COOL,
-    "cool": HVAC_MODE_COOL,
-    "dry": HVAC_MODE_DRY,
-    "fan": HVAC_MODE_FAN_ONLY,
-    "heat": HVAC_MODE_HEAT,
-    "off": HVAC_MODE_OFF,
+    "auto": HVACMode.HEAT_COOL,
+    "cool": HVACMode.COOL,
+    "dry": HVACMode.DRY,
+    "fan": HVACMode.FAN_ONLY,
+    "heat": HVACMode.HEAT,
+    "off": HVACMode.OFF,
 }
 MAP_HVAC_MODE_TO_IH = {v: k for k, v in MAP_IH_TO_HVAC_MODE.items()}
 
@@ -95,11 +90,11 @@ MAP_SWING_TO_IH = {
 
 
 MAP_STATE_ICONS = {
-    HVAC_MODE_COOL: "mdi:snowflake",
-    HVAC_MODE_DRY: "mdi:water-off",
-    HVAC_MODE_FAN_ONLY: "mdi:fan",
-    HVAC_MODE_HEAT: "mdi:white-balance-sunny",
-    HVAC_MODE_HEAT_COOL: "mdi:cached",
+    HVACMode.COOL: "mdi:snowflake",
+    HVACMode.DRY: "mdi:water-off",
+    HVACMode.FAN_ONLY: "mdi:fan",
+    HVACMode.HEAT: "mdi:white-balance-sunny",
+    HVACMode.HEAT_COOL: "mdi:cached",
 }
 
 
@@ -150,6 +145,10 @@ async def async_setup_platform(
 class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
+    _attr_should_poll = False
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
+
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
         self._controller = controller
@@ -161,7 +160,7 @@ class IntesisAC(ClimateEntity):
         self._setpoint_step = 1
         self._current_temp = None
         self._max_temp = None
-        self._hvac_mode_list = []
+        self._attr_hvac_modes = []
         self._min_temp = None
         self._target_temp = None
         self._outdoor_temp = None
@@ -175,13 +174,12 @@ class IntesisAC(ClimateEntity):
         self._hvane = None
         self._power = False
         self._fan_speed = None
-        self._support = 0
         self._power_consumption_heat = None
         self._power_consumption_cool = None
 
         # Setpoint support
         if controller.has_setpoint_control(ih_device_id):
-            self._support |= SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Setup swing list
         if controller.has_vertical_swing(ih_device_id):
@@ -191,24 +189,29 @@ class IntesisAC(ClimateEntity):
         if SWING_HORIZONTAL in self._swing_list and SWING_VERTICAL in self._swing_list:
             self._swing_list.append(SWING_BOTH)
         if len(self._swing_list) > 1:
-            self._support |= SUPPORT_SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         # Setup fan speeds
         self._fan_modes = controller.get_fan_speed_list(ih_device_id)
         if self._fan_modes:
-            self._support |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         # Preset support
         if ih_device.get("climate_working_mode"):
-            self._support |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
         # Setup HVAC modes
         if modes := controller.get_mode_list(ih_device_id):
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
-            self._hvac_mode_list.extend(mode_list)
-        self._hvac_mode_list.append(HVAC_MODE_OFF)
+            self._attr_hvac_modes.extend(mode_list)
+        self._attr_hvac_modes.append(HVACMode.OFF)
 
-    async def async_added_to_hass(self):
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+
+    async def async_added_to_hass(self) -> None:
         """Subscribe to event updates."""
         _LOGGER.debug("Added climate device with state: %s", repr(self._ih_device))
         await self._controller.add_update_callback(self.async_update_callback)
@@ -222,11 +225,6 @@ class IntesisAC(ClimateEntity):
     def name(self):
         """Return the name of the AC device."""
         return self._device_name
-
-    @property
-    def temperature_unit(self):
-        """Intesishome API uses celsius on the backend."""
-        return TEMP_CELSIUS
 
     @property
     def extra_state_attributes(self):
@@ -265,7 +263,7 @@ class IntesisAC(ClimateEntity):
         """Return the current preset mode."""
         return self._preset
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(hvac_mode)
@@ -278,10 +276,10 @@ class IntesisAC(ClimateEntity):
         # Write updated temperature to HA state to avoid flapping (API confirmation is slow)
         self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
         _LOGGER.debug("Setting %s to %s mode", self._device_type, hvac_mode)
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             self._power = False
             await self._controller.set_power_off(self._device_id)
             # Write changes to HA, API can be slow to push changes
@@ -304,7 +302,7 @@ class IntesisAC(ClimateEntity):
         self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode (from quiet, low, medium, high, auto)."""
         await self._controller.set_fan_speed(self._device_id, fan_mode)
 
@@ -312,12 +310,12 @@ class IntesisAC(ClimateEntity):
         self._fan_speed = fan_mode
         self.async_write_ha_state()
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         ih_preset_mode = MAP_PRESET_MODE_TO_IH.get(preset_mode)
         await self._controller.set_preset_mode(self._device_id, ih_preset_mode)
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the vertical vane."""
         if swing_settings := MAP_SWING_TO_IH.get(swing_mode):
             await self._controller.set_vertical_vane(
@@ -327,7 +325,7 @@ class IntesisAC(ClimateEntity):
                 self._device_id, swing_settings.hvane
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Copy values from controller dictionary to climate device."""
         # Update values from controller's device dictionary
         self._connected = self._controller.is_connected
@@ -362,7 +360,7 @@ class IntesisAC(ClimateEntity):
             self._device_id
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Shutdown the controller when the device is being removed."""
         await self._controller.stop()
 
@@ -418,16 +416,6 @@ class IntesisAC(ClimateEntity):
         return self._max_temp
 
     @property
-    def should_poll(self):
-        """Poll for updates if pyIntesisHome doesn't have a socket open."""
-        return False
-
-    @property
-    def hvac_modes(self):
-        """List of available operation modes."""
-        return self._hvac_mode_list
-
-    @property
     def fan_mode(self):
         """Return whether the fan is on."""
         return self._fan_speed
@@ -466,18 +454,13 @@ class IntesisAC(ClimateEntity):
         return self._current_temp
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return the current mode of operation if unit is on."""
         if self._power:
             return self._hvac_mode
-        return HVAC_MODE_OFF
+        return HVACMode.OFF
 
     @property
     def target_temperature(self):
         """Return the current setpoint temperature if unit is on."""
         return self._target_temp
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support

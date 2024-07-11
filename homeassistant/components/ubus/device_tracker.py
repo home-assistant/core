@@ -1,4 +1,5 @@
 """Support for OpenWRT (ubus) routers."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -23,7 +24,7 @@ CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
 DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -58,8 +59,7 @@ def _refresh_on_access_denied(func):
             return func(self, *args, **kwargs)
         except PermissionError:
             _LOGGER.warning(
-                "Invalid session detected."
-                " Trying to refresh session_id and re-run RPC"
+                "Invalid session detected. Trying to refresh session_id and re-run RPC"
             )
             self.ubus.connect()
 
@@ -69,21 +69,20 @@ def _refresh_on_access_denied(func):
 
 
 class UbusDeviceScanner(DeviceScanner):
-    """
-    This class queries a wireless router running OpenWrt firmware.
+    """Class which queries a wireless router running OpenWrt firmware.
 
     Adapted from Tomato scanner.
     """
 
     def __init__(self, config):
         """Initialize the scanner."""
-        host = config[CONF_HOST]
+        self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = f"http://{host}/ubus"
+        self.url = f"http://{self.host}/ubus"
 
         self.ubus = Ubus(self.url, self.username, self.password)
         self.hostapd = []
@@ -107,8 +106,11 @@ class UbusDeviceScanner(DeviceScanner):
         if self.mac2name is None:
             # Generation of mac2name dictionary failed
             return None
-        name = self.mac2name.get(device.upper(), None)
-        return name
+        return self.mac2name.get(device.upper(), None)
+
+    async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
+        """Return the host to distinguish between multiple routers."""
+        return {"host": self.host}
 
     @_refresh_on_access_denied
     def _update_info(self):
@@ -132,7 +134,7 @@ class UbusDeviceScanner(DeviceScanner):
             if result := self.ubus.get_hostapd_clients(hostapd):
                 results = results + 1
                 # Check for each device is authorized (valid wpa key)
-                for key in result["clients"].keys():
+                for key in result["clients"]:
                     device = result["clients"][key]
                     if device["authorized"]:
                         self.last_results.append(key)

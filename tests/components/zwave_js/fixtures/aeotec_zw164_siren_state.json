@@ -77,7 +77,93 @@
           32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
         ],
         "mandatoryControlledCCs": []
-      }
+      },
+      "commandClasses": [
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 121,
+          "name": "Sound Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": false
+        }
+      ]
     },
     {
       "nodeId": 2,
@@ -3665,92 +3751,6 @@
     ],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 89,
-      "name": "Association Group Information",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 121,
-      "name": "Sound Switch",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 108,
-      "name": "Supervision",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 94,
-      "name": "Z-Wave Plus Info",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 142,
-      "name": "Multi Channel Association",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 96,
-      "name": "Multi Channel",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 90,
-      "name": "Device Reset Locally",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 152,
-      "name": "Security",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 122,
-      "name": "Firmware Update Meta Data",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 113,
-      "name": "Notification",
-      "version": 8,
-      "isSecure": false
-    }
-  ],
   "interviewStage": "Complete",
   "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0103:0x00a4:1.3",
   "isControllerNode": false

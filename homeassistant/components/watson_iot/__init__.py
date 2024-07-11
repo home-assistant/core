@@ -1,4 +1,5 @@
 """Support for the IBM Watson IoT Platform."""
+
 import logging
 import queue
 import threading
@@ -99,12 +100,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             or state.entity_id in exclude_e
             or state.domain in exclude_d
         ):
-            return
+            return None
 
         if (include_e and state.entity_id not in include_e) or (
             include_d and state.domain not in include_d
         ):
-            return
+            return None
 
         try:
             _state_as_value = float(state.state)
@@ -131,7 +132,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 if key in out_event["fields"]:
                     key = f"{key}_"
                 # For each value we try to cast it as float
-                # But if we can not do it we store the value
+                # But if we cannot do it we store the value
                 # as string
                 try:
                     out_event["fields"][key] = float(value)

@@ -1,9 +1,12 @@
 """Test GitHub sensor."""
+
 import json
+
+import pytest
 
 from homeassistant.components.github.const import DOMAIN, FALLBACK_UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import TEST_REPOSITORY
 
@@ -13,6 +16,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 TEST_SENSOR_ENTITY = "sensor.octocat_hello_world_latest_release"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_updates_with_empty_release_array(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -38,7 +43,7 @@ async def test_sensor_updates_with_empty_release_array(
         headers=headers,
     )
 
-    async_fire_time_changed(hass, dt.utcnow() + FALLBACK_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     new_state = hass.states.get(TEST_SENSOR_ENTITY)

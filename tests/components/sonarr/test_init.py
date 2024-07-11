@@ -1,4 +1,5 @@
 """Tests for the Sonsrr integration."""
+
 from unittest.mock import MagicMock, patch
 
 from aiopyarr import ArrAuthenticationException, ArrException
@@ -87,7 +88,7 @@ async def test_unload_config_entry(
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
 
 
-async def test_migrate_config_entry(hass: HomeAssistant):
+async def test_migrate_config_entry(hass: HomeAssistant) -> None:
     """Test successful migration of entry data."""
     legacy_config = {
         CONF_API_KEY: "MOCK_API_KEY",
@@ -98,12 +99,15 @@ async def test_migrate_config_entry(hass: HomeAssistant):
         CONF_BASE_PATH: "/base/",
     }
     entry = MockConfigEntry(domain=DOMAIN, data=legacy_config)
+    entry.add_to_hass(hass)
 
     assert entry.data == legacy_config
     assert entry.version == 1
     assert not entry.unique_id
 
-    await entry.async_migrate(hass)
+    with patch("homeassistant.components.sonarr.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert entry.data == {
         CONF_API_KEY: "MOCK_API_KEY",

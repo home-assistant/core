@@ -1,4 +1,5 @@
 """Support for Crownstone devices."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -9,11 +10,7 @@ from crownstone_cloud.const import DIMMING_ABILITY
 from crownstone_cloud.exceptions import CrownstoneAbilityError
 from crownstone_uart import CrownstoneUart
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -69,13 +66,13 @@ def hass_to_crownstone_state(value: int) -> int:
 
 
 class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
-    """
-    Representation of a crownstone.
+    """Representation of a crownstone.
 
     Light platform is used to support dimming.
     """
 
-    _attr_icon = "mdi:power-socket-de"
+    _attr_name = None
+    _attr_translation_key = "german_power_outlet"
 
     def __init__(
         self, crownstone_data: Crownstone, usb: CrownstoneUart | None = None
@@ -84,7 +81,6 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
         super().__init__(crownstone_data)
         self.usb = usb
         # Entity class attributes
-        self._attr_name = str(self.device.name)
         self._attr_unique_id = f"{self.cloud_id}-{CROWNSTONE_SUFFIX}"
 
     @property
@@ -98,11 +94,16 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
         return crownstone_state_to_hass(self.device.state) > 0
 
     @property
-    def supported_features(self) -> int:
-        """Return the supported features of this Crownstone."""
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
         if self.device.abilities.get(DIMMING_ABILITY).is_enabled:
-            return SUPPORT_BRIGHTNESS
-        return 0
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""

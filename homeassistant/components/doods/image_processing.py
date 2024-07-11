@@ -1,4 +1,5 @@
 """Support for the DOODS service."""
+
 from __future__ import annotations
 
 import io
@@ -12,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -65,7 +66,7 @@ LABEL_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.string,
         vol.Required(CONF_DETECTOR): cv.string,
@@ -111,19 +112,17 @@ def setup_platform(
         )
         return
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            Doods(
-                hass,
-                camera[CONF_ENTITY_ID],
-                camera.get(CONF_NAME),
-                doods,
-                detector,
-                config,
-            )
+    add_entities(
+        Doods(
+            hass,
+            camera[CONF_ENTITY_ID],
+            camera.get(CONF_NAME),
+            doods,
+            detector,
+            config,
         )
-    add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class Doods(ImageProcessingEntity):
@@ -255,7 +254,6 @@ class Doods(ImageProcessingEntity):
             )
 
         for label, values in matches.items():
-
             # Draw custom label regions/areas
             if label in self._label_areas and self._label_areas[label] != [0, 0, 1, 1]:
                 box_label = f"{label.capitalize()} Detection Area"
@@ -297,7 +295,10 @@ class Doods(ImageProcessingEntity):
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
             _LOGGER.debug(
-                "The image aspect: %s and the detector aspect: %s differ by more than 0.1",
+                (
+                    "The image aspect: %s and the detector aspect: %s differ by more"
+                    " than 0.1"
+                ),
                 (img_width / img_height),
                 self._aspect,
             )
@@ -348,14 +349,13 @@ class Doods(ImageProcessingEntity):
                     or boxes[3] > self._area[3]
                 ):
                     continue
-            else:
-                if (
-                    boxes[0] > self._area[2]
-                    or boxes[1] > self._area[3]
-                    or boxes[2] < self._area[0]
-                    or boxes[3] < self._area[1]
-                ):
-                    continue
+            elif (
+                boxes[0] > self._area[2]
+                or boxes[1] > self._area[3]
+                or boxes[2] < self._area[0]
+                or boxes[3] < self._area[1]
+            ):
+                continue
 
             # Exclude matches outside label specific area definition
             if self._label_areas.get(label):
@@ -367,14 +367,13 @@ class Doods(ImageProcessingEntity):
                         or boxes[3] > self._label_areas[label][3]
                     ):
                         continue
-                else:
-                    if (
-                        boxes[0] > self._label_areas[label][2]
-                        or boxes[1] > self._label_areas[label][3]
-                        or boxes[2] < self._label_areas[label][0]
-                        or boxes[3] < self._label_areas[label][1]
-                    ):
-                        continue
+                elif (
+                    boxes[0] > self._label_areas[label][2]
+                    or boxes[1] > self._label_areas[label][3]
+                    or boxes[2] < self._label_areas[label][0]
+                    or boxes[3] < self._label_areas[label][1]
+                ):
+                    continue
 
             if label not in matches:
                 matches[label] = []
@@ -392,6 +391,10 @@ class Doods(ImageProcessingEntity):
                 else:
                     paths.append(path_template)
             self._save_image(image, matches, paths)
+        else:
+            _LOGGER.debug(
+                "Not saving image(s), no detections found or no output file configured"
+            )
 
         self._matches = matches
         self._total_matches = total_matches

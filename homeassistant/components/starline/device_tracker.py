@@ -1,6 +1,6 @@
 """StarLine device tracker."""
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,19 +16,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up StarLine entry."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
-    entities = []
-    for device in account.api.devices.values():
-        if device.support_position:
-            entities.append(StarlineDeviceTracker(account, device))
-    async_add_entities(entities)
+    async_add_entities(
+        StarlineDeviceTracker(account, device)
+        for device in account.api.devices.values()
+        if device.support_position
+    )
 
 
 class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
     """StarLine device tracker."""
 
+    _attr_translation_key = "location"
+
     def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
         """Set up StarLine entity."""
-        super().__init__(account, device, "location", "Location")
+        super().__init__(account, device, "location")
 
     @property
     def extra_state_attributes(self):
@@ -43,7 +45,7 @@ class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
     @property
     def location_accuracy(self):
         """Return the gps accuracy of the device."""
-        return self._device.position["r"] if "r" in self._device.position else 0
+        return self._device.position.get("r", 0)
 
     @property
     def latitude(self):
@@ -56,11 +58,6 @@ class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
         return self._device.position["y"]
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return "mdi:map-marker-outline"
+        return SourceType.GPS

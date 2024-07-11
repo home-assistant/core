@@ -1,4 +1,5 @@
 """Light support for switch entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,8 +7,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    COLOR_MODE_ONOFF,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import (
@@ -19,7 +20,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +31,7 @@ from .const import DOMAIN as SWITCH_DOMAIN
 
 DEFAULT_NAME = "Light Switch"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(SWITCH_DOMAIN),
@@ -63,9 +64,9 @@ async def async_setup_platform(
 class LightSwitch(LightEntity):
     """Represents a Switch as a Light."""
 
-    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_color_mode = ColorMode.ONOFF
     _attr_should_poll = False
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, name: str, switch_entity_id: str, unique_id: str | None) -> None:
         """Initialize Light Switch."""
@@ -97,7 +98,9 @@ class LightSwitch(LightEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(event: Event | None = None) -> None:
+        def async_state_changed_listener(
+            event: Event[EventStateChangedData] | None = None,
+        ) -> None:
             """Handle child updates."""
             if (
                 state := self.hass.states.get(self._switch_entity_id)

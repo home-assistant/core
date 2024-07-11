@@ -1,10 +1,14 @@
 """Support for KWB Easyfire."""
+
 from __future__ import annotations
 
 from pykwb import kwb
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -26,7 +30,7 @@ MODE_TCP = 1
 
 CONF_RAW = "raw"
 
-SERIAL_SCHEMA = PLATFORM_SCHEMA.extend(
+SERIAL_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -35,7 +39,7 @@ SERIAL_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ETHERNET_SCHEMA = PLATFORM_SCHEMA.extend(
+ETHERNET_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -71,16 +75,14 @@ def setup_platform(
 
     easyfire.run_thread()
 
-    sensors = []
-    for sensor in easyfire.get_sensors():
-        if (sensor.sensor_type != kwb.PROP_SENSOR_RAW) or (
-            sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw
-        ):
-            sensors.append(KWBSensor(easyfire, sensor, client_name))
-
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: easyfire.stop_thread())
 
-    add_entities(sensors)
+    add_entities(
+        KWBSensor(easyfire, sensor, client_name)
+        for sensor in easyfire.get_sensors()
+        if (sensor.sensor_type != kwb.PROP_SENSOR_RAW)
+        or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)
+    )
 
 
 class KWBSensor(SensorEntity):

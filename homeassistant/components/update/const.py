@@ -1,13 +1,14 @@
 """Constants for the update component."""
+
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import IntFlag
 from typing import Final
 
 DOMAIN: Final = "update"
 
 
-class UpdateEntityFeature(IntEnum):
+class UpdateEntityFeature(IntFlag):
     """Supported features of the update entity."""
 
     INSTALL = 1
@@ -20,8 +21,9 @@ class UpdateEntityFeature(IntEnum):
 SERVICE_INSTALL: Final = "install"
 SERVICE_SKIP: Final = "skip"
 
+ATTR_AUTO_UPDATE: Final = "auto_update"
 ATTR_BACKUP: Final = "backup"
-ATTR_CURRENT_VERSION: Final = "current_version"
+ATTR_INSTALLED_VERSION: Final = "installed_version"
 ATTR_IN_PROGRESS: Final = "in_progress"
 ATTR_LATEST_VERSION: Final = "latest_version"
 ATTR_RELEASE_SUMMARY: Final = "release_summary"

@@ -1,10 +1,10 @@
 """Support for MySensors covers."""
+
 from __future__ import annotations
 
 from enum import Enum, unique
 from typing import Any
 
-from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
@@ -54,7 +55,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
+class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
     def get_cover_state(self) -> CoverState:

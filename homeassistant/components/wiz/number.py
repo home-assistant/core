@@ -1,9 +1,10 @@
 """Support for WiZ effect speed numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from pywizlight import wizlight
 
@@ -13,6 +14,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,20 +23,13 @@ from .entity import WizEntity
 from .models import WizData
 
 
-@dataclass
-class WizNumberEntityDescriptionMixin:
-    """Mixin to describe a WiZ number entity."""
-
-    value_fn: Callable[[wizlight], int | None]
-    set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
-    required_feature: str
-
-
-@dataclass
-class WizNumberEntityDescription(
-    NumberEntityDescription, WizNumberEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class WizNumberEntityDescription(NumberEntityDescription):
     """Class to describe a WiZ number entity."""
+
+    required_feature: str
+    set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
+    value_fn: Callable[[wizlight], int | None]
 
 
 async def _async_set_speed(device: wizlight, speed: int) -> None:
@@ -48,25 +43,25 @@ async def _async_set_ratio(device: wizlight, ratio: int) -> None:
 NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     WizNumberEntityDescription(
         key="effect_speed",
-        min_value=10,
-        max_value=200,
-        step=1,
-        icon="mdi:speedometer",
-        name="Effect Speed",
-        value_fn=lambda device: cast(Optional[int], device.state.get_speed()),
+        translation_key="effect_speed",
+        native_min_value=10,
+        native_max_value=200,
+        native_step=1,
+        value_fn=lambda device: cast(int | None, device.state.get_speed()),
         set_value_fn=_async_set_speed,
         required_feature="effect",
+        entity_category=EntityCategory.CONFIG,
     ),
     WizNumberEntityDescription(
         key="dual_head_ratio",
-        min_value=0,
-        max_value=100,
-        step=1,
-        icon="mdi:floor-lamp-dual",
-        name="Dual Head Ratio",
-        value_fn=lambda device: cast(Optional[int], device.state.get_ratio()),
+        translation_key="dual_head_ratio",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        value_fn=lambda device: cast(int | None, device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -98,7 +93,6 @@ class WizSpeedNumber(WizEntity, NumberEntity):
         super().__init__(wiz_data, name)
         self.entity_description = description
         self._attr_unique_id = f"{self._device.mac}_{description.key}"
-        self._attr_name = f"{name} {description.name}"
         self._async_update_attrs()
 
     @property
@@ -113,9 +107,9 @@ class WizSpeedNumber(WizEntity, NumberEntity):
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         if (value := self.entity_description.value_fn(self._device)) is not None:
-            self._attr_value = float(value)
+            self._attr_native_value = float(value)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the speed value."""
         await self.entity_description.set_value_fn(self._device, int(value))
         await self.coordinator.async_request_refresh()

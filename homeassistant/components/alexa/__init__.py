@@ -1,4 +1,9 @@
 """Support for Alexa skill service end point."""
+
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -12,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.typing import ConfigType
 
-from . import flash_briefings, intent, smart_home_http
+from . import flash_briefings, intent, smart_home
 from .const import (
     CONF_AUDIO,
     CONF_DISPLAY_CATEGORIES,
@@ -32,6 +37,15 @@ CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"
 DEFAULT_LOCALE = "en-US"
 
+# Alexa Smart Home API send events gateway endpoints
+# https://developer.amazon.com/en-US/docs/alexa/smarthome/send-events.html#endpoints
+VALID_ENDPOINTS = [
+    "https://api.amazonalexa.com/v3/events",
+    "https://api.eu.amazonalexa.com/v3/events",
+    "https://api.fe.amazonalexa.com/v3/events",
+]
+
+
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DESCRIPTION): cv.string,
@@ -42,7 +56,7 @@ ALEXA_ENTITY_SCHEMA = vol.Schema(
 
 SMART_HOME_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ENDPOINT): cv.string,
+        vol.Optional(CONF_ENDPOINT): vol.All(vol.Lower, vol.In(VALID_ENDPOINTS)),
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
@@ -87,19 +101,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     config = config[DOMAIN]
 
-    flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)
-
     intent.async_setup(hass)
 
-    if flash_briefings_config:
+    if flash_briefings_config := config.get(CONF_FLASH_BRIEFINGS):
         flash_briefings.async_setup(hass, flash_briefings_config)
 
-    try:
-        smart_home_config = config[CONF_SMART_HOME]
-    except KeyError:
-        pass
-    else:
+    # smart_home being absent is not the same as smart_home being None
+    if CONF_SMART_HOME in config:
+        smart_home_config: dict[str, Any] | None = config[CONF_SMART_HOME]
         smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
-        await smart_home_http.async_setup(hass, smart_home_config)
+        await smart_home.async_setup(hass, smart_home_config)
 
     return True

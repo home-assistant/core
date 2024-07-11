@@ -1,65 +1,59 @@
 """Support for Twente Milieu Calendar."""
+
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timedelta
 
-from homeassistant.components.calendar import CalendarEventDevice
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, WASTE_TYPE_TO_DESCRIPTION
+from . import TwenteMilieuConfigEntry
+from .const import WASTE_TYPE_TO_DESCRIPTION
 from .entity import TwenteMilieuEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TwenteMilieuConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu calendar based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.data[CONF_ID]]
-    async_add_entities([TwenteMilieuCalendar(coordinator, entry)])
+    async_add_entities([TwenteMilieuCalendar(entry)])
 
 
-class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
+class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
     """Defines a Twente Milieu calendar."""
 
-    _attr_name = "Twente Milieu"
-    _attr_icon = "mdi:delete-empty"
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "calendar"
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        entry: ConfigEntry,
-    ) -> None:
+    def __init__(self, entry: TwenteMilieuConfigEntry) -> None:
         """Initialize the Twente Milieu entity."""
-        super().__init__(coordinator, entry)
+        super().__init__(entry)
         self._attr_unique_id = str(entry.data[CONF_ID])
-        self._event: dict[str, Any] | None = None
+        self._event: CalendarEvent | None = None
 
     @property
-    def event(self) -> dict[str, Any] | None:
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[dict[str, Any]]:
+    ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        events: list[dict[str, Any]] = []
+        events: list[CalendarEvent] = []
         for waste_type, waste_dates in self.coordinator.data.items():
             events.extend(
-                {
-                    "all_day": True,
-                    "start": {"date": waste_date.isoformat()},
-                    "end": {"date": waste_date.isoformat()},
-                    "summary": WASTE_TYPE_TO_DESCRIPTION[waste_type],
-                }
+                CalendarEvent(
+                    summary=WASTE_TYPE_TO_DESCRIPTION[waste_type],
+                    start=waste_date,
+                    end=waste_date + timedelta(days=1),
+                )
                 for waste_date in waste_dates
                 if start_date.date() <= waste_date <= end_date.date()
             )
@@ -86,12 +80,11 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
 
         self._event = None
         if next_waste_pickup_date is not None and next_waste_pickup_type is not None:
-            self._event = {
-                "all_day": True,
-                "start": {"date": next_waste_pickup_date.isoformat()},
-                "end": {"date": next_waste_pickup_date.isoformat()},
-                "summary": WASTE_TYPE_TO_DESCRIPTION[next_waste_pickup_type],
-            }
+            self._event = CalendarEvent(
+                summary=WASTE_TYPE_TO_DESCRIPTION[next_waste_pickup_type],
+                start=next_waste_pickup_date,
+                end=next_waste_pickup_date + timedelta(days=1),
+            )
 
         super()._handle_coordinator_update()
 

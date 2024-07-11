@@ -1,14 +1,16 @@
 """Diagnostics support for august."""
+
 from __future__ import annotations
 
 from typing import Any
 
+from yalexs.const import DEFAULT_BRAND
+
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import AugustData
-from .const import DOMAIN
+from . import AugustConfigEntry
+from .const import CONF_BRAND
 
 TO_REDACT = {
     "HouseID",
@@ -22,14 +24,15 @@ TO_REDACT = {
     "remoteOperateSecret",
     "users",
     "zWaveDSK",
+    "contentToken",
 }
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AugustConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: AugustData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     return {
         "locks": {
@@ -44,4 +47,5 @@ async def async_get_config_entry_diagnostics(
             )
             for doorbell in data.doorbells
         },
+        "brand": entry.data.get(CONF_BRAND, DEFAULT_BRAND),
     }

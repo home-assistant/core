@@ -1,9 +1,9 @@
 {
   "domain": "volkszaehler",
   "name": "Volkszaehler",
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/volkszaehler",
-  "requirements": ["volkszaehler==0.3.2"],
-  "codeowners": ["@fabaff"],
   "iot_class": "local_polling",
-  "loggers": ["volkszaehler"]
+  "loggers": ["volkszaehler"],
+  "requirements": ["volkszaehler==0.4.0"]
 }

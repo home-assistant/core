@@ -1,7 +1,9 @@
 """Support for locks through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from pysmartthings import Attribute, Capability
 
@@ -32,11 +34,9 @@ async def async_setup_entry(
     """Add locks for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [
-            SmartThingsLock(device)
-            for device in broker.devices.values()
-            if broker.any_assigned(device.device_id, "lock")
-        ]
+        SmartThingsLock(device)
+        for device in broker.devices.values()
+        if broker.any_assigned(device.device_id, "lock")
     )
 
 
@@ -50,23 +50,23 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsLock(SmartThingsEntity, LockEntity):
     """Define a SmartThings lock."""
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self._device.lock(set_status=True)
         self.async_write_ha_state()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self._device.unlock(set_status=True)
         self.async_write_ha_state()
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._device.status.lock == ST_STATE_LOCKED
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         state_attrs = {}
         status = self._device.status.attributes[Attribute.lock]

@@ -1,4 +1,5 @@
-"""Common stuff for AVM Fritz!Box tests."""
+"""Common stuff for Fritz!Tools tests."""
+
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -6,7 +7,12 @@ from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
 import pytest
 
-from .const import MOCK_FB_SERVICES, MOCK_MESH_DATA, MOCK_MODELNAME
+from .const import (
+    MOCK_FB_SERVICES,
+    MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_MESH_DATA,
+    MOCK_MODELNAME,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +27,7 @@ class FritzServiceMock(Service):
         self.serviceId = serviceId
 
 
-class FritzConnectionMock:  # pylint: disable=too-few-public-methods
+class FritzConnectionMock:
     """FritzConnection mocking."""
 
     def __init__(self, services):
@@ -43,6 +49,10 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
         else:
             self.call_action = self._call_action
 
+    def override_services(self, services) -> None:
+        """Overrire services data."""
+        self._services = services
+
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
             "_call_action service: %s, action: %s, **kwargs: %s",
@@ -57,7 +67,6 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
             service = service + "1"
 
         if kwargs:
-
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
 
@@ -65,29 +74,29 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
         return self._services[service][action]
 
 
-class FritzHostMock(FritzHosts):
-    """FritzHosts mocking."""
-
-    def get_mesh_topology(self, raw=False):
-        """Retrurn mocked mesh data."""
-        return MOCK_MESH_DATA
+@pytest.fixture(name="fc_data")
+def fc_data_mock():
+    """Fixture for default fc_data."""
+    return MOCK_FB_SERVICES
 
 
-@pytest.fixture()
-def fc_class_mock():
+@pytest.fixture
+def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection", autospec=True
+        "homeassistant.components.fritz.coordinator.FritzConnection", autospec=True
     ) as result:
-        result.return_value = FritzConnectionMock(MOCK_FB_SERVICES)
+        result.return_value = FritzConnectionMock(fc_data)
         yield result
 
 
-@pytest.fixture()
+@pytest.fixture
 def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
     with patch(
-        "homeassistant.components.fritz.common.FritzHosts",
-        new=FritzHostMock,
+        "homeassistant.components.fritz.coordinator.FritzHosts",
+        new=FritzHosts,
     ) as result:
+        result.get_mesh_topology = MagicMock(return_value=MOCK_MESH_DATA)
+        result.get_hosts_attributes = MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA)
         yield result

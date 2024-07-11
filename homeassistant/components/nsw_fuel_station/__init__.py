@@ -1,4 +1,5 @@
 """The nsw_fuel_station component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ import logging
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "nsw_fuel_station"
 SCAN_INTERVAL = datetime.timedelta(hours=1)
+
+CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

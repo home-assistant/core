@@ -1,7 +1,9 @@
 """Utils for Sensibo integration."""
+
 from __future__ import annotations
 
-import async_timeout
+import asyncio
+
 from pysensibo import SensiboClient
 from pysensibo.exceptions import AuthenticationError
 
@@ -12,7 +14,7 @@ from .const import LOGGER, SENSIBO_ERRORS, TIMEOUT
 
 
 async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
-    """Get data from API."""
+    """Validate the api and return username."""
     client = SensiboClient(
         api_key,
         session=async_get_clientsession(hass),
@@ -20,7 +22,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
     )
 
     try:
-        async with async_timeout.timeout(TIMEOUT):
+        async with asyncio.timeout(TIMEOUT):
             device_query = await client.async_get_devices()
             user_query = await client.async_get_me()
     except AuthenticationError as err:
@@ -31,7 +33,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
         raise ConnectionError from err
 
     devices = device_query["result"]
-    user = user_query["result"].get("username")
+    user: str = user_query["result"].get("username")
     if not devices:
         LOGGER.error("Could not retrieve any devices from Sensibo servers")
         raise NoDevicesError

@@ -1,8 +1,9 @@
 """Support for sensors through the SmartThings cloud API."""
+
 from __future__ import annotations
 
-from collections import namedtuple
 from collections.abc import Sequence
+from typing import NamedTuple
 
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import DeviceEntity
@@ -16,27 +17,34 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
-    MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_CUBIC_METERS,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-Map = namedtuple(
-    "Map", "attribute name default_unit device_class state_class entity_category"
-)
+
+class Map(NamedTuple):
+    """Tuple for mapping Smartthings capabilities to Home Assistant sensors."""
+
+    attribute: str
+    name: str
+    default_unit: str | None
+    device_class: SensorDeviceClass | None
+    state_class: SensorStateClass | None
+    entity_category: EntityCategory | None
+
 
 CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
     Capability.activity_lighting_mode: [
@@ -46,7 +54,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.air_conditioner_mode: [
@@ -56,7 +64,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.air_quality_sensor: [
@@ -87,7 +95,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.bmi_measurement,
             "Body Mass Index",
-            f"{MASS_KILOGRAMS}/{AREA_SQUARE_METERS}",
+            f"{UnitOfMass.KILOGRAMS}/{AREA_SQUARE_METERS}",
             None,
             SensorStateClass.MEASUREMENT,
             None,
@@ -97,8 +105,8 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.body_weight_measurement,
             "Body Weight",
-            MASS_KILOGRAMS,
-            None,
+            UnitOfMass.KILOGRAMS,
+            SensorDeviceClass.WEIGHT,
             SensorStateClass.MEASUREMENT,
             None,
         )
@@ -161,7 +169,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.dryer_operating_state: [
@@ -198,7 +206,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.energy,
             "Energy Meter",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
             SensorDeviceClass.ENERGY,
             SensorStateClass.TOTAL_INCREASING,
             None,
@@ -209,7 +217,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             Attribute.equivalent_carbon_dioxide_measurement,
             "Equivalent Carbon Dioxide Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
-            None,
+            SensorDeviceClass.CO2,
             SensorStateClass.MEASUREMENT,
             None,
         )
@@ -228,8 +236,8 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.gas_meter,
             "Gas Meter",
-            ENERGY_KILO_WATT_HOUR,
-            None,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            SensorDeviceClass.ENERGY,
             SensorStateClass.MEASUREMENT,
             None,
         ),
@@ -247,8 +255,8 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.gas_meter_volume,
             "Gas Meter Volume",
-            VOLUME_CUBIC_METERS,
-            None,
+            UnitOfVolume.CUBIC_METERS,
+            SensorDeviceClass.GAS,
             SensorStateClass.MEASUREMENT,
             None,
         ),
@@ -304,7 +312,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.oven_operating_state: [
@@ -320,7 +328,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.power,
             "Power Meter",
-            POWER_WATT,
+            UnitOfPower.WATT,
             SensorDeviceClass.POWER,
             SensorStateClass.MEASUREMENT,
             None,
@@ -363,7 +371,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.robot_cleaner_movement: [
@@ -383,7 +391,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.signal_strength: [
@@ -434,7 +442,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.thermostat_heating_setpoint: [
@@ -444,7 +452,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             SensorDeviceClass.TEMPERATURE,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.thermostat_mode: [
@@ -454,7 +462,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.thermostat_operating_state: [
@@ -474,7 +482,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             SensorDeviceClass.TEMPERATURE,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.three_axis: [],
@@ -506,7 +514,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.voltage,
             "Voltage Measurement",
-            ELECTRIC_POTENTIAL_VOLT,
+            UnitOfElectricPotential.VOLT,
             SensorDeviceClass.VOLTAGE,
             SensorStateClass.MEASUREMENT,
             None,
@@ -519,7 +527,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.washer_operating_state: [
@@ -536,7 +544,11 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
     ],
 }
 
-UNITS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
+UNITS = {
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
+    "lux": LIGHT_LUX,
+}
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
 POWER_CONSUMPTION_REPORT_NAMES = [
@@ -553,7 +565,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add binary sensors for a config entry."""
+    """Add sensors for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     entities: list[SensorEntity] = []
     for device in broker.devices.values():
@@ -625,44 +637,30 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         device: DeviceEntity,
         attribute: str,
         name: str,
-        default_unit: str,
-        device_class: str,
+        default_unit: str | None,
+        device_class: SensorDeviceClass | None,
         state_class: str | None,
         entity_category: EntityCategory | None,
     ) -> None:
         """Init the class."""
         super().__init__(device)
         self._attribute = attribute
-        self._name = name
-        self._device_class = device_class
+        self._attr_name = f"{device.label} {name}"
+        self._attr_unique_id = f"{device.device_id}.{attribute}"
+        self._attr_device_class = device_class
         self._default_unit = default_unit
         self._attr_state_class = state_class
         self._attr_entity_category = entity_category
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return f"{self._device.label} {self._name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{self._attribute}"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         value = self._device.status.attributes[self._attribute].value
 
-        if self._device_class != SensorDeviceClass.TIMESTAMP:
+        if self.device_class != SensorDeviceClass.TIMESTAMP:
             return value
 
         return dt_util.parse_datetime(value)
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
 
     @property
     def native_unit_of_measurement(self):
@@ -678,16 +676,8 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self._index = index
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return f"{self._device.label} {THREE_AXIS_NAMES[self._index]}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{THREE_AXIS_NAMES[self._index]}"
+        self._attr_name = f"{device.label} {THREE_AXIS_NAMES[index]}"
+        self._attr_unique_id = f"{device.device_id} {THREE_AXIS_NAMES[index]}"
 
     @property
     def native_value(self):
@@ -710,19 +700,16 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self.report_name = report_name
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        if self.report_name != "power":
+        self._attr_name = f"{device.label} {report_name}"
+        self._attr_unique_id = f"{device.device_id}.{report_name}_meter"
+        if self.report_name == "power":
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
+        else:
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return f"{self._device.label} {self.report_name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{self.report_name}_meter"
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
 
     @property
     def native_value(self):
@@ -735,15 +722,17 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         return value[self.report_name] / 1000
 
     @property
-    def device_class(self):
-        """Return the device class of the sensor."""
+    def extra_state_attributes(self):
+        """Return specific state attributes."""
         if self.report_name == "power":
-            return SensorDeviceClass.POWER
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        if self.report_name == "power":
-            return POWER_WATT
-        return ENERGY_KILO_WATT_HOUR
+            attributes = [
+                "power_consumption_start",
+                "power_consumption_end",
+            ]
+            state_attributes = {}
+            for attribute in attributes:
+                value = getattr(self._device.status, attribute)
+                if value is not None:
+                    state_attributes[attribute] = value
+            return state_attributes
+        return None

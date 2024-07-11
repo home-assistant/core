@@ -1,4 +1,5 @@
 """Base Entity for all TelldusLive entities."""
+
 from datetime import datetime
 import logging
 
@@ -9,11 +10,10 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_VIA_DEVICE,
-    DEVICE_DEFAULT_NAME,
 )
-from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import SIGNAL_UPDATE_ENTITY
 
@@ -25,31 +25,22 @@ ATTR_LAST_UPDATED = "time_last_updated"
 class TelldusLiveEntity(Entity):
     """Base class for all Telldus Live entities."""
 
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
     def __init__(self, client, device_id):
         """Initialize the entity."""
         self._id = device_id
         self._client = client
-        self._name = self.device.name
-        self._async_unsub_dispatcher_connect = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         _LOGGER.debug("Created device %s", self)
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ENTITY, self.async_write_ha_state
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    @callback
-    def _update_callback(self):
-        """Return the property of the device might have changed."""
-        if self.device.name:
-            self._name = self.device.name
-        self.async_write_ha_state()
 
     @property
     def device_id(self):
@@ -67,19 +58,9 @@ class TelldusLiveEntity(Entity):
         return self.device.state
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return True
-
-    @property
-    def name(self):
-        """Return name of device."""
-        return self._name or DEVICE_DEFAULT_NAME
 
     @property
     def available(self):

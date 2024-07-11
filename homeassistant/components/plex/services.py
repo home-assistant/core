@@ -1,4 +1,5 @@
 """Services for the Plex integration."""
+
 import json
 import logging
 
@@ -19,7 +20,9 @@ from .const import (
     SERVICE_SCAN_CLIENTS,
 )
 from .errors import MediaNotFound
+from .helpers import get_plex_data
 from .models import PlexMediaSearchResult
+from .server import PlexServer
 
 REFRESH_LIBRARY_SCHEMA = vol.Schema(
     {vol.Optional("server_name"): str, vol.Required("library_name"): str}
@@ -28,7 +31,7 @@ REFRESH_LIBRARY_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup_services(hass):
+async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the Plex component."""
 
     async def async_refresh_library_service(service_call: ServiceCall) -> None:
@@ -36,10 +39,11 @@ async def async_setup_services(hass):
 
     async def async_scan_clients_service(_: ServiceCall) -> None:
         _LOGGER.warning(
-            "This service is deprecated in favor of the scan_clients button entity. "
-            "Service calls will still work for now but the service will be removed in a future release"
+            "This service is deprecated in favor of the scan_clients button entity."
+            " Service calls will still work for now but the service will be removed in"
+            " a future release"
         )
-        for server_id in hass.data[DOMAIN][SERVERS]:
+        for server_id in get_plex_data(hass)[SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
     hass.services.async_register(
@@ -51,8 +55,6 @@ async def async_setup_services(hass):
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN_CLIENTS, async_scan_clients_service
     )
-
-    return True
 
 
 def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
@@ -76,17 +78,22 @@ def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     library.update()
 
 
-def get_plex_server(hass, plex_server_name=None, plex_server_id=None):
+def get_plex_server(
+    hass: HomeAssistant,
+    plex_server_name: str | None = None,
+    plex_server_id: str | None = None,
+) -> PlexServer:
     """Retrieve a configured Plex server by name."""
     if DOMAIN not in hass.data:
         raise HomeAssistantError("Plex integration not configured")
-    plex_servers = hass.data[DOMAIN][SERVERS].values()
-    if not plex_servers:
+    servers: dict[str, PlexServer] = get_plex_data(hass)[SERVERS]
+    if not servers:
         raise HomeAssistantError("No Plex servers available")
 
     if plex_server_id:
-        return hass.data[DOMAIN][SERVERS][plex_server_id]
+        return servers[plex_server_id]
 
+    plex_servers = servers.values()
     if plex_server_name:
         plex_server = next(
             (x for x in plex_servers if x.friendly_name == plex_server_name), None
@@ -103,12 +110,17 @@ def get_plex_server(hass, plex_server_name=None, plex_server_id=None):
 
     friendly_names = [x.friendly_name for x in plex_servers]
     raise HomeAssistantError(
-        f"Multiple Plex servers configured, choose with 'plex_server' key: {friendly_names}"
+        "Multiple Plex servers configured, choose with 'plex_server' key:"
+        f" {friendly_names}"
     )
 
 
 def process_plex_payload(
-    hass, content_type, content_id, default_plex_server=None, supports_playqueues=True
+    hass: HomeAssistant,
+    content_type: str,
+    content_id: str,
+    default_plex_server: PlexServer | None = None,
+    supports_playqueues: bool = True,
 ) -> PlexMediaSearchResult:
     """Look up Plex media using media_player.play_media service payloads."""
     plex_server = default_plex_server
@@ -116,23 +128,28 @@ def process_plex_payload(
 
     if content_id.startswith(PLEX_URI_SCHEME + "{"):
         # Handle the special payload of 'plex://{<json>}'
-        content_id = content_id[len(PLEX_URI_SCHEME) :]
+        content_id = content_id.removeprefix(PLEX_URI_SCHEME)
         content = json.loads(content_id)
     elif content_id.startswith(PLEX_URI_SCHEME):
         # Handle standard media_browser payloads
         plex_url = URL(content_id)
         if plex_url.name:
             if len(plex_url.parts) == 2:
-                # The path contains a single item, will always be a ratingKey
-                content = int(plex_url.name)
+                if plex_url.name == "search":
+                    content = {}
+                else:
+                    content = int(plex_url.name)
             else:
                 # For "special" items like radio stations
                 content = plex_url.path
             server_id = plex_url.host
             plex_server = get_plex_server(hass, plex_server_id=server_id)
-        else:
+        else:  # noqa: PLR5501
             # Handle legacy payloads without server_id in URL host position
-            content = int(plex_url.host)  # type: ignore[arg-type]
+            if plex_url.host == "search":
+                content = {}
+            else:
+                content = int(plex_url.host)  # type: ignore[arg-type]
         extra_params = dict(plex_url.query)
     else:
         content = json.loads(content_id)
@@ -170,10 +187,16 @@ def process_plex_payload(
     search_query = content.copy()
     shuffle = search_query.pop("shuffle", 0)
 
+    # Remove internal kwargs before passing copy to plexapi
+    for internal_key in ("resume", "offset"):
+        search_query.pop(internal_key, None)
+
     media = plex_server.lookup_media(content_type, **search_query)
 
     if supports_playqueues and (isinstance(media, list) or shuffle):
-        playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+        playqueue = plex_server.create_playqueue(
+            media, includeRelated=0, shuffle=shuffle
+        )
         return PlexMediaSearchResult(playqueue, content)
 
     return PlexMediaSearchResult(media, content)

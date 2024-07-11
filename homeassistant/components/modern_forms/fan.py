@@ -1,4 +1,5 @@
 """Support for Modern Forms Fan Fans."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,22 +7,18 @@ from typing import Any
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
 import voluptuous as vol
 
-from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import ModernFormsDeviceEntity, modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -31,6 +28,7 @@ from .const import (
     SERVICE_CLEAR_FAN_SLEEP_TIMER,
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
+from .coordinator import ModernFormsDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -72,6 +70,9 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
 
     SPEED_RANGE = (1, 6)  # off is not included
 
+    _attr_supported_features = FanEntityFeature.DIRECTION | FanEntityFeature.SET_SPEED
+    _attr_translation_key = "fan"
+
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
     ) -> None:
@@ -79,14 +80,8 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
-            name=f"{coordinator.data.info.device_name} Fan",
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_DIRECTION | SUPPORT_SET_SPEED
 
     @property
     def percentage(self) -> int | None:
@@ -130,7 +125,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
     async def async_turn_on(
         self,
         percentage: int | None = None,
-        preset_mode: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""

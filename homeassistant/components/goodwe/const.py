@@ -1,11 +1,12 @@
 """Constants for the Goodwe component."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform
 
 DOMAIN = "goodwe"
 
-PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
 
 DEFAULT_NAME = "GoodWe"
 SCAN_INTERVAL = timedelta(seconds=10)

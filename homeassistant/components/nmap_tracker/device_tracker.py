@@ -1,11 +1,11 @@
 """Support for scanning a network with nmap."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,6 +45,9 @@ async def async_setup_entry(
 
 class NmapTrackerEntity(ScannerEntity):
     """An Nmap Tracker entity."""
+
+    _attr_should_poll = False
+    _attr_translation_key = "device_tracker"
 
     def __init__(
         self, nmap_tracker: NmapDeviceScanner, mac_address: str, active: bool
@@ -93,19 +96,9 @@ class NmapTrackerEntity(ScannerEntity):
         return short_hostname(self._device.hostname)
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return tracker source type."""
-        return SOURCE_TYPE_ROUTER
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:lan-connect" if self._active else "mdi:lan-disconnect"
+        return SourceType.ROUTER
 
     @callback
     def async_process_update(self, online: bool) -> None:

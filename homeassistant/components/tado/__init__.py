@@ -1,32 +1,33 @@
 """Support for the (unofficial) Tado API."""
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
-from PyTado.interface import Tado
-from requests import RequestException
 import requests.exceptions
 
-from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import Throttle
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FALLBACK,
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
-    DATA,
+    CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
-    INSIDE_TEMPERATURE_MEASUREMENT,
-    SIGNAL_TADO_UPDATE_RECEIVED,
-    TEMP_OFFSET,
     UPDATE_LISTENER,
+    UPDATE_MOBILE_DEVICE_TRACK,
     UPDATE_TRACK,
 )
+from .services import setup_services
+from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,24 +35,47 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Tado."""
+
+    setup_services(hass)
+
+    return True
+
+
+type TadoConfigEntry = ConfigEntry[TadoRuntimeData]
+
+
+@dataclass
+class TadoRuntimeData:
+    """Dataclass for Tado runtime data."""
+
+    tadoconnector: TadoConnector
+    update_track: Any
+    update_mobile_device_track: Any
+    update_listener: Any
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
     """Set up Tado from a config entry."""
 
     _async_import_options_from_data_if_missing(hass, entry)
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
+    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
 
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
@@ -81,16 +105,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SCAN_INTERVAL,
     )
 
+    update_mobile_devices = async_track_time_interval(
+        hass,
+        lambda now: tadoconnector.update_mobile_devices(),
+        SCAN_MOBILE_DEVICE_INTERVAL,
+    )
+
     update_listener = entry.add_update_listener(_async_update_listener)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA: tadoconnector,
-        UPDATE_TRACK: update_track,
-        UPDATE_LISTENER: update_listener,
-    }
+    entry.runtime_data = TadoRuntimeData(
+        tadoconnector=tadoconnector,
+        update_track=update_track,
+        update_mobile_device_track=update_mobile_devices,
+        update_listener=update_listener,
+    )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -99,7 +129,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
-        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
+        options[CONF_FALLBACK] = entry.data.get(
+            CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+        )
+        hass.config_entries.async_update_entry(entry, options=options)
+
+    if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
+        if options[CONF_FALLBACK]:
+            options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
+        else:
+            options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
         hass.config_entries.async_update_entry(entry, options=options)
 
 
@@ -114,205 +153,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id][UPDATE_TRACK]()
     hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
+    hass.data[DOMAIN][entry.entry_id][UPDATE_MOBILE_DEVICE_TRACK]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class TadoConnector:
-    """An object to store the Tado data."""
-
-    def __init__(self, hass, username, password, fallback):
-        """Initialize Tado Connector."""
-        self.hass = hass
-        self._username = username
-        self._password = password
-        self._fallback = fallback
-
-        self.home_id = None
-        self.home_name = None
-        self.tado = None
-        self.zones = None
-        self.devices = None
-        self.data = {
-            "device": {},
-            "weather": {},
-            "zone": {},
-        }
-
-    @property
-    def fallback(self):
-        """Return fallback flag to Smart Schedule."""
-        return self._fallback
-
-    def setup(self):
-        """Connect to Tado and fetch the zones."""
-        self.tado = Tado(self._username, self._password)
-        self.tado.setDebugging(True)
-        # Load zones and devices
-        self.zones = self.tado.getZones()
-        self.devices = self.tado.getDevices()
-        tado_home = self.tado.getMe()["homes"][0]
-        self.home_id = tado_home["id"]
-        self.home_name = tado_home["name"]
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update the registered zones."""
-        self.update_devices()
-        self.update_zones()
-        self.data["weather"] = self.tado.getWeather()
-        dispatcher_send(
-            self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
-        )
-
-    def update_devices(self):
-        """Update the device data from Tado."""
-        devices = self.tado.getDevices()
-        for device in devices:
-            device_short_serial_no = device["shortSerialNo"]
-            _LOGGER.debug("Updating device %s", device_short_serial_no)
-            try:
-                if (
-                    INSIDE_TEMPERATURE_MEASUREMENT
-                    in device["characteristics"]["capabilities"]
-                ):
-                    device[TEMP_OFFSET] = self.tado.getDeviceInfo(
-                        device_short_serial_no, TEMP_OFFSET
-                    )
-            except RuntimeError:
-                _LOGGER.error(
-                    "Unable to connect to Tado while updating device %s",
-                    device_short_serial_no,
-                )
-                return
-
-            self.data["device"][device_short_serial_no] = device
-
-            _LOGGER.debug(
-                "Dispatching update to %s device %s: %s",
-                self.home_id,
-                device_short_serial_no,
-                device,
-            )
-            dispatcher_send(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self.home_id, "device", device_short_serial_no
-                ),
-            )
-
-    def update_zones(self):
-        """Update the zone data from Tado."""
-        try:
-            zone_states = self.tado.getZoneStates()["zoneStates"]
-        except RuntimeError:
-            _LOGGER.error("Unable to connect to Tado while updating zones")
-            return
-
-        for zone in zone_states:
-            self.update_zone(int(zone))
-
-    def update_zone(self, zone_id):
-        """Update the internal data from Tado."""
-        _LOGGER.debug("Updating zone %s", zone_id)
-        try:
-            data = self.tado.getZoneState(zone_id)
-        except RuntimeError:
-            _LOGGER.error("Unable to connect to Tado while updating zone %s", zone_id)
-            return
-
-        self.data["zone"][zone_id] = data
-
-        _LOGGER.debug(
-            "Dispatching update to %s zone %s: %s",
-            self.home_id,
-            zone_id,
-            data,
-        )
-        dispatcher_send(
-            self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone_id),
-        )
-
-    def get_capabilities(self, zone_id):
-        """Return the capabilities of the devices."""
-        return self.tado.getCapabilities(zone_id)
-
-    def reset_zone_overlay(self, zone_id):
-        """Reset the zone back to the default operation."""
-        self.tado.resetZoneOverlay(zone_id)
-        self.update_zone(zone_id)
-
-    def set_presence(
-        self,
-        presence=PRESET_HOME,
-    ):
-        """Set the presence to home or away."""
-        if presence == PRESET_AWAY:
-            self.tado.setAway()
-        elif presence == PRESET_HOME:
-            self.tado.setHome()
-
-    def set_zone_overlay(
-        self,
-        zone_id=None,
-        overlay_mode=None,
-        temperature=None,
-        duration=None,
-        device_type="HEATING",
-        mode=None,
-        fan_speed=None,
-        swing=None,
-    ):
-        """Set a zone overlay."""
-        _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
-            zone_id,
-            overlay_mode,
-            temperature,
-            duration,
-            device_type,
-            mode,
-            fan_speed,
-            swing,
-        )
-
-        try:
-            self.tado.setZoneOverlay(
-                zone_id,
-                overlay_mode,
-                temperature,
-                duration,
-                device_type,
-                "ON",
-                mode,
-                fanSpeed=fan_speed,
-                swing=swing,
-            )
-
-        except RequestException as exc:
-            _LOGGER.error("Could not set zone overlay: %s", exc)
-
-        self.update_zone(zone_id)
-
-    def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
-        """Set a zone to off."""
-        try:
-            self.tado.setZoneOverlay(
-                zone_id, overlay_mode, None, None, device_type, "OFF"
-            )
-        except RequestException as exc:
-            _LOGGER.error("Could not set zone overlay: %s", exc)
-
-        self.update_zone(zone_id)
-
-    def set_temperature_offset(self, device_id, offset):
-        """Set temperature offset of device."""
-        try:
-            self.tado.setTempOffset(device_id, offset)
-        except RequestException as exc:
-            _LOGGER.error("Could not set temperature offset: %s", exc)

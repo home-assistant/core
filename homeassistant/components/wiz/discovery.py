@@ -1,4 +1,5 @@
 """The wiz integration discovery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,6 +11,7 @@ from pywizlight.discovery import DiscoveredBulb, find_wizlights
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 
 from .const import DOMAIN
 
@@ -32,6 +34,8 @@ async def async_discover_devices(
         if isinstance(discovered, Exception):
             _LOGGER.debug("Scanning %s failed with error: %s", targets[idx], discovered)
             continue
+        if isinstance(discovered, BaseException):
+            raise discovered from None
         for device in discovered:
             assert isinstance(device, DiscoveredBulb)
             combined_discoveries[device.ip_address] = device
@@ -46,10 +50,9 @@ def async_trigger_discovery(
 ) -> None:
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                data=asdict(device),
-            )
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=asdict(device),
         )

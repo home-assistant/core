@@ -1,10 +1,111 @@
 {
+  "entity": {
+    "sensor": {
+      "electricity_price": {
+        "name": "Electricity price"
+      },
+      "month_cost": {
+        "name": "Monthly cost"
+      },
+      "peak_hour": {
+        "name": "Monthly peak hour consumption"
+      },
+      "peak_hour_time": {
+        "name": "Time of max hour consumption"
+      },
+      "month_cons": {
+        "name": "Monthly net consumption"
+      },
+      "average_power": {
+        "name": "Average power"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "power_production": {
+        "name": "Power production"
+      },
+      "min_power": {
+        "name": "Min power"
+      },
+      "max_power": {
+        "name": "Max power"
+      },
+      "accumulated_consumption": {
+        "name": "Accumulated consumption"
+      },
+      "accumulated_consumption_last_hour": {
+        "name": "Accumulated consumption current hour"
+      },
+      "estimated_hour_consumption": {
+        "name": "Estimated consumption current hour"
+      },
+      "accumulated_production": {
+        "name": "Accumulated production"
+      },
+      "accumulated_production_last_hour": {
+        "name": "Accumulated production current hour"
+      },
+      "last_meter_consumption": {
+        "name": "Last meter consumption"
+      },
+      "last_meter_production": {
+        "name": "Last meter production"
+      },
+      "voltage_phase1": {
+        "name": "Voltage phase1"
+      },
+      "voltage_phase2": {
+        "name": "Voltage phase2"
+      },
+      "voltage_phase3": {
+        "name": "Voltage phase3"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      },
+      "accumulated_reward": {
+        "name": "Accumulated reward"
+      },
+      "accumulated_cost": {
+        "name": "Accumulated cost"
+      },
+      "power_factor": {
+        "name": "Power factor"
+      }
+    }
+  },
+  "services": {
+    "get_prices": {
+      "name": "Get energy prices",
+      "description": "Get hourly energy prices from Tibber",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted."
+        },
+        "end": {
+          "name": "End",
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted."
+        }
+      }
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "timeout": "Timeout connecting to Tibber",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
     },
@@ -13,8 +114,13 @@
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Enter your access token from https://developer.tibber.com/settings/accesstoken"
+        "description": "Enter your access token from {url}"
       }
+    }
+  },
+  "exceptions": {
+    "send_message_timeout": {
+      "message": "Timeout sending message with Tibber"
     }
   }
 }

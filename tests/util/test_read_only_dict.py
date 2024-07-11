@@ -1,4 +1,6 @@
 """Test read only dictionary."""
+
+import copy
 import json
 
 import pytest
@@ -6,7 +8,7 @@ import pytest
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 
-def test_read_only_dict():
+def test_read_only_dict() -> None:
     """Test read only dictionary."""
     data = ReadOnlyDict({"hello": "world"})
 
@@ -34,3 +36,5 @@ def test_read_only_dict():
     assert isinstance(data, dict)
     assert dict(data) == {"hello": "world"}
     assert json.dumps(data) == json.dumps({"hello": "world"})
+
+    assert copy.deepcopy(data) == {"hello": "world"}

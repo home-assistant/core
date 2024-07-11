@@ -1,4 +1,5 @@
 """Support for Genius Hub sensor devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -47,6 +48,9 @@ async def async_setup_platform(
 class GeniusBattery(GeniusDevice, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(self, broker, device, state_attr) -> None:
         """Initialize the sensor."""
         super().__init__(broker, device)
@@ -81,17 +85,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
         return icon
 
     @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return SensorDeviceClass.BATTERY
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of the sensor."""
-        return PERCENTAGE
-
-    @property
-    def native_value(self) -> str:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         level = self._device.data["state"][self._state_attr]
         return level if level != 255 else 0

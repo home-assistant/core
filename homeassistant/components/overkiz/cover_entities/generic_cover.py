@@ -1,20 +1,18 @@
 """Base class for Overkiz covers, shutters, awnings, etc."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP_TILT,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.components.overkiz.entity import OverkizEntity
+
+from ..entity import OverkizEntity
 
 ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
 
@@ -29,15 +27,19 @@ COMMANDS_STOP_TILT: list[OverkizCommand] = [
 COMMANDS_OPEN: list[OverkizCommand] = [
     OverkizCommand.OPEN,
     OverkizCommand.UP,
-    OverkizCommand.CYCLE,
 ]
-COMMANDS_OPEN_TILT: list[OverkizCommand] = [OverkizCommand.OPEN_SLATS]
+COMMANDS_OPEN_TILT: list[OverkizCommand] = [
+    OverkizCommand.OPEN_SLATS,
+    OverkizCommand.TILT_DOWN,
+]
 COMMANDS_CLOSE: list[OverkizCommand] = [
     OverkizCommand.CLOSE,
     OverkizCommand.DOWN,
-    OverkizCommand.CYCLE,
 ]
-COMMANDS_CLOSE_TILT: list[OverkizCommand] = [OverkizCommand.CLOSE_SLATS]
+COMMANDS_CLOSE_TILT: list[OverkizCommand] = [
+    OverkizCommand.CLOSE_SLATS,
+    OverkizCommand.TILT_UP,
+]
 
 COMMANDS_SET_TILT_POSITION: list[OverkizCommand] = [OverkizCommand.SET_ORIENTATION]
 
@@ -111,82 +113,29 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         if command := self.executor.select_command(*COMMANDS_STOP_TILT):
             await self.executor.async_execute_command(command)
 
-    @property
-    def is_opening(self) -> bool | None:
-        """Return if the cover is opening or not."""
-
-        if self.assumed_state:
-            return None
-
-        # Check if cover movement execution is currently running
-        if any(
+    def is_running(self, commands: list[OverkizCommand]) -> bool:
+        """Return if the given commands are currently running."""
+        return any(
             execution.get("device_url") == self.device.device_url
-            and execution.get("command_name") in COMMANDS_OPEN + COMMANDS_OPEN_TILT
+            and execution.get("command_name") in commands
             for execution in self.coordinator.executions.values()
-        ):
-            return True
-
-        # Check if cover is moving based on current state
-        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
-        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
-        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
-
-        if not is_moving or not current_closure or not target_closure:
-            return None
-
-        return cast(int, current_closure.value) > cast(int, target_closure.value)
+        )
 
     @property
-    def is_closing(self) -> bool | None:
-        """Return if the cover is closing or not."""
-
-        if self.assumed_state:
-            return None
-
-        # Check if cover movement execution is currently running
-        if any(
-            execution.get("device_url") == self.device.device_url
-            and execution.get("command_name") in COMMANDS_CLOSE + COMMANDS_CLOSE_TILT
-            for execution in self.coordinator.executions.values()
-        ):
-            return True
-
-        # Check if cover is moving based on current state
-        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
-        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
-        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
-
-        if not is_moving or not current_closure or not target_closure:
-            return None
-
-        return cast(int, current_closure.value) < cast(int, target_closure.value)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the device state attributes."""
-        attr = super().extra_state_attributes or {}
-
-        # Obstruction Detected attribute is used by HomeKit
-        if self.executor.has_state(OverkizState.IO_PRIORITY_LOCK_LEVEL):
-            return {**attr, **{ATTR_OBSTRUCTION_DETECTED: True}}
-
-        return attr
-
-    @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
 
         if self.executor.has_command(*COMMANDS_OPEN_TILT):
-            supported_features |= SUPPORT_OPEN_TILT
+            supported_features |= CoverEntityFeature.OPEN_TILT
 
             if self.executor.has_command(*COMMANDS_STOP_TILT):
-                supported_features |= SUPPORT_STOP_TILT
+                supported_features |= CoverEntityFeature.STOP_TILT
 
         if self.executor.has_command(*COMMANDS_CLOSE_TILT):
-            supported_features |= SUPPORT_CLOSE_TILT
+            supported_features |= CoverEntityFeature.CLOSE_TILT
 
         if self.executor.has_command(*COMMANDS_SET_TILT_POSITION):
-            supported_features |= SUPPORT_SET_TILT_POSITION
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
         return supported_features

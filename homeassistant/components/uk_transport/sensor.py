@@ -1,4 +1,5 @@
 """Support for UK public transport data provided by transportapi.com."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -9,8 +10,11 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_MODE, TIME_MINUTES
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_MODE, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,7 +47,7 @@ _QUERY_SCHEME = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_APP_ID): cv.string,
         vol.Required(CONF_API_APP_KEY): cv.string,
@@ -97,8 +101,7 @@ def setup_platform(
 
 
 class UkTransportSensor(SensorEntity):
-    """
-    Sensor that reads the UK transport web API.
+    """Sensor that reads the UK transport web API.
 
     transportapi.com provides comprehensive transport data for UK train, tube
     and bus travel across the UK via simple JSON API. Subclasses of this
@@ -107,7 +110,7 @@ class UkTransportSensor(SensorEntity):
 
     TRANSPORT_API_URL_BASE = "https://transportapi.com/v3/uk/"
     _attr_icon = "mdi:train"
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, name, api_app_id, api_app_key, url):
         """Initialize the sensor."""
@@ -134,7 +137,7 @@ class UkTransportSensor(SensorEntity):
             {"app_id": self._api_app_id, "app_key": self._api_app_key}, **params
         )
 
-        response = requests.get(self._url, params=request_params)
+        response = requests.get(self._url, params=request_params, timeout=10)
         if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         elif "error" in response.json():
@@ -173,7 +176,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         if self._data != {}:
             self._next_buses = []
 
-            for (route, departures) in self._data["departures"].items():
+            for route, departures in self._data["departures"].items():
                 for departure in departures:
                     if self._destination_re.search(departure["direction"]):
                         self._next_buses.append(
@@ -284,5 +287,4 @@ def _delta_mins(hhmm_time_str):
     if hhmm_datetime < now:
         hhmm_datetime += timedelta(days=1)
 
-    delta_mins = (hhmm_datetime - now).total_seconds() // 60
-    return delta_mins
+    return (hhmm_datetime - now).total_seconds() // 60

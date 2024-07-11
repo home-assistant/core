@@ -1,4 +1,5 @@
 """Support for Envisalink sensors (shows panel info)."""
+
 from __future__ import annotations
 
 import logging
@@ -59,7 +60,7 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

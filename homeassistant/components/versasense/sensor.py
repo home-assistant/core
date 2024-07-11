@@ -1,4 +1,5 @@
 """Support for VersaSense sensor peripheral."""
+
 from __future__ import annotations
 
 import logging
@@ -29,7 +30,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the sensor platform."""
     if discovery_info is None:
-        return None
+        return
 
     consumer = hass.data[DOMAIN][KEY_CONSUMER]
 
@@ -89,7 +90,7 @@ class VSensor(SensorEntity):
         """Return if the sensor is available."""
         return self._available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
         samples = await self.consumer.fetchPeripheralSample(
             None, self._identifier, self._parent_mac

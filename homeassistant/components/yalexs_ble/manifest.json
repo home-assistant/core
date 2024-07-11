@@ -1,0 +1,16 @@
+{
+  "domain": "yalexs_ble",
+  "name": "Yale Access Bluetooth",
+  "bluetooth": [
+    {
+      "manufacturer_id": 465,
+      "service_uuid": "0000fe24-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/yalexs_ble",
+  "iot_class": "local_push",
+  "requirements": ["yalexs-ble==2.4.3"]
+}

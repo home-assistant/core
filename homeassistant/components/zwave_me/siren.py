@@ -1,9 +1,12 @@
 """Representation of a sirenBinary."""
+
 from typing import Any
 
-from homeassistant.components.siren import SirenEntity
-from homeassistant.core import callback
+from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
@@ -11,7 +14,11 @@ from .const import DOMAIN, ZWaveMePlatform
 DEVICE_NAME = ZWaveMePlatform.SIREN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the siren platform."""
 
     @callback
@@ -34,6 +41,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class ZWaveMeSiren(ZWaveMeEntity, SirenEntity):
     """Representation of a ZWaveMe siren."""
+
+    def __init__(self, controller, device):
+        """Initialize the device."""
+        super().__init__(controller, device)
+        self._attr_supported_features = (
+            SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
+        )
 
     @property
     def is_on(self) -> bool:

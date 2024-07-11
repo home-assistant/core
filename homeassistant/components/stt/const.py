@@ -1,7 +1,9 @@
 """STT constante."""
+
 from enum import Enum
 
 DOMAIN = "stt"
+DATA_PROVIDERS = f"{DOMAIN}_providers"
 
 
 class AudioCodecs(str, Enum):

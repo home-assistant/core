@@ -1,4 +1,5 @@
 """Config flow for Times of the Day integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,37 +9,36 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
 )
 
 from .const import CONF_AFTER_TIME, CONF_BEFORE_TIME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_AFTER_TIME): selector.selector({"time": {}}),
-        vol.Required(CONF_BEFORE_TIME): selector.selector({"time": {}}),
+        vol.Required(CONF_AFTER_TIME): selector.TimeSelector(),
+        vol.Required(CONF_BEFORE_TIME): selector.TimeSelector(),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector({"text": {}}),
+        vol.Required(CONF_NAME): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Times of the Day."""
 
     config_flow = CONFIG_FLOW

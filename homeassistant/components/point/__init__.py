@@ -1,7 +1,9 @@
 """Support for Minut Point."""
+
 import asyncio
 import logging
 
+from aiohttp import web
 from httpx import ConnectTimeout
 from pypoint import PointSession
 import voluptuous as vol
@@ -18,13 +20,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
@@ -97,13 +100,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         token_saver=token_saver,
     )
     try:
-        # pylint: disable-next=fixme
-        # TODO Remove authlib constraint when refactoring this code
-        await session.ensure_active_token()
+        # the call to user() implicitly calls ensure_active_token() in authlib
+        await session.user()
     except ConnectTimeout as err:
         _LOGGER.debug("Connection Timeout")
         raise ConfigEntryNotReady from err
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.error("Authentication Error")
         return False
 
@@ -157,13 +159,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle webhook callback."""
     try:
         data = await request.json()
         _LOGGER.debug("Webhook %s: %s", webhook_id, data)
     except ValueError:
-        return None
+        return
 
     if isinstance(data, dict):
         data["webhook_id"] = webhook_id
@@ -204,8 +208,8 @@ class MinutPointClient:
             config_entries_key = f"{platform}.{DOMAIN}"
             async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    await self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, platform
+                    await self._hass.config_entries.async_forward_entry_setups(
+                        self._config_entry, [platform]
                     )
                     self._hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
@@ -256,15 +260,29 @@ class MinutPointClient:
 class MinutPointEntity(Entity):
     """Base Entity used by the sensors."""
 
+    _attr_should_poll = False
+
     def __init__(self, point_client, device_id, device_class):
         """Initialize the entity."""
         self._async_unsub_dispatcher_connect = None
         self._client = point_client
         self._id = device_id
         self._name = self.device.name
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._updated = utc_from_timestamp(0)
-        self._value = None
+        self._attr_unique_id = f"point.{device_id}-{device_class}"
+        device = self.device.device
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device["device_mac"])},
+            identifiers={(DOMAIN, device["device_id"])},
+            manufacturer="Minut",
+            model=f"Point v{device['hardware_version']}",
+            name=device["description"],
+            sw_version=device["firmware"]["installed"],
+            via_device=(DOMAIN, device["home"]),
+        )
+        if device_class:
+            self._attr_name = f"{self._name} {device_class.capitalize()}"
 
     def __str__(self):
         """Return string representation of device."""
@@ -297,11 +315,6 @@ class MinutPointEntity(Entity):
         return self._client.device(self.device_id)
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
     def device_id(self):
         """Return the id of the device."""
         return self._id
@@ -316,27 +329,6 @@ class MinutPointEntity(Entity):
         return attrs
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        device = self.device.device
-        return DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
-            },
-            identifiers={(DOMAIN, device["device_id"])},
-            manufacturer="Minut",
-            model=f"Point v{device['hardware_version']}",
-            name=device["description"],
-            sw_version=device["firmware"]["installed"],
-            via_device=(DOMAIN, device["home"]),
-        )
-
-    @property
-    def name(self):
-        """Return the display name of this device."""
-        return f"{self._name} {self.device_class.capitalize()}"
-
-    @property
     def is_updated(self):
         """Return true if sensor have been updated."""
         return self.last_update > self._updated
@@ -344,20 +336,4 @@ class MinutPointEntity(Entity):
     @property
     def last_update(self):
         """Return the last_update time for the device."""
-        last_update = parse_datetime(self.device.last_update)
-        return last_update
-
-    @property
-    def should_poll(self):
-        """No polling needed for point."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"point.{self._id}-{self.device_class}"
-
-    @property
-    def value(self):
-        """Return the sensor value."""
-        return self._value
+        return parse_datetime(self.device.last_update)

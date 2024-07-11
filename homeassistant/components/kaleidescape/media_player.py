@@ -7,17 +7,11 @@ from typing import TYPE_CHECKING
 
 from kaleidescape import const as kaleidescape_const
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN as KALEIDESCAPE_DOMAIN
@@ -25,8 +19,6 @@ from .entity import KaleidescapeEntity
 
 if TYPE_CHECKING:
     from datetime import datetime
-
-    from kaleidescape import Device as KaleidescapeDevice
 
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
@@ -41,15 +33,6 @@ KALEIDESCAPE_PLAYING_STATES = [
 
 KALEIDESCAPE_PAUSED_STATES = [kaleidescape_const.PLAY_STATUS_PAUSED]
 
-SUPPORTED_FEATURES = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,10 +48,16 @@ async def async_setup_entry(
 class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
     """Representation of a Kaleidescape device."""
 
-    def __init__(self, device: KaleidescapeDevice) -> None:
-        """Initialize media player."""
-        super().__init__(device)
-        self._attr_supported_features = SUPPORTED_FEATURES
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    )
+    _attr_name = None
 
     async def async_turn_on(self) -> None:
         """Send leave standby command."""
@@ -99,15 +88,15 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         await self._device.previous()
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of device."""
         if self._device.power.state == kaleidescape_const.DEVICE_POWER_STATE_STANDBY:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._device.movie.play_status in KALEIDESCAPE_PLAYING_STATES:
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if self._device.movie.play_status in KALEIDESCAPE_PAUSED_STATES:
-            return STATE_PAUSED
-        return STATE_IDLE
+            return MediaPlayerState.PAUSED
+        return MediaPlayerState.IDLE
 
     @property
     def available(self) -> bool:

@@ -2,16 +2,19 @@
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
-from .binary_sensor import DEFAULT_NAME
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for iss component."""
 
     VERSION = 1
@@ -19,49 +22,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         # Check if already configured
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        # Check if location have been defined.
-        if not self.hass.config.latitude and not self.hass.config.longitude:
-            return self.async_abort(reason="latitude_longitude_not_defined")
-
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                title=DEFAULT_NAME,
                 data={},
                 options={CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False)},
             )
 
         return self.async_show_form(step_id="user")
 
-    async def async_step_import(self, conf: dict) -> FlowResult:
-        """Import a configuration from configuration.yaml."""
-        return await self.async_step_user(
-            user_input={
-                CONF_NAME: conf[CONF_NAME],
-                CONF_SHOW_ON_MAP: conf[CONF_SHOW_ON_MAP],
-            }
-        )
 
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Config flow options handler for iss."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             self.options.update(user_input)

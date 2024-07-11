@@ -1,12 +1,12 @@
 """Support for Abode Security System alarm control panels."""
+
 from __future__ import annotations
 
-from abodepy.devices.alarm import AbodeAlarm as AbodeAl
+from jaraco.abode.devices.alarm import Alarm
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,10 +17,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN
-
-ICON = "mdi:security"
+from .entity import AbodeDevice
 
 
 async def async_setup_entry(
@@ -33,13 +32,16 @@ async def async_setup_entry(
     )
 
 
-class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
+class AbodeAlarm(AbodeDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
-    _attr_icon = ICON
+    _attr_name = None
     _attr_code_arm_required = False
-    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-    _device: AbodeAl
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+    _device: Alarm
 
     @property
     def state(self) -> str | None:
@@ -68,7 +70,7 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            "device_id": self._device.device_id,
+            "device_id": self._device.id,
             "battery_backup": self._device.battery,
             "cellular_backup": self._device.is_cellular,
         }

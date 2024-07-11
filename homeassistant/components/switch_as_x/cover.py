@@ -1,10 +1,15 @@
 """Cover support for switch entities."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
-from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverEntity,
+    CoverEntityFeature,
+)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,11 +18,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import BaseEntity
+from .const import CONF_INVERT
+from .entity import BaseInvertableEntity
 
 
 async def async_setup_entry(
@@ -30,31 +36,31 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
-    wrapped_switch = registry.async_get(entity_id)
-    device_id = wrapped_switch.device_id if wrapped_switch else None
 
     async_add_entities(
         [
             CoverSwitch(
+                hass,
                 config_entry.title,
+                COVER_DOMAIN,
+                config_entry.options[CONF_INVERT],
                 entity_id,
                 config_entry.entry_id,
-                device_id,
             )
         ]
     )
 
 
-class CoverSwitch(BaseEntity, CoverEntity):
+class CoverSwitch(BaseInvertableEntity, CoverEntity):
     """Represents a Switch as a Cover."""
 
-    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SERVICE_TURN_OFF if self._invert_state else SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
@@ -64,14 +70,16 @@ class CoverSwitch(BaseEntity, CoverEntity):
         """Close cover."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SERVICE_TURN_ON if self._invert_state else SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: Event[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         super().async_state_changed_listener(event)
         if (
@@ -80,4 +88,7 @@ class CoverSwitch(BaseEntity, CoverEntity):
         ):
             return
 
-        self._attr_is_closed = state.state != STATE_ON
+        if self._invert_state:
+            self._attr_is_closed = state.state == STATE_ON
+        else:
+            self._attr_is_closed = state.state != STATE_ON

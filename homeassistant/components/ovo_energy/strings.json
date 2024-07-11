@@ -10,7 +10,8 @@
       "user": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "account": "OVO account id (only add if you have multiple accounts)"
         },
         "description": "Set up an OVO Energy instance to access your energy usage.",
         "title": "Add OVO Energy Account"
@@ -21,6 +22,34 @@
         },
         "description": "Authentication failed for OVO Energy. Please enter your current credentials.",
         "title": "Reauthentication"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_electricity_reading": {
+        "name": "Last electricity reading"
+      },
+      "last_electricity_cost": {
+        "name": "Last electricity cost"
+      },
+      "last_electricity_start_time": {
+        "name": "Last electricity start time"
+      },
+      "last_electricity_end_time": {
+        "name": "Last electricity end time"
+      },
+      "last_gas_reading": {
+        "name": "Last gas reading"
+      },
+      "last_gas_cost": {
+        "name": "Last gas cost"
+      },
+      "last_gas_start_time": {
+        "name": "Last gas start time"
+      },
+      "last_gas_end_time": {
+        "name": "Last gas end time"
       }
     }
   }

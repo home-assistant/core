@@ -1,1740 +1,734 @@
 {
   "current": {
-    "fromDateTime": "2019-10-02T05:54:57.204Z",
-    "tillDateTime": "2019-10-02T06:54:57.204Z",
-    "values": [
-      {
-        "name": "PM1",
-        "value": 9.23
-      },
-      {
-        "name": "PM25",
-        "value": 13.71
-      },
-      {
-        "name": "PM10",
-        "value": 18.58
-      },
-      {
-        "name": "PRESSURE",
-        "value": 1000.87
-      },
-      {
-        "name": "HUMIDITY",
-        "value": 92.84
-      },
-      {
-        "name": "TEMPERATURE",
-        "value": 14.23
-      }
-    ],
+    "fromDateTime": "2022-09-06T22:13:20.347Z",
     "indexes": [
       {
-        "name": "AIRLY_CAQI",
-        "value": 22.85,
-        "level": "VERY_LOW",
+        "advice": "Catch your breath!",
+        "color": "#6BC926",
         "description": "Great air here today!",
-        "advice": "Great air!",
-        "color": "#6BC926"
+        "level": "VERY_LOW",
+        "name": "AIRLY_CAQI",
+        "value": 7.29
       }
     ],
     "standards": [
       {
+        "averaging": "24h",
+        "limit": 15,
         "name": "WHO",
-        "pollutant": "PM25",
-        "limit": 25.0,
-        "percent": 54.84
+        "percent": 29.13,
+        "pollutant": "PM25"
+      },
+      {
+        "averaging": "24h",
+        "limit": 45,
+        "name": "WHO",
+        "percent": 14.5,
+        "pollutant": "PM10"
+      },
+      {
+        "averaging": "24h",
+        "limit": 25,
+        "name": "WHO",
+        "percent": 64.17,
+        "pollutant": "NO2"
+      },
+      {
+        "averaging": "8h",
+        "limit": 100,
+        "name": "WHO",
+        "percent": 41.52,
+        "pollutant": "O3"
       },
       {
         "name": "WHO",
-        "pollutant": "PM10",
-        "limit": 50.0,
-        "percent": 37.17
+        "pollutant": "CO",
+        "limit": 4000,
+        "percent": 4.06,
+        "averaging": "24h"
+      },
+      {
+        "name": "WHO",
+        "pollutant": "SO2",
+        "limit": 40,
+        "percent": 34.93,
+        "averaging": "24h"
+      }
+    ],
+    "tillDateTime": "2022-09-06T23:13:20.347Z",
+    "values": [
+      {
+        "name": "PM1",
+        "value": 2.83
+      },
+      {
+        "name": "PM25",
+        "value": 4.37
+      },
+      {
+        "name": "PM10",
+        "value": 6.06
+      },
+      {
+        "name": "PRESSURE",
+        "value": 1019.86
+      },
+      {
+        "name": "HUMIDITY",
+        "value": 68.35
+      },
+      {
+        "name": "TEMPERATURE",
+        "value": 14.37
+      },
+      {
+        "name": "NO2",
+        "value": 16.04
+      },
+      {
+        "name": "O3",
+        "value": 41.52
+      },
+      {
+        "name": "SO2",
+        "value": 13.97
+      },
+      {
+        "name": "CO",
+        "value": 162.49
       }
     ]
   },
-  "history": [
-    {
-      "fromDateTime": "2019-10-01T06:00:00.000Z",
-      "tillDateTime": "2019-10-01T07:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 5.95
-        },
-        {
-          "name": "PM25",
-          "value": 8.54
-        },
-        {
-          "name": "PM10",
-          "value": 11.46
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1009.61
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 97.6
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 9.71
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 14.24,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Green equals clean!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 34.18
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 22.91
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T07:00:00.000Z",
-      "tillDateTime": "2019-10-01T08:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 4.2
-        },
-        {
-          "name": "PM25",
-          "value": 5.88
-        },
-        {
-          "name": "PM10",
-          "value": 7.88
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1009.13
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 90.84
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 12.65
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 9.81,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Dear me, how wonderful!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 23.53
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 15.75
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T08:00:00.000Z",
-      "tillDateTime": "2019-10-01T09:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 3.63
-        },
-        {
-          "name": "PM25",
-          "value": 5.56
-        },
-        {
-          "name": "PM10",
-          "value": 7.71
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1008.27
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 84.61
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 15.57
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 9.26,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Dear me, how wonderful!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 22.23
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 15.42
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T09:00:00.000Z",
-      "tillDateTime": "2019-10-01T10:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 2.9
-        },
-        {
-          "name": "PM25",
-          "value": 3.93
-        },
-        {
-          "name": "PM10",
-          "value": 5.24
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1007.57
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 79.52
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 16.57
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 6.56,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Breathe deep! The air is clean!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 15.74
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 10.48
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T10:00:00.000Z",
-      "tillDateTime": "2019-10-01T11:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 2.45
-        },
-        {
-          "name": "PM25",
-          "value": 3.33
-        },
-        {
-          "name": "PM10",
-          "value": 4.52
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1006.75
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 74.09
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 16.95
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 5.55,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "The air is grand today. ;)",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 13.31
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 9.04
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T11:00:00.000Z",
-      "tillDateTime": "2019-10-01T12:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 2.0
-        },
-        {
-          "name": "PM25",
-          "value": 2.93
-        },
-        {
-          "name": "PM10",
-          "value": 3.98
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1005.71
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 69.06
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 17.31
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 4.89,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Green equals clean!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 11.74
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 7.96
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T12:00:00.000Z",
-      "tillDateTime": "2019-10-01T13:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 1.92
-        },
-        {
-          "name": "PM25",
-          "value": 2.69
-        },
-        {
-          "name": "PM10",
-          "value": 3.68
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1005.03
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 65.08
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 17.47
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 4.49,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Enjoy life!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 10.77
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 7.36
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T13:00:00.000Z",
-      "tillDateTime": "2019-10-01T14:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 1.79
-        },
-        {
-          "name": "PM25",
-          "value": 2.57
-        },
-        {
-          "name": "PM10",
-          "value": 3.53
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1004.26
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 63.72
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 17.91
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 4.29,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Great air!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 10.29
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 7.06
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T14:00:00.000Z",
-      "tillDateTime": "2019-10-01T15:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 2.06
-        },
-        {
-          "name": "PM25",
-          "value": 3.08
-        },
-        {
-          "name": "PM10",
-          "value": 4.23
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1003.46
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 64.44
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 17.84
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 5.14,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "The air is grand today. ;)",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 12.33
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 8.47
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T15:00:00.000Z",
-      "tillDateTime": "2019-10-01T16:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 3.17
-        },
-        {
-          "name": "PM25",
-          "value": 4.61
-        },
-        {
-          "name": "PM10",
-          "value": 6.25
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1003.18
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 65.32
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 18.08
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 7.68,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Green, green, green!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 18.44
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 12.5
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T16:00:00.000Z",
-      "tillDateTime": "2019-10-01T17:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 4.17
-        },
-        {
-          "name": "PM25",
-          "value": 5.91
-        },
-        {
-          "name": "PM10",
-          "value": 8.06
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1003.05
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 66.14
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 17.04
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 9.84,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Enjoy life!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 23.62
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 16.11
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T17:00:00.000Z",
-      "tillDateTime": "2019-10-01T18:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 6.4
-        },
-        {
-          "name": "PM25",
-          "value": 10.93
-        },
-        {
-          "name": "PM10",
-          "value": 15.7
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.85
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 68.31
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 16.33
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 18.22,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "It couldn't be better ;)",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 43.74
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 31.4
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T18:00:00.000Z",
-      "tillDateTime": "2019-10-01T19:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 4.79
-        },
-        {
-          "name": "PM25",
-          "value": 7.41
-        },
-        {
-          "name": "PM10",
-          "value": 10.31
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.52
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 69.88
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 15.98
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 12.35,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Enjoy life!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 29.65
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 20.63
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T19:00:00.000Z",
-      "tillDateTime": "2019-10-01T20:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 5.99
-        },
-        {
-          "name": "PM25",
-          "value": 9.45
-        },
-        {
-          "name": "PM10",
-          "value": 13.22
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.32
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 70.47
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 15.76
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 15.74,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Breathe deeply!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 37.78
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 26.44
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T20:00:00.000Z",
-      "tillDateTime": "2019-10-01T21:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 9.35
-        },
-        {
-          "name": "PM25",
-          "value": 14.67
-        },
-        {
-          "name": "PM10",
-          "value": 20.57
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.46
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 72.61
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 15.47
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 24.45,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "It couldn't be better ;)",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 58.68
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 41.13
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T21:00:00.000Z",
-      "tillDateTime": "2019-10-01T22:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 9.95
-        },
-        {
-          "name": "PM25",
-          "value": 15.37
-        },
-        {
-          "name": "PM10",
-          "value": 21.33
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.59
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 75.09
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 15.17
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 25.62,
-          "level": "LOW",
-          "description": "Air is quite good.",
-          "advice": "Take a breath!",
-          "color": "#D1CF1E"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 61.48
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 42.66
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T22:00:00.000Z",
-      "tillDateTime": "2019-10-01T23:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 10.16
-        },
-        {
-          "name": "PM25",
-          "value": 15.78
-        },
-        {
-          "name": "PM10",
-          "value": 21.97
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.59
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 77.68
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 14.9
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 26.31,
-          "level": "LOW",
-          "description": "Air is quite good.",
-          "advice": "Great air for a walk to the park!",
-          "color": "#D1CF1E"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 63.14
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 43.93
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-01T23:00:00.000Z",
-      "tillDateTime": "2019-10-02T00:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 9.86
-        },
-        {
-          "name": "PM25",
-          "value": 15.14
-        },
-        {
-          "name": "PM10",
-          "value": 21.07
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.49
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 79.86
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 14.56
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 25.24,
-          "level": "LOW",
-          "description": "Air is quite good.",
-          "advice": "Leave the mask at home today!",
-          "color": "#D1CF1E"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 60.57
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 42.14
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T00:00:00.000Z",
-      "tillDateTime": "2019-10-02T01:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 9.77
-        },
-        {
-          "name": "PM25",
-          "value": 15.04
-        },
-        {
-          "name": "PM10",
-          "value": 20.97
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.18
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 81.77
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 14.13
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 25.07,
-          "level": "LOW",
-          "description": "Air is quite good.",
-          "advice": "Time for a walk with friends or activities with your family - because the air is clean!",
-          "color": "#D1CF1E"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 60.18
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 41.94
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T01:00:00.000Z",
-      "tillDateTime": "2019-10-02T02:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 9.67
-        },
-        {
-          "name": "PM25",
-          "value": 14.9
-        },
-        {
-          "name": "PM10",
-          "value": 20.67
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1002.01
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 84.5
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 13.7
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 24.84,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Great air!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 59.62
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 41.33
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T02:00:00.000Z",
-      "tillDateTime": "2019-10-02T03:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 7.17
-        },
-        {
-          "name": "PM25",
-          "value": 10.7
-        },
-        {
-          "name": "PM10",
-          "value": 14.58
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1001.56
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 88.55
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 13.44
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 17.83,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Catch your breath!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 42.8
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 29.17
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T03:00:00.000Z",
-      "tillDateTime": "2019-10-02T04:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 6.99
-        },
-        {
-          "name": "PM25",
-          "value": 10.23
-        },
-        {
-          "name": "PM10",
-          "value": 13.66
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1001.34
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 90.82
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 13.3
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 17.05,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Perfect air for exercising! Go for it!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 40.91
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 27.33
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T04:00:00.000Z",
-      "tillDateTime": "2019-10-02T05:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 7.82
-        },
-        {
-          "name": "PM25",
-          "value": 11.59
-        },
-        {
-          "name": "PM10",
-          "value": 15.77
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1000.92
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 91.8
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 13.34
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 19.32,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Dear me, how wonderful!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 46.36
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 31.54
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T05:00:00.000Z",
-      "tillDateTime": "2019-10-02T06:00:00.000Z",
-      "values": [
-        {
-          "name": "PM1",
-          "value": 10.16
-        },
-        {
-          "name": "PM25",
-          "value": 15.35
-        },
-        {
-          "name": "PM10",
-          "value": 21.45
-        },
-        {
-          "name": "PRESSURE",
-          "value": 1000.82
-        },
-        {
-          "name": "HUMIDITY",
-          "value": 92.15
-        },
-        {
-          "name": "TEMPERATURE",
-          "value": 13.74
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 25.59,
-          "level": "LOW",
-          "description": "Air is quite good.",
-          "advice": "How about going for a walk?",
-          "color": "#D1CF1E"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 61.42
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 42.9
-        }
-      ]
-    }
-  ],
   "forecast": [
     {
-      "fromDateTime": "2019-10-02T06:00:00.000Z",
-      "tillDateTime": "2019-10-02T07:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 13.28
-        },
-        {
-          "name": "PM10",
-          "value": 18.37
-        }
-      ],
+      "fromDateTime": "2022-09-06T23:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 22.14,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
           "advice": "It couldn't be better ;)",
-          "color": "#6BC926"
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.68
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 53.13
+          "percent": 26.71,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 36.73
+          "percent": 11.47,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T00:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 4.01
+        },
+        {
+          "name": "PM10",
+          "value": 5.07
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T07:00:00.000Z",
-      "tillDateTime": "2019-10-02T08:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 11.19
-        },
-        {
-          "name": "PM10",
-          "value": 15.65
-        }
-      ],
+      "fromDateTime": "2022-09-07T00:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 18.65,
-          "level": "VERY_LOW",
+          "advice": "Dear me, how wonderful!",
+          "color": "#6BC926",
           "description": "Great air here today!",
-          "advice": "Enjoy life!",
-          "color": "#6BC926"
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.4
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 44.76
+          "percent": 25.57,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 31.31
+          "percent": 10.79,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T01:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 3.84
+        },
+        {
+          "name": "PM10",
+          "value": 4.67
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T08:00:00.000Z",
-      "tillDateTime": "2019-10-02T09:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 8.79
-        },
-        {
-          "name": "PM10",
-          "value": 12.8
-        }
-      ],
+      "fromDateTime": "2022-09-07T01:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 14.65,
-          "level": "VERY_LOW",
+          "advice": "Perfect air for exercising! Go for it!",
+          "color": "#6BC926",
           "description": "Great air here today!",
-          "advice": "Breathe deep! The air is clean!",
-          "color": "#6BC926"
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.7
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 35.15
+          "percent": 30.78,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 25.59
+          "percent": 12.51,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T02:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 4.62
+        },
+        {
+          "name": "PM10",
+          "value": 5.33
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T09:00:00.000Z",
-      "tillDateTime": "2019-10-02T10:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 5.46
-        },
-        {
-          "name": "PM10",
-          "value": 8.91
-        }
-      ],
+      "fromDateTime": "2022-09-07T02:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 9.11,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Breathe to fill your lungs!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 21.86
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 17.83
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T10:00:00.000Z",
-      "tillDateTime": "2019-10-02T11:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 2.26
-        },
-        {
-          "name": "PM10",
-          "value": 5.02
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 5.02,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Enjoy life!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 9.06
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 10.05
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T11:00:00.000Z",
-      "tillDateTime": "2019-10-02T12:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 1.06
-        },
-        {
-          "name": "PM10",
-          "value": 2.52
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 2.52,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
           "advice": "The air is great!",
-          "color": "#6BC926"
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 9.05
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 4.22
+          "percent": 36.18,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 5.05
+          "percent": 15.28,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T03:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 5.43
+        },
+        {
+          "name": "PM10",
+          "value": 6.43
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T12:00:00.000Z",
-      "tillDateTime": "2019-10-02T13:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 0.48
-        },
-        {
-          "name": "PM10",
-          "value": 1.94
-        }
-      ],
+      "fromDateTime": "2022-09-07T03:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 1.94,
-          "level": "VERY_LOW",
+          "advice": "It couldn't be better ;)",
+          "color": "#6BC926",
           "description": "Great air here today!",
-          "advice": "Breathe as much as you can!",
-          "color": "#6BC926"
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 11.18
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 1.94
+          "percent": 44.69,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 3.89
+          "percent": 18.51,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T04:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 6.7
+        },
+        {
+          "name": "PM10",
+          "value": 7.69
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T13:00:00.000Z",
-      "tillDateTime": "2019-10-02T14:00:00.000Z",
+      "fromDateTime": "2022-09-07T04:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Zero dust - zero worries!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 13.08
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 52.29,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 23.47,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T05:00:00.000Z",
       "values": [
         {
           "name": "PM25",
-          "value": 0.63
+          "value": 7.84
         },
         {
           "name": "PM10",
-          "value": 2.26
+          "value": 9.89
         }
-      ],
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T05:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 2.26,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
           "advice": "Enjoy life!",
-          "color": "#6BC926"
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 14.05
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 2.53
+          "percent": 56.17,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 4.52
+          "percent": 25.86,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T06:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 8.42
+        },
+        {
+          "name": "PM10",
+          "value": 11.09
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T14:00:00.000Z",
-      "tillDateTime": "2019-10-02T15:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 1.47
-        },
-        {
-          "name": "PM10",
-          "value": 3.39
-        }
-      ],
+      "fromDateTime": "2022-09-07T06:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 3.39,
-          "level": "VERY_LOW",
+          "advice": "It couldn't be better ;)",
+          "color": "#6BC926",
           "description": "Great air here today!",
-          "advice": "Breathe as much as you can!",
-          "color": "#6BC926"
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 13.22
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 5.87
+          "percent": 52.87,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 6.78
+          "percent": 25.01,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T07:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 7.93
+        },
+        {
+          "name": "PM10",
+          "value": 10.83
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T15:00:00.000Z",
-      "tillDateTime": "2019-10-02T16:00:00.000Z",
+      "fromDateTime": "2022-09-07T07:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "The air is great!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 11.54
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 46.14,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 22.44,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T08:00:00.000Z",
       "values": [
         {
           "name": "PM25",
-          "value": 2.62
+          "value": 6.92
         },
         {
           "name": "PM10",
-          "value": 5.02
+          "value": 9.71
         }
-      ],
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T08:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 5.02,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
           "advice": "Great air!",
-          "color": "#6BC926"
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 10.26
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 10.5
+          "percent": 41.03,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 10.05
+          "percent": 19.04,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T09:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 6.15
+        },
+        {
+          "name": "PM10",
+          "value": 8.21
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T16:00:00.000Z",
-      "tillDateTime": "2019-10-02T17:00:00.000Z",
+      "fromDateTime": "2022-09-07T09:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Catch your breath!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 8.94
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 35.72,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 17.02,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T10:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 5.36
+        },
+        {
+          "name": "PM10",
+          "value": 7.25
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T10:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Perfect air for exercising! Go for it!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.96
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 31.81,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 16.22,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T11:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 4.77
+        },
+        {
+          "name": "PM10",
+          "value": 6.65
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T11:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "The air is great!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.16
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 28.61,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 15.74,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T12:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 4.29
+        },
+        {
+          "name": "PM10",
+          "value": 6.19
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T12:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Green equals clean!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.53
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 26.08,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 14.64,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T13:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 3.91
+        },
+        {
+          "name": "PM10",
+          "value": 5.67
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T13:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Enjoy life!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 5.94
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 23.72,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 13.03,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T14:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 3.56
+        },
+        {
+          "name": "PM10",
+          "value": 5.11
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T14:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Breathe as much as you can!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.49
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 25.93,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 14.58,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T15:00:00.000Z",
       "values": [
         {
           "name": "PM25",
@@ -1742,525 +736,2393 @@
         },
         {
           "name": "PM10",
-          "value": 8.02
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 8.02,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Dear me, how wonderful!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 15.56
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 16.04
+          "value": 6.09
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-02T17:00:00.000Z",
-      "tillDateTime": "2019-10-02T18:00:00.000Z",
+      "fromDateTime": "2022-09-07T15:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "The air is grand today. ;)",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 8.73
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 33.18,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 20,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T16:00:00.000Z",
       "values": [
         {
           "name": "PM25",
-          "value": 6.26
+          "value": 4.98
         },
         {
           "name": "PM10",
-          "value": 11.41
+          "value": 8.72
         }
-      ],
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T16:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 11.41,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
           "advice": "The air is great!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 25.05
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 22.83
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T18:00:00.000Z",
-      "tillDateTime": "2019-10-02T19:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 8.69
-        },
-        {
-          "name": "PM10",
-          "value": 14.48
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 14.48,
-          "level": "VERY_LOW",
+          "color": "#6BC926",
           "description": "Great air here today!",
-          "advice": "Zero dust - zero worries!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 34.76
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 28.96
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T19:00:00.000Z",
-      "tillDateTime": "2019-10-02T20:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 10.78
-        },
-        {
-          "name": "PM10",
-          "value": 16.86
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 17.97,
           "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Zero dust - zero worries!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 43.13
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 33.72
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T20:00:00.000Z",
-      "tillDateTime": "2019-10-02T21:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 12.22
-        },
-        {
-          "name": "PM10",
-          "value": 18.19
-        }
-      ],
-      "indexes": [
-        {
           "name": "AIRLY_CAQI",
-          "value": 20.36,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Breathe to fill your lungs!",
-          "color": "#6BC926"
+          "value": 13.68
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 48.88
+          "percent": 45.97,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 36.38
+          "percent": 31.41,
+          "pollutant": "PM10"
         }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T21:00:00.000Z",
-      "tillDateTime": "2019-10-02T22:00:00.000Z",
+      ],
+      "tillDateTime": "2022-09-07T17:00:00.000Z",
       "values": [
         {
           "name": "PM25",
-          "value": 13.06
-        },
-        {
-          "name": "PM10",
-          "value": 18.62
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 21.77,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Dear me, how wonderful!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 52.25
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 37.24
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T22:00:00.000Z",
-      "tillDateTime": "2019-10-02T23:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 13.51
-        },
-        {
-          "name": "PM10",
-          "value": 18.49
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 22.52,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "The air is great!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 54.06
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 36.98
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-02T23:00:00.000Z",
-      "tillDateTime": "2019-10-03T00:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 13.46
-        },
-        {
-          "name": "PM10",
-          "value": 17.63
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 22.44,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Green, green, green!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 53.85
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 35.26
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-03T00:00:00.000Z",
-      "tillDateTime": "2019-10-03T01:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 13.05
-        },
-        {
-          "name": "PM10",
-          "value": 16.36
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 21.74,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Catch your breath!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 52.19
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 32.73
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-03T01:00:00.000Z",
-      "tillDateTime": "2019-10-03T02:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 12.47
-        },
-        {
-          "name": "PM10",
-          "value": 15.16
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 20.79,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Green, green, green!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 49.9
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 30.32
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-03T02:00:00.000Z",
-      "tillDateTime": "2019-10-03T03:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 11.99
-        },
-        {
-          "name": "PM10",
-          "value": 14.07
-        }
-      ],
-      "indexes": [
-        {
-          "name": "AIRLY_CAQI",
-          "value": 19.98,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
-          "advice": "Breathe as much as you can!",
-          "color": "#6BC926"
-        }
-      ],
-      "standards": [
-        {
-          "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 47.94
-        },
-        {
-          "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 28.14
-        }
-      ]
-    },
-    {
-      "fromDateTime": "2019-10-03T03:00:00.000Z",
-      "tillDateTime": "2019-10-03T04:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 11.74
+          "value": 6.9
         },
         {
           "name": "PM10",
           "value": 13.67
         }
-      ],
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T17:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 19.56,
-          "level": "VERY_LOW",
-          "description": "Great air here today!",
           "advice": "Dear me, how wonderful!",
-          "color": "#6BC926"
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 18.49
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 46.95
+          "percent": 61.97,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 27.34
+          "percent": 43.21,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T18:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 9.29
+        },
+        {
+          "name": "PM10",
+          "value": 18.48
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-03T04:00:00.000Z",
-      "tillDateTime": "2019-10-03T05:00:00.000Z",
+      "fromDateTime": "2022-09-07T18:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Breathe deep! The air is clean!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 21.48
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 74.49,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 50.81,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T19:00:00.000Z",
       "values": [
         {
           "name": "PM25",
-          "value": 11.44
+          "value": 11.17
         },
         {
           "name": "PM10",
-          "value": 13.51
+          "value": 21.47
         }
-      ],
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T19:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 19.06,
-          "level": "VERY_LOW",
+          "advice": "Great air!",
+          "color": "#6BC926",
           "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 22.85
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 81.31,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 54.64,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T20:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 12.2
+        },
+        {
+          "name": "PM10",
+          "value": 22.84
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T20:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Enjoy life!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 22.1
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 84.94,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 53.31,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T21:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 12.74
+        },
+        {
+          "name": "PM10",
+          "value": 22.1
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T21:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Enjoy life!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 21.47
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 83.43,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 51.94,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T22:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 12.51
+        },
+        {
+          "name": "PM10",
+          "value": 21.46
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-07T22:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Breathe deep! The air is clean!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 20.47
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 81.86,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 48.47,
+          "pollutant": "PM10"
+        }
+      ],
+      "tillDateTime": "2022-09-07T23:00:00.000Z",
+      "values": [
+        {
+          "name": "PM25",
+          "value": 12.28
+        },
+        {
+          "name": "PM10",
+          "value": 19.92
+        }
+      ]
+    }
+  ],
+  "history": [
+    {
+      "fromDateTime": "2022-09-05T23:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Great air!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.47
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 25.85,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 13.87,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 55.29,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 44.3,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T00:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.44
+        },
+        {
+          "name": "PM25",
+          "value": 3.88
+        },
+        {
+          "name": "PM10",
+          "value": 5.19
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.88
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 65.25
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 13.88
+        },
+        {
+          "name": "NO2",
+          "value": 13.82
+        },
+        {
+          "name": "O3",
+          "value": 44.3
+        },
+        {
+          "name": "SO2",
+          "value": 11.73
+        },
+        {
+          "name": "CO",
+          "value": 142.92
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T00:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Green equals clean!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.84
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 27.35,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 12.86,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 65.53,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 42.53,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T01:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.5
+        },
+        {
+          "name": "PM25",
+          "value": 4.1
+        },
+        {
+          "name": "PM10",
+          "value": 5.6
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.68
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 68.5
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 13.45
+        },
+        {
+          "name": "NO2",
+          "value": 16.38
+        },
+        {
+          "name": "O3",
+          "value": 42.53
+        },
+        {
+          "name": "SO2",
+          "value": 12.51
+        },
+        {
+          "name": "CO",
+          "value": 134.93
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T01:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "It couldn't be better ;)",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 27.98,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 16.41,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 78.5,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 36.51,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T02:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.81
+        },
+        {
+          "name": "PM25",
+          "value": 4.2
+        },
+        {
+          "name": "PM10",
+          "value": 5.8
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.56
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 71.13
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 12.81
+        },
+        {
+          "name": "NO2",
+          "value": 19.62
+        },
+        {
+          "name": "O3",
+          "value": 36.51
+        },
+        {
+          "name": "SO2",
+          "value": 14.27
+        },
+        {
+          "name": "CO",
+          "value": 151.9
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T02:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Enjoy life!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.12
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 28.46,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 14.02,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 81.46,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 33.07,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T03:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.78
+        },
+        {
+          "name": "PM25",
+          "value": 4.27
+        },
+        {
+          "name": "PM10",
+          "value": 5.69
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.33
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 73.75
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 11.99
+        },
+        {
+          "name": "NO2",
+          "value": 20.36
+        },
+        {
+          "name": "O3",
+          "value": 33.07
+        },
+        {
+          "name": "SO2",
+          "value": 14.3
+        },
+        {
+          "name": "CO",
+          "value": 181.88
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T03:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "The air is great!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 9.02
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 36.06,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 20.69,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 101.69,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 16.79,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T04:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 3.51
+        },
+        {
+          "name": "PM25",
+          "value": 5.41
+        },
+        {
+          "name": "PM10",
+          "value": 7.27
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.2
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 76.5
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 11.35
+        },
+        {
+          "name": "NO2",
+          "value": 25.42
+        },
+        {
+          "name": "O3",
+          "value": 16.79
+        },
+        {
+          "name": "SO2",
+          "value": 15.46
+        },
+        {
+          "name": "CO",
+          "value": 192.34
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T04:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Zero dust - zero worries!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 9.2
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 36.8,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 28.2,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 103.26,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 13.41,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T05:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 3.62
+        },
+        {
+          "name": "PM25",
+          "value": 5.52
+        },
+        {
+          "name": "PM10",
+          "value": 7.25
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.23
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 80.5
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 11.1
+        },
+        {
+          "name": "NO2",
+          "value": 25.82
+        },
+        {
+          "name": "O3",
+          "value": 13.41
+        },
+        {
+          "name": "SO2",
+          "value": 15.91
+        },
+        {
+          "name": "CO",
+          "value": 207.15
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T05:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Green, green, green!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 9.38
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 37.51,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 16.91,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 83.97,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 21.62,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T06:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 3.63
+        },
+        {
+          "name": "PM25",
+          "value": 5.63
+        },
+        {
+          "name": "PM10",
+          "value": 7.63
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.34
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 81.63
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 11.83
+        },
+        {
+          "name": "NO2",
+          "value": 20.99
+        },
+        {
+          "name": "O3",
+          "value": 21.62
+        },
+        {
+          "name": "SO2",
+          "value": 15.27
+        },
+        {
+          "name": "CO",
+          "value": 218.33
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T06:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "The air is great!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.89
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 31.56,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 13,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 71.24,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 27.32,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T07:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 3.03
+        },
+        {
+          "name": "PM25",
+          "value": 4.73
+        },
+        {
+          "name": "PM10",
+          "value": 6.5
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.27
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 79.69
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 13.34
+        },
+        {
+          "name": "NO2",
+          "value": 17.81
+        },
+        {
+          "name": "O3",
+          "value": 27.32
+        },
+        {
+          "name": "SO2",
+          "value": 15.01
+        },
+        {
+          "name": "CO",
+          "value": 190.22
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T07:00:00.000Z",
+      "indexes": [
+        {
           "advice": "Breathe to fill your lungs!",
-          "color": "#6BC926"
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 9.38
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 45.74
+          "percent": 37.49,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 27.02
+          "percent": 14.34,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 67.99,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 28.73,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T08:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 3.54
+        },
+        {
+          "name": "PM25",
+          "value": 5.62
+        },
+        {
+          "name": "PM10",
+          "value": 7.53
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.56
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 76.25
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 15.14
+        },
+        {
+          "name": "NO2",
+          "value": 17
+        },
+        {
+          "name": "O3",
+          "value": 28.73
+        },
+        {
+          "name": "SO2",
+          "value": 16.82
+        },
+        {
+          "name": "CO",
+          "value": 211.61
         }
       ]
     },
     {
-      "fromDateTime": "2019-10-03T05:00:00.000Z",
-      "tillDateTime": "2019-10-03T06:00:00.000Z",
-      "values": [
-        {
-          "name": "PM25",
-          "value": 10.88
-        },
-        {
-          "name": "PM10",
-          "value": 13.38
-        }
-      ],
+      "fromDateTime": "2022-09-06T08:00:00.000Z",
       "indexes": [
         {
-          "name": "AIRLY_CAQI",
-          "value": 18.13,
-          "level": "VERY_LOW",
+          "advice": "Catch your breath!",
+          "color": "#6BC926",
           "description": "Great air here today!",
-          "advice": "Breathe as much as you can!",
-          "color": "#6BC926"
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 9.69
         }
       ],
       "standards": [
         {
+          "averaging": "24h",
+          "limit": 15,
           "name": "WHO",
-          "pollutant": "PM25",
-          "limit": 25.0,
-          "percent": 43.52
+          "percent": 38.76,
+          "pollutant": "PM25"
         },
         {
+          "averaging": "24h",
+          "limit": 45,
           "name": "WHO",
-          "pollutant": "PM10",
-          "limit": 50.0,
-          "percent": 26.76
+          "percent": 16.4,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 78.57,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 34.53,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T09:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 3.8
+        },
+        {
+          "name": "PM25",
+          "value": 5.81
+        },
+        {
+          "name": "PM10",
+          "value": 7.72
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.48
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 73.56
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 16.47
+        },
+        {
+          "name": "NO2",
+          "value": 19.64
+        },
+        {
+          "name": "O3",
+          "value": 34.53
+        },
+        {
+          "name": "SO2",
+          "value": 18.21
+        },
+        {
+          "name": "CO",
+          "value": 223.41
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T09:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Perfect air for exercising! Go for it!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.51
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 30.01,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 12.93,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 60.74,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 40.73,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T10:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.9
+        },
+        {
+          "name": "PM25",
+          "value": 4.5
+        },
+        {
+          "name": "PM10",
+          "value": 6.04
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1023.09
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 70.38
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 18.16
+        },
+        {
+          "name": "NO2",
+          "value": 15.18
+        },
+        {
+          "name": "O3",
+          "value": 40.73
+        },
+        {
+          "name": "SO2",
+          "value": 14.7
+        },
+        {
+          "name": "CO",
+          "value": 217.37
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T10:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Catch your breath!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.19
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 24.74,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 10.29,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 41.62,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 51.72,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T11:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.41
+        },
+        {
+          "name": "PM25",
+          "value": 3.71
+        },
+        {
+          "name": "PM10",
+          "value": 4.83
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1022.61
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 67.13
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 20.64
+        },
+        {
+          "name": "NO2",
+          "value": 10.41
+        },
+        {
+          "name": "O3",
+          "value": 51.72
+        },
+        {
+          "name": "SO2",
+          "value": 7.57
+        },
+        {
+          "name": "CO",
+          "value": 190.58
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T11:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "The air is grand today. ;)",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 4.09
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 16.35,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 8.2,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 57.45,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 59.87,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T12:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 1.6
+        },
+        {
+          "name": "PM25",
+          "value": 2.45
+        },
+        {
+          "name": "PM10",
+          "value": 3.27
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1022.35
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 64.75
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 21.39
+        },
+        {
+          "name": "NO2",
+          "value": 14.36
+        },
+        {
+          "name": "O3",
+          "value": 59.87
+        },
+        {
+          "name": "SO2",
+          "value": 8.52
+        },
+        {
+          "name": "CO",
+          "value": 160.83
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T12:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "It couldn't be better ;)",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 5.42
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 21.66,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 11.11,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 63.14,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 57.67,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T13:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.21
+        },
+        {
+          "name": "PM25",
+          "value": 3.25
+        },
+        {
+          "name": "PM10",
+          "value": 4.37
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1021.72
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 61
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 21.62
+        },
+        {
+          "name": "NO2",
+          "value": 15.79
+        },
+        {
+          "name": "O3",
+          "value": 57.67
+        },
+        {
+          "name": "SO2",
+          "value": 13.43
+        },
+        {
+          "name": "CO",
+          "value": 171.22
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T13:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Zero dust - zero worries!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.88
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 27.49,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 14.55,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 79.87,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 51.47,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T14:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.75
+        },
+        {
+          "name": "PM25",
+          "value": 4.12
+        },
+        {
+          "name": "PM10",
+          "value": 5.42
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1021.36
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 59.75
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 21.42
+        },
+        {
+          "name": "NO2",
+          "value": 19.97
+        },
+        {
+          "name": "O3",
+          "value": 51.47
+        },
+        {
+          "name": "SO2",
+          "value": 15.42
+        },
+        {
+          "name": "CO",
+          "value": 199.3
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T14:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Zero dust - zero worries!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.5
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 25.97,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 11.74,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 17.42,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 56.69,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T15:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.68
+        },
+        {
+          "name": "PM25",
+          "value": 3.89
+        },
+        {
+          "name": "PM10",
+          "value": 5.23
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.96
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 61
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 21.49
+        },
+        {
+          "name": "NO2",
+          "value": 4.36
+        },
+        {
+          "name": "O3",
+          "value": 56.69
+        },
+        {
+          "name": "SO2",
+          "value": 13.25
+        },
+        {
+          "name": "CO",
+          "value": 180.53
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T15:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Breathe deeply!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 6.95
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 27.79,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 10.09,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 46.43,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 85.39,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T16:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.68
+        },
+        {
+          "name": "PM25",
+          "value": 4.17
+        },
+        {
+          "name": "PM10",
+          "value": 5.59
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.77
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 62.49
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 21.04
+        },
+        {
+          "name": "NO2",
+          "value": 11.61
+        },
+        {
+          "name": "O3",
+          "value": 85.39
+        },
+        {
+          "name": "SO2",
+          "value": 12.77
+        },
+        {
+          "name": "CO",
+          "value": 159.08
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T16:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Dear me, how wonderful!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.11
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 28.43,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 11.77,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 126.91,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 80.2,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T17:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.88
+        },
+        {
+          "name": "PM25",
+          "value": 4.26
+        },
+        {
+          "name": "PM10",
+          "value": 5.66
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.5
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 66.22
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 20.08
+        },
+        {
+          "name": "NO2",
+          "value": 31.73
+        },
+        {
+          "name": "O3",
+          "value": 80.2
+        },
+        {
+          "name": "SO2",
+          "value": 15.05
+        },
+        {
+          "name": "CO",
+          "value": 186.52
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T17:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Zero dust - zero worries!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 9.81
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 39.22,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 18.8,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 133.19,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 54.46,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T18:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 4.13
+        },
+        {
+          "name": "PM25",
+          "value": 5.88
+        },
+        {
+          "name": "PM10",
+          "value": 7.74
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.37
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 68.88
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 18.69
+        },
+        {
+          "name": "NO2",
+          "value": 33.3
+        },
+        {
+          "name": "O3",
+          "value": 54.46
+        },
+        {
+          "name": "SO2",
+          "value": 17.85
+        },
+        {
+          "name": "CO",
+          "value": 219.51
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T18:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Enjoy life!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 12.18
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 48.71,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 25.59,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 97.71,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 49.24,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T19:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 4.8
+        },
+        {
+          "name": "PM25",
+          "value": 7.31
+        },
+        {
+          "name": "PM10",
+          "value": 9.8
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.54
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 69.8
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 17.38
+        },
+        {
+          "name": "NO2",
+          "value": 24.43
+        },
+        {
+          "name": "O3",
+          "value": 49.24
+        },
+        {
+          "name": "SO2",
+          "value": 16.35
+        },
+        {
+          "name": "CO",
+          "value": 229.63
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T19:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Green, green, green!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 15.31
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 61.21,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 24.56,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 84.31,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 45.35,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T20:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 5.9
+        },
+        {
+          "name": "PM25",
+          "value": 9.18
+        },
+        {
+          "name": "PM10",
+          "value": 12.2
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.5
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 68.85
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 16.59
+        },
+        {
+          "name": "NO2",
+          "value": 21.08
+        },
+        {
+          "name": "O3",
+          "value": 45.35
+        },
+        {
+          "name": "SO2",
+          "value": 16
+        },
+        {
+          "name": "CO",
+          "value": 249.34
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T20:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Enjoy life!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 11.65
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 46.58,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 22.75,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 75.91,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 42.98,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T21:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 4.36
+        },
+        {
+          "name": "PM25",
+          "value": 6.99
+        },
+        {
+          "name": "PM10",
+          "value": 9.35
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.2
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 67.31
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 15.79
+        },
+        {
+          "name": "NO2",
+          "value": 18.98
+        },
+        {
+          "name": "O3",
+          "value": 42.98
+        },
+        {
+          "name": "SO2",
+          "value": 14.47
+        },
+        {
+          "name": "CO",
+          "value": 197.43
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T21:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Breathe deeply!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 10.28
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 41.1,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 17.55,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 68.82,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 41.88,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T22:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 3.91
+        },
+        {
+          "name": "PM25",
+          "value": 6.17
+        },
+        {
+          "name": "PM10",
+          "value": 8.55
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1020.17
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 66.84
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 15.16
+        },
+        {
+          "name": "NO2",
+          "value": 17.21
+        },
+        {
+          "name": "O3",
+          "value": 41.88
+        },
+        {
+          "name": "SO2",
+          "value": 14.74
+        },
+        {
+          "name": "CO",
+          "value": 172.13
+        }
+      ]
+    },
+    {
+      "fromDateTime": "2022-09-06T22:00:00.000Z",
+      "indexes": [
+        {
+          "advice": "Zero dust - zero worries!",
+          "color": "#6BC926",
+          "description": "Great air here today!",
+          "level": "VERY_LOW",
+          "name": "AIRLY_CAQI",
+          "value": 7.5
+        }
+      ],
+      "standards": [
+        {
+          "averaging": "24h",
+          "limit": 15,
+          "name": "WHO",
+          "percent": 29.99,
+          "pollutant": "PM25"
+        },
+        {
+          "averaging": "24h",
+          "limit": 45,
+          "name": "WHO",
+          "percent": 13.83,
+          "pollutant": "PM10"
+        },
+        {
+          "averaging": "24h",
+          "limit": 25,
+          "name": "WHO",
+          "percent": 63.67,
+          "pollutant": "NO2"
+        },
+        {
+          "averaging": "8h",
+          "limit": 100,
+          "name": "WHO",
+          "percent": 42.24,
+          "pollutant": "O3"
+        }
+      ],
+      "tillDateTime": "2022-09-06T23:00:00.000Z",
+      "values": [
+        {
+          "name": "PM1",
+          "value": 2.96
+        },
+        {
+          "name": "PM25",
+          "value": 4.5
+        },
+        {
+          "name": "PM10",
+          "value": 6.26
+        },
+        {
+          "name": "PRESSURE",
+          "value": 1019.87
+        },
+        {
+          "name": "HUMIDITY",
+          "value": 67.94
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": 14.54
+        },
+        {
+          "name": "NO2",
+          "value": 15.92
+        },
+        {
+          "name": "O3",
+          "value": 42.24
+        },
+        {
+          "name": "SO2",
+          "value": 13.63
+        },
+        {
+          "name": "CO",
+          "value": 168.23
         }
       ]
     }

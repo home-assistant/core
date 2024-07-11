@@ -5,17 +5,17 @@
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "Failed to connect: {error}"
     },
     "step": {
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "language": "Language",
+          "language": "[%key:common::config_flow::data::language%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "mode": "[%key:common::config_flow::data::mode%]",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "To generate API key go to https://openweathermap.org/appid"
       }
@@ -25,8 +25,25 @@
     "step": {
       "init": {
         "data": {
-          "language": "Language",
+          "language": "[%key:common::config_flow::data::language%]",
           "mode": "[%key:common::config_flow::data::mode%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_v25": {
+      "title": "OpenWeatherMap API V2.5 deprecated",
+      "fix_flow": {
+        "step": {
+          "migrate": {
+            "title": "OpenWeatherMap API V2.5 deprecated",
+            "description": "OWM API v2.5 will be closed in June 2024.\nYou need to migrate all your OpenWeatherMap integrations to v3.0.\n\nBefore the migration, you must have an active subscription (be aware that subscription activation can take up to 2h). After your subscription is activated, select **Submit** to migrate the integration to API V3.0. Read the documentation for more information."
+          }
+        },
+        "error": {
+          "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+          "cannot_connect": "Failed to connect: {error}"
         }
       }
     }

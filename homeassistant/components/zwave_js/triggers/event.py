@@ -1,49 +1,43 @@
 """Offer Z-Wave JS event listening automation trigger."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 
 from pydantic import ValidationError
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
-from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP
-from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP, Node
+from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
+from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
-from homeassistant.components.zwave_js.const import (
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
+
+from ..const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
     ATTR_EVENT_SOURCE,
     ATTR_NODE_ID,
-    ATTR_NODES,
     ATTR_PARTIAL_DICT_MATCH,
     DATA_CLIENT,
     DOMAIN,
 )
-from homeassistant.components.zwave_js.helpers import (
+from ..helpers import (
     async_get_nodes_from_targets,
     get_device_id,
     get_home_and_node_id_from_device_entry,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
+from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
-
-EVENT_MODEL_MAP = {
-    "controller": CONTROLLER_EVENT_MODEL_MAP,
-    "driver": DRIVER_EVENT_MODEL_MAP,
-    "node": NODE_EVENT_MODEL_MAP,
-}
 
 
 def validate_non_node_event_source(obj: dict) -> dict:
@@ -58,7 +52,12 @@ def validate_event_name(obj: dict) -> dict:
     event_source = obj[ATTR_EVENT_SOURCE]
     event_name = obj[ATTR_EVENT]
     # the keys to the event source's model map are the event names
-    vol.In(EVENT_MODEL_MAP[event_source])(event_name)
+    if event_source == "controller":
+        vol.In(CONTROLLER_EVENT_MODEL_MAP)(event_name)
+    elif event_source == "driver":
+        vol.In(DRIVER_EVENT_MODEL_MAP)(event_name)
+    else:
+        vol.In(NODE_EVENT_MODEL_MAP)(event_name)
     return obj
 
 
@@ -68,18 +67,21 @@ def validate_event_data(obj: dict) -> dict:
     if ATTR_EVENT_DATA not in obj:
         return obj
 
-    event_source = obj[ATTR_EVENT_SOURCE]
-    event_name = obj[ATTR_EVENT]
-    event_data = obj[ATTR_EVENT_DATA]
+    event_source: str = obj[ATTR_EVENT_SOURCE]
+    event_name: str = obj[ATTR_EVENT]
+    event_data: dict = obj[ATTR_EVENT_DATA]
     try:
-        EVENT_MODEL_MAP[event_source][event_name](**event_data)
+        if event_source == "controller":
+            CONTROLLER_EVENT_MODEL_MAP[event_name](**event_data)
+        elif event_source == "driver":
+            DRIVER_EVENT_MODEL_MAP[event_name](**event_data)
+        else:
+            NODE_EVENT_MODEL_MAP[event_name](**event_data)
     except ValidationError as exc:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
-        if errors := [
-            error for error in exc.errors() if error["type"] != "value_error.missing"
-        ]:
-            raise vol.MultipleInvalid(errors) from exc
+        if [error for error in exc.errors() if error["type"] != "value_error.missing"]:
+            raise vol.MultipleInvalid from exc
     return obj
 
 
@@ -90,7 +92,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
             vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Required(ATTR_EVENT_SOURCE): vol.In(EVENT_MODEL_MAP),
+            vol.Required(ATTR_EVENT_SOURCE): vol.In(["controller", "driver", "node"]),
             vol.Required(ATTR_EVENT): cv.string,
             vol.Optional(ATTR_EVENT_DATA): dict,
             vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
@@ -111,22 +113,20 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    if config[ATTR_EVENT_SOURCE] == "node":
-        config[ATTR_NODES] = async_get_nodes_from_targets(hass, config)
-        if not config[ATTR_NODES]:
-            raise vol.Invalid(
-                f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
-            )
+    if ATTR_CONFIG_ENTRY_ID in config:
+        entry_id = config[ATTR_CONFIG_ENTRY_ID]
+        if hass.config_entries.async_get_entry(entry_id) is None:
+            raise vol.Invalid(f"Config entry '{entry_id}' not found")
 
-    if ATTR_CONFIG_ENTRY_ID not in config:
+    if async_bypass_dynamic_config_validation(hass, config):
         return config
 
-    entry_id = config[ATTR_CONFIG_ENTRY_ID]
-    if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-        raise vol.Invalid(f"Config entry '{entry_id}' not found")
-
-    if entry.state is not ConfigEntryState.LOADED:
-        raise vol.Invalid(f"Config entry '{entry_id}' not loaded")
+    if config[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
+        hass, config
+    ):
+        raise vol.Invalid(
+            f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
+        )
 
     return config
 
@@ -134,22 +134,28 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = PLATFORM_TYPE,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    nodes: set[Node] = config.get(ATTR_NODES, {})
+    dev_reg = dr.async_get(hass)
+    if config[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
+        hass, config, dev_reg=dev_reg
+    ):
+        raise ValueError(
+            f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
+        )
 
     event_source = config[ATTR_EVENT_SOURCE]
     event_name = config[ATTR_EVENT]
     event_data_filter = config.get(ATTR_EVENT_DATA, {})
 
-    unsubs = []
+    unsubs: list[Callable] = []
     job = HassJob(action)
 
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
 
     @callback
     def async_on_event(event_data: dict, device: dr.DeviceEntry | None = None) -> None:
@@ -189,31 +195,11 @@ async def async_attach_trigger(
         else:
             payload["description"] = primary_desc
 
-        payload[
-            "description"
-        ] = f"{payload['description']} with event data: {event_data}"
+        payload["description"] = (
+            f"{payload['description']} with event data: {event_data}"
+        )
 
         hass.async_run_hass_job(job, {"trigger": payload})
-
-    dev_reg = dr.async_get(hass)
-
-    if not nodes:
-        entry_id = config[ATTR_CONFIG_ENTRY_ID]
-        client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-        if event_source == "controller":
-            source = client.driver.controller
-        else:
-            source = client.driver
-        unsubs.append(source.on(event_name, async_on_event))
-
-    for node in nodes:
-        device_identifier = get_device_id(node.client, node)
-        device = dev_reg.async_get_device({device_identifier})
-        assert device
-        # We need to store the device for the callback
-        unsubs.append(
-            node.on(event_name, functools.partial(async_on_event, device=device))
-        )
 
     @callback
     def async_remove() -> None:
@@ -221,5 +207,47 @@ async def async_attach_trigger(
         for unsub in unsubs:
             unsub()
         unsubs.clear()
+
+    @callback
+    def _create_zwave_listeners() -> None:
+        """Create Z-Wave JS listeners."""
+        async_remove()
+        # Nodes list can come from different drivers and we will need to listen to
+        # server connections for all of them.
+        drivers: set[Driver] = set()
+        if not (nodes := async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)):
+            entry_id = config[ATTR_CONFIG_ENTRY_ID]
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            client: Client = entry.runtime_data[DATA_CLIENT]
+            driver = client.driver
+            assert driver
+            drivers.add(driver)
+            if event_source == "controller":
+                unsubs.append(driver.controller.on(event_name, async_on_event))
+            else:
+                unsubs.append(driver.on(event_name, async_on_event))
+
+        for node in nodes:
+            driver = node.client.driver
+            assert driver is not None  # The node comes from the driver.
+            drivers.add(driver)
+            device_identifier = get_device_id(driver, node)
+            device = dev_reg.async_get_device(identifiers={device_identifier})
+            assert device
+            # We need to store the device for the callback
+            unsubs.append(
+                node.on(event_name, functools.partial(async_on_event, device=device))
+            )
+        unsubs.extend(
+            async_dispatcher_connect(
+                hass,
+                f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
+                _create_zwave_listeners,
+            )
+            for driver in drivers
+        )
+
+    _create_zwave_listeners()
 
     return async_remove

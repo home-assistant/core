@@ -1,5 +1,7 @@
 """Platform for Omnilogic switch integration."""
+
 import time
+from typing import Any
 
 from omnilogic import OmniLogicException
 import voluptuous as vol
@@ -10,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
+from .common import OmniLogicEntity, check_guard
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .coordinator import OmniLogicUpdateCoordinator
 
 SERVICE_SET_SPEED = "set_pump_speed"
 OMNILOGIC_SWITCH_OFF = 7
@@ -22,7 +25,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the light platform."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -34,7 +39,8 @@ async def async_setup_entry(
             continue
 
         for entity_setting in entity_settings:
-            for state_key, entity_class in entity_setting["entity_classes"].items():
+            entity_classes: dict[str, type] = entity_setting["entity_classes"]
+            for state_key, entity_class in entity_classes.items():
                 if check_guard(state_key, item, entity_setting):
                     continue
 
@@ -92,9 +98,10 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         """Return the on/off state of the switch."""
         state_int = 0
 
-        # The Omnilogic API has a significant delay in state reporting after calling for a
-        # change. This state delay will ensure that HA keeps an optimistic value of state
-        # during this period to improve the user experience and avoid confusion.
+        # The Omnilogic API has a significant delay in state reporting after
+        # calling for a change. This state delay will ensure that HA keeps an
+        # optimistic value of state during this period to improve the user
+        # experience and avoid confusion.
         if self._last_action < (time.time() - self._state_delay):
             state_int = int(self.coordinator.data[self._item_id][self._state_key])
 
@@ -229,7 +236,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
             raise OmniLogicException("Cannot set speed on a non-variable speed pump.")
 
 
-SWITCH_TYPES = {
+SWITCH_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
     (4, "Relays"): [
         {
             "entity_classes": {"switchState": OmniLogicRelayControl},

@@ -1,4 +1,5 @@
-"""This platform allows several cover to be grouped into one cover."""
+"""Platform allowing several cover to be grouped into one cover."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,20 +12,12 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    PLATFORM_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
@@ -42,15 +35,16 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
-from .util import attribute_equal, reduce_attribute
+from .entity import GroupEntity
+from .util import reduce_attribute
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -61,7 +55,7 @@ DEFAULT_NAME = "Cover Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -102,18 +96,30 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_cover(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> CoverGroup:
+    """Create a preview sensor."""
+    return CoverGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+    )
+
+
 class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
+    _attr_available: bool = False
     _attr_is_closed: bool | None = None
     _attr_is_opening: bool | None = False
     _attr_is_closing: bool | None = False
     _attr_current_cover_position: int | None = 100
-    _attr_assumed_state: bool = True
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a CoverGroup entity."""
-        self._entities = entities
+        self._entity_ids = entities
         self._covers: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),
@@ -130,17 +136,10 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_unique_id = unique_id
 
     @callback
-    def _update_supported_features_event(self, event: Event) -> None:
-        self.async_set_context(event.context)
-        if (entity := event.data.get("entity_id")) is not None:
-            self.async_update_supported_features(entity, event.data.get("new_state"))
-
-    @callback
     def async_update_supported_features(
         self,
         entity_id: str,
         new_state: State | None,
-        update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
@@ -148,56 +147,35 @@ class CoverGroup(GroupEntity, CoverEntity):
                 values.discard(entity_id)
             for values in self._tilts.values():
                 values.discard(entity_id)
-            if update_state:
-                self.async_defer_or_update_ha_state()
             return
 
         features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+        if features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             self._covers[KEY_OPEN_CLOSE].add(entity_id)
         else:
             self._covers[KEY_OPEN_CLOSE].discard(entity_id)
-        if features & (SUPPORT_STOP):
+        if features & (CoverEntityFeature.STOP):
             self._covers[KEY_STOP].add(entity_id)
         else:
             self._covers[KEY_STOP].discard(entity_id)
-        if features & (SUPPORT_SET_POSITION):
+        if features & (CoverEntityFeature.SET_POSITION):
             self._covers[KEY_POSITION].add(entity_id)
         else:
             self._covers[KEY_POSITION].discard(entity_id)
 
-        if features & (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT):
+        if features & (CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT):
             self._tilts[KEY_OPEN_CLOSE].add(entity_id)
         else:
             self._tilts[KEY_OPEN_CLOSE].discard(entity_id)
-        if features & (SUPPORT_STOP_TILT):
+        if features & (CoverEntityFeature.STOP_TILT):
             self._tilts[KEY_STOP].add(entity_id)
         else:
             self._tilts[KEY_STOP].discard(entity_id)
-        if features & (SUPPORT_SET_TILT_POSITION):
+        if features & (CoverEntityFeature.SET_TILT_POSITION):
             self._tilts[KEY_POSITION].add(entity_id)
         else:
             self._tilts[KEY_POSITION].discard(entity_id)
-
-        if update_state:
-            self.async_defer_or_update_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register listeners."""
-        for entity_id in self._entities:
-            if (new_state := self.hass.states.get(entity_id)) is None:
-                continue
-            self.async_update_supported_features(
-                entity_id, new_state, update_state=False
-            )
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entities, self._update_supported_features_event
-            )
-        )
-
-        await super().async_added_to_hass()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the covers up."""
@@ -272,40 +250,44 @@ class CoverGroup(GroupEntity, CoverEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
-        self._attr_assumed_state = False
+        states = [
+            state.state
+            for entity_id in self._entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
+
+        valid_state = any(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
+        )
+
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
 
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
-        has_valid_state = False
-        for entity_id in self._entities:
+        for entity_id in self._entity_ids:
             if not (state := self.hass.states.get(entity_id)):
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
-                has_valid_state = True
                 continue
             if state.state == STATE_CLOSED:
-                has_valid_state = True
                 continue
             if state.state == STATE_CLOSING:
                 self._attr_is_closing = True
-                has_valid_state = True
                 continue
             if state.state == STATE_OPENING:
                 self._attr_is_opening = True
-                has_valid_state = True
                 continue
-        if not has_valid_state:
+        if not valid_state:
+            # Set as unknown if all members are unknown or unavailable
             self._attr_is_closed = None
 
         position_covers = self._covers[KEY_POSITION]
         all_position_states = [self.hass.states.get(x) for x in position_covers]
         position_states: list[State] = list(filter(None, all_position_states))
         self._attr_current_cover_position = reduce_attribute(
-            position_states, ATTR_CURRENT_POSITION
-        )
-        self._attr_assumed_state |= not attribute_equal(
             position_states, ATTR_CURRENT_POSITION
         )
 
@@ -315,29 +297,19 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_current_cover_tilt_position = reduce_attribute(
             tilt_states, ATTR_CURRENT_TILT_POSITION
         )
-        self._attr_assumed_state |= not attribute_equal(
-            tilt_states, ATTR_CURRENT_TILT_POSITION
-        )
 
-        supported_features = 0
-        supported_features |= (
-            SUPPORT_OPEN | SUPPORT_CLOSE if self._covers[KEY_OPEN_CLOSE] else 0
-        )
-        supported_features |= SUPPORT_STOP if self._covers[KEY_STOP] else 0
-        supported_features |= SUPPORT_SET_POSITION if self._covers[KEY_POSITION] else 0
-        supported_features |= (
-            SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT if self._tilts[KEY_OPEN_CLOSE] else 0
-        )
-        supported_features |= SUPPORT_STOP_TILT if self._tilts[KEY_STOP] else 0
-        supported_features |= (
-            SUPPORT_SET_TILT_POSITION if self._tilts[KEY_POSITION] else 0
-        )
+        supported_features = CoverEntityFeature(0)
+        if self._covers[KEY_OPEN_CLOSE]:
+            supported_features |= CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        supported_features |= CoverEntityFeature.STOP if self._covers[KEY_STOP] else 0
+        if self._covers[KEY_POSITION]:
+            supported_features |= CoverEntityFeature.SET_POSITION
+        if self._tilts[KEY_OPEN_CLOSE]:
+            supported_features |= (
+                CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT
+            )
+        if self._tilts[KEY_STOP]:
+            supported_features |= CoverEntityFeature.STOP_TILT
+        if self._tilts[KEY_POSITION]:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
-
-        if not self._attr_assumed_state:
-            for entity_id in self._entities:
-                if (state := self.hass.states.get(entity_id)) is None:
-                    continue
-                if state and state.attributes.get(ATTR_ASSUMED_STATE):
-                    self._attr_assumed_state = True
-                    break

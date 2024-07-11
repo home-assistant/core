@@ -1,8 +1,11 @@
 """Tests for the kraken sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pykrakenapi.pykrakenapi import KrakenAPIError
+import pytest
 
 from homeassistant.components.kraken.const import (
     CONF_TRACKED_ASSET_PAIRS,
@@ -11,8 +14,8 @@ from homeassistant.components.kraken.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.device_registry import DeviceEntryType
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     MISSING_PAIR_TICKER_INFORMATION_RESPONSE,
@@ -24,16 +27,21 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensor(hass):
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test that sensor has a value."""
-    utcnow = dt_util.utcnow()
-    # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -51,105 +59,6 @@ async def test_sensor(hass):
             },
         )
         entry.add_to_hass(hass)
-
-        registry = await hass.helpers.entity_registry.async_get_registry()
-
-        # Pre-create registry entries for disabled by default sensors
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_ask_volume",
-            suggested_object_id="xbt_usd_ask_volume",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_last_trade_closed",
-            suggested_object_id="xbt_usd_last_trade_closed",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_bid_volume",
-            suggested_object_id="xbt_usd_bid_volume",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_volume_today",
-            suggested_object_id="xbt_usd_volume_today",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_volume_last_24h",
-            suggested_object_id="xbt_usd_volume_last_24h",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_volume_weighted_average_today",
-            suggested_object_id="xbt_usd_volume_weighted_average_today",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_volume_weighted_average_last_24h",
-            suggested_object_id="xbt_usd_volume_weighted_average_last_24h",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_number_of_trades_today",
-            suggested_object_id="xbt_usd_number_of_trades_today",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_number_of_trades_last_24h",
-            suggested_object_id="xbt_usd_number_of_trades_last_24h",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_low_last_24h",
-            suggested_object_id="xbt_usd_low_last_24h",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_high_last_24h",
-            suggested_object_id="xbt_usd_high_last_24h",
-            disabled_by=None,
-        )
-
-        registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            "xbt_usd_opening_price_today",
-            suggested_object_id="xbt_usd_opening_price_today",
-            disabled_by=None,
-        )
 
         await hass.config_entries.async_setup(entry.entry_id)
 
@@ -229,16 +138,21 @@ async def test_sensor(hass):
         assert xbt_usd_opening_price_today.state == "0.0003513"
 
 
-async def test_sensors_available_after_restart(hass):
+async def test_sensors_available_after_restart(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test that all sensors are added again after a restart."""
-    utcnow = dt_util.utcnow()
-    # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -247,16 +161,15 @@ async def test_sensors_available_after_restart(hass):
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
+        entry.add_to_hass(hass)
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, "XBT_USD")},
             name="XBT USD",
             manufacturer="Kraken.com",
-            entry_type=DeviceEntryType.SERVICE,
+            entry_type=dr.DeviceEntryType.SERVICE,
         )
-        entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
 
@@ -269,16 +182,19 @@ async def test_sensors_available_after_restart(hass):
         assert sensor.state == "0.0003494"
 
 
-async def test_sensors_added_after_config_update(hass):
+async def test_sensors_added_after_config_update(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that sensors are added when another tracked asset pair is added."""
-    utcnow = dt_util.utcnow()
-    # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -307,25 +223,27 @@ async def test_sensors_added_after_config_update(hass):
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR, "ADA/XBT"],
             },
         )
-        async_fire_time_changed(
-            hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert hass.states.get("sensor.ada_xbt_ask")
 
 
-async def test_missing_pair_marks_sensor_unavailable(hass):
+async def test_missing_pair_marks_sensor_unavailable(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that a missing tradable asset pair marks the sensor unavailable."""
-    utcnow = dt_util.utcnow()
-    # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ) as tradeable_asset_pairs_mock, patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
-    ) as ticket_information_mock:
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ) as tradeable_asset_pairs_mock,
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ) as ticket_information_mock,
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={
@@ -351,16 +269,14 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
         ticket_information_mock.side_effect = KrakenAPIError(
             "EQuery:Unknown asset pair"
         )
-        async_fire_time_changed(
-            hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         ticket_information_mock.side_effect = None
         ticket_information_mock.return_value = MISSING_PAIR_TICKER_INFORMATION_RESPONSE
-        async_fire_time_changed(
-            hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.xbt_usd_ask")

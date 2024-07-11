@@ -1,4 +1,5 @@
 """The tests for the Monoprice Blackbird media player platform."""
+
 from collections import defaultdict
 from unittest import mock
 
@@ -11,12 +12,12 @@ from homeassistant.components.blackbird.media_player import (
     PLATFORM_SCHEMA,
     setup_platform,
 )
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
 class AttrDict(dict):
@@ -57,7 +58,7 @@ class MockBlackbird:
         self.zones[3].av = source_idx
 
 
-def test_valid_serial_schema():
+def test_valid_serial_schema() -> None:
     """Test valid schema."""
     valid_schema = {
         "platform": "blackbird",
@@ -86,7 +87,7 @@ def test_valid_serial_schema():
     PLATFORM_SCHEMA(valid_schema)
 
 
-def test_valid_socket_schema():
+def test_valid_socket_schema() -> None:
     """Test valid schema."""
     valid_schema = {
         "platform": "blackbird",
@@ -108,7 +109,7 @@ def test_valid_socket_schema():
     PLATFORM_SCHEMA(valid_schema)
 
 
-def test_invalid_schemas():
+def test_invalid_schemas() -> None:
     """Test invalid schemas."""
     schemas = (
         {},  # Empty
@@ -168,17 +169,17 @@ def test_invalid_schemas():
 
 
 @pytest.fixture
-def mock_blackbird():
+def mock_blackbird() -> MockBlackbird:
     """Return a mock blackbird instance."""
     return MockBlackbird()
 
 
 @pytest.fixture
-async def setup_blackbird(hass, mock_blackbird):
+async def setup_blackbird(hass: HomeAssistant, mock_blackbird: MockBlackbird) -> None:
     """Set up blackbird."""
     with mock.patch(
         "homeassistant.components.blackbird.media_player.get_blackbird",
-        new=lambda *a: mock_blackbird,
+        return_value=mock_blackbird,
     ):
         await hass.async_add_executor_job(
             setup_platform,
@@ -200,7 +201,9 @@ async def setup_blackbird(hass, mock_blackbird):
 
 
 @pytest.fixture
-def media_player_entity(hass, setup_blackbird):
+def media_player_entity(
+    hass: HomeAssistant, setup_blackbird: None
+) -> MediaPlayerEntity:
     """Return the media player entity."""
     media_player = hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
     media_player.hass = hass
@@ -208,7 +211,8 @@ def media_player_entity(hass, setup_blackbird):
     return media_player
 
 
-async def test_setup_platform(hass, setup_blackbird):
+@pytest.mark.usefixtures("setup_blackbird")
+async def test_setup_platform(hass: HomeAssistant) -> None:
     """Test setting up platform."""
     # One service must be registered
     assert hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
@@ -217,8 +221,10 @@ async def test_setup_platform(hass, setup_blackbird):
 
 
 async def test_setallzones_service_call_with_entity_id(
-    hass, media_player_entity, mock_blackbird
-):
+    hass: HomeAssistant,
+    media_player_entity: MediaPlayerEntity,
+    mock_blackbird: MockBlackbird,
+) -> None:
     """Test set all zone source service call with entity id."""
     await hass.async_add_executor_job(media_player_entity.update)
     assert media_player_entity.name == "Zone name"
@@ -240,8 +246,10 @@ async def test_setallzones_service_call_with_entity_id(
 
 
 async def test_setallzones_service_call_without_entity_id(
-    mock_blackbird, hass, media_player_entity
-):
+    mock_blackbird: MockBlackbird,
+    hass: HomeAssistant,
+    media_player_entity: MediaPlayerEntity,
+) -> None:
     """Test set all zone source service call without entity id."""
     await hass.async_add_executor_job(media_player_entity.update)
     assert media_player_entity.name == "Zone name"
@@ -259,7 +267,9 @@ async def test_setallzones_service_call_without_entity_id(
     assert media_player_entity.source == "three"
 
 
-async def test_update(hass, media_player_entity):
+async def test_update(
+    hass: HomeAssistant, media_player_entity: MediaPlayerEntity
+) -> None:
     """Test updating values from blackbird."""
     assert media_player_entity.state is None
     assert media_player_entity.source is None
@@ -270,12 +280,16 @@ async def test_update(hass, media_player_entity):
     assert media_player_entity.source == "one"
 
 
-async def test_name(media_player_entity):
+async def test_name(media_player_entity: MediaPlayerEntity) -> None:
     """Test name property."""
     assert media_player_entity.name == "Zone name"
 
 
-async def test_state(hass, media_player_entity, mock_blackbird):
+async def test_state(
+    hass: HomeAssistant,
+    media_player_entity: MediaPlayerEntity,
+    mock_blackbird: MockBlackbird,
+) -> None:
     """Test state property."""
     assert media_player_entity.state is None
 
@@ -287,35 +301,45 @@ async def test_state(hass, media_player_entity, mock_blackbird):
     assert media_player_entity.state == STATE_OFF
 
 
-async def test_supported_features(media_player_entity):
+async def test_supported_features(media_player_entity: MediaPlayerEntity) -> None:
     """Test supported features property."""
     assert (
-        SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
-        == media_player_entity.supported_features
+        media_player_entity.supported_features
+        == MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
 
-async def test_source(hass, media_player_entity):
+async def test_source(
+    hass: HomeAssistant, media_player_entity: MediaPlayerEntity
+) -> None:
     """Test source property."""
     assert media_player_entity.source is None
     await hass.async_add_executor_job(media_player_entity.update)
     assert media_player_entity.source == "one"
 
 
-async def test_media_title(hass, media_player_entity):
+async def test_media_title(
+    hass: HomeAssistant, media_player_entity: MediaPlayerEntity
+) -> None:
     """Test media title property."""
     assert media_player_entity.media_title is None
     await hass.async_add_executor_job(media_player_entity.update)
     assert media_player_entity.media_title == "one"
 
 
-async def test_source_list(media_player_entity):
+async def test_source_list(media_player_entity: MediaPlayerEntity) -> None:
     """Test source list property."""
     # Note, the list is sorted!
     assert media_player_entity.source_list == ["one", "two", "three"]
 
 
-async def test_select_source(hass, media_player_entity, mock_blackbird):
+async def test_select_source(
+    hass: HomeAssistant,
+    media_player_entity: MediaPlayerEntity,
+    mock_blackbird: MockBlackbird,
+) -> None:
     """Test source selection methods."""
     await hass.async_add_executor_job(media_player_entity.update)
 
@@ -333,7 +357,11 @@ async def test_select_source(hass, media_player_entity, mock_blackbird):
     assert media_player_entity.source == "two"
 
 
-async def test_turn_on(hass, media_player_entity, mock_blackbird):
+async def test_turn_on(
+    hass: HomeAssistant,
+    media_player_entity: MediaPlayerEntity,
+    mock_blackbird: MockBlackbird,
+) -> None:
     """Testing turning on the zone."""
     mock_blackbird.zones[3].power = False
     await hass.async_add_executor_job(media_player_entity.update)
@@ -345,7 +373,11 @@ async def test_turn_on(hass, media_player_entity, mock_blackbird):
     assert media_player_entity.state == STATE_ON
 
 
-async def test_turn_off(hass, media_player_entity, mock_blackbird):
+async def test_turn_off(
+    hass: HomeAssistant,
+    media_player_entity: MediaPlayerEntity,
+    mock_blackbird: MockBlackbird,
+) -> None:
     """Testing turning off the zone."""
     mock_blackbird.zones[3].power = True
     await hass.async_add_executor_job(media_player_entity.update)

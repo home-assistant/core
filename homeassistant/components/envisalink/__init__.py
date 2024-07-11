@@ -1,4 +1,5 @@
 """Support for Envisalink devices."""
+
 import asyncio
 import logging
 
@@ -124,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect: asyncio.Future[bool] = asyncio.Future()
+    sync_connect: asyncio.Future[bool] = hass.loop.create_future()
 
     controller = EnvisalinkAlarmPanel(
         host,
@@ -248,6 +249,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class EnvisalinkDevice(Entity):
     """Representation of an Envisalink device."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, info, controller):
         """Initialize the device."""
         self._controller = controller
@@ -258,8 +261,3 @@ class EnvisalinkDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

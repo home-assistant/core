@@ -1,15 +1,16 @@
 """Support for getting the disk temperature of a host."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 import socket
-from telnetlib import Telnet
+from telnetlib import Telnet  # pylint: disable=deprecated-module
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -18,8 +19,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -38,7 +38,7 @@ DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DISKS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -66,11 +66,7 @@ def setup_platform(
     if not disks:
         disks = [next(iter(hddtemp.data)).split("|")[0]]
 
-    dev = []
-    for disk in disks:
-        dev.append(HddTempSensor(name, disk, hddtemp))
-
-    add_entities(dev, True)
+    add_entities((HddTempSensor(name, disk, hddtemp) for disk in disks), True)
 
 
 class HddTempSensor(SensorEntity):
@@ -91,7 +87,7 @@ class HddTempSensor(SensorEntity):
         if self._details is not None:
             return {ATTR_DEVICE: self._details[0], ATTR_MODEL: self._details[1]}
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from HDDTemp daemon and updates the state."""
         self.hddtemp.update()
 
@@ -99,9 +95,9 @@ class HddTempSensor(SensorEntity):
             self._details = self.hddtemp.data[self.disk].split("|")
             self._attr_native_value = self._details[2]
             if self._details is not None and self._details[3] == "F":
-                self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
             else:
-                self._attr_native_unit_of_measurement = TEMP_CELSIUS
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         else:
             self._attr_native_value = None
 

@@ -1,7 +1,9 @@
 """The tests for the Group Switch platform."""
+
+import asyncio
 from unittest.mock import patch
 
-import async_timeout
+import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
@@ -18,13 +20,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass):
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test switch group default state."""
     hass.states.async_set("switch.tv", "on")
     await async_setup_component(
@@ -49,14 +54,19 @@ async def test_default_state(hass):
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.tv", "switch.soundbar"]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("switch.multimedia_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting(hass):
-    """Test the state reporting."""
+async def test_state_reporting(hass: HomeAssistant) -> None:
+    """Test the state reporting in 'any' mode.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if all group members are unknown.
+    Otherwise, the group state is on if at least one group member is on.
+    Otherwise, the group state is off.
+    """
     await async_setup_component(
         hass,
         SWITCH_DOMAIN,
@@ -72,29 +82,79 @@ async def test_state_reporting(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.async_set("switch.test1", STATE_ON)
-    hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert hass.states.get("switch.switch_group").state == STATE_ON
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
 
-    hass.states.async_set("switch.test1", STATE_ON)
-    hass.states.async_set("switch.test2", STATE_OFF)
-    await hass.async_block_till_done()
-    assert hass.states.get("switch.switch_group").state == STATE_ON
-
-    hass.states.async_set("switch.test1", STATE_OFF)
-    hass.states.async_set("switch.test2", STATE_OFF)
-    await hass.async_block_till_done()
-    assert hass.states.get("switch.switch_group").state == STATE_OFF
-
+    # All group members unavailable -> unavailable
     hass.states.async_set("switch.test1", STATE_UNAVAILABLE)
     hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
 
+    # All group members unknown -> unknown
+    hass.states.async_set("switch.test1", STATE_UNKNOWN)
+    hass.states.async_set("switch.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
 
-async def test_state_reporting_all(hass):
-    """Test the state reporting."""
+    # Group members unknown or unavailable -> unknown
+    hass.states.async_set("switch.test1", STATE_UNKNOWN)
+    hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
+
+    # At least one member on -> group on
+    hass.states.async_set("switch.test1", STATE_ON)
+    hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_ON
+
+    hass.states.async_set("switch.test1", STATE_ON)
+    hass.states.async_set("switch.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_ON
+
+    hass.states.async_set("switch.test1", STATE_ON)
+    hass.states.async_set("switch.test2", STATE_ON)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_ON
+
+    hass.states.async_set("switch.test1", STATE_ON)
+    hass.states.async_set("switch.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_ON
+
+    # Otherwise -> off
+    hass.states.async_set("switch.test1", STATE_OFF)
+    hass.states.async_set("switch.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_OFF
+
+    hass.states.async_set("switch.test1", STATE_UNKNOWN)
+    hass.states.async_set("switch.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_OFF
+
+    hass.states.async_set("switch.test1", STATE_UNAVAILABLE)
+    hass.states.async_set("switch.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_OFF
+
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("switch.test1")
+    hass.states.async_remove("switch.test2")
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
+
+
+async def test_state_reporting_all(hass: HomeAssistant) -> None:
+    """Test the state reporting in 'all' mode.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
+    Otherwise, the group state is off if at least one group member is off.
+    Otherwise, the group state is on.
+    """
     await async_setup_component(
         hass,
         SWITCH_DOMAIN,
@@ -110,11 +170,47 @@ async def test_state_reporting_all(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
+
+    # All group members unavailable -> unavailable
+    hass.states.async_set("switch.test1", STATE_UNAVAILABLE)
+    hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
+
+    # At least one member unknown or unavailable -> group unknown
     hass.states.async_set("switch.test1", STATE_ON)
     hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
 
+    hass.states.async_set("switch.test1", STATE_ON)
+    hass.states.async_set("switch.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("switch.test1", STATE_UNKNOWN)
+    hass.states.async_set("switch.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("switch.test1", STATE_OFF)
+    hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("switch.test1", STATE_OFF)
+    hass.states.async_set("switch.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("switch.test1", STATE_UNKNOWN)
+    hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.switch_group").state == STATE_UNKNOWN
+
+    # At least one member off -> group off
     hass.states.async_set("switch.test1", STATE_ON)
     hass.states.async_set("switch.test2", STATE_OFF)
     await hass.async_block_till_done()
@@ -125,18 +221,21 @@ async def test_state_reporting_all(hass):
     await hass.async_block_till_done()
     assert hass.states.get("switch.switch_group").state == STATE_OFF
 
+    # Otherwise -> on
     hass.states.async_set("switch.test1", STATE_ON)
     hass.states.async_set("switch.test2", STATE_ON)
     await hass.async_block_till_done()
     assert hass.states.get("switch.switch_group").state == STATE_ON
 
-    hass.states.async_set("switch.test1", STATE_UNAVAILABLE)
-    hass.states.async_set("switch.test2", STATE_UNAVAILABLE)
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("switch.test1")
+    hass.states.async_remove("switch.test2")
     await hass.async_block_till_done()
     assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
 
 
-async def test_service_calls(hass, enable_custom_integrations):
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_service_calls(hass: HomeAssistant) -> None:
     """Test service calls."""
     await async_setup_component(
         hass,
@@ -190,7 +289,7 @@ async def test_service_calls(hass, enable_custom_integrations):
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test the ability to reload switches."""
     await async_setup_component(
         hass,
@@ -232,7 +331,7 @@ async def test_reload(hass):
     assert hass.states.get("switch.outside_switches_g") is not None
 
 
-async def test_reload_with_platform_not_setup(hass):
+async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     """Test the ability to reload switches."""
     hass.states.async_set("switch.something", STATE_ON)
     await async_setup_component(
@@ -270,7 +369,9 @@ async def test_reload_with_platform_not_setup(hass):
     assert hass.states.get("switch.outside_switches_g") is not None
 
 
-async def test_reload_with_base_integration_platform_not_setup(hass):
+async def test_reload_with_base_integration_platform_not_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test the ability to reload switches."""
     assert await async_setup_component(
         hass,
@@ -305,7 +406,7 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
     assert hass.states.get("switch.outside_switches_g").state == STATE_OFF
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested switch group."""
     await async_setup_component(
         hass,
@@ -346,7 +447,7 @@ async def test_nested_group(hass):
     assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.some_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TOGGLE,

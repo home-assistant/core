@@ -1,12 +1,12 @@
 """Switcher integration Switch platform."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
-from aioswitcher.api import Command, SwitcherApi, SwitcherBaseResponse
+from aioswitcher.api import Command, SwitcherBaseResponse, SwitcherType1Api
 from aioswitcher.device import DeviceCategory, DeviceState
 import voluptuous as vol
 
@@ -15,15 +15,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     entity_platform,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import (
     CONF_AUTO_OFF,
     CONF_TIMER_MINUTES,
@@ -31,14 +31,18 @@ from .const import (
     SERVICE_TURN_ON_WITH_TIMER_NAME,
     SIGNAL_DEVICE_ADD,
 )
+from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SET_AUTO_OFF_SCHEMA = {
+API_CONTROL_DEVICE = "control_device"
+API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
+
+SERVICE_SET_AUTO_OFF_SCHEMA: VolDictType = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
 }
 
-SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
+SERVICE_TURN_ON_WITH_TIMER_SCHEMA: VolDictType = {
     vol.Required(CONF_TIMER_MINUTES): vol.All(
         cv.positive_int, vol.Range(min=1, max=150)
     ),
@@ -83,18 +87,18 @@ class SwitcherBaseSwitchEntity(
 ):
     """Representation of a Switcher switch entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None
 
         # Entity class attributes
-        self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     @callback
@@ -105,22 +109,26 @@ class SwitcherBaseSwitchEntity(
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
-        _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
-        response: SwitcherBaseResponse = None
+        _LOGGER.debug(
+            "Calling api for %s, api: '%s', args: %s", self.coordinator.name, api, args
+        )
+        response: SwitcherBaseResponse | None = None
         error = None
 
         try:
-            async with SwitcherApi(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+            async with SwitcherType1Api(
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.data.device_key,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:
             _LOGGER.error(
                 "Call api for %s failed, api: '%s', args: %s, response/error: %s",
-                self.name,
+                self.coordinator.name,
                 api,
                 args,
                 response or error,
@@ -137,13 +145,13 @@ class SwitcherBaseSwitchEntity(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._async_call_api("control_device", Command.ON)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON)
         self.control_result = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._async_call_api("control_device", Command.OFF)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.OFF)
         self.control_result = False
         self.async_write_ha_state()
 
@@ -152,7 +160,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_SET_AUTO_OFF_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
@@ -160,7 +168,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_TURN_ON_WITH_TIMER_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
 
@@ -177,11 +185,11 @@ class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""
-        await self._async_call_api("set_auto_shutdown", auto_off)
+        await self._async_call_api(API_SET_AUTO_SHUTDOWN, auto_off)
         self.async_write_ha_state()
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
         """Use for turning device on with a timer service calls."""
-        await self._async_call_api("control_device", Command.ON, timer_minutes)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON, timer_minutes)
         self.control_result = True
         self.async_write_ha_state()

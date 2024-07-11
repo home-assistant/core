@@ -1,4 +1,5 @@
 """Base class for pilight."""
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -56,6 +57,8 @@ SWITCHES_SCHEMA = vol.Schema(
 class PilightBaseDevice(RestoreEntity):
     """Base class for pilight switches and lights."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, name, config):
         """Initialize a device."""
         self._hass = hass
@@ -94,11 +97,6 @@ class PilightBaseDevice(RestoreEntity):
     def name(self):
         """Get the name of the switch."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed, state set when correct code is received."""
-        return False
 
     @property
     def assumed_state(self):

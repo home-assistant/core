@@ -1,0 +1,16 @@
+{
+  "wifi_ssid": "My Wi-Fi",
+  "wifi_strength": 92,
+  "total_power_import_t1_kwh": 2.705,
+  "total_power_export_t1_kwh": 255.551,
+  "active_power_w": -1058.296,
+  "active_power_l1_w": -1058.296,
+  "active_voltage_v": 228.472,
+  "active_current_a": 0.273,
+  "active_apparent_current_a": 0.447,
+  "active_reactive_current_a": 0.354,
+  "active_apparent_power_va": 74.052,
+  "active_reactive_power_var": -58.612,
+  "active_power_factor": 0.611,
+  "active_frequency_hz": 50
+}

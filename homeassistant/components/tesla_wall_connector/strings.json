@@ -6,6 +6,9 @@
         "title": "Configure Tesla Wall Connector",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Tesla Wall Connector."
         }
       }
     },
@@ -15,6 +18,72 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "vehicle_connected": {
+        "name": "Vehicle connected"
+      },
+      "contactor_closed": {
+        "name": "Contactor closed"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "booting": "Booting",
+          "not_connected": "Vehicle not connected",
+          "connected": "Vehicle connected",
+          "ready": "Ready to charge",
+          "negotiating": "Negotiating connection",
+          "error": "Error",
+          "charging_finished": "Charging finished",
+          "waiting_car": "Waiting for car",
+          "charging_reduced": "Charging (reduced)",
+          "charging": "Charging"
+        }
+      },
+      "status_code": {
+        "name": "Status code"
+      },
+      "handle_temp_c": {
+        "name": "Handle temperature"
+      },
+      "pcba_temp_c": {
+        "name": "PCB temperature"
+      },
+      "mcu_temp_c": {
+        "name": "MCU temperature"
+      },
+      "grid_v": {
+        "name": "Grid voltage"
+      },
+      "grid_hz": {
+        "name": "Grid frequency"
+      },
+      "current_a_a": {
+        "name": "Phase A current"
+      },
+      "current_b_a": {
+        "name": "Phase B current"
+      },
+      "current_c_a": {
+        "name": "Phase C current"
+      },
+      "voltage_a_v": {
+        "name": "Phase A voltage"
+      },
+      "voltage_b_v": {
+        "name": "Phase B voltage"
+      },
+      "voltage_c_v": {
+        "name": "Phase C voltage"
+      },
+      "session_energy_wh": {
+        "name": "Session energy"
+      }
     }
   }
 }

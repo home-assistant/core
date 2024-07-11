@@ -1,36 +1,43 @@
 """DataUpdateCoordinator for Plugwise."""
+
 from datetime import timedelta
-from typing import Any, NamedTuple
 
-from plugwise import Smile
-from plugwise.exceptions import PlugwiseException, XMLDataMissingError
+from plugwise import PlugwiseData, Smile
+from plugwise.exceptions import (
+    ConnectionFailedError,
+    InvalidAuthentication,
+    InvalidXMLError,
+    PlugwiseError,
+    ResponseError,
+    UnsupportedDeviceError,
+)
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
-
-
-class PlugwiseData(NamedTuple):
-    """Plugwise data stored in the DataUpdateCoordinator."""
-
-    gateway: dict[str, Any]
-    devices: dict[str, dict[str, Any]]
+from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, GATEWAY_ID, LOGGER
 
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
     """Class to manage fetching Plugwise data from single endpoint."""
 
-    def __init__(self, hass: HomeAssistant, api: Smile) -> None:
+    _connected: bool = False
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=api.smile_name or DOMAIN,
-            update_interval=DEFAULT_SCAN_INTERVAL.get(
-                str(api.smile_type), timedelta(seconds=60)
-            ),
+            name=DOMAIN,
+            update_interval=timedelta(seconds=60),
             # Don't refresh immediately, give the device time to process
             # the change in state before we query it.
             request_refresh_debouncer=Debouncer(
@@ -40,16 +47,83 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
                 immediate=False,
             ),
         )
-        self.api = api
+
+        self.api = Smile(
+            host=self.config_entry.data[CONF_HOST],
+            username=self.config_entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
+            password=self.config_entry.data[CONF_PASSWORD],
+            port=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
+            timeout=30,
+            websession=async_get_clientsession(hass, verify_ssl=False),
+        )
+        self._current_devices: set[str] = set()
+        self.new_devices: set[str] = set()
+
+    async def _connect(self) -> None:
+        """Connect to the Plugwise Smile."""
+        self._connected = await self.api.connect()
+        self.api.get_all_devices()
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
+        data = PlugwiseData({}, {})
         try:
+            if not self._connected:
+                await self._connect()
             data = await self.api.async_update()
-        except XMLDataMissingError as err:
+        except ConnectionFailedError as err:
+            raise UpdateFailed("Failed to connect") from err
+        except InvalidAuthentication as err:
+            raise ConfigEntryError("Authentication failed") from err
+        except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
-                f"No XML data received for: {self.api.smile_name}"
+                "Invalid XML data, or error indication received from the Plugwise Adam/Smile/Stretch"
             ) from err
-        except PlugwiseException as err:
-            raise UpdateFailed(f"Updated failed for: {self.api.smile_name}") from err
-        return PlugwiseData(*data)
+        except PlugwiseError as err:
+            raise UpdateFailed("Data incomplete or missing") from err
+        except UnsupportedDeviceError as err:
+            raise ConfigEntryError("Device with unsupported firmware") from err
+        else:
+            self._async_add_remove_devices(data, self.config_entry)
+
+        return data
+
+    def _async_add_remove_devices(self, data: PlugwiseData, entry: ConfigEntry) -> None:
+        """Add new Plugwise devices, remove non-existing devices."""
+        # Check for new or removed devices
+        self.new_devices = set(data.devices) - self._current_devices
+        removed_devices = self._current_devices - set(data.devices)
+        self._current_devices = set(data.devices)
+
+        if removed_devices:
+            self._async_remove_devices(data, entry)
+
+    def _async_remove_devices(self, data: PlugwiseData, entry: ConfigEntry) -> None:
+        """Clean registries when removed devices found."""
+        device_reg = dr.async_get(self.hass)
+        device_list = dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        )
+        # via_device cannot be None, this will result in the deletion
+        # of other Plugwise Gateways when present!
+        via_device: str = ""
+        for device_entry in device_list:
+            if device_entry.identifiers:
+                item = list(list(device_entry.identifiers)[0])
+                if item[0] == DOMAIN:
+                    # First find the Plugwise via_device, this is always the first device
+                    if item[1] == data.gateway[GATEWAY_ID]:
+                        via_device = device_entry.id
+                    elif (  # then remove the connected orphaned device(s)
+                        device_entry.via_device_id == via_device
+                        and item[1] not in data.devices
+                    ):
+                        device_reg.async_update_device(
+                            device_entry.id, remove_config_entry_id=entry.entry_id
+                        )
+                        LOGGER.debug(
+                            "Removed %s device %s %s from device_registry",
+                            DOMAIN,
+                            device_entry.model,
+                            item[1],
+                        )

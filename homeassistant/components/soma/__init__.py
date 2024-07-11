@@ -1,5 +1,10 @@
 """Support for Soma Smartshades."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
+from typing import Any
 
 from api.soma_api import SomaApi
 from requests import RequestException
@@ -10,7 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API, DOMAIN, HOST, PORT
@@ -54,11 +60,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
-    devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
-    hass.data[DOMAIN][DEVICES] = devices["shades"]
+    api = await hass.async_add_executor_job(SomaApi, entry.data[HOST], entry.data[PORT])
+    devices = await hass.async_add_executor_job(api.list_devices)
+    hass.data[DOMAIN] = {API: api, DEVICES: devices["shades"]}
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -68,10 +74,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def soma_api_call(api_call):
+def soma_api_call[_SomaEntityT: SomaEntity](
+    api_call: Callable[[_SomaEntityT], Coroutine[Any, Any, dict]],
+) -> Callable[[_SomaEntityT], Coroutine[Any, Any, dict]]:
     """Soma api call decorator."""
 
-    async def inner(self) -> dict:
+    async def inner(self: _SomaEntityT) -> dict:
         response = {}
         try:
             response_from_api = await api_call(self)
@@ -88,7 +96,10 @@ def soma_api_call(api_call):
                 if self.is_available:
                     self.is_available = False
                     _LOGGER.warning(
-                        "Device is unreachable (%s). Error while fetching the state: %s",
+                        (
+                            "Device is unreachable (%s). Error while fetching the"
+                            " state: %s"
+                        ),
                         self.name,
                         response_from_api["msg"],
                     )
@@ -104,6 +115,8 @@ def soma_api_call(api_call):
 
 class SomaEntity(Entity):
     """Representation of a generic Soma device."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, device, api):
         """Initialize the Soma device."""
@@ -125,11 +138,6 @@ class SomaEntity(Entity):
         return self.device["mac"]
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device["name"]
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 
@@ -138,7 +146,7 @@ class SomaEntity(Entity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Wazombi Labs",
-            name=self.name,
+            name=self.device["name"],
         )
 
     def set_position(self, position: int) -> None:

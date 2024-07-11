@@ -1,0 +1,875 @@
+# serializer version: 1
+# name: test_entity_state_attrs[button.i3_rex_activate_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i3_rex_activate_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activate air conditioning',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activate_air_conditioning',
+    'unique_id': 'WBY00000000REXI01-activate_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i3_rex_activate_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i3 (+ REX) Activate air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i3_rex_activate_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i3_rex_find_vehicle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i3_rex_find_vehicle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Find vehicle',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'find_vehicle',
+    'unique_id': 'WBY00000000REXI01-find_vehicle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i3_rex_find_vehicle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i3 (+ REX) Find vehicle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i3_rex_find_vehicle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i3_rex_flash_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i3_rex_flash_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flash lights',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_flash',
+    'unique_id': 'WBY00000000REXI01-light_flash',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i3_rex_flash_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i3 (+ REX) Flash lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i3_rex_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i3_rex_sound_horn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i3_rex_sound_horn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound horn',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_horn',
+    'unique_id': 'WBY00000000REXI01-sound_horn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i3_rex_sound_horn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i3 (+ REX) Sound horn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i3_rex_sound_horn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_activate_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i4_edrive40_activate_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activate air conditioning',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activate_air_conditioning',
+    'unique_id': 'WBA00000000DEMO02-activate_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_activate_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 Activate air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i4_edrive40_activate_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_deactivate_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i4_edrive40_deactivate_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Deactivate air conditioning',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'deactivate_air_conditioning',
+    'unique_id': 'WBA00000000DEMO02-deactivate_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_deactivate_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 Deactivate air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i4_edrive40_deactivate_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_find_vehicle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i4_edrive40_find_vehicle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Find vehicle',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'find_vehicle',
+    'unique_id': 'WBA00000000DEMO02-find_vehicle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_find_vehicle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 Find vehicle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i4_edrive40_find_vehicle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_flash_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i4_edrive40_flash_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flash lights',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_flash',
+    'unique_id': 'WBA00000000DEMO02-light_flash',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_flash_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 Flash lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i4_edrive40_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_sound_horn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.i4_edrive40_sound_horn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound horn',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_horn',
+    'unique_id': 'WBA00000000DEMO02-sound_horn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.i4_edrive40_sound_horn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 Sound horn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.i4_edrive40_sound_horn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_activate_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.ix_xdrive50_activate_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activate air conditioning',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activate_air_conditioning',
+    'unique_id': 'WBA00000000DEMO01-activate_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_activate_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 Activate air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ix_xdrive50_activate_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_deactivate_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.ix_xdrive50_deactivate_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Deactivate air conditioning',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'deactivate_air_conditioning',
+    'unique_id': 'WBA00000000DEMO01-deactivate_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_deactivate_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 Deactivate air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ix_xdrive50_deactivate_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_find_vehicle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.ix_xdrive50_find_vehicle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Find vehicle',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'find_vehicle',
+    'unique_id': 'WBA00000000DEMO01-find_vehicle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_find_vehicle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 Find vehicle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ix_xdrive50_find_vehicle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_flash_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.ix_xdrive50_flash_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flash lights',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_flash',
+    'unique_id': 'WBA00000000DEMO01-light_flash',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_flash_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 Flash lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ix_xdrive50_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_sound_horn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.ix_xdrive50_sound_horn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound horn',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_horn',
+    'unique_id': 'WBA00000000DEMO01-sound_horn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.ix_xdrive50_sound_horn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 Sound horn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ix_xdrive50_sound_horn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_activate_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.m340i_xdrive_activate_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activate air conditioning',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activate_air_conditioning',
+    'unique_id': 'WBA00000000DEMO03-activate_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_activate_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M340i xDrive Activate air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.m340i_xdrive_activate_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_deactivate_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.m340i_xdrive_deactivate_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Deactivate air conditioning',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'deactivate_air_conditioning',
+    'unique_id': 'WBA00000000DEMO03-deactivate_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_deactivate_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M340i xDrive Deactivate air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.m340i_xdrive_deactivate_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_find_vehicle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.m340i_xdrive_find_vehicle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Find vehicle',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'find_vehicle',
+    'unique_id': 'WBA00000000DEMO03-find_vehicle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_find_vehicle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M340i xDrive Find vehicle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.m340i_xdrive_find_vehicle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_flash_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.m340i_xdrive_flash_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flash lights',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_flash',
+    'unique_id': 'WBA00000000DEMO03-light_flash',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_flash_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M340i xDrive Flash lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.m340i_xdrive_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_sound_horn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.m340i_xdrive_sound_horn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound horn',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_horn',
+    'unique_id': 'WBA00000000DEMO03-sound_horn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[button.m340i_xdrive_sound_horn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M340i xDrive Sound horn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.m340i_xdrive_sound_horn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

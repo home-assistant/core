@@ -1,25 +1,17 @@
 """Validate manifests."""
+
 import argparse
 from pathlib import Path
 import subprocess
 import sys
 
+from script.util import valid_integration
+
 from . import docs, error, gather_info, generate
-from .const import COMPONENT_DIR
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
 ]
-
-
-def valid_integration(integration):
-    """Test if it's a valid integration."""
-    if not (COMPONENT_DIR / integration).exists():
-        raise argparse.ArgumentTypeError(
-            f"The integration {integration} does not exist."
-        )
-
-    return integration
 
 
 def get_arguments() -> argparse.Namespace:
@@ -33,9 +25,7 @@ def get_arguments() -> argparse.Namespace:
         "--integration", type=valid_integration, help="Integration to target."
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
 def main():
@@ -77,11 +67,13 @@ def main():
     pipe_null = {} if args.develop else {"stdout": subprocess.DEVNULL}
 
     print("Running hassfest to pick up new information.")
-    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null)
+    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null, check=True)
     print()
 
     print("Running gen_requirements_all to pick up new information.")
-    subprocess.run(["python", "-m", "script.gen_requirements_all"], **pipe_null)
+    subprocess.run(
+        ["python", "-m", "script.gen_requirements_all"], **pipe_null, check=True
+    )
     print()
 
     print("Running script/translations_develop to pick up new translation strings.")
@@ -95,13 +87,24 @@ def main():
             info.domain,
         ],
         **pipe_null,
+        check=True,
     )
     print()
 
     if args.develop:
         print("Running tests")
-        print(f"$ pytest -vvv tests/components/{info.domain}")
-        subprocess.run(["pytest", "-vvv", f"tests/components/{info.domain}"])
+        print(f"$ python3 -b -m pytest -vvv tests/components/{info.domain}")
+        subprocess.run(
+            [
+                "python3",
+                "-b",
+                "-m",
+                "pytest",
+                "-vvv",
+                f"tests/components/{info.domain}",
+            ],
+            check=True,
+        )
         print()
 
     docs.print_relevant_docs(args.template, info)

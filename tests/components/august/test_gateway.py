@@ -1,25 +1,26 @@
 """The gateway tests for the august platform."""
+
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from yalexs.authenticator_common import AuthenticationState
 
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.august.gateway import AugustGateway
+from homeassistant.core import HomeAssistant
 
-from tests.components.august.mocks import _mock_august_authentication, _mock_get_config
+from .mocks import _mock_august_authentication, _mock_get_config
 
 
-async def test_refresh_access_token(hass):
+async def test_refresh_access_token(hass: HomeAssistant) -> None:
     """Test token refreshes."""
     await _patched_refresh_access_token(hass, "new_token", 5678)
 
 
-@patch("homeassistant.components.august.gateway.ApiAsync.async_get_operable_locks")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.should_refresh")
-@patch(
-    "homeassistant.components.august.gateway.AuthenticatorAsync.async_refresh_access_token"
-)
+@patch("yalexs.manager.gateway.ApiAsync.async_get_operable_locks")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.should_refresh")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_refresh_access_token")
 async def _patched_refresh_access_token(
     hass,
     new_token,
@@ -34,7 +35,7 @@ async def _patched_refresh_access_token(
             "original_token", 1234, AuthenticationState.AUTHENTICATED
         )
     )
-    august_gateway = AugustGateway(hass)
+    august_gateway = AugustGateway(Path(hass.config.config_dir), MagicMock())
     mocked_config = _mock_get_config()
     await august_gateway.async_setup(mocked_config[DOMAIN])
     await august_gateway.async_authenticate()

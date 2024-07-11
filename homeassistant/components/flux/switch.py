@@ -1,12 +1,13 @@
-"""
-Flux for Home-Assistant.
+"""Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
+
 from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,7 +16,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     VALID_TRANSITION,
@@ -49,6 +49,8 @@ from homeassistant.util.color import (
 from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_UNIQUE_ID = "unique_id"
 
 CONF_START_TIME = "start_time"
 CONF_STOP_TIME = "stop_time"
@@ -88,6 +90,7 @@ PLATFORM_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
         vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+        vol.Optional(ATTR_UNIQUE_ID): cv.string,
     }
 )
 
@@ -101,7 +104,6 @@ async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition
                 service_data[ATTR_XY_COLOR] = [x_val, y_val]
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
-                service_data[ATTR_WHITE_VALUE] = brightness
             if transition is not None:
                 service_data[ATTR_TRANSITION] = transition
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
@@ -152,6 +154,7 @@ async def async_setup_platform(
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
     transition = config.get(ATTR_TRANSITION)
+    unique_id = config.get(ATTR_UNIQUE_ID)
     flux = FluxSwitch(
         name,
         hass,
@@ -166,6 +169,7 @@ async def async_setup_platform(
         mode,
         interval,
         transition,
+        unique_id,
     )
     async_add_entities([flux])
 
@@ -195,6 +199,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         mode,
         interval,
         transition,
+        unique_id,
     ):
         """Initialize the Flux switch."""
         self._name = name
@@ -210,6 +215,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self._mode = mode
         self._interval = interval
         self._transition = transition
+        self._attr_unique_id = unique_id
         self.unsub_tracker = None
 
     @property
@@ -222,13 +228,19 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
             await self.async_turn_on()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self.unsub_tracker:
+            self.unsub_tracker()
+        return await super().async_will_remove_from_hass()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on flux."""
         if self.is_on:
             return
@@ -244,7 +256,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off flux."""
         if self.is_on:
             self.unsub_tracker()
@@ -317,8 +329,10 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 self.hass, self._lights, x_val, y_val, brightness, self._transition
             )
             _LOGGER.debug(
-                "Lights updated to x:%s y:%s brightness:%s, %s%% "
-                "of %s cycle complete at %s",
+                (
+                    "Lights updated to x:%s y:%s brightness:%s, %s%% "
+                    "of %s cycle complete at %s"
+                ),
                 x_val,
                 y_val,
                 brightness,
@@ -342,8 +356,10 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 self.hass, self._lights, mired, brightness, self._transition
             )
             _LOGGER.debug(
-                "Lights updated to mired:%s brightness:%s, %s%% "
-                "of %s cycle complete at %s",
+                (
+                    "Lights updated to mired:%s brightness:%s, %s%% "
+                    "of %s cycle complete at %s"
+                ),
                 mired,
                 brightness,
                 round(percentage_complete * 100),

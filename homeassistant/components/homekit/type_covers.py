@@ -1,11 +1,16 @@
 """Class to hold all cover accessories."""
+
 import logging
+from typing import Any
 
 from pyhap.const import (
+    CATEGORY_DOOR,
     CATEGORY_GARAGE_DOOR_OPENER,
     CATEGORY_WINDOW,
     CATEGORY_WINDOW_COVERING,
 )
+from pyhap.service import Service
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -13,9 +18,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -31,7 +34,13 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HassJobType,
+    State,
+    callback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory
@@ -56,6 +65,7 @@ from .const import (
     HK_POSITION_STOPPED,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
+    SERV_DOOR,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW,
     SERV_WINDOW_COVERING,
@@ -81,6 +91,8 @@ DOOR_TARGET_HASS_TO_HK = {
     STATE_CLOSING: HK_DOOR_CLOSED,
 }
 
+MOVING_STATES = {STATE_OPENING, STATE_CLOSING}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -92,10 +104,11 @@ class GarageDoorOpener(HomeAccessory):
     and support no more than open, close, and stop.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a GarageDoorOpener accessory object."""
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
         state = self.hass.states.get(self.entity_id)
+        assert state
 
         serv_garage_door = self.add_preload_service(SERV_GARAGE_DOOR_OPENER)
         self.char_current_state = serv_garage_door.configure_char(
@@ -116,7 +129,9 @@ class GarageDoorOpener(HomeAccessory):
 
         self.async_update_state(state)
 
-    async def run(self):
+    @callback
+    @pyhap_callback  # type: ignore[misc]
+    def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -127,18 +142,21 @@ class GarageDoorOpener(HomeAccessory):
                     self.hass,
                     [self.linked_obstruction_sensor],
                     self._async_update_obstruction_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
-        await super().run()
+        super().run()
 
     @callback
-    def _async_update_obstruction_event(self, event):
+    def _async_update_obstruction_event(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
         """Handle state change event listener callback."""
-        self._async_update_obstruction_state(event.data.get("new_state"))
+        self._async_update_obstruction_state(event.data["new_state"])
 
     @callback
-    def _async_update_obstruction_state(self, new_state):
+    def _async_update_obstruction_state(self, new_state: State | None) -> None:
         """Handle linked obstruction sensor state change to update HomeKit value."""
         if not new_state:
             return
@@ -155,7 +173,7 @@ class GarageDoorOpener(HomeAccessory):
             detected,
         )
 
-    def set_state(self, value):
+    def set_state(self, value: int) -> None:
         """Change garage state if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
 
@@ -170,7 +188,7 @@ class GarageDoorOpener(HomeAccessory):
             self.async_call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover state after state changed."""
         hass_state = new_state.state
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
@@ -195,17 +213,17 @@ class OpeningDeviceBase(HomeAccessory):
     WindowCovering
     """
 
-    def __init__(self, *args, category, service):
+    def __init__(self, *args: Any, category: int, service: Service) -> None:
         """Initialize a OpeningDeviceBase accessory object."""
         super().__init__(*args, category=category)
         state = self.hass.states.get(self.entity_id)
-
-        self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self._supports_stop = self.features & SUPPORT_STOP
+        assert state
+        self.features: int = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        self._supports_stop = self.features & CoverEntityFeature.STOP
         self.chars = []
         if self._supports_stop:
             self.chars.append(CHAR_HOLD_POSITION)
-        self._supports_tilt = self.features & SUPPORT_SET_TILT_POSITION
+        self._supports_tilt = self.features & CoverEntityFeature.SET_TILT_POSITION
 
         if self._supports_tilt:
             self.chars.extend([CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE])
@@ -225,7 +243,7 @@ class OpeningDeviceBase(HomeAccessory):
                 CHAR_CURRENT_TILT_ANGLE, value=0
             )
 
-    def set_stop(self, value):
+    def set_stop(self, value: int) -> None:
         """Stop the cover motion from HomeKit."""
         if value != 1:
             return
@@ -233,7 +251,7 @@ class OpeningDeviceBase(HomeAccessory):
             DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: self.entity_id}
         )
 
-    def set_tilt(self, value):
+    def set_tilt(self, value: float) -> None:
         """Set tilt to value if call came from HomeKit."""
         _LOGGER.info("%s: Set tilt to %d", self.entity_id, value)
 
@@ -246,7 +264,7 @@ class OpeningDeviceBase(HomeAccessory):
         self.async_call_service(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         # update tilt
         if not self._supports_tilt:
@@ -268,22 +286,26 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, *args, category, service):
+    def __init__(self, *args: Any, category: int, service: Service) -> None:
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
+        assert state
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
         )
-        target_args = {"value": 0}
-        if self.features & SUPPORT_SET_POSITION:
+        target_args: dict[str, Any] = {"value": 0}
+        if self.features & CoverEntityFeature.SET_POSITION:
             target_args["setter_callback"] = self.move_cover
         else:
             # If its tilt only we lock the position state to 0 (closed)
             # since CHAR_CURRENT_POSITION/CHAR_TARGET_POSITION are required
             # by homekit, but really don't exist.
             _LOGGER.debug(
-                "%s does not support setting position, current position will be locked to closed",
+                (
+                    "%s does not support setting position, current position will be"
+                    " locked to closed"
+                ),
                 self.entity_id,
             )
             target_args["properties"] = {PROP_MIN_VALUE: 0, PROP_MAX_VALUE: 0}
@@ -296,25 +318,40 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         )
         self.async_update_state(state)
 
-    def move_cover(self, value):
+    def move_cover(self, value: int) -> None:
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
         self.async_call_service(DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
-            self.char_target_position.set_value(current_position)
+            # Writing target_position on a moving cover
+            # will break the moving state in HK.
+            if new_state.state not in MOVING_STATES:
+                self.char_target_position.set_value(current_position)
 
         position_state = _hass_state_to_position_start(new_state.state)
         self.char_position_state.set_value(position_state)
 
         super().async_update_state(new_state)
+
+
+@TYPES.register("Door")
+class Door(OpeningDevice):
+    """Generate a Door accessory for a cover entity.
+
+    The entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize a Door accessory object."""
+        super().__init__(*args, category=CATEGORY_DOOR, service=SERV_DOOR)
 
 
 @TYPES.register("Window")
@@ -324,7 +361,7 @@ class Window(OpeningDevice):
     The entity must support: set_cover_position.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a Window accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW, service=SERV_WINDOW)
 
@@ -336,7 +373,7 @@ class WindowCovering(OpeningDevice):
     The entity must support: set_cover_position.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a WindowCovering accessory object."""
         super().__init__(
             *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
@@ -351,12 +388,13 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
     stop_cover (optional).
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a WindowCoveringBasic accessory object."""
         super().__init__(
             *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
         )
         state = self.hass.states.get(self.entity_id)
+        assert state
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
         )
@@ -368,7 +406,7 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         )
         self.async_update_state(state)
 
-    def move_cover(self, value):
+    def move_cover(self, value: int) -> None:
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
 
@@ -392,14 +430,16 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         self.char_target_position.set_value(position)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover position after state changed."""
         position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
         hk_position = position_mapping.get(new_state.state)
         if hk_position is not None:
+            is_moving = new_state.state in MOVING_STATES
+
             if self.char_current_position.value != hk_position:
                 self.char_current_position.set_value(hk_position)
-            if self.char_target_position.value != hk_position:
+            if self.char_target_position.value != hk_position and not is_moving:
                 self.char_target_position.set_value(hk_position)
         position_state = _hass_state_to_position_start(new_state.state)
         if self.char_position_state.value != position_state:
@@ -408,7 +448,7 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         super().async_update_state(new_state)
 
 
-def _hass_state_to_position_start(state):
+def _hass_state_to_position_start(state: str) -> int:
     """Convert hass state to homekit position state."""
     if state == STATE_OPENING:
         return HK_POSITION_GOING_TO_MAX

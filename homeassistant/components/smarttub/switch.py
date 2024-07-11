@@ -1,5 +1,8 @@
 """Platform for switch integration."""
-import async_timeout
+
+import asyncio
+from typing import Any
+
 from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
@@ -31,21 +34,17 @@ async def async_setup_entry(
 class SmartTubPump(SmartTubEntity, SwitchEntity):
     """A pump on a spa."""
 
-    def __init__(self, coordinator, pump: SpaPump):
+    def __init__(self, coordinator, pump: SpaPump) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, pump.spa, "pump")
         self.pump_id = pump.id
         self.pump_type = pump.type
+        self._attr_unique_id = f"{super().unique_id}-{pump.id}"
 
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this pump entity."""
-        return f"{super().unique_id}-{self.pump_id}"
 
     @property
     def name(self) -> str:
@@ -62,22 +61,22 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         """Return True if the pump is on."""
         return self.pump.state != SpaPump.PumpState.OFF
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the pump on."""
 
         # the API only supports toggling
         if not self.is_on:
             await self.async_toggle()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the pump off."""
 
         # the API only supports toggling
         if self.is_on:
             await self.async_toggle()
 
-    async def async_toggle(self, **kwargs) -> None:
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the pump on or off."""
-        async with async_timeout.timeout(API_TIMEOUT):
+        async with asyncio.timeout(API_TIMEOUT):
             await self.pump.toggle()
         await self.coordinator.async_request_refresh()

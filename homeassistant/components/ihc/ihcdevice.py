@@ -1,4 +1,5 @@
 """Implementation of a base class for all IHC devices."""
+
 import logging
 
 from ihcsdk.ihccontroller import IHCController
@@ -17,6 +18,8 @@ class IHCDevice(Entity):
     registration of the IHC controller callback when the IHC resource changes.
     Derived classes must implement the on_ihc_change method
     """
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -37,7 +40,7 @@ class IHCDevice(Entity):
             self.ihc_name = product["name"]
             self.ihc_note = product["note"]
             self.ihc_position = product["position"]
-            self.suggested_area = product["group"] if "group" in product else None
+            self.suggested_area = product.get("group")
             if "id" in product:
                 product_id = product["id"]
                 self.device_id = f"{controller_id}_{product_id }"
@@ -55,11 +58,6 @@ class IHCDevice(Entity):
         """Add callback for IHC changes."""
         _LOGGER.debug("Adding IHC entity notify event: %s", self.ihc_id)
         self.ihc_controller.add_notify_event(self.ihc_id, self.on_ihc_change, True)
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for IHC devices."""
-        return False
 
     @property
     def name(self):

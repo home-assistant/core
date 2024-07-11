@@ -1,13 +1,16 @@
 """Platform for light integration."""
+
+from typing import Any
+
 from smarttub import SpaLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     EFFECT_COLORLOOP,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -43,26 +46,22 @@ async def async_setup_entry(
 class SmartTubLight(SmartTubEntity, LightEntity):
     """A light on a spa."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.EFFECT
+
     def __init__(self, coordinator, light):
         """Initialize the entity."""
         super().__init__(coordinator, light.spa, "light")
         self.light_zone = light.zone
+        self._attr_unique_id = f"{super().unique_id}-{light.zone}"
+        spa_name = get_spa_name(self.spa)
+        self._attr_name = f"{spa_name} Light {light.zone}"
 
     @property
     def light(self) -> SpaLight:
         """Return the underlying SpaLight object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_LIGHTS][self.light_zone]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this light entity."""
-        return f"{super().unique_id}-{self.light_zone}"
-
-    @property
-    def name(self) -> str:
-        """Return a name for this light entity."""
-        spa_name = get_spa_name(self.spa)
-        return f"{spa_name} Light {self.light_zone}"
 
     @property
     def brightness(self):
@@ -87,11 +86,6 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         return self.light.mode != SpaLight.LightMode.OFF
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
-
-    @property
     def effect(self):
         """Return the current effect."""
         mode = self.light.mode.name.lower()
@@ -102,13 +96,11 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        effects = [
+        return [
             effect
             for effect in map(self._light_mode_to_effect, SpaLight.LightMode)
             if effect is not None
         ]
-
-        return effects
 
     @staticmethod
     def _light_mode_to_effect(light_mode: SpaLight.LightMode):
@@ -126,7 +118,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
 
         return SpaLight.LightMode[effect.upper()]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
         mode = self._effect_to_light_mode(kwargs.get(ATTR_EFFECT, DEFAULT_LIGHT_EFFECT))
@@ -137,7 +129,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         await self.light.set_mode(mode, intensity)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.light.set_mode(SpaLight.LightMode.OFF, 0)
         await self.coordinator.async_request_refresh()
