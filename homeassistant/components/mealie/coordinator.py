@@ -121,8 +121,8 @@ class MealieShoppingListCoordinator(
     async def _async_update_data(
         self,
     ) -> dict[str, ShoppingListData]:
+        shopping_list_items = {}
         try:
-            shopping_list_items = {}
             shopping_lists = (await self.client.get_shopping_lists()).items
             for shopping_list in shopping_lists:
                 shopping_list_id = shopping_list.list_id
@@ -138,5 +138,4 @@ class MealieShoppingListCoordinator(
             raise ConfigEntryAuthFailed from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
-        else:
-            return shopping_list_items
+        return shopping_list_items
