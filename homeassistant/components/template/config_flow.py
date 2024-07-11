@@ -92,14 +92,12 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
             vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
 
     if domain == Platform.SELECT:
         schema |= _SCHEMA_STATE | {
             vol.Required(CONF_OPTIONS): selector.TemplateSelector(),
             vol.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
 
     if domain == Platform.SENSOR:
