@@ -173,7 +173,7 @@
     "roof_color": "RoofColorGlass",
     "seat_type": null,
     "spoiler_type": "None",
-    "sun_roof_installed": null,
+    "sun_roof_installed": true,
     "supports_qr_pairing": false,
     "third_row_seats": "None",
     "timestamp": 1701139037461,

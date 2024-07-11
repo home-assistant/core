@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from itertools import chain
 from typing import Any
 
 from tessie_api import (
@@ -38,15 +39,25 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     async_add_entities(
-        klass(vehicle)
-        for klass in (
-            TessieWindowEntity,
-            TessieChargePortEntity,
-            TessieFrontTrunkEntity,
-            TessieRearTrunkEntity,
-            TessieSunroofEntity,
+        chain(
+            (
+                klass(vehicle)
+                for klass in (
+                    TessieWindowEntity,
+                    TessieChargePortEntity,
+                    TessieFrontTrunkEntity,
+                    TessieRearTrunkEntity,
+                )
+                for vehicle in data.vehicles
+            ),
+            (
+                TessieSunroofEntity(vehicle)
+                for vehicle in data.vehicles
+                if vehicle.data_coordinator.data.get(
+                    "vehicle_config_sun_roof_installed"
+                )
+            ),
         )
-        for vehicle in data.vehicles
     )
 
 
