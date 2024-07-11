@@ -29,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     TimestampDataUpdateCoordinator,
 )
+from homeassistant.util.dt import parse_datetime
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -138,38 +139,12 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         unit_convert=UnitOfLength.MILES,
     ),
+    NWSSensorEntityDescription(
+        key="timestamp",
+        name="Observation Timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
-
-
-def _getNWSTimestampSensorTypes(
-    nws_data: NWSData,
-) -> tuple[tuple[TimestampDataUpdateCoordinator[None], SensorEntityDescription], ...]:
-    return (
-        (
-            nws_data.coordinator_observation,
-            SensorEntityDescription(
-                key="observationLastUpdate",
-                name="Last Update Timestamp of Observation",
-                device_class=SensorDeviceClass.TIMESTAMP,
-            ),
-        ),
-        (
-            nws_data.coordinator_forecast,
-            SensorEntityDescription(
-                key="forecastLastUpdate",
-                name="Last Update Timestamp of Twice Daily Forecast",
-                device_class=SensorDeviceClass.TIMESTAMP,
-            ),
-        ),
-        (
-            nws_data.coordinator_forecast_hourly,
-            SensorEntityDescription(
-                key="forecastHourlyLastUpdate",
-                name="Last Update Timestampt of Hourly Forecast",
-                device_class=SensorDeviceClass.TIMESTAMP,
-            ),
-        ),
-    )
 
 
 async def async_setup_entry(
@@ -188,16 +163,6 @@ async def async_setup_entry(
             station=station,
         )
         for description in SENSOR_TYPES
-    )
-
-    async_add_entities(
-        NWSUpdateTimestampSensor(
-            entry_data=entry.data,
-            description=description,
-            coordinator=coordinator,
-            station=station,
-        )
-        for (coordinator, description) in _getNWSTimestampSensorTypes(nws_data)
     )
 
 
@@ -232,7 +197,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state."""
         if (
             not (observation := self._nws.observation)
@@ -265,38 +230,6 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
             return round(value, 1)
         if unit_of_measurement == PERCENTAGE:
             return round(value)
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            return parse_datetime(value)
         return value
-
-
-class NWSUpdateTimestampSensor(
-    CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorEntity
-):
-    """An NWS Sensor for Last Updated Timestamp."""
-
-    entity_description: SensorEntityDescription
-    _attr_attribution = ATTRIBUTION
-    _attr_entity_registry_enabled_default = True
-
-    def __init__(
-        self,
-        entry_data: MappingProxyType[str, Any],
-        description: SensorEntityDescription,
-        coordinator: TimestampDataUpdateCoordinator[None],
-        station: str,
-    ) -> None:
-        """Initialise the platform with a data instance."""
-        super().__init__(coordinator)
-        latitude = entry_data[CONF_LATITUDE]
-        longitude = entry_data[CONF_LONGITUDE]
-        self.entity_description = description
-
-        self._attr_name = f"{station} {description.name}"
-        self._attr_device_info = device_info(latitude, longitude)
-        self._attr_unique_id = (
-            f"{base_unique_id(latitude, longitude)}_{description.key}"
-        )
-
-    @property
-    def native_value(self) -> datetime | None:
-        """Return the state."""
-        return self.coordinator.last_update_success_time
