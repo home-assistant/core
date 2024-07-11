@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from pysmlight.web import Sensors
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
-from .coordinator import SmData, SmDataUpdateCoordinator
+from .coordinator import SmDataUpdateCoordinator
 from .entity import SmEntity
 
 UPTIME_DEVIATION = 5  # seconds
@@ -29,7 +31,8 @@ UPTIME_DEVIATION = 5  # seconds
 class SmSensorEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT sensor entities."""
 
-    value_fn: Callable[[SmData], float | None] = lambda _: None
+    entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    value_fn: Callable[[Sensors], float | None] = lambda _: None
 
 
 SENSORS = [
@@ -37,37 +40,33 @@ SENSORS = [
         key="esp32_temperature",
         translation_key="core_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda x: x.sensors.esp32_temp,
+        value_fn=lambda x: x.esp32_temp,
     ),
     SmSensorEntityDescription(
         key="zb_temperature",
         translation_key="zigbee_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda x: x.sensors.zb_temp,
+        value_fn=lambda x: x.zb_temp,
     ),
     SmSensorEntityDescription(
         key="core_uptime",
         translation_key="core_uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda x: x.sensors.uptime,
+        value_fn=lambda x: x.uptime,
     ),
     SmSensorEntityDescription(
         key="socket_uptime",
         translation_key="socket_uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda x: x.sensors.socket_uptime,
+        value_fn=lambda x: x.socket_uptime,
     ),
     SmSensorEntityDescription(
         key="ram_usage",
@@ -75,8 +74,7 @@ SENSORS = [
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda x: x.sensors.ram_usage,
+        value_fn=lambda x: x.ram_usage,
     ),
     SmSensorEntityDescription(
         key="fs_usage",
@@ -84,8 +82,7 @@ SENSORS = [
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda x: x.sensors.fs_used,
+        value_fn=lambda x: x.fs_used,
     ),
 ]
 
@@ -98,14 +95,13 @@ async def async_setup_entry(
     """Set up SMLIGHT sensor based on a config entry."""
     coordinator: SmDataUpdateCoordinator = entry.runtime_data
 
-    sensors = [SmSensorEntity(coordinator, description) for description in SENSORS]
-    async_add_entities(sensors)
+    async_add_entities(
+        SmSensorEntity(coordinator, description) for description in SENSORS
+    )
 
 
 class SmSensorEntity(SmEntity, SensorEntity):
     """Representation of a slzb sensor."""
-
-    # entity_description: SmSensorEntityDescription
 
     def __init__(
         self,
@@ -114,7 +110,6 @@ class SmSensorEntity(SmEntity, SensorEntity):
     ) -> None:
         """Initiate slzb sensor."""
         super().__init__(coordinator)
-        # CoordinatorEntity.__init__(self, coordinator)
 
         self.entity_description: SmSensorEntityDescription = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
@@ -149,7 +144,7 @@ class SmSensorEntity(SmEntity, SensorEntity):
     @property
     def native_value(self) -> float | datetime | None:
         """Return the sensor value."""
-        value = self.entity_description.value_fn(self.coordinator.data)
+        value = self.entity_description.value_fn(self.coordinator.data.sensors)
 
         if "uptime" in self.entity_description.key:
             if value:
