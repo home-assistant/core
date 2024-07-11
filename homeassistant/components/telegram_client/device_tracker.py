@@ -11,10 +11,19 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import DOMAIN, SERVICE_EDIT_MESSAGE, SERVICE_SEND_MESSAGE
+from .const import (
+    DOMAIN,
+    SERVICE_DELETE_MESSAGES,
+    SERVICE_EDIT_MESSAGE,
+    SERVICE_SEND_MESSAGES,
+)
 from .coordinator import TelegramClientCoordinator
 from .entity import TelegramClientCoordinatorEntity
-from .schemas import SERVICE_EDIT_MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE_SCHEMA
+from .schemas import (
+    SERVICE_DELETE_MESSAGES_SCHEMA,
+    SERVICE_EDIT_MESSAGE_SCHEMA,
+    SERVICE_SEND_MESSAGES_SCHEMA,
+)
 from .services import async_telegram_call
 
 
@@ -26,14 +35,19 @@ async def async_setup_entry(
     """Set up Telegram client device tracker entity."""
     platform = async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_SEND_MESSAGE,
-        SERVICE_SEND_MESSAGE_SCHEMA,
+        SERVICE_SEND_MESSAGES,
+        SERVICE_SEND_MESSAGES_SCHEMA,
         "async_send_message",
     )
     platform.async_register_entity_service(
         SERVICE_EDIT_MESSAGE,
         SERVICE_EDIT_MESSAGE_SCHEMA,
         "async_edit_message",
+    )
+    platform.async_register_entity_service(
+        SERVICE_DELETE_MESSAGES,
+        SERVICE_DELETE_MESSAGES_SCHEMA,
+        "async_delete_message",
     )
     if coordinator := hass.data[DOMAIN].get(entry.entry_id):
         async_add_entities(
@@ -75,7 +89,7 @@ class TelegramClientDeviceTracker(TelegramClientCoordinatorEntity, ScannerEntity
         """Process Telegram send message service call."""
         await async_telegram_call(
             self.coordinator,
-            SERVICE_SEND_MESSAGE,
+            SERVICE_SEND_MESSAGES,
             **kwargs,
         )
 
@@ -84,5 +98,13 @@ class TelegramClientDeviceTracker(TelegramClientCoordinatorEntity, ScannerEntity
         await async_telegram_call(
             self.coordinator,
             SERVICE_EDIT_MESSAGE,
+            **kwargs,
+        )
+
+    async def async_delete_message(self, **kwargs) -> None:
+        """Process Telegram delete message service call."""
+        await async_telegram_call(
+            self.coordinator,
+            SERVICE_DELETE_MESSAGES,
             **kwargs,
         )

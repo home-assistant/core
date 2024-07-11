@@ -126,8 +126,23 @@ class TelegramClientOptionsFlow(OptionsFlow):
         if not self._events_options.get(EVENT_MESSAGE_EDITED):
             return await self.async_step_message_read()
         if user_input is not None:
-            self._message_edited_options = user_input
-            return await self.async_step_message_read()
+            if (
+                not user_input.get(OPTION_INCOMING)
+                and not user_input.get(OPTION_OUTGOING)
+                and not user_input.get(OPTION_FORWARDS)
+            ):
+                errors[KEY_BASE] = (
+                    "You should select at least one of 'Incoming' and 'Outgoing'"
+                )
+            if user_input.get(OPTION_FORWARDS) and (
+                user_input.get(OPTION_INCOMING) or user_input.get(OPTION_OUTGOING)
+            ):
+                errors[OPTION_FORWARDS] = (
+                    f"You can't select Forwards='{STRING_FORWARDS_ONLY_FORWARDS}' if you selected 'Incoming' or 'Outgoing'"
+                )
+            if not errors:
+                self._message_edited_options = user_input
+                return await self.async_step_message_read()
 
         return self.async_show_form(
             step_id=EVENT_MESSAGE_EDITED,
@@ -273,5 +288,11 @@ class TelegramClientOptionsFlow(OptionsFlow):
                 OPTION_EVENTS: self._events_options,
                 EVENT_NEW_MESSAGE: self._new_message_options,
                 EVENT_MESSAGE_EDITED: self._message_edited_options,
+                EVENT_MESSAGE_READ: self._message_read_options,
+                EVENT_MESSAGE_DELETED: self._message_deleted_options,
+                EVENT_CALLBACK_QUERY: self._callback_query_options,
+                EVENT_INLINE_QUERY: self._inline_query_options,
+                EVENT_CHAT_ACTION: self._chat_action_options,
+                EVENT_USER_UPDATE: self._user_update_options,
             },
         )

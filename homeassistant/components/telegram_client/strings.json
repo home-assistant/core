@@ -133,8 +133,8 @@
       },
       "inline_query": {
         "data": {
-          "chats": "Chats",
-          "blacklist_chats": "Blacklist chats",
+          "users": "Users",
+          "blacklist_users": "Blacklist users",
           "pattern": "Pattern"
         },
         "title": "Inline query event",
@@ -159,9 +159,9 @@
     }
   },
   "services": {
-    "send_message": {
-      "name": "Send message",
-      "description": "Sends text message to user, group or bot.",
+    "send_messages": {
+      "name": "Send messages",
+      "description": "Sends text messages to user, group or bot.",
       "fields": {
         "target_username": {
           "name": "Target username",
@@ -169,7 +169,7 @@
         },
         "target_id": {
           "name": "Target ID",
-          "description": "User or group id."
+          "description": "User or group ID."
         },
         "message": {
           "name": "Message",
@@ -247,7 +247,7 @@
         },
         "target_id": {
           "name": "Target ID",
-          "description": "User or group id."
+          "description": "User or group ID."
         },
         "message": {
           "name": "Message",
@@ -296,6 +296,28 @@
         "schedule": {
           "name": "Schedule",
           "description": "Schedule message edition. Can be used only in `client` mode. Bots can't schedule message delivery."
+        }
+      }
+    },
+    "delete_messages": {
+      "name": "Delete messages",
+      "description": "Deletes previously sent messages to user, group or bot.",
+      "fields": {
+        "target_username": {
+          "name": "Target username",
+          "description": "User, channel, bot username or phone number."
+        },
+        "target_id": {
+          "name": "Target ID",
+          "description": "User or group ID."
+        },
+        "message_ids": {
+          "name": "Message ID(s)",
+          "description": "Message ID(s) to delete."
+        },
+        "revoke": {
+          "name": "Revoke",
+          "description": "Deletes message from everyone."
         }
       }
     }

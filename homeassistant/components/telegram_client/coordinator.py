@@ -7,7 +7,7 @@ import re
 import sqlite3
 from typing import Any
 
-from telethon import TelegramClient, __version__ as sw_version, events
+from telethon import TelegramClient, __version__ as sw_version, events, tl
 from telethon.errors import AccessTokenExpiredError, AccessTokenInvalidError
 from telethon.errors.common import AuthKeyNotFound
 from telethon.errors.rpcbaseerrors import AuthKeyError
@@ -31,17 +31,94 @@ from .const import (
     CONF_PHONE,
     CONF_TOKEN,
     DOMAIN,
+    EVENT_CALLBACK_QUERY,
+    EVENT_CHAT_ACTION,
+    EVENT_INLINE_QUERY,
+    EVENT_MESSAGE_DELETED,
+    EVENT_MESSAGE_EDITED,
+    EVENT_MESSAGE_READ,
     EVENT_NEW_MESSAGE,
+    EVENT_USER_UPDATE,
+    KEY_ACTION,
+    KEY_ACTION_MESSAGE,
+    KEY_ADDED_BY,
+    KEY_AUDIO,
+    KEY_CANCEL,
+    KEY_CHAT,
+    KEY_CHAT_ID,
+    KEY_CHAT_INSTANCE,
     KEY_CLIENT,
+    KEY_CONTACT,
+    KEY_CONTENTS,
+    KEY_CREATED,
+    KEY_DATA,
+    KEY_DATA_MATCH,
+    KEY_DELETED_ID,
+    KEY_DELETED_IDS,
+    KEY_DOCUMENT,
+    KEY_GEO,
+    KEY_ID,
+    KEY_INBOX,
+    KEY_INPUT_CHAT,
+    KEY_INPUT_SENDER,
+    KEY_INPUT_USER,
+    KEY_INPUT_USERS,
+    KEY_IS_CHANNEL,
+    KEY_IS_GROUP,
+    KEY_IS_PRIVATE,
+    KEY_KICKED_BY,
+    KEY_LAST_SEEN,
+    KEY_MAX_ID,
+    KEY_MESSAGE,
+    KEY_MESSAGE_ID,
+    KEY_MESSAGE_IDS,
+    KEY_NEW_PHOTO,
+    KEY_NEW_PIN,
+    KEY_NEW_SCORE,
+    KEY_NEW_TITLE,
+    KEY_OFFSET,
+    KEY_ONLINE,
+    KEY_OUTBOX,
+    KEY_PATTERN_MATCH,
+    KEY_PHOTO,
+    KEY_PLAYING,
+    KEY_QUERY,
+    KEY_RECENTLY,
+    KEY_RECORDING,
+    KEY_ROUND,
+    KEY_SENDER,
+    KEY_SENDER_ID,
+    KEY_STATUS,
+    KEY_STICKER,
+    KEY_TYPING,
+    KEY_UNPIN,
+    KEY_UNTIL,
+    KEY_UPLOADING,
+    KEY_USER,
+    KEY_USER_ADDED,
+    KEY_USER_ID,
+    KEY_USER_IDS,
+    KEY_USER_JOINED,
+    KEY_USER_KICKED,
+    KEY_USER_LEFT,
+    KEY_USERS,
+    KEY_VIA_INLINE,
+    KEY_VIDEO,
+    KEY_WITHIN_MONTHS,
+    KEY_WITHIN_WEEKS,
     LOGGER,
     OPTION_BLACKLIST_CHATS,
+    OPTION_BLACKLIST_USERS,
     OPTION_CHATS,
+    OPTION_DATA,
     OPTION_EVENTS,
     OPTION_FORWARDS,
     OPTION_FROM_USERS,
+    OPTION_INBOX,
     OPTION_INCOMING,
     OPTION_OUTGOING,
     OPTION_PATTERN,
+    OPTION_USERS,
     SCAN_INTERVAL,
     SENSOR_FIRST_NAME,
     SENSOR_LAST_NAME,
@@ -64,6 +141,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     _client: TelegramClient
     _last_sent_message_id_sensor: Any
     _last_edited_message_id_sensor: Any
+    _last_deleted_message_id_sensor: Any
 
     def __init__(
         self, hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
@@ -138,26 +216,250 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     def last_edited_message_id(self, sensor: Any):
         self._last_edited_message_id_sensor = sensor
 
+    @property
+    def last_deleted_message_id(self) -> Any:
+        """Last deleted message id."""
+        return self._last_deleted_message_id_sensor
+
+    @last_deleted_message_id.setter
+    def last_deleted_message_id(self, sensor: Any):
+        self._last_deleted_message_id_sensor = sensor
+
     @callback
     async def on_new_message(self, event: events.newmessage.NewMessage.Event):
         """Process new message event."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_NEW_MESSAGE}",
-            dict(event.message.to_dict(), **{KEY_CLIENT: self.data}),
+            self._data_to_dict(
+                event,
+                [
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_INPUT_CHAT,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                    KEY_MESSAGE,
+                    KEY_PATTERN_MATCH,
+                ],
+            ),
+        )
+
+    @callback
+    async def on_message_edited(self, event: events.messageedited.MessageEdited.Event):
+        """Process message edited event."""
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_MESSAGE_EDITED}",
+            self._data_to_dict(
+                event,
+                [
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_INPUT_CHAT,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                    KEY_MESSAGE,
+                    KEY_PATTERN_MATCH,
+                ],
+            ),
+        )
+
+    @callback
+    async def on_message_read(self, event: events.messageread.MessageRead.Event):
+        """Process message read event."""
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_MESSAGE_READ}",
+            self._data_to_dict(
+                event,
+                [
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_CONTENTS,
+                    KEY_INBOX,
+                    KEY_INPUT_CHAT,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                    KEY_MAX_ID,
+                    KEY_MESSAGE_IDS,
+                    KEY_OUTBOX,
+                ],
+            ),
+        )
+
+    @callback
+    async def on_message_deleted(
+        self, event: events.messagedeleted.MessageDeleted.Event
+    ):
+        """Process message deleted event."""
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_MESSAGE_DELETED}",
+            self._data_to_dict(
+                event,
+                [
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_DELETED_ID,
+                    KEY_DELETED_IDS,
+                    KEY_INPUT_CHAT,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                ],
+            ),
+        )
+
+    @callback
+    async def on_callback_query(self, event: events.callbackquery.CallbackQuery.Event):
+        """Process callback query event."""
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_CALLBACK_QUERY}",
+            self._data_to_dict(
+                event,
+                [
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_CHAT_INSTANCE,
+                    KEY_DATA,
+                    KEY_DATA_MATCH,
+                    KEY_ID,
+                    KEY_INPUT_CHAT,
+                    KEY_INPUT_SENDER,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                    KEY_MESSAGE_ID,
+                    KEY_PATTERN_MATCH,
+                    KEY_QUERY,
+                    KEY_SENDER,
+                    KEY_SENDER_ID,
+                    KEY_VIA_INLINE,
+                ],
+            ),
+        )
+
+    @callback
+    async def on_inline_query(self, event: events.inlinequery.InlineQuery.Event):
+        """Process inline query event."""
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_INLINE_QUERY}",
+            self._data_to_dict(
+                event,
+                [
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_GEO,
+                    KEY_ID,
+                    KEY_INPUT_CHAT,
+                    KEY_INPUT_SENDER,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                    KEY_OFFSET,
+                    KEY_PATTERN_MATCH,
+                ],
+            ),
+        )
+
+    @callback
+    async def on_chat_action(self, event: events.chataction.ChatAction.Event):
+        """Process chat action event."""
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_CHAT_ACTION}",
+            self._data_to_dict(
+                event,
+                [
+                    KEY_ACTION_MESSAGE,
+                    KEY_ADDED_BY,
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_CREATED,
+                    KEY_INPUT_CHAT,
+                    KEY_INPUT_USER,
+                    KEY_INPUT_USERS,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                    KEY_KICKED_BY,
+                    KEY_NEW_PHOTO,
+                    KEY_NEW_PIN,
+                    KEY_NEW_SCORE,
+                    KEY_NEW_TITLE,
+                    KEY_PHOTO,
+                    KEY_UNPIN,
+                    KEY_USER,
+                    KEY_USERS,
+                    KEY_USER_ADDED,
+                    KEY_USER_ID,
+                    KEY_USER_IDS,
+                    KEY_USER_JOINED,
+                    KEY_USER_KICKED,
+                    KEY_USER_LEFT,
+                ],
+            ),
+        )
+
+    @callback
+    async def on_user_update(self, event: events.userupdate.UserUpdate.Event):
+        """Process message deleted event."""
+        self._hass.bus.async_fire(
+            f"{DOMAIN}_{EVENT_USER_UPDATE}",
+            self._data_to_dict(
+                event,
+                [
+                    KEY_ACTION,
+                    KEY_AUDIO,
+                    KEY_CANCEL,
+                    KEY_CHAT,
+                    KEY_CHAT_ID,
+                    KEY_CONTACT,
+                    KEY_DOCUMENT,
+                    KEY_GEO,
+                    KEY_INPUT_CHAT,
+                    KEY_INPUT_SENDER,
+                    KEY_INPUT_USER,
+                    KEY_IS_CHANNEL,
+                    KEY_IS_GROUP,
+                    KEY_IS_PRIVATE,
+                    KEY_LAST_SEEN,
+                    KEY_ONLINE,
+                    KEY_PHOTO,
+                    KEY_PLAYING,
+                    KEY_RECENTLY,
+                    KEY_RECORDING,
+                    KEY_ROUND,
+                    KEY_SENDER,
+                    KEY_SENDER_ID,
+                    KEY_STATUS,
+                    KEY_STICKER,
+                    KEY_TYPING,
+                    KEY_UNTIL,
+                    KEY_UPLOADING,
+                    KEY_USER,
+                    KEY_USER_ID,
+                    KEY_VIDEO,
+                    KEY_WITHIN_MONTHS,
+                    KEY_WITHIN_WEEKS,
+                ],
+            ),
         )
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         me = await self.async_client_call(self._client.get_me())
-        return {
-            SENSOR_USER_ID: me.id,
-            SENSOR_USERNAME: me.username,
-            SENSOR_RESTRICTED: me.restricted,
-            SENSOR_PREMIUM: me.premium,
-            SENSOR_LAST_NAME: me.last_name,
-            SENSOR_FIRST_NAME: me.first_name,
-            SENSOR_PHONE: me.phone,
-        }
+        return self._data_to_dict(
+            me,
+            [
+                SENSOR_USER_ID,
+                SENSOR_USERNAME,
+                SENSOR_RESTRICTED,
+                SENSOR_PREMIUM,
+                SENSOR_LAST_NAME,
+                SENSOR_FIRST_NAME,
+                SENSOR_PHONE,
+            ],
+        )
 
     async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Call a coro or raise exception."""
@@ -223,32 +525,114 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Subscribe listeners."""
         events_config = entry.options.get(OPTION_EVENTS, {})
         if events_config.get(EVENT_NEW_MESSAGE):
-            new_message_options = entry.options.get(EVENT_NEW_MESSAGE, {})
+            options = entry.options.get(EVENT_NEW_MESSAGE, {})
             self._client.add_event_handler(
                 self.on_new_message,
                 events.NewMessage(
-                    chats=list(
-                        map(
-                            int,
-                            cv.ensure_list_csv(new_message_options.get(OPTION_CHATS)),
-                        )
-                    )
+                    chats=list(map(int, cv.ensure_list_csv(options.get(OPTION_CHATS))))
                     or None,
-                    blacklist_chats=new_message_options.get(OPTION_BLACKLIST_CHATS),
-                    incoming=new_message_options.get(OPTION_INCOMING),
-                    outgoing=new_message_options.get(OPTION_OUTGOING),
-                    from_users=cv.ensure_list_csv(
-                        new_message_options.get(OPTION_FROM_USERS)
-                    )
+                    blacklist_chats=options.get(OPTION_BLACKLIST_CHATS),
+                    incoming=options.get(OPTION_INCOMING),
+                    outgoing=options.get(OPTION_OUTGOING),
+                    from_users=cv.ensure_list_csv(options.get(OPTION_FROM_USERS))
                     or None,
-                    forwards=new_message_options.get(OPTION_FORWARDS),
-                    pattern=new_message_options.get(OPTION_PATTERN),
+                    forwards=options.get(OPTION_FORWARDS),
+                    pattern=options.get(OPTION_PATTERN),
+                ),
+            )
+        if events_config.get(EVENT_MESSAGE_EDITED):
+            options = entry.options.get(EVENT_MESSAGE_EDITED, {})
+            self._client.add_event_handler(
+                self.on_message_edited,
+                events.MessageEdited(
+                    chats=list(map(int, cv.ensure_list_csv(options.get(OPTION_CHATS))))
+                    or None,
+                    blacklist_chats=options.get(OPTION_BLACKLIST_CHATS),
+                    incoming=options.get(OPTION_INCOMING),
+                    outgoing=options.get(OPTION_OUTGOING),
+                    from_users=cv.ensure_list_csv(options.get(OPTION_FROM_USERS))
+                    or None,
+                    forwards=options.get(OPTION_FORWARDS),
+                    pattern=options.get(OPTION_PATTERN),
+                ),
+            )
+        if events_config.get(EVENT_MESSAGE_READ):
+            options = entry.options.get(EVENT_MESSAGE_READ, {})
+            self._client.add_event_handler(
+                self.on_message_read,
+                events.MessageRead(
+                    chats=list(map(int, cv.ensure_list_csv(options.get(OPTION_CHATS))))
+                    or None,
+                    blacklist_chats=options.get(OPTION_BLACKLIST_CHATS),
+                    inbox=options.get(OPTION_INBOX),
+                ),
+            )
+        if events_config.get(EVENT_MESSAGE_DELETED):
+            options = entry.options.get(EVENT_MESSAGE_DELETED, {})
+            self._client.add_event_handler(
+                self.on_message_deleted,
+                events.MessageDeleted(
+                    chats=list(map(int, cv.ensure_list_csv(options.get(OPTION_CHATS))))
+                    or None,
+                    blacklist_chats=options.get(OPTION_BLACKLIST_CHATS),
+                ),
+            )
+        if events_config.get(EVENT_CALLBACK_QUERY):
+            options = entry.options.get(EVENT_CALLBACK_QUERY, {})
+            self._client.add_event_handler(
+                self.on_callback_query,
+                events.CallbackQuery(
+                    chats=list(map(int, cv.ensure_list_csv(options.get(OPTION_CHATS))))
+                    or None,
+                    blacklist_chats=options.get(OPTION_BLACKLIST_CHATS),
+                    data=options.get(OPTION_DATA),
+                    pattern=options.get(OPTION_PATTERN),
+                ),
+            )
+        if events_config.get(EVENT_INLINE_QUERY):
+            options = entry.options.get(EVENT_INLINE_QUERY, {})
+            self._client.add_event_handler(
+                self.on_inline_query,
+                events.InlineQuery(
+                    users=list(map(int, cv.ensure_list_csv(options.get(OPTION_USERS))))
+                    or None,
+                    blacklist_users=options.get(OPTION_BLACKLIST_USERS),
+                    pattern=options.get(OPTION_PATTERN),
+                ),
+            )
+        if events_config.get(EVENT_CHAT_ACTION):
+            options = entry.options.get(EVENT_CHAT_ACTION, {})
+            self._client.add_event_handler(
+                self.on_chat_action,
+                events.ChatAction(
+                    chats=list(map(int, cv.ensure_list_csv(options.get(OPTION_CHATS))))
+                    or None,
+                    blacklist_chats=options.get(OPTION_BLACKLIST_CHATS),
+                ),
+            )
+        if events_config.get(EVENT_USER_UPDATE):
+            options = entry.options.get(EVENT_USER_UPDATE, {})
+            self._client.add_event_handler(
+                self.on_user_update,
+                events.UserUpdate(
+                    chats=list(map(int, cv.ensure_list_csv(options.get(OPTION_CHATS))))
+                    or None,
+                    blacklist_chats=options.get(OPTION_BLACKLIST_CHATS),
                 ),
             )
 
     def _unsubscribe_listeners(self, entry: ConfigEntry) -> None:
         """Unsubscribe listeners."""
         self._client.remove_event_handler(self.on_new_message, events.NewMessage)
+        self._client.remove_event_handler(self.on_message_edited, events.MessageEdited)
+        self._client.remove_event_handler(self.on_message_read, events.MessageRead)
+        self._client.remove_event_handler(
+            self.on_message_deleted, events.MessageDeleted
+        )
+        self._client.remove_event_handler(self.on_callback_query, events.CallbackQuery)
+        self._client.remove_event_handler(self.on_inline_query, events.InlineQuery)
+        self._client.remove_event_handler(self.on_chat_action, events.ChatAction)
+        self._client.remove_event_handler(self.on_user_update, events.UserUpdate)
 
     async def resubscribe_listeners(
         self, hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
@@ -256,3 +640,22 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Resubscribe listeners."""
         self._unsubscribe_listeners(entry)
         self._subscribe_listeners(entry)
+
+    def _tlobject_to_dict(self, data):
+        if isinstance(data, list):
+            return list(map(self._tlobject_to_dict, data))
+        if isinstance(data, re.Match):
+            return data.groupdict()
+        if isinstance(data, tl.TLObject):
+            return data.to_dict()
+        return data
+
+    def _data_to_dict(self, event, keys):
+        return dict(
+            {
+                key: self._tlobject_to_dict(getattr(event, key))
+                for key in keys
+                if hasattr(event, key)
+            },
+            **{KEY_CLIENT: self.data},
+        )

@@ -9,12 +9,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CLIENT_TYPE_CLIENT,
     CONF_CLIENT_TYPE,
+    ICON_LAST_DELETED_MESSAGE_ID,
     ICON_LAST_EDITED_MESSAGE_ID,
     ICON_LAST_SENT_MESSAGE_ID,
     ICON_PHONE,
     ICON_USER_ID,
     ICON_USERNAME,
     SENSOR_FIRST_NAME,
+    SENSOR_LAST_DELETED_MESSAGE_ID,
     SENSOR_LAST_EDITED_MESSAGE_ID,
     SENSOR_LAST_NAME,
     SENSOR_LAST_SENT_MESSAGE_ID,
@@ -22,6 +24,7 @@ from .const import (
     SENSOR_USER_ID,
     SENSOR_USERNAME,
     STRING_FIRST_NAME,
+    STRING_LAST_DELETED_MESSAGE_ID,
     STRING_LAST_EDITED_MESSAGE_ID,
     STRING_LAST_NAME,
     STRING_LAST_SENT_MESSAGE_ID,
@@ -96,6 +99,20 @@ async def async_setup_entry(
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     )
+    coordinator.last_deleted_message_id = TelegramClientSensor(
+        coordinator,
+        SensorEntityDescription(
+            key=SENSOR_LAST_DELETED_MESSAGE_ID,
+            translation_key=SENSOR_LAST_DELETED_MESSAGE_ID,
+            name=STRING_LAST_DELETED_MESSAGE_ID,
+            icon=ICON_LAST_DELETED_MESSAGE_ID,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    )
     async_add_entities(
-        [coordinator.last_sent_message_id, coordinator.last_edited_message_id]
+        [
+            coordinator.last_sent_message_id,
+            coordinator.last_edited_message_id,
+            coordinator.last_deleted_message_id,
+        ]
     )

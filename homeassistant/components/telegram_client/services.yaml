@@ -1,6 +1,6 @@
 # Describes the format for available Telegram client services
 
-send_message:
+send_messages:
   target:
     entity:
       domain: device_tracker
@@ -162,3 +162,27 @@ edit_message:
     schedule:
       selector:
         datetime:
+delete_messages:
+  target:
+    entity:
+      domain: device_tracker
+      integration: telegram_client
+  fields:
+    target_username:
+      example: me
+      selector:
+        text:
+          multiple: true
+    target_id:
+      selector:
+        text:
+          multiple: true
+    message_ids:
+      required: true
+      example: 2
+      selector:
+        text:
+          multiple: true
+    revoke:
+      selector:
+        boolean:
