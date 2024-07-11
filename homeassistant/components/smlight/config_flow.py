@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
+from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
 from pysmlight.models import Info
 from pysmlight.web import Api2
 import voluptuous as vol
@@ -145,7 +145,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 return await self.async_step_auth()
-        except Exception:  # pylint: disable=broad-except
+        except SmlightError:
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

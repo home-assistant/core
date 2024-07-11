@@ -37,15 +37,6 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.config_entry = entry
-        self.hostname = self.get_hostname()
-        self.client = Api2(
-            host=entry.data[CONF_HOST], session=async_get_clientsession(hass)
-        )
-        entry.async_create_background_task(
-            hass, self.client.sse.client(), "smlight-sse-client"
-        )
-
         super().__init__(
             hass,
             LOGGER,
@@ -53,15 +44,25 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def get_hostname(self) -> str:
+        self.hostname: str | None = self.get_hostname()
+        self.client = Api2(
+            host=entry.data[CONF_HOST], session=async_get_clientsession(hass)
+        )
+        entry.async_create_background_task(
+            hass, self.client.sse.client(), "smlight-sse-client"
+        )
+
+    def get_hostname(self) -> str | None:
         """Get hostname. Fallback to IP if not available."""
-        host = str(self.config_entry.data[CONF_HOST])
-        if is_ip_address(host):
-            try:
-                host = socket.gethostbyaddr(host)[0]
-            except socket.herror:
-                return host
-        return host.split(".", maxsplit=1)[0]
+        if self.config_entry:
+            host = str(self.config_entry.data[CONF_HOST])
+            if is_ip_address(host):
+                try:
+                    host = socket.gethostbyaddr(host)[0]
+                except socket.herror:
+                    return host
+            return host.split(".", maxsplit=1)[0]
+        return None
 
     async def async_handle_setup(self) -> None:
         """Handle initial setup."""
@@ -73,8 +74,10 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
     async def async_maybe_auth(self) -> None:
         """Authenticate if needed."""
         if await self.client.check_auth_needed():
-            if self.config_entry.data.get(CONF_USERNAME) and self.config_entry.data.get(
-                CONF_PASSWORD
+            if (
+                self.config_entry
+                and self.config_entry.data.get(CONF_USERNAME)
+                and self.config_entry.data.get(CONF_PASSWORD)
             ):
                 try:
                     await self.client.authenticate(
