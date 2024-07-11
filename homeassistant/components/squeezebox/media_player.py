@@ -65,6 +65,7 @@ SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
 SERVICE_SYNC = "sync"
 SERVICE_UNSYNC = "unsync"
+SERVICE_SYNC_FAVORITES = "sync_favorites"
 
 ATTR_QUERY_RESULT = "query_result"
 ATTR_SYNC_GROUP = "sync_group"
@@ -206,6 +207,8 @@ async def async_setup_entry(
         "async_sync",
     )
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
+    platform.async_register_entity_service(SERVICE_SYNC_FAVORITES, None, "async_sync_favorites")
+
 
     # Start server discovery task if not already running
     config_entry.async_on_unload(async_at_start(hass, start_server_discovery))
@@ -235,6 +238,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -245,6 +249,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Initialize the SqueezeBox device."""
         self._player = player
         self._query_result = {}
+        self._sources = ()
+        self._source = ""
         self._remove_dispatcher = None
         self._attr_unique_id = format_mac(player.player_id)
         self._attr_device_info = DeviceInfo(
@@ -276,6 +282,14 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if self._player.mode:
             return SQUEEZEBOX_MODE.get(self._player.mode)
         return None
+    
+    @property
+    def source_list(self):
+        return self._sources
+    
+    @property
+    def source(self):
+        return self._source
 
     async def async_update(self) -> None:
         """Update the Player() object."""
@@ -294,6 +308,26 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                     self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
                 )
 
+    async def _async_sync_favorites(self, loop):
+        _command = ["favorites"]
+        _command.extend(["items","0","100"])
+        _res = (await self._player.async_query(*_command))["loop_loop"]
+        _favs = []
+        for _fav in _res:
+            _favs+=[_fav["name"]]
+        self._sources = tuple(_favs)
+
+    async def async_added_to_hass(self) -> None:
+        # Populate sources with favorites
+        async_at_start(self.hass,  self._async_sync_favorites)
+ 
+    async def async_select_source(self, source: str) -> None:		
+        _idx = self._sources.index(source)
+        _command = ["favorites"]
+        _command.extend(["playlist","play","item_id:"+str(_idx)])
+        await self._player.async_query(*_command)
+        self._source="" # Clear the source so that when other music is played, the incorrect source isn't shown
+        
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
         self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
@@ -596,6 +630,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             " instead"
         )
         await self.async_unjoin_player()
+
+    async def async_sync_favorites(self):
+        await self._async_sync_favorites(None)
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""

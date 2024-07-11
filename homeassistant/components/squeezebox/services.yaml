@@ -46,3 +46,8 @@ unsync:
     entity:
       integration: squeezebox
       domain: media_player
+sync_favorites:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player

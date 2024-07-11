@@ -3,6 +3,7 @@
     "call_method": "mdi:console",
     "call_query": "mdi:database",
     "sync": "mdi:sync",
-    "unsync": "mdi:sync-off"
+    "unsync": "mdi:sync-off",
+    "sync_favorites": "mdi:star-cog"
   }
 }

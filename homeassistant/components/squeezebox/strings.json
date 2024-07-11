@@ -74,6 +74,10 @@
     "unsync": {
       "name": "Unsync",
       "description": "Removes this player from its sync group."
+    },
+    "sync_favorites": {
+      "name": "Sync Favorites",
+      "description": "Syncronize LMS favorites to media player entity sources"
     }
   }
 }
