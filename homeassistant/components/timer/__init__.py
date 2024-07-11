@@ -334,7 +334,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_change(self, duration: timedelta) -> None:
         """Change duration of a running timer."""
-        " Update remaining time before checking new duration
+        # Update remaining time before checking new duration
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         
         if self._listener is None or self._end is None:
