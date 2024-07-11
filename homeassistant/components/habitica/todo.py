@@ -15,17 +15,16 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import HabiticaConfigEntry
-from .const import ASSETS_URL, DOMAIN, MANUFACTURER, NAME
+from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaDataUpdateCoordinator
+from .entity import HabiticaBase
 from .util import next_due_date
 
 
@@ -63,35 +62,16 @@ async def async_setup_entry(
     )
 
 
-class BaseHabiticaListEntity(
-    CoordinatorEntity[HabiticaDataUpdateCoordinator], TodoListEntity
-):
+class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
     """Representation of Habitica task lists."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: HabiticaDataUpdateCoordinator,
-        key: HabiticaTodoList,
     ) -> None:
         """Initialize HabiticaTodoListEntity."""
-        entry = coordinator.config_entry
-        if TYPE_CHECKING:
-            assert entry.unique_id
-        super().__init__(coordinator)
 
-        self._attr_unique_id = f"{entry.unique_id}_{key}"
-        self._attr_translation_key = key
-        self.idx = key
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer=MANUFACTURER,
-            model=NAME,
-            name=entry.data[CONF_NAME],
-            configuration_url=entry.data[CONF_URL],
-            identifiers={(DOMAIN, entry.unique_id)},
-        )
+        super().__init__(coordinator, self.entity_description)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete Habitica tasks."""
@@ -101,7 +81,7 @@ class BaseHabiticaListEntity(
             except ClientResponseError as e:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key=f"delete_{self.idx}_failed",
+                    translation_key=f"delete_{self.entity_description.key}_failed",
                 ) from e
 
         await self.coordinator.async_refresh()
@@ -129,7 +109,7 @@ class BaseHabiticaListEntity(
         except ClientResponseError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"move_{self.idx}_item_failed",
+                translation_key=f"move_{self.entity_description.key}_item_failed",
                 translation_placeholders={"pos": str(pos)},
             ) from e
 
@@ -145,7 +125,10 @@ class BaseHabiticaListEntity(
             assert current_item
             assert item.due
 
-        if self.idx is HabiticaTodoList.TODOS:  # Only todos support a due date.
+        if (
+            self.entity_description.key is HabiticaTodoList.TODOS
+            and item.due is not None
+        ):  # Only todos support a due date.
             date = item.due.isoformat()
         else:
             date = None
@@ -159,7 +142,7 @@ class BaseHabiticaListEntity(
         except ClientResponseError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"update_{self.idx}_item_failed",
+                translation_key=f"update_{self.entity_description.key}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
@@ -167,14 +150,14 @@ class BaseHabiticaListEntity(
             # Score up or down if item status changed
             if (
                 current_item.status is TodoItemStatus.NEEDS_ACTION
-                and item.status is TodoItemStatus.COMPLETED
+                and item.status == TodoItemStatus.COMPLETED
             ):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["up"].post()
                 )
             elif (
                 current_item.status is TodoItemStatus.COMPLETED
-                and item.status is TodoItemStatus.NEEDS_ACTION
+                and item.status == TodoItemStatus.NEEDS_ACTION
             ):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["down"].post()
@@ -185,7 +168,7 @@ class BaseHabiticaListEntity(
         except ClientResponseError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"score_{self.idx}_item_failed",
+                translation_key=f"score_{self.entity_description.key}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
@@ -212,10 +195,10 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
-
-    def __init__(self, coordinator: HabiticaDataUpdateCoordinator) -> None:
-        """Initialize HabiticaTodosListEntity."""
-        super().__init__(coordinator, HabiticaTodoList.TODOS)
+    entity_description = EntityDescription(
+        key=HabiticaTodoList.TODOS,
+        translation_key=HabiticaTodoList.TODOS,
+    )
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -258,7 +241,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
         except ClientResponseError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"create_{self.idx}_item_failed",
+                translation_key=f"create_{self.entity_description.key}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
@@ -274,10 +257,10 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
-
-    def __init__(self, coordinator: HabiticaDataUpdateCoordinator) -> None:
-        """Initialize HabiticaDailiesListEntity."""
-        super().__init__(coordinator, HabiticaTodoList.DAILIES)
+    entity_description = EntityDescription(
+        key=HabiticaTodoList.DAILIES,
+        translation_key=HabiticaTodoList.DAILIES,
+    )
 
     @property
     def todo_items(self) -> list[TodoItem]:

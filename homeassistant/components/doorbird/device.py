@@ -32,6 +32,7 @@ class ConfiguredDoorBird:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: DoorBird,
         name: str | None,
         custom_url: str | None,
@@ -39,6 +40,7 @@ class ConfiguredDoorBird:
         event_entity_ids: dict[str, str],
     ) -> None:
         """Initialize configured device."""
+        self._hass = hass
         self._name = name
         self._device = device
         self._custom_url = custom_url
@@ -75,8 +77,9 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
-    def register_events(self, hass: HomeAssistant) -> None:
+    async def async_register_events(self) -> None:
         """Register events on device."""
+        hass = self._hass
         # Override url if another is specified in the configuration
         if custom_url := self.custom_url:
             hass_url = custom_url
@@ -88,14 +91,14 @@ class ConfiguredDoorBird:
             # User may not have permission to get the favorites
             return
 
-        favorites = self.device.favorites()
+        favorites = await self.device.favorites()
         for event in self.door_station_events:
-            if self._register_event(hass_url, event, favs=favorites):
+            if await self._async_register_event(hass_url, event, favs=favorites):
                 _LOGGER.info(
                     "Successfully registered URL for %s on %s", event, self.name
                 )
 
-        schedule: list[DoorBirdScheduleEntry] = self.device.schedule()
+        schedule: list[DoorBirdScheduleEntry] = await self.device.schedule()
         http_fav: dict[str, dict[str, Any]] = favorites.get("http") or {}
         favorite_input_type: dict[str, str] = {
             output.param: entry.input
@@ -122,18 +125,18 @@ class ConfiguredDoorBird:
     def _get_event_name(self, event: str) -> str:
         return f"{self.slug}_{event}"
 
-    def _register_event(
+    async def _async_register_event(
         self, hass_url: str, event: str, favs: dict[str, Any] | None = None
     ) -> bool:
         """Add a schedule entry in the device for a sensor."""
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
-        if self.webhook_is_registered(url, favs=favs):
+        if await self.async_webhook_is_registered(url, favs=favs):
             return True
 
-        self.device.change_favorite("http", f"Home Assistant ({event})", url)
-        if not self.webhook_is_registered(url):
+        await self.device.change_favorite("http", f"Home Assistant ({event})", url)
+        if not await self.async_webhook_is_registered(url):
             _LOGGER.warning(
                 'Unable to set favorite URL "%s". Event "%s" will not fire',
                 url,
@@ -142,20 +145,20 @@ class ConfiguredDoorBird:
             return False
         return True
 
-    def webhook_is_registered(
+    async def async_webhook_is_registered(
         self, url: str, favs: dict[str, Any] | None = None
     ) -> bool:
         """Return whether the given URL is registered as a device favorite."""
-        return self.get_webhook_id(url, favs) is not None
+        return await self.async_get_webhook_id(url, favs) is not None
 
-    def get_webhook_id(
+    async def async_get_webhook_id(
         self, url: str, favs: dict[str, Any] | None = None
     ) -> str | None:
         """Return the device favorite ID for the given URL.
 
         The favorite must exist or there will be problems.
         """
-        favs = favs if favs else self.device.favorites()
+        favs = favs if favs else await self.device.favorites()
         http_fav: dict[str, dict[str, Any]] = favs.get("http") or {}
         for fav_id, data in http_fav.items():
             if data["value"] == url:
@@ -174,18 +177,11 @@ class ConfiguredDoorBird:
         }
 
 
-async def async_reset_device_favorites(
-    hass: HomeAssistant, door_station: ConfiguredDoorBird
-) -> None:
+async def async_reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
     """Handle clearing favorites on device."""
-    await hass.async_add_executor_job(_reset_device_favorites, door_station)
-
-
-def _reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
-    """Handle clearing favorites on device."""
-    # Clear webhooks
     door_bird = door_station.device
-    favorites: dict[str, list[str]] = door_bird.favorites()
+    favorites = await door_bird.favorites()
     for favorite_type, favorite_ids in favorites.items():
         for favorite_id in favorite_ids:
-            door_bird.delete_favorite(favorite_type, favorite_id)
+            await door_bird.delete_favorite(favorite_type, favorite_id)
+    await door_station.async_register_events()
