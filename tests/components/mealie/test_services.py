@@ -65,8 +65,8 @@ async def test_service_mealplan(
         SERVICE_GET_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_START_DATE: date(2023, 10, 22),
-            ATTR_END_DATE: date(2023, 10, 25),
+            ATTR_START_DATE: "2023-10-22",
+            ATTR_END_DATE: "2023-10-25",
         },
         blocking=True,
         return_response=True,
@@ -82,7 +82,7 @@ async def test_service_mealplan(
         SERVICE_GET_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_START_DATE: date(2023, 10, 19),
+            ATTR_START_DATE: "2023-10-19",
         },
         blocking=True,
         return_response=True,
@@ -98,7 +98,7 @@ async def test_service_mealplan(
         SERVICE_GET_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_END_DATE: date(2023, 10, 22),
+            ATTR_END_DATE: "2023-10-22",
         },
         blocking=True,
         return_response=True,
@@ -115,8 +115,8 @@ async def test_service_mealplan(
             SERVICE_GET_MEALPLAN,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_START_DATE: date(2023, 10, 22),
-                ATTR_END_DATE: date(2023, 10, 19),
+                ATTR_START_DATE: "2023-10-22",
+                ATTR_END_DATE: "2023-10-19",
             },
             blocking=True,
             return_response=True,
