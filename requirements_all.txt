@@ -749,9 +749,6 @@ discogs-client==2.3.0
 # homeassistant.components.steamist
 discovery30303==0.3.2
 
-# homeassistant.components.dovado
-dovado==0.4.1
-
 # homeassistant.components.dremel_3d_printer
 dremel3dpy==2.1.1
 
