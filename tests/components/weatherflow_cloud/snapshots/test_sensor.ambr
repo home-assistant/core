@@ -696,7 +696,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -730,7 +730,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
       'friendly_name': 'My Home Station None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_none_2',
@@ -746,7 +746,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -780,7 +780,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
       'friendly_name': 'My Home Station None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_none_3',
@@ -796,7 +796,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -830,7 +830,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
       'friendly_name': 'My Home Station None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_none_4',
