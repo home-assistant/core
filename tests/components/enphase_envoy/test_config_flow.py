@@ -1,5 +1,6 @@
 """Test the Enphase Envoy config flow."""
 
+from collections.abc import AsyncGenerator  # noqa: I001
 from ipaddress import ip_address
 import logging
 from unittest.mock import AsyncMock
@@ -22,10 +23,16 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+from . import setup_integration
+
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
+async def test_form(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    setup_enphase_envoy: AsyncGenerator[None],
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -54,7 +61,9 @@ async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
 
 @pytest.mark.parametrize("serial_number", [None])
 async def test_user_no_serial_number(
-    hass: HomeAssistant, config, setup_enphase_envoy
+    hass: HomeAssistant,
+    config: dict[str, str],
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test user setup without a serial number."""
     result = await hass.config_entries.flow.async_init(
@@ -84,7 +93,7 @@ async def test_user_no_serial_number(
 
 @pytest.mark.parametrize("serial_number", [None])
 async def test_user_fetching_serial_fails(
-    hass: HomeAssistant, setup_enphase_envoy
+    hass: HomeAssistant, setup_enphase_envoy: AsyncGenerator[None]
 ) -> None:
     """Test user setup without a serial number."""
     result = await hass.config_entries.flow.async_init(
@@ -118,7 +127,9 @@ async def test_user_fetching_serial_fails(
         AsyncMock(side_effect=EnvoyAuthenticationError("test")),
     ],
 )
-async def test_form_invalid_auth(hass: HomeAssistant, setup_enphase_envoy) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, setup_enphase_envoy: AsyncGenerator[None]
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -140,7 +151,9 @@ async def test_form_invalid_auth(hass: HomeAssistant, setup_enphase_envoy) -> No
     "mock_setup",
     [AsyncMock(side_effect=EnvoyError)],
 )
-async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, setup_enphase_envoy: AsyncGenerator[None]
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -162,7 +175,9 @@ async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> 
     "mock_setup",
     [AsyncMock(side_effect=ValueError)],
 )
-async def test_form_unknown_error(hass: HomeAssistant, setup_enphase_envoy) -> None:
+async def test_form_unknown_error(
+    hass: HomeAssistant, setup_enphase_envoy: AsyncGenerator[None]
+) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -189,7 +204,7 @@ def _get_schema_default(schema, key_name):
 
 
 async def test_zeroconf_pre_token_firmware(
-    hass: HomeAssistant, setup_enphase_envoy
+    hass: HomeAssistant, setup_enphase_envoy: AsyncGenerator[None]
 ) -> None:
     """Test we can setup from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -231,7 +246,7 @@ async def test_zeroconf_pre_token_firmware(
 
 
 async def test_zeroconf_token_firmware(
-    hass: HomeAssistant, setup_enphase_envoy
+    hass: HomeAssistant, setup_enphase_envoy: AsyncGenerator[None]
 ) -> None:
     """Test we can setup from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -284,9 +299,12 @@ async def test_zeroconf_token_firmware(
     ],
 )
 async def test_form_host_already_exists(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test changing credentials for existing host."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -336,12 +354,13 @@ async def test_form_host_already_exists(
 
 async def test_zeroconf_serial_already_exists(
     hass: HomeAssistant,
-    config_entry,
-    setup_enphase_envoy,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test serial number already exists from zeroconf."""
     _LOGGER.setLevel(logging.DEBUG)
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -364,9 +383,12 @@ async def test_zeroconf_serial_already_exists(
 
 
 async def test_zeroconf_serial_already_exists_ignores_ipv6(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test serial number already exists from zeroconf but the discovery is ipv6."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -389,9 +411,12 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
 
 @pytest.mark.parametrize("serial_number", [None])
 async def test_zeroconf_host_already_exists(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test hosts already exists from zeroconf."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -414,9 +439,12 @@ async def test_zeroconf_host_already_exists(
 
 
 async def test_zero_conf_while_form(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test zeroconf while form is active."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -444,9 +472,12 @@ async def test_zero_conf_while_form(
 
 
 async def test_zero_conf_second_envoy_while_form(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test zeroconf while form is active."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -497,9 +528,12 @@ async def test_zero_conf_second_envoy_while_form(
 
 
 async def test_zero_conf_malformed_serial_property(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test malformed zeroconf properties."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -534,9 +568,12 @@ async def test_zero_conf_malformed_serial_property(
 
 
 async def test_zero_conf_malformed_serial(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test malformed zeroconf properties."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -572,9 +609,12 @@ async def test_zero_conf_malformed_serial(
 
 
 async def test_zero_conf_malformed_fw_property(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test malformed zeroconf property."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -602,7 +642,7 @@ async def test_zero_conf_malformed_fw_property(
 
 
 async def test_zero_conf_old_blank_entry(
-    hass: HomeAssistant, setup_enphase_envoy
+    hass: HomeAssistant, setup_enphase_envoy: AsyncGenerator[None]
 ) -> None:
     """Test re-using old blank entry."""
     entry = MockConfigEntry(
@@ -639,8 +679,13 @@ async def test_zero_conf_old_blank_entry(
     assert entry.title == "Envoy 1234"
 
 
-async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) -> None:
+async def test_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
+) -> None:
     """Test we reauth auth."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -662,9 +707,12 @@ async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) ->
 
 
 async def test_options_default(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test we can configure options."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -682,9 +730,12 @@ async def test_options_default(
 
 
 async def test_options_set(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test we can configure options."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -697,9 +748,12 @@ async def test_options_set(
 
 
 async def test_reconfigure(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test we can reconfiger the entry."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -735,9 +789,12 @@ async def test_reconfigure(
 
 
 async def test_reconfigure_nochange(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test we get the reconfigure form and apply nochange."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -773,9 +830,13 @@ async def test_reconfigure_nochange(
 
 
 async def test_reconfigure_otherenvoy(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
+    mock_envoy,
 ) -> None:
     """Test entering ip of other envoy and prevent changing it based on serial."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -844,9 +905,12 @@ async def test_reconfigure_otherenvoy(
     ],
 )
 async def test_reconfigure_auth_failure(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test changing credentials for existing host with auth failure."""
+    await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -933,9 +997,12 @@ async def test_reconfigure_auth_failure(
 
 
 async def test_reconfigure_change_ip_to_existing(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_enphase_envoy: AsyncGenerator[None],
 ) -> None:
     """Test reconfiguration to existing entry with same ip does not harm existing one."""
+    await setup_integration(hass, config_entry)
     other_entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="65432155aaddb2007c5f6602e0c38e72",

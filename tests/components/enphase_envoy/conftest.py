@@ -1,34 +1,33 @@
 """Define test fixtures for Enphase Envoy."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import jwt
 from pyenphase import (
     Envoy,
     EnvoyData,
+    EnvoyEncharge,
+    EnvoyEnchargeAggregate,
+    EnvoyEnchargePower,
+    EnvoyEnpower,
     EnvoyInverter,
     EnvoySystemConsumption,
     EnvoySystemProduction,
     EnvoyTokenAuth,
 )
-from pyenphase.const import PhaseNames, SupportedFeatures
-from pyenphase.models.meters import (
-    CtMeterStatus,
-    CtState,
-    CtStatusFlags,
-    CtType,
-    EnvoyMeterData,
-    EnvoyPhaseMode,
-)
+from pyenphase.const import SupportedFeatures
+from pyenphase.models.dry_contacts import EnvoyDryContactSettings, EnvoyDryContactStatus
+from pyenphase.models.meters import EnvoyMeterData
+from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(name="config_entry")
@@ -36,15 +35,13 @@ def config_entry_fixture(
     hass: HomeAssistant, config: dict[str, str], serial_number: str
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
         title=f"Envoy {serial_number}" if serial_number else "Envoy",
         unique_id=serial_number,
         data=config,
     )
-    entry.add_to_hass(hass)
-    return entry
 
 
 @pytest.fixture(name="config")
@@ -59,295 +56,47 @@ def config_fixture() -> dict[str, str]:
 
 
 @pytest.fixture(name="mock_envoy")
-def mock_envoy_fixture(
-    serial_number: str,
-    mock_authenticate: AsyncMock,
-    mock_setup: AsyncMock,
+async def mock_envoy_fixture(
     mock_auth: EnvoyTokenAuth,
-) -> Mock:
+    mock_authenticate: AsyncMock,
+    mock_close_dry_contact: AsyncMock,
+    mock_disable_charge_from_grid: AsyncMock,
+    mock_enable_charge_from_grid: AsyncMock,
+    mock_go_off_grid: AsyncMock,
+    mock_go_on_grid: AsyncMock,
+    mock_open_dry_contact: AsyncMock,
+    mock_set_reserve_soc: AsyncMock,
+    mock_set_storage_mode: AsyncMock,
+    mock_setup: AsyncMock,
+    mock_update_dry_contact: AsyncMock,
+    request: pytest.FixtureRequest,
+    serial_number: str,
+) -> AsyncGenerator[AsyncMock, None]:
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
-    mock_envoy.serial_number = serial_number
-    mock_envoy.firmware = "7.1.2"
-    mock_envoy.part_number = "123456789"
-    mock_envoy.envoy_model = "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT"
-    mock_envoy.authenticate = mock_authenticate
-    mock_envoy.setup = mock_setup
+    # Add the fixtures specified
     mock_envoy.auth = mock_auth
-    mock_envoy.supported_features = SupportedFeatures(
-        SupportedFeatures.INVERTERS
-        | SupportedFeatures.PRODUCTION
-        | SupportedFeatures.PRODUCTION
-        | SupportedFeatures.METERING
-        | SupportedFeatures.THREEPHASE
-        | SupportedFeatures.CTMETERS
-    )
-    mock_envoy.phase_mode = EnvoyPhaseMode.THREE
-    mock_envoy.phase_count = 3
-    mock_envoy.active_phase_count = 3
-    mock_envoy.ct_meter_count = 3
-    mock_envoy.consumption_meter_type = CtType.NET_CONSUMPTION
-    mock_envoy.production_meter_type = CtType.PRODUCTION
-    mock_envoy.storage_meter_type = CtType.STORAGE
-    mock_envoy.data = EnvoyData(
-        system_consumption=EnvoySystemConsumption(
-            watt_hours_last_7_days=1234,
-            watt_hours_lifetime=1234,
-            watt_hours_today=1234,
-            watts_now=1234,
-        ),
-        system_production=EnvoySystemProduction(
-            watt_hours_last_7_days=1234,
-            watt_hours_lifetime=1234,
-            watt_hours_today=1234,
-            watts_now=1234,
-        ),
-        system_consumption_phases={
-            PhaseNames.PHASE_1: EnvoySystemConsumption(
-                watt_hours_last_7_days=1321,
-                watt_hours_lifetime=1322,
-                watt_hours_today=1323,
-                watts_now=1324,
-            ),
-            PhaseNames.PHASE_2: EnvoySystemConsumption(
-                watt_hours_last_7_days=2321,
-                watt_hours_lifetime=2322,
-                watt_hours_today=2323,
-                watts_now=2324,
-            ),
-            PhaseNames.PHASE_3: EnvoySystemConsumption(
-                watt_hours_last_7_days=3321,
-                watt_hours_lifetime=3322,
-                watt_hours_today=3323,
-                watts_now=3324,
-            ),
-        },
-        system_production_phases={
-            PhaseNames.PHASE_1: EnvoySystemProduction(
-                watt_hours_last_7_days=1231,
-                watt_hours_lifetime=1232,
-                watt_hours_today=1233,
-                watts_now=1234,
-            ),
-            PhaseNames.PHASE_2: EnvoySystemProduction(
-                watt_hours_last_7_days=2231,
-                watt_hours_lifetime=2232,
-                watt_hours_today=2233,
-                watts_now=2234,
-            ),
-            PhaseNames.PHASE_3: EnvoySystemProduction(
-                watt_hours_last_7_days=3231,
-                watt_hours_lifetime=3232,
-                watt_hours_today=3233,
-                watts_now=3234,
-            ),
-        },
-        ctmeter_production=EnvoyMeterData(
-            eid="100000010",
-            timestamp=1708006110,
-            energy_delivered=11234,
-            energy_received=12345,
-            active_power=100,
-            power_factor=0.11,
-            voltage=111,
-            current=0.2,
-            frequency=50.1,
-            state=CtState.ENABLED,
-            measurement_type=CtType.PRODUCTION,
-            metering_status=CtMeterStatus.NORMAL,
-            status_flags=[
-                CtStatusFlags.PODUCTION_IMBALANCE,
-                CtStatusFlags.POWER_ON_UNUSED_PHASE,
-            ],
-        ),
-        ctmeter_consumption=EnvoyMeterData(
-            eid="100000020",
-            timestamp=1708006120,
-            energy_delivered=21234,
-            energy_received=22345,
-            active_power=101,
-            power_factor=0.21,
-            voltage=112,
-            current=0.3,
-            frequency=50.2,
-            state=CtState.ENABLED,
-            measurement_type=CtType.NET_CONSUMPTION,
-            metering_status=CtMeterStatus.NORMAL,
-            status_flags=[],
-        ),
-        ctmeter_storage=EnvoyMeterData(
-            eid="100000030",
-            timestamp=1708006120,
-            energy_delivered=31234,
-            energy_received=32345,
-            active_power=103,
-            power_factor=0.23,
-            voltage=113,
-            current=0.4,
-            frequency=50.3,
-            state=CtState.ENABLED,
-            measurement_type=CtType.STORAGE,
-            metering_status=CtMeterStatus.NORMAL,
-            status_flags=[],
-        ),
-        ctmeter_production_phases={
-            PhaseNames.PHASE_1: EnvoyMeterData(
-                eid="100000011",
-                timestamp=1708006111,
-                energy_delivered=112341,
-                energy_received=123451,
-                active_power=20,
-                power_factor=0.12,
-                voltage=111,
-                current=0.2,
-                frequency=50.1,
-                state=CtState.ENABLED,
-                measurement_type=CtType.PRODUCTION,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[CtStatusFlags.PODUCTION_IMBALANCE],
-            ),
-            PhaseNames.PHASE_2: EnvoyMeterData(
-                eid="100000012",
-                timestamp=1708006112,
-                energy_delivered=112342,
-                energy_received=123452,
-                active_power=30,
-                power_factor=0.13,
-                voltage=111,
-                current=0.2,
-                frequency=50.1,
-                state=CtState.ENABLED,
-                measurement_type=CtType.PRODUCTION,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[CtStatusFlags.POWER_ON_UNUSED_PHASE],
-            ),
-            PhaseNames.PHASE_3: EnvoyMeterData(
-                eid="100000013",
-                timestamp=1708006113,
-                energy_delivered=112343,
-                energy_received=123453,
-                active_power=50,
-                power_factor=0.14,
-                voltage=111,
-                current=0.2,
-                frequency=50.1,
-                state=CtState.ENABLED,
-                measurement_type=CtType.PRODUCTION,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[],
-            ),
-        },
-        ctmeter_consumption_phases={
-            PhaseNames.PHASE_1: EnvoyMeterData(
-                eid="100000021",
-                timestamp=1708006121,
-                energy_delivered=212341,
-                energy_received=223451,
-                active_power=21,
-                power_factor=0.22,
-                voltage=112,
-                current=0.3,
-                frequency=50.2,
-                state=CtState.ENABLED,
-                measurement_type=CtType.NET_CONSUMPTION,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[],
-            ),
-            PhaseNames.PHASE_2: EnvoyMeterData(
-                eid="100000022",
-                timestamp=1708006122,
-                energy_delivered=212342,
-                energy_received=223452,
-                active_power=31,
-                power_factor=0.23,
-                voltage=112,
-                current=0.3,
-                frequency=50.2,
-                state=CtState.ENABLED,
-                measurement_type=CtType.NET_CONSUMPTION,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[],
-            ),
-            PhaseNames.PHASE_3: EnvoyMeterData(
-                eid="100000023",
-                timestamp=1708006123,
-                energy_delivered=212343,
-                energy_received=223453,
-                active_power=51,
-                power_factor=0.24,
-                voltage=112,
-                current=0.3,
-                frequency=50.2,
-                state=CtState.ENABLED,
-                measurement_type=CtType.NET_CONSUMPTION,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[],
-            ),
-        },
-        ctmeter_storage_phases={
-            PhaseNames.PHASE_1: EnvoyMeterData(
-                eid="100000031",
-                timestamp=1708006121,
-                energy_delivered=312341,
-                energy_received=323451,
-                active_power=22,
-                power_factor=0.32,
-                voltage=113,
-                current=0.4,
-                frequency=50.3,
-                state=CtState.ENABLED,
-                measurement_type=CtType.STORAGE,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[],
-            ),
-            PhaseNames.PHASE_2: EnvoyMeterData(
-                eid="100000032",
-                timestamp=1708006122,
-                energy_delivered=312342,
-                energy_received=323452,
-                active_power=33,
-                power_factor=0.23,
-                voltage=112,
-                current=0.3,
-                frequency=50.2,
-                state=CtState.ENABLED,
-                measurement_type=CtType.STORAGE,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[],
-            ),
-            PhaseNames.PHASE_3: EnvoyMeterData(
-                eid="100000033",
-                timestamp=1708006123,
-                energy_delivered=312343,
-                energy_received=323453,
-                active_power=53,
-                power_factor=0.24,
-                voltage=112,
-                current=0.3,
-                frequency=50.2,
-                state=CtState.ENABLED,
-                measurement_type=CtType.STORAGE,
-                metering_status=CtMeterStatus.NORMAL,
-                status_flags=[],
-            ),
-        },
-        inverters={
-            "1": EnvoyInverter(
-                serial_number="1",
-                last_report_date=1,
-                last_report_watts=1,
-                max_report_watts=1,
-            )
-        },
-        raw={"varies_by": "firmware_version"},
-    )
-    mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
+    mock_envoy.authenticate = mock_authenticate
+    mock_envoy.close_dry_contact = mock_close_dry_contact
+    mock_envoy.disable_charge_from_grid = mock_disable_charge_from_grid
+    mock_envoy.enable_charge_from_grid = mock_enable_charge_from_grid
+    mock_envoy.go_off_grid = mock_go_off_grid
+    mock_envoy.go_on_grid = mock_go_on_grid
+    mock_envoy.open_dry_contact = mock_open_dry_contact
+    mock_envoy.serial_number = serial_number
+    mock_envoy.set_reserve_soc = mock_set_reserve_soc
+    mock_envoy.set_storage_mode = mock_set_storage_mode
+    mock_envoy.setup = mock_setup
+    mock_envoy.update_dry_contact = mock_update_dry_contact
 
-    response = Mock()
-    response.status_code = 200
-    response.text = "Testing request \nreplies."
-    response.headers = {"Hello": "World"}
-    mock_envoy.request = AsyncMock(return_value=response)
+    # determine fixture file name, default envoy if no request passed
+    fixture_name = "envoy"
+    if hasattr(request, "param"):
+        fixture_name = request.param
+
+    # Load envoy model from fixture
+    load_envoy_fixture(mock_envoy, fixture_name)
+    mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
 
     return mock_envoy
 
@@ -369,8 +118,6 @@ async def setup_enphase_envoy_fixture(
             return_value=mock_envoy,
         ),
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
         yield
 
 
@@ -399,3 +146,187 @@ def mock_setup() -> AsyncMock:
 def serial_number_fixture() -> str:
     """Define a serial number fixture."""
     return "1234"
+
+
+@pytest.fixture(name="mock_go_on_grid")
+def go_on_grid_fixture() -> AsyncMock:
+    """Define a go_on_grid fixture."""
+    return AsyncMock(return_value="went on grid")
+
+
+@pytest.fixture(name="mock_go_off_grid")
+def go_off_grid_fixture() -> AsyncMock:
+    """Define a go_off_grid fixture."""
+    return AsyncMock(return_value="went off grid")
+
+
+@pytest.fixture(name="mock_update_dry_contact")
+def update_dry_contact_fixture() -> AsyncMock:
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="dry contact updated")
+
+
+@pytest.fixture(name="mock_open_dry_contact")
+def open_dry_contact_fixture() -> AsyncMock:
+    """Define a gopen dry contact fixture."""
+    return AsyncMock(return_value="dry contact closed")
+
+
+@pytest.fixture(name="mock_close_dry_contact")
+def close_dry_contact_fixture() -> AsyncMock:
+    """Define a close dry contact fixture."""
+    return AsyncMock(return_value="dry contact closed")
+
+
+@pytest.fixture(name="mock_enable_charge_from_grid")
+def enable_charge_from_grid_fixture() -> AsyncMock:
+    """Define a enable charge from grid fixture."""
+    return AsyncMock(return_value="charge from grid enabled")
+
+
+@pytest.fixture(name="mock_disable_charge_from_grid")
+def disable_charge_from_grid_fixture() -> AsyncMock:
+    """Define a disable charge from grid fixture."""
+    return AsyncMock(return_value="charge from grid disabled")
+
+
+@pytest.fixture(name="mock_set_storage_mode")
+def set_storage_mode_fixture() -> AsyncMock:
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="storage mode set")
+
+
+@pytest.fixture(name="mock_set_reserve_soc")
+def set_reserve_soc_fixture() -> AsyncMock:
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="reserve soc set")
+
+
+def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
+    """Load envoy model from fixture."""
+
+    json_fixture: dict[str, Any] = load_json_object_fixture(
+        f"{fixture_name}.json", DOMAIN
+    )
+
+    mock_envoy.firmware = json_fixture["firmware"]
+    mock_envoy.part_number = json_fixture["part_number"]
+    mock_envoy.envoy_model = json_fixture["envoy_model"]
+    mock_envoy.supported_features = SupportedFeatures(
+        json_fixture["supported_features"]
+    )
+    mock_envoy.phase_mode = json_fixture["phase_mode"]
+    mock_envoy.phase_count = json_fixture["phase_count"]
+    mock_envoy.active_phase_count = json_fixture["active_phase_count"]
+    mock_envoy.ct_meter_count = json_fixture["ct_meter_count"]
+    mock_envoy.consumption_meter_type = json_fixture["consumption_meter_type"]
+    mock_envoy.production_meter_type = json_fixture["production_meter_type"]
+    mock_envoy.storage_meter_type = json_fixture["storage_meter_type"]
+
+    mock_envoy.data = EnvoyData()
+    _load_json_2_production_data(mock_envoy.data, json_fixture)
+    _load_json_2_meter_data(mock_envoy.data, json_fixture)
+    _load_json_2_inverter_data(mock_envoy.data, json_fixture)
+    _load_json_2_encharge_enpower_data(mock_envoy.data, json_fixture)
+    _load_json_2_raw_data(mock_envoy.data, json_fixture)
+
+
+def _load_json_2_production_data(
+    mocked_data: EnvoyData, json_fixture: dict[str, Any]
+) -> None:
+    """Fill envoy production data from fixture."""
+    if item := json_fixture["data"].get("system_consumption"):
+        mocked_data.system_consumption = EnvoySystemConsumption(**item)
+    if item := json_fixture["data"].get("system_production"):
+        mocked_data.system_production = EnvoySystemProduction(**item)
+    if item := json_fixture["data"].get("system_consumption_phases"):
+        mocked_data.system_consumption_phases = {}
+        for sub_item, item_data in item.items():
+            mocked_data.system_consumption_phases[sub_item] = EnvoySystemConsumption(
+                **item_data
+            )
+    if item := json_fixture["data"].get("system_production_phases"):
+        mocked_data.system_production_phases = {}
+        for sub_item, item_data in item.items():
+            mocked_data.system_production_phases[sub_item] = EnvoySystemProduction(
+                **item_data
+            )
+
+
+def _load_json_2_meter_data(
+    mocked_data: EnvoyData, json_fixture: dict[str, Any]
+) -> None:
+    """Fill envoy meter data from fixture."""
+    if item := json_fixture["data"].get("ctmeter_production"):
+        mocked_data.ctmeter_production = EnvoyMeterData(**item)
+    if item := json_fixture["data"].get("ctmeter_consumption"):
+        mocked_data.ctmeter_consumption = EnvoyMeterData(**item)
+    if item := json_fixture["data"].get("ctmeter_storage"):
+        mocked_data.ctmeter_storage = EnvoyMeterData(**item)
+    if item := json_fixture["data"].get("ctmeter_production_phases"):
+        mocked_data.ctmeter_production_phases = {}
+        for sub_item, item_data in item.items():
+            mocked_data.ctmeter_production_phases[sub_item] = EnvoyMeterData(
+                **item_data
+            )
+    if item := json_fixture["data"].get("ctmeter_consumption_phases"):
+        mocked_data.ctmeter_consumption_phases = {}
+        for sub_item, item_data in item.items():
+            mocked_data.ctmeter_consumption_phases[sub_item] = EnvoyMeterData(
+                **item_data
+            )
+    if item := json_fixture["data"].get("ctmeter_storage_phases"):
+        mocked_data.ctmeter_storage_phases = {}
+        for sub_item, item_data in item.items():
+            mocked_data.ctmeter_storage_phases[sub_item] = EnvoyMeterData(**item_data)
+
+
+def _load_json_2_inverter_data(
+    mocked_data: EnvoyData, json_fixture: dict[str, Any]
+) -> None:
+    """Fill envoy inverter data from fixture."""
+    if item := json_fixture["data"].get("inverters"):
+        mocked_data.inverters = {}
+        for sub_item, item_data in item.items():
+            mocked_data.inverters[sub_item] = EnvoyInverter(**item_data)
+
+
+def _load_json_2_encharge_enpower_data(
+    mocked_data: EnvoyData, json_fixture: dict[str, Any]
+) -> None:
+    """Fill envoy encharge/enpower data from fixture."""
+    if item := json_fixture["data"].get("encharge_inventory"):
+        mocked_data.encharge_inventory = {}
+        for sub_item, item_data in item.items():
+            mocked_data.encharge_inventory[sub_item] = EnvoyEncharge(**item_data)
+    if item := json_fixture["data"].get("enpower"):
+        mocked_data.enpower = EnvoyEnpower(**item)
+    if item := json_fixture["data"].get("encharge_aggregate"):
+        mocked_data.encharge_aggregate = EnvoyEnchargeAggregate(**item)
+    if item := json_fixture["data"].get("encharge_power"):
+        mocked_data.encharge_power = {}
+        for sub_item, item_data in item.items():
+            mocked_data.encharge_power[sub_item] = EnvoyEnchargePower(**item_data)
+    if item := json_fixture["data"].get("tariff"):
+        mocked_data.tariff = EnvoyTariff(**item)
+        mocked_data.tariff.storage_settings = EnvoyStorageSettings(
+            **item["storage_settings"]
+        )
+    if item := json_fixture["data"].get("dry_contact_status"):
+        mocked_data.dry_contact_status = {}
+        for sub_item, item_data in item.items():
+            mocked_data.dry_contact_status[sub_item] = EnvoyDryContactStatus(
+                **item_data
+            )
+    if item := json_fixture["data"].get("dry_contact_settings"):
+        mocked_data.dry_contact_settings = {}
+        for sub_item, item_data in item.items():
+            mocked_data.dry_contact_settings[sub_item] = EnvoyDryContactSettings(
+                **item_data
+            )
+
+
+def _load_json_2_raw_data(mocked_data: EnvoyData, json_fixture: dict[str, Any]) -> None:
+    """Fill envoy raw data from fixture."""
+    if item := json_fixture["data"].get("raw"):
+        mocked_data.raw = item
