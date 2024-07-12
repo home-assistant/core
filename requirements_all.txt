@@ -12,9 +12,6 @@ AIOSomecomfort==0.0.25
 # homeassistant.components.adax
 Adax-local==0.1.5
 
-# homeassistant.components.blinksticklight
-BlinkStick==1.2.0
-
 # homeassistant.components.doorbird
 DoorBirdPy==3.0.2
 
