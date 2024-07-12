@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent
 
 from tests.common import async_fire_time_changed, load_fixture, load_json_value_fixture
 
@@ -127,20 +127,21 @@ async def _media_play(hass: HomeAssistant, entity: str) -> None:
 
 
 async def test_zgs_event_group_speakers(
-    hass: HomeAssistant, soco_factory: SoCoMockFactory
+    hass: HomeAssistant, sonos_setup_two_speakers: list[MockSoCo]
 ) -> None:
     """Tests grouping and ungrouping two speakers."""
-    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
-    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
-    await _setup_hass(hass)
+    # When Sonos speakers are grouped; one of the speakers is the coordinator and is in charge
+    # of playback across both speakers. Hence, service calls to play or pause on media_players
+    # that are part of the group are routed to the coordinator.
+    soco_lr = sonos_setup_two_speakers[0]
+    soco_br = sonos_setup_two_speakers[1]
 
-    # Initial state - speakers are not grouped
+    # Test 1 - Initial state - speakers are not grouped
     state = hass.states.get("media_player.living_room")
     assert state.attributes["group_members"] == ["media_player.living_room"]
     state = hass.states.get("media_player.bedroom")
     assert state.attributes["group_members"] == ["media_player.bedroom"]
-
-    # Each speaker should be its own coordinator and calls should route to their SoCos
+    # Each speaker is its own coordinator and calls should route to their SoCos
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 1
     await _media_play(hass, "media_player.bedroom")
@@ -149,7 +150,7 @@ async def test_zgs_event_group_speakers(
     soco_lr.play.reset_mock()
     soco_br.play.reset_mock()
 
-    # Group the speakers, living room is the coordinator and should be first
+    # Test 2 - Group the speakers, living room is the coordinator
     event = _load_zgs("zgs_group.xml", soco_lr, soco_br, create_uui_ds=True)
     soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
     soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
@@ -164,7 +165,7 @@ async def test_zgs_event_group_speakers(
         "media_player.living_room",
         "media_player.bedroom",
     ]
-    # Calls should all route to the group coordinator which is the bedroom
+    # Play calls should route to the living room SoCo
     await _media_play(hass, "media_player.living_room")
     await _media_play(hass, "media_player.bedroom")
     assert soco_lr.play.call_count == 2
@@ -182,7 +183,6 @@ async def test_zgs_event_group_speakers(
     assert state.attributes["group_members"] == ["media_player.living_room"]
     state = hass.states.get("media_player.bedroom")
     assert state.attributes["group_members"] == ["media_player.bedroom"]
-
     # Calls should route to each speakers Soco
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 1
@@ -191,19 +191,17 @@ async def test_zgs_event_group_speakers(
 
 
 async def test_zgs_avtransport_group_speakers(
-    hass: HomeAssistant, soco_factory: SoCoMockFactory
+    hass: HomeAssistant, sonos_setup_two_speakers: list[MockSoCo]
 ) -> None:
-    """Test processing avtransport and zgs events."""
-    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
-    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
-    await _setup_hass(hass)
+    """Test processing avtransport and zgs events to change group membership."""
+    soco_lr = sonos_setup_two_speakers[0]
+    soco_br = sonos_setup_two_speakers[1]
 
     # Send a transport event that changes the coordinator for the Living Room speaker
     # to the bedroom speaker.
     event = _load_avtransport("av_transport.json", soco_lr)
     soco_lr.avTransport.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
-
     # Calls should route to the new coodinator which is the bedroom
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 0
@@ -217,7 +215,6 @@ async def test_zgs_avtransport_group_speakers(
     soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
     soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
-
     # Calls should route to the living room
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 1
