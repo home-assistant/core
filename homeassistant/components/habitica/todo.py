@@ -75,14 +75,23 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete Habitica tasks."""
-        for task_id in uids:
+        if len(uids) > 1 and self.entity_description.key is HabiticaTodoList.TODOS:
             try:
-                await self.coordinator.api.tasks[task_id].delete()
+                await self.coordinator.api.tasks.clearCompletedTodos.post()
             except ClientResponseError as e:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key=f"delete_{self.entity_description.key}_failed",
+                    translation_key="delete_completed_todos_failed",
                 ) from e
+        else:
+            for task_id in uids:
+                try:
+                    await self.coordinator.api.tasks[task_id].delete()
+                except ClientResponseError as e:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key=f"delete_{self.entity_description.key}_failed",
+                    ) from e
 
         await self.coordinator.async_refresh()
 
