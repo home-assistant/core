@@ -32,7 +32,6 @@ def button_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_buttons(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -60,7 +59,6 @@ async def test_buttons(
         ("button.test_user_start_my_day", "cron"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_press(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -108,7 +106,6 @@ async def test_button_press(
         (HTTPStatus.UNAUTHORIZED, "Unable to carry out this action"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_press_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
