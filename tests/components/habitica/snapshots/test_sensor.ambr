@@ -178,7 +178,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': '2',
   })
 # ---
 # name: test_sensors[sensor.test_user_display_name-entry]
@@ -423,7 +423,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8',
+    'state': '4',
   })
 # ---
 # name: test_sensors[sensor.test_user_health-entry]
@@ -771,7 +771,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '1',
   })
 # ---
 # name: test_sensors[sensor.test_user_to_do_s-entry]
@@ -846,6 +846,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': '2',
   })
 # ---

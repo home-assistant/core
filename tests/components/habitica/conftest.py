@@ -36,12 +36,13 @@ def mock_habitica(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     """Mock aiohttp requests."""
 
     aioclient_mock.get(f"{DEFAULT_URL}/api/v3/user", json=json_data("user"))
-
-    aioclient_mock.get(f"{DEFAULT_URL}/api/v3/tasks/user", json=json_data("tasks"))
     aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user?type=completedTodos",
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        params={"type": "completedTodos"},
         json=json_data("completed_todos"),
     )
+    aioclient_mock.get(f"{DEFAULT_URL}/api/v3/tasks/user", json=json_data("tasks"))
+
     return aioclient_mock
 
 

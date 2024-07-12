@@ -1,0 +1,144 @@
+# serializer version: 1
+# name: test_todo_items[todo.test_user_dailies]
+  dict({
+    'todo.test_user_dailies': dict({
+      'items': list([
+        dict({
+          'description': 'Klicke um Änderungen zu machen!',
+          'due': '2024-07-11',
+          'status': 'needs_action',
+          'summary': 'Zahnseide benutzen',
+          'uid': '55555555-5555-5555-5555-555555555555',
+        }),
+        dict({
+          'description': 'Klicke um Deinen Terminplan festzulegen!',
+          'due': '2024-07-12',
+          'status': 'completed',
+          'summary': '5 Minuten ruhig durchatmen',
+          'uid': '66666666-6666-6666-6666-666666666666',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_todo_items[todo.test_user_to_do_s]
+  dict({
+    'todo.test_user_to_do_s': dict({
+      'items': list([
+        dict({
+          'description': 'Du kannst dieses To-Do entweder abhaken, es bearbeiten oder löschen',
+          'status': 'needs_action',
+          'summary': 'Habitica beitreten (Hake mich ab!)',
+          'uid': '77777777-7777-7777-7777-777777777777',
+        }),
+        dict({
+          'description': 'Klicke um Checklisten hinzuzufügen',
+          'due': '2024-07-30',
+          'status': 'needs_action',
+          'summary': 'Termin für einen Check-up setzen >> Denke über eine gesunde Veränderung nach',
+          'uid': '88888888-8888-8888-8888-888888888888',
+        }),
+        dict({
+          'description': 'Klicke um anzugeben, was Du vorhast!',
+          'status': 'completed',
+          'summary': 'Etwas Lustiges unternehmen',
+          'uid': '10101010-1010-1010-1010-101010101010',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_todos[todo.test_user_dailies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.test_user_dailies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dailies',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 92>,
+    'translation_key': <HabiticaTodoList.DAILIES: 'dailys'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todos[todo.test_user_dailies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Dailies',
+      'supported_features': <TodoListEntityFeature: 92>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.test_user_dailies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_todos[todo.test_user_to_do_s-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.test_user_to_do_s',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': "To-Do's",
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 95>,
+    'translation_key': <HabiticaTodoList.TODOS: 'todos'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todos[todo.test_user_to_do_s-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': "test-user To-Do's",
+      'supported_features': <TodoListEntityFeature: 95>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.test_user_to_do_s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
