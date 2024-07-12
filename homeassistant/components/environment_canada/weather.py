@@ -199,12 +199,12 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
         if now.hour < 6 and half_days[0]["temperature_class"] != "high":
             now = now - datetime.timedelta(days=1)
 
-        def get_day_forecast(day, fcst):
-            high = int(fcst[0]["temperature"]) if len(fcst) == 2 else None
-            forecast: Forecast = {
+        def get_day_forecast(day: int, fcst: list[dict[str, str]]) -> Forecast:
+            high_temp = int(fcst[0]["temperature"]) if len(fcst) == 2 else None
+            return {
                 ATTR_FORECAST_TIME: (now + datetime.timedelta(days=day)).isoformat(),
-                ATTR_FORECAST_NATIVE_TEMP: high,
-                ATTR_FORECAST_NATIVE_TEMP_LOW: (fcst[-1]["temperature"]),
+                ATTR_FORECAST_NATIVE_TEMP: high_temp,
+                ATTR_FORECAST_NATIVE_TEMP_LOW: int(fcst[-1]["temperature"]),
                 ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
                     fcst[0]["precip_probability"]
                 ),
@@ -212,7 +212,6 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
                     int(fcst[0]["icon_code"])
                 ),
             }
-            return forecast
 
         i = 2 if half_days[0]["temperature_class"] == "high" else 1
         forecast_array.append(get_day_forecast(0, half_days[0:i]))
