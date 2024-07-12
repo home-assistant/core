@@ -1791,6 +1791,11 @@ pydaikin==2.13.1
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
 
+# homeassistant.components.unifiprotect
+# homeassistant.components.xbox
+# homeassistant.components.zwave_js
+pydantic==1.10.17
+
 # homeassistant.components.deconz
 pydeconz==116
 
