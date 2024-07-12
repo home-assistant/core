@@ -1053,6 +1053,9 @@ lupupy==0.3.2
 # homeassistant.components.scrape
 lxml==5.1.0
 
+# homeassistant.components.airgradient
+mashumaro==3.13.1
+
 # homeassistant.components.matrix
 matrix-nio==0.24.0
 
