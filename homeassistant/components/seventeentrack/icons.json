@@ -2,33 +2,33 @@
   "entity": {
     "sensor": {
       "not_found": {
-        "default": "mdi:package-variant-closed"
+        "default": "mdi:package"
       },
       "in_transit": {
-        "default": "mdi:package-variant-closed"
+        "default": "mdi:package"
       },
       "expired": {
-        "default": "mdi:package-variant-closed-remove"
+        "default": "mdi:package"
       },
       "ready_to_be_picked_up": {
-        "default": "mdi:package-variant-closed"
+        "default": "mdi:package"
       },
       "undelivered": {
-        "default": "mdi:package-variant-closed"
+        "default": "mdi:package"
       },
       "delivered": {
-        "default": "mdi:package-variant-closed-check"
+        "default": "mdi:package"
       },
       "returned": {
-        "default": "mdi:package-variant-closed-remove"
+        "default": "mdi:package"
       },
       "package": {
-        "default": "mdi:package-variant-closed"
+        "default": "mdi:package"
       }
     }
   },
   "services": {
-    "get_packages": "mdi:package-variant-closed",
-    "add_package": "mdi:package-variant-closed-plus"
+    "get_packages": "mdi:package",
+    "add_package": "mdi:package"
   }
 }
