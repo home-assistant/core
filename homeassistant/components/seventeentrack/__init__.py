@@ -131,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def add_package(call: ServiceCall) -> ServiceResponse:
         config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
-        tracking_number = call.data.get(ATTR_TRACKING_NUMBER)
+        tracking_number = call.data[ATTR_TRACKING_NUMBER]
         friendly_name = call.data.get(ATTR_INFO_TEXT, "")
 
         config_entry: ConfigEntry | None = hass.config_entries.async_get_entry(
