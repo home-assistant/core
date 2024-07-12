@@ -73,5 +73,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "setup_error": {
+      "message": "Setup of {title} could not be setup due to {error}"
+    }
   }
 }

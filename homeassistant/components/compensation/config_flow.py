@@ -78,16 +78,18 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 
 def _is_valid_data_points(check_data_points: list[str]) -> bool:
     """Validate data points."""
+    result = False
     for data_point in check_data_points:
-        if data_point.find(",") > 0:
-            values = data_point.split(",", maxsplit=1)
-            for value in values:
-                try:
-                    float(value)
-                except ValueError:
-                    return False
-            return True
-    return False
+        if not data_point.find(",") > 0:
+            return False
+        values = data_point.split(",", maxsplit=1)
+        for value in values:
+            try:
+                float(value)
+            except ValueError:
+                return False
+        result = True
+    return result
 
 
 async def validate_options(
