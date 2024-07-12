@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -18,6 +18,7 @@ from .const import (
     EVENT_MESSAGE_READ,
     EVENT_NEW_MESSAGE,
     EVENT_USER_UPDATE,
+    KEY_CONFIG_ENTRY_ID,
     OPTION_BLACKLIST_CHATS,
     OPTION_DATA,
     OPTION_EVENTS,
@@ -25,12 +26,19 @@ from .const import (
     OPTION_INCOMING,
     OPTION_OUTGOING,
     OPTION_PATTERN,
+    SERVICE_DELETE_MESSAGES,
+    SERVICE_EDIT_MESSAGE,
+    SERVICE_SEND_MESSAGES,
 )
 from .coordinator import TelegramClientCoordinator, TelegramClientEntryConfigEntry
+from .schemas import (
+    SERVICE_DELETE_MESSAGES_SCHEMA,
+    SERVICE_EDIT_MESSAGE_SCHEMA,
+    SERVICE_SEND_MESSAGES_SCHEMA,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
 ]
 
@@ -39,17 +47,20 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Telegram client component."""
+    _register_service(hass, SERVICE_SEND_MESSAGES, SERVICE_SEND_MESSAGES_SCHEMA)
+    _register_service(hass, SERVICE_EDIT_MESSAGE, SERVICE_EDIT_MESSAGE_SCHEMA)
+    _register_service(hass, SERVICE_DELETE_MESSAGES, SERVICE_DELETE_MESSAGES_SCHEMA)
     CLIENT_PARAMS["lang_code"] = CLIENT_PARAMS["system_lang_code"] = (
         hass.config.language
     )
-
     return True
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
 ) -> bool:
-    """Handle Telegram client entry setup."""
+    """Handle Telegram client config entry setup."""
+
     if not entry.options:
         hass.config_entries.async_update_entry(
             entry,
@@ -107,10 +118,23 @@ async def async_setup_entry(
 async def async_unload_entry(
     hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
 ) -> bool:
-    """Unload a config entry."""
+    """Handle Telegram client config entry unload."""
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     coordinator: TelegramClientCoordinator = hass.data[DOMAIN].get(entry.entry_id)
     if coordinator:
         await coordinator.async_client_disconnect()
 
     return True
+
+
+def _register_service(hass: HomeAssistant, service: str, schema):
+    async def async_service_handler(call: ServiceCall):
+        """Service call handler."""
+        data = dict(call.data)
+        coordinator = hass.data[DOMAIN].get(
+            data.pop(KEY_CONFIG_ENTRY_ID, list(hass.data[DOMAIN].keys())[0])
+        )
+        handler = getattr(coordinator, call.service)
+        return await handler(data)
+
+    return hass.services.async_register(DOMAIN, service, async_service_handler, schema)

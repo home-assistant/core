@@ -1,11 +1,11 @@
 # Describes the format for available Telegram client services
 
 send_messages:
-  target:
-    entity:
-      domain: device_tracker
-      integration: telegram_client
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_client
     target_username:
       example: me
       selector:
@@ -60,8 +60,8 @@ send_messages:
             data: grinning
           - text: 😃
             data: smiley
-          - text: smile
-            data: 😄
+          - text: 😄
+            data: smile
       selector:
         object:
     keyboard_resize:
@@ -87,11 +87,12 @@ send_messages:
       selector:
         boolean:
 edit_message:
-  target:
-    entity:
-      domain: device_tracker
-      integration: telegram_client
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: telegram_client
     target_username:
       example: me
       selector:
@@ -163,11 +164,12 @@ edit_message:
       selector:
         datetime:
 delete_messages:
-  target:
-    entity:
-      domain: device_tracker
-      integration: telegram_client
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: telegram_client
     target_username:
       example: me
       selector:

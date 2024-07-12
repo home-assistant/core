@@ -13,7 +13,7 @@ SCAN_INTERVAL: Final = timedelta(seconds=10)
 CLIENT_PARAMS: Final = {
     "device_model": "Home Assistant",
     "system_version": ha_version,
-    "app_version": "1.0",
+    "app_version": "1.0.0",
 }
 # endregion
 
@@ -68,7 +68,7 @@ SENSOR_PHONE: Final = "phone"
 SENSOR_PREMIUM: Final = "premium"
 SENSOR_RESTRICTED: Final = "restricted"
 SENSOR_USERNAME: Final = "username"
-SENSOR_USER_ID: Final = "user_id"
+SENSOR_ID: Final = "id"
 # endregion
 
 # region services
@@ -114,7 +114,7 @@ KEY_CANCEL: Final = "cancel"
 KEY_CHAT: Final = "chat"
 KEY_CHAT_ID: Final = "chat_id"
 KEY_CHAT_INSTANCE: Final = "chat_instance"
-KEY_CLIENT: Final = "client"
+KEY_CONFIG_ENTRY_ID: Final = "config_entry_id"
 KEY_CONTACT: Final = "contact"
 KEY_CONTENTS: Final = "contents"
 KEY_CREATED: Final = "created"
@@ -138,6 +138,7 @@ KEY_IS_PRIVATE: Final = "is_private"
 KEY_KICKED_BY: Final = "kicked_by"
 KEY_LAST_SEEN: Final = "last_seen"
 KEY_MAX_ID: Final = "max_id"
+KEY_ME: Final = "me"
 KEY_MESSAGE: Final = "message"
 KEY_MESSAGE_ID: Final = "message_id"
 KEY_MESSAGE_IDS: Final = "message_ids"
@@ -193,7 +194,7 @@ STRING_PHONE: Final = "Phone"
 STRING_PREMIUM: Final = "Premium"
 STRING_RESTRICTED: Final = "Restricted"
 STRING_USERNAME: Final = "Username"
-STRING_USER_ID: Final = "User ID"
+STRING_ID: Final = "ID"
 # endregion
 
 # region icons
@@ -203,5 +204,5 @@ ICON_LAST_SENT_MESSAGE_ID: Final = "mdi:message-arrow-right"
 ICON_PHONE: Final = "mdi:card-account-phone"
 ICON_PREMIUM: Final = "mdi:star"
 ICON_USERNAME: Final = "mdi:account"
-ICON_USER_ID: Final = "mdi:id-card"
+ICON_ID: Final = "mdi:id-card"
 # endregion

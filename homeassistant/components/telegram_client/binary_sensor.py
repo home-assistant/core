@@ -40,7 +40,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Telegram client binary sensor entity."""
+    """Handle Telegram client binary sensor entries setup."""
     coordinator = entry.runtime_data
     binary_sensors = [
         TelegramClientBinarySensor(coordinator, entity_description)

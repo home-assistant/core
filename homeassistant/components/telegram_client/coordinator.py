@@ -7,7 +7,7 @@ import re
 import sqlite3
 from typing import Any
 
-from telethon import TelegramClient, __version__ as sw_version, events, tl
+from telethon import Button, TelegramClient, __version__ as sw_version, events, tl
 from telethon.errors import AccessTokenExpiredError, AccessTokenInvalidError
 from telethon.errors.common import AuthKeyNotFound
 from telethon.errors.rpcbaseerrors import AuthKeyError
@@ -40,6 +40,13 @@ from .const import (
     EVENT_MESSAGE_READ,
     EVENT_NEW_MESSAGE,
     EVENT_USER_UPDATE,
+    FIELD_BUTTONS,
+    FIELD_FILE,
+    FIELD_INLINE_KEYBOARD,
+    FIELD_KEYBOARD,
+    FIELD_KEYBOARD_RESIZE,
+    FIELD_TARGET_ID,
+    FIELD_TARGET_USERNAME,
     KEY_ACTION,
     KEY_ACTION_MESSAGE,
     KEY_ADDED_BY,
@@ -48,7 +55,6 @@ from .const import (
     KEY_CHAT,
     KEY_CHAT_ID,
     KEY_CHAT_INSTANCE,
-    KEY_CLIENT,
     KEY_CONTACT,
     KEY_CONTENTS,
     KEY_CREATED,
@@ -57,6 +63,7 @@ from .const import (
     KEY_DELETED_ID,
     KEY_DELETED_IDS,
     KEY_DOCUMENT,
+    KEY_ENTITY,
     KEY_GEO,
     KEY_ID,
     KEY_INBOX,
@@ -70,6 +77,7 @@ from .const import (
     KEY_KICKED_BY,
     KEY_LAST_SEEN,
     KEY_MAX_ID,
+    KEY_ME,
     KEY_MESSAGE,
     KEY_MESSAGE_ID,
     KEY_MESSAGE_IDS,
@@ -122,11 +130,11 @@ from .const import (
     OPTION_USERS,
     SCAN_INTERVAL,
     SENSOR_FIRST_NAME,
+    SENSOR_ID,
     SENSOR_LAST_NAME,
     SENSOR_PHONE,
     SENSOR_PREMIUM,
     SENSOR_RESTRICTED,
-    SENSOR_USER_ID,
     SENSOR_USERNAME,
 )
 
@@ -449,21 +457,82 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             ),
         )
 
+    async def send_messages(self, data):
+        """Send messages."""
+        self._process_data(data)
+        target_usernames = data.pop(FIELD_TARGET_USERNAME, [])
+        target_ids = data.pop(FIELD_TARGET_ID, [])
+        for target in target_usernames + target_ids:
+            data[KEY_ENTITY] = target
+            message = await self.client.send_message(**data)
+        self.last_sent_message_id.set_state(message.id)
+
+    async def edit_message(self, data):
+        """Edit messages."""
+        self._process_data(data)
+        target_username = data.pop(FIELD_TARGET_USERNAME, None)
+        target_id = data.pop(FIELD_TARGET_ID, None)
+        data[KEY_ENTITY] = target_username or target_id
+        message = await self.client.edit_message(**data)
+        self.last_edited_message_id.set_state(message.id)
+
+    async def delete_messages(self, data):
+        """Delete messages."""
+        self._process_data(data)
+        target_usernames = data.pop(FIELD_TARGET_USERNAME, [])
+        target_ids = data.pop(FIELD_TARGET_ID, [])
+        data[KEY_ENTITY] = target_usernames + target_ids
+        await self.client.delete_messages(**data)
+        message_ids = cv.ensure_list(data.get(KEY_MESSAGE_ID))
+        self.last_deleted_message_id.set_state(message_ids[-1])
+
+    def _process_data(self, hass, data):
+        def inline_button(data):
+            """Generate inline button out of data."""
+            return (
+                Button.inline(data)
+                if isinstance(data, str)
+                else Button.inline(data.get("text"), data.get("data"))
+            )
+
+        if keyboard := data.pop(FIELD_KEYBOARD, None):
+            if not isinstance(keyboard[0], list):
+                keyboard = [keyboard]
+            data[FIELD_BUTTONS] = [
+                [
+                    Button.text(
+                        button,
+                        resize=data.pop(FIELD_KEYBOARD_RESIZE, None),
+                        single_use=data.pop(FIELD_KEYBOARD, None),
+                    )
+                    for button in row
+                ]
+                for row in keyboard
+            ]
+        if inline_keyboard := data.pop(FIELD_INLINE_KEYBOARD, None):
+            if not isinstance(inline_keyboard[0], list):
+                inline_keyboard = [inline_keyboard]
+            data[FIELD_BUTTONS] = [
+                [inline_button(button) for button in row] for row in inline_keyboard
+            ]
+        if file := data.get(FIELD_BUTTONS):
+            data[FIELD_FILE] = list(map(hass.config.path, file))
+
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         me = await self.async_client_call(self._client.get_me())
-        return self._data_to_dict(
-            me,
-            [
-                SENSOR_USER_ID,
+        return {
+            key: getattr(me, key)
+            for key in (
+                SENSOR_ID,
                 SENSOR_USERNAME,
                 SENSOR_RESTRICTED,
                 SENSOR_PREMIUM,
                 SENSOR_LAST_NAME,
                 SENSOR_FIRST_NAME,
                 SENSOR_PHONE,
-            ],
-        )
+            )
+        }
 
     async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Call a coro or raise exception."""
@@ -646,12 +715,24 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         self._subscribe_listeners(entry)
 
     def _tlobject_to_dict(self, data):
+        def cleanup_data(data: Any) -> Any:
+            """Remove byte strings and "_" keys from dict."""
+            if isinstance(data, list):
+                return [cleanup_data(value) for value in data]
+            if isinstance(data, dict):
+                return {
+                    key: cleanup_data(value)
+                    for key, value in data.items()
+                    if key != "_" and not isinstance(value, bytes)
+                }
+            return data
+
         if isinstance(data, list):
             return list(map(self._tlobject_to_dict, data))
         if isinstance(data, re.Match):
             return data.groupdict()
         if isinstance(data, tl.TLObject):
-            return data.to_dict()
+            return cleanup_data(data.to_dict())
         return data
 
     def _data_to_dict(self, event, keys):
@@ -661,5 +742,5 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
                 for key in keys
                 if hasattr(event, key)
             },
-            **{KEY_CLIENT: self.data},
+            **{KEY_ME: self.data},
         )

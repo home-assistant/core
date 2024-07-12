@@ -163,6 +163,10 @@
       "name": "Send messages",
       "description": "Sends text messages to user, group or bot.",
       "fields": {
+        "config_entry_id": {
+          "name": "Telegram client",
+          "description": "Telegram client to use for API calls. If not specified, then first one is used."
+        },
         "target_username": {
           "name": "Target username",
           "description": "User, channel, bot username or phone number."
@@ -241,6 +245,10 @@
       "name": "Edit message",
       "description": "Edits text message of a previously sent message to user, group or bot.",
       "fields": {
+        "config_entry_id": {
+          "name": "Telegram client",
+          "description": "Telegram client to use for API calls. If not specified, then first one is used."
+        },
         "target_username": {
           "name": "Target username",
           "description": "User, channel, bot username or phone number."
@@ -303,6 +311,10 @@
       "name": "Delete messages",
       "description": "Deletes previously sent messages to user, group or bot.",
       "fields": {
+        "config_entry_id": {
+          "name": "Telegram client",
+          "description": "Telegram client to use for API calls. If not specified, then first one is used."
+        },
         "target_username": {
           "name": "Target username",
           "description": "User, channel, bot username or phone number."

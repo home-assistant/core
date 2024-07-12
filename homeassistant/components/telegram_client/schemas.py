@@ -3,7 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CLIENT_TYPE_BOT,
@@ -14,6 +14,7 @@ from .const import (
     CONF_OTP,
     CONF_PHONE,
     CONF_TOKEN,
+    DOMAIN,
     EVENT_CALLBACK_QUERY,
     EVENT_CHAT_ACTION,
     EVENT_INLINE_QUERY,
@@ -43,6 +44,7 @@ from .const import (
     FIELD_TARGET_ID,
     FIELD_TARGET_USERNAME,
     FIELD_TEXT,
+    KEY_CONFIG_ENTRY_ID,
     KEY_SUGGESTED_VALUE,
     OPTION_BLACKLIST_CHATS,
     OPTION_CHATS,
@@ -347,6 +349,11 @@ SERVICE_SEND_MESSAGES_SCHEMA = vol.Schema(
     vol.All(
         vol.Schema(
             {
+                vol.Optional(KEY_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
                 vol.Optional(FIELD_TARGET_USERNAME): cv.ensure_list_csv,
                 vol.Optional(FIELD_TARGET_ID): vol.All(
                     cv.ensure_list_csv, [string_number]
@@ -385,6 +392,11 @@ SERVICE_EDIT_MESSAGE_SCHEMA = vol.Schema(
     vol.All(
         vol.Schema(
             {
+                vol.Optional(KEY_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
                 vol.Optional(FIELD_TARGET_USERNAME): cv.string,
                 vol.Optional(FIELD_TARGET_ID): int,
                 vol.Optional(FIELD_MESSAGE): cv.positive_int,
@@ -419,6 +431,11 @@ SERVICE_DELETE_MESSAGES_SCHEMA = vol.Schema(
     vol.All(
         vol.Schema(
             {
+                vol.Optional(KEY_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
                 vol.Optional(FIELD_TARGET_USERNAME): cv.ensure_list_csv,
                 vol.Optional(FIELD_TARGET_ID): vol.All(
                     cv.ensure_list_csv, [string_number]

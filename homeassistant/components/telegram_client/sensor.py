@@ -9,37 +9,37 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CLIENT_TYPE_CLIENT,
     CONF_CLIENT_TYPE,
+    ICON_ID,
     ICON_LAST_DELETED_MESSAGE_ID,
     ICON_LAST_EDITED_MESSAGE_ID,
     ICON_LAST_SENT_MESSAGE_ID,
     ICON_PHONE,
-    ICON_USER_ID,
     ICON_USERNAME,
     SENSOR_FIRST_NAME,
+    SENSOR_ID,
     SENSOR_LAST_DELETED_MESSAGE_ID,
     SENSOR_LAST_EDITED_MESSAGE_ID,
     SENSOR_LAST_NAME,
     SENSOR_LAST_SENT_MESSAGE_ID,
     SENSOR_PHONE,
-    SENSOR_USER_ID,
     SENSOR_USERNAME,
     STRING_FIRST_NAME,
+    STRING_ID,
     STRING_LAST_DELETED_MESSAGE_ID,
     STRING_LAST_EDITED_MESSAGE_ID,
     STRING_LAST_NAME,
     STRING_LAST_SENT_MESSAGE_ID,
     STRING_PHONE,
-    STRING_USER_ID,
     STRING_USERNAME,
 )
 from .entity import TelegramClientCoordinatorSensor, TelegramClientSensor
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=SENSOR_USER_ID,
-        translation_key=SENSOR_USER_ID,
-        name=STRING_USER_ID,
-        icon=ICON_USER_ID,
+        key=SENSOR_ID,
+        translation_key=SENSOR_ID,
+        name=STRING_ID,
+        icon=ICON_ID,
     ),
     SensorEntityDescription(
         key=SENSOR_USERNAME,
@@ -71,7 +71,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Telegram client sensor entity."""
+    """Handle Telegram client sensor entries setup."""
     coordinator = entry.runtime_data
     async_add_entities(
         TelegramClientCoordinatorSensor(coordinator, entity_description)
