@@ -68,7 +68,7 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Prompt user for SimpleFIN API credentials."""
-
+        errors: dict[str, str] = {}
         if user_input is not None:
             access_url, errors = await _validate_input(user_input)
             self._async_abort_entries_match({CONF_ACCESS_URL: access_url})

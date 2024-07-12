@@ -162,3 +162,39 @@ async def test_claim_token_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ACCESS_URL: "https://i:am@yomama.house.com"}
     assert result["title"] == "SimpleFIN"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_simplefin_client: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    MOCK_TOKEN = "http://user:password@string"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ACCESS_URL: "https://i:am@yomama.house.com"},
+        version=1,
+        unique_id=MOCK_TOKEN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reauth",
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_URL: MOCK_TOKEN},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
