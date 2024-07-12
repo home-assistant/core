@@ -393,8 +393,8 @@ def _drop_index(
         index_to_drop = get_index_by_name(session, table_name, index_name)
 
     if index_to_drop is None:
-        _LOGGER.debug(
-            "The index %s on table %s no longer exists", index_name, table_name
+        _LOGGER.warning(
+            "The index `%s` on table `%s` no longer exists", index_name, table_name
         )
         return
 
