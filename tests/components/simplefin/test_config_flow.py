@@ -13,7 +13,7 @@ from simplefin4py.exceptions import (
 
 from homeassistant.components.simplefin import CONF_ACCESS_URL
 from homeassistant.components.simplefin.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -166,25 +166,24 @@ async def test_claim_token_errors(
 
 async def test_reauth_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_simplefin_client: AsyncMock,
 ) -> None:
     """Test reauth flow."""
-    MOCK_TOKEN = "http://user:password@string"
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCESS_URL: "https://i:am@yomama.house.com"},
-        version=1,
-        unique_id=MOCK_TOKEN,
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
+
+    # result = await hass.config_entries.flow.async_init(
+    #     DOMAIN,
+    #     context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+    #     data=mock_config_entry.data,
+    # )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": "reauth",
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
         },
     )
     assert result["type"] == FlowResultType.FORM
@@ -192,7 +191,7 @@ async def test_reauth_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_ACCESS_URL: MOCK_TOKEN},
+        {CONF_ACCESS_URL: MOCK_ACCESS_URL},
     )
     await hass.async_block_till_done()
 
