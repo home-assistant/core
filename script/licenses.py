@@ -178,9 +178,6 @@ EXCEPTIONS = {
 }
 
 TODO = {
-    "BlinkStick": AwesomeVersion(
-        "1.2.0"
-    ),  # Proprietary license https://github.com/arvydas/blinkstick-python
     "PyMVGLive": AwesomeVersion(
         "1.1.4"
     ),  # No license and archived https://github.com/pc-coholic/PyMVGLive
