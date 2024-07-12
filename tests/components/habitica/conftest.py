@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from yarl import URL
 
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -29,6 +30,28 @@ def json_data(file) -> dict[str, Any]:
     path = Path(__file__).parent / "data" / f"{file}.json"
 
     return json.loads(path.read_text())
+
+
+def assert_mock_called_with(
+    mock_client: AiohttpClientMocker,
+    method: str,
+    url: str,
+    data: dict[str, Any] | None = None,
+) -> None:
+    """Assert request mock was called with json data."""
+
+    mock = next(
+        (
+            call
+            for call in mock_client.mock_calls
+            if call[0] == method.upper() and call[1] == URL(url)
+        ),
+        [],
+    )
+    assert mock
+    assert len(mock)
+    if data:
+        assert json.loads(mock[2]) == data
 
 
 @pytest.fixture

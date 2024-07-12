@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import json_data
+from .conftest import assert_mock_called_with, json_data
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -32,12 +32,12 @@ def button_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("mock_habitica")
 async def test_buttons(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_habitica: AiohttpClientMocker,
 ) -> None:
     """Test button entities."""
 
@@ -82,10 +82,8 @@ async def test_button_press(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert await mock_habitica.match_request(
-        "post",
-        f"{DEFAULT_URL}/api/v3/{api_url}",
-    )
+
+    assert_mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/{api_url}")
 
 
 @pytest.mark.parametrize(
@@ -136,10 +134,8 @@ async def test_button_press_exceptions(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-    assert await mock_habitica.match_request(
-        "post",
-        f"{DEFAULT_URL}/api/v3/{api_url}",
-    )
+
+    assert_mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/{api_url}")
 
 
 async def test_button_unavailable(

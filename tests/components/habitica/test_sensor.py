@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -27,13 +26,12 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("mock_habitica", "entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_habitica: AiohttpClientMocker,
 ) -> None:
     """Test setup of the Habitica sensor platform."""
 
@@ -51,7 +49,6 @@ async def test_sensor_deprecation_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
-    mock_habitica: AiohttpClientMocker,
 ) -> None:
     """Test task sensor deprecation issue."""
 
