@@ -83,7 +83,7 @@ def _create_zgs_sonos_event(
     zgs = load_fixture(fixture_file, DOMAIN)
     variables = {}
     variables["ZoneGroupState"] = zgs
-    # Sonos does not always send this data with zgs events
+    # Sonos does not always send this variable with zgs events
     if create_uui_ds:
         variables["zone_player_uui_ds_in_group"] = f"{soco_1.uid},{soco_2.uid}"
     event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
