@@ -33,7 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = WeheatDataUpdateCoordinator(
-        hass=hass, session=session, heatpump_id=entry.unique_id
+        hass=hass,
+        session=session,
+        heat_pump=entry.data["heat_pump_info"],
     )
     hass.data[DOMAIN][entry.entry_id] = coordinator
 

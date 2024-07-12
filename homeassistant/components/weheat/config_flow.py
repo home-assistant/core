@@ -23,6 +23,7 @@ class OAuth2FlowHandler(
         super().__init__()
 
         self._auth_data = None
+        self._discovered_pumps = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -42,16 +43,16 @@ class OAuth2FlowHandler(
         """
         if info is None or "uuid" not in info:
             # nothing select, construct list of devices
-            discovered_pumps = await self.hass.async_add_executor_job(
+            self._discovered_pumps = await self.hass.async_add_executor_job(
                 HeatPumpDiscovery.discover,
                 API_URL,
                 self._auth_data["token"]["access_token"],
             )
 
-            if len(discovered_pumps) == 0:
+            if len(self._discovered_pumps) == 0:
                 # when there are no pumps, the user is lacking access
                 return self.async_abort(reason="no_devices_found")
-            if len(discovered_pumps) == 1:
+            if len(self._discovered_pumps) == 1:
                 # just select this pump since it is the only one
                 # await self.async_set_unique_id(info["uuid"])
                 # self._abort_if_unique_id_configured()
@@ -62,16 +63,21 @@ class OAuth2FlowHandler(
                 return self.async_abort(reason="no_devices_found")
 
             # show list of pumps
+            heat_pump_dict = {
+                hp.uuid: f"{hp.name} ({hp.sn})" for hp in self._discovered_pumps
+            }
             return self.async_show_form(
                 step_id="find_devices",
-                data_schema=vol.Schema(
-                    {vol.Required("uuid"): vol.In(discovered_pumps)}
-                ),
+                data_schema=vol.Schema({vol.Required("uuid"): vol.In(heat_pump_dict)}),
             )
 
         # a heat pump was selected, try adding it
         await self.async_set_unique_id(info["uuid"])
         self._abort_if_unique_id_configured()
+
+        info["heat_pump_info"] = next(
+            (hp for hp in self._discovered_pumps if hp.uuid == info["uuid"]), None
+        )
 
         return self.async_create_entry(
             title="Weheat heatpump", data=(self._auth_data | info)
