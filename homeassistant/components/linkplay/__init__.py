@@ -1,5 +1,6 @@
 """Support for LinkPlay devices."""
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from linkplay.controller import LinkPlayController
@@ -10,22 +11,26 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    BRIDGE_DISCOVERED,
-    CONTROLLER,
-    DISCOVERY_SCAN_INTERVAL,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import BRIDGE_DISCOVERED, DISCOVERY_SCAN_INTERVAL, PLATFORMS
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class LinkPlayData:
+    """Data for LinkPlay."""
+
+    controller: LinkPlayController
+
+
+type LinkPlayConfigEntry = ConfigEntry[LinkPlayData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
     """Async setup hass config entry. Called when an entry has been setup."""
 
-    hass.data.setdefault(DOMAIN, {})
     session = async_get_clientsession(hass)
     controller = LinkPlayController(session)
-    hass.data[DOMAIN][CONTROLLER] = controller
+    entry.runtime_data = LinkPlayData(controller=controller)
+
     bridge_uuids = []
 
     async def _async_scan_update(now: datetime | None) -> None:
@@ -49,3 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

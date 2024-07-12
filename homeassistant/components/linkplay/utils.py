@@ -5,10 +5,6 @@ from typing import Final
 from linkplay.bridge import LinkPlayBridge, LinkPlayMultiroom
 from linkplay.controller import LinkPlayController
 
-from homeassistant.core import HomeAssistant
-
-from .const import CONTROLLER, DOMAIN
-
 MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
 MANUFACTURER_GENERIC: Final[str] = "Generic"
 MODELS_ARTSOUND_SMART_ZONE4: Final[str] = "Smart Zone 4 AMP"
@@ -27,16 +23,10 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_GENERIC, MODELS_GENERIC
 
 
-def get_controller(hass: HomeAssistant) -> LinkPlayController:
-    """Get the LinkPlay controller from hass data."""
-    return hass.data[DOMAIN][CONTROLLER]
-
-
 def get_active_multiroom(
-    hass: HomeAssistant, bridge: LinkPlayBridge
+    controller: LinkPlayController, bridge: LinkPlayBridge
 ) -> LinkPlayMultiroom | None:
     """Get the active multiroom for given bridge."""
-    controller = get_controller(hass)
 
     for multiroom in controller.multirooms:
         if multiroom.leader.device.uuid == bridge.device.uuid:
