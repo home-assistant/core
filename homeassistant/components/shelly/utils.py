@@ -510,12 +510,16 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
     if not component:
         return []
 
-    return [
-        k
-        for k, v in config.items()
-        if k.startswith(component["type"])
-        and v["meta"]["ui"]["view"] == component["mode"]
-    ]
+    ids: list[str] = []
+
+    for comp_type in component["types"]:
+        ids.extend(
+            k
+            for k, v in config.items()
+            if k.startswith(comp_type) and v["meta"]["ui"]["view"] == component["mode"]
+        )
+
+    return ids
 
 
 @callback

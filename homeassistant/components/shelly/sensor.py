@@ -1024,6 +1024,12 @@ RPC_SENSORS: Final = {
         sub_key="value",
         has_entity_name=True,
     ),
+    "number": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        has_entity_name=True,
+        unit=lambda config: config["meta"]["ui"]["unit"],
+    ),
 }
 
 
@@ -1052,17 +1058,18 @@ async def async_setup_entry(
 
             # the user can remove virtual components from the device configuration, so
             # we need to remove orphaned entities
-            virtual_sensor_ids = get_virtual_component_ids(
-                coordinator.device.config, SENSOR_PLATFORM
-            )
-            async_remove_orphaned_virtual_entities(
-                hass,
-                config_entry.entry_id,
-                coordinator.mac,
-                SENSOR_PLATFORM,
-                "text",
-                virtual_sensor_ids,
-            )
+            for component in ("text", "number"):
+                virtual_component_ids = get_virtual_component_ids(
+                    coordinator.device.config, SENSOR_PLATFORM
+                )
+                async_remove_orphaned_virtual_entities(
+                    hass,
+                    config_entry.entry_id,
+                    coordinator.mac,
+                    SENSOR_PLATFORM,
+                    component,
+                    virtual_component_ids,
+                )
         return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
@@ -1124,6 +1131,21 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     """Represent a RPC sensor."""
 
     entity_description: RpcSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if callable(description.unit):
+            self._attr_native_unit_of_measurement = description.unit(
+                coordinator.device.config[key]
+            )
 
     @property
     def native_value(self) -> StateType:
