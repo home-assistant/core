@@ -4,8 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "incorrect_datapoints": "Datapoints needs to be provided in list-format, ex. '[1.0, 0.0]'.",
-      "not_enough_datapoints": "The number of datapoints needs to be less or equal to configured degree."
+      "incorrect_datapoints": "Datapoints needs to be provided in the right format, ex. '1.0, 0.0'.",
+      "not_enough_datapoints": "The number of datapoints needs to be more than the configured degree."
     },
     "step": {
       "user": {
@@ -31,7 +31,7 @@
           "unit_of_measurement": "Unit of measurement"
         },
         "data_description": {
-          "data_points": "The collection of data point conversions with the format '[uncompensated_value, compensated_value]'",
+          "data_points": "The collection of data point conversions with the format 'uncompensated_value, compensated_value', ex. '1.0, 0.0'",
           "attribute": "Attribute from the source to monitor/compensate.",
           "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data collections (data_points) greatest uncompensated value.",
           "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data collections (data_points) lowest uncompensated value.",

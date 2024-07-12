@@ -76,6 +76,20 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     )
 
 
+def _is_valid_data_points(check_data_points: list[str]) -> bool:
+    """Validate data points."""
+    for data_point in check_data_points:
+        if data_point.find(",") > 0:
+            values = data_point.split(",", maxsplit=1)
+            for value in values:
+                try:
+                    float(value)
+                except ValueError:
+                    return False
+            return True
+    return False
+
+
 async def validate_options(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -84,9 +98,8 @@ async def validate_options(
     user_input[CONF_PRECISION] = int(user_input[CONF_PRECISION])
     user_input[CONF_DEGREE] = int(user_input[CONF_DEGREE])
 
-    for datapoint in user_input[CONF_DATAPOINTS]:
-        if not isinstance(datapoint, list):
-            raise SchemaFlowError("incorrect_datapoints")
+    if not _is_valid_data_points(user_input[CONF_DATAPOINTS]):
+        raise SchemaFlowError("incorrect_datapoints")
 
     if len(user_input[CONF_DATAPOINTS]) <= user_input[CONF_DEGREE]:
         raise SchemaFlowError("not_enough_datapoints")

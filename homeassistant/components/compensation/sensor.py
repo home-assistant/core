@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
+    CONF_ENTITY_ID,
     CONF_MAXIMUM,
     CONF_MINIMUM,
     CONF_SOURCE,
@@ -90,14 +91,14 @@ async def async_setup_entry(
     compensation = entry.entry_id
     conf: dict[str, Any] = hass.data[DATA_COMPENSATION][compensation]
 
-    source: str = conf[CONF_SOURCE]
+    source: str = conf[CONF_ENTITY_ID]
     attribute: str | None = conf.get(CONF_ATTRIBUTE)
     name = entry.title
 
     async_add_entities(
         [
             CompensationSensor(
-                conf.get(CONF_UNIQUE_ID),
+                entry.entry_id,
                 name,
                 source,
                 attribute,
