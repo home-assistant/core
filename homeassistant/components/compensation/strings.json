@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "incorrect_datapoints": "Datapoints needs to be provided in list-format, ex. '[1.0, 0.0]'.",
+      "not_enough_datapoints": "The number of datapoints needs to be less or equal to configured degree."
+    },
+    "step": {
+      "user": {
+        "description": "Add a compensation sensor",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "Entity"
+        },
+        "data_description": {
+          "name": "Name for the created entity.",
+          "entity_id": "Entity to use as source."
+        }
+      },
+      "options": {
+        "description": "Read the documention for further details on how to configure the statistics sensor using these options.",
+        "data": {
+          "data_points": "Data points",
+          "attribute": "Attribute",
+          "upper_limit": "Upper limit",
+          "lower_limit": "Lower limit",
+          "precision": "Precision",
+          "degree": "Degree",
+          "unit_of_measurement": "Unit of measurement"
+        },
+        "data_description": {
+          "data_points": "The collection of data point conversions with the format '[uncompensated_value, compensated_value]'",
+          "attribute": "Attribute from the source to monitor/compensate.",
+          "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data collections (data_points) greatest uncompensated value.",
+          "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data collections (data_points) lowest uncompensated value.",
+          "precision": "Defines the precision of the calculated values, through the argument of round().",
+          "degree": "The degree of a polynomial.",
+          "unit_of_measurement": "Defines the units of measurement of the sensor, if any."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "incorrect_datapoints": "[%key:component::compensation::config::error::incorrect_datapoints%]",
+      "not_enough_datapoints": "[%key:component::compensation::config::error::not_enough_datapoints%]"
+    },
+    "step": {
+      "init": {
+        "description": "[%key:component::compensation::config::step::options::description%]",
+        "data": {
+          "data_points": "[%key:component::compensation::config::step::options::data::data_points%]",
+          "attribute": "[%key:component::compensation::config::step::options::data::attribute%]",
+          "upper_limit": "[%key:component::compensation::config::step::options::data::upper_limit%]",
+          "lower_limit": "[%key:component::compensation::config::step::options::data::lower_limit%]",
+          "precision": "[%key:component::compensation::config::step::options::data::precision%]",
+          "degree": "[%key:component::compensation::config::step::options::data::degree%]",
+          "unit_of_measurement": "[%key:component::compensation::config::step::options::data::unit_of_measurement%]"
+        },
+        "data_description": {
+          "data_points": "[%key:component::compensation::config::step::options::data_description::data_points%]",
+          "attribute": "[%key:component::compensation::config::step::options::data_description::attribute%]",
+          "upper_limit": "[%key:component::compensation::config::step::options::data_description::upper_limit%]",
+          "lower_limit": "[%key:component::compensation::config::step::options::data_description::lower_limit%]",
+          "precision": "[%key:component::compensation::config::step::options::data_description::precision%]",
+          "degree": "[%key:component::compensation::config::step::options::data_description::degree%]",
+          "unit_of_measurement": "[%key:component::compensation::config::step::options::data_description::unit_of_measurement%]"
+        }
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ from typing import Any
 import numpy as np
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
@@ -62,6 +63,36 @@ async def async_setup_platform(
     name = f"{DEFAULT_NAME} {source}"
     if attribute is not None:
         name = f"{name} {attribute}"
+
+    async_add_entities(
+        [
+            CompensationSensor(
+                conf.get(CONF_UNIQUE_ID),
+                name,
+                source,
+                attribute,
+                conf[CONF_PRECISION],
+                conf[CONF_POLYNOMIAL],
+                conf.get(CONF_UNIT_OF_MEASUREMENT),
+                conf[CONF_MINIMUM],
+                conf[CONF_MAXIMUM],
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Compensation sensor entry."""
+    compensation = entry.entry_id
+    conf: dict[str, Any] = hass.data[DATA_COMPENSATION][compensation]
+
+    source: str = conf[CONF_SOURCE]
+    attribute: str | None = conf.get(CONF_ATTRIBUTE)
+    name = entry.title
 
     async_add_entities(
         [
