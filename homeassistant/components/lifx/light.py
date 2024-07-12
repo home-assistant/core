@@ -36,6 +36,7 @@ from .const import (
     DATA_LIFX_MANAGER,
     DOMAIN,
     INFRARED_BRIGHTNESS,
+    LIFX_CEILING_PRODUCT_IDS,
 )
 from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
@@ -98,7 +99,7 @@ async def async_setup_entry(
         "set_hev_cycle_state",
     )
     if lifx_features(device)["matrix"]:
-        if device.product in {176, 177}:
+        if device.product in LIFX_CEILING_PRODUCT_IDS:
             entity: LIFXLight = LIFXCeiling(coordinator, manager, entry)
         else:
             entity = LIFXMatrix(coordinator, manager, entry)
