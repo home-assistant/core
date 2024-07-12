@@ -1,4 +1,4 @@
-"""Telegram client entity class."""
+"""Telegram client entities."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ class TelegramClientEntity(Entity):
         coordinator: TelegramClientCoordinator,
         entity_description: EntityDescription,
     ) -> None:
-        """Initialize the entity."""
+        """Handle Telegram client entity initialization."""
         super().__init__()
         self.entity_description = entity_description
         self._attr_device_info = coordinator.device_info
@@ -35,7 +35,7 @@ class TelegramClientEntity(Entity):
 
 
 class TelegramClientCoordinatorEntity(CoordinatorEntity):
-    """Telegram client entity."""
+    """Telegram client coordinator entity."""
 
     _attr_has_entity_name = True
 
@@ -46,7 +46,7 @@ class TelegramClientCoordinatorEntity(CoordinatorEntity):
         | BinarySensorEntityDescription
         | SensorEntityDescription,
     ) -> None:
-        """Initialize the entity."""
+        """Handle Telegram client coordinator entity initialization."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_device_info = coordinator.device_info
@@ -55,21 +55,23 @@ class TelegramClientCoordinatorEntity(CoordinatorEntity):
         )
 
 
-class TelegramClientBinarySensor(TelegramClientCoordinatorEntity, BinarySensorEntity):
-    """Telegram client binary_sensor entity class."""
+class TelegramClientCoordinatorBinarySensor(
+    TelegramClientCoordinatorEntity, BinarySensorEntity
+):
+    """Telegram client coordinator binary sensor entity."""
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle state update from coordinator."""
         self._attr_is_on = self.coordinator.data.get(self.entity_description.key)
         self.async_write_ha_state()
 
 
 class TelegramClientSensor(TelegramClientEntity, SensorEntity):
-    """Telegram client sensor entity class."""
+    """Telegram client sensor entity."""
 
     def set_state(self, state):
-        """Update the sensor's state."""
+        """Handle sensor's state update."""
         self._attr_native_value = state
         self.async_write_ha_state()
 
@@ -77,10 +79,10 @@ class TelegramClientSensor(TelegramClientEntity, SensorEntity):
 class TelegramClientCoordinatorSensor(
     TelegramClientCoordinatorEntity, TelegramClientSensor
 ):
-    """Telegram client sensor entity class."""
+    """Telegram client coordinator sensor entity."""
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle state update from coordinator."""
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
         self.async_write_ha_state()

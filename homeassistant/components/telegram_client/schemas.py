@@ -76,6 +76,12 @@ from .validators import (
     string_number,
 )
 
+FORWARDS_OPTIONS = {
+    None: STRING_FORWARDS_DEFAULT,
+    True: STRING_FORWARDS_ONLY_FORWARDS,
+    False: STRING_FORWARDS_NON_FORWARDS,
+}
+
 STEP_API_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_ID): cv.string,
@@ -93,7 +99,7 @@ STEP_PHONE_DATA_SCHEMA = vol.Schema(
 
 
 def step_token_data_schema(default_token=None):
-    """Step Token data schema."""
+    """Handle bot token step data validation."""
     return vol.Schema({vol.Required(CONF_TOKEN, default=default_token): cv.string})
 
 
@@ -105,14 +111,14 @@ STEP_OTP_DATA_SCHEMA = vol.Schema(
 
 
 def step_password_data_schema(default_password=None):
-    """Step Password data schema."""
+    """Handle password step data validation."""
     return vol.Schema(
         {vol.Required(CONF_PASSWORD, default=default_password): cv.string}
     )
 
 
 def step_events_data_schema(data):
-    """Step Events data schema."""
+    """Handle events step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -152,7 +158,7 @@ def step_events_data_schema(data):
 
 
 def step_new_message_data_schema(data):
-    """Step new message data schema."""
+    """Handle new message step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -166,13 +172,7 @@ def step_new_message_data_schema(data):
             vol.Required(
                 OPTION_FORWARDS,
                 default=data.get(OPTION_FORWARDS),
-            ): vol.In(
-                {
-                    None: STRING_FORWARDS_DEFAULT,
-                    True: STRING_FORWARDS_ONLY_FORWARDS,
-                    False: STRING_FORWARDS_NON_FORWARDS,
-                }
-            ),
+            ): vol.In(FORWARDS_OPTIONS),
             vol.Required(
                 OPTION_BLACKLIST_CHATS,
                 default=data.get(OPTION_BLACKLIST_CHATS, False),
@@ -194,7 +194,7 @@ def step_new_message_data_schema(data):
 
 
 def step_message_edited_data_schema(data):
-    """Step message edited data schema."""
+    """Handle message edited step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -208,13 +208,7 @@ def step_message_edited_data_schema(data):
             vol.Required(
                 OPTION_FORWARDS,
                 default=data.get(OPTION_FORWARDS),
-            ): vol.In(
-                {
-                    None: STRING_FORWARDS_DEFAULT,
-                    True: STRING_FORWARDS_ONLY_FORWARDS,
-                    False: STRING_FORWARDS_NON_FORWARDS,
-                }
-            ),
+            ): vol.In(FORWARDS_OPTIONS),
             vol.Required(
                 OPTION_BLACKLIST_CHATS,
                 default=data.get(OPTION_BLACKLIST_CHATS, False),
@@ -236,7 +230,7 @@ def step_message_edited_data_schema(data):
 
 
 def step_message_read_data_schema(data):
-    """Step message read data schema."""
+    """Handle message read step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -256,7 +250,7 @@ def step_message_read_data_schema(data):
 
 
 def step_message_deleted_data_schema(data):
-    """Step message deleted data schema."""
+    """Handle message deleted step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -272,7 +266,7 @@ def step_message_deleted_data_schema(data):
 
 
 def step_callback_query_data_schema(data):
-    """Step callback query data schema."""
+    """Handle callback query step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -296,7 +290,7 @@ def step_callback_query_data_schema(data):
 
 
 def step_inline_query_data_schema(data):
-    """Step inline query data schema."""
+    """Handle inline query step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -316,7 +310,7 @@ def step_inline_query_data_schema(data):
 
 
 def step_chat_action_data_schema(data):
-    """Step chat action data schema."""
+    """Handle chat action step data validation."""
     return vol.Schema(
         {
             vol.Required(
@@ -332,7 +326,7 @@ def step_chat_action_data_schema(data):
 
 
 def step_user_update_data_schema(data):
-    """Step user update data schema."""
+    """Handle user update step data validation."""
     return vol.Schema(
         {
             vol.Required(

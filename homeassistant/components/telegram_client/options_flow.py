@@ -1,4 +1,4 @@
-"""Options flow class."""
+"""Telegram client entry options flow."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from .schemas import (
 
 
 class TelegramClientOptionsFlow(OptionsFlow):
-    """Options flow handler."""
+    """Telegram client entry options flow."""
 
     _events_options: dict[str, bool]
     _new_message_options: dict[str, str | bool]
@@ -49,7 +49,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     _user_update_options: dict[str, str | bool]
 
     def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
+        """Handle Telegram client entry options flow initialization."""
         self.config_entry = config_entry
         self._events_options = config_entry.options.get(OPTION_EVENTS, {})
         self._new_message_options = config_entry.options.get(EVENT_NEW_MESSAGE, {})
@@ -70,7 +70,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
+        """Handle input of events to listen step."""
         if user_input is not None:
             self._events_options = user_input
             return await self.async_step_new_message()
@@ -85,7 +85,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_new_message(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage new message event options."""
+        """Handle input of new message event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_NEW_MESSAGE):
             return await self.async_step_message_edited()
@@ -121,7 +121,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_message_edited(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage message edited event options."""
+        """Handle input of message edited event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_MESSAGE_EDITED):
             return await self.async_step_message_read()
@@ -157,7 +157,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_message_read(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage message read event options."""
+        """Handle input of message read event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_MESSAGE_READ):
             return await self.async_step_message_deleted()
@@ -178,7 +178,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_message_deleted(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage callback deleted event options."""
+        """Handle input of message deleted event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_MESSAGE_DELETED):
             return await self.async_step_callback_query()
@@ -199,7 +199,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_callback_query(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage callback query event options."""
+        """Handle input of callback query event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_CALLBACK_QUERY):
             return await self.async_step_inline_query()
@@ -220,7 +220,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_inline_query(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage inline query event options."""
+        """Handle input of inline query event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_INLINE_QUERY):
             return await self.async_step_chat_action()
@@ -241,7 +241,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_chat_action(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage chat action event options."""
+        """Handle input of chat action event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_CHAT_ACTION):
             return await self.async_step_user_update()
@@ -262,7 +262,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
     async def async_step_user_update(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage user update event options."""
+        """Handle input of user update event parameters step."""
         errors: dict[str, str] = {}
         if not self._events_options.get(EVENT_USER_UPDATE):
             return await self.async_finish()
@@ -281,7 +281,7 @@ class TelegramClientOptionsFlow(OptionsFlow):
         )
 
     async def async_finish(self) -> ConfigFlowResult:
-        """Finish options flow."""
+        """Handle Telegram client entry options creation."""
         return self.async_create_entry(
             title="",
             data={

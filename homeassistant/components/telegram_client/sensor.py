@@ -1,4 +1,4 @@
-"""Telegram client sensor entity class."""
+"""Telegram client sensor entities."""
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry

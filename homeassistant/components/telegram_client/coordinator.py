@@ -142,7 +142,7 @@ type TelegramClientEntryConfigEntry = ConfigEntry[TelegramClientCoordinator]
 
 
 class TelegramClientCoordinator(DataUpdateCoordinator):
-    """Telegram client coordinator."""
+    """Telegram client data update coordinator."""
 
     _unique_id: str | None
     _entry: TelegramClientEntryConfigEntry
@@ -155,7 +155,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     def __init__(
         self, hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
     ) -> None:
-        """Initialize Telegram client coordinator."""
+        """Handle Telegram client data update coordinator initialization."""
         self._unique_id = entry.unique_id
         self._entry = entry
         self._hass = hass
@@ -195,49 +195,52 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     @property
     def device_info(self):
-        """Device info."""
+        """Get device info."""
         return self._device_info
 
     @property
     def unique_id(self):
-        """Unique id."""
+        """Get unique ID."""
         return self._unique_id
 
     @property
     def client(self):
-        """Client."""
+        """Get Telegram client instance."""
         return self._client
 
     @property
     def last_sent_message_id(self) -> Any:
-        """Last sent message id."""
+        """Get Last sent message ID sensor."""
         return self._last_sent_message_id
 
     @last_sent_message_id.setter
     def last_sent_message_id(self, sensor: Any):
+        """Set Last sent message ID sensor."""
         self._last_sent_message_id = sensor
 
     @property
     def last_edited_message_id(self) -> Any:
-        """Last edited message id."""
+        """Get Last edited message ID sensor."""
         return self._last_edited_message_id_sensor
 
     @last_edited_message_id.setter
     def last_edited_message_id(self, sensor: Any):
+        """Set Last edited message ID sensor."""
         self._last_edited_message_id_sensor = sensor
 
     @property
     def last_deleted_message_id(self) -> Any:
-        """Last deleted message id."""
+        """Get Last deleted message ID sensor."""
         return self._last_deleted_message_id_sensor
 
     @last_deleted_message_id.setter
     def last_deleted_message_id(self, sensor: Any):
+        """Set Last deleted message ID sensor."""
         self._last_deleted_message_id_sensor = sensor
 
     @callback
     async def on_new_message(self, event: events.newmessage.NewMessage.Event):
-        """Process new message event."""
+        """Handle new message event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_NEW_MESSAGE}",
             self._data_to_dict(
@@ -257,7 +260,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     @callback
     async def on_message_edited(self, event: events.messageedited.MessageEdited.Event):
-        """Process message edited event."""
+        """Handle message edited event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_MESSAGE_EDITED}",
             self._data_to_dict(
@@ -277,7 +280,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     @callback
     async def on_message_read(self, event: events.messageread.MessageRead.Event):
-        """Process message read event."""
+        """Handle message read event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_MESSAGE_READ}",
             self._data_to_dict(
@@ -302,7 +305,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     async def on_message_deleted(
         self, event: events.messagedeleted.MessageDeleted.Event
     ):
-        """Process message deleted event."""
+        """Handle message deleted event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_MESSAGE_DELETED}",
             self._data_to_dict(
@@ -322,7 +325,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     @callback
     async def on_callback_query(self, event: events.callbackquery.CallbackQuery.Event):
-        """Process callback query event."""
+        """Handle callback query event propagation."""
         data = self._data_to_dict(
             event,
             [
@@ -353,7 +356,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     @callback
     async def on_inline_query(self, event: events.inlinequery.InlineQuery.Event):
-        """Process inline query event."""
+        """Handle inline query event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_INLINE_QUERY}",
             self._data_to_dict(
@@ -376,7 +379,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     @callback
     async def on_chat_action(self, event: events.chataction.ChatAction.Event):
-        """Process chat action event."""
+        """Handle chat action event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_CHAT_ACTION}",
             self._data_to_dict(
@@ -414,7 +417,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
 
     @callback
     async def on_user_update(self, event: events.userupdate.UserUpdate.Event):
-        """Process message deleted event."""
+        """Handle user update event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_USER_UPDATE}",
             self._data_to_dict(
@@ -458,7 +461,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         )
 
     async def send_messages(self, data):
-        """Send messages."""
+        """Handle Send messages service call."""
         self._process_data(data)
         target_usernames = data.pop(FIELD_TARGET_USERNAME, [])
         target_ids = data.pop(FIELD_TARGET_ID, [])
@@ -468,7 +471,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         self.last_sent_message_id.set_state(message.id)
 
     async def edit_message(self, data):
-        """Edit messages."""
+        """Handle Edit message service call."""
         self._process_data(data)
         target_username = data.pop(FIELD_TARGET_USERNAME, None)
         target_id = data.pop(FIELD_TARGET_ID, None)
@@ -477,7 +480,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         self.last_edited_message_id.set_state(message.id)
 
     async def delete_messages(self, data):
-        """Delete messages."""
+        """Handle Delete messages service call."""
         self._process_data(data)
         target_usernames = data.pop(FIELD_TARGET_USERNAME, [])
         target_ids = data.pop(FIELD_TARGET_ID, [])
@@ -487,8 +490,10 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         self.last_deleted_message_id.set_state(message_ids[-1])
 
     def _process_data(self, hass, data):
+        """Handle Send messages and Edit message services data processing."""
+
         def inline_button(data):
-            """Generate inline button out of data."""
+            """Handle inline button generation."""
             return (
                 Button.inline(data)
                 if isinstance(data, str)
@@ -519,8 +524,8 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             data[FIELD_FILE] = list(map(hass.config.path, file))
 
     async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-        me = await self.async_client_call(self._client.get_me())
+        """Handle sensors data update."""
+        me = await self._async_client_call(self._client.get_me())
         return {
             key: getattr(me, key)
             for key in (
@@ -534,8 +539,8 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             )
         }
 
-    async def async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
-        """Call a coro or raise exception."""
+    async def _async_client_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
+        """Handle safe Telegram client call."""
         try:
             await self.async_client_start()
             if not await self._client.is_user_authorized():
@@ -559,18 +564,10 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         except sqlite3.OperationalError as err:
             raise ConfigEntryAuthFailed(err) from err
         except ConnectionError as err:
-            retries = 3
-            for i in range(retries):
-                await asyncio.sleep(1)
-                LOGGER.warning(f"API call raised an error {err} for {i + 1} time(s)")
-                try:
-                    return await coro
-                finally:
-                    pass
-            raise IntegrationError(f"API call failed {retries} times.") from err
+            raise IntegrationError("API call failed") from err
 
     async def async_client_start(self):
-        """Start the client."""
+        """Handle Telegram client start."""
         if not self._client.is_connected():
             try:
                 if self._entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT:
@@ -590,12 +587,12 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
                 raise ConfigEntryAuthFailed(err) from err
 
     async def async_client_disconnect(self, retries=5, delay=1):
-        """Disconnect the client."""
+        """Handle Telegram client stop."""
         if self._client.is_connected():
             await self._client.disconnect()
 
     def _subscribe_listeners(self, entry: ConfigEntry) -> None:
-        """Subscribe listeners."""
+        """Handle Telegram client events listeners subscription."""
         events_config = entry.options.get(OPTION_EVENTS, {})
         if events_config.get(EVENT_NEW_MESSAGE):
             options = entry.options.get(EVENT_NEW_MESSAGE, {})
@@ -695,7 +692,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             )
 
     def _unsubscribe_listeners(self, entry: ConfigEntry) -> None:
-        """Unsubscribe listeners."""
+        """Handle Telegram client events listeners unsubscription."""
         self._client.remove_event_handler(self.on_new_message, events.NewMessage)
         self._client.remove_event_handler(self.on_message_edited, events.MessageEdited)
         self._client.remove_event_handler(self.on_message_read, events.MessageRead)
@@ -710,13 +707,15 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     async def resubscribe_listeners(
         self, hass: HomeAssistant, entry: TelegramClientEntryConfigEntry
     ):
-        """Resubscribe listeners."""
+        """Handle Telegram client events listeners re-subscription."""
         self._unsubscribe_listeners(entry)
         self._subscribe_listeners(entry)
 
     def _tlobject_to_dict(self, data):
+        """Handle Telegram client objects to dict conversion."""
+
         def cleanup_data(data: Any) -> Any:
-            """Remove byte strings and "_" keys from dict."""
+            """Handle byte strings and "_" keys deletion."""
             if isinstance(data, list):
                 return [cleanup_data(value) for value in data]
             if isinstance(data, dict):
@@ -736,6 +735,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         return data
 
     def _data_to_dict(self, event, keys):
+        """Handle Telegram client data to dict conversion."""
         return dict(
             {
                 key: self._tlobject_to_dict(getattr(event, key))

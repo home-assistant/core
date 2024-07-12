@@ -1,4 +1,4 @@
-"""Config flow for Telegram client integration."""
+"""Telegram client entry config flow."""
 
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ from .schemas import (
 
 
 class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Telegram client."""
+    """Telegram client entry config flow."""
 
     VERSION = 1
     _api_hash: str
@@ -67,8 +67,8 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     _token: str = ""
     _type: str
 
-    def create_client(self) -> TelegramClient:
-        """Create Telegram client."""
+    def _create_client(self) -> TelegramClient:
+        """Create Telegram client instance."""
         path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
         path.mkdir(parents=True, exist_ok=True)
         path = path.joinpath(
@@ -81,7 +81,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             **CLIENT_PARAMS,
         )
 
-    def get_config_entry(self) -> ConfigEntry | None:
+    def _get_config_entry(self) -> ConfigEntry | None:
         """Get config entry."""
         entry_id = self.context.get(KEY_ENTRY_ID)
         return self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
@@ -89,13 +89,13 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Create the options flow."""
+        """Create Telegram client options flow."""
         return TelegramClientOptionsFlow(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle API input."""
+        """Handle input of API parameters step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             self._session = self.flow_id
@@ -115,11 +115,11 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_phone(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle phone number input."""
+        """Handle input of phone number step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             self._phone = user_input[CONF_PHONE]
-            self._client = self.create_client()
+            self._client = self._create_client()
             return await self.async_step_otp()
 
         return self.async_show_form(
@@ -129,11 +129,11 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_token(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle token input."""
+        """Handle input of bot token step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             self._token = user_input[CONF_TOKEN]
-            self._client = self.create_client()
+            self._client = self._create_client()
             try:
                 await self._client.start(bot_token=self._token)
                 await self._client.disconnect()
@@ -142,7 +142,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._client.log_out()
                 errors[CONF_TOKEN] = str(err)
 
-        entry = self.get_config_entry()
+        entry = self._get_config_entry()
         return self.async_show_form(
             step_id=CONF_TOKEN,
             data_schema=step_token_data_schema(
@@ -154,7 +154,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_otp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle OTP input."""
+        """Handle input of OTP step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
@@ -188,7 +188,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_password(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle password input."""
+        """Handle input of password step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             self._password = user_input[CONF_PASSWORD]
@@ -201,7 +201,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._client.disconnect()
                 errors[CONF_PASSWORD] = "invalid_auth"
 
-        entry = self.get_config_entry()
+        entry = self._get_config_entry()
         return self.async_show_form(
             step_id=CONF_PASSWORD,
             data_schema=step_password_data_schema(
@@ -211,8 +211,34 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=True,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-auth step."""
+        self._session = entry_data.get(CONF_SESSION_ID, "")
+        self._api_id = entry_data.get(CONF_API_ID, "")
+        self._api_hash = entry_data.get(CONF_API_HASH, "")
+        self._type = entry_data.get(CONF_CLIENT_TYPE, CLIENT_TYPE_CLIENT)
+        self._phone = entry_data.get(CONF_PHONE, "")
+
+        if self._type == CLIENT_TYPE_CLIENT:
+            self._client = self._create_client()
+            return await self.async_step_reauth_confirm()
+        return await self.async_step_token()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-auth completion step."""
+        if user_input is not None:
+            return await self.async_step_otp()
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=vol.Schema({})
+        )
+
     async def async_finish(self) -> ConfigFlowResult:
-        """Handle entry creation."""
+        """Handle Telegram client entry creation."""
         data = {
             CONF_SESSION_ID: self._session,
             CONF_API_ID: self._api_id,
@@ -224,7 +250,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if self.context["source"] == "reauth":
             if reauth_config_entry := self.hass.config_entries.async_get_entry(
-                self.context["entry_id"]
+                self.context[KEY_ENTRY_ID]
             ):
                 self.hass.config_entries.async_update_entry(
                     reauth_config_entry, data=data
@@ -249,34 +275,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=f"Telegam {self._type} ({unique_id})",
-            data=data,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle re-auth."""
-        self._session = entry_data.get(CONF_SESSION_ID, "")
-        self._api_id = entry_data.get(CONF_API_ID, "")
-        self._api_hash = entry_data.get(CONF_API_HASH, "")
-        self._type = entry_data.get(CONF_CLIENT_TYPE, CLIENT_TYPE_CLIENT)
-        self._phone = entry_data.get(CONF_PHONE, "")
-
-        if self._type == CLIENT_TYPE_CLIENT:
-            self._client = self.create_client()
-            return await self.async_step_reauth_confirm()
-        return await self.async_step_token()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
-        """Handle re-auth completion."""
-        if user_input is not None:
-            return await self.async_step_otp()
-
-        return self.async_show_form(
-            step_id="reauth_confirm", data_schema=vol.Schema({})
+            title=f"Telegam {self._type} ({unique_id})", data=data
         )
 
 

@@ -1,4 +1,4 @@
-"""Telegram client sensor entities."""
+"""Telegram client binary sensor entities."""
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,7 +17,7 @@ from .const import (
     STRING_PREMIUM,
     STRING_RESTRICTED,
 )
-from .entity import TelegramClientBinarySensor
+from .entity import TelegramClientCoordinatorBinarySensor
 
 BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -43,7 +43,7 @@ async def async_setup_entry(
     """Handle Telegram client binary sensor entries setup."""
     coordinator = entry.runtime_data
     binary_sensors = [
-        TelegramClientBinarySensor(coordinator, entity_description)
+        TelegramClientCoordinatorBinarySensor(coordinator, entity_description)
         for entity_description in BINARY_SENSORS
         if entry.data.get(CONF_CLIENT_TYPE) == CLIENT_TYPE_CLIENT
         or entity_description.key not in [SENSOR_PREMIUM]

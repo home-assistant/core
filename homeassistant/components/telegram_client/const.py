@@ -60,6 +60,7 @@ OPTION_USERS: Final = "users"
 
 # region sensors
 SENSOR_FIRST_NAME: Final = "first_name"
+SENSOR_ID: Final = "id"
 SENSOR_LAST_DELETED_MESSAGE_ID: Final = "last_deleted_message_id"
 SENSOR_LAST_EDITED_MESSAGE_ID: Final = "last_edited_message_id"
 SENSOR_LAST_NAME: Final = "last_name"
@@ -68,7 +69,6 @@ SENSOR_PHONE: Final = "phone"
 SENSOR_PREMIUM: Final = "premium"
 SENSOR_RESTRICTED: Final = "restricted"
 SENSOR_USERNAME: Final = "username"
-SENSOR_ID: Final = "id"
 # endregion
 
 # region services
@@ -186,6 +186,7 @@ STRING_FIRST_NAME: Final = "First name"
 STRING_FORWARDS_DEFAULT: Final = "Default (both)"
 STRING_FORWARDS_NON_FORWARDS: Final = "Only non-forwards"
 STRING_FORWARDS_ONLY_FORWARDS: Final = "Only forwards"
+STRING_ID: Final = "ID"
 STRING_LAST_DELETED_MESSAGE_ID: Final = "Last deleted message ID"
 STRING_LAST_EDITED_MESSAGE_ID: Final = "Last edited message ID"
 STRING_LAST_NAME: Final = "Last name"
@@ -194,15 +195,14 @@ STRING_PHONE: Final = "Phone"
 STRING_PREMIUM: Final = "Premium"
 STRING_RESTRICTED: Final = "Restricted"
 STRING_USERNAME: Final = "Username"
-STRING_ID: Final = "ID"
 # endregion
 
 # region icons
-ICON_LAST_EDITED_MESSAGE_ID: Final = "mdi:message-draw"
+ICON_ID: Final = "mdi:id-card"
 ICON_LAST_DELETED_MESSAGE_ID: Final = "mdi:message-minus"
+ICON_LAST_EDITED_MESSAGE_ID: Final = "mdi:message-draw"
 ICON_LAST_SENT_MESSAGE_ID: Final = "mdi:message-arrow-right"
 ICON_PHONE: Final = "mdi:card-account-phone"
 ICON_PREMIUM: Final = "mdi:star"
 ICON_USERNAME: Final = "mdi:account"
-ICON_ID: Final = "mdi:id-card"
 # endregion
