@@ -101,6 +101,7 @@ def _create_avtransport_sonos_event(
 
 
 async def _media_play(hass: HomeAssistant, entity: str) -> None:
+    """Call media play service."""
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_MEDIA_PLAY,
