@@ -188,7 +188,7 @@ async def test_zgs_avtransport_group_speakers(
     soco_br = sonos_setup_two_speakers[1]
 
     # Test 1 - Send a transport event changing the coordinator
-    # for the Living Room speaker to the bedroom speaker.
+    # for the living room speaker to the bedroom speaker.
     event = _create_avtransport_sonos_event("av_transport.json", soco_lr)
     soco_lr.avTransport.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
