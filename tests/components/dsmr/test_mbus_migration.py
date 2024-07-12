@@ -66,15 +66,13 @@ async def test_migrate_gas_to_mbus(
     await hass.async_block_till_done()
 
     telegram = {
-        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject(
-            BELGIUM_MBUS1_DEVICE_TYPE, [{"value": "003", "unit": ""}]
-        ),
+        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject((0, 0), [{"value": "003", "unit": ""}]),
         BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER: CosemObject(
-            BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+            (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
         BELGIUM_MBUS1_METER_READING2: MBusObject(
-            BELGIUM_MBUS1_METER_READING2,
+            (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
@@ -174,15 +172,13 @@ async def test_migrate_gas_to_mbus_exists(
     await hass.async_block_till_done()
 
     telegram = {
-        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject(
-            BELGIUM_MBUS1_DEVICE_TYPE, [{"value": "003", "unit": ""}]
-        ),
+        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject((0, 0), [{"value": "003", "unit": ""}]),
         BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER: CosemObject(
-            BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+            (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
         BELGIUM_MBUS1_METER_READING2: MBusObject(
-            BELGIUM_MBUS1_METER_READING2,
+            (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
