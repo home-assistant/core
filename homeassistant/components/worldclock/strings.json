@@ -3,9 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
-    "error": {
-      "incorrect_time_format": "the provided time format is incorrect"
-    },
     "step": {
       "user": {
         "data": {
@@ -23,9 +20,6 @@
   "options": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
-    },
-    "error": {
-      "incorrect_time_format": "[%key:component::worldclock::config::error::incorrect_time_format%]"
     },
     "step": {
       "init": {
