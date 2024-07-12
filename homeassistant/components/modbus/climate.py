@@ -481,7 +481,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if self._hvac_onoff_register is not None:
             if self._hvac_onoff_register_type == CALL_TYPE_WRITE_COILS:
                 onoff = await self._async_read_register(
-                    CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
+                    CALL_TYPE_COIL, self._hvac_onoff_register, raw=True
                 )
             else :
                 onoff = await self._async_read_register(
@@ -508,6 +508,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             # Return the raw value read from the register, do not change
             # the object's state
             self._attr_available = True
+            if register_type in (CALL_TYPE_COIL) :
+                return bool(result.bits[0] & 1)
             return int(result.registers[0])
 
         # The regular handling of the value
