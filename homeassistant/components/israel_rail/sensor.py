@@ -55,9 +55,9 @@ SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
         value_fn=lambda data_connection: data_connection.platform,
     ),
     IsraelRailSensorEntityDescription(
-        key="transfers",
-        translation_key="transfers",
-        value_fn=lambda data_connection: data_connection.transfers,
+        key="trains",
+        translation_key="trains",
+        value_fn=lambda data_connection: data_connection.trains,
     ),
     IsraelRailSensorEntityDescription(
         key="train_number",

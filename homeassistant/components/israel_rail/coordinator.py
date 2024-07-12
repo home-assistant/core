@@ -29,7 +29,7 @@ class DataConnection:
     start: str
     destination: str
     train_number: str
-    transfers: int
+    trains: int
 
 
 def departure_time(train_route: TrainRoute) -> datetime | None:
@@ -80,7 +80,7 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
                 departure=departure_time(train_routes[i]),
                 train_number=train_routes[i].trains[0].data["trainNumber"],
                 platform=train_routes[i].trains[0].platform,
-                transfers=len(train_routes[i].trains) - 1,
+                trains=len(train_routes[i].trains),
                 start=station_name_to_id(train_routes[i].trains[0].src),
                 destination=station_name_to_id(train_routes[i].trains[-1].dst),
             )

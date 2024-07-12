@@ -218,8 +218,8 @@
     'platform': 'israel_rail',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'transfers',
-    'unique_id': 'באר יעקב אשקלון_transfers',
+    'translation_key': 'trains',
+    'unique_id': 'באר יעקב אשקלון_trains',
     'unit_of_measurement': None,
   })
 # ---
@@ -234,7 +234,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
 # name: test_valid_config[sensor.mock_title_none_3-entry]
@@ -522,7 +522,7 @@
     'state': '1234',
   })
 # ---
-# name: test_valid_config[sensor.mock_title_transfers-entry]
+# name: test_valid_config[sensor.mock_title_trains-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -534,7 +534,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_transfers',
+    'entity_id': 'sensor.mock_title_trains',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -546,26 +546,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Transfers',
+    'original_name': 'Trains',
     'platform': 'israel_rail',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'transfers',
-    'unique_id': 'באר יעקב אשקלון_transfers',
+    'translation_key': 'trains',
+    'unique_id': 'באר יעקב אשקלון_trains',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_valid_config[sensor.mock_title_transfers-state]
+# name: test_valid_config[sensor.mock_title_trains-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Transfers',
+      'friendly_name': 'Mock Title Trains',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_transfers',
+    'entity_id': 'sensor.mock_title_trains',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
