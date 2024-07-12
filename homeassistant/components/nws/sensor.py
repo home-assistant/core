@@ -141,7 +141,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     ),
     NWSSensorEntityDescription(
         key="timestamp",
-        name="Observation Timestamp",
+        name="Latest Observation Time",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
