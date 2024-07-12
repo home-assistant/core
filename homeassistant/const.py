@@ -683,7 +683,7 @@ class UnitOfReactivePower(StrEnum):
 
 _DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
     UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
-    "2025.1",
+    "2025.8",
 )
 """Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
 
