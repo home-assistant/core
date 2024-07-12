@@ -27,7 +27,7 @@ SCHEMA = vol.Schema(
 async def _validate_input(user_input: dict[str, Any]) -> tuple[str, dict[str, str]]:
     errors: dict[str, str] = {}
 
-    # Validate Access URL and/or CLaim token - converting to an Access URL
+    # Validate Access URL and/or Claim token - converting to an Access URL
     access_url: str = user_input[CONF_ACCESS_URL]
     try:
         if not access_url.startswith("http"):
