@@ -13,6 +13,18 @@ from . import BroadlinkDevice
 from .const import DOMAIN
 from .entity import BroadlinkEntity
 
+DAY_ID_TO_NAME = {
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday",
+    7: "sunday",
+}
+DAY_NAME_TO_ID = {v: k for k, v in DAY_ID_TO_NAME.items()}
+OPTIONS = [k for k, _ in DAY_NAME_TO_ID.items()]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -29,15 +41,7 @@ class BroadlinkDayOfWeek(BroadlinkEntity, SelectEntity):
 
     _attr_has_entity_name = True
     _attr_current_option: str | None = None
-    _attr_options = [
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-    ]
+    _attr_options = OPTIONS
     _attr_translation_key = "day_of_week"
 
     def __init__(self, device: BroadlinkDevice) -> None:
@@ -51,7 +55,7 @@ class BroadlinkDayOfWeek(BroadlinkEntity, SelectEntity):
         if data is None or "dayofweek" not in data:
             self._attr_current_option = None
         else:
-            self._attr_current_option = str(data["dayofweek"])
+            self._attr_current_option = DAY_ID_TO_NAME[data["dayofweek"]]
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
@@ -60,7 +64,7 @@ class BroadlinkDayOfWeek(BroadlinkEntity, SelectEntity):
             hour=self._coordinator.data["hour"],
             minute=self._coordinator.data["min"],
             second=self._coordinator.data["sec"],
-            day=int(option),
+            day=DAY_NAME_TO_ID[option],
         )
         self._attr_current_option = option
         self.async_write_ha_state()

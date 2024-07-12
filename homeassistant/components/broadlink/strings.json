@@ -66,13 +66,13 @@
       "day_of_week": {
         "name": "Day of week",
         "state": {
-          "1": "[%key:common::time::monday%]",
-          "2": "[%key:common::time::tuesday%]",
-          "3": "[%key:common::time::wednesday%]",
-          "4": "[%key:common::time::thursday%]",
-          "5": "[%key:common::time::friday%]",
-          "6": "[%key:common::time::saturday%]",
-          "7": "[%key:common::time::sunday%]"
+          "monday": "[%key:common::time::monday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "friday": "[%key:common::time::friday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]"
         }
       }
     }

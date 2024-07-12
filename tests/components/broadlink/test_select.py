@@ -43,7 +43,7 @@ async def test_select(
     await async_update_entity(hass, select.entity_id)
     assert mock_setup.api.get_full_status.call_count == 2
     state = hass.states.get(select.entity_id)
-    assert state.state == "3"
+    assert state.state == "wednesday"
 
     # set value
     await hass.services.async_call(
@@ -51,12 +51,12 @@ async def test_select(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: select.entity_id,
-            ATTR_OPTION: "2",
+            ATTR_OPTION: "tuesday",
         },
         blocking=True,
     )
     state = hass.states.get(select.entity_id)
-    assert state.state == "2"
+    assert state.state == "tuesday"
     assert mock_setup.api.set_time.call_count == 1
     call_args = mock_setup.api.set_time.call_args.kwargs
     assert call_args == {
