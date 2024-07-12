@@ -36,9 +36,11 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
         protocol = "https" if config_entry.data[CONF_SSL] else "http"
+        self.api_url = f"{protocol}://{config_entry.data.get(CONF_HOST)}"
+        self.api_port = config_entry.data.get(CONF_PORT)
         self._api = QNAPStats(
-            f"{protocol}://{config_entry.data.get(CONF_HOST)}",
-            config_entry.data.get(CONF_PORT),
+            self.api_url,
+            self.api_port,
             config_entry.data.get(CONF_USERNAME),
             config_entry.data.get(CONF_PASSWORD),
             verify_ssl=config_entry.data.get(CONF_VERIFY_SSL),
