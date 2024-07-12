@@ -1,6 +1,5 @@
 """Tests for Motionblinds BLE buttons."""
 
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -15,8 +14,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_platform
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(("button"), [ATTR_CONNECT, ATTR_DISCONNECT, ATTR_FAVORITE])
