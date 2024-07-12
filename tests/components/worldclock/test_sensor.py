@@ -1,5 +1,7 @@
 """The test for the World clock sensor platform."""
 
+from datetime import tzinfo
+
 import pytest
 
 from homeassistant.components.worldclock.const import (
@@ -17,13 +19,13 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def time_zone():
+async def time_zone() -> tzinfo | None:
     """Fixture for time zone."""
-    return dt_util.get_time_zone("America/New_York")
+    return await dt_util.async_get_time_zone("America/New_York")
 
 
 async def test_time_imported_from_yaml(
-    hass: HomeAssistant, time_zone, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant, time_zone: tzinfo | None, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test the time at a different location."""
     config = {"sensor": {"platform": "worldclock", "time_zone": "America/New_York"}}
@@ -48,7 +50,7 @@ async def test_time_imported_from_yaml(
 
 
 async def test_time_from_config_entry(
-    hass: HomeAssistant, time_zone, loaded_entry: MockConfigEntry
+    hass: HomeAssistant, time_zone: tzinfo | None, loaded_entry: MockConfigEntry
 ) -> None:
     """Test the time at a different location."""
 
@@ -69,7 +71,7 @@ async def test_time_from_config_entry(
     ],
 )
 async def test_time_format(
-    hass: HomeAssistant, time_zone, loaded_entry: MockConfigEntry
+    hass: HomeAssistant, time_zone: tzinfo | None, loaded_entry: MockConfigEntry
 ) -> None:
     """Test time_format setting."""
 
