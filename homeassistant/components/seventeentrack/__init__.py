@@ -134,11 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         tracking_number = call.data[ATTR_TRACKING_NUMBER]
         friendly_name = call.data.get(ATTR_INFO_TEXT, "")
 
-        config_entry: ConfigEntry | None = hass.config_entries.async_get_entry(
-            config_entry_id
-        )
-
-        if not config_entry:
+        if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_config_entry",
@@ -146,12 +142,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     "config_entry_id": config_entry_id,
                 },
             )
-        if config_entry.state != ConfigEntryState.LOADED:
+        if entry.state != ConfigEntryState.LOADED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="unloaded_config_entry",
                 translation_placeholders={
-                    "config_entry_id": config_entry.title,
+                    "config_entry_id": entry.title,
                 },
             )
 
