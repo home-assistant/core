@@ -68,7 +68,7 @@
           "name": "[%key:common::config_flow::data::name%]",
           "turn_off": "Actions on turn off",
           "turn_on": "Actions on turn on",
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "value_template": "Value template"
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
@@ -127,7 +127,7 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
           "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
           "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]"
         },
