@@ -36,6 +36,7 @@ class WeatherFlowCloudSensorEntityDescription(
 
 
 WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
+    # Air Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="air_density",
         translation_key="air_density",
