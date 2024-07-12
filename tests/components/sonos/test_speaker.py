@@ -76,7 +76,7 @@ async def test_subscription_creation_fails(
     assert speaker._subscriptions
 
 
-def _load_zgs(
+def _create_zgs_sonos_event(
     fixture_file: str, soco_1: MockSoCo, soco_2: MockSoCo, create_uui_ds: bool = True
 ) -> SonosMockEvent:
     """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
@@ -92,7 +92,9 @@ def _load_zgs(
     return event
 
 
-def _load_avtransport(fixture_file: str, soco: MockSoCo) -> SonosMockEvent:
+def _create_avtransport_sonos_event(
+    fixture_file: str, soco: MockSoCo
+) -> SonosMockEvent:
     """Create a Sonos Event for an AVTransport update."""
     variables = load_json_value_fixture(fixture_file, DOMAIN)
     return SonosMockEvent(soco, soco.avTransport, variables)
@@ -134,7 +136,9 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2 - Group the speakers, living room is the coordinator
-    event = _load_zgs("zgs_group.xml", soco_lr, soco_br, create_uui_ds=True)
+    event = _create_zgs_sonos_event(
+        "zgs_group.xml", soco_lr, soco_br, create_uui_ds=True
+    )
     soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
     soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -158,7 +162,9 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 3 - Ungroup the speakers
-    event = _load_zgs("zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False)
+    event = _create_zgs_sonos_event(
+        "zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False
+    )
     soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
     soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -182,7 +188,7 @@ async def test_zgs_avtransport_group_speakers(
 
     # Test 1 - Send a transport event changing the coordinator
     # for the Living Room speaker to the bedroom speaker.
-    event = _load_avtransport("av_transport.json", soco_lr)
+    event = _create_avtransport_sonos_event("av_transport.json", soco_lr)
     soco_lr.avTransport.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
     # Call should route to the new coodinator which is the bedroom
@@ -194,7 +200,9 @@ async def test_zgs_avtransport_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2- Send a zgs event to return living room to its own coordinator
-    event = _load_zgs("zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False)
+    event = _create_zgs_sonos_event(
+        "zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False
+    )
     soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
     soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
