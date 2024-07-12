@@ -872,7 +872,7 @@ class SonosSpeaker:
                 and self.sonos_group == [self]
                 and self.sonos_group_entities
             ):
-                # A single speaker should not have a coordinator
+                # Single speakers do not have a coodinator, check and clear
                 if self.coordinator is not None:
                     _LOGGER.debug(
                         "Zone %s Cleared coordinator [%s]",
@@ -881,6 +881,7 @@ class SonosSpeaker:
                     )
                     self.coordinator = None
                     self.async_write_entity_states()
+                # Skip updating existing single speakers in polling mode
                 return
 
             entity_registry = er.async_get(self.hass)
