@@ -59,16 +59,7 @@ def config_fixture() -> dict[str, str]:
 async def mock_envoy_fixture(
     mock_auth: EnvoyTokenAuth,
     mock_authenticate: AsyncMock,
-    mock_close_dry_contact: AsyncMock,
-    mock_disable_charge_from_grid: AsyncMock,
-    mock_enable_charge_from_grid: AsyncMock,
-    mock_go_off_grid: AsyncMock,
-    mock_go_on_grid: AsyncMock,
-    mock_open_dry_contact: AsyncMock,
-    mock_set_reserve_soc: AsyncMock,
-    mock_set_storage_mode: AsyncMock,
     mock_setup: AsyncMock,
-    mock_update_dry_contact: AsyncMock,
     request: pytest.FixtureRequest,
     serial_number: str,
 ) -> AsyncGenerator[AsyncMock, None]:
@@ -77,17 +68,17 @@ async def mock_envoy_fixture(
     # Add the fixtures specified
     mock_envoy.auth = mock_auth
     mock_envoy.authenticate = mock_authenticate
-    mock_envoy.close_dry_contact = mock_close_dry_contact
-    mock_envoy.disable_charge_from_grid = mock_disable_charge_from_grid
-    mock_envoy.enable_charge_from_grid = mock_enable_charge_from_grid
-    mock_envoy.go_off_grid = mock_go_off_grid
-    mock_envoy.go_on_grid = mock_go_on_grid
-    mock_envoy.open_dry_contact = mock_open_dry_contact
+    mock_envoy.close_dry_contact = AsyncMock(return_value={})
+    mock_envoy.disable_charge_from_grid = AsyncMock(return_value={})
+    mock_envoy.enable_charge_from_grid = AsyncMock(return_value={})
+    mock_envoy.go_off_grid = AsyncMock(return_value={})
+    mock_envoy.go_on_grid = AsyncMock(return_value={})
+    mock_envoy.open_dry_contact = AsyncMock(return_value={})
     mock_envoy.serial_number = serial_number
-    mock_envoy.set_reserve_soc = mock_set_reserve_soc
-    mock_envoy.set_storage_mode = mock_set_storage_mode
+    mock_envoy.set_reserve_soc = AsyncMock(return_value={})
+    mock_envoy.set_storage_mode = AsyncMock(return_value={})
     mock_envoy.setup = mock_setup
-    mock_envoy.update_dry_contact = mock_update_dry_contact
+    mock_envoy.update_dry_contact = AsyncMock(return_value={})
 
     # determine fixture file name, default envoy if no request passed
     fixture_name = "envoy"
@@ -146,60 +137,6 @@ def mock_setup() -> AsyncMock:
 def serial_number_fixture() -> str:
     """Define a serial number fixture."""
     return "1234"
-
-
-@pytest.fixture(name="mock_go_on_grid")
-def go_on_grid_fixture() -> AsyncMock:
-    """Define a go_on_grid fixture."""
-    return AsyncMock(return_value="went on grid")
-
-
-@pytest.fixture(name="mock_go_off_grid")
-def go_off_grid_fixture() -> AsyncMock:
-    """Define a go_off_grid fixture."""
-    return AsyncMock(return_value="went off grid")
-
-
-@pytest.fixture(name="mock_update_dry_contact")
-def update_dry_contact_fixture() -> AsyncMock:
-    """Define a update_dry_contact fixture."""
-    return AsyncMock(return_value="dry contact updated")
-
-
-@pytest.fixture(name="mock_open_dry_contact")
-def open_dry_contact_fixture() -> AsyncMock:
-    """Define a gopen dry contact fixture."""
-    return AsyncMock(return_value="dry contact closed")
-
-
-@pytest.fixture(name="mock_close_dry_contact")
-def close_dry_contact_fixture() -> AsyncMock:
-    """Define a close dry contact fixture."""
-    return AsyncMock(return_value="dry contact closed")
-
-
-@pytest.fixture(name="mock_enable_charge_from_grid")
-def enable_charge_from_grid_fixture() -> AsyncMock:
-    """Define a enable charge from grid fixture."""
-    return AsyncMock(return_value="charge from grid enabled")
-
-
-@pytest.fixture(name="mock_disable_charge_from_grid")
-def disable_charge_from_grid_fixture() -> AsyncMock:
-    """Define a disable charge from grid fixture."""
-    return AsyncMock(return_value="charge from grid disabled")
-
-
-@pytest.fixture(name="mock_set_storage_mode")
-def set_storage_mode_fixture() -> AsyncMock:
-    """Define a update_dry_contact fixture."""
-    return AsyncMock(return_value="storage mode set")
-
-
-@pytest.fixture(name="mock_set_reserve_soc")
-def set_reserve_soc_fixture() -> AsyncMock:
-    """Define a update_dry_contact fixture."""
-    return AsyncMock(return_value="reserve soc set")
 
 
 def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
