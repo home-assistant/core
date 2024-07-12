@@ -132,19 +132,19 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count",
         translation_key="lightning_strike_count",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.lightning_strike_count,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count_last_1hr",
         translation_key="lightning_strike_count_last_1hr",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.lightning_strike_count_last_1hr,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count_last_3hr",
         translation_key="lightning_strike_count_last_3hr",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.lightning_strike_count_last_3hr,
     ),
     WeatherFlowCloudSensorEntityDescription(
