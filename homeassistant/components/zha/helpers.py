@@ -73,7 +73,7 @@ from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
 from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
 from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device, ZHAEvent
-from zha.zigbee.group import Group, GroupMember
+from zha.zigbee.group import Group, GroupInfo, GroupMember
 from zigpy.config import (
     CONF_DATABASE,
     CONF_DEVICE,
@@ -760,12 +760,14 @@ class ZHAGatewayProxy(EventBase):
             zha_device_proxy.device_id = device_registry_device.id
         return zha_device_proxy
 
-    def _async_get_or_create_group_proxy(self, zha_group: Group) -> ZHAGroupProxy:
+    def _async_get_or_create_group_proxy(self, group_info: GroupInfo) -> ZHAGroupProxy:
         """Get or create a ZHA group."""
-        zha_group_proxy = self.group_proxies.get(zha_group.group_id)
+        zha_group_proxy = self.group_proxies.get(group_info.group_id)
         if zha_group_proxy is None:
-            zha_group_proxy = ZHAGroupProxy(zha_group, self)
-            self.group_proxies[zha_group.group_id] = zha_group_proxy
+            zha_group_proxy = ZHAGroupProxy(
+                self.gateway.groups[group_info.group_id], self
+            )
+            self.group_proxies[group_info.group_id] = zha_group_proxy
         return zha_group_proxy
 
     def _create_entity_metadata(
