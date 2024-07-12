@@ -13,11 +13,10 @@ import pytest
 
 from homeassistant.components.motionblinds_ble.const import (
     ATTR_BATTERY,
-    ATTR_CALIBRATION,
-    ATTR_CONNECTION,
     ATTR_SIGNAL_STRENGTH,
     DOMAIN,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -25,18 +24,16 @@ from . import setup_platform
 
 
 @pytest.mark.parametrize(
-    ("sensor", "sensor_str", "update_func", "initial", "input", "output"),
+    ("sensor", "update_func", "initial", "input", "output"),
     [
         (
-            ATTR_CONNECTION,
-            "none",
+            "connection_status",
             lambda device: device.update_connection,
             MotionConnectionType.DISCONNECTED.value,
             [MotionConnectionType.CONNECTING],
             MotionConnectionType.CONNECTING.value,
         ),
         (
-            ATTR_BATTERY,
             ATTR_BATTERY,
             lambda device: device.update_battery,
             "unknown",
@@ -45,14 +42,12 @@ from . import setup_platform
         ),
         (  # Battery unknown
             ATTR_BATTERY,
-            ATTR_BATTERY,
             lambda device: device.update_battery,
             "unknown",
             [None, False, False],
             "unknown",
         ),
         (  # Wired
-            ATTR_BATTERY,
             ATTR_BATTERY,
             lambda device: device.update_battery,
             "unknown",
@@ -61,7 +56,6 @@ from . import setup_platform
         ),
         (  # Almost full
             ATTR_BATTERY,
-            ATTR_BATTERY,
             lambda device: device.update_battery,
             "unknown",
             [99, False, False],
@@ -69,22 +63,19 @@ from . import setup_platform
         ),
         (  # Almost empty
             ATTR_BATTERY,
-            ATTR_BATTERY,
             lambda device: device.update_battery,
             "unknown",
             [1, False, False],
             "1",
         ),
         (
-            ATTR_CALIBRATION,
-            "none_2",
+            "calibration_status",
             lambda device: device.update_calibration,
             "unknown",
             [MotionCalibrationType.CALIBRATING],
             MotionCalibrationType.CALIBRATING.value,
         ),
         (
-            ATTR_SIGNAL_STRENGTH,
             ATTR_SIGNAL_STRENGTH,
             lambda device: device.update_signal_strength,
             "unknown",
@@ -96,7 +87,6 @@ from . import setup_platform
 async def test_sensor(
     hass: HomeAssistant,
     sensor: str,
-    sensor_str: str,
     update_func: Callable[[MotionDevice], Callable[..., None]],
     initial: str,
     input: list[Any],
@@ -109,8 +99,8 @@ async def test_sensor(
     )
     device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
 
-    assert hass.states.get(f"sensor.{name}_{sensor_str}").state == initial
+    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == initial
     update_func(device)(*input)
-    assert hass.states.get(f"sensor.{name}_{sensor_str}").state == output
+    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == output
 
     await hass.async_block_till_done()

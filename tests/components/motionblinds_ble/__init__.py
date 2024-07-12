@@ -22,7 +22,7 @@ async def setup_platform(
     hass: HomeAssistant,
     platforms: list[Platform],
     blind_type: MotionBlindType = MotionBlindType.ROLLER,
-) -> MockConfigEntry:
+) -> tuple[MockConfigEntry, str]:
     """Mock a fully setup config entry."""
 
     config_entry = MockConfigEntry(
