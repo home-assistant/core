@@ -12,6 +12,10 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, SCOPES
 
+CLIENT_ID = "71b813eb-4a2e-483a-b831-4dec5cb9bf0d"
+AUTHORIZE_URL = "https://auth.tesla.com/oauth2/v3/authorize"
+TOKEN_URL = "https://auth.tesla.com/oauth2/v3/token"
+
 
 async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
@@ -42,10 +46,10 @@ class TeslaOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
         super().__init__(
             hass,
             domain,
-            "71b813eb-4a2e-483a-b831-4dec5cb9bf0d",
+            CLIENT_ID,
             "",  # Implementation has no client secret
-            "https://auth.tesla.com/oauth2/v3/authorize",
-            "https://auth.tesla.com/oauth2/v3/token",
+            AUTHORIZE_URL,
+            TOKEN_URL,
         )
 
     @property
@@ -53,7 +57,7 @@ class TeslaOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": " ".join(SCOPES),
-            "code_challenge": self.code_challenge,
+            "code_challenge": self.code_challenge,  # PKCE
         }
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
@@ -63,6 +67,6 @@ class TeslaOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
                 "grant_type": "authorization_code",
                 "code": external_data["code"],
                 "redirect_uri": external_data["state"]["redirect_uri"],
-                "code_verifier": self.code_verifier,  # PKCE verifier
+                "code_verifier": self.code_verifier,  # PKCE
             }
         )

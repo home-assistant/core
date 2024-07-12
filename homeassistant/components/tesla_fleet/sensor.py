@@ -438,7 +438,7 @@ async def async_setup_entry(
                 TeslaFleetEnergyLiveSensorEntity(energysite, description)
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
-                # if description.key in energysite.live_coordinator.data
+                if description.key in energysite.live_coordinator.data
             ),
             (  # Add wall connectors
                 TeslaFleetWallConnectorSensorEntity(energysite, wc["din"], description)
@@ -453,7 +453,7 @@ async def async_setup_entry(
                 TeslaFleetEnergyInfoSensorEntity(energysite, description)
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_INFO_DESCRIPTIONS
-                # if description.key in energysite.info_coordinator.data
+                if description.key in energysite.info_coordinator.data
             ),
         )
     )

@@ -74,7 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
     async def _refresh_token() -> str:
         async with refresh_lock:
-            LOGGER.info("Refreshing token")
             await oauth_session.async_ensure_token_valid()
             token = oauth_session.token[CONF_ACCESS_TOKEN]
             if TYPE_CHECKING:
@@ -138,13 +137,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, api)
             info_coordinator = TeslaFleetEnergySiteInfoCoordinator(hass, api, product)
 
+            await live_coordinator.async_config_entry_first_refresh()
+            await info_coordinator.async_config_entry_first_refresh()
+
             # Create energy site model
             model = None
             models = set()
-            for gateway in product.get("components_gateways", []):
+            for gateway in info_coordinator.data.get("components_gateways", []):
                 if gateway.get("part_name"):
                     models.add(gateway["part_name"])
-            for battery in product.get("components_batteries", []):
+            for battery in info_coordinator.data.get("components_batteries", []):
                 if battery.get("part_name"):
                     models.add(battery["part_name"])
             if models:
