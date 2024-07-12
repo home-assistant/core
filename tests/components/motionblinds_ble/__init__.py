@@ -18,15 +18,13 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
 
-SERVICE_INFO = BluetoothServiceInfo(
+FIXTURE_SERVICE_INFO = BluetoothServiceInfo(
     name="MOTION_CCCC",
     address="cc:cc:cc:cc:cc:cc",
     rssi=-63,
     service_data={},
-    manufacturer_data={
-        1062: b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02\t\x01\x04\x06\x10\x00\x01"
-    },
-    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    manufacturer_data={},
+    service_uuids=[],
     source="local",
 )
 
