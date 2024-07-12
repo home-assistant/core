@@ -47,6 +47,7 @@ from .const import (
     KEY_CONFIG_ENTRY_ID,
     KEY_SUGGESTED_VALUE,
     OPTION_BLACKLIST_CHATS,
+    OPTION_BLACKLIST_USERS,
     OPTION_CHATS,
     OPTION_DATA,
     OPTION_FORWARDS,
@@ -55,6 +56,7 @@ from .const import (
     OPTION_INCOMING,
     OPTION_OUTGOING,
     OPTION_PATTERN,
+    OPTION_USERS,
     STRING_BOT,
     STRING_CLIENT,
     STRING_FORWARDS_DEFAULT,
@@ -298,12 +300,12 @@ def step_inline_query_data_schema(data):
     return vol.Schema(
         {
             vol.Required(
-                OPTION_BLACKLIST_CHATS,
-                default=data.get(OPTION_BLACKLIST_CHATS, False),
+                OPTION_BLACKLIST_USERS,
+                default=data.get(OPTION_BLACKLIST_USERS, False),
             ): cv.boolean,
             vol.Optional(
-                OPTION_FROM_USERS,
-                description={KEY_SUGGESTED_VALUE: data.get(OPTION_FROM_USERS, "")},
+                OPTION_USERS,
+                description={KEY_SUGGESTED_VALUE: data.get(OPTION_USERS, "")},
             ): cv.string,
             vol.Optional(
                 OPTION_PATTERN,

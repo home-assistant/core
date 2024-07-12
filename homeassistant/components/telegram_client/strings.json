@@ -81,7 +81,7 @@
       "new_message": {
         "data": {
           "chats": "Chats",
-          "blacklist_chats": "Blacklist chats",
+          "blacklist_chats": "Blacklist mode (chats)",
           "incoming": "Incoming",
           "outgoing": "Outgoing",
           "from_users": "From users",
@@ -94,7 +94,7 @@
       "message_edited": {
         "data": {
           "chats": "Chats",
-          "blacklist_chats": "Blacklist chats",
+          "blacklist_chats": "Blacklist mode (chats)",
           "incoming": "Incoming",
           "outgoing": "Outgoing",
           "from_users": "From users",
@@ -107,7 +107,7 @@
       "message_read": {
         "data": {
           "chats": "Chats",
-          "blacklist_chats": "Blacklist chats",
+          "blacklist_chats": "Blacklist mode (chats)",
           "inbox": "Inbox"
         },
         "title": "Message read event",
@@ -116,7 +116,7 @@
       "message_deleted": {
         "data": {
           "chats": "Chats",
-          "blacklist_chats": "Blacklist chats"
+          "blacklist_chats": "Blacklist mode (chats)"
         },
         "title": "Message deleted event",
         "description": "Here you can set parameters for message deleted events."
@@ -124,7 +124,7 @@
       "callback_query": {
         "data": {
           "chats": "Chats",
-          "blacklist_chats": "Blacklist chats",
+          "blacklist_chats": "Blacklist mode (chats)",
           "data": "Data",
           "pattern": "Pattern"
         },
@@ -134,7 +134,7 @@
       "inline_query": {
         "data": {
           "users": "Users",
-          "blacklist_users": "Blacklist users",
+          "blacklist_users": "Blacklist mode (users)",
           "pattern": "Pattern"
         },
         "title": "Inline query event",
@@ -143,7 +143,7 @@
       "chat_action": {
         "data": {
           "chats": "Chats",
-          "blacklist_chats": "Blacklist chats"
+          "blacklist_chats": "Blacklist mode (chats)"
         },
         "title": "Chat action event",
         "description": "Here you can set parameters for chat action events."
@@ -151,7 +151,7 @@
       "user_update": {
         "data": {
           "chats": "Chats",
-          "blacklist_chats": "Blacklist chats"
+          "blacklist_chats": "Blacklist mode (chats)"
         },
         "title": "User update event",
         "description": "Here you can set parameters for user update events."

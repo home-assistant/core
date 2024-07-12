@@ -19,13 +19,9 @@ from .const import (
     EVENT_NEW_MESSAGE,
     EVENT_USER_UPDATE,
     KEY_CONFIG_ENTRY_ID,
-    OPTION_BLACKLIST_CHATS,
-    OPTION_DATA,
     OPTION_EVENTS,
-    OPTION_INBOX,
     OPTION_INCOMING,
     OPTION_OUTGOING,
-    OPTION_PATTERN,
     SERVICE_DELETE_MESSAGES,
     SERVICE_EDIT_MESSAGE,
     SERVICE_SEND_MESSAGES,
@@ -46,7 +42,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Telegram client component."""
+    """Handle Telegram client integration setup."""
     _register_service(hass, SERVICE_SEND_MESSAGES, SERVICE_SEND_MESSAGES_SCHEMA)
     _register_service(hass, SERVICE_EDIT_MESSAGE, SERVICE_EDIT_MESSAGE_SCHEMA)
     _register_service(hass, SERVICE_DELETE_MESSAGES, SERVICE_DELETE_MESSAGES_SCHEMA)
@@ -68,40 +64,20 @@ async def async_setup_entry(
                 OPTION_EVENTS: {
                     EVENT_NEW_MESSAGE: True,
                     EVENT_MESSAGE_EDITED: True,
+                    EVENT_MESSAGE_READ: True,
+                    EVENT_MESSAGE_DELETED: True,
+                    EVENT_CALLBACK_QUERY: True,
+                    EVENT_INLINE_QUERY: True,
+                    EVENT_CHAT_ACTION: True,
+                    EVENT_USER_UPDATE: True,
                 },
                 EVENT_NEW_MESSAGE: {
-                    OPTION_BLACKLIST_CHATS: False,
                     OPTION_INCOMING: True,
                     OPTION_OUTGOING: True,
-                    OPTION_PATTERN: "",
                 },
                 EVENT_MESSAGE_EDITED: {
-                    OPTION_BLACKLIST_CHATS: False,
                     OPTION_INCOMING: True,
                     OPTION_OUTGOING: True,
-                    OPTION_PATTERN: "",
-                },
-                EVENT_MESSAGE_READ: {
-                    OPTION_BLACKLIST_CHATS: False,
-                    OPTION_INBOX: False,
-                },
-                EVENT_MESSAGE_DELETED: {
-                    OPTION_BLACKLIST_CHATS: False,
-                },
-                EVENT_CALLBACK_QUERY: {
-                    OPTION_BLACKLIST_CHATS: False,
-                    OPTION_DATA: "",
-                    OPTION_PATTERN: "",
-                },
-                EVENT_INLINE_QUERY: {
-                    OPTION_BLACKLIST_CHATS: False,
-                    OPTION_PATTERN: "",
-                },
-                EVENT_CHAT_ACTION: {
-                    OPTION_BLACKLIST_CHATS: False,
-                },
-                EVENT_USER_UPDATE: {
-                    OPTION_BLACKLIST_CHATS: False,
                 },
             },
         )
@@ -129,7 +105,6 @@ async def async_unload_entry(
 
 def _register_service(hass: HomeAssistant, service: str, schema):
     async def async_service_handler(call: ServiceCall):
-        """Service call handler."""
         data = dict(call.data)
         coordinator = hass.data[DOMAIN].get(
             data.pop(KEY_CONFIG_ENTRY_ID, list(hass.data[DOMAIN].keys())[0])
