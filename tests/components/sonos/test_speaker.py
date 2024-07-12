@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import sonos
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_PLAY,
 )
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SonosMockEvent
@@ -77,30 +76,14 @@ async def test_subscription_creation_fails(
     assert speaker._subscriptions
 
 
-async def _setup_hass(hass: HomeAssistant) -> None:
-    """Set up home assistant with two Sonos Speakers."""
-    await async_setup_component(
-        hass,
-        sonos.DOMAIN,
-        {
-            "sonos": {
-                "media_player": {
-                    "interface_addr": "127.0.0.1",
-                    "hosts": ["10.10.10.1", "10.10.10.2"],
-                }
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-
 def _load_zgs(
     fixture_file: str, soco_1: MockSoCo, soco_2: MockSoCo, create_uui_ds: bool = True
 ) -> SonosMockEvent:
     """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
-    zgs = load_fixture(f"sonos/{fixture_file}")
+    zgs = load_fixture(fixture_file, DOMAIN)
     variables = {}
     variables["ZoneGroupState"] = zgs
+    # Sonos does not always send this data with zgs events
     if create_uui_ds:
         variables["zone_player_uui_ds_in_group"] = f"{soco_1.uid},{soco_2.uid}"
     event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
@@ -111,7 +94,7 @@ def _load_zgs(
 
 def _load_avtransport(fixture_file: str, soco: MockSoCo) -> SonosMockEvent:
     """Create a Sonos Event for an AVTransport update."""
-    variables = load_json_value_fixture(fixture_file, "sonos")
+    variables = load_json_value_fixture(fixture_file, DOMAIN)
     return SonosMockEvent(soco, soco.avTransport, variables)
 
 
@@ -174,7 +157,7 @@ async def test_zgs_event_group_speakers(
     soco_lr.play.reset_mock()
     soco_br.play.reset_mock()
 
-    # Ungroup the speakers
+    # Test 3 - Ungroup the speakers
     event = _load_zgs("zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False)
     soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
     soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
@@ -197,12 +180,12 @@ async def test_zgs_avtransport_group_speakers(
     soco_lr = sonos_setup_two_speakers[0]
     soco_br = sonos_setup_two_speakers[1]
 
-    # Send a transport event that changes the coordinator for the Living Room speaker
-    # to the bedroom speaker.
+    # Test 1 - Send a transport event changing the coordinator
+    # for the Living Room speaker to the bedroom speaker.
     event = _load_avtransport("av_transport.json", soco_lr)
     soco_lr.avTransport.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
-    # Calls should route to the new coodinator which is the bedroom
+    # Call should route to the new coodinator which is the bedroom
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 0
     assert soco_br.play.call_count == 1
@@ -210,12 +193,12 @@ async def test_zgs_avtransport_group_speakers(
     soco_lr.play.reset_mock()
     soco_br.play.reset_mock()
 
-    # Send a zgs event that returns the living room to it's own group
+    # Test 2- Send a zgs event to return living room to its own coordinator
     event = _load_zgs("zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False)
     soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
     soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
-    # Calls should route to the living room
+    # Call should route to the living room
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 1
     assert soco_br.play.call_count == 0
