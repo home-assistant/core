@@ -48,5 +48,5 @@ class DoorBirdRequestView(HomeAssistantView):
         #
         event_type = f"{DOMAIN}_{event}"
         hass.bus.async_fire(event_type, event_data)
-        async_dispatcher_send(hass, event_type, event_data)
+        async_dispatcher_send(hass, event_type)
         return web.Response(text="OK")
