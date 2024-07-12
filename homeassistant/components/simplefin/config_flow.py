@@ -77,6 +77,11 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
                 # create entry
                 user_input[CONF_ACCESS_URL] = access_url
 
+                if self.reauth_entry:
+                    return self.async_update_reload_and_abort(
+                        self.reauth_entry,
+                        data={CONF_ACCESS_URL: user_input[CONF_ACCESS_URL]},
+                    )
                 return self.async_create_entry(
                     title="SimpleFIN",
                     data={CONF_ACCESS_URL: user_input[CONF_ACCESS_URL]},
@@ -95,21 +100,21 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return await self.async_step_reauth_confirm()
+        return await self.async_step_user()
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is not None:
-            access_url, errors = await _validate_input(user_input)
-            if not errors and self.reauth_entry:
-                return self.async_update_reload_and_abort(
-                    self.reauth_entry,
-                    data={CONF_ACCESS_URL: user_input[CONF_ACCESS_URL]},
-                )
+    # async def async_step_reauth_confirm(
+    #     self, user_input: dict[str, Any] | None = None
+    # ) -> ConfigFlowResult:
+    #     """Dialog that informs the user that reauth is required."""
+    #     if user_input is not None:
+    #         access_url, errors = await _validate_input(user_input)
+    #         if not errors and self.reauth_entry:
+    #             return self.async_update_reload_and_abort(
+    #                 self.reauth_entry,
+    #                 data={CONF_ACCESS_URL: user_input[CONF_ACCESS_URL]},
+    #             )
 
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=SCHEMA,
-        )
+    #     return self.async_show_form(
+    #         step_id="reauth_confirm",
+    #         data_schema=SCHEMA,
+    #     )
