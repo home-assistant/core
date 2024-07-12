@@ -14,12 +14,10 @@ from homeassistant.components.number import (
     DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
-    NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
-    CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_STATE,
@@ -75,7 +73,6 @@ NUMBER_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_MIN): cv.template,
         vol.Optional(CONF_MAX): cv.template,
-        vol.Optional(CONF_MODE): vol.All(cv.string, vol.In(NumberMode)),
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 )
@@ -169,7 +166,6 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
-        self._attr_mode = config.get(CONF_MODE, NumberMode.AUTO)
         self._attr_device_info = async_device_info_to_link_from_device_id(
             hass,
             config.get(CONF_DEVICE_ID),

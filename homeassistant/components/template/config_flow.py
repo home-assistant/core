@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
-    CONF_MODE,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -50,7 +49,6 @@ from .number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
-    NumberMode,
     async_create_preview_number,
 )
 from .select import CONF_OPTIONS, CONF_SELECT_OPTION
@@ -120,18 +118,6 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             ): selector.TemplateSelector(),
             vol.Optional(CONF_SET_VALUE): selector.ActionSelector(),
         }
-        if flow_type == "options":
-            schema |= {
-                vol.Optional(
-                    CONF_MODE, default=NumberMode.AUTO
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[mode.value for mode in NumberMode],
-                        mode=selector.SelectSelectorMode.LIST,
-                        translation_key="number_mode",
-                    ),
-                ),
-            }
 
     if domain == Platform.SELECT:
         schema |= _SCHEMA_STATE | {
