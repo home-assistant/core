@@ -293,6 +293,7 @@ effect_sky:
         boolean:
     speed:
       default: 50
+      example: 50
       selector:
         number:
           min: 1
@@ -301,6 +302,7 @@ effect_sky:
           unit_of_measurement: seconds
     sky_type:
       default: "Clouds"
+      example: "Clouds"
       selector:
         select:
           options:
@@ -309,19 +311,26 @@ effect_sky:
             - "Sunset"
     cloud_saturation_min:
       default: 50
+      example: 50
       selector:
         number:
           min: 0
           max: 255
     cloud_saturation_max:
       default: 180
+      example: 180
       selector:
         number:
           min: 0
           max: 255
     palette:
       example:
-        - "[[0, 100, 100, 3500], [60, 100, 100, 3500]]"
+        - "[200, 1, 1, 3500]"
+        - "[241, 1, 0.01, 3500]"
+        - "[189, 1, 0.08, 3500]"
+        - "[40, 1, 1, 3500]"
+        - "[40, 0.5, 1, 3500]"
+        - "[40, 0, 1, 6500]"
       selector:
         object:
 effect_stop:

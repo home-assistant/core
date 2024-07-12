@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import IntEnum
-from functools import partial
+from functools import cached_property, partial
 from math import floor, log10
 from typing import Any, cast
 
@@ -15,6 +15,7 @@ from aiolifx.aiolifx import (
     Message,
     MultiZoneDirection,
     MultiZoneEffectType,
+    TileEffectSkyType,
     TileEffectType,
 )
 from aiolifx.connection import LIFXConnection
@@ -137,14 +138,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
         """Return the current infrared brightness as a string."""
         return infrared_brightness_value_to_option(self.device.infrared_brightness)
 
-    @property
+    @cached_property
     def serial_number(self) -> str:
         """Return the internal mac address."""
         return cast(
             str, self.device.mac_addr
         )  # device.mac_addr is not the mac_address, its the serial number
 
-    @property
+    @cached_property
     def mac_address(self) -> str:
         """Return the physical mac address."""
         return get_real_mac_addr(
@@ -158,19 +159,19 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
         """Return the label of the bulb."""
         return cast(str, self.device.label)
 
-    @property
+    @cached_property
     def is_extended_multizone(self) -> bool:
         """Return true if this is a multizone device."""
         return bool(lifx_features(self.device)["extended_multizone"])
 
-    @property
+    @cached_property
     def is_legacy_multizone(self) -> bool:
         """Return true if this is a legacy multizone device."""
         return bool(
             lifx_features(self.device)["multizone"] and not self.is_extended_multizone
         )
 
-    @property
+    @cached_property
     def is_matrix(self) -> bool:
         """Return true if this is a matrix device."""
         return bool(lifx_features(self.device)["matrix"])
@@ -471,6 +472,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
 
             if palette is None:
                 palette = []
+
+            if sky_type is not None:
+                sky_type = TileEffectSkyType[sky_type.upper()].value
 
             await async_execute_lifx(
                 partial(

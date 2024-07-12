@@ -410,21 +410,33 @@ class LIFXManager:
             await self.effects_conductor.start(effect, bulbs)
 
         elif service == SERVICE_EFFECT_SKY:
+            palette = kwargs.get(ATTR_PALETTE, None)
+            if palette is not None:
+                theme = Theme()
+                for hsbk in palette:
+                    theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
+
+            speed = kwargs.get(ATTR_SPEED, EFFECT_SKY_DEFAULT_SPEED)
+            sky_type = kwargs.get(ATTR_SKY_TYPE, EFFECT_SKY_DEFAULT_SKY_TYPE)
+
+            cloud_saturation_min = kwargs.get(
+                ATTR_CLOUD_SATURATION_MIN,
+                EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN,
+            )
+            cloud_saturation_max = kwargs.get(
+                ATTR_CLOUD_SATURATION_MAX,
+                EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX,
+            )
+
             await asyncio.gather(
                 *(
                     coordinator.async_set_matrix_effect(
                         effect=EFFECT_SKY,
-                        speed=kwargs.get(ATTR_SPEED, EFFECT_SKY_DEFAULT_SPEED),
-                        sky_type=kwargs.get(ATTR_SKY_TYPE, EFFECT_SKY_DEFAULT_SKY_TYPE),
-                        cloud_saturation_min=kwargs.get(
-                            ATTR_CLOUD_SATURATION_MIN,
-                            EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN,
-                        ),
-                        cloud_saturation_max=kwargs.get(
-                            ATTR_CLOUD_SATURATION_MAX,
-                            EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX,
-                        ),
-                        palette=kwargs.get(ATTR_PALETTE, None),
+                        speed=speed,
+                        sky_type=sky_type,
+                        cloud_saturation_min=cloud_saturation_min,
+                        cloud_saturation_max=cloud_saturation_max,
+                        palette=theme.colors,
                     )
                     for coordinator in coordinators
                 )
