@@ -119,8 +119,8 @@ async def test_setup_multiple_systems_zones(
     # Set the temperature of each zone to its zone number so that we can
     # ensure we've created the right client for each zone.
     for sz, client in mock_evolution_entry.runtime_data.items():
-        client.read_temperature.return_value = sz[1]
-    trigger_polling(hass, freezer)
+        client.read_current_temperature.return_value = sz[1]
+    await trigger_polling(hass, freezer)
 
     # Check that each system and zone has the expected temperature value to
     # verify that the initial setup flow worked as expected.
@@ -129,7 +129,7 @@ async def test_setup_multiple_systems_zones(
         zone = sz[1]
         state = hass.states.get(f"climate.system_{system}_zone_{zone}")
         assert state, hass.states.async_all()
-        assert state.attributes["temperature"] == zone
+        assert state.attributes["current_temperature"] == zone
 
     # Check that the created devices are wired to each other as expected.
     device_registry = dr.async_get(hass)
