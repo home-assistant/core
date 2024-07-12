@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import mimetypes
 from pathlib import Path
 from typing import Final
 
@@ -18,7 +17,7 @@ from .const import KEY_HASS
 CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADER = f"public, max-age={CACHE_TIME}"
 CACHE_HEADERS: Mapping[str, str] = {hdrs.CACHE_CONTROL: CACHE_HEADER}
-PATH_CACHE: LRU[tuple[str, Path], tuple[Path | None, str | None]] = LRU(512)
+PATH_CACHE: LRU[tuple[str, Path], Path | None] = LRU(512)
 
 
 def _get_file_path(rel_url: str, directory: Path) -> Path | None:
@@ -46,7 +45,7 @@ class CachingStaticResource(StaticResource):
         """Return requested file from disk as a FileResponse."""
         rel_url = request.match_info["filename"]
         key = (rel_url, self._directory)
-        if (filepath_content_type := PATH_CACHE.get(key)) is None:
+        if (filepath := PATH_CACHE.get(key)) is None:
             hass = request.app[KEY_HASS]
             try:
                 filepath = await hass.async_add_executor_job(_get_file_path, *key)
@@ -60,24 +59,13 @@ class CachingStaticResource(StaticResource):
                 # perm error or other kind!
                 request.app.logger.exception("Unexpected exception")
                 raise HTTPNotFound from error
+            PATH_CACHE[key] = filepath
 
-            content_type: str | None = None
-            if filepath is not None:
-                content_type = (mimetypes.guess_type(rel_url))[
-                    0
-                ] or "application/octet-stream"
-            PATH_CACHE[key] = (filepath, content_type)
-        else:
-            filepath, content_type = filepath_content_type
-
-        if filepath and content_type:
+        if filepath:
             return FileResponse(
                 filepath,
                 chunk_size=self._chunk_size,
-                headers={
-                    hdrs.CACHE_CONTROL: CACHE_HEADER,
-                    hdrs.CONTENT_TYPE: content_type,
-                },
+                headers=CACHE_HEADERS,
             )
 
         raise HTTPForbidden if filepath is None else HTTPNotFound
