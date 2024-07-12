@@ -10,6 +10,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
+    CONF_PLATFORM,
     EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
@@ -18,6 +19,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+
+async def test_not_loading_from_platform_yaml(hass: HomeAssistant) -> None:
+    """Test compensation sensor not loaded from platform YAML."""
+    config = {
+        "sensor": [
+            {
+                CONF_PLATFORM: DOMAIN,
+            }
+        ]
+    }
+
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_linear_state(hass: HomeAssistant) -> None:
