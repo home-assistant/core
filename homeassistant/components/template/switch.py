@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
 SWICTH_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
         vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
