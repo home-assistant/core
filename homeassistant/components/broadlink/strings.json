@@ -64,15 +64,15 @@
     },
     "select": {
       "day_of_week": {
-        "name": "Day of Week",
+        "name": "Day of week",
         "state": {
-          "1": "Monday",
-          "2": "Tuesday",
-          "3": "Wednesday",
-          "4": "Thursday",
-          "5": "Friday",
-          "6": "Saturday",
-          "7": "Sunday"
+          "1": "[%key:common::time::monday%]",
+          "2": "[%key:common::time::tuesday%]",
+          "3": "[%key:common::time::wednesday%]",
+          "4": "[%key:common::time::thursday%]",
+          "5": "[%key:common::time::friday%]",
+          "6": "[%key:common::time::saturday%]",
+          "7": "[%key:common::time::sunday%]"
         }
       }
     }
