@@ -31,7 +31,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CLIENT_PARAMS,
-    CLIENT_TYPE_CLIENT,
+    CLIENT_TYPE_USER,
     CONF_API_HASH,
     CONF_API_ID,
     CONF_CLIENT_TYPE,
@@ -72,7 +72,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
         path.mkdir(parents=True, exist_ok=True)
         path = path.joinpath(
-            f"{re.sub(r'\D', '', self._phone) if self._type == CLIENT_TYPE_CLIENT else self._token.split(":")[0]}.session"
+            f"{re.sub(r'\D', '', self._phone) if self._type == CLIENT_TYPE_USER else self._token.split(":")[0]}.session"
         )
         return TelegramClient(
             path,
@@ -104,7 +104,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             self._type = user_input[CONF_CLIENT_TYPE]
             return (
                 await self.async_step_phone()
-                if self._type == CLIENT_TYPE_CLIENT
+                if self._type == CLIENT_TYPE_USER
                 else await self.async_step_token()
             )
 
@@ -218,10 +218,10 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         self._session = entry_data.get(CONF_SESSION_ID, "")
         self._api_id = entry_data.get(CONF_API_ID, "")
         self._api_hash = entry_data.get(CONF_API_HASH, "")
-        self._type = entry_data.get(CONF_CLIENT_TYPE, CLIENT_TYPE_CLIENT)
+        self._type = entry_data.get(CONF_CLIENT_TYPE, CLIENT_TYPE_USER)
         self._phone = entry_data.get(CONF_PHONE, "")
 
-        if self._type == CLIENT_TYPE_CLIENT:
+        if self._type == CLIENT_TYPE_USER:
             self._client = self._create_client()
             return await self.async_step_reauth_confirm()
         return await self.async_step_token()
@@ -260,7 +260,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             return self.async_abort(reason="reauth_successful")
         try:
-            if self._type == CLIENT_TYPE_CLIENT:
+            if self._type == CLIENT_TYPE_USER:
                 await self._client.start(phone=self._phone)
             else:
                 await self._client.start(bot_token=self._token)
@@ -269,7 +269,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._client.disconnect()
         unique_id = (
             f"@{me.username}" or self._phone
-            if self._type == CLIENT_TYPE_CLIENT
+            if self._type == CLIENT_TYPE_USER
             else f"@{me.username}"
         )
         await self.async_set_unique_id(unique_id)

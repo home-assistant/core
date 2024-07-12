@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "api_id": "API ID",
-          "api_hash": "API hash"
+          "api_hash": "API hash",
+          "client_type": "Client type"
         },
         "title": "API parameters",
         "description": "You can obtain `api_id` and `api_hash` using [this manual](https://core.telegram.org/api/obtaining_api_id#obtaining-api-id)."

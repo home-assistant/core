@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CLIENT_PARAMS,
-    CLIENT_TYPE_CLIENT,
+    CLIENT_TYPE_USER,
     CONF_API_HASH,
     CONF_API_ID,
     CONF_CLIENT_TYPE,
@@ -180,7 +180,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         )
         session_id = (
             re.sub(r"\D", "", self._entry.data[CONF_PHONE])
-            if self._entry.data.get(CONF_CLIENT_TYPE) == CLIENT_TYPE_CLIENT
+            if self._entry.data.get(CONF_CLIENT_TYPE) == CLIENT_TYPE_USER
             else self._entry.data.get(CONF_TOKEN, "").split(":")[0]
         )
         self._client = TelegramClient(
@@ -570,7 +570,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle Telegram client start."""
         if not self._client.is_connected():
             try:
-                if self._entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT:
+                if self._entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_USER:
                     await self._client.connect()
                     if not await self._client.is_user_authorized():
                         raise ConfigEntryAuthFailed("Credentials has expired")

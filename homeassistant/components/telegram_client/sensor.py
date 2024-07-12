@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CLIENT_TYPE_CLIENT,
+    CLIENT_TYPE_USER,
     CONF_CLIENT_TYPE,
     ICON_ID,
     ICON_LAST_DELETED_MESSAGE_ID,
@@ -76,7 +76,7 @@ async def async_setup_entry(
     async_add_entities(
         TelegramClientCoordinatorSensor(coordinator, entity_description)
         for entity_description in SENSORS
-        if entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_CLIENT
+        if entry.data[CONF_CLIENT_TYPE] == CLIENT_TYPE_USER
         or entity_description.key not in [SENSOR_PHONE, SENSOR_LAST_NAME]
     )
     coordinator.last_sent_message_id = TelegramClientSensor(

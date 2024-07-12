@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CLIENT_TYPE_CLIENT,
+    CLIENT_TYPE_USER,
     CONF_CLIENT_TYPE,
     ICON_PREMIUM,
     SENSOR_PREMIUM,
@@ -45,7 +45,7 @@ async def async_setup_entry(
     binary_sensors = [
         TelegramClientCoordinatorBinarySensor(coordinator, entity_description)
         for entity_description in BINARY_SENSORS
-        if entry.data.get(CONF_CLIENT_TYPE) == CLIENT_TYPE_CLIENT
+        if entry.data.get(CONF_CLIENT_TYPE) == CLIENT_TYPE_USER
         or entity_description.key not in [SENSOR_PREMIUM]
     ]
     async_add_entities(binary_sensors)

@@ -7,7 +7,7 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CLIENT_TYPE_BOT,
-    CLIENT_TYPE_CLIENT,
+    CLIENT_TYPE_USER,
     CONF_API_HASH,
     CONF_API_ID,
     CONF_CLIENT_TYPE,
@@ -58,10 +58,10 @@ from .const import (
     OPTION_PATTERN,
     OPTION_USERS,
     STRING_BOT,
-    STRING_CLIENT,
     STRING_FORWARDS_DEFAULT,
     STRING_FORWARDS_NON_FORWARDS,
     STRING_FORWARDS_ONLY_FORWARDS,
+    STRING_USER,
 )
 from .validators import (
     allow_keyboard_if_file_not_defined,
@@ -87,7 +87,7 @@ STEP_API_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_ID): cv.string,
         vol.Required(CONF_API_HASH): cv.string,
         vol.Required(CONF_CLIENT_TYPE): vol.In(
-            {CLIENT_TYPE_CLIENT: STRING_CLIENT, CLIENT_TYPE_BOT: STRING_BOT}
+            {CLIENT_TYPE_USER: STRING_USER, CLIENT_TYPE_BOT: STRING_BOT}
         ),
     }
 )

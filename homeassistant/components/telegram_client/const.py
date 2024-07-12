@@ -19,7 +19,7 @@ CLIENT_PARAMS: Final = {
 
 # region client types
 CLIENT_TYPE_BOT: Final = "bot"
-CLIENT_TYPE_CLIENT: Final = "client"
+CLIENT_TYPE_USER: Final = "client"
 # endregion
 
 # region configuration
@@ -181,7 +181,6 @@ KEY_WITHIN_WEEKS: Final = "within_weeks"
 
 # region strings
 STRING_BOT: Final = "Bot"
-STRING_CLIENT: Final = "Client"
 STRING_FIRST_NAME: Final = "First name"
 STRING_FORWARDS_DEFAULT: Final = "Default (both)"
 STRING_FORWARDS_NON_FORWARDS: Final = "Only non-forwards"
@@ -194,6 +193,7 @@ STRING_LAST_SENT_MESSAGE_ID: Final = "Last sent message ID"
 STRING_PHONE: Final = "Phone"
 STRING_PREMIUM: Final = "Premium"
 STRING_RESTRICTED: Final = "Restricted"
+STRING_USER: Final = "User"
 STRING_USERNAME: Final = "Username"
 # endregion
 
