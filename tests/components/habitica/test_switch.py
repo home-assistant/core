@@ -20,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import assert_mock_called_with
+
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -86,7 +88,7 @@ async def test_turn_on_off_toggle(
         blocking=True,
     )
 
-    assert await mock_habitica.match_request("post", f"{DEFAULT_URL}/api/v3/user/sleep")
+    assert_mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/user/sleep")
 
 
 @pytest.mark.parametrize(
@@ -133,4 +135,5 @@ async def test_turn_on_off_toggle_exceptions(
             {ATTR_ENTITY_ID: "switch.test_user_rest_in_the_inn"},
             blocking=True,
         )
-    assert await mock_habitica.match_request("post", f"{DEFAULT_URL}/api/v3/user/sleep")
+
+    assert_mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/user/sleep")
