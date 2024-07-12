@@ -23,7 +23,6 @@ DAY_ID_TO_NAME = {
     7: "sunday",
 }
 DAY_NAME_TO_ID = {v: k for k, v in DAY_ID_TO_NAME.items()}
-OPTIONS = [k for k, _ in DAY_NAME_TO_ID.items()]
 
 
 async def async_setup_entry(
@@ -41,7 +40,7 @@ class BroadlinkDayOfWeek(BroadlinkEntity, SelectEntity):
 
     _attr_has_entity_name = True
     _attr_current_option: str | None = None
-    _attr_options = OPTIONS
+    _attr_options = list(DAY_NAME_TO_ID)
     _attr_translation_key = "day_of_week"
 
     def __init__(self, device: BroadlinkDevice) -> None:
