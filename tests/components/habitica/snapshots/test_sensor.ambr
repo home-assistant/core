@@ -473,7 +473,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_user_level-entry]
