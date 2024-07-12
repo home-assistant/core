@@ -8,7 +8,12 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
+from homeassistant.components.doorbird.const import (
+    CONF_EVENTS,
+    DEFAULT_DOORBELL_EVENT,
+    DEFAULT_MOTION_EVENT,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -81,6 +86,9 @@ async def test_user_form(hass: HomeAssistant) -> None:
         "name": "mydoorbird",
         "password": "password",
         "username": "friend",
+    }
+    assert result2["options"] == {
+        CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
