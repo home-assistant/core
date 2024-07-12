@@ -1,11 +1,12 @@
 """Test weather."""
 
+from datetime import UTC, datetime
 import json
+from unittest.mock import MagicMock, patch
+
+from homeassistant.components.environment_canada.weather import get_forecast
 
 from tests.common import load_fixture
-from homeassistant.components.environment_canada.weather import get_forecast
-from datetime import UTC, datetime
-from unittest.mock import MagicMock, patch
 
 
 def test_forecast_daily() -> None:
