@@ -54,13 +54,17 @@ class OAuth2FlowHandler(
                 return self.async_abort(reason="no_devices_found")
             if len(self._discovered_pumps) == 1:
                 # just select this pump since it is the only one
-                # await self.async_set_unique_id(info["uuid"])
-                # self._abort_if_unique_id_configured()
-                # # a pump was selected
-                # return self.async_create_entry(
-                #     title="Weheat heatpump", data=(self._auth_data | info)
-                # )
-                return self.async_abort(reason="no_devices_found")
+                info = {
+                    "uuid": self._discovered_pumps[0].uuid,
+                    "heat_pump_info": self._discovered_pumps[0],
+                }
+
+                await self.async_set_unique_id(info["uuid"])
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title="Weheat heatpump", data=(self._auth_data | info)
+                )
 
             # show list of pumps
             heat_pump_dict = {
