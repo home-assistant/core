@@ -214,7 +214,8 @@
           "unknown": "Unknown",
           "locked": "Locked",
           "air_drying_stopping": "Air drying stopping",
-          "egg_attack": "Cupid mode"
+          "egg_attack": "Cupid mode",
+          "mapping": "Mapping"
         }
       },
       "total_cleaning_time": {
@@ -282,7 +283,8 @@
           "deep": "Deep",
           "deep_plus": "Deep+",
           "custom": "Custom",
-          "fast": "Fast"
+          "fast": "Fast",
+          "smart_mode": "SmartPlan"
         }
       },
       "mop_intensity": {
@@ -293,10 +295,12 @@
           "mild": "Mild",
           "medium": "Medium",
           "moderate": "Moderate",
+          "max": "Max",
           "high": "High",
           "intense": "Intense",
           "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
-          "custom_water_flow": "Custom water flow"
+          "custom_water_flow": "Custom water flow",
+          "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
         }
       }
     },
@@ -338,13 +342,14 @@
               "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
               "off": "[%key:common::state::off%]",
-              "max": "Max",
+              "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
               "max_plus": "Max plus",
               "medium": "Medium",
               "quiet": "Quiet",
               "silent": "Silent",
               "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
-              "turbo": "Turbo"
+              "turbo": "Turbo",
+              "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
             }
           }
         }
