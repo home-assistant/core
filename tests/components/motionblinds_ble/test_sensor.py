@@ -1,5 +1,8 @@
 """Tests for Motionblinds BLE sensors."""
 
+from collections.abc import Callable
+from typing import Any
+
 from motionblindsble.const import (
     MotionBlindType,
     MotionCalibrationType,
@@ -94,10 +97,10 @@ async def test_sensor(
     hass: HomeAssistant,
     sensor: str,
     sensor_str: str,
-    update_func,
-    initial,
-    input,
-    output,
+    update_func: Callable[[MotionDevice], Callable[..., None]],
+    initial: str,
+    input: list[Any],
+    output: str,
 ) -> None:
     """Test sensors."""
 
