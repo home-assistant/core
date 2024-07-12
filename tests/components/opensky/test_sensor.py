@@ -14,12 +14,13 @@ from homeassistant.components.opensky.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 
+from . import setup_integration
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_object_fixture,
 )
-from tests.components.opensky import setup_integration
 
 
 async def test_sensor(

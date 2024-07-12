@@ -10,7 +10,7 @@ import voluptuous as vol
 import wakeonlan
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -36,7 +36,7 @@ CONF_OFF_ACTION = "turn_off"
 DEFAULT_NAME = "Wake on LAN"
 DEFAULT_PING_TIMEOUT = 1
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,

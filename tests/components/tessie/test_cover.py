@@ -37,12 +37,13 @@ async def test_covers(
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
-    for entity_id, openfunc, closefunc in [
+    for entity_id, openfunc, closefunc in (
         ("cover.test_vent_windows", "vent_windows", "close_windows"),
         ("cover.test_charge_port_door", "open_unlock_charge_port", "close_charge_port"),
         ("cover.test_frunk", "open_front_trunk", False),
         ("cover.test_trunk", "open_close_rear_trunk", "open_close_rear_trunk"),
-    ]:
+        ("cover.test_sunroof", "vent_sunroof", "close_sunroof"),
+    ):
         # Test open windows
         if openfunc:
             with patch(

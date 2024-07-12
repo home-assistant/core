@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+
+# pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 

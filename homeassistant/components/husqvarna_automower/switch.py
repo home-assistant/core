@@ -1,53 +1,30 @@
 """Creates a switch entity for the mower."""
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aioautomower.exceptions import ApiException
-from aioautomower.model import (
-    MowerActivities,
-    MowerStates,
-    RestrictedReasons,
-    StayOutZones,
-    Zone,
-)
+from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, EXECUTION_TIME_DELAY
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
-ERROR_ACTIVITIES = (
-    MowerActivities.STOPPED_IN_GARDEN,
-    MowerActivities.UNKNOWN,
-    MowerActivities.NOT_APPLICABLE,
-)
-ERROR_STATES = [
-    MowerStates.FATAL_ERROR,
-    MowerStates.ERROR,
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.NOT_APPLICABLE,
-    MowerStates.UNKNOWN,
-    MowerStates.STOPPED,
-    MowerStates.OFF,
-]
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[SwitchEntity] = []
     entities.extend(
         AutomowerScheduleSwitchEntity(mower_id, coordinator)
@@ -84,37 +61,17 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        attributes = self.mower_attributes
-        return not (
-            attributes.mower.state == MowerStates.RESTRICTED
-            and attributes.planner.restricted_reason == RestrictedReasons.NOT_APPLICABLE
-        )
+        return self.mower_attributes.mower.mode != MowerModes.HOME
 
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and (
-            self.mower_attributes.mower.state not in ERROR_STATES
-            or self.mower_attributes.mower.activity not in ERROR_ACTIVITIES
-        )
-
+    @handle_sending_exception()
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        try:
-            await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
 
+    @handle_sending_exception()
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        try:
-            await self.coordinator.api.commands.resume_schedule(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
 
 class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
@@ -159,44 +116,26 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Return True if the device is available and the zones are not `dirty`."""
         return super().available and not self.stay_out_zones.dirty
 
+    @handle_sending_exception(poll_after_sending=True)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        try:
-            await self.coordinator.api.commands.switch_stay_out_zone(
-                self.mower_id, self.stay_out_zone_uid, False
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
-        else:
-            # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME_DELAY)
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.api.commands.switch_stay_out_zone(
+            self.mower_id, self.stay_out_zone_uid, False
+        )
 
+    @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        try:
-            await self.coordinator.api.commands.switch_stay_out_zone(
-                self.mower_id, self.stay_out_zone_uid, True
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
-        else:
-            # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME_DELAY)
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.api.commands.switch_stay_out_zone(
+            self.mower_id, self.stay_out_zone_uid, True
+        )
 
 
 @callback
 def async_remove_entities(
     hass: HomeAssistant,
     coordinator: AutomowerDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    entry: AutomowerConfigEntry,
     mower_id: str,
 ) -> None:
     """Remove deleted stay-out-zones from Home Assistant."""
@@ -207,9 +146,7 @@ def async_remove_entities(
         for zones_uid in _zones.zones:
             uid = f"{mower_id}_{zones_uid}_stay_out_zones"
             active_zones.add(uid)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_reg, config_entry.entry_id
-    ):
+    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
         if (
             entity_entry.domain == Platform.SWITCH
             and (split := entity_entry.unique_id.split("_"))[0] == mower_id

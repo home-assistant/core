@@ -11,6 +11,7 @@ from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -26,8 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -57,7 +57,7 @@ ATTR_MEDIA_START_TIME = "media_start_time"
 
 _LOGGER = getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -142,10 +142,10 @@ class Enigma2Device(MediaPlayerEntity):
         self._device: OpenWebIfDevice = device
         self._entry = entry
 
-        self._attr_unique_id = device.mac_address
+        self._attr_unique_id = device.mac_address or entry.entry_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.mac_address)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=about["info"]["brand"],
             model=about["info"]["model"],
             configuration_url=device.base,

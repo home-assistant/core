@@ -15,7 +15,7 @@ from homeassistant.components.logbook import websocket_api
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,

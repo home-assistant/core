@@ -12,9 +12,6 @@ import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
@@ -728,22 +725,6 @@ async def test_rendering_template_admin(
     """Test rendering a template requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post(const.URL_API_TEMPLATE)
-    assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
-async def test_rendering_template_legacy_user(
-    hass: HomeAssistant,
-    mock_api_client: TestClient,
-    aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
-) -> None:
-    """Test rendering a template with legacy API password."""
-    hass.states.async_set("sensor.temperature", 10)
-    client = await aiohttp_client(hass.http.app)
-    resp = await client.post(
-        const.URL_API_TEMPLATE,
-        json={"template": "{{ states.sensor.temperature.state }}"},
-    )
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 

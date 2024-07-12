@@ -113,7 +113,6 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
 
-ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
 MAX_RECONNECT_WAIT = 300  # seconds
@@ -159,16 +158,14 @@ CONFIG_SCHEMA = vol.Schema(
 MQTT_PUBLISH_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
-            vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
+            vol.Required(ATTR_TOPIC): valid_publish_topic,
             vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
             vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
             vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
             vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         },
         required=True,
-    ),
-    cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
+    )
 )
 
 
@@ -290,29 +287,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
         msg_topic: str | None = call.data.get(ATTR_TOPIC)
-        msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
         payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
-        if msg_topic_template is not None:
-            rendered_topic: Any = MqttCommandTemplate(
-                template.Template(msg_topic_template),
-                hass=hass,
-            ).async_render()
-            try:
-                msg_topic = valid_publish_topic(rendered_topic)
-            except vol.Invalid as err:
-                err_str = str(err)
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_publish_topic",
-                    translation_placeholders={
-                        "error": err_str,
-                        "topic": str(rendered_topic),
-                        "topic_template": str(msg_topic_template),
-                    },
-                ) from err
 
         if payload_template is not None:
             payload = MqttCommandTemplate(
@@ -379,9 +357,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
         platforms_used = platforms_from_config(new_config)
         new_platforms = platforms_used - mqtt_data.platforms_loaded
-        await async_forward_entry_setup_and_setup_discovery(
-            hass, entry, new_platforms, late=True
-        )
+        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
         # Check the schema before continuing reload
         await async_check_config_schema(hass, config_yaml)
 
@@ -537,8 +513,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:
         registry_hooks.popitem()[1]()
-    # Wait for all ACKs and stop the loop
-    await mqtt_client.async_disconnect()
+    # Wait for all ACKs, stop the loop and disconnect the client
+    await mqtt_client.async_disconnect(disconnect_paho_client=True)
 
     # Cleanup MQTT client availability
     hass.data.pop(DATA_MQTT_AVAILABLE, None)

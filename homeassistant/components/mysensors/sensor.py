@@ -15,12 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONDUCTIVITY,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     Platform,
     UnitOfApparentPower,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -191,7 +191,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
-        native_unit_of_measurement=CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",

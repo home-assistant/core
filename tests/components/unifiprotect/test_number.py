@@ -6,7 +6,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Doorlock, IRLEDMode, Light
+from uiprotect.data import Camera, Doorlock, IRLEDMode, Light
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (

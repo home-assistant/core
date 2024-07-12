@@ -4,17 +4,21 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from airgradient import AirGradientClient, Config
-from airgradient.models import ConfigurationControl, TemperatureUnit
+from airgradient.models import ConfigurationControl, LedBarMode, TemperatureUnit
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
+    SelectEntityDescription,
+)
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
+from . import AirGradientConfigEntry
+from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
+from .coordinator import AirGradientConfigCoordinator
 from .entity import AirGradientEntity
 
 
@@ -24,7 +28,6 @@ class AirGradientSelectEntityDescription(SelectEntityDescription):
 
     value_fn: Callable[[Config], str | None]
     set_value_fn: Callable[[AirGradientClient, str], Awaitable[None]]
-    requires_display: bool = False
 
 
 CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
@@ -32,15 +35,17 @@ CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     translation_key="configuration_control",
     options=[ConfigurationControl.CLOUD.value, ConfigurationControl.LOCAL.value],
     entity_category=EntityCategory.CONFIG,
-    value_fn=lambda config: config.configuration_control
-    if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
-    else None,
+    value_fn=lambda config: (
+        config.configuration_control
+        if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
+        else None
+    ),
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
     ),
 )
 
-PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
+DISPLAY_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
     AirGradientSelectEntityDescription(
         key="display_temperature_unit",
         translation_key="display_temperature_unit",
@@ -50,35 +55,146 @@ PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
         set_value_fn=lambda client, value: client.set_temperature_unit(
             TemperatureUnit(value)
         ),
-        requires_display=True,
+    ),
+    AirGradientSelectEntityDescription(
+        key="display_pm_standard",
+        translation_key="display_pm_standard",
+        options=list(PM_STANDARD_REVERSE),
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: PM_STANDARD.get(config.pm_standard),
+        set_value_fn=lambda client, value: client.set_pm_standard(
+            PM_STANDARD_REVERSE[value]
+        ),
+    ),
+)
+
+LED_BAR_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
+    AirGradientSelectEntityDescription(
+        key="led_bar_mode",
+        translation_key="led_bar_mode",
+        options=[x.value for x in LedBarMode],
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: config.led_bar_mode,
+        set_value_fn=lambda client, value: client.set_led_bar_mode(LedBarMode(value)),
+    ),
+)
+
+LEARNING_TIME_OFFSET_OPTIONS = [
+    "12",
+    "60",
+    "120",
+    "360",
+    "720",
+]
+
+ABC_DAYS = [
+    "1",
+    "8",
+    "30",
+    "90",
+    "180",
+    "0",
+]
+
+
+def _get_value(value: int, values: list[str]) -> str | None:
+    str_value = str(value)
+    return str_value if str_value in values else None
+
+
+CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
+    AirGradientSelectEntityDescription(
+        key="nox_index_learning_time_offset",
+        translation_key="nox_index_learning_time_offset",
+        options=LEARNING_TIME_OFFSET_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: _get_value(
+            config.nox_learning_offset, LEARNING_TIME_OFFSET_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_nox_learning_offset(int(value)),
+    ),
+    AirGradientSelectEntityDescription(
+        key="voc_index_learning_time_offset",
+        translation_key="voc_index_learning_time_offset",
+        options=LEARNING_TIME_OFFSET_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: _get_value(
+            config.tvoc_learning_offset, LEARNING_TIME_OFFSET_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_tvoc_learning_offset(int(value)),
+    ),
+    AirGradientSelectEntityDescription(
+        key="co2_automatic_baseline_calibration",
+        translation_key="co2_automatic_baseline_calibration",
+        options=ABC_DAYS,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: _get_value(
+            config.co2_automatic_baseline_calibration_days, ABC_DAYS
+        ),
+        set_value_fn=lambda client,
+        value: client.set_co2_automatic_baseline_calibration(int(value)),
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirGradientConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirGradient select entities based on a config entry."""
 
-    config_coordinator: AirGradientConfigCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]["config"]
-    measurement_coordinator: AirGradientMeasurementCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]["measurement"]
+    coordinator = entry.runtime_data.config
+    measurement_coordinator = entry.runtime_data.measurement
 
-    entities = [AirGradientSelect(config_coordinator, CONFIG_CONTROL_ENTITY)]
+    async_add_entities([AirGradientSelect(coordinator, CONFIG_CONTROL_ENTITY)])
 
-    entities.extend(
-        AirGradientProtectedSelect(config_coordinator, description)
-        for description in PROTECTED_SELECT_TYPES
+    model = measurement_coordinator.data.model
+
+    added_entities = False
+
+    @callback
+    def _async_check_entities() -> None:
+        nonlocal added_entities
+
         if (
-            description.requires_display
-            and measurement_coordinator.data.model.startswith("I")
-        )
-    )
+            coordinator.data.configuration_control is ConfigurationControl.LOCAL
+            and not added_entities
+        ):
+            entities: list[AirGradientSelect] = [
+                AirGradientSelect(coordinator, description)
+                for description in CONTROL_ENTITIES
+            ]
+            if "I" in model:
+                entities.extend(
+                    AirGradientSelect(coordinator, description)
+                    for description in DISPLAY_SELECT_TYPES
+                )
+            if "L" in model:
+                entities.extend(
+                    AirGradientSelect(coordinator, description)
+                    for description in LED_BAR_ENTITIES
+                )
 
-    async_add_entities(entities)
+            async_add_entities(entities)
+            added_entities = True
+        elif (
+            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            and added_entities
+        ):
+            entity_registry = er.async_get(hass)
+            for entity_description in (
+                DISPLAY_SELECT_TYPES + LED_BAR_ENTITIES + CONTROL_ENTITIES
+            ):
+                unique_id = f"{coordinator.serial_number}-{entity_description.key}"
+                if entity_id := entity_registry.async_get_entity_id(
+                    SELECT_DOMAIN, DOMAIN, unique_id
+                ):
+                    entity_registry.async_remove(entity_id)
+            added_entities = False
+
+    coordinator.async_add_listener(_async_check_entities)
+    _async_check_entities()
 
 
 class AirGradientSelect(AirGradientEntity, SelectEntity):
@@ -106,19 +222,3 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
         """Change the selected option."""
         await self.entity_description.set_value_fn(self.coordinator.client, option)
         await self.coordinator.async_request_refresh()
-
-
-class AirGradientProtectedSelect(AirGradientSelect):
-    """Defines a protected AirGradient select entity."""
-
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        if (
-            self.coordinator.data.configuration_control
-            is not ConfigurationControl.LOCAL
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_local_configuration",
-            )
-        await super().async_select_option(option)

@@ -505,6 +505,8 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._last_value = None
+        id_key = key.split(":")[-1]
+        self._id = int(id_key) if id_key.isnumeric() else None
 
     @property
     def sub_status(self) -> Any:

@@ -24,7 +24,7 @@ from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -486,7 +486,8 @@ async def test_warn_when_cannot_connect(
     assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
-async def test_service_register(hassio_env, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("hassio_env")
+async def test_service_register(hass: HomeAssistant) -> None:
     """Check if service will be setup."""
     assert await async_setup_component(hass, "hassio", {})
     assert hass.services.has_service("hassio", "addon_start")
@@ -717,8 +718,9 @@ async def test_addon_service_call_with_complex_slug(
     await hass.services.async_call("hassio", "addon_start", {"addon": "test.a_1-2"})
 
 
+@pytest.mark.usefixtures("hassio_env")
 async def test_service_calls_core(
-    hassio_env, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Call core service and check the API calls behind that."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -773,9 +775,10 @@ async def test_migration_off_hassio(hass: HomeAssistant) -> None:
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 
-async def test_device_registry_calls(hass: HomeAssistant) -> None:
+async def test_device_registry_calls(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test device registry entries for hassio."""
-    dev_reg = async_get(hass)
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
@@ -829,7 +832,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(dev_reg.devices) == 6
+        assert len(device_registry.devices) == 6
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -863,11 +866,11 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(dev_reg.devices) == 5
+        assert len(device_registry.devices) == 5
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(dev_reg.devices) == 5
+        assert len(device_registry.devices) == 5
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -921,7 +924,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 5
+        assert len(device_registry.devices) == 5
 
 
 async def test_coordinator_updates(
@@ -1115,8 +1118,9 @@ async def test_setup_hardware_integration(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("hassio_stubs")
 async def test_get_store_addon_info(
-    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test get store add-on info from Supervisor API."""
     aioclient_mock.clear_requests()

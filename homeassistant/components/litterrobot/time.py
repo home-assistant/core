@@ -10,15 +10,13 @@ from typing import Any, Generic
 from pylitterbot import LitterRobot3
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
-from .hub import LitterRobotHub
 
 
 @dataclass(frozen=True)
@@ -52,11 +50,11 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LitterRobotConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+    hub = entry.runtime_data
     async_add_entities(
         [
             LitterRobotTimeEntity(

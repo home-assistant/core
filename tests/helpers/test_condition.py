@@ -30,14 +30,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 def assert_element(trace_element, expected_element, path):
@@ -2215,7 +2208,9 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
 
 
 async def test_if_action_before_sunrise_no_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was before sunrise.
 
@@ -2241,7 +2236,7 @@ async def test_if_action_before_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2253,7 +2248,7 @@ async def test_if_action_before_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2265,7 +2260,7 @@ async def test_if_action_before_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2277,7 +2272,7 @@ async def test_if_action_before_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2286,7 +2281,9 @@ async def test_if_action_before_sunrise_no_offset(
 
 
 async def test_if_action_after_sunrise_no_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was after sunrise.
 
@@ -2312,7 +2309,7 @@ async def test_if_action_after_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2324,7 +2321,7 @@ async def test_if_action_after_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2336,7 +2333,7 @@ async def test_if_action_after_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2348,7 +2345,7 @@ async def test_if_action_after_sunrise_no_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2357,7 +2354,9 @@ async def test_if_action_after_sunrise_no_offset(
 
 
 async def test_if_action_before_sunrise_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was before sunrise with offset.
 
@@ -2387,7 +2386,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2399,7 +2398,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2411,7 +2410,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2423,7 +2422,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2435,7 +2434,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2447,7 +2446,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2459,7 +2458,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2471,7 +2470,7 @@ async def test_if_action_before_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2480,7 +2479,9 @@ async def test_if_action_before_sunrise_with_offset(
 
 
 async def test_if_action_before_sunset_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was before sunset with offset.
 
@@ -2510,7 +2511,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2522,7 +2523,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2534,7 +2535,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2546,7 +2547,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 3
+        assert len(service_calls) == 3
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2558,7 +2559,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 4
+        assert len(service_calls) == 4
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2570,7 +2571,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 5
+        assert len(service_calls) == 5
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2582,7 +2583,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 6
+        assert len(service_calls) == 6
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2594,7 +2595,7 @@ async def test_if_action_before_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 6
+        assert len(service_calls) == 6
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2603,7 +2604,9 @@ async def test_if_action_before_sunset_with_offset(
 
 
 async def test_if_action_after_sunrise_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was after sunrise with offset.
 
@@ -2633,7 +2636,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2645,7 +2648,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2657,7 +2660,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2669,7 +2672,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2681,7 +2684,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2693,7 +2696,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 3
+        assert len(service_calls) == 3
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2705,7 +2708,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 4
+        assert len(service_calls) == 4
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2717,7 +2720,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 5
+        assert len(service_calls) == 5
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2729,7 +2732,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 6
+        assert len(service_calls) == 6
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2741,7 +2744,7 @@ async def test_if_action_after_sunrise_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 6
+        assert len(service_calls) == 6
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2750,7 +2753,9 @@ async def test_if_action_after_sunrise_with_offset(
 
 
 async def test_if_action_after_sunset_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was after sunset with offset.
 
@@ -2780,7 +2785,7 @@ async def test_if_action_after_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2792,7 +2797,7 @@ async def test_if_action_after_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2804,7 +2809,7 @@ async def test_if_action_after_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2816,7 +2821,7 @@ async def test_if_action_after_sunset_with_offset(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2825,7 +2830,9 @@ async def test_if_action_after_sunset_with_offset(
 
 
 async def test_if_action_after_and_before_during(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was after sunrise and before sunset.
 
@@ -2855,7 +2862,7 @@ async def test_if_action_after_and_before_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2871,7 +2878,7 @@ async def test_if_action_after_and_before_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2883,7 +2890,7 @@ async def test_if_action_after_and_before_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2899,7 +2906,7 @@ async def test_if_action_after_and_before_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2915,7 +2922,7 @@ async def test_if_action_after_and_before_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 3
+        assert len(service_calls) == 3
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2928,7 +2935,9 @@ async def test_if_action_after_and_before_during(
 
 
 async def test_if_action_before_or_after_during(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was before sunrise or after sunset.
 
@@ -2958,7 +2967,7 @@ async def test_if_action_before_or_after_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2974,7 +2983,7 @@ async def test_if_action_before_or_after_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -2990,7 +2999,7 @@ async def test_if_action_before_or_after_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3006,7 +3015,7 @@ async def test_if_action_before_or_after_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3022,7 +3031,7 @@ async def test_if_action_before_or_after_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 3
+        assert len(service_calls) == 3
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3038,7 +3047,7 @@ async def test_if_action_before_or_after_during(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 4
+        assert len(service_calls) == 4
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3051,7 +3060,9 @@ async def test_if_action_before_or_after_during(
 
 
 async def test_if_action_before_sunrise_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was before sunrise.
 
@@ -3083,7 +3094,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3095,7 +3106,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3107,7 +3118,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3119,7 +3130,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3128,7 +3139,9 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
 
 
 async def test_if_action_after_sunrise_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was after sunrise.
 
@@ -3160,7 +3173,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3172,7 +3185,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3184,7 +3197,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3196,7 +3209,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3205,7 +3218,9 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
 
 
 async def test_if_action_before_sunset_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was before sunrise.
 
@@ -3237,7 +3252,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3249,7 +3264,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3261,7 +3276,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3273,7 +3288,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3282,7 +3297,9 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
 
 
 async def test_if_action_after_sunset_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test if action was after sunrise.
 
@@ -3314,7 +3331,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3326,7 +3343,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3338,7 +3355,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
@@ -3350,7 +3367,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 2
+        assert len(service_calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",

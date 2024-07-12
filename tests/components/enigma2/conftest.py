@@ -78,13 +78,24 @@ class MockDevice:
                 }
             }
 
-    def get_version(self):
+    def get_version(self) -> str | None:
         """Return the version."""
         return None
 
     async def get_about(self) -> dict:
         """Get mock about endpoint."""
         return await self._call_api("/api/about")
+
+    async def get_all_bouquets(self) -> dict:
+        """Get all bouquets."""
+        return {
+            "bouquets": [
+                [
+                    '1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet',
+                    "Favourites (TV)",
+                ]
+            ]
+        }
 
     async def close(self):
         """Mock close."""

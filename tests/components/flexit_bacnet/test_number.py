@@ -6,15 +6,19 @@ from flexit_bacnet import DecodingError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.number.const import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.flexit_bacnet import setup_with_selected_platforms
 
 ENTITY_ID = "number.device_name_fireplace_supply_fan_setpoint"
 
