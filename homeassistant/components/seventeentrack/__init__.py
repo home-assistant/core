@@ -22,7 +22,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -164,8 +164,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 tracking_number=tracking_number, friendly_name=friendly_name
             )
         except SeventeenTrackError as err:
-            _LOGGER.error("Failed to add package %s: %s", tracking_number, err)
-            return None
+            raise HomeAssistantError(
+                f"Failed to add package {tracking_number}: {err}"
+            ) from err
 
         return {
             ATTR_DESTINATION_COUNTRY: new_package.destination_country,
