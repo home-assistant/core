@@ -54,6 +54,7 @@ TEST_FILE_NAME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00"
 TEST_FILE_NAME_MP4 = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
+TEST_CAM_NAME = "Cam new name"
 
 TEST_MIME_TYPE = "application/x-mpegURL"
 TEST_MIME_TYPE_MP4 = "video/mp4"
@@ -138,7 +139,7 @@ async def test_browsing(
 
     entries = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(entries) > 0
-    device_registry.async_update_device(entries[0].id, name_by_user="Cam new name")
+    device_registry.async_update_device(entries[0].id, name_by_user=TEST_CAM_NAME)
 
     caplog.set_level(logging.DEBUG)
 
@@ -150,6 +151,7 @@ async def test_browsing(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert browse.children[0].identifier == browse_root_id
+    assert browse.children[0].title == f"{TEST_CAM_NAME} lens 0"
 
     # browse resolution select
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
