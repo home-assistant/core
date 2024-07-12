@@ -6,6 +6,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import randint
 from time import monotonic
@@ -471,7 +472,7 @@ class BaseCoordinatorEntity[
         self.coordinator = coordinator
         self.coordinator_context = context
 
-    @property
+    @cached_property
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False

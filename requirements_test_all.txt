@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.48.0
+PySwitchbot==0.48.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -161,7 +161,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.3
+aioairzone-cloud==0.5.4
 
 # homeassistant.components.airzone
 aioairzone==0.7.7
@@ -255,7 +255,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.4
+aiolifx==1.0.5
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -1783,7 +1783,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.3
+python-kasa[speedups]==0.7.0.4
 
 # homeassistant.components.matter
 python-matter-server==6.2.2
@@ -2192,7 +2192,7 @@ unifi-discovery==1.2.0
 universal-silabs-flasher==0.0.21
 
 # homeassistant.components.upb
-upb-lib==0.5.7
+upb-lib==0.5.8
 
 # homeassistant.components.upcloud
 upcloud-api==2.5.1
