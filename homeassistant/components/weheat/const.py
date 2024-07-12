@@ -20,12 +20,14 @@ OAUTH2_TOKEN = (
 
 API_URL = "https://api.early.weheat.nl"
 
+UPDATE_INTERVAL = 10
+
 
 LOGGER: Logger = getLogger(__package__)
 
 SENSORS = [
     SensorEntityDescription(
-        name="Current control state",
+        name="State",
         key="heat_pump_state",
         icon="mdi:auto-mode",
     ),
