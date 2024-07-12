@@ -127,7 +127,7 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
           "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
           "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]"
         },
