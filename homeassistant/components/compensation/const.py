@@ -1,6 +1,9 @@
 """Compensation constants."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "compensation"
+PLATFORMS = [Platform.SENSOR]
 
 SENSOR = "compensation"
 
