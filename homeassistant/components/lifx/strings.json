@@ -230,15 +230,15 @@
         },
         "sky_type": {
           "name": "Sky type",
-          "description": "(Optional, default: 'Clouds') The style of sky that will be animated by the effect."
+          "description": "The style of sky that will be animated by the effect."
         },
         "cloud_saturation_min": {
           "name": "Cloud saturation Minimum",
-          "description": "(Optional, default: 50) Minimum cloud saturation."
+          "description": "Minimum cloud saturation."
         },
         "cloud_saturation_max": {
           "name": "Cloud Saturation maximum",
-          "description": "(Optional, default: 180) Maximum cloud saturation."
+          "description": "Maximum cloud saturation."
         },
         "palette": {
           "name": "Palette",
