@@ -90,16 +90,10 @@ def mock_motion_device(
 ) -> Generator[AsyncMock]:
     """Mock a MotionDevice."""
 
-    with (
-        patch(
-            "homeassistant.components.motionblinds_ble.MotionDevice",
-            autospec=True,
-        ) as mock_device,
-        patch(
-            "homeassistant.components.motionblinds_ble.MotionDevice",
-            new=mock_device,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.motionblinds_ble.MotionDevice",
+        autospec=True,
+    ) as mock_device:
         device = mock_device.return_value
         device.ble_device = Mock()
         device.display_name = display_name
