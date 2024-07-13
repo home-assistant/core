@@ -774,6 +774,37 @@ PORT_FORWARD_PLEX = {
     "src": "any",
 }
 
+TRAFFIC_RULE = {
+    "_id": "6452cd9b859d5b11aa002ea1",
+    "action": "BLOCK",
+    "app_category_ids": [],
+    "app_ids": [],
+    "bandwidth_limit": {
+        "download_limit_kbps": 1024,
+        "enabled": False,
+        "upload_limit_kbps": 1024,
+    },
+    "description": "Test Traffic Rule",
+    "name": "Test Traffic Rule",
+    "domains": [],
+    "enabled": True,
+    "ip_addresses": [],
+    "ip_ranges": [],
+    "matching_target": "INTERNET",
+    "network_ids": [],
+    "regions": [],
+    "schedule": {
+        "date_end": "2023-05-10",
+        "date_start": "2023-05-03",
+        "mode": "ALWAYS",
+        "repeat_on_days": [],
+        "time_all_day": False,
+        "time_range_end": "12:00",
+        "time_range_start": "09:00",
+    },
+    "target_devices": [{"client_mac": CLIENT_1["mac"], "type": "CLIENT"}],
+}
+
 
 @pytest.mark.parametrize("client_payload", [[CONTROLLER_HOST]])
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])
@@ -1070,6 +1101,78 @@ async def test_dpi_switches_add_second_app(
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("traffic_rule_payload", "entity_id"),
+    [
+        ([TRAFFIC_RULE], "unifi_network_test_traffic_rule"),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_traffic_rules(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_websocket_message,
+    config_entry_setup: ConfigEntry,
+    traffic_rule_payload: list[dict[str, Any]],
+    entity_id: str,
+) -> None:
+    """Test control of UniFi traffic rules."""
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    # ent_reg = er.async_get(hass)
+    # ent_reg_entry = ent_reg.async_get(entity_id)
+    # assert ent_reg_entry
+    # assert ent_reg_entry.unique_id == "traffic_rule-6452cd9b859d5b11aa002ea1"
+    # assert ent_reg_entry.entity_category is EntityCategory.CONFIG
+
+    # Validate state object
+    switch_1 = hass.states.get(entity_id)
+    assert switch_1 is not None
+    assert switch_1.state == STATE_ON
+    assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
+
+    # Update state object
+
+    device_1 = deepcopy(traffic_rule_payload[0])
+    device_1["outlet_table"][0]["relay_state"] = False
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+    assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
+
+    # Disable traffic rule
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}/trafficrules/{device_1['_id']}",
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": f"switch.{entity_id}"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+    expected_disable_call = deepcopy(device_1)
+    expected_disable_call = False
+    assert aioclient_mock.mock_calls[0][2] == expected_disable_call
+
+    # Enable traffic rule
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": f"switch.{entity_id}"},
+        blocking=True,
+    )
+
+    expected_enable_call = deepcopy(device_1)
+    expected_enable_call["enabled"] = True
+
+    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.mock_calls[1][2] == expected_enable_call
 
 
 @pytest.mark.parametrize(

@@ -160,6 +160,7 @@ def fixture_request(
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
+    traffic_rule_payload: list[dict[str, Any]],
     site_payload: list[dict[str, Any]],
     system_information_payload: list[dict[str, Any]],
     wlan_payload: list[dict[str, Any]],
@@ -182,6 +183,7 @@ def fixture_request(
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
+
         mock_get_request("/api/self/sites", site_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sta", client_payload)
         mock_get_request(f"/api/s/{site_id}/rest/user", clients_all_payload)
@@ -191,6 +193,7 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
+        mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
 
     return __mock_requests
 
@@ -231,6 +234,12 @@ def fixture_dpi_group_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="port_forward_payload")
 def fixture_port_forward_data() -> list[dict[str, Any]]:
     """Port forward data."""
+    return []
+
+
+@pytest.fixture(name="traffic_rule_payload")
+def traffic_rule_payload_data() -> list[dict[str, Any]]:
+    """Traffic rule data."""
     return []
 
 
