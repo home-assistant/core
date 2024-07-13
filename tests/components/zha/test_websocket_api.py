@@ -585,7 +585,7 @@ async def test_remove_group(zha_client) -> None:
 
 
 async def test_add_group_member(hass: HomeAssistant, zha_client) -> None:
-    """Test adding and getting a new ZHA zigbee group."""
+    """Test adding a ZHA zigbee group member."""
     await zha_client.send_json(
         {
             ID: 12,
@@ -623,7 +623,7 @@ async def test_add_group_member(hass: HomeAssistant, zha_client) -> None:
 
 
 async def test_remove_group_member(hass: HomeAssistant, zha_client) -> None:
-    """Test adding and getting a new ZHA zigbee group."""
+    """Test removing a ZHA zigbee group member."""
     await zha_client.send_json(
         {
             ID: 12,
