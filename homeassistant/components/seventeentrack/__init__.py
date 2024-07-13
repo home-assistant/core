@@ -2,9 +2,9 @@
 
 from typing import Final
 
-from py17track import Client as SeventeenTrackClient
-from py17track.errors import SeventeenTrackError
-from py17track.package import PACKAGE_STATUS_MAP
+from pyseventeentrack import Client as SeventeenTrackClient
+from pyseventeentrack.errors import SeventeenTrackError
+from pyseventeentrack.package import PACKAGE_STATUS_MAP
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
