@@ -88,6 +88,7 @@ RPC_NUMBERS: Final = {
             config["meta"]["ui"]["view"], NumberMode.BOX
         ),
         step_fn=lambda config: config["meta"]["ui"]["step"],
+        # If the unit is not set, the device sends an empty string
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
