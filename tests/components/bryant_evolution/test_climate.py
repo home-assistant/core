@@ -27,6 +27,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
+from .conftest import DEFAULT_SYSTEM_ZONES
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,11 +108,10 @@ async def test_setup_multiple_systems_zones(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a device with multiple systems and zones works."""
-    szs = [(1, 1), (1, 2), (2, 3)]
     hass.config.units = US_CUSTOMARY_SYSTEM
     mock_evolution_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ZONE: szs},
+        data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ZONE: DEFAULT_SYSTEM_ZONES},
     )
     mock_evolution_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_evolution_entry.entry_id)
@@ -124,7 +125,7 @@ async def test_setup_multiple_systems_zones(
 
     # Check that each system and zone has the expected temperature value to
     # verify that the initial setup flow worked as expected.
-    for sz in szs:
+    for sz in DEFAULT_SYSTEM_ZONES:
         system = sz[0]
         zone = sz[1]
         state = hass.states.get(f"climate.system_{system}_zone_{zone}")

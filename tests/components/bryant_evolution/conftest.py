@@ -1,6 +1,6 @@
 """Common fixtures for the Bryant Evolution tests."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from unittest.mock import AsyncMock, patch
 
 from evolutionhttp import BryantEvolutionLocalClient
@@ -23,15 +23,22 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
+DEFAULT_SYSTEM_ZONES = ((1, 1), (1, 2), (2, 3))
+"""
+A tuple of (system, zone) pairs representing the default system and zone configurations
+for the Bryant Evolution integration.
+"""
+
+
 @pytest.fixture(autouse=True)
-def mock_evolution_client_factory() -> Generator[AsyncMock]:
+def mock_evolution_client_factory() -> Generator[AsyncMock, None, None]:
     """Mock an Evolution client."""
     with patch(
         "evolutionhttp.BryantEvolutionLocalClient.get_client",
         austospec=True,
     ) as mock_get_client:
-        clients = {}
-        for system, zone in ((1, 1), (1, 2), (2, 3)):
+        clients: Mapping[tuple[int, int], AsyncMock] = {}
+        for system, zone in DEFAULT_SYSTEM_ZONES:
             clients[(system, zone)] = AsyncMock(spec=BryantEvolutionLocalClient)
             client = clients[system, zone]
             client.read_zone_name.return_value = f"System {system} Zone {zone}"
