@@ -18,20 +18,10 @@
     "zigpy_xbee",
     "zigpy_zigate",
     "zigpy_znp",
+    "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": [
-    "bellows==0.39.1",
-    "pyserial==3.5",
-    "zha-quirks==0.0.117",
-    "zigpy-deconz==0.23.2",
-    "zigpy==0.64.1",
-    "zigpy-xbee==0.20.1",
-    "zigpy-zigate==0.12.1",
-    "zigpy-znp==0.12.2",
-    "universal-silabs-flasher==0.0.20",
-    "pyserial-asyncio-fast==0.11"
-  ],
+  "requirements": ["universal-silabs-flasher==0.0.21", "zha==0.0.20"],
   "usb": [
     {
       "vid": "10C4",

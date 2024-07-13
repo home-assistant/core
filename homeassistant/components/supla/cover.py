@@ -71,7 +71,9 @@ class SuplaCoverEntity(SuplaEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self.async_action("REVEAL", percentage=kwargs.get(ATTR_POSITION))
+        await self.async_action(
+            "REVEAL_PARTIALLY", percentage=kwargs.get(ATTR_POSITION)
+        )
 
     @property
     def is_closed(self) -> bool | None:

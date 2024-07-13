@@ -178,9 +178,6 @@ EXCEPTIONS = {
 }
 
 TODO = {
-    "BlinkStick": AwesomeVersion(
-        "1.2.0"
-    ),  # Proprietary license https://github.com/arvydas/blinkstick-python
     "PyMVGLive": AwesomeVersion(
         "1.1.4"
     ),  # No license and archived https://github.com/pc-coholic/PyMVGLive
@@ -237,20 +234,20 @@ def main() -> int:
                         f"{package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
-                    print("")
+                    print()
                 else:
                     print(
                         "We could not detect an OSI-approved license for "
                         f"{package.name}@{package.version}: {package.license}"
                     )
-                    print("")
+                    print()
                 exit_code = 1
         elif not approved and package.name not in EXCEPTIONS:
             print(
                 "We could not detect an OSI-approved license for"
                 f"{package.name}@{package.version}: {package.license}"
             )
-            print("")
+            print()
             exit_code = 1
         elif approved and package.name in EXCEPTIONS:
             print(
@@ -258,7 +255,7 @@ def main() -> int:
                 f"{package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")
-            print("")
+            print()
             exit_code = 1
     current_packages = {package.name for package in package_definitions}
     for package in [*TODO.keys(), *EXCEPTIONS]:
@@ -267,7 +264,7 @@ def main() -> int:
                 f"Package {package} is tracked, but not used. Please remove from the licenses.py"
                 "file."
             )
-            print("")
+            print()
             exit_code = 1
     return exit_code
 
