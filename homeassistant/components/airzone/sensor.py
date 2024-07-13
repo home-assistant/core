@@ -95,8 +95,10 @@ async def async_setup_entry(
         nonlocal added_hotwater
         nonlocal added_webserver
 
+        entities: list[AirzoneSensor] = []
+
         if not added_hotwater and AZD_HOT_WATER in coordinator.data:
-            async_add_entities(
+            entities.extend(
                 AirzoneHotWaterSensor(
                     coordinator,
                     description,
@@ -108,7 +110,7 @@ async def async_setup_entry(
             added_hotwater = True
 
         if not added_webserver and AZD_WEBSERVER in coordinator.data:
-            async_add_entities(
+            entities.extend(
                 AirzoneWebServerSensor(
                     coordinator,
                     description,
@@ -123,7 +125,7 @@ async def async_setup_entry(
         received_zones = set(zones_data)
         new_zones = received_zones - added_zones
         if new_zones:
-            async_add_entities(
+            entities.extend(
                 AirzoneZoneSensor(
                     coordinator,
                     description,
@@ -136,6 +138,8 @@ async def async_setup_entry(
                 if description.key in zones_data.get(system_zone_id)
             )
             added_zones.update(new_zones)
+
+        async_add_entities(entities)
 
     coordinator.async_add_listener(_async_entity_listener)
     _async_entity_listener()

@@ -88,11 +88,13 @@ async def async_setup_entry(
     def _async_entity_listener() -> None:
         """Handle additions of binary sensors."""
 
+        entities: list[AirzoneBinarySensor] = []
+
         systems_data = coordinator.data.get(AZD_SYSTEMS, {})
         received_systems = set(systems_data)
         new_systems = received_systems - added_systems
         if new_systems:
-            async_add_entities(
+            entities.extend(
                 AirzoneSystemBinarySensor(
                     coordinator,
                     description,
@@ -110,7 +112,7 @@ async def async_setup_entry(
         received_zones = set(zones_data)
         new_zones = received_zones - added_zones
         if new_zones:
-            async_add_entities(
+            entities.extend(
                 AirzoneZoneBinarySensor(
                     coordinator,
                     description,
@@ -123,6 +125,8 @@ async def async_setup_entry(
                 if description.key in zones_data.get(system_zone_id)
             )
             added_zones.update(new_zones)
+
+        async_add_entities(entities)
 
     coordinator.async_add_listener(_async_entity_listener)
     _async_entity_listener()
