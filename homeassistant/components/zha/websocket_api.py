@@ -570,6 +570,7 @@ async def websocket_add_group_members(
 ) -> None:
     """Add members to a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     group_id: int = msg[GROUP_ID]
     members: list[GroupMemberReference] = msg[ATTR_MEMBERS]
 
@@ -582,8 +583,9 @@ async def websocket_add_group_members(
         return
 
     await zha_group.async_add_members(members)
-    ret_group = zha_group.group_info
-    connection.send_result(msg[ID], ret_group)
+    ret_group = zha_gateway_proxy.get_group_proxy(group_id)
+    assert ret_group
+    connection.send_result(msg[ID], ret_group.group_info)
 
 
 @websocket_api.require_admin
@@ -600,6 +602,7 @@ async def websocket_remove_group_members(
 ) -> None:
     """Remove members from a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     group_id: int = msg[GROUP_ID]
     members: list[GroupMemberReference] = msg[ATTR_MEMBERS]
 
@@ -612,8 +615,9 @@ async def websocket_remove_group_members(
         return
 
     await zha_group.async_remove_members(members)
-    ret_group = zha_group.group_info
-    connection.send_result(msg[ID], ret_group)
+    ret_group = zha_gateway_proxy.get_group_proxy(group_id)
+    assert ret_group
+    connection.send_result(msg[ID], ret_group.group_info)
 
 
 @websocket_api.require_admin

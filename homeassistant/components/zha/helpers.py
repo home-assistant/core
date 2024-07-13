@@ -290,7 +290,11 @@ class ZHAGroupProxy(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (f"0x{self.group.group_id:04x}", self.group.endpoint.id, *args)
+        args = (
+            f"0x{self.group.group_id:04x}",
+            self.group.endpoint.endpoint_id,
+            *args,
+        )
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -673,8 +677,8 @@ class ZHAGatewayProxy(EventBase):
     @callback
     def handle_group_removed(self, event: GroupEvent) -> None:
         """Handle a group removed event."""
-        self._send_group_gateway_message(event.group_info, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group_proxy = self.group_proxies.pop(event.group_info.group_id)
+        self._send_group_gateway_message(zha_group_proxy, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group_proxy.info("group_removed")
         self._cleanup_group_entity_registry_entries(zha_group_proxy)
 
@@ -842,19 +846,17 @@ class ZHAGatewayProxy(EventBase):
         async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
 
     def _send_group_gateway_message(
-        self, zigpy_group: zigpy.group.Group, gateway_message_type: str
+        self, zha_group_proxy: ZHAGroupProxy, gateway_message_type: str
     ) -> None:
         """Send the gateway event for a zigpy group event."""
-        zha_group = self.group_proxies.get(zigpy_group.group_id)
-        if zha_group is not None:
-            async_dispatcher_send(
-                self.hass,
-                ZHA_GW_MSG,
-                {
-                    ATTR_TYPE: gateway_message_type,
-                    ZHA_GW_MSG_GROUP_INFO: zha_group.group_info,
-                },
-            )
+        async_dispatcher_send(
+            self.hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: gateway_message_type,
+                ZHA_GW_MSG_GROUP_INFO: zha_group_proxy.group_info,
+            },
+        )
 
     async def _async_remove_device(
         self, device: ZHADeviceProxy, entity_refs: list[EntityReference] | None
