@@ -1,6 +1,6 @@
 """Test the Hue BLE config flow."""
 
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -132,24 +132,18 @@ async def test_form(
             return_value=scanner_count_result,
         ),
         patch(
-            "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
-            return_value=connect_result,
-        ),
-        patch(
-            "homeassistant.components.hue_ble.config_flow.HueBleLight.authenticated",
-            return_value=authenticated_result,
-            new_callable=PropertyMock,
-        ),
-        patch(
-            "homeassistant.components.hue_ble.config_flow.HueBleLight.connected",
-            return_value=connected_result,
-            new_callable=PropertyMock,
-        ),
-        patch(
-            "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
-            return_value=poll_state_result,
-        ),
+            "homeassistant.components.hue_ble.config_flow.HueBleLight",
+            autospec=True,
+            authenticated=authenticated_result,
+            connected=connected_result,
+        ) as mock_obj,
     ):
+        client = mock_obj.return_value
+        client.connect.return_value = connect_result
+        client.authenticated = authenticated_result
+        client.connected = connected_result
+        client.poll_state.return_value = poll_state_result
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_NAME: TEST_DEVICE_NAME, CONF_MAC: TEST_DEVICE_MAC},
