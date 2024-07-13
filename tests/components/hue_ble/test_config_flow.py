@@ -120,7 +120,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     with (
         patch(
@@ -151,7 +151,7 @@ async def test_form(
         await hass.async_block_till_done()
 
     if expected_error is not None:
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": expected_error}
 
         with patch(
@@ -185,7 +185,7 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
             {CONF_NAME: TEST_DEVICE_NAME, CONF_MAC: TEST_DEVICE_MAC},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
     with patch(
@@ -265,7 +265,7 @@ async def test_bluetooth_form_exception(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_message}
 
     with patch(
