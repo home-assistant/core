@@ -27,10 +27,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from .const import (
     CONF_DATA_TYPE,
     CONF_FAN_MODE_VALUES,
-    CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE,
-    CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_RETRIES,
     CONF_SLAVE_COUNT,
@@ -58,7 +54,6 @@ ENTRY = namedtuple(
         "validate_parm",
     ],
 )
-
 
 ILLEGAL = "I"
 OPTIONAL = "O"
