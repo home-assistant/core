@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Enter a name for the device and the MAC address of the light. Make sure the light is in Alexa/Google pairing mode.",
+        "description": "Enter a name for the device and the MAC address of the light. Make sure the light is in [Alexa/Google pairing mode.]({url_pairing_mode})",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "mac": "MAC Address"
