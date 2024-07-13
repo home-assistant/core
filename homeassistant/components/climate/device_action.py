@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN, const
 
-ACTION_TYPES = {"set_hvac_mode", "set_preset_mode"}
+ACTION_TYPES = {"set_hvac_mode", "set_preset_mode", "set_temperature"}
 
 SET_HVAC_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -151,8 +151,8 @@ async def async_get_action_capabilities(
             min_temp = get_capability(hass, entry.entity_id, const.ATTR_MIN_TEMP)
             max_temp = get_capability(hass, entry.entity_id, const.ATTR_MAX_TEMP)
         except HomeAssistantError:
-            min_temp = const.ATTR_MIN_TEMP
-            max_temp = const.ATTR_MAX_TEMP
+            min_temp = const.DEFAULT_MIN_TEMP
+            max_temp = const.DEFAULT_MAX_TEMP
         fields[vol.Required(const.ATTR_TEMPERATURE)] = vol.Range(min_temp, max_temp)
 
     return {"extra_fields": vol.Schema(fields)}

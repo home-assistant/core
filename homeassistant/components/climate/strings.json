@@ -12,7 +12,8 @@
     },
     "action_type": {
       "set_hvac_mode": "Change HVAC mode on {entity_name}",
-      "set_preset_mode": "Change preset on {entity_name}"
+      "set_preset_mode": "Change preset on {entity_name}",
+      "set_temperature": "Set target temperature on {entity_name}"
     },
     "extra_fields": {
       "above": "[%key:common::device_automation::extra_fields::above%]",
@@ -20,7 +21,8 @@
       "for": "[%key:common::device_automation::extra_fields::for%]",
       "to": "[%key:common::device_automation::extra_fields::to%]",
       "preset_mode": "Preset mode",
-      "hvac_mode": "HVAC mode"
+      "hvac_mode": "HVAC mode",
+      "temperature": "Temperature"
     }
   },
   "entity_component": {
