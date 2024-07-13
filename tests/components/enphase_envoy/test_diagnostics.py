@@ -39,7 +39,7 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
-    setup_enphase_envoy: AsyncGenerator[None],
+    mock_envoy: AsyncGenerator[AsyncMock],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""

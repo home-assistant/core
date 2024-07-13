@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import jwt
 from pyenphase import (
@@ -57,14 +57,34 @@ def config_fixture() -> dict[str, str]:
 
 @pytest.fixture(name="mock_envoy")
 async def mock_envoy_fixture(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    mocked_envoy: AsyncMock,
+) -> AsyncGenerator[AsyncMock]:
+    """Define a mocked Envoy fixture."""
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mocked_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mocked_envoy,
+        ),
+    ):
+        yield mocked_envoy
+
+
+@pytest.fixture(name="mocked_envoy")
+async def mocked_envoy_fixture(
     mock_auth: EnvoyTokenAuth,
     mock_authenticate: AsyncMock,
     mock_setup: AsyncMock,
     request: pytest.FixtureRequest,
     serial_number: str,
-) -> AsyncGenerator[AsyncMock, None]:
+) -> AsyncGenerator[AsyncMock]:
     """Define a mocked Envoy fixture."""
-    mock_envoy = Mock(spec=Envoy)
+    mock_envoy = AsyncMock(spec=Envoy)
     # Add the fixtures specified
     mock_envoy.auth = mock_auth
     mock_envoy.authenticate = mock_authenticate
@@ -90,26 +110,6 @@ async def mock_envoy_fixture(
     mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
 
     return mock_envoy
-
-
-@pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(
-    hass: HomeAssistant,
-    config: dict[str, str],
-    mock_envoy: Mock,
-) -> AsyncGenerator[None]:
-    """Define a fixture to set up Enphase Envoy."""
-    with (
-        patch(
-            "homeassistant.components.enphase_envoy.config_flow.Envoy",
-            return_value=mock_envoy,
-        ),
-        patch(
-            "homeassistant.components.enphase_envoy.Envoy",
-            return_value=mock_envoy,
-        ),
-    ):
-        yield
 
 
 @pytest.fixture(name="mock_authenticate")
