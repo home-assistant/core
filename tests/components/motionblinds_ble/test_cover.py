@@ -1,7 +1,7 @@
 """Tests for Motionblinds BLE covers."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
 from motionblindsble.device import MotionDevice
@@ -83,17 +83,19 @@ async def test_cover_service(
 )
 async def test_cover_update_running(
     mock_config_entry: MockConfigEntry,
+    mock_motion_device: Mock,
     hass: HomeAssistant,
     running_type: str | None,
     state: str,
 ) -> None:
     """Test updating running status."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
-    device: MotionDevice = hass.data[DOMAIN][mock_config_entry.entry_id]
-    device.update_running(running_type)
-    assert hass.states.get(f"cover.{name}").state == state
+    async_update_running = mock_motion_device.register_running_callback.call_args[0][0]
+
+    async_update_running(running_type)
+    assert hass.states.get("cover.motionblinds_ble_cc_cc_cc_cc_cc_cc").state == state
 
 
 @pytest.mark.parametrize(

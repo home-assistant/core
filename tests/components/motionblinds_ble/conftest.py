@@ -28,6 +28,27 @@ def blind_type() -> MotionBlindType:
 
 
 @pytest.fixture
+def mock_motion_device(blind_type) -> Generator[AsyncMock]:
+    """Mock a MotionDevice."""
+
+    with (
+        patch(
+            "homeassistant.components.motionblinds_ble.MotionDevice",
+            autospec=True,
+        ) as mock_device,
+        patch(
+            "homeassistant.components.motionblinds_ble.MotionDevice",
+            new=mock_device,
+        ),
+    ):
+        device = mock_device.return_value
+        device.ble_device = Mock()
+        device.display_name = ""
+        device.blind_type = blind_type
+        yield device
+
+
+@pytest.fixture
 def mock_config_entry(blind_type: MotionBlindType) -> MockConfigEntry:
     """Config entry fixture."""
     return MockConfigEntry(
