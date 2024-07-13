@@ -11,7 +11,6 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
-    DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
@@ -73,10 +72,8 @@ async def test_import_no_options(hass: HomeAssistant, language, diaspora) -> Non
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == conf[DOMAIN] | {
-        CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT,
-        CONF_HAVDALAH_OFFSET_MINUTES: DEFAULT_HAVDALAH_OFFSET_MINUTES,
-    }
+    for entry_key, entry_val in entries[0].data.items():
+        assert entry_val == conf[DOMAIN][entry_key]
 
 
 async def test_import_with_options(hass: HomeAssistant) -> None:
@@ -93,12 +90,16 @@ async def test_import_with_options(hass: HomeAssistant) -> None:
         }
     }
 
+    # Simulate HomeAssistant setting up the component
     assert await async_setup_component(hass, DOMAIN, conf.copy())
     await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == conf[DOMAIN]
+    for entry_key, entry_val in entries[0].data.items():
+        assert entry_val == conf[DOMAIN][entry_key]
+    for entry_key, entry_val in entries[0].options.items():
+        assert entry_val == conf[DOMAIN][entry_key]
 
 
 async def test_single_instance_allowed(
@@ -134,5 +135,32 @@ async def test_options(hass: HomeAssistant, mock_config_entry: MockConfigEntry) 
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_CANDLE_LIGHT_MINUTES] == 25
-    assert result["data"][CONF_HAVDALAH_OFFSET_MINUTES] == 34
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].options[CONF_CANDLE_LIGHT_MINUTES] == 25
+    assert entries[0].options[CONF_HAVDALAH_OFFSET_MINUTES] == 34
+
+
+async def test_options_reconfigure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that updating the options of the Jewish Calendar integration triggers a value update."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert CONF_CANDLE_LIGHT_MINUTES not in mock_config_entry.options
+
+    # Update the CONF_CANDLE_LIGHT_MINUTES option to a new value
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT + 1,
+        },
+    )
+    assert result["result"]
+
+    # The value of the "upcoming_shabbat_candle_lighting" sensor should be the new value
+    assert (
+        mock_config_entry.options[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1
+    )

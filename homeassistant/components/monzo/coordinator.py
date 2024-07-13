@@ -5,7 +5,10 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from monzopy import AuthorisationExpiredError
+
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import AuthenticatedMonzoAPI
@@ -37,6 +40,10 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
 
     async def _async_update_data(self) -> MonzoData:
         """Fetch data from Monzo API."""
-        accounts = await self.api.user_account.accounts()
-        pots = await self.api.user_account.pots()
+        try:
+            accounts = await self.api.user_account.accounts()
+            pots = await self.api.user_account.pots()
+        except AuthorisationExpiredError as err:
+            raise ConfigEntryAuthFailed from err
+
         return MonzoData(accounts, pots)

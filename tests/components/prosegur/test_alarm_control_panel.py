@@ -1,5 +1,6 @@
 """Tests for the Prosegur alarm control panel device."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from pyprosegur.installation import Status
@@ -35,7 +36,7 @@ def mock_auth():
 
 
 @pytest.fixture(params=list(Status))
-def mock_status(request):
+def mock_status(request: pytest.FixtureRequest) -> Generator[None]:
     """Mock the status of the alarm."""
 
     install = AsyncMock()

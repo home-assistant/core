@@ -3,7 +3,6 @@
 from homeassistant.const import UnitOfLength, UnitOfVolume
 
 DOMAIN = "bmw_connected_drive"
-ATTRIBUTION = "Data provided by MyBMW"
 
 ATTR_DIRECTION = "direction"
 ATTR_VIN = "vin"
@@ -28,10 +27,3 @@ SCAN_INTERVALS = {
     "north_america": 600,
     "rest_of_world": 300,
 }
-
-CLIMATE_ACTIVITY_STATE: list[str] = [
-    "cooling",
-    "heating",
-    "inactive",
-    "standby",
-]

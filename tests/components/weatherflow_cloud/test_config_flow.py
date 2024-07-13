@@ -56,14 +56,18 @@ async def test_config_flow_abort(hass: HomeAssistant, mock_get_stations) -> None
 
 
 @pytest.mark.parametrize(
-    "mock_fixture, expected_error",  # noqa: PT006
+    ("mock_fixture", "expected_error"),
     [
         ("mock_get_stations_500_error", "cannot_connect"),
         ("mock_get_stations_401_error", "invalid_api_key"),
     ],
 )
 async def test_config_errors(
-    hass: HomeAssistant, request, expected_error, mock_fixture, mock_get_stations
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    expected_error: str,
+    mock_fixture: str,
+    mock_get_stations,
 ) -> None:
     """Test the config flow for various error scenarios."""
     mock_get_stations_bad = request.getfixturevalue(mock_fixture)

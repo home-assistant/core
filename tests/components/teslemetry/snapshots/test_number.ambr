@@ -90,8 +90,8 @@
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'off_grid_vehicle_charging_reserve',
-    'unique_id': '123456-off_grid_vehicle_charging_reserve',
+    'translation_key': 'off_grid_vehicle_charging_reserve_percent',
+    'unique_id': '123456-off_grid_vehicle_charging_reserve_percent',
     'unit_of_measurement': '%',
   })
 # ---

@@ -97,6 +97,7 @@ homeassistant.components.assist_pipeline.*
 homeassistant.components.asterisk_cdr.*
 homeassistant.components.asterisk_mbox.*
 homeassistant.components.asuswrt.*
+homeassistant.components.autarco.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
@@ -261,6 +262,7 @@ homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.jvc_projector.*
 homeassistant.components.kaleidescape.*
+homeassistant.components.knocki.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lacrosse.*
@@ -286,6 +288,7 @@ homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
+homeassistant.components.madvr.*
 homeassistant.components.mailbox.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*
@@ -369,6 +372,7 @@ homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.ring.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
 homeassistant.components.rpi_power.*

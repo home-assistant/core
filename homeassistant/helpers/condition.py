@@ -150,7 +150,7 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 
 
 @contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None, None]:
+def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
     """Trace condition evaluation."""
     should_pop = True
     trace_element = trace_stack_top(trace_stack_cv)

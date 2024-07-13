@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_tractive_client() -> Generator[AsyncMock, None, None]:
+def mock_tractive_client() -> Generator[AsyncMock]:
     """Mock a Tractive client."""
 
     def send_hardware_event(

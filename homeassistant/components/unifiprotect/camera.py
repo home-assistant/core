@@ -4,19 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Generator
 import logging
-from typing import Any, cast
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
-    ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     StateType,
 )
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,20 +25,18 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DISPATCH_ADOPT,
-    DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .data import ProtectData
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd, get_camera_base_name
+from .utils import get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
 def _create_rtsp_repair(
-    hass: HomeAssistant, entry: ConfigEntry, data: ProtectData, camera: UFPCamera
+    hass: HomeAssistant, entry: UFPConfigEntry, data: ProtectData, camera: UFPCamera
 ) -> None:
     edit_key = "readonly"
     if camera.can_write(data.api.bootstrap.auth_user):
@@ -68,17 +62,14 @@ def _create_rtsp_repair(
 @callback
 def _get_camera_channels(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
-) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
+) -> Generator[tuple[UFPCamera, CameraChannel, bool]]:
     """Get all the camera channels."""
 
-    devices = (
-        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
-    )
-    for camera in devices:
-        camera = cast(UFPCamera, camera)
+    cameras = data.get_cameras() if ufp_device is None else [ufp_device]
+    for camera in cameras:
         if not camera.channels:
             if ufp_device is None:
                 # only warn on startup
@@ -108,7 +99,7 @@ def _get_camera_channels(
 
 def _async_camera_entities(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
 ) -> list[ProtectDeviceEntity]:
@@ -146,35 +137,37 @@ def _async_camera_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Discover cameras on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
             return
+        async_add_entities(_async_camera_entities(hass, entry, data, ufp_device=device))
 
-        entities = _async_camera_entities(hass, entry, data, ufp_device=device)
-        async_add_entities(entities)
-
+    data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+        async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
-    )
+    async_add_entities(_async_camera_entities(hass, entry, data))
 
-    entities = _async_camera_entities(hass, entry, data)
-    async_add_entities(entities)
+
+_EMPTY_CAMERA_FEATURES = CameraEntityFeature(0)
 
 
 class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
 
     device: UFPCamera
+    _state_attrs = (
+        "_attr_available",
+        "_attr_is_recording",
+        "_attr_motion_detection_enabled",
+    )
 
     def __init__(
         self,
@@ -196,10 +189,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         camera_name = get_camera_base_name(channel)
         if self._secure:
             self._attr_unique_id = f"{device.mac}_{channel.id}"
-            self._attr_name = f"{device.display_name} {camera_name}"
+            self._attr_name = camera_name
         else:
             self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
-            self._attr_name = f"{device.display_name} {camera_name} (Insecure)"
+            self._attr_name = f"{camera_name} (insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 
@@ -214,30 +207,15 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
 
         # _async_set_stream_source called by __init__
-        self._stream_source = (  # pylint: disable=attribute-defined-outside-init
-            None if disable_stream else rtsp_url
-        )
+        # pylint: disable-next=attribute-defined-outside-init
+        self._stream_source = None if disable_stream else rtsp_url
         if self._stream_source:
             self._attr_supported_features = CameraEntityFeature.STREAM
         else:
-            self._attr_supported_features = CameraEntityFeature(0)
+            self._attr_supported_features = _EMPTY_CAMERA_FEATURES
 
     @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (
-            self._attr_available,
-            self._attr_is_recording,
-            self._attr_motion_detection_enabled,
-        )
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
         channel = updated_device.channels[self.channel.id]

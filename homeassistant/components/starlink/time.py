@@ -62,6 +62,8 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
 
 def _utc_minutes_to_time(utc_minutes: int, timezone: tzinfo) -> time:
     hour = math.floor(utc_minutes / 60)
+    if hour > 23:
+        hour -= 24
     minute = utc_minutes % 60
     try:
         utc = datetime.now(UTC).replace(

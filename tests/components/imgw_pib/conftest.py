@@ -27,7 +27,7 @@ HYDROLOGICAL_DATA = HydrologicalData(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.imgw_pib.async_setup_entry", return_value=True
@@ -36,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_imgw_pib_client() -> Generator[AsyncMock, None, None]:
+def mock_imgw_pib_client() -> Generator[AsyncMock]:
     """Mock a ImgwPib client."""
     with (
         patch(

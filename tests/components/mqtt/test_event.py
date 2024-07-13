@@ -222,6 +222,8 @@ async def test_setting_event_value_via_mqtt_json_message_and_default_current_sta
     assert state.attributes.get("val") == "valcontent"
     assert state.attributes.get("par") == "parcontent"
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(
@@ -323,10 +325,9 @@ async def test_discovery_update_availability(
         }
     ],
 )
+@pytest.mark.usefixtures("hass")
 async def test_invalid_device_class(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test device_class option with invalid value."""
     assert await mqtt_mock_entry()
@@ -371,11 +372,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        event.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, event.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -386,26 +383,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        event.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, event.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        event.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, event.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -440,19 +427,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_event(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered event."""
     data = '{ "name": "test", "state_topic": "test_topic", "event_types": ["press"] }'
-    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, event.DOMAIN, data)
+    await help_test_discovery_removal(hass, mqtt_mock_entry, event.DOMAIN, data)
 
 
 async def test_discovery_update_event_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered mqtt event template."""
     await mqtt_mock_entry()
@@ -489,16 +472,12 @@ async def test_discovery_update_event_template(
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer", "state_topic": "test_topic#", "event_types": ["press"] }'
     data2 = '{ "name": "Milk", "state_topic": "test_topic", "event_types": ["press"] }'
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, event.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, event.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -675,8 +654,7 @@ async def test_value_template_with_entity_id(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = event.DOMAIN
@@ -699,8 +677,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = event.DOMAIN

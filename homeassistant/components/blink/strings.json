@@ -55,16 +55,6 @@
     }
   },
   "services": {
-    "blink_update": {
-      "name": "Update",
-      "description": "Forces a refresh.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The Blink device id."
-        }
-      }
-    },
     "record": {
       "name": "Record",
       "description": "Requests camera to record a clip."
@@ -85,7 +75,7 @@
     },
     "save_recent_clips": {
       "name": "Save recent clips",
-      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_{name}.mp4\".",
+      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_[camera name].mp4\".",
       "fields": {
         "file_path": {
           "name": "Output directory",

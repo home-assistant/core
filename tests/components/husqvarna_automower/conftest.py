@@ -81,7 +81,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client() -> Generator[AsyncMock, None, None]:
+def mock_automower_client() -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
     mower_dict = mower_list_to_dictionary_dataclass(

@@ -43,7 +43,7 @@
   },
   "exceptions": {
     "invalid_room": {
-      "message": "The room { room } is unavailable to your vacuum. Make sure all rooms match the Shark App, including capitalization."
+      "message": "The room {room} is unavailable to your vacuum. Make sure all rooms match the Shark App, including capitalization."
     }
   },
   "services": {
