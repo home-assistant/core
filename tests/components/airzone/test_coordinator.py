@@ -8,6 +8,7 @@ from aioairzone.exceptions import (
     InvalidMethod,
     SystemOutOfRange,
 )
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
@@ -66,7 +67,10 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_coordinator_new_devices(hass: HomeAssistant) -> None:
+async def test_coordinator_new_devices(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test new devices on coordinator update."""
 
     config_entry = MockConfigEntry(
@@ -110,9 +114,10 @@ async def test_coordinator_new_devices(hass: HomeAssistant) -> None:
         assert state is None
 
         mock_hvac.return_value = HVAC_MOCK
-        async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        mock_hvac.assert_called()
+        mock_hvac.assert_called_once()
 
         state = hass.states.get("sensor.salon_temperature")
         assert state.state == "19.6"
