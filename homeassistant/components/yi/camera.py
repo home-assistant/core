@@ -9,7 +9,10 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     CONF_HOST,
@@ -37,7 +40,7 @@ DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -149,7 +152,7 @@ class YiCamera(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         if not self._is_on:
-            return
+            return None
 
         stream = CameraMjpeg(self._manager.binary)
         await stream.open_camera(self._last_url, extra_cmd=self._extra_arguments)

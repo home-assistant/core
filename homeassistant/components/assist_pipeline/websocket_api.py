@@ -165,7 +165,7 @@ async def websocket_run(
         elif start_stage == PipelineStage.STT:
             wake_word_phrase = msg["input"].get("wake_word_phrase")
 
-        async def stt_stream() -> AsyncGenerator[bytes, None]:
+        async def stt_stream() -> AsyncGenerator[bytes]:
             state = None
 
             # Yield until we receive an empty chunk
@@ -291,8 +291,11 @@ def websocket_list_runs(
         msg["id"],
         {
             "pipeline_runs": [
-                {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
-                for id, pipeline_run in pipeline_debug.items()
+                {
+                    "pipeline_run_id": pipeline_run_id,
+                    "timestamp": pipeline_run.timestamp,
+                }
+                for pipeline_run_id, pipeline_run in pipeline_debug.items()
             ]
         },
     )
@@ -349,7 +352,7 @@ def websocket_get_run(
     if pipeline_id not in pipeline_data.pipeline_debug:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"pipeline_id {pipeline_id} not found",
         )
         return
@@ -359,7 +362,7 @@ def websocket_get_run(
     if pipeline_run_id not in pipeline_debug:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"pipeline_run_id {pipeline_run_id} not found",
         )
         return
@@ -375,8 +378,8 @@ def websocket_get_run(
         vol.Required("type"): "assist_pipeline/language/list",
     }
 )
-@websocket_api.async_response
-async def websocket_list_languages(
+@callback
+def websocket_list_languages(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
@@ -386,7 +389,7 @@ async def websocket_list_languages(
     This will return a list of languages which are supported by at least one stt, tts
     and conversation engine respectively.
     """
-    conv_language_tags = await conversation.async_get_conversation_languages(hass)
+    conv_language_tags = conversation.async_get_conversation_languages(hass)
     stt_language_tags = stt.async_get_speech_to_text_languages(hass)
     tts_language_tags = tts.async_get_text_to_speech_languages(hass)
     pipeline_languages: set[str] | None = None

@@ -7,7 +7,7 @@ from py_nextbus import NextBusClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_STOP
+from homeassistant.const import CONF_STOP
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -102,41 +102,6 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize NextBus config flow."""
         self.data: dict[str, str] = {}
         self._client = NextBusClient(output_format="json")
-        _LOGGER.info("Init new config flow")
-
-    async def async_step_import(self, config_input: dict[str, str]) -> ConfigFlowResult:
-        """Handle import of config."""
-        agency_tag = config_input[CONF_AGENCY]
-        route_tag = config_input[CONF_ROUTE]
-        stop_tag = config_input[CONF_STOP]
-
-        validation_result = await self.hass.async_add_executor_job(
-            _validate_import,
-            self._client,
-            agency_tag,
-            route_tag,
-            stop_tag,
-        )
-        if isinstance(validation_result, str):
-            return self.async_abort(reason=validation_result)
-
-        data = {
-            CONF_AGENCY: agency_tag,
-            CONF_ROUTE: route_tag,
-            CONF_STOP: stop_tag,
-            CONF_NAME: config_input.get(
-                CONF_NAME,
-                f"{config_input[CONF_AGENCY]} {config_input[CONF_ROUTE]}",
-            ),
-        }
-
-        await self.async_set_unique_id(_unique_id_from_data(data))
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=" ".join(validation_result),
-            data=data,
-        )
 
     async def async_step_user(
         self,

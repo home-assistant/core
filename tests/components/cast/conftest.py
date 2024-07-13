@@ -18,8 +18,7 @@ def get_multizone_status_mock():
 @pytest.fixture
 def get_cast_type_mock():
     """Mock pychromecast dial."""
-    mock = MagicMock(spec_set=pychromecast.dial.get_cast_type)
-    return mock
+    return MagicMock(spec_set=pychromecast.dial.get_cast_type)
 
 
 @pytest.fixture

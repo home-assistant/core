@@ -7,7 +7,6 @@ from axis.models.api import CONTEXT
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -31,9 +30,9 @@ root.IOPort.I1.Output.Active=open
 
 
 @pytest.mark.parametrize("param_ports_payload", [PORT_DATA])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_switches_with_port_cgi(
     hass: HomeAssistant,
-    setup_config_entry: ConfigEntry,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
 ) -> None:
     """Test that switches are loaded properly using port.cgi."""
@@ -116,9 +115,9 @@ PORT_MANAGEMENT_RESPONSE = {
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_PORT_MANAGEMENT])
 @pytest.mark.parametrize("port_management_payload", [PORT_MANAGEMENT_RESPONSE])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_switches_with_port_management(
     hass: HomeAssistant,
-    setup_config_entry: ConfigEntry,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
 ) -> None:
     """Test that switches are loaded properly using port management."""

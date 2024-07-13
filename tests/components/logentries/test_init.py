@@ -4,7 +4,7 @@ from unittest.mock import ANY, call, patch
 
 import pytest
 
-import homeassistant.components.logentries as logentries
+from homeassistant.components import logentries
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

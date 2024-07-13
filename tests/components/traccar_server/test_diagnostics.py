@@ -21,7 +21,7 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -33,6 +33,10 @@ async def test_entry_diagnostics(
         hass_client,
         mock_config_entry,
     )
+    # Sort the list of entities
+    result["entities"] = sorted(
+        result["entities"], key=lambda entity: entity["entity_id"]
+    )
 
     assert result == snapshot(name="entry")
 
@@ -40,26 +44,40 @@ async def test_entry_diagnostics(
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test device diagnostics."""
     await setup_integration(hass, mock_config_entry)
 
     devices = dr.async_entries_for_config_entry(
-        hass.helpers.device_registry.async_get(hass),
+        device_registry,
         mock_config_entry.entry_id,
     )
 
     assert len(devices) == 1
 
     for device in dr.async_entries_for_config_entry(
-        hass.helpers.device_registry.async_get(hass), mock_config_entry.entry_id
+        device_registry, mock_config_entry.entry_id
     ):
+        entities = er.async_entries_for_device(
+            entity_registry,
+            device_id=device.id,
+            include_disabled_entities=True,
+        )
+        # Enable all entities to show everything in snapshots
+        for entity in entities:
+            entity_registry.async_update_entity(entity.entity_id, disabled_by=None)
+
         result = await get_diagnostics_for_device(
             hass, hass_client, mock_config_entry, device=device
+        )
+        # Sort the list of entities
+        result["entities"] = sorted(
+            result["entities"], key=lambda entity: entity["entity_id"]
         )
 
         assert result == snapshot(name=device.name)
@@ -68,7 +86,7 @@ async def test_device_diagnostics(
 async def test_device_diagnostics_with_disabled_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
@@ -78,14 +96,14 @@ async def test_device_diagnostics_with_disabled_entity(
     await setup_integration(hass, mock_config_entry)
 
     devices = dr.async_entries_for_config_entry(
-        hass.helpers.device_registry.async_get(hass),
+        device_registry,
         mock_config_entry.entry_id,
     )
 
     assert len(devices) == 1
 
     for device in dr.async_entries_for_config_entry(
-        hass.helpers.device_registry.async_get(hass), mock_config_entry.entry_id
+        device_registry, mock_config_entry.entry_id
     ):
         for entry in er.async_entries_for_device(
             entity_registry,
@@ -99,6 +117,10 @@ async def test_device_diagnostics_with_disabled_entity(
 
         result = await get_diagnostics_for_device(
             hass, hass_client, mock_config_entry, device=device
+        )
+        # Sort the list of entities
+        result["entities"] = sorted(
+            result["entities"], key=lambda entity: entity["entity_id"]
         )
 
         assert result == snapshot(name=device.name)

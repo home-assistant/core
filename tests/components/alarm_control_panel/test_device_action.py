@@ -3,11 +3,11 @@
 import pytest
 from pytest_unordered import unordered
 
+from homeassistant.components import automation
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
 )
-import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     CONF_PLATFORM,
@@ -24,13 +24,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .common import MockAlarm
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     setup_test_component_platform,
 )
-from tests.components.alarm_control_panel.common import MockAlarm
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -173,7 +174,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["disarm", "arm_away"]
+        for action in ("disarm", "arm_away")
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id

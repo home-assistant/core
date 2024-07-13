@@ -98,7 +98,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
                 url = await self._get_authorization_url()
         except TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error generating auth url")
             return self.async_abort(reason="unknown_authorize_url_generation")
         return self.async_show_form(

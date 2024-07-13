@@ -102,7 +102,7 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -128,11 +128,9 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 
 @callback
 def _key_for_source(index, source, previous_sources):
-    key = vol.Required(
+    return vol.Required(
         source, description={"suggested_value": previous_sources[str(index)]}
     )
-
-    return key
 
 
 class Ws66iOptionsFlowHandler(OptionsFlow):

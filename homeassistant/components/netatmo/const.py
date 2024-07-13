@@ -9,9 +9,11 @@ MANUFACTURER = "Netatmo"
 DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,

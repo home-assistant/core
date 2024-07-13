@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -24,8 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import DOMAIN
-from .coordinator import NextcloudDataUpdateCoordinator
+from . import NextcloudConfigEntry
 from .entity import NextcloudEntity
 
 UNIT_OF_LOAD: Final[str] = "load"
@@ -602,10 +600,12 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NextcloudConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nextcloud sensors."""
-    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         NextcloudSensor(coordinator, entry, sensor)
         for sensor in SENSORS

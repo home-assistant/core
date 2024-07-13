@@ -1,5 +1,7 @@
 """Support for water heater devices."""
 
+DOMAIN = "water_heater"
+
 STATE_ECO = "eco"
 STATE_ELECTRIC = "electric"
 STATE_PERFORMANCE = "performance"

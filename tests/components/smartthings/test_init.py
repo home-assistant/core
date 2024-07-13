@@ -370,9 +370,9 @@ async def test_remove_entry_installedapp_unknown_error(
 ) -> None:
     """Test raises exceptions removing the installed app."""
     # Arrange
-    smartthings_mock.delete_installed_app.side_effect = Exception
+    smartthings_mock.delete_installed_app.side_effect = ValueError
     # Act
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1
@@ -403,9 +403,9 @@ async def test_remove_entry_app_unknown_error(
 ) -> None:
     """Test raises exceptions removing the app."""
     # Arrange
-    smartthings_mock.delete_app.side_effect = Exception
+    smartthings_mock.delete_app.side_effect = ValueError
     # Act
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1

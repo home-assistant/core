@@ -6,15 +6,14 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from aiohttp import web
 import voluptuous as vol
 
-from .view import HomeAssistantView
+from homeassistant.helpers.typing import VolDictType
 
-_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
-_P = ParamSpec("_P")
+from .view import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +27,9 @@ class RequestDataValidator:
     Will return a 400 if no JSON provided or doesn't match schema.
     """
 
-    def __init__(self, schema: vol.Schema, allow_empty: bool = False) -> None:
+    def __init__(
+        self, schema: VolDictType | vol.Schema, allow_empty: bool = False
+    ) -> None:
         """Initialize the decorator."""
         if isinstance(schema, dict):
             schema = vol.Schema(schema)
@@ -36,7 +37,7 @@ class RequestDataValidator:
         self._schema = schema
         self._allow_empty = allow_empty
 
-    def __call__(
+    def __call__[_HassViewT: HomeAssistantView, **_P](
         self,
         method: Callable[
             Concatenate[_HassViewT, web.Request, dict[str, Any], _P],
@@ -70,7 +71,6 @@ class RequestDataValidator:
                     f"Message format incorrect: {err}", HTTPStatus.BAD_REQUEST
                 )
 
-            result = await method(view, request, data, *args, **kwargs)
-            return result
+            return await method(view, request, data, *args, **kwargs)
 
         return wrapper

@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from pygti.exceptions import CannotConnect, InvalidAuth
 
-from homeassistant import data_entry_flow
 from homeassistant.components.hvv_departures.const import (
     CONF_FILTER,
     CONF_REAL_TIME,
@@ -15,6 +14,7 @@ from homeassistant.components.hvv_departures.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -77,7 +77,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             {CONF_STATION: "Wartenau"},
         )
 
-        assert result_station_select["type"] == "create_entry"
+        assert result_station_select["type"] is FlowResultType.CREATE_ENTRY
         assert result_station_select["title"] == "Wartenau"
         assert result_station_select["data"] == {
             CONF_HOST: "api-test.geofox.de",
@@ -144,7 +144,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=InvalidAuth(
             "ERROR_TEXT",
-            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
+            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",  # codespell:ignore ist
             "Authentication failed!",
         ),
     ):
@@ -159,7 +159,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result_user["type"] == "form"
+        assert result_user["type"] is FlowResultType.FORM
         assert result_user["errors"] == {"base": "invalid_auth"}
 
 
@@ -181,7 +181,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result_user["type"] == "form"
+        assert result_user["type"] is FlowResultType.FORM
         assert result_user["errors"] == {"base": "cannot_connect"}
 
 
@@ -217,7 +217,7 @@ async def test_user_flow_station(hass: HomeAssistant) -> None:
             result_user["flow_id"],
             None,
         )
-        assert result_station["type"] == "form"
+        assert result_station["type"] is FlowResultType.FORM
         assert result_station["step_id"] == "station"
 
 
@@ -255,7 +255,7 @@ async def test_user_flow_station_select(hass: HomeAssistant) -> None:
             None,
         )
 
-        assert result_station_select["type"] == "form"
+        assert result_station_select["type"] is FlowResultType.FORM
         assert result_station_select["step_id"] == "station_select"
 
 
@@ -289,7 +289,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -297,7 +297,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             user_input={CONF_FILTER: ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_FILTER: [
                 {
@@ -343,13 +343,13 @@ async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.hvv_departures.hub.GTI.departureList",
         side_effect=InvalidAuth(
             "ERROR_TEXT",
-            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
+            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",  # codespell:ignore ist
             "Authentication failed!",
         ),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         assert result["errors"] == {"base": "invalid_auth"}
@@ -388,7 +388,7 @@ async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         assert result["errors"] == {"base": "cannot_connect"}

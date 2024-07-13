@@ -12,7 +12,10 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -44,7 +47,7 @@ REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 
 URL_API_NETIO_EP = "/api/netio/{host}"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -165,7 +168,7 @@ class NetioSwitch(SwitchEntity):
     def _set(self, value):
         val = list("uuuu")
         val[int(self.outlet) - 1] = "1" if value else "0"
-        self.netio.get("port list %s" % "".join(val))
+        self.netio.get("port list {}".format("".join(val)))
         self.netio.states[int(self.outlet) - 1] = value
         self.schedule_update_ha_state()
 

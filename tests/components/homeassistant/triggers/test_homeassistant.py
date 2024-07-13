@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -27,8 +27,9 @@ from tests.common import async_mock_service
         }
     ],
 )
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_if_fires_on_hass_start(
-    hass: HomeAssistant, mock_hass_config: None, hass_config: ConfigType
+    hass: HomeAssistant, hass_config: ConfigType
 ) -> None:
     """Test the firing when Home Assistant starts."""
     calls = async_mock_service(hass, "test", "automation")

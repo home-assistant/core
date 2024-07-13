@@ -41,7 +41,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_flow_entry_migrate_1_1_to_1_2(hass: HomeAssistant) -> None:
@@ -76,7 +76,7 @@ async def test_setup_failed_connection_error(
     mock_api.side_effect = TransmissionConnectError()
 
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_failed_auth_error(
@@ -90,7 +90,7 @@ async def test_setup_failed_auth_error(
     mock_api.side_effect = TransmissionAuthError()
 
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_failed_unexpected_error(
@@ -104,7 +104,7 @@ async def test_setup_failed_unexpected_error(
     mock_api.side_effect = TransmissionError()
 
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -119,7 +119,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data[DOMAIN]
 
 
 @pytest.mark.parametrize(

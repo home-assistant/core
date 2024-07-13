@@ -83,6 +83,7 @@ TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
 TYPE_DOORBELL = f"{PREFIX_TYPES}DOORBELL"
 TYPE_FAN = f"{PREFIX_TYPES}FAN"
 TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
+TYPE_GATE = f"{PREFIX_TYPES}GATE"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
 TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
 TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
@@ -171,7 +172,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.CURTAIN): TYPE_CURTAIN,
     (cover.DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
     (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
-    (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
+    (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GATE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
     (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
     (event.DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,

@@ -16,6 +16,7 @@ from homeassistant.components import (
     counter,
     cover,
     device_tracker,
+    fan,
     humidifier,
     input_boolean,
     input_number,
@@ -30,10 +31,22 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+)
+from homeassistant.components.fan import (
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
 )
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.sensor import SensorDeviceClass
@@ -57,6 +70,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
     STATE_UNLOCKED,
     UnitOfEnergy,
     UnitOfTemperature,
@@ -394,6 +408,18 @@ async def test_climate(
         'entity="climate.fritzdect",'
         'friendly_name="Fritz!DECT"} 0.0' in body
     )
+    assert (
+        'climate_preset_mode{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"} 1.0' in body
+    )
+    assert (
+        'climate_fan_mode{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="auto"} 1.0' in body
+    )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -558,6 +584,51 @@ async def test_lock(
         'lock_state{domain="lock",'
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_fan(
+    client: ClientSessionGenerator, fan_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for fan."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'fan_state{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 1.0' in body
+    )
+
+    assert (
+        'fan_speed_percent{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 33.0' in body
+    )
+
+    assert (
+        'fan_is_oscillating{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 1.0' in body
+    )
+
+    assert (
+        'fan_direction_reversed{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 0.0' in body
+    )
+
+    assert (
+        'fan_preset_mode{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1",'
+        'mode="LO"} 1.0' in body
+    )
+
+    assert (
+        'fan_direction_reversed{domain="fan",'
+        'entity="fan.fan_2",'
+        'friendly_name="Reverse Fan"} 1.0' in body
     )
 
 
@@ -1053,6 +1124,126 @@ async def test_disabling_entity(
     )
 
 
+@pytest.mark.parametrize("namespace", [""])
+async def test_entity_becomes_unavailable_with_export(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test an entity that becomes unavailable is still exported."""
+    data = {**sensor_entities}
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
+    )
+
+    assert (
+        'sensor_humidity_percent{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 54.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    # Make sensor_1 unavailable.
+    set_state_with_entry(
+        hass, data["sensor_1"], STATE_UNAVAILABLE, data["sensor_1_attributes"]
+    )
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    # Check that only the availability changed on sensor_1.
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 2.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 0.0' in body
+    )
+
+    # The other sensor should be unchanged.
+    assert (
+        'sensor_humidity_percent{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 54.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    # Bring sensor_1 back and check that it is correct.
+    set_state_with_entry(hass, data["sensor_1"], 200.0, data["sensor_1_attributes"])
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 200.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 3.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
+    )
+
+
 @pytest.fixture(name="sensor_entities")
 async def sensor_fixture(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -1238,6 +1429,11 @@ async def climate_fixture(
         ATTR_TARGET_TEMP_LOW: 21,
         ATTR_TARGET_TEMP_HIGH: 24,
         ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
+        ATTR_HVAC_MODES: ["off", "heat", "cool", "heat_cool"],
+        ATTR_PRESET_MODE: "away",
+        ATTR_PRESET_MODES: ["away", "home", "sleep"],
+        ATTR_FAN_MODE: "auto",
+        ATTR_FAN_MODES: ["auto", "on"],
     }
     set_state_with_entry(
         hass, climate_2, climate.HVACAction.HEATING, climate_2_attributes
@@ -1662,6 +1858,46 @@ async def switch_fixture(
     set_state_with_entry(hass, switch_2, STATE_OFF, switch_2_attributes)
     data["switch_2"] = switch_2
     data["switch_2_attributes"] = switch_2_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="fan_entities")
+async def fan_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate fan entities."""
+    data = {}
+    fan_1 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_1",
+        suggested_object_id="fan_1",
+        original_name="Fan 1",
+    )
+    fan_1_attributes = {
+        ATTR_DIRECTION: DIRECTION_FORWARD,
+        ATTR_OSCILLATING: True,
+        ATTR_PERCENTAGE: 33,
+        ATTR_PRESET_MODE: "LO",
+        ATTR_PRESET_MODES: ["LO", "OFF", "HI"],
+    }
+    set_state_with_entry(hass, fan_1, STATE_ON, fan_1_attributes)
+    data["fan_1"] = fan_1
+    data["fan_1_attributes"] = fan_1_attributes
+
+    fan_2 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_2",
+        suggested_object_id="fan_2",
+        original_name="Reverse Fan",
+    )
+    fan_2_attributes = {ATTR_DIRECTION: DIRECTION_REVERSE}
+    set_state_with_entry(hass, fan_2, STATE_ON, fan_2_attributes)
+    data["fan_2"] = fan_2
+    data["fan_2_attributes"] = fan_2_attributes
 
     await hass.async_block_till_done()
     return data

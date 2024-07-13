@@ -26,6 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ACTIVITY_POWER_OFF,
@@ -50,7 +51,7 @@ PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
 
-HARMONY_CHANGE_CHANNEL_SCHEMA = {
+HARMONY_CHANGE_CHANNEL_SCHEMA: VolDictType = {
     vol.Required(ATTR_CHANNEL): cv.positive_int,
 }
 
@@ -138,7 +139,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
 
         _LOGGER.debug("%s: Harmony Hub added", self._data.name)
 
-        self.async_on_remove(self._clear_disconnection_delay)
+        self.async_on_remove(self._async_clear_disconnection_delay)
         self._setup_callbacks()
 
         self.async_on_remove(

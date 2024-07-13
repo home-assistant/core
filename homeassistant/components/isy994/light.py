@@ -114,8 +114,5 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         if not (last_state := await self.async_get_last_state()):
             return
 
-        if (
-            ATTR_LAST_BRIGHTNESS in last_state.attributes
-            and last_state.attributes[ATTR_LAST_BRIGHTNESS]
-        ):
-            self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]
+        if last_brightness := last_state.attributes.get(ATTR_LAST_BRIGHTNESS):
+            self._last_brightness = last_brightness

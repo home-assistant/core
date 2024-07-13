@@ -156,7 +156,7 @@ async def async_integration_yaml_config(
     hass: HomeAssistant,
     integration_name: str,
     *,
-    raise_on_failure: Literal[False] | bool,
+    raise_on_failure: Literal[False],
 ) -> ConfigType | None: ...
 
 

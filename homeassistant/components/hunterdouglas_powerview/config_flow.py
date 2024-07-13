@@ -114,7 +114,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, "cannot_connect"
         except UnsupportedDevice:
             return None, "unsupported_device"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return None, "unknown"
 

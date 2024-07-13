@@ -8,7 +8,6 @@ from typing import Any, cast
 from jaraco.abode.devices.base import Device
 from jaraco.abode.devices.camera import Camera as AbodeCam
 from jaraco.abode.helpers import timeline
-from jaraco.abode.helpers.constants import TYPE_CAMERA
 import requests
 from requests.models import Response
 
@@ -19,8 +18,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
-from . import AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN, LOGGER
+from .entity import AbodeDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
     async_add_entities(
         AbodeCamera(data, device, timeline.CAPTURE_IMAGE)
-        for device in data.abode.get_devices(generic_type=TYPE_CAMERA)
+        for device in data.abode.get_devices(generic_type="camera")
     )
 
 

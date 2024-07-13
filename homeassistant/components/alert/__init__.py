@@ -26,13 +26,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
 from homeassistant.exceptions import ServiceNotFound
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )

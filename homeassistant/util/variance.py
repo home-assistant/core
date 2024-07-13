@@ -5,31 +5,30 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import functools
-from typing import Any, ParamSpec, TypeVar, overload
-
-_R = TypeVar("_R", int, float, datetime)
-_P = ParamSpec("_P")
+from typing import Any, overload
 
 
 @overload
-def ignore_variance(
+def ignore_variance[**_P](
     func: Callable[_P, int], ignored_variance: int
 ) -> Callable[_P, int]: ...
 
 
 @overload
-def ignore_variance(
+def ignore_variance[**_P](
     func: Callable[_P, float], ignored_variance: float
 ) -> Callable[_P, float]: ...
 
 
 @overload
-def ignore_variance(
+def ignore_variance[**_P](
     func: Callable[_P, datetime], ignored_variance: timedelta
 ) -> Callable[_P, datetime]: ...
 
 
-def ignore_variance(func: Callable[_P, _R], ignored_variance: Any) -> Callable[_P, _R]:
+def ignore_variance[**_P, _R: (int, float, datetime)](
+    func: Callable[_P, _R], ignored_variance: Any
+) -> Callable[_P, _R]:
     """Wrap a function that returns old result if new result does not vary enough."""
     last_value: _R | None = None
 

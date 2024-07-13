@@ -8,6 +8,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.volumio.config_flow import CannotConnectError
 from homeassistant.components.volumio.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -43,7 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -62,7 +63,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TestVolumio"
     assert result2["data"] == {**TEST_SYSTEM_INFO, **TEST_CONNECTION}
 
@@ -103,7 +104,7 @@ async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
     assert entry.data == {**TEST_SYSTEM_INFO, **TEST_CONNECTION}
@@ -114,7 +115,7 @@ async def test_empty_system_info(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -133,7 +134,7 @@ async def test_empty_system_info(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_CONNECTION["host"]
     assert result2["data"] == {
         "host": TEST_CONNECTION["host"],
@@ -160,7 +161,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             TEST_CONNECTION,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -179,7 +180,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
             TEST_CONNECTION,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -206,7 +207,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_DISCOVERY_RESULT["name"]
     assert result2["data"] == TEST_DISCOVERY_RESULT
 
@@ -232,7 +233,7 @@ async def test_discovery_cannot_connect(hass: HomeAssistant) -> None:
             user_input={},
         )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "cannot_connect"
 
 
@@ -241,13 +242,13 @@ async def test_discovery_duplicate_data(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -278,7 +279,7 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.data == TEST_DISCOVERY_RESULT

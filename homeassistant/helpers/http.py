@@ -30,10 +30,10 @@ from .json import find_paths_unserializable_data, json_bytes, json_dumps
 _LOGGER = logging.getLogger(__name__)
 
 
-AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
+type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
-KEY_ALLOW_CONFIGRED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
+KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
 KEY_HASS: AppKey[HomeAssistant] = AppKey("hass")
 
 current_request: ContextVar[Request | None] = ContextVar(
@@ -181,7 +181,7 @@ class HomeAssistantView:
         if self.cors_allowed:
             allow_cors = app.get(KEY_ALLOW_ALL_CORS)
         else:
-            allow_cors = app.get(KEY_ALLOW_CONFIGRED_CORS)
+            allow_cors = app.get(KEY_ALLOW_CONFIGURED_CORS)
 
         if allow_cors:
             for route in routes:

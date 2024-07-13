@@ -5,10 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, TypedDict, cast
+from typing import Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -16,13 +18,32 @@ from .normalized_name_base_registry import (
     normalize_name,
 )
 from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "floor_registry"
-EVENT_FLOOR_REGISTRY_UPDATED = "floor_registry_updated"
+DATA_REGISTRY: HassKey[FloorRegistry] = HassKey("floor_registry")
+EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventType(
+    "floor_registry_updated"
+)
 STORAGE_KEY = "core.floor_registry"
 STORAGE_VERSION_MAJOR = 1
+
+
+class _FloorStoreData(TypedDict):
+    """Data type for individual floor. Used in FloorRegistryStoreData."""
+
+    aliases: list[str]
+    floor_id: str
+    icon: str | None
+    level: int | None
+    name: str
+
+
+class FloorRegistryStoreData(TypedDict):
+    """Store data type for FloorRegistry."""
+
+    floors: list[_FloorStoreData]
 
 
 class EventFloorRegistryUpdatedData(TypedDict):
@@ -32,7 +53,7 @@ class EventFloorRegistryUpdatedData(TypedDict):
     floor_id: str
 
 
-EventFloorRegistryUpdated = Event[EventFloorRegistryUpdatedData]
+type EventFloorRegistryUpdated = Event[EventFloorRegistryUpdatedData]
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)
@@ -45,7 +66,7 @@ class FloorEntry(NormalizedNameBaseRegistryEntry):
     level: int | None = None
 
 
-class FloorRegistry(BaseRegistry):
+class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     """Class to hold a registry of floors."""
 
     floors: NormalizedNameBaseRegistryItems[FloorEntry]
@@ -54,13 +75,11 @@ class FloorRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the floor registry."""
         self.hass = hass
-        self._store: Store[dict[str, list[dict[str, str | int | list[str] | None]]]] = (
-            Store(
-                hass,
-                STORAGE_VERSION_MAJOR,
-                STORAGE_KEY,
-                atomic_writes=True,
-            )
+        self._store = Store(
+            hass,
+            STORAGE_VERSION_MAJOR,
+            STORAGE_KEY,
+            atomic_writes=True,
         )
 
     @callback
@@ -102,6 +121,7 @@ class FloorRegistry(BaseRegistry):
         level: int | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
+        self.hass.verify_event_loop_thread("floor_registry.async_create")
         if floor := self.async_get_floor_by_name(name):
             raise ValueError(
                 f"The name {name} ({floor.normalized_name}) is already in use"
@@ -120,7 +140,7 @@ class FloorRegistry(BaseRegistry):
         floor_id = floor.floor_id
         self.floors[floor_id] = floor
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
             EventFloorRegistryUpdatedData(
                 action="create",
@@ -132,8 +152,9 @@ class FloorRegistry(BaseRegistry):
     @callback
     def async_delete(self, floor_id: str) -> None:
         """Delete floor."""
+        self.hass.verify_event_loop_thread("floor_registry.async_delete")
         del self.floors[floor_id]
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
             EventFloorRegistryUpdatedData(
                 action="remove",
@@ -170,10 +191,11 @@ class FloorRegistry(BaseRegistry):
         if not changes:
             return old
 
+        self.hass.verify_event_loop_thread("floor_registry.async_update")
         new = self.floors[floor_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
             EventFloorRegistryUpdatedData(
                 action="update",
@@ -190,13 +212,6 @@ class FloorRegistry(BaseRegistry):
 
         if data is not None:
             for floor in data["floors"]:
-                if TYPE_CHECKING:
-                    assert isinstance(floor["aliases"], list)
-                    assert isinstance(floor["icon"], str)
-                    assert isinstance(floor["level"], int)
-                    assert isinstance(floor["name"], str)
-                    assert isinstance(floor["floor_id"], str)
-
                 normalized_name = normalize_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
                     aliases=set(floor["aliases"]),
@@ -211,7 +226,7 @@ class FloorRegistry(BaseRegistry):
         self._floor_data = floors.data
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, str | int | list[str] | None]]]:
+    def _data_to_save(self) -> FloorRegistryStoreData:
         """Return data of floor registry to store in a file."""
         return {
             "floors": [
@@ -228,13 +243,13 @@ class FloorRegistry(BaseRegistry):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> FloorRegistry:
     """Get floor registry."""
-    return cast(FloorRegistry, hass.data[DATA_REGISTRY])
+    return FloorRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load floor registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = FloorRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()

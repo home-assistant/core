@@ -23,16 +23,22 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
-    next_departure: datetime | None
-    next_on_departure: datetime | None
-    duration: str
+    duration: int | None
     platform: str
     remaining_time: str
     start: str
     destination: str
     train_number: str
-    transfers: str
+    transfers: int
     delay: int
+
+
+def calculate_duration_in_seconds(duration_text: str) -> int | None:
+    """Transform and calculate the duration into seconds."""
+    # Transform 01d03:21:23 into 01 days 03:21:23
+    duration_text_pg_format = duration_text.replace("d", " days ")
+    duration = dt_util.parse_duration(duration_text_pg_format)
+    return duration.seconds if duration else None
 
 
 class SwissPublicTransportDataUpdateCoordinator(
@@ -77,16 +83,13 @@ class SwissPublicTransportDataUpdateCoordinator(
             raise UpdateFailed from e
 
         connections = self._opendata.connections
-
         return [
             DataConnection(
                 departure=self.nth_departure_time(i),
-                next_departure=self.nth_departure_time(i + 1),
-                next_on_departure=self.nth_departure_time(i + 2),
                 train_number=connections[i]["number"],
                 platform=connections[i]["platform"],
                 transfers=connections[i]["transfers"],
-                duration=connections[i]["duration"],
+                duration=calculate_duration_in_seconds(connections[i]["duration"]),
                 start=self._opendata.from_name,
                 destination=self._opendata.to_name,
                 remaining_time=str(self.remaining_time(connections[i]["departure"])),

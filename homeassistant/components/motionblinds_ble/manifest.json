@@ -1,6 +1,6 @@
 {
   "domain": "motionblinds_ble",
-  "name": "Motionblinds BLE",
+  "name": "Motionblinds Bluetooth",
   "bluetooth": [
     {
       "local_name": "MOTION_*",
@@ -14,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "assumed_state",
   "loggers": ["motionblindsble"],
-  "requirements": ["motionblindsble==0.0.9"]
+  "requirements": ["motionblindsble==0.1.0"]
 }

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
@@ -158,12 +158,44 @@ CERT_UPLOAD_SELECTOR = FileSelector(
 )
 KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
 
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): TEXT_SELECTOR,
+        vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+    }
+)
+PWD_NOT_CHANGED = "__**password_not_changed**__"
+
+
+@callback
+def update_password_from_user_input(
+    entry_password: str | None, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Update the password if the entry has been updated.
+
+    As we want to avoid reflecting the stored password in the UI,
+    we replace the suggested value in the UI with a sentitel,
+    and we change it back here if it was changed.
+    """
+    substituted_used_data = dict(user_input)
+    # Take out the password submitted
+    user_password: str | None = substituted_used_data.pop(CONF_PASSWORD, None)
+    # Only add the password if it has changed.
+    # If the sentinel password is submitted, we replace that with our current
+    # password from the config entry data.
+    password_changed = user_password is not None and user_password != PWD_NOT_CHANGED
+    password = user_password if password_changed else entry_password
+    if password is not None:
+        substituted_used_data[CONF_PASSWORD] = password
+    return substituted_used_data
+
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
+    entry: ConfigEntry | None
     _hassio_discovery: dict[str, Any] | None = None
 
     @staticmethod
@@ -182,6 +214,48 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_broker()
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication with MQTT broker."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with MQTT broker."""
+        errors: dict[str, str] = {}
+
+        assert self.entry is not None
+        if user_input:
+            substituted_used_data = update_password_from_user_input(
+                self.entry.data.get(CONF_PASSWORD), user_input
+            )
+            new_entry_data = {**self.entry.data, **substituted_used_data}
+            if await self.hass.async_add_executor_job(
+                try_connection,
+                new_entry_data,
+            ):
+                return self.async_update_reload_and_abort(
+                    self.entry, data=new_entry_data
+                )
+
+            errors["base"] = "invalid_auth"
+
+        schema = self.add_suggested_values_to_schema(
+            REAUTH_SCHEMA,
+            {
+                CONF_USERNAME: self.entry.data.get(CONF_USERNAME),
+                CONF_PASSWORD: PWD_NOT_CHANGED,
+            },
+        )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=schema,
+            errors=errors,
+        )
 
     async def async_step_broker(
         self, user_input: dict[str, Any] | None = None
@@ -291,13 +365,17 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             validated_user_input,
             errors,
         ):
+            self.broker_config.update(
+                update_password_from_user_input(
+                    self.config_entry.data.get(CONF_PASSWORD), validated_user_input
+                ),
+            )
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                validated_user_input,
+                self.broker_config,
             )
 
             if can_connect:
-                self.broker_config.update(validated_user_input)
                 return await self.async_step_options()
 
             errors["base"] = "cannot_connect"
@@ -598,7 +676,9 @@ async def async_get_broker_settings(
         current_broker = current_config.get(CONF_BROKER)
         current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
         current_user = current_config.get(CONF_USERNAME)
-        current_pass = current_config.get(CONF_PASSWORD)
+        # Return the sentinel password to avoid exposure
+        current_entry_pass = current_config.get(CONF_PASSWORD)
+        current_pass = PWD_NOT_CHANGED if current_entry_pass else None
 
     # Treat the previous post as an update of the current settings
     # (if there was a basic broker setup step)
@@ -754,7 +834,9 @@ def try_connection(
     # should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-    client = MqttClientSetup(user_input).client
+    mqtt_client_setup = MqttClientSetup(user_input)
+    mqtt_client_setup.setup()
+    client = mqtt_client_setup.client
 
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 

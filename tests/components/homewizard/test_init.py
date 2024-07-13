@@ -241,3 +241,62 @@ async def test_sensor_migration_does_not_trigger(
     assert entity
     assert entity.unique_id == new_unique_id
     assert entity.previous_unique_id is None
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "old_unique_id", "new_unique_id"),
+    [
+        (
+            "HWE-P1",
+            "homewizard_G001",
+            "homewizard_gas_meter_G001",
+        ),
+        (
+            "HWE-P1",
+            "homewizard_W001",
+            "homewizard_water_meter_W001",
+        ),
+        (
+            "HWE-P1",
+            "homewizard_WW001",
+            "homewizard_warm_water_meter_WW001",
+        ),
+        (
+            "HWE-P1",
+            "homewizard_H001",
+            "homewizard_heat_meter_H001",
+        ),
+        (
+            "HWE-P1",
+            "homewizard_IH001",
+            "homewizard_inlet_heat_meter_IH001",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_external_sensor_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test unique ID or External sensors are migrated."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain=Platform.SENSOR,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=mock_config_entry,
+    )
+
+    assert entity.unique_id == old_unique_id
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_migrated = entity_registry.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == new_unique_id
+    assert entity_migrated.previous_unique_id == old_unique_id

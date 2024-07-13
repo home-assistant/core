@@ -82,7 +82,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise err from None
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
             if errors:
@@ -105,7 +105,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_get_api_key(self, user_input=None):
         """Get an Application Api Key."""
         if not self.api_key_task:
-            self.api_key_task = self.hass.async_create_task(self._async_get_auth_key())
+            self.api_key_task = self.hass.async_create_task(
+                self._async_get_auth_key(), eager_start=False
+            )
         if not self.api_key_task.done():
             return self.async_show_progress(
                 step_id="get_api_key",
@@ -118,7 +120,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         except OctoprintException:
             _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
         finally:
@@ -133,7 +135,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             # Reload the config entry otherwise devices will remain unavailable
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
+                self.hass.config_entries.async_reload(existing_entry.entry_id),
             )
 
             return self.async_abort(reason="reauth_successful")

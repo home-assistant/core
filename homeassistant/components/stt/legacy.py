@@ -86,7 +86,7 @@ def async_setup_legacy(
                 provider.hass = hass
 
                 providers[provider.name] = provider
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 

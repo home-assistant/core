@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ps4
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -47,7 +48,7 @@ MOCK_FLOW_RESULT = {
     "version": VERSION,
     "minor_version": 1,
     "handler": DOMAIN,
-    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+    "type": FlowResultType.CREATE_ENTRY,
     "title": "test_ps4",
     "data": MOCK_DATA,
     "options": {},
@@ -132,7 +133,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

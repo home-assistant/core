@@ -47,13 +47,13 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        SwitchBotCloudAirConditionner(data.api, device, coordinator)
+        SwitchBotCloudAirConditioner(data.api, device, coordinator)
         for device, coordinator in data.devices.climates
     )
 
 
-class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
-    """Representation of a SwitchBot air conditionner.
+class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity):
+    """Representation of a SwitchBot air conditioner.
 
     As it is an IR device, we don't know the actual state.
     """

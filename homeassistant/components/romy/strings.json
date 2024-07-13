@@ -46,6 +46,37 @@
           }
         }
       }
+    },
+    "binary_sensor": {
+      "dustbin_present": {
+        "name": "Dustbin present"
+      },
+      "docked": {
+        "name": "Robot docked"
+      },
+      "water_tank_present": {
+        "name": "Watertank present"
+      },
+      "water_tank_empty": {
+        "name": "Watertank empty"
+      }
+    },
+    "sensor": {
+      "dustbin_sensor": {
+        "name": "Dustbin dirt level"
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      },
+      "total_number_of_cleaning_runs": {
+        "name": "Total cleaning runs"
+      },
+      "total_area_cleaned": {
+        "name": "Total cleaned area"
+      },
+      "total_distance_driven": {
+        "name": "Total distance driven"
+      }
     }
   }
 }

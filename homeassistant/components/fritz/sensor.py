@@ -27,13 +27,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .common import (
-    AvmWrapper,
-    ConnectionInfo,
-    FritzBoxBaseCoordinatorEntity,
-    FritzEntityDescription,
-)
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
+from .coordinator import AvmWrapper, ConnectionInfo
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +139,7 @@ def _retrieve_link_attenuation_received_state(
     return status.attenuation[1] / 10  # type: ignore[no-any-return]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FritzSensorEntityDescription(SensorEntityDescription, FritzEntityDescription):
     """Describes Fritz sensor entity."""
 

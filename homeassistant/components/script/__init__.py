@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
+from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -38,7 +39,6 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
@@ -73,12 +73,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_script
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
@@ -375,11 +369,11 @@ async def _async_process_config(
         config_matches: set[int] = set()
 
         for script_idx, script in enumerate(scripts):
-            for config_idx, config in enumerate(script_configs):
+            for config_idx, script_config in enumerate(script_configs):
                 if config_idx in config_matches:
                     # Only allow a script config to match at most once
                     continue
-                if script_matches_config(script, config):
+                if script_matches_config(script, script_config):
                     script_matches.add(script_idx)
                     config_matches.add(config_idx)
                     # Only allow a script to match at most once
@@ -464,14 +458,9 @@ class UnavailableScriptEntity(BaseScriptEntity):
         raw_config: ConfigType | None,
     ) -> None:
         """Initialize a script entity."""
-        self._name = raw_config.get(CONF_ALIAS, key) if raw_config else key
+        self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @cached_property
     def referenced_labels(self) -> set[str]:
@@ -508,6 +497,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     """Representation of a script entity."""
 
     icon = None
+    _attr_should_poll = False
 
     def __init__(self, hass, key, cfg, raw_config, blueprint_inputs):
         """Initialize the script."""
@@ -536,29 +526,21 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self.raw_config = raw_config
         self._trace_config = cfg[CONF_TRACE]
         self._blueprint_inputs = blueprint_inputs
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.script.name
+        self._attr_name = self.script.name
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
+        script = self.script
         attrs = {
-            ATTR_LAST_TRIGGERED: self.script.last_triggered,
-            ATTR_MODE: self.script.script_mode,
-            ATTR_CUR: self.script.runs,
+            ATTR_LAST_TRIGGERED: script.last_triggered,
+            ATTR_MODE: script.script_mode,
+            ATTR_CUR: script.runs,
         }
-        if self.script.supports_max:
-            attrs[ATTR_MAX] = self.script.max_runs
-        if self.script.last_action:
-            attrs[ATTR_LAST_ACTION] = self.script.last_action
+        if script.supports_max:
+            attrs[ATTR_MAX] = script.max_runs
+        if script.last_action:
+            attrs[ATTR_LAST_ACTION] = script.last_action
         return attrs
 
     @property
@@ -627,6 +609,15 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         )
         coro = self._async_run(variables, context)
         if wait:
+            # If we are executing in parallel, we need to copy the script stack so
+            # that if this script is called in parallel, it will not be seen in the
+            # stack of the other parallel calls and hit the disallowed recursion
+            # check as each parallel call would otherwise be appending to the same
+            # stack. We do not wipe the stack in this case because we still want to
+            # be able to detect if there is a disallowed recursion.
+            if script_stack := script_stack_cv.get():
+                script_stack_cv.set(script_stack.copy())
+
             script_result = await coro
             return script_result.service_response if script_result else None
 
@@ -678,9 +669,13 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
+        if TYPE_CHECKING:
+            assert self.unique_id is not None
+            assert self.registry_entry is not None
 
-        unique_id = cast(str, self.unique_id)
-        self.hass.services.async_register(
+        unique_id = self.unique_id
+        hass = self.hass
+        hass.services.async_register(
             DOMAIN,
             unique_id,
             self._service_handler,
@@ -690,15 +685,16 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
         # Register the service description
         service_desc = {
-            CONF_NAME: cast(er.RegistryEntry, self.registry_entry).name or self.name,
+            CONF_NAME: self.registry_entry.name or self.name,
             CONF_DESCRIPTION: self.description,
             CONF_FIELDS: self.fields,
         }
-        async_set_service_schema(self.hass, DOMAIN, unique_id, service_desc)
+        async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
 
-        if state := await self.async_get_last_state():
-            if last_triggered := state.attributes.get("last_triggered"):
-                self.script.last_triggered = parse_datetime(last_triggered)
+        if (state := await self.async_get_last_state()) and (
+            last_triggered := state.attributes.get("last_triggered")
+        ):
+            self.script.last_triggered = parse_datetime(last_triggered)
 
     async def async_will_remove_from_hass(self):
         """Stop script and remove service when it will be removed from HA."""
@@ -721,7 +717,7 @@ def websocket_config(
 
     if script is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 

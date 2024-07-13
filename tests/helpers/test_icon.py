@@ -106,8 +106,8 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     # Ensure icons file for platform isn't loaded, as that isn't supported
     icons = await icon.async_get_icons(hass, "entity")
     assert icons == {}
-    icons = await icon.async_get_icons(hass, "entity", ["test.switch"])
-    assert icons == {}
+    with pytest.raises(ValueError, match="test.switch"):
+        await icon.async_get_icons(hass, "entity", ["test.switch"])
 
     # Load up an custom integration
     hass.config.components.add("test_package")
@@ -162,10 +162,6 @@ async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:
         return {"component1": {"entity": {"climate": {"test": {"icon": "mdi:home"}}}}}
 
     with (
-        patch(
-            "homeassistant.helpers.icon._component_icons_path",
-            return_value="choochoo.json",
-        ),
         patch(
             "homeassistant.helpers.icon._load_icons_files",
             mock_load_icons_files,

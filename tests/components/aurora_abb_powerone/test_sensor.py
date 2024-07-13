@@ -201,7 +201,7 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     ):
         freezer.tick(SCAN_INTERVAL * 2)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_total_energy")
         assert power.state == "unknown"
     # sun rose again
@@ -218,7 +218,7 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     ):
         freezer.tick(SCAN_INTERVAL * 4)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power is not None
         assert power.state == "45.7"
@@ -237,7 +237,7 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     ):
         freezer.tick(SCAN_INTERVAL * 6)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power.state == "unknown"  # should this be 'available'?
 
@@ -277,7 +277,7 @@ async def test_sensor_unknown_error(
     ):
         freezer.tick(SCAN_INTERVAL * 2)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             "Exception: AuroraError('another error') occurred, 2 retries remaining"
             in caplog.text

@@ -6,8 +6,17 @@ from unittest.mock import AsyncMock
 import pytest
 from todoist_api_python.models import Due, Task
 
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.components.todo import (
+    ATTR_DESCRIPTION,
+    ATTR_DUE_DATE,
+    ATTR_DUE_DATETIME,
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -23,9 +32,9 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant) -> None:
+async def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests that keesp UTC-6 all year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.mark.parametrize(
@@ -86,7 +95,7 @@ async def test_todo_item_state(
         ),
         (
             [],
-            {"due_date": "2023-11-18"},
+            {ATTR_DUE_DATE: "2023-11-18"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -105,7 +114,7 @@ async def test_todo_item_state(
         ),
         (
             [],
-            {"due_datetime": "2023-11-18T06:30:00"},
+            {ATTR_DUE_DATETIME: "2023-11-18T06:30:00"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -132,7 +141,7 @@ async def test_todo_item_state(
         ),
         (
             [],
-            {"description": "6-pack"},
+            {ATTR_DESCRIPTION: "6-pack"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -173,9 +182,9 @@ async def test_add_todo_list_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "Soda", **item_data},
-        target={"entity_id": "todo.name"},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Soda", **item_data},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
 
@@ -190,9 +199,9 @@ async def test_add_todo_list_item(
 
     result = await hass.services.async_call(
         TODO_DOMAIN,
-        "get_items",
+        TodoServices.GET_ITEMS,
         {},
-        target={"entity_id": "todo.name"},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
         return_response=True,
     )
@@ -223,9 +232,9 @@ async def test_update_todo_item_status(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "task-id-1", "status": "completed"},
-        target={"entity_id": "todo.name"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "task-id-1", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.close_task.called
@@ -246,9 +255,9 @@ async def test_update_todo_item_status(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "task-id-1", "status": "needs_action"},
-        target={"entity_id": "todo.name"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "task-id-1", ATTR_STATUS: "needs_action"},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.reopen_task.called
@@ -274,7 +283,7 @@ async def test_update_todo_item_status(
                     description="desc",
                 )
             ],
-            {"rename": "Milk"},
+            {ATTR_RENAME: "Milk"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -298,7 +307,7 @@ async def test_update_todo_item_status(
         ),
         (
             [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
-            {"due_date": "2023-11-18"},
+            {ATTR_DUE_DATE: "2023-11-18"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -322,7 +331,7 @@ async def test_update_todo_item_status(
         ),
         (
             [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
-            {"due_datetime": "2023-11-18T06:30:00"},
+            {ATTR_DUE_DATETIME: "2023-11-18T06:30:00"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -351,7 +360,7 @@ async def test_update_todo_item_status(
         ),
         (
             [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
-            {"description": "6-pack"},
+            {ATTR_DESCRIPTION: "6-pack"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -382,7 +391,7 @@ async def test_update_todo_item_status(
                     is_completed=False,
                 )
             ],
-            {"description": None},
+            {ATTR_DESCRIPTION: None},
             [
                 make_api_task(
                     id="task-id-1",
@@ -415,7 +424,7 @@ async def test_update_todo_item_status(
                     due=Due(date="2024-01-01", is_recurring=True, string="every day"),
                 )
             ],
-            {"due_date": "2024-02-01"},
+            {ATTR_DUE_DATE: "2024-02-01"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -472,9 +481,9 @@ async def test_update_todo_items(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "task-id-1", **update_data},
-        target={"entity_id": "todo.name"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "task-id-1", **update_data},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.update_task.called
@@ -484,9 +493,9 @@ async def test_update_todo_items(
 
     result = await hass.services.async_call(
         TODO_DOMAIN,
-        "get_items",
+        TodoServices.GET_ITEMS,
         {},
-        target={"entity_id": "todo.name"},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
         return_response=True,
     )
@@ -519,9 +528,9 @@ async def test_remove_todo_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": ["task-id-1", "task-id-2"]},
-        target={"entity_id": "todo.name"},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: ["task-id-1", "task-id-2"]},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.delete_task.call_count == 2
@@ -575,9 +584,9 @@ async def test_subscribe(
     ]
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "Cheese", "rename": "Wine"},
-        target={"entity_id": "todo.name"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "Cheese", ATTR_RENAME: "Wine"},
+        target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
 

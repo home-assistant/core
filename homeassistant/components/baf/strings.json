@@ -26,6 +26,17 @@
         "name": "Auto comfort"
       }
     },
+    "fan": {
+      "baf": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "comfort_min_speed": {
         "name": "Auto Comfort Minimum Speed"

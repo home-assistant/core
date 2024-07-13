@@ -4,5 +4,5 @@
   "codeowners": ["@fabaff"],
   "documentation": "https://www.home-assistant.io/integrations/serial",
   "iot_class": "local_polling",
-  "requirements": ["pyserial-asyncio==0.6"]
+  "requirements": ["pyserial-asyncio-fast==0.13"]
 }

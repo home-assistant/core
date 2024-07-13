@@ -7,13 +7,13 @@ import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
-from homeassistant.const import CONF_NAME, CONF_STOP
+from homeassistant.const import CONF_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[MagicMock, None, None]:
+def mock_setup_entry() -> Generator[MagicMock]:
     """Create a mock for the nextbus component setup."""
     with patch(
         "homeassistant.components.nextbus.async_setup_entry",
@@ -23,85 +23,10 @@ def mock_setup_entry() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_nextbus() -> Generator[MagicMock, None, None]:
+def mock_nextbus() -> Generator[MagicMock]:
     """Create a mock py_nextbus module."""
     with patch("homeassistant.components.nextbus.config_flow.NextBusClient") as client:
         yield client
-
-
-async def test_import_config(
-    hass: HomeAssistant, mock_setup_entry: MagicMock, mock_nextbus_lists: MagicMock
-) -> None:
-    """Test config is imported and component set up."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    data = {
-        CONF_AGENCY: "sf-muni",
-        CONF_ROUTE: "F",
-        CONF_STOP: "5650",
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=data,
-    )
-    await hass.async_block_till_done()
-
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert (
-        result.get("title")
-        == "San Francisco Muni F - Market & Wharves Market St & 7th St (Outbound)"
-    )
-    assert result.get("data") == {CONF_NAME: "sf-muni F", **data}
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-    # Check duplicate entries are aborted
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=data,
-    )
-    await hass.async_block_till_done()
-
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
-
-
-@pytest.mark.parametrize(
-    ("override", "expected_reason"),
-    [
-        ({CONF_AGENCY: "not muni"}, "invalid_agency"),
-        ({CONF_ROUTE: "not F"}, "invalid_route"),
-        ({CONF_STOP: "not 5650"}, "invalid_stop"),
-    ],
-)
-async def test_import_config_invalid(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_nextbus_lists: MagicMock,
-    override: dict[str, str],
-    expected_reason: str,
-) -> None:
-    """Test user is redirected to user setup flow because they have invalid config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    data = {
-        CONF_AGENCY: "sf-muni",
-        CONF_ROUTE: "F",
-        CONF_STOP: "5650",
-        **override,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=data,
-    )
-    await hass.async_block_till_done()
-
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == expected_reason
 
 
 async def test_user_config(
@@ -112,7 +37,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "agency"
 
     # Select agency
@@ -124,7 +49,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "route"
 
     # Select route
@@ -136,7 +61,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "stop"
 
     # Select stop
@@ -148,7 +73,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
         "agency": "sf-muni",
         "route": "F",

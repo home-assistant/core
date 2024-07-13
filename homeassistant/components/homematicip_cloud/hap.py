@@ -39,9 +39,9 @@ class HomematicipAuth:
             self.auth = await self.get_auth(
                 self.hass, self.config.get(HMIPC_HAPID), self.config.get(HMIPC_PIN)
             )
-            return self.auth is not None
         except HmipcConnectionError:
             return False
+        return self.auth is not None
 
     async def async_checkbutton(self) -> bool:
         """Check blue butten has been pressed."""
@@ -55,9 +55,9 @@ class HomematicipAuth:
         try:
             authtoken = await self.auth.requestAuthToken()
             await self.auth.confirmAuthToken(authtoken)
-            return authtoken
         except HmipConnectionError:
             return False
+        return authtoken
 
     async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
@@ -100,7 +100,7 @@ class HomematicipHAP:
             )
         except HmipcConnectionError as err:
             raise ConfigEntryNotReady from err
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
             return False
 

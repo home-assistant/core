@@ -33,7 +33,7 @@ async def test_user_flow(hass: HomeAssistant, mock_epion: MagicMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Epion integration"
     assert result["data"] == {
         CONF_API_KEY: API_KEY,
@@ -63,7 +63,7 @@ async def test_form_exceptions(
         {CONF_API_KEY: API_KEY},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_epion.return_value.get_current.side_effect = None
@@ -78,7 +78,7 @@ async def test_form_exceptions(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Epion integration"
     assert result["data"] == {
         CONF_API_KEY: API_KEY,
@@ -107,5 +107,5 @@ async def test_duplicate_entry(hass: HomeAssistant, mock_epion: MagicMock) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

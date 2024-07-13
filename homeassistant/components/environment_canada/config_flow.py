@@ -61,7 +61,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "bad_station_id"
                 else:
                     errors["base"] = "error_response"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

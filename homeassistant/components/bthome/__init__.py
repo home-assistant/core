@@ -15,11 +15,8 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    DeviceRegistry,
-    async_get,
-)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.signal_type import SignalType
 
@@ -130,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         kwargs[CONF_BINDKEY] = bytes.fromhex(bindkey)
     data = BTHomeBluetoothDeviceData(**kwargs)
 
-    device_registry = async_get(hass)
+    device_registry = dr.async_get(hass)
     coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
         BTHomePassiveBluetoothProcessorCoordinator(
             hass,

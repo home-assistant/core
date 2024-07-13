@@ -100,19 +100,17 @@ class OpenSkyOptionsFlowHandler(OptionsFlowWithConfigEntry):
             if user_input[CONF_CONTRIBUTING_USER] and not authentication:
                 errors["base"] = "no_authentication"
             if authentication and not errors:
-                async with OpenSky(
-                    session=async_get_clientsession(self.hass)
-                ) as opensky:
-                    try:
-                        await opensky.authenticate(
-                            BasicAuth(
-                                login=user_input[CONF_USERNAME],
-                                password=user_input[CONF_PASSWORD],
-                            ),
-                            contributing_user=user_input[CONF_CONTRIBUTING_USER],
-                        )
-                    except OpenSkyUnauthenticatedError:
-                        errors["base"] = "invalid_auth"
+                opensky = OpenSky(session=async_get_clientsession(self.hass))
+                try:
+                    await opensky.authenticate(
+                        BasicAuth(
+                            login=user_input[CONF_USERNAME],
+                            password=user_input[CONF_PASSWORD],
+                        ),
+                        contributing_user=user_input[CONF_CONTRIBUTING_USER],
+                    )
+                except OpenSkyUnauthenticatedError:
+                    errors["base"] = "invalid_auth"
             if not errors:
                 return self.async_create_entry(
                     title=self.options.get(CONF_NAME, "OpenSky"),

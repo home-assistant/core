@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from aiohttp.client_exceptions import ClientConnectionError
 import aiosomecomfort
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +22,7 @@ from .const import (
 )
 
 UPDATE_LOOP_SLEEP_TIME = 5
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
@@ -68,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         aiosomecomfort.device.ConnectionError,
         aiosomecomfort.device.ConnectionTimeout,
         aiosomecomfort.device.SomeComfortError,
+        ClientConnectionError,
         TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(

@@ -48,13 +48,16 @@ def async_sign_path(
     expiration: timedelta,
     *,
     refresh_token_id: str | None = None,
+    use_content_user: bool = False,
 ) -> str:
     """Sign a path for temporary access without auth header."""
     if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     if refresh_token_id is None:
-        if connection := websocket_api.current_connection.get():
+        if use_content_user:
+            refresh_token_id = hass.data[STORAGE_KEY]
+        elif connection := websocket_api.current_connection.get():
             refresh_token_id = connection.refresh_token_id
         elif (
             request := current_request.get()
@@ -114,7 +117,10 @@ def async_user_not_allowed_do_auth(
     return "User cannot authenticate remotely"
 
 
-async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(
+    hass: HomeAssistant,
+    app: Application,
+) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:

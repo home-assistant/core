@@ -24,7 +24,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -45,7 +45,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == LD2410_BLE_DISCOVERY_INFO.name
     assert result2["data"] == {
         CONF_ADDRESS: LD2410_BLE_DISCOVERY_INFO.address,
@@ -63,7 +63,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -84,7 +84,7 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -97,7 +97,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -113,7 +113,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -134,7 +134,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == LD2410_BLE_DISCOVERY_INFO.name
     assert result3["data"] == {
         CONF_ADDRESS: LD2410_BLE_DISCOVERY_INFO.address,
@@ -152,7 +152,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -168,7 +168,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
@@ -189,7 +189,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == LD2410_BLE_DISCOVERY_INFO.name
     assert result3["data"] == {
         CONF_ADDRESS: LD2410_BLE_DISCOVERY_INFO.address,
@@ -205,7 +205,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=LD2410_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -226,7 +226,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == LD2410_BLE_DISCOVERY_INFO.name
     assert result2["data"] == {
         CONF_ADDRESS: LD2410_BLE_DISCOVERY_INFO.address,

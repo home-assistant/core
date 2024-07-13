@@ -46,7 +46,7 @@ async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
         CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
         CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
     }
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_migration_minor_future_version(hass: HomeAssistant) -> None:
@@ -80,4 +80,4 @@ async def test_migration_minor_future_version(hass: HomeAssistant) -> None:
     assert config_entry.version == config_entry_version
     assert config_entry.minor_version == config_entry_minor_version
     assert config_entry.data == config_entry_data
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED

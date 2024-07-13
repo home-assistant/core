@@ -52,14 +52,17 @@ async def test_sensor_has_correct_entities(hass: HomeAssistant) -> None:
         assert entity_state, f"Couldn't find entity: {entity_id}"
 
 
-async def test_device_info(hass: HomeAssistant) -> None:
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Verify device information includes expected details."""
     client = create_mock_client()
     client.components = TEST_COMPONENTS
     await setup_test_config_entry(hass, hyperion_client=client)
 
     device_identifer = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
-    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, device_identifer)})
     assert device
@@ -69,7 +72,6 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == HYPERION_MODEL_NAME
     assert device.name == TEST_INSTANCE_1["friendly_name"]
 
-    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)
@@ -159,7 +161,6 @@ async def test_visible_effect_state_changes(hass: HomeAssistant) -> None:
             KEY_ACTIVE: True,
             KEY_COMPONENTID: "COLOR",
             KEY_ORIGIN: "System",
-            KEY_OWNER: "System",
             KEY_PRIORITY: 250,
             KEY_VALUE: {KEY_RGB: [0, 0, 0]},
             KEY_VISIBLE: True,

@@ -11,6 +11,7 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_PIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -38,7 +39,7 @@ async def test_flow_works(hass: HomeAssistant, simple_mock_home) -> None:
             data=DEFAULT_CONFIG,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "press_the_button"}
 
@@ -70,7 +71,7 @@ async def test_flow_works(hass: HomeAssistant, simple_mock_home) -> None:
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABC123"
     assert result["data"] == {"hapid": "ABC123", "authtoken": True, "name": "hmip"}
     assert result["result"].unique_id == "ABC123"
@@ -88,7 +89,7 @@ async def test_flow_init_connection_error(hass: HomeAssistant) -> None:
             data=DEFAULT_CONFIG,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
 
@@ -114,7 +115,7 @@ async def test_flow_link_connection_error(hass: HomeAssistant) -> None:
             data=DEFAULT_CONFIG,
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "connection_aborted"
 
 
@@ -136,7 +137,7 @@ async def test_flow_link_press_button(hass: HomeAssistant) -> None:
             data=DEFAULT_CONFIG,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "press_the_button"}
 
@@ -147,7 +148,7 @@ async def test_init_flow_show_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         HMIPC_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
 
@@ -164,7 +165,7 @@ async def test_init_already_configured(hass: HomeAssistant) -> None:
             data=DEFAULT_CONFIG,
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -193,7 +194,7 @@ async def test_import_config(hass: HomeAssistant, simple_mock_home) -> None:
             data=IMPORT_CONFIG,
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABC123"
     assert result["data"] == {"authtoken": "123", "hapid": "ABC123", "name": "hmip"}
     assert result["result"].unique_id == "ABC123"
@@ -222,5 +223,5 @@ async def test_import_existing_config(hass: HomeAssistant) -> None:
             data=IMPORT_CONFIG,
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

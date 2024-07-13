@@ -14,13 +14,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.metoffice.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import utcnow
 
 from .const import (
@@ -73,7 +71,9 @@ async def wavertree_data(requests_mock: requests_mock.Mocker) -> dict[str, _Matc
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_site_cannot_connect(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test we handle cannot connect error."""
 
@@ -89,13 +89,12 @@ async def test_site_cannot_connect(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    dev_reg = get_dev_reg(hass)
-    assert len(dev_reg.devices) == 0
+    assert len(device_registry.devices) == 0
 
     assert hass.states.get("weather.met_office_wavertree_3hourly") is None
     assert hass.states.get("weather.met_office_wavertree_daily") is None
-    for sensor_id in WAVERTREE_SENSOR_RESULTS:
-        sensor_name, _ = WAVERTREE_SENSOR_RESULTS[sensor_id]
+    for sensor in WAVERTREE_SENSOR_RESULTS.values():
+        sensor_name = sensor[0]
         sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
         assert sensor is None
 
@@ -103,7 +102,6 @@ async def test_site_cannot_connect(
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_site_cannot_update(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
     wavertree_data,
 ) -> None:
@@ -125,7 +123,7 @@ async def test_site_cannot_update(
 
     future_time = utcnow() + timedelta(minutes=20)
     async_fire_time_changed(hass, future_time)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     weather = hass.states.get("weather.met_office_wavertree_daily")
     assert weather.state == STATE_UNAVAILABLE
@@ -134,7 +132,7 @@ async def test_site_cannot_update(
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_one_weather_site_running(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     requests_mock: requests_mock.Mocker,
     wavertree_data,
 ) -> None:
@@ -148,9 +146,10 @@ async def test_one_weather_site_running(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    dev_reg = get_dev_reg(hass)
-    assert len(dev_reg.devices) == 1
-    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert len(device_registry.devices) == 1
+    device_wavertree = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_WAVERTREE
+    )
     assert device_wavertree.name == "Met Office Wavertree"
 
     # Wavertree daily weather platform expected results
@@ -167,7 +166,7 @@ async def test_one_weather_site_running(
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_two_weather_sites_running(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     requests_mock: requests_mock.Mocker,
     wavertree_data,
 ) -> None:
@@ -199,11 +198,14 @@ async def test_two_weather_sites_running(
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
-    dev_reg = get_dev_reg(hass)
-    assert len(dev_reg.devices) == 2
-    device_kingslynn = dev_reg.async_get_device(identifiers=DEVICE_KEY_KINGSLYNN)
+    assert len(device_registry.devices) == 2
+    device_kingslynn = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_KINGSLYNN
+    )
     assert device_kingslynn.name == "Met Office King's Lynn"
-    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    device_wavertree = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_WAVERTREE
+    )
     assert device_wavertree.name == "Met Office Wavertree"
 
     # Wavertree daily weather platform expected results
@@ -251,10 +253,7 @@ async def test_new_config_entry(
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
@@ -297,7 +296,7 @@ async def test_forecast_service(
     # Trigger data refetch
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert wavertree_data["wavertree_daily_mock"].call_count == 2
     assert wavertree_data["wavertree_hourly_mock"].call_count == 1
@@ -324,7 +323,7 @@ async def test_forecast_service(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -371,7 +370,6 @@ async def test_legacy_config_entry_is_removed(
 async def test_forecast_subscription(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     no_sensor,
@@ -412,7 +410,7 @@ async def test_forecast_subscription(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     msg = await client.receive_json()
 
     assert msg["id"] == subscription_id
@@ -430,6 +428,6 @@ async def test_forecast_subscription(
     )
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     msg = await client.receive_json()
     assert msg["success"]

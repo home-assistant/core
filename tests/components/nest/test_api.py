@@ -11,13 +11,14 @@ The tests below exercise both cases during integration setup.
 import time
 from unittest.mock import patch
 
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import pytest
 
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import CLIENT_ID, CLIENT_SECRET, PROJECT_ID, PlatformSetup
+from .common import CLIENT_ID, CLIENT_SECRET, PROJECT_ID, FakeSubscriber, PlatformSetup
 from .conftest import FAKE_REFRESH_TOKEN, FAKE_TOKEN
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -26,7 +27,7 @@ FAKE_UPDATED_TOKEN = "fake-updated-token"
 
 
 @pytest.fixture
-def subscriber() -> None:
+def subscriber() -> FakeSubscriber | None:
     """Disable default subscriber since tests use their own patch."""
     return None
 
@@ -55,7 +56,7 @@ async def test_auth(
 
     async def async_new_subscriber(
         creds, subscription_name, event_loop, async_callback
-    ):
+    ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds
@@ -123,7 +124,7 @@ async def test_auth_expired_token(
 
     async def async_new_subscriber(
         creds, subscription_name, event_loop, async_callback
-    ):
+    ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds

@@ -45,16 +45,15 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     Event,
+    EventStateChangedData,
+    HassJobType,
     HomeAssistant,
     State,
     callback as ha_callback,
     split_entity_id,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -105,12 +104,12 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES = {
-    TYPE_FAUCET: "Valve",
+    TYPE_FAUCET: "ValveSwitch",
     TYPE_OUTLET: "Outlet",
-    TYPE_SHOWER: "Valve",
-    TYPE_SPRINKLER: "Valve",
+    TYPE_SHOWER: "ValveSwitch",
+    TYPE_SPRINKLER: "ValveSwitch",
     TYPE_SWITCH: "Switch",
-    TYPE_VALVE: "Valve",
+    TYPE_VALVE: "ValveSwitch",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -245,6 +244,9 @@ def get_accessory(  # noqa: C901
         else:
             a_type = "Switch"
 
+    elif state.domain == "valve":
+        a_type = "Valve"
+
     elif state.domain == "vacuum":
         a_type = "Vacuum"
 
@@ -290,7 +292,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         name: str,
         entity_id: str,
         aid: int,
-        config: dict,
+        config: dict[str, Any],
         *args: Any,
         category: int = CATEGORY_OTHER,
         device_id: str | None = None,
@@ -438,7 +440,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self._update_available_from_state(state)
         self._subscriptions.append(
             async_track_state_change_event(
-                self.hass, [self.entity_id], self.async_update_event_state_callback
+                self.hass,
+                [self.entity_id],
+                self.async_update_event_state_callback,
+                job_type=HassJobType.Callback,
             )
         )
 
@@ -458,6 +463,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                     self.hass,
                     [self.linked_battery_sensor],
                     self.async_update_linked_battery_callback,
+                    job_type=HassJobType.Callback,
                 )
             )
         elif state is not None:
@@ -470,6 +476,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                     self.hass,
                     [self.linked_battery_charging_sensor],
                     self.async_update_linked_battery_charging_callback,
+                    job_type=HassJobType.Callback,
                 )
             )
         elif battery_charging_state is None and state is not None:

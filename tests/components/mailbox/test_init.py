@@ -9,7 +9,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
-import homeassistant.components.mailbox as mailbox
+from homeassistant.components import mailbox
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -164,7 +164,7 @@ async def test_delete_from_mailbox(mock_http_client: TestClient) -> None:
     msgsha1 = sha1(msgtxt1.encode("utf-8")).hexdigest()
     msgsha2 = sha1(msgtxt2.encode("utf-8")).hexdigest()
 
-    for msg in [msgsha1, msgsha2]:
+    for msg in (msgsha1, msgsha2):
         url = f"/api/mailbox/delete/TestMailbox/{msg}"
         req = await mock_http_client.delete(url)
         assert req.status == HTTPStatus.OK

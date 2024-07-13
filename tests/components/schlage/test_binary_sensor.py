@@ -22,7 +22,7 @@ async def test_keypad_disabled_binary_sensor(
 
     # Make the coordinator refresh data.
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
     assert keypad is not None
@@ -43,7 +43,7 @@ async def test_keypad_disabled_binary_sensor_use_previous_logs_on_failure(
 
     # Make the coordinator refresh data.
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
     assert keypad is not None

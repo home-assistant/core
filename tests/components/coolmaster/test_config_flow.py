@@ -6,6 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components.coolmaster.config_flow import AVAILABLE_MODES
 from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 def _flow_data():
@@ -21,7 +22,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -39,7 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -64,7 +65,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
             result["flow_id"], _flow_data()
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -82,7 +83,7 @@ async def test_form_connection_refused(hass: HomeAssistant) -> None:
             result["flow_id"], _flow_data()
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -100,5 +101,5 @@ async def test_form_no_units(hass: HomeAssistant) -> None:
             result["flow_id"], _flow_data()
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_units"}

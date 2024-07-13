@@ -1,4 +1,4 @@
-"""The SwitchBot via API integration."""
+"""SwitchBot via API integration."""
 
 from asyncio import gather
 from dataclasses import dataclass, field
@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 
 @dataclass
@@ -24,6 +24,7 @@ class SwitchbotDevices:
 
     climates: list[Remote] = field(default_factory=list)
     switches: list[Device | Remote] = field(default_factory=list)
+    sensors: list[Device] = field(default_factory=list)
 
 
 @dataclass
@@ -70,6 +71,14 @@ def make_device_data(
             or isinstance(device, Remote)
         ):
             devices_data.switches.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
+        if isinstance(device, Device) and device.device_type in [
+            "Meter",
+            "MeterPlus",
+            "WoIOSensor",
+        ]:
+            devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
     return devices_data

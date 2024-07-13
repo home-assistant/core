@@ -350,6 +350,7 @@ async def test_config_platform_import_error(hass: HomeAssistant) -> None:
             side_effect=ImportError("blablabla"),
         ),
         patch("os.path.isfile", return_value=True),
+        patch("homeassistant.loader.Integration.platforms_exists", return_value=True),
         patch_yaml_files(files),
     ):
         res = await async_check_ha_config_file(hass)
@@ -373,6 +374,7 @@ async def test_platform_import_error(hass: HomeAssistant) -> None:
             "homeassistant.loader.Integration.async_get_platform",
             side_effect=[None, ImportError("blablabla")],
         ),
+        patch("homeassistant.loader.Integration.platforms_exists", return_value=True),
         patch("os.path.isfile", return_value=True),
         patch_yaml_files(files),
     ):

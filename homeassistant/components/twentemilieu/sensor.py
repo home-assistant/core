@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .entity import TwenteMilieuEntity
@@ -69,9 +68,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.data[CONF_ID]]
     async_add_entities(
-        TwenteMilieuSensor(coordinator, description, entry) for description in SENSORS
+        TwenteMilieuSensor(entry, description) for description in SENSORS
     )
 
 
@@ -82,12 +80,11 @@ class TwenteMilieuSensor(TwenteMilieuEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]],
-        description: TwenteMilieuSensorDescription,
         entry: ConfigEntry,
+        description: TwenteMilieuSensorDescription,
     ) -> None:
         """Initialize the Twente Milieu entity."""
-        super().__init__(coordinator, entry)
+        super().__init__(entry)
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}_{entry.data[CONF_ID]}_{description.key}"
 

@@ -5,7 +5,14 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
+from homeassistant.components.todo import (
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -53,8 +60,7 @@ async def ws_move_item(
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
-        resp = await client.receive_json()
-        return resp
+        return await client.receive_json()
 
     return move
 
@@ -99,11 +105,11 @@ async def test_add_item(
     """Test adding shopping_list item and listing it."""
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
+        TodoServices.ADD_ITEM,
         {
-            "item": "soda",
+            ATTR_ITEM: "soda",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -126,9 +132,9 @@ async def test_remove_item(
     """Test removing a todo item."""
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     items = await ws_get_items()
@@ -143,11 +149,11 @@ async def test_remove_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
+        TodoServices.REMOVE_ITEM,
         {
-            "item": [items[0]["uid"]],
+            ATTR_ITEM: [items[0]["uid"]],
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -169,11 +175,11 @@ async def test_bulk_remove(
     for _i in range(5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
+            TodoServices.ADD_ITEM,
             {
-                "item": "soda",
+                ATTR_ITEM: "soda",
             },
-            target={"entity_id": TEST_ENTITY},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -187,11 +193,11 @@ async def test_bulk_remove(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
+        TodoServices.REMOVE_ITEM,
         {
-            "item": uids,
+            ATTR_ITEM: uids,
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -213,11 +219,11 @@ async def test_update_item(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
+        TodoServices.ADD_ITEM,
         {
-            "item": "soda",
+            ATTR_ITEM: "soda",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -235,12 +241,12 @@ async def test_update_item(
     # Mark item completed
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         {
-            "item": "soda",
-            "status": "completed",
+            ATTR_ITEM: "soda",
+            ATTR_STATUS: "completed",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -266,11 +272,11 @@ async def test_partial_update_item(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
+        TodoServices.ADD_ITEM,
         {
-            "item": "soda",
+            ATTR_ITEM: "soda",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -288,12 +294,12 @@ async def test_partial_update_item(
     # Mark item completed without changing the summary
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         {
-            "item": item["uid"],
-            "status": "completed",
+            ATTR_ITEM: item["uid"],
+            ATTR_STATUS: "completed",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -311,12 +317,12 @@ async def test_partial_update_item(
     # Change the summary without changing the status
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         {
-            "item": item["uid"],
-            "rename": "other summary",
+            ATTR_ITEM: item["uid"],
+            ATTR_RENAME: "other summary",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -342,12 +348,12 @@ async def test_update_invalid_item(
     with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "update_item",
+            TodoServices.UPDATE_ITEM,
             {
-                "item": "invalid-uid",
-                "rename": "Example task",
+                ATTR_ITEM: "invalid-uid",
+                ATTR_RENAME: "Example task",
             },
-            target={"entity_id": TEST_ENTITY},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -392,11 +398,11 @@ async def test_move_item(
     for i in range(1, 5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
+            TodoServices.ADD_ITEM,
             {
-                "item": f"item {i}",
+                ATTR_ITEM: f"item {i}",
             },
-            target={"entity_id": TEST_ENTITY},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -430,9 +436,9 @@ async def test_move_invalid_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -457,11 +463,11 @@ async def test_subscribe_item(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
+        TodoServices.ADD_ITEM,
         {
-            "item": "soda",
+            ATTR_ITEM: "soda",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -492,12 +498,12 @@ async def test_subscribe_item(
     # Rename item item completed
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         {
-            "item": "soda",
-            "rename": "milk",
+            ATTR_ITEM: "soda",
+            ATTR_RENAME: "milk",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 

@@ -9,22 +9,19 @@ from elkm1_lib.elements import Element
 from elkm1_lib.zones import Zone
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElkAttachedEntity, ElkEntity
-from .const import DOMAIN
-from .models import ELKM1Data
+from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ElkM1ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 sensor platform."""
-    elk_data: ELKM1Data = hass.data[DOMAIN][config_entry.entry_id]
+    elk_data = config_entry.runtime_data
     elk = elk_data.elk
     auto_configure = elk_data.auto_configure
 

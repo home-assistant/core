@@ -11,6 +11,7 @@ from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ComponentSetup
 
@@ -22,9 +23,9 @@ async def test_web_full_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
-    assert result.get("data_schema").schema.get("server_url") == str
+    assert result.get("data_schema").schema.get("server_url") is str
     assert not result.get("errors")
     with (
         patch("rtsp_to_webrtc.client.Client.heartbeat"),
@@ -36,7 +37,7 @@ async def test_web_full_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"server_url": "https://example.com"}
         )
-        assert result.get("type") == "create_entry"
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
         assert result.get("title") == "https://example.com"
         assert "result" in result
         assert result["result"].data == {"server_url": "https://example.com"}
@@ -52,7 +53,7 @@ async def test_single_config_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
 
 
@@ -61,15 +62,15 @@ async def test_invalid_url(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
-    assert result.get("data_schema").schema.get("server_url") == str
+    assert result.get("data_schema").schema.get("server_url") is str
     assert not result.get("errors")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"server_url": "not-a-url"}
     )
 
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"server_url": "invalid_url"}
 
@@ -79,7 +80,7 @@ async def test_server_unreachable(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert not result.get("errors")
     with patch(
@@ -89,7 +90,7 @@ async def test_server_unreachable(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"server_url": "https://example.com"}
         )
-        assert result.get("type") == "form"
+        assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "user"
         assert result.get("errors") == {"base": "server_unreachable"}
 
@@ -99,7 +100,7 @@ async def test_server_failure(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert not result.get("errors")
     with patch(
@@ -109,7 +110,7 @@ async def test_server_failure(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"server_url": "https://example.com"}
         )
-        assert result.get("type") == "form"
+        assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "user"
         assert result.get("errors") == {"base": "server_failure"}
 
@@ -130,7 +131,7 @@ async def test_hassio_discovery(hass: HomeAssistant) -> None:
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "RTSPtoWebRTC"}
 
@@ -146,7 +147,7 @@ async def test_hassio_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result.get("type") == "create_entry"
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
         assert result.get("title") == "RTSPtoWebRTC"
         assert "result" in result
         assert result["result"].data == {"server_url": "http://fake-server:8083"}
@@ -173,7 +174,7 @@ async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
 
 
@@ -196,7 +197,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
 
 
@@ -217,7 +218,7 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_HASSIO},
     )
 
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert not result.get("errors")
 
@@ -226,7 +227,7 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
         side_effect=rtsp_to_webrtc.exceptions.ResponseError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result.get("type") == "abort"
+        assert result.get("type") is FlowResultType.ABORT
         assert result.get("reason") == "server_failure"
 
 
@@ -246,7 +247,7 @@ async def test_options_flow(
     assert not config_entry.options
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"stun_server"}
@@ -257,17 +258,17 @@ async def test_options_flow(
             "stun_server": "example.com:1234",
         },
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     assert config_entry.options == {"stun_server": "example.com:1234"}
 
     # Clear the value
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     assert config_entry.options == {}

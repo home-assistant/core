@@ -5,6 +5,7 @@ import base64
 from typing import Any
 from unittest.mock import ANY, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.assist_pipeline.const import DOMAIN
@@ -23,11 +24,19 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
+@pytest.mark.parametrize(
+    "extra_msg",
+    [
+        {},
+        {"pipeline": "conversation.home_assistant"},
+    ],
+)
 async def test_text_only_pipeline(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
     snapshot: SnapshotAssertion,
+    extra_msg: dict[str, Any],
 ) -> None:
     """Test events from a pipeline run with text input (no STT/TTS)."""
     events = []
@@ -42,6 +51,7 @@ async def test_text_only_pipeline(
             "conversation_id": "mock-conversation-id",
             "device_id": "mock-device-id",
         }
+        | extra_msg
     )
 
     # result
@@ -1166,11 +1176,36 @@ async def test_get_pipeline(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "conversation_engine": "homeassistant",
+        "conversation_engine": "conversation.home_assistant",
         "conversation_language": "en",
         "id": ANY,
         "language": "en",
         "name": "Home Assistant",
+        "stt_engine": "test",
+        "stt_language": "en-US",
+        "tts_engine": "test",
+        "tts_language": "en-US",
+        "tts_voice": "james_earl_jones",
+        "wake_word_entity": None,
+        "wake_word_id": None,
+    }
+
+    # Get conversation agent as pipeline
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+            "pipeline_id": "conversation.home_assistant",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "conversation.home_assistant",
+        "conversation_language": "en",
+        "id": ANY,
+        "language": "en",
+        "name": "Home Assistant",
+        # It found these defaults
         "stt_engine": "test",
         "stt_language": "en-US",
         "tts_engine": "test",
@@ -1250,7 +1285,7 @@ async def test_list_pipelines(
     assert msg["result"] == {
         "pipelines": [
             {
-                "conversation_engine": "homeassistant",
+                "conversation_engine": "conversation.home_assistant",
                 "conversation_language": "en",
                 "id": ANY,
                 "language": "en",
@@ -2012,7 +2047,7 @@ async def test_wake_word_cooldown_different_entities(
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_1",
@@ -2032,7 +2067,7 @@ async def test_wake_word_cooldown_different_entities(
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_2",

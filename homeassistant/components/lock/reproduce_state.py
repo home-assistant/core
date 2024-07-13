@@ -10,9 +10,12 @@ from typing import Any
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
+    SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -22,7 +25,14 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES = {STATE_LOCKED, STATE_UNLOCKED, STATE_LOCKING, STATE_UNLOCKING}
+VALID_STATES = {
+    STATE_LOCKED,
+    STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
+}
 
 
 async def _async_reproduce_state(
@@ -53,6 +63,8 @@ async def _async_reproduce_state(
         service = SERVICE_LOCK
     elif state.state in {STATE_UNLOCKED, STATE_UNLOCKING}:
         service = SERVICE_UNLOCK
+    elif state.state in {STATE_OPEN, STATE_OPENING}:
+        service = SERVICE_OPEN
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

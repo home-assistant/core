@@ -8,5 +8,9 @@
         "default": "mdi:cloud-upload"
       }
     }
+  },
+  "services": {
+    "get_torrents": "mdi:file-arrow-up-down-outline",
+    "get_all_torrents": "mdi:file-arrow-up-down-outline"
   }
 }

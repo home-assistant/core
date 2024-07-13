@@ -160,7 +160,7 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_API_KEY] = "invalid_api_key"
             except RateLimitedException:
                 errors[CONF_API_KEY] = "rate_limited"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

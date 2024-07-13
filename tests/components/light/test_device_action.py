@@ -3,7 +3,7 @@
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
@@ -30,12 +30,6 @@ from tests.common import (
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_actions(
@@ -66,14 +60,14 @@ async def test_get_actions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for action in [
+        for action in (
             "brightness_decrease",
             "brightness_increase",
             "flash",
             "turn_off",
             "turn_on",
             "toggle",
-        ]
+        )
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -123,7 +117,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["turn_on", "turn_off", "toggle"]
+        for action in ("turn_on", "turn_off", "toggle")
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -168,7 +162,7 @@ async def test_get_action_capabilities(
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.ACTION, action
         )
-        assert capabilities == {"extra_fields": []} or capabilities == {}
+        assert capabilities in ({"extra_fields": []}, {})
 
 
 @pytest.mark.parametrize(
@@ -466,12 +460,11 @@ async def test_get_action_capabilities_features_legacy(
         assert capabilities == expected
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -631,12 +624,11 @@ async def test_action(
     assert turn_on_calls[-1].data == {"entity_id": entry.entity_id, "flash": FLASH_LONG}
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_action_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})

@@ -8,6 +8,7 @@ from typing import Any
 
 from astral.location import Elevation, Location
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
@@ -29,6 +30,8 @@ from .const import (
     STATE_ABOVE_HORIZON,
     STATE_BELOW_HORIZON,
 )
+
+type SunConfigEntry = ConfigEntry[Sun]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -819,22 +819,23 @@ class BrSensor(SensorEntity):
                     self._attr_native_value = data.get(FORECAST)[fcday].get(
                         sensor_type[:-3]
                     )
-                    if self.state is not None:
-                        self._attr_native_value = round(self.state * 3.6, 1)
-                    return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
+
+                if self.state is not None:
+                    self._attr_native_value = round(self.state * 3.6, 1)
+                return True
 
             # update all other sensors
             try:
                 self._attr_native_value = data.get(FORECAST)[fcday].get(
                     sensor_type[:-3]
                 )
-                return True
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
+            return True
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
             # update weather symbol & status text

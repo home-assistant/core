@@ -141,7 +141,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         forecast = self._hourly_forecast
 
         if not forecast:
-            return
+            return None
 
         return self._condition_conversion(forecast[0].weather_type.id, None)
 

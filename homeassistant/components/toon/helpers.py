@@ -4,19 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from toonapi import ToonConnectionError, ToonError
 
 from .models import ToonEntity
 
-_ToonEntityT = TypeVar("_ToonEntityT", bound=ToonEntity)
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 
-def toon_exception_handler(
+def toon_exception_handler[_ToonEntityT: ToonEntity, **_P](
     func: Callable[Concatenate[_ToonEntityT, _P], Coroutine[Any, Any, None]],
 ) -> Callable[Concatenate[_ToonEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate Toon calls to handle Toon exceptions.
