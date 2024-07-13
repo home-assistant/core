@@ -1,6 +1,6 @@
 """Lamarzocco session fixtures."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
@@ -127,14 +127,6 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
 
         lamarzocco.firmware[FirmwareType.GATEWAY].latest_version = "v3.5-rc3"
         lamarzocco.firmware[FirmwareType.MACHINE].latest_version = "1.55"
-
-        async def websocket_connect_mock(
-            notify_callback: Callable | None,
-        ) -> None:
-            """Mock the websocket connect method."""
-            return None
-
-        lamarzocco.websocket_connect = websocket_connect_mock
 
         yield lamarzocco
 
