@@ -581,6 +581,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "autarco": {
+      "name": "Autarco",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "avion": {
       "name": "Avi-on",
       "integration_type": "hub",
@@ -2903,6 +2909,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "israel_rail": {
+      "name": "Israel Railways",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "iss": {
       "name": "International Space Station (ISS)",
       "integration_type": "service",
@@ -5158,7 +5170,7 @@
       "integrations": {
         "russound_rio": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_push",
           "name": "Russound RIO"
         },
