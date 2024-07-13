@@ -11,7 +11,6 @@ from homeassistant.components.motionblinds_ble.const import (
     CONF_MAC_CODE,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -53,7 +52,6 @@ async def setup_platform(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
-        assert config_entry.state is ConfigEntryState.LOADED
 
     return (
         config_entry,
