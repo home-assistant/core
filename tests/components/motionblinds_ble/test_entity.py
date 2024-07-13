@@ -1,6 +1,6 @@
 """Tests for Motionblinds BLE entities."""
 
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -35,6 +35,7 @@ from tests.common import MockConfigEntry
 )
 async def test_entity_update(
     mock_config_entry: MockConfigEntry,
+    mock_motion_device: Mock,
     name: str,
     hass: HomeAssistant,
     platform: Platform,
@@ -45,17 +46,14 @@ async def test_entity_update(
     await async_setup_component(hass, HA_DOMAIN, {})
     await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.motionblinds_ble.entity.MotionDevice.status_query"
-    ) as status_query:
-        await hass.services.async_call(
-            HA_DOMAIN,
-            SERVICE_UPDATE_ENTITY,
-            {
-                ATTR_ENTITY_ID: f"{platform.name.lower()}.{name}"
-                if platform is Platform.COVER
-                else f"{platform.name.lower()}.{name}_{entity}"
-            },
-            blocking=True,
-        )
-        status_query.assert_called_once()
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {
+            ATTR_ENTITY_ID: f"{platform.name.lower()}.{name}"
+            if platform is Platform.COVER
+            else f"{platform.name.lower()}.{name}_{entity}"
+        },
+        blocking=True,
+    )
+    getattr(mock_motion_device, "status_query").assert_called_once_with()
