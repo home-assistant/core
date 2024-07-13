@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.network import is_ip_address
 
@@ -61,6 +62,8 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
     async def async_handle_setup(self) -> None:
         """Handle initial setup."""
         await self.async_maybe_auth()
+        await self.async_config_entry_first_refresh()
+        self.unique_id = format_mac(self.data.info.MAC)
 
     async def async_maybe_auth(self) -> None:
         """Authenticate if needed."""
