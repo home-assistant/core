@@ -20,6 +20,8 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(
     ("platform", "entity"),
@@ -32,12 +34,15 @@ from . import setup_integration
     ],
 )
 async def test_entity_update(
-    hass: HomeAssistant, platform: Platform, entity: str
+    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    platform: Platform,
+    entity: str,
 ) -> None:
     """Test updating entity using homeassistant.update_entity."""
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    _, name = await setup_integration(hass)
+    name = await setup_integration(hass, mock_config_entry)
 
     with patch(
         "homeassistant.components.motionblinds_ble.entity.MotionDevice.status_query"

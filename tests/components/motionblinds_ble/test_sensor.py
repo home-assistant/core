@@ -21,7 +21,10 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
+from tests.common import MockConfigEntry
 
+
+@pytest.mark.parametrize("blind_type", [MotionBlindType.CURTAIN])
 @pytest.mark.parametrize(
     ("sensor", "update_func", "initial_value", "args", "expected_value"),
     [
@@ -84,6 +87,7 @@ from . import setup_integration
     ],
 )
 async def test_sensor(
+    mock_config_entry: MockConfigEntry,
     hass: HomeAssistant,
     sensor: str,
     update_func: Callable[[MotionDevice], Callable[..., None]],
@@ -93,10 +97,8 @@ async def test_sensor(
 ) -> None:
     """Test sensors."""
 
-    config_entry, name = await setup_integration(
-        hass, blind_type=MotionBlindType.CURTAIN
-    )
-    device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
+    name = await setup_integration(hass, mock_config_entry)
+    device: MotionDevice = hass.data[DOMAIN][mock_config_entry.entry_id]
 
     assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == initial_value
     update_func(device)(*args)

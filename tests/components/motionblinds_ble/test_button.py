@@ -15,12 +15,16 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(("button"), [ATTR_CONNECT, ATTR_DISCONNECT, ATTR_FAVORITE])
-async def test_button(hass: HomeAssistant, button: str) -> None:
+async def test_button(
+    mock_config_entry: MockConfigEntry, hass: HomeAssistant, button: str
+) -> None:
     """Test states of the button."""
 
-    _, name = await setup_integration(hass)
+    name = await setup_integration(hass, mock_config_entry)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{button}"

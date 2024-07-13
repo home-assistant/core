@@ -18,12 +18,16 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(("select", "args"), [(ATTR_SPEED, MotionSpeedLevel.HIGH)])
-async def test_select(hass: HomeAssistant, select: str, args: Any) -> None:
+async def test_select(
+    mock_config_entry: MockConfigEntry, hass: HomeAssistant, select: str, args: Any
+) -> None:
     """Test select."""
 
-    _, name = await setup_integration(hass)
+    name = await setup_integration(hass, mock_config_entry)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{select}"
@@ -47,13 +51,17 @@ async def test_select(hass: HomeAssistant, select: str, args: Any) -> None:
     [(ATTR_SPEED, lambda device: device.update_speed, MotionSpeedLevel.HIGH)],
 )
 async def test_select_update(
-    hass: HomeAssistant, select: str, update_func, value: type[Enum]
+    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    select: str,
+    update_func,
+    value: type[Enum],
 ) -> None:
     """Test select state update."""
 
-    config_entry, name = await setup_integration(hass)
+    name = await setup_integration(hass, mock_config_entry)
 
-    device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
+    device: MotionDevice = hass.data[DOMAIN][mock_config_entry.entry_id]
     update_func(device)(value)
     assert hass.states.get(f"select.{name}_{select}").state == str(value.value)
 

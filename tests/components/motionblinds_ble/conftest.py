@@ -3,11 +3,44 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+from motionblindsble.const import MotionBlindType
 import pytest
+
+from homeassistant.components.motionblinds_ble.const import (
+    CONF_BLIND_TYPE,
+    CONF_LOCAL_NAME,
+    CONF_MAC_CODE,
+    DOMAIN,
+)
+from homeassistant.const import CONF_ADDRESS
+
+from tests.common import MockConfigEntry
 
 TEST_MAC = "abcd"
 TEST_NAME = f"MOTION_{TEST_MAC.upper()}"
 TEST_ADDRESS = "test_adress"
+
+
+@pytest.fixture
+def blind_type() -> MotionBlindType:
+    """Blind type fixture."""
+    return MotionBlindType.ROLLER
+
+
+@pytest.fixture
+def mock_config_entry(blind_type: MotionBlindType) -> MockConfigEntry:
+    """Config entry fixture."""
+    return MockConfigEntry(
+        title="mock_title",
+        domain=DOMAIN,
+        unique_id="cc:cc:cc:cc:cc:cc",
+        data={
+            CONF_ADDRESS: "cc:cc:cc:cc:cc:cc",
+            CONF_LOCAL_NAME: "Motionblind CCCC",
+            CONF_MAC_CODE: "CCCC",
+            CONF_BLIND_TYPE: blind_type.name.lower(),
+        },
+    )
 
 
 @pytest.fixture(name="motionblinds_ble_connect", autouse=True)

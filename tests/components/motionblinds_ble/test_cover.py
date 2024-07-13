@@ -30,7 +30,10 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
+from tests.common import MockConfigEntry
 
+
+@pytest.mark.parametrize("blind_type", [MotionBlindType.VENETIAN])
 @pytest.mark.parametrize(
     ("service", "method", "kwargs"),
     [
@@ -45,11 +48,15 @@ from . import setup_integration
     ],
 )
 async def test_cover_service(
-    hass: HomeAssistant, service: str, method: str, kwargs: dict[str, Any]
+    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    kwargs: dict[str, Any],
 ) -> None:
     """Test cover service."""
 
-    _, name = await setup_integration(hass, blind_type=MotionBlindType.VENETIAN)
+    name = await setup_integration(hass, mock_config_entry)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{method}"
@@ -75,15 +82,16 @@ async def test_cover_service(
     ],
 )
 async def test_cover_update_running(
-    hass: HomeAssistant, running_type: str | None, state: str
+    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    running_type: str | None,
+    state: str,
 ) -> None:
     """Test updating running status."""
 
-    config_entry, name = await setup_integration(
-        hass, blind_type=MotionBlindType.VENETIAN
-    )
+    name = await setup_integration(hass, mock_config_entry)
 
-    device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
+    device: MotionDevice = hass.data[DOMAIN][mock_config_entry.entry_id]
     device.update_running(running_type)
     assert hass.states.get(f"cover.{name}").state == state
 
@@ -98,14 +106,16 @@ async def test_cover_update_running(
     ],
 )
 async def test_cover_update_position(
-    hass: HomeAssistant, position: int, tilt: int, state: str
+    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    position: int,
+    tilt: int,
+    state: str,
 ) -> None:
     """Test updating cover position and tilt."""
 
-    config_entry, name = await setup_integration(
-        hass, blind_type=MotionBlindType.VENETIAN
-    )
+    name = await setup_integration(hass, mock_config_entry)
 
-    device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
+    device: MotionDevice = hass.data[DOMAIN][mock_config_entry.entry_id]
     device.update_position(position, tilt)
     assert hass.states.get(f"cover.{name}").state == state

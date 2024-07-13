@@ -7,13 +7,16 @@ from homeassistant.core import HomeAssistant
 
 from . import FIXTURE_SERVICE_INFO, setup_integration
 
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_options_update_listener(hass: HomeAssistant) -> None:
+async def test_options_update_listener(
+    mock_config_entry: MockConfigEntry, hass: HomeAssistant
+) -> None:
     """Test options_update_listener."""
 
-    config_entry, _ = await setup_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     with (
         patch(
@@ -23,15 +26,17 @@ async def test_options_update_listener(hass: HomeAssistant) -> None:
             "homeassistant.components.motionblinds_ble.MotionDevice.set_permanent_connection"
         ) as set_permanent_connection,
     ):
-        await options_update_listener(hass, config_entry)
+        await options_update_listener(hass, mock_config_entry)
         mock_set_custom_disconnect_time.assert_called_once()
         set_permanent_connection.assert_called_once()
 
 
-async def test_update_ble_device(hass: HomeAssistant) -> None:
+async def test_update_ble_device(
+    mock_config_entry: MockConfigEntry, hass: HomeAssistant
+) -> None:
     """Test async_update_ble_device."""
 
-    await setup_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     with patch(
         "homeassistant.components.motionblinds_ble.MotionDevice.set_ble_device"
