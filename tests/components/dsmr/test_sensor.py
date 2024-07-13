@@ -1044,20 +1044,32 @@ async def test_belgian_meter_mbus(
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "unknown"
 
-    # check if gas consumption mbus2 is parsed correctly
+    # check if gas consumption mbus1 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption is None
 
-    # check if water usage mbus3 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
-    assert water_consumption is None
-
-    # check if gas consumption mbus4 is parsed correctly
+    # check if gas consumption mbus2 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
     assert gas_consumption is None
 
-    # check if gas consumption mbus4 is parsed correctly
+    # check if water usage mbus3 is parsed correctly
     water_consumption = hass.states.get("sensor.water_meter_water_consumption")
+    assert water_consumption
+    assert water_consumption.state == "12.12"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if gas consumption mbus4 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
     assert water_consumption.state == "13.13"
     assert (
         water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
