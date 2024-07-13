@@ -10,7 +10,7 @@ from homeassistant.components.hue_ble.config_flow import (
     NotFound,
     ScannerNotAvailable,
 )
-from homeassistant.components.hue_ble.const import DOMAIN
+from homeassistant.components.hue_ble.const import DOMAIN, URL_PAIRING_MODE
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -152,6 +152,9 @@ async def test_form(
 
     if expected_error is not None:
         assert result["type"] is FlowResultType.FORM
+        assert result["description_placeholders"] == {
+            "url_pairing_mode": URL_PAIRING_MODE,
+        }
         assert result["errors"] == {"base": expected_error}
 
         with patch(
@@ -214,6 +217,10 @@ async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "name": TEST_DEVICE_NAME,
+        "url_pairing_mode": URL_PAIRING_MODE,
+    }
 
     with patch(
         "homeassistant.components.hue_ble.config_flow.validate_input",

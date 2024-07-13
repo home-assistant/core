@@ -19,13 +19,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import DOMAIN, URL_PAIRING_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): str, vol.Required(CONF_MAC): str}
+    {
+        vol.Required(CONF_NAME): str,
+        vol.Required(CONF_MAC): str,
+    }
 )
 
 
@@ -83,7 +86,10 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders={"url_pairing_mode": URL_PAIRING_MODE},
+                errors=errors,
             )
 
         try:
@@ -108,7 +114,10 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=user_input[CONF_NAME], data={})
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            description_placeholders={"url_pairing_mode": URL_PAIRING_MODE},
+            errors=errors,
         )
 
     async def async_step_bluetooth(
@@ -169,7 +178,10 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=vol.Schema({}),
             errors=errors,
-            description_placeholders={"name": self._discovery_info.name},
+            description_placeholders={
+                "name": self._discovery_info.name,
+                "url_pairing_mode": URL_PAIRING_MODE,
+            },
         )
 
 
