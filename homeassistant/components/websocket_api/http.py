@@ -252,7 +252,10 @@ class WebSocketHandler:
         # in the queue since the last time we tried to release the ready future, we
         # try again later so we can coalesce more messages.
         if queue_size > self._release_ready_queue_size < PENDING_MSG_MAX_FORCE_READY:
-            self._schedule_ready_future(queue_size)
+            self._release_ready_queue_size = queue_size
+            self._release_ready_handle = self._loop.call_soon(
+                self._release_ready_future_or_reschedule
+            )
             return
         self._release_ready_queue_size = 0
         if not ready_future.done():
@@ -266,6 +269,8 @@ class WebSocketHandler:
             self._release_ready_handle = self._loop.call_soon(
                 self._release_ready_future_or_reschedule
             )
+        else:
+            _WS_LOGGER.warning("Ready future already scheduled")
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
