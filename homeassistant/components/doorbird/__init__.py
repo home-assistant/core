@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-import logging
 
 from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
@@ -26,8 +25,6 @@ from .const import CONF_EVENTS, DOMAIN, PLATFORMS
 from .device import ConfiguredDoorBird
 from .models import DoorBirdConfigEntry, DoorBirdData
 from .view import DoorBirdRequestView
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOM_URL = "hass_url_override"
 
