@@ -1,0 +1,42 @@
+"""Diagnostics support for Motionblinds Bluetooth."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any
+
+from motionblindsble.device import MotionDevice
+
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_UNIQUE_ID
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
+
+CONF_TITLE = "title"
+
+TO_REDACT: Iterable[Any] = {
+    # Config entry title and unique ID may contain sensitive data:
+    CONF_TITLE,
+    CONF_UNIQUE_ID,
+}
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+
+    # Create a dictionary of all attributes and their values
+    device_attributes = {k: v for k, v in vars(device).items() if not callable(v)}
+
+    return async_redact_data(
+        {
+            "entry": entry.as_dict(),
+            "device": device,
+            "device_attributes": device_attributes,
+        },
+        TO_REDACT,
+    )
