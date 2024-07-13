@@ -174,7 +174,7 @@ aioambient==2024.01.0
 aioapcaccess==0.4.2
 
 # homeassistant.components.aquacell
-aioaquacell==0.1.8
+aioaquacell==0.2.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.1.1
