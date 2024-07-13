@@ -1,10 +1,12 @@
 """Tests for Motionblinds BLE selects."""
 
+from collections.abc import Callable
 from enum import Enum
 from typing import Any
 from unittest.mock import Mock, patch
 
 from motionblindsble.const import MotionSpeedLevel
+from motionblindsble.device import MotionDevice
 import pytest
 
 from homeassistant.components.motionblinds_ble.const import ATTR_SPEED
@@ -60,7 +62,7 @@ async def test_select_update(
     mock_motion_device: Mock,
     hass: HomeAssistant,
     select: str,
-    register_callback,
+    register_callback: Callable[[MotionDevice], Callable[..., None]],
     value: type[Enum],
 ) -> None:
     """Test select state update."""
