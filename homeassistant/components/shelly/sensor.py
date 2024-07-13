@@ -1028,7 +1028,9 @@ RPC_SENSORS: Final = {
         key="number",
         sub_key="value",
         has_entity_name=True,
-        unit=lambda config: config["meta"]["ui"]["unit"],
+        unit=lambda config: config["meta"]["ui"]["unit"]
+        if config["meta"]["ui"]["unit"]
+        else None,
     ),
 }
 

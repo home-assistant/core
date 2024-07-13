@@ -85,7 +85,9 @@ RPC_NUMBERS: Final = {
         min_fn=lambda config: config["min"],
         mode=NumberMode.BOX,
         step_fn=lambda config: config["meta"]["ui"]["step"],
-        unit=lambda config: config["meta"]["ui"]["unit"],
+        unit=lambda config: config["meta"]["ui"]["unit"]
+        if config["meta"]["ui"]["unit"]
+        else None,
     ),
 }
 
