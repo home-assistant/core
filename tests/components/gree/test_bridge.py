@@ -1,12 +1,18 @@
 """Tests for gree component."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import DOMAIN
-from homeassistant.components.gree.const import COORDINATORS, DOMAIN as GREE
+from homeassistant.components.gree.const import (
+    COORDINATORS,
+    DOMAIN as GREE,
+    UPDATE_INTERVAL,
+)
+from homeassistant.components.gree.coordinator import DeviceDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -69,3 +75,33 @@ async def test_discovery_after_setup(
     device_infos = [x.device.device_info for x in hass.data[GREE][COORDINATORS]]
     assert device_infos[0].ip == "1.1.1.2"
     assert device_infos[1].ip == "2.2.2.1"
+
+
+async def test_coordinator_updates(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+) -> None:
+    """Test gree devices update their state."""
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(DOMAIN)) == 1
+
+    coordinator = hass.data[GREE][COORDINATORS][0]
+
+    def update_device_state():
+        """Update the device state."""
+        coordinator.device_state_updated(["test"])
+
+    device().update_state.side_effect = update_device_state
+
+    next_update = mock_now + timedelta(seconds=UPDATE_INTERVAL)
+    freezer.move_to(next_update)
+
+    with patch.object(
+        DeviceDataUpdateCoordinator, "async_set_updated_data"
+    ) as mock_set_updated_data:
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+        mock_set_updated_data.assert_called_once_with(device().raw_properties)
+
+    assert coordinator.last_update_success is not None
