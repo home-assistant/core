@@ -581,6 +581,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "autarco": {
+      "name": "Autarco",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "avion": {
       "name": "Avi-on",
       "integration_type": "hub",
@@ -2524,12 +2530,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "history_stats": {
-      "name": "History Stats",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "hitron_coda": {
       "name": "Rogers Hitron CODA",
       "integration_type": "hub",
@@ -2908,6 +2908,12 @@
       "name": "iSmartWindow",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "israel_rail": {
+      "name": "Israel Railways",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "iss": {
       "name": "International Space Station (ISS)",
@@ -3453,6 +3459,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "madvr": {
+      "name": "madVR Envy",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mailgun": {
       "name": "Mailgun",
       "integration_type": "hub",
@@ -3825,7 +3837,7 @@
     "mpd": {
       "name": "Music Player Daemon (MPD)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "mqtt": {
@@ -5158,7 +5170,7 @@
       "integrations": {
         "russound_rio": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_push",
           "name": "Russound RIO"
         },
@@ -5431,6 +5443,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "simplefin": {
+      "name": "SimpleFin",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "simplepush": {
       "name": "Simplepush",
@@ -7173,6 +7191,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "history_stats": {
+      "name": "History Stats",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "input_boolean": {
       "integration_type": "helper",

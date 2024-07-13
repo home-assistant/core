@@ -49,6 +49,7 @@ base_platforms: &base_platforms
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
+  - homeassistant/components/valve/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
 
