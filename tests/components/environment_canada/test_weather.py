@@ -16,12 +16,13 @@ from . import init_integration
 from tests.common import load_fixture
 
 
-@freeze_time("2022-10-04 01:00:00")
+@freeze_time("2022-10-04 06:00:00-04:00")
 async def test_forecast_daily(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic forecast."""
+    await hass.config.async_set_time_zone("America/New_York")
 
     ec_data = json.loads(
         load_fixture("environment_canada/current_conditions_data.json")
@@ -42,12 +43,13 @@ async def test_forecast_daily(
     assert response == snapshot
 
 
-@freeze_time("2022-10-04 01:00:00")
+@freeze_time("2022-10-04 06:00:00-04:00")
 async def test_forecast_daily_with_some_previous_days_data(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic forecast."""
+    await hass.config.async_set_time_zone("America/New_York")
 
     ec_data = json.loads(
         load_fixture("environment_canada/current_conditions_data.json")
