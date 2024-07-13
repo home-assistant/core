@@ -11,6 +11,8 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
@@ -125,41 +127,12 @@ async def test_form_cannot_connect_bad_file(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_evolution_entry: MockConfigEntry,
+) -> None:
     """Test that reconfigure discovers additional systems and zones."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    # Configure initial set of systems and zones.
-    with (
-        patch.object(
-            BryantEvolutionLocalClient,
-            "enumerate_zones",
-            return_value=DEFAULT,
-        ) as mock_call,
-    ):
-        mock_call.side_effect = lambda system_id, filename: {
-            1: [ZoneInfo(1, 1, "S1Z1"), ZoneInfo(1, 2, "S1Z2")],
-            2: [ZoneInfo(2, 3, "S2Z23"), ZoneInfo(2, 4, "S2Z4")],
-        }.get(system_id, [])
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_FILENAME: "test_reconfigure",
-            },
-        )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY, result
-    assert result["title"] == "SAM at test_reconfigure"
-    assert result["data"] == {
-        CONF_FILENAME: "test_reconfigure",
-        CONF_SYSTEM_ZONE: [(1, 1), (1, 2), (2, 3), (2, 4)],
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
 
     # Reconfigure with additional systems and zones.
     result = await hass.config_entries.flow.async_init(
