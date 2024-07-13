@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+from datetime import time
 from typing import Any
 from unittest.mock import patch
 
@@ -12,6 +13,7 @@ import pytest
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
 from homeassistant.components.schedule.const import (
     ATTR_NEXT_EVENT,
+    CONF_ALL_DAYS,
     CONF_DATA,
     CONF_FRIDAY,
     CONF_FROM,
@@ -23,12 +25,14 @@ from homeassistant.components.schedule.const import (
     CONF_TUESDAY,
     CONF_WEDNESDAY,
     DOMAIN,
+    SERVICE_GET,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -754,3 +758,81 @@ async def test_ws_create(
     assert result["party_mode"][CONF_MONDAY] == [
         {CONF_FROM: "12:00:00", CONF_TO: saved_to}
     ]
+
+
+async def test_service_get(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+) -> None:
+    """Test getting a single schedule via service."""
+    assert await schedule_setup()
+
+    # Test retrieving a single schedule via service call
+    service_result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET,
+        {
+            CONF_ENTITY_ID: "schedule.from_storage",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = service_result.get("schedule.from_storage")
+
+    assert set(result) == CONF_ALL_DAYS
+    assert result[CONF_FRIDAY] == [
+        {
+            CONF_FROM: time(17),
+            CONF_TO: time(23, 59, 59),
+            CONF_DATA: {"party_level": "epic"},
+        }
+    ]
+    assert result[CONF_SATURDAY] == [{CONF_FROM: time(0), CONF_TO: time(23, 59, 59)}]
+    assert result[CONF_SUNDAY] == [
+        {
+            CONF_FROM: time(0),
+            CONF_TO: time(23, 59, 59, 999999),
+            CONF_DATA: {"entry": "VIPs only"},
+        }
+    ]
+    for day in CONF_ALL_DAYS.difference({CONF_FRIDAY, CONF_SATURDAY, CONF_SUNDAY}):
+        assert result[day] == []
+
+    # Now we update the schedule via WS
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            CONF_NAME: "Party pooper",
+            CONF_ICON: "mdi:party-pooper",
+            CONF_MONDAY: [],
+            CONF_TUESDAY: [],
+            CONF_WEDNESDAY: [{CONF_FROM: "17:00:00", CONF_TO: "19:00:00"}],
+            CONF_THURSDAY: [],
+            CONF_FRIDAY: [],
+            CONF_SATURDAY: [],
+            CONF_SUNDAY: [],
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    # Test retrieving the schedule via service call after WS update
+    service_result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET,
+        {
+            CONF_ENTITY_ID: "schedule.from_storage",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = service_result.get("schedule.from_storage")
+
+    assert set(result) == CONF_ALL_DAYS
+    assert result[CONF_WEDNESDAY] == [{CONF_FROM: time(17), CONF_TO: time(19)}]
+    for day in CONF_ALL_DAYS.difference({CONF_WEDNESDAY}):
+        assert result[day] == []
