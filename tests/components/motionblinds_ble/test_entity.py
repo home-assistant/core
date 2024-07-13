@@ -37,7 +37,7 @@ async def test_entity_update(
     """Test updating entity using homeassistant.update_entity."""
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    _, name = await setup_platform(hass, [platform])
+    _, name = await setup_platform(hass)
 
     with patch(
         "homeassistant.components.motionblinds_ble.entity.MotionDevice.status_query"

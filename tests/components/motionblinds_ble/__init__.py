@@ -1,7 +1,5 @@
 """Tests for the Motionblinds Bluetooth integration."""
 
-from unittest.mock import patch
-
 from motionblindsble.const import MotionBlindType
 
 from homeassistant.components.motionblinds_ble import async_setup_entry
@@ -11,7 +9,7 @@ from homeassistant.components.motionblinds_ble.const import (
     CONF_MAC_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_ADDRESS, Platform
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
@@ -30,7 +28,6 @@ FIXTURE_SERVICE_INFO = BluetoothServiceInfo(
 
 async def setup_platform(
     hass: HomeAssistant,
-    platforms: list[Platform],
     blind_type: MotionBlindType = MotionBlindType.ROLLER,
 ) -> tuple[MockConfigEntry, str]:
     """Mock a fully setup config entry."""
@@ -48,10 +45,9 @@ async def setup_platform(
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.motionblinds_ble.PLATFORMS", platforms):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_entry(hass, config_entry)
+    await hass.async_block_till_done()
 
     return (
         config_entry,

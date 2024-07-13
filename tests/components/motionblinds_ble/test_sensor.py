@@ -17,7 +17,6 @@ from homeassistant.components.motionblinds_ble.const import (
     DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_platform
@@ -94,9 +93,7 @@ async def test_sensor(
 ) -> None:
     """Test sensors."""
 
-    config_entry, name = await setup_platform(
-        hass, [Platform.SENSOR], blind_type=MotionBlindType.CURTAIN
-    )
+    config_entry, name = await setup_platform(hass, blind_type=MotionBlindType.CURTAIN)
     device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
 
     assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == initial_value

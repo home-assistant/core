@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import HomeAssistant
 
 from . import setup_platform
@@ -23,7 +23,7 @@ from . import setup_platform
 async def test_select(hass: HomeAssistant, select: str, args: Any) -> None:
     """Test select."""
 
-    _, name = await setup_platform(hass, [Platform.SELECT])
+    _, name = await setup_platform(hass)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{select}"
@@ -51,7 +51,7 @@ async def test_select_update(
 ) -> None:
     """Test select state update."""
 
-    config_entry, name = await setup_platform(hass, [Platform.SELECT])
+    config_entry, name = await setup_platform(hass)
 
     device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
     update_func(device)(value)
