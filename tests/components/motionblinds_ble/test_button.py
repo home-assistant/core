@@ -1,6 +1,6 @@
 """Tests for Motionblinds BLE buttons."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -37,13 +37,10 @@ async def test_button(
 
     await setup_integration(hass, mock_config_entry)
 
-    command = AsyncMock()
-    setattr(mock_motion_device, button, command)
-
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {ATTR_ENTITY_ID: f"button.{name}_{button}"},
         blocking=True,
     )
-    command.assert_called_once()
+    getattr(mock_motion_device, button).assert_called_once()
