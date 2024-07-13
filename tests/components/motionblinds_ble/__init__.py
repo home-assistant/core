@@ -26,7 +26,7 @@ FIXTURE_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 
-async def setup_platform(
+async def setup_integration(
     hass: HomeAssistant,
     blind_type: MotionBlindType = MotionBlindType.ROLLER,
 ) -> tuple[MockConfigEntry, str]:

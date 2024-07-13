@@ -16,14 +16,14 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import HomeAssistant
 
-from . import setup_platform
+from . import setup_integration
 
 
 @pytest.mark.parametrize(("select", "args"), [(ATTR_SPEED, MotionSpeedLevel.HIGH)])
 async def test_select(hass: HomeAssistant, select: str, args: Any) -> None:
     """Test select."""
 
-    _, name = await setup_platform(hass)
+    _, name = await setup_integration(hass)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{select}"
@@ -51,7 +51,7 @@ async def test_select_update(
 ) -> None:
     """Test select state update."""
 
-    config_entry, name = await setup_platform(hass)
+    config_entry, name = await setup_integration(hass)
 
     device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
     update_func(device)(value)

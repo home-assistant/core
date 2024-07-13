@@ -13,14 +13,14 @@ from homeassistant.components.motionblinds_ble.const import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from . import setup_platform
+from . import setup_integration
 
 
 @pytest.mark.parametrize(("button"), [ATTR_CONNECT, ATTR_DISCONNECT, ATTR_FAVORITE])
 async def test_button(hass: HomeAssistant, button: str) -> None:
     """Test states of the button."""
 
-    _, name = await setup_platform(hass)
+    _, name = await setup_integration(hass)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{button}"

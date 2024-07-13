@@ -28,7 +28,7 @@ from homeassistant.components.motionblinds_ble.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from . import setup_platform
+from . import setup_integration
 
 
 @pytest.mark.parametrize(
@@ -49,7 +49,7 @@ async def test_cover_service(
 ) -> None:
     """Test cover service."""
 
-    _, name = await setup_platform(hass, blind_type=MotionBlindType.VENETIAN)
+    _, name = await setup_integration(hass, blind_type=MotionBlindType.VENETIAN)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{method}"
@@ -79,7 +79,9 @@ async def test_cover_update_running(
 ) -> None:
     """Test updating running status."""
 
-    config_entry, name = await setup_platform(hass, blind_type=MotionBlindType.VENETIAN)
+    config_entry, name = await setup_integration(
+        hass, blind_type=MotionBlindType.VENETIAN
+    )
 
     device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
     device.update_running(running_type)
@@ -100,7 +102,9 @@ async def test_cover_update_position(
 ) -> None:
     """Test updating cover position and tilt."""
 
-    config_entry, name = await setup_platform(hass, blind_type=MotionBlindType.VENETIAN)
+    config_entry, name = await setup_integration(
+        hass, blind_type=MotionBlindType.VENETIAN
+    )
 
     device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
     device.update_position(position, tilt)

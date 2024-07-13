@@ -5,7 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.motionblinds_ble import options_update_listener
 from homeassistant.core import HomeAssistant
 
-from . import FIXTURE_SERVICE_INFO, setup_platform
+from . import FIXTURE_SERVICE_INFO, setup_integration
 
 from tests.components.bluetooth import inject_bluetooth_service_info
 
@@ -13,7 +13,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 async def test_options_update_listener(hass: HomeAssistant) -> None:
     """Test options_update_listener."""
 
-    config_entry, _ = await setup_platform(hass)
+    config_entry, _ = await setup_integration(hass)
 
     with (
         patch(
@@ -31,7 +31,7 @@ async def test_options_update_listener(hass: HomeAssistant) -> None:
 async def test_update_ble_device(hass: HomeAssistant) -> None:
     """Test async_update_ble_device."""
 
-    await setup_platform(hass)
+    await setup_integration(hass)
 
     with patch(
         "homeassistant.components.motionblinds_ble.MotionDevice.set_ble_device"

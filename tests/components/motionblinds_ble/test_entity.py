@@ -18,7 +18,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import setup_platform
+from . import setup_integration
 
 
 @pytest.mark.parametrize(
@@ -37,7 +37,7 @@ async def test_entity_update(
     """Test updating entity using homeassistant.update_entity."""
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    _, name = await setup_platform(hass)
+    _, name = await setup_integration(hass)
 
     with patch(
         "homeassistant.components.motionblinds_ble.entity.MotionDevice.status_query"
