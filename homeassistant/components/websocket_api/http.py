@@ -81,6 +81,7 @@ class WebSocketHandler:
         "_message_queue",
         "_ready_future",
         "_release_ready_queue_size",
+        "_release_ready_handle",
     )
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
@@ -96,6 +97,7 @@ class WebSocketHandler:
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
         self._connection: ActiveConnection | None = None
+        self._release_ready_handle: asyncio.Handle | None = None
 
         # The WebSocketHandler has a single consumer and path
         # to where messages are queued. This allows the implementation
@@ -216,8 +218,7 @@ class WebSocketHandler:
 
         if self._release_ready_queue_size == 0:
             # Try to coalesce more messages to reduce the number of writes
-            self._release_ready_queue_size = queue_size_after_add
-            self._loop.call_soon(self._release_ready_future_or_reschedule)
+            self._schedule_ready_future(queue_size_after_add)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -241,6 +242,7 @@ class WebSocketHandler:
         If we reach PENDING_MSG_MAX_FORCE_READY, we will release the ready future
         immediately so avoid the coalesced messages from growing too large.
         """
+        self._release_ready_handle = None
         if not (ready_future := self._ready_future) or not (
             queue_size := len(self._message_queue)
         ):
@@ -250,12 +252,20 @@ class WebSocketHandler:
         # in the queue since the last time we tried to release the ready future, we
         # try again later so we can coalesce more messages.
         if queue_size > self._release_ready_queue_size < PENDING_MSG_MAX_FORCE_READY:
-            self._release_ready_queue_size = queue_size
-            self._loop.call_soon(self._release_ready_future_or_reschedule)
+            self._schedule_ready_future(queue_size)
             return
         self._release_ready_queue_size = 0
         if not ready_future.done():
             ready_future.set_result(queue_size)
+
+    @callback
+    def _schedule_ready_future(self, queue_size: int) -> None:
+        """Schedule the ready future to be released."""
+        self._release_ready_queue_size = queue_size
+        if self._release_ready_handle is None:
+            self._release_ready_handle = self._loop.call_soon(
+                self._release_ready_future_or_reschedule
+            )
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
