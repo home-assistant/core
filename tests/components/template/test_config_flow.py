@@ -92,6 +92,16 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {},
+        ),
+        (
             "switch",
             {"value_template": "{{ states('switch.one') }}"},
             "on",
@@ -215,6 +225,12 @@ async def test_config_flow(
             },
             {"verify_ssl": True},
             {"verify_ssl": True},
+        ),
+        (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
         ),
     ],
 )
@@ -385,6 +401,16 @@ def get_suggested(schema, key):
                 "verify_ssl": True,
             },
             "url",
+        ),
+        (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            {"state": "{{ states('select.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            "state",
         ),
         (
             "switch",
@@ -1129,6 +1155,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             },
             {},
             {},
+        ),
+        (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
         ),
         (
             "switch",

@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.25
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.1
+DoorBirdPy==3.0.2
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -174,7 +174,7 @@ aioambient==2024.01.0
 aioapcaccess==0.4.2
 
 # homeassistant.components.aquacell
-aioaquacell==0.1.8
+aioaquacell==0.2.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.1.1
@@ -192,7 +192,7 @@ aioazuredevops==2.1.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.13.0
+aiobotocore==2.13.1
 
 # homeassistant.components.comelit
 aiocomelit==0.9.0
@@ -528,6 +528,9 @@ bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
+
+# homeassistant.components.aws
+botocore==1.34.131
 
 # homeassistant.components.bring
 bring-api==0.7.1
