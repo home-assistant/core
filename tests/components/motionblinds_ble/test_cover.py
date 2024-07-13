@@ -1,7 +1,7 @@
 """Tests for Motionblinds BLE covers."""
 
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
 import pytest
@@ -47,6 +47,7 @@ from tests.common import MockConfigEntry
 )
 async def test_cover_service(
     mock_config_entry: MockConfigEntry,
+    mock_motion_device: Mock,
     name: str,
     hass: HomeAssistant,
     service: str,
@@ -57,16 +58,13 @@ async def test_cover_service(
 
     await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        f"homeassistant.components.motionblinds_ble.MotionDevice.{method}"
-    ) as func:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: f"cover.{name}", **kwargs},
-            blocking=True,
-        )
-        func.assert_called_once()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: f"cover.{name}", **kwargs},
+        blocking=True,
+    )
+    getattr(mock_motion_device, method).assert_called_once()
 
 
 @pytest.mark.parametrize(
