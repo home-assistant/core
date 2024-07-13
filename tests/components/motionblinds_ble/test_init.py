@@ -2,10 +2,11 @@
 
 from unittest.mock import patch
 
+from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.motionblinds_ble import options_update_listener
 from homeassistant.core import HomeAssistant
 
-from . import FIXTURE_SERVICE_INFO, setup_integration
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -32,7 +33,9 @@ async def test_options_update_listener(
 
 
 async def test_update_ble_device(
-    mock_config_entry: MockConfigEntry, hass: HomeAssistant
+    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
 ) -> None:
     """Test async_update_ble_device."""
 
@@ -41,5 +44,5 @@ async def test_update_ble_device(
     with patch(
         "homeassistant.components.motionblinds_ble.MotionDevice.set_ble_device"
     ) as mock_set_ble_device:
-        inject_bluetooth_service_info(hass, FIXTURE_SERVICE_INFO)
+        inject_bluetooth_service_info(hass, service_info)
         mock_set_ble_device.assert_called_once()

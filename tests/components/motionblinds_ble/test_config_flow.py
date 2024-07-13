@@ -6,25 +6,22 @@ from motionblindsble.const import MotionBlindType
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.motionblinds_ble import const
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from . import (
-    FIXTURE_ADDRESS,
-    FIXTURE_BLIND_TYPE,
-    FIXTURE_LOCAL_NAME,
-    FIXTURE_MAC,
-    FIXTURE_SERVICE_INFO,
-)
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("motionblinds_ble_connect")
 async def test_config_flow_manual_success(
-    hass: HomeAssistant, blind_type: MotionBlindType
+    hass: HomeAssistant,
+    blind_type: MotionBlindType,
+    mac: str,
+    address: str,
+    local_name: str,
 ) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
@@ -36,7 +33,7 @@ async def test_config_flow_manual_success(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_MAC_CODE: FIXTURE_MAC},
+        {const.CONF_MAC_CODE: mac},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -46,18 +43,24 @@ async def test_config_flow_manual_success(
         {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
+    assert result["title"] == f"Motionblind {mac.upper()}"
     assert result["data"] == {
-        CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
-        const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
-        const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
+        CONF_ADDRESS: address,
+        const.CONF_LOCAL_NAME: local_name,
+        const.CONF_MAC_CODE: mac.upper(),
+        const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
     assert result["options"] == {}
 
 
 @pytest.mark.usefixtures("motionblinds_ble_connect")
-async def test_config_flow_manual_error_invalid_mac(hass: HomeAssistant) -> None:
+async def test_config_flow_manual_error_invalid_mac(
+    hass: HomeAssistant,
+    mac: str,
+    address: str,
+    local_name: str,
+    blind_type: MotionBlindType,
+) -> None:
     """Invalid MAC code error flow manually initialized by the user."""
 
     # Initialize
@@ -80,7 +83,7 @@ async def test_config_flow_manual_error_invalid_mac(hass: HomeAssistant) -> None
     # Recover
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_MAC_CODE: FIXTURE_MAC},
+        {const.CONF_MAC_CODE: mac},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -88,22 +91,22 @@ async def test_config_flow_manual_error_invalid_mac(hass: HomeAssistant) -> None
     # Finish flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
+        {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
+    assert result["title"] == f"Motionblind {mac.upper()}"
     assert result["data"] == {
-        CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
-        const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
-        const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
+        CONF_ADDRESS: address,
+        const.CONF_LOCAL_NAME: local_name,
+        const.CONF_MAC_CODE: mac.upper(),
+        const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
     assert result["options"] == {}
 
 
 @pytest.mark.usefixtures("motionblinds_ble_connect")
 async def test_config_flow_manual_error_no_bluetooth_adapter(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mac: str
 ) -> None:
     """No Bluetooth adapter error flow manually initialized by the user."""
 
@@ -132,14 +135,19 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {const.CONF_MAC_CODE: FIXTURE_MAC},
+            {const.CONF_MAC_CODE: mac},
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
 
 
 async def test_config_flow_manual_error_could_not_find_motor(
-    hass: HomeAssistant, motionblinds_ble_connect: tuple[AsyncMock, Mock]
+    hass: HomeAssistant,
+    motionblinds_ble_connect: tuple[AsyncMock, Mock],
+    mac: str,
+    local_name: str,
+    address: str,
+    blind_type: MotionBlindType,
 ) -> None:
     """Could not find motor error flow manually initialized by the user."""
 
@@ -155,17 +163,17 @@ async def test_config_flow_manual_error_could_not_find_motor(
     motionblinds_ble_connect[1].name = "WRONG_NAME"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_MAC_CODE: FIXTURE_MAC},
+        {const.CONF_MAC_CODE: mac},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": const.ERROR_COULD_NOT_FIND_MOTOR}
 
     # Recover
-    motionblinds_ble_connect[1].name = FIXTURE_LOCAL_NAME
+    motionblinds_ble_connect[1].name = local_name
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_MAC_CODE: FIXTURE_MAC},
+        {const.CONF_MAC_CODE: mac},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -176,18 +184,18 @@ async def test_config_flow_manual_error_could_not_find_motor(
         {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
+    assert result["title"] == f"Motionblind {mac.upper()}"
     assert result["data"] == {
-        CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
-        const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
-        const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
+        CONF_ADDRESS: address,
+        const.CONF_LOCAL_NAME: local_name,
+        const.CONF_MAC_CODE: mac.upper(),
+        const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
     assert result["options"] == {}
 
 
 async def test_config_flow_manual_error_no_devices_found(
-    hass: HomeAssistant, motionblinds_ble_connect: tuple[AsyncMock, Mock]
+    hass: HomeAssistant, motionblinds_ble_connect: tuple[AsyncMock, Mock], mac: str
 ) -> None:
     """No devices found error flow manually initialized by the user."""
 
@@ -203,19 +211,26 @@ async def test_config_flow_manual_error_no_devices_found(
     motionblinds_ble_connect[0].discover.return_value = []
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_MAC_CODE: FIXTURE_MAC},
+        {const.CONF_MAC_CODE: mac},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_DEVICES_FOUND
 
 
 @pytest.mark.usefixtures("motionblinds_ble_connect")
-async def test_config_flow_bluetooth_success(hass: HomeAssistant) -> None:
+async def test_config_flow_bluetooth_success(
+    hass: HomeAssistant,
+    mac: str,
+    service_info: BluetoothServiceInfoBleak,
+    address: str,
+    local_name: str,
+    blind_type: MotionBlindType,
+) -> None:
     """Successful bluetooth discovery flow."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=FIXTURE_SERVICE_INFO,
+        data=service_info,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -223,16 +238,16 @@ async def test_config_flow_bluetooth_success(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
+        {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
+    assert result["title"] == f"Motionblind {mac.upper()}"
     assert result["data"] == {
-        CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
-        const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
-        const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
+        CONF_ADDRESS: address,
+        const.CONF_LOCAL_NAME: local_name,
+        const.CONF_MAC_CODE: mac.upper(),
+        const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
     assert result["options"] == {}
 

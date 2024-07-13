@@ -29,12 +29,13 @@ from tests.common import MockConfigEntry
 async def test_button(
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
+    name: str,
     hass: HomeAssistant,
     button: str,
 ) -> None:
     """Test states of the button."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     command = AsyncMock()
     setattr(mock_motion_device, button, command)

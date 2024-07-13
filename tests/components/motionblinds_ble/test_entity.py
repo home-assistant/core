@@ -35,6 +35,7 @@ from tests.common import MockConfigEntry
 )
 async def test_entity_update(
     mock_config_entry: MockConfigEntry,
+    name: str,
     hass: HomeAssistant,
     platform: Platform,
     entity: str,
@@ -42,7 +43,7 @@ async def test_entity_update(
     """Test updating entity using homeassistant.update_entity."""
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     with patch(
         "homeassistant.components.motionblinds_ble.entity.MotionDevice.status_query"

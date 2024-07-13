@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from motionblindsble.const import MotionBlindType
 import pytest
 
+from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.motionblinds_ble.const import (
     CONF_BLIND_TYPE,
     CONF_LOCAL_NAME,
@@ -14,9 +15,8 @@ from homeassistant.components.motionblinds_ble.const import (
 )
 from homeassistant.const import CONF_ADDRESS
 
-from . import FIXTURE_ADDRESS, FIXTURE_DISPLAY_NAME, FIXTURE_LOCAL_NAME
-
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
 @pytest.fixture
@@ -26,7 +26,68 @@ def blind_type() -> MotionBlindType:
 
 
 @pytest.fixture
-def mock_motion_device(blind_type) -> Generator[AsyncMock]:
+def mac() -> str:
+    """MAC code fixture."""
+    return "CCCC"
+
+
+@pytest.fixture
+def display_name(mac: str) -> str:
+    """Display name fixture."""
+    return f"Motionblind {mac.upper()}"
+
+
+@pytest.fixture
+def name(display_name: str) -> str:
+    """Name fixture."""
+    return display_name.lower().replace(" ", "_")
+
+
+@pytest.fixture
+def local_name(mac: str) -> str:
+    """Local name fixture."""
+    return f"MOTION_{mac.upper()}"
+
+
+@pytest.fixture
+def address(mac: str) -> str:
+    """Address fixture."""
+    return "cc:cc:cc:cc:cc:cc"
+
+
+@pytest.fixture
+def service_info(local_name: str, address: str) -> BluetoothServiceInfoBleak:
+    """Service info fixture."""
+    return BluetoothServiceInfoBleak(
+        name=local_name,
+        address=address,
+        device=generate_ble_device(
+            address=address,
+            name=local_name,
+        ),
+        rssi=-61,
+        manufacturer_data={000: b"test"},
+        service_data={
+            "test": bytearray(b"0000"),
+        },
+        service_uuids=[
+            "test",
+        ],
+        source="local",
+        advertisement=generate_advertisement_data(
+            manufacturer_data={000: b"test"},
+            service_uuids=["test"],
+        ),
+        connectable=True,
+        time=0,
+        tx_power=-127,
+    )
+
+
+@pytest.fixture
+def mock_motion_device(
+    blind_type: MotionBlindType, display_name: str
+) -> Generator[AsyncMock]:
     """Mock a MotionDevice."""
 
     with (
@@ -41,7 +102,7 @@ def mock_motion_device(blind_type) -> Generator[AsyncMock]:
     ):
         device = mock_device.return_value
         device.ble_device = Mock()
-        device.display_name = FIXTURE_DISPLAY_NAME
+        device.display_name = display_name
         device.blind_type = blind_type
         yield device
 
@@ -64,12 +125,12 @@ def mock_config_entry(blind_type: MotionBlindType) -> MockConfigEntry:
 
 @pytest.fixture(name="motionblinds_ble_connect", autouse=True)
 def motion_blinds_connect_fixture(
-    enable_bluetooth: None,
+    enable_bluetooth: None, local_name: str, address: str
 ) -> Generator[tuple[AsyncMock, Mock]]:
     """Mock motion blinds ble connection and entry setup."""
     device = Mock()
-    device.name = FIXTURE_LOCAL_NAME
-    device.address = FIXTURE_ADDRESS
+    device.name = local_name
+    device.address = address
 
     bleak_scanner = AsyncMock()
     bleak_scanner.discover.return_value = [device]

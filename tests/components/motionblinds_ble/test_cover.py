@@ -47,6 +47,7 @@ from tests.common import MockConfigEntry
 )
 async def test_cover_service(
     mock_config_entry: MockConfigEntry,
+    name: str,
     hass: HomeAssistant,
     service: str,
     method: str,
@@ -54,7 +55,7 @@ async def test_cover_service(
 ) -> None:
     """Test cover service."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{method}"
@@ -80,13 +81,14 @@ async def test_cover_service(
 async def test_cover_update_running(
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
+    name: str,
     hass: HomeAssistant,
     running_type: str | None,
     state: str,
 ) -> None:
     """Test updating running status."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     async_update_running = mock_motion_device.register_running_callback.call_args[0][0]
 
@@ -106,6 +108,7 @@ async def test_cover_update_running(
 async def test_cover_update_position(
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
+    name: str,
     hass: HomeAssistant,
     position: int,
     tilt: int,
@@ -113,7 +116,7 @@ async def test_cover_update_position(
 ) -> None:
     """Test updating cover position and tilt."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     async_update_position = mock_motion_device.register_position_callback.call_args[0][
         0

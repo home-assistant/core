@@ -24,11 +24,15 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(("select", "args"), [(ATTR_SPEED, MotionSpeedLevel.HIGH)])
 async def test_select(
-    mock_config_entry: MockConfigEntry, hass: HomeAssistant, select: str, args: Any
+    mock_config_entry: MockConfigEntry,
+    name: str,
+    hass: HomeAssistant,
+    select: str,
+    args: Any,
 ) -> None:
     """Test select."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     with patch(
         f"homeassistant.components.motionblinds_ble.MotionDevice.{select}"
@@ -60,6 +64,7 @@ async def test_select(
 async def test_select_update(
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
+    name: str,
     hass: HomeAssistant,
     select: str,
     register_callback: Callable[[MotionDevice], Callable[..., None]],
@@ -67,7 +72,7 @@ async def test_select_update(
 ) -> None:
     """Test select state update."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     update_func = register_callback(mock_motion_device).call_args[0][0]
 

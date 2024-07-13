@@ -89,6 +89,7 @@ from tests.common import MockConfigEntry
 async def test_sensor(
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
+    name: str,
     hass: HomeAssistant,
     sensor: str,
     register_callback: Callable[[MotionDevice], Callable[..., None]],
@@ -98,7 +99,7 @@ async def test_sensor(
 ) -> None:
     """Test sensors."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == initial_value
     update_func = register_callback(mock_motion_device).call_args[0][0]
