@@ -4,7 +4,6 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
-from motionblindsble.device import MotionDevice
 import pytest
 
 from homeassistant.components.cover import (
@@ -24,7 +23,6 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.components.motionblinds_ble.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -109,6 +107,7 @@ async def test_cover_update_running(
 )
 async def test_cover_update_position(
     mock_config_entry: MockConfigEntry,
+    mock_motion_device: Mock,
     hass: HomeAssistant,
     position: int,
     tilt: int,
@@ -116,8 +115,11 @@ async def test_cover_update_position(
 ) -> None:
     """Test updating cover position and tilt."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
-    device: MotionDevice = hass.data[DOMAIN][mock_config_entry.entry_id]
-    device.update_position(position, tilt)
-    assert hass.states.get(f"cover.{name}").state == state
+    async_update_position = mock_motion_device.register_position_callback.call_args[0][
+        0
+    ]
+
+    async_update_position(position, tilt)
+    assert hass.states.get("cover.motionblinds_ble_cc_cc_cc_cc_cc_cc").state == state
