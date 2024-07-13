@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from enum import Enum
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from motionblindsble.const import MotionSpeedLevel
 from motionblindsble.device import MotionDevice
@@ -25,6 +25,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(("select", "args"), [(ATTR_SPEED, MotionSpeedLevel.HIGH)])
 async def test_select(
     mock_config_entry: MockConfigEntry,
+    mock_motion_device: Mock,
     name: str,
     hass: HomeAssistant,
     select: str,
@@ -34,21 +35,16 @@ async def test_select(
 
     await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        f"homeassistant.components.motionblinds_ble.MotionDevice.{select}"
-    ) as command:
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: f"select.{name}_{select}",
-                ATTR_OPTION: MotionSpeedLevel.HIGH.value,
-            },
-            blocking=True,
-        )
-        command.assert_called_once_with(args)
-
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: f"select.{name}_{select}",
+            ATTR_OPTION: MotionSpeedLevel.HIGH.value,
+        },
+        blocking=True,
+    )
+    getattr(mock_motion_device, select).assert_called_once_with(args)
 
 
 @pytest.mark.parametrize(
