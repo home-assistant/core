@@ -26,15 +26,15 @@ def blind_type() -> MotionBlindType:
 
 
 @pytest.fixture
-def mac() -> str:
+def mac_code() -> str:
     """MAC code fixture."""
     return "CCCC"
 
 
 @pytest.fixture
-def display_name(mac: str) -> str:
+def display_name(mac_code: str) -> str:
     """Display name fixture."""
-    return f"Motionblind {mac.upper()}"
+    return f"Motionblind {mac_code.upper()}"
 
 
 @pytest.fixture
@@ -44,13 +44,13 @@ def name(display_name: str) -> str:
 
 
 @pytest.fixture
-def local_name(mac: str) -> str:
+def local_name(mac_code: str) -> str:
     """Local name fixture."""
-    return f"MOTION_{mac.upper()}"
+    return f"MOTION_{mac_code.upper()}"
 
 
 @pytest.fixture
-def address(mac: str) -> str:
+def address(mac_code: str) -> str:
     """Address fixture."""
     return "cc:cc:cc:cc:cc:cc"
 
