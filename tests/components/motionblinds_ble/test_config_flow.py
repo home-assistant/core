@@ -22,6 +22,7 @@ async def test_config_flow_manual_success(
     mac: str,
     address: str,
     local_name: str,
+    display_name: str,
 ) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
@@ -43,7 +44,7 @@ async def test_config_flow_manual_success(
         {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {mac.upper()}"
+    assert result["title"] == display_name
     assert result["data"] == {
         CONF_ADDRESS: address,
         const.CONF_LOCAL_NAME: local_name,
@@ -59,6 +60,7 @@ async def test_config_flow_manual_error_invalid_mac(
     mac: str,
     address: str,
     local_name: str,
+    display_name: str,
     blind_type: MotionBlindType,
 ) -> None:
     """Invalid MAC code error flow manually initialized by the user."""
@@ -94,7 +96,7 @@ async def test_config_flow_manual_error_invalid_mac(
         {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {mac.upper()}"
+    assert result["title"] == display_name
     assert result["data"] == {
         CONF_ADDRESS: address,
         const.CONF_LOCAL_NAME: local_name,
@@ -146,6 +148,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
     motionblinds_ble_connect: tuple[AsyncMock, Mock],
     mac: str,
     local_name: str,
+    display_name: str,
     address: str,
     blind_type: MotionBlindType,
 ) -> None:
@@ -181,10 +184,10 @@ async def test_config_flow_manual_error_could_not_find_motor(
     # Finish flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
+        {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {mac.upper()}"
+    assert result["title"] == display_name
     assert result["data"] == {
         CONF_ADDRESS: address,
         const.CONF_LOCAL_NAME: local_name,
@@ -224,6 +227,7 @@ async def test_config_flow_bluetooth_success(
     service_info: BluetoothServiceInfoBleak,
     address: str,
     local_name: str,
+    display_name: str,
     blind_type: MotionBlindType,
 ) -> None:
     """Successful bluetooth discovery flow."""
@@ -242,7 +246,7 @@ async def test_config_flow_bluetooth_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Motionblind {mac.upper()}"
+    assert result["title"] == display_name
     assert result["data"] == {
         CONF_ADDRESS: address,
         const.CONF_LOCAL_NAME: local_name,
