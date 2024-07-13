@@ -55,6 +55,7 @@ ENTRY = namedtuple(
     ],
 )
 
+
 ILLEGAL = "I"
 OPTIONAL = "O"
 DEMANDED = "D"
@@ -259,6 +260,7 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
     for key in reversed(errors):
         del config[CONF_SWING_MODE_VALUES][key]
     return config
+
 
 def register_int_list_validator(value: Any) -> Any:
     """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
