@@ -24,7 +24,7 @@ from . import setup_platform
 
 
 @pytest.mark.parametrize(
-    ("sensor", "update_func", "initial", "input", "output"),
+    ("sensor", "update_func", "initial_value", "args", "expected_value"),
     [
         (
             "connection_status",
@@ -88,9 +88,9 @@ async def test_sensor(
     hass: HomeAssistant,
     sensor: str,
     update_func: Callable[[MotionDevice], Callable[..., None]],
-    initial: str,
-    input: list[Any],
-    output: str,
+    initial_value: str,
+    args: list[Any],
+    expected_value: str,
 ) -> None:
     """Test sensors."""
 
@@ -99,8 +99,8 @@ async def test_sensor(
     )
     device: MotionDevice = hass.data[DOMAIN][config_entry.entry_id]
 
-    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == initial
-    update_func(device)(*input)
-    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == output
+    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == initial_value
+    update_func(device)(*args)
+    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == expected_value
 
     await hass.async_block_till_done()
