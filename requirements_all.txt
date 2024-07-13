@@ -1984,7 +1984,7 @@ pygtfs==0.1.9
 pygti==0.9.4
 
 # homeassistant.components.hausbus
-pyhausbus==1.0.0
+pyhausbus==1.0.1
 
 # homeassistant.components.version
 pyhaversion==22.8.0

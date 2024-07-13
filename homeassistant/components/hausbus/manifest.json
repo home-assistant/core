@@ -8,6 +8,6 @@
   "homekit": {},
   "iot_class": "local_push",
   "loggers": ["pyhausbus"],
-  "requirements": ["pyhausbus==1.0.0"],
+  "requirements": ["pyhausbus==1.0.1"],
   "single_config_entry": true
 }

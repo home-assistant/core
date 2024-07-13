@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -13,7 +11,6 @@ from .config_entry import HausbusConfig, HausbusConfigEntry
 from .const import DOMAIN
 from .gateway import HausbusGateway
 
-# Only support light platform on the initial version. Additional platforms to follow
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)

@@ -26,7 +26,7 @@ async def test_device_info() -> None:
     assert device_info is not None
     assert device_info.get("manufacturer") == "Haus-Bus.de"
     assert device_info.get("model") == "Controller"
-    assert device_info.get("name") == "Controller ID device_id"
+    assert device_info.get("name") == "Controller device_id"
     assert device_info.get("sw_version") == "sw_version"
     assert device_info.get("hw_version") == "hw_version"
     assert device_info.get("identifiers") == {(DOMAIN, "device_id")}
@@ -124,6 +124,10 @@ async def test_missing_device_id() -> None:
         ({"firmware": EFirmwareId.SD6, "type": 0x14}, {"model_id": "Multitaster"}),
         ({"firmware": EFirmwareId.SD6, "type": 0x1E}, {"model_id": "Multitaster"}),
         ({"firmware": EFirmwareId.SD6, "type": 0x99}, {"model_id": "Controller"}),
+        (
+            {"firmware": EFirmwareId.SER_UNKNOWN, "type": 0x99},
+            {"model_id": "Controller"},
+        ),
     ],
 )
 async def test_set_type(inputs, expected) -> None:
