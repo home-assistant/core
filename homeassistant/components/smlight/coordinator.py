@@ -3,13 +3,12 @@
 from dataclasses import dataclass
 import socket
 
-from pysmlight.const import Events as SmEvents
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from pysmlight.web import Api2, Info, Sensors
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -40,15 +39,11 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self._internet: bool = False
         self.hostname: str | None = self.get_hostname()
         self.unique_id: str | None = None
 
         self.client = Api2(
             host=entry.data[CONF_HOST], session=async_get_clientsession(hass)
-        )
-        entry.async_create_background_task(
-            hass, self.client.sse.client(), "smlight-sse-client"
         )
 
     def get_hostname(self) -> str | None:
@@ -66,9 +61,6 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
     async def async_handle_setup(self) -> None:
         """Handle initial setup."""
         await self.async_maybe_auth()
-        self.client.sse.register_callback(
-            SmEvents.EVENT_INET_STATE, self.internet_callback
-        )
 
     async def async_maybe_auth(self) -> None:
         """Authenticate if needed."""
@@ -94,12 +86,7 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
             return SmData(
                 sensors=await self.client.get_sensors(),
                 info=await self.client.get_info(),
-                internet=self._internet,
+                internet=False,
             )
         except SmlightConnectionError as err:
             raise UpdateFailed(err) from err
-
-    @callback
-    def internet_callback(self, x):
-        """Internet callback."""
-        self._internet = "ok" in x.data
