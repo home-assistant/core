@@ -1,6 +1,6 @@
 """Tests for Motionblinds BLE buttons."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -18,23 +18,32 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(("button"), [ATTR_CONNECT, ATTR_DISCONNECT, ATTR_FAVORITE])
+@pytest.mark.parametrize(
+    ("button", "name"),
+    [
+        (ATTR_CONNECT, "mock_title_connect"),
+        (ATTR_DISCONNECT, "disconnect"),
+        (ATTR_FAVORITE, "favorite"),
+    ],
+)
 async def test_button(
-    mock_config_entry: MockConfigEntry, hass: HomeAssistant, button: str
+    mock_config_entry: MockConfigEntry,
+    mock_motion_device: Mock,
+    hass: HomeAssistant,
+    button: str,
+    name: str,
 ) -> None:
     """Test states of the button."""
 
-    name = await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        f"homeassistant.components.motionblinds_ble.MotionDevice.{button}"
-    ) as command:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: f"button.{name}_{button}"},
-            blocking=True,
-        )
-        command.assert_called_once()
+    command = AsyncMock()
+    setattr(mock_motion_device, button, command)
 
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: f"button.{name}"},
+        blocking=True,
+    )
+    command.assert_called_once()
