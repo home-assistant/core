@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
-from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
+from pysmlight.exceptions import SmlightConnectionError, SmlightError
 import pytest
 
 from homeassistant import config_entries
@@ -13,6 +13,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
+
+from .conftest import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +52,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "slzb-06.local",
+            CONF_HOST: MOCK_HOST,
         },
     )
     await hass.async_block_till_done()
@@ -59,7 +61,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result2["context"]["source"] == "user"
     assert result2["title"] == "SLZB-06p7"
     assert result2["data"] == {
-        CONF_HOST: "slzb-06.local",
+        CONF_HOST: MOCK_HOST,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -76,7 +78,7 @@ async def test_zeroconf_flow(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["description_placeholders"] == {"host": "slzb-06.local"}
+    assert result["description_placeholders"] == {"host": MOCK_HOST}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
@@ -100,8 +102,8 @@ async def test_zeroconf_flow(
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_USERNAME: "test-user",
-            CONF_PASSWORD: "test-pass",
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
         },
     )
     await hass.async_block_till_done()
@@ -111,9 +113,9 @@ async def test_zeroconf_flow(
     assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
     assert result3["title"] == "SLZB-06p7"
     assert result3["data"] == {
-        CONF_USERNAME: "test-user",
-        CONF_PASSWORD: "test-pass",
-        CONF_HOST: "slzb-06.local",
+        CONF_USERNAME: MOCK_USERNAME,
+        CONF_PASSWORD: MOCK_PASSWORD,
+        CONF_HOST: MOCK_HOST,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -131,7 +133,7 @@ async def test_user_device_exists_abort(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
-            CONF_HOST: "slzb-06.local",
+            CONF_HOST: MOCK_HOST,
         },
     )
 
@@ -156,18 +158,16 @@ async def test_zeroconf_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.invalid_auth
 async def test_user_invalid_auth(
     hass: HomeAssistant, mock_smlight_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle invalid auth."""
-    mock_smlight_client.check_auth_needed.return_value = True
-    mock_smlight_client.authenticate.side_effect = SmlightAuthError
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
-            CONF_HOST: "slzb-06.local",
+            CONF_HOST: MOCK_HOST,
         },
     )
 
@@ -201,13 +201,13 @@ async def test_user_invalid_auth(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "SLZB-06p7"
     assert result3["data"] == {
-        CONF_HOST: "slzb-06.local",
+        CONF_HOST: MOCK_HOST,
         CONF_USERNAME: "test",
         CONF_PASSWORD: "good",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.mock_calls) == 6
+    assert len(mock_smlight_client.get_info.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_smlight_client")
@@ -221,7 +221,7 @@ async def test_user_api_exception(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
-            CONF_HOST: "slzb-06.local",
+            CONF_HOST: MOCK_HOST,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -256,7 +256,7 @@ async def test_user_cannot_connect(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "slzb-06.local",
+            CONF_HOST: MOCK_HOST,
         },
     )
     await hass.async_block_till_done()
@@ -308,7 +308,7 @@ async def test_zeroconf_legacy_mac(hass: HomeAssistant) -> None:
     assert progress[0]["context"]["unique_id"] == format_mac("AA:BB:CC:DD:EE:FF")
     assert progress[0]["flow_id"] == result["flow_id"]
 
-    assert result["description_placeholders"] == {"host": "slzb-06.local"}
+    assert result["description_placeholders"] == {"host": MOCK_HOST}
 
 
 async def test_reauth_flow(
@@ -336,8 +336,8 @@ async def test_reauth_flow(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_USERNAME: "test-user",
-            CONF_PASSWORD: "test-pass",
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
         },
     )
     await hass.async_block_till_done()
@@ -345,8 +345,8 @@ async def test_reauth_flow(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_config_entry.data == {
-        CONF_USERNAME: "test-user",
-        CONF_PASSWORD: "test-pass",
+        CONF_USERNAME: MOCK_USERNAME,
+        CONF_PASSWORD: MOCK_PASSWORD,
         CONF_HOST: MOCK_HOST,
     }
 
@@ -354,6 +354,7 @@ async def test_reauth_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.invalid_auth
 async def test_reauth_auth_fail(
     hass: HomeAssistant,
     mock_smlight_client: MagicMock,
@@ -361,8 +362,6 @@ async def test_reauth_auth_fail(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow with authentication error."""
-    mock_smlight_client.check_auth_needed.return_value = True
-    mock_smlight_client.authenticate.side_effect = SmlightAuthError
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -380,7 +379,7 @@ async def test_reauth_auth_fail(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_USERNAME: "test-user",
+            CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: "test-bad",
         },
     )
@@ -393,8 +392,8 @@ async def test_reauth_auth_fail(
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_USERNAME: "test-user",
-            CONF_PASSWORD: "test-pass",
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
         },
     )
     await hass.async_block_till_done()
@@ -403,8 +402,8 @@ async def test_reauth_auth_fail(
     assert result3["reason"] == "reauth_successful"
 
     assert mock_config_entry.data == {
-        CONF_USERNAME: "test-user",
-        CONF_PASSWORD: "test-pass",
+        CONF_USERNAME: MOCK_USERNAME,
+        CONF_PASSWORD: MOCK_PASSWORD,
         CONF_HOST: MOCK_HOST,
     }
 
@@ -437,8 +436,8 @@ async def test_reauth_error(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_USERNAME: "test-user",
-            CONF_PASSWORD: "test-bad",
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
         },
     )
     await hass.async_block_till_done()
