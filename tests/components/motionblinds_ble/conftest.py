@@ -102,16 +102,18 @@ def mock_motion_device(
 
 
 @pytest.fixture
-def mock_config_entry(blind_type: MotionBlindType) -> MockConfigEntry:
+def mock_config_entry(
+    blind_type: MotionBlindType, address: str, display_name: str, mac_code: str
+) -> MockConfigEntry:
     """Config entry fixture."""
     return MockConfigEntry(
         title="mock_title",
         domain=DOMAIN,
-        unique_id="cc:cc:cc:cc:cc:cc",
+        unique_id=address,
         data={
-            CONF_ADDRESS: "cc:cc:cc:cc:cc:cc",
-            CONF_LOCAL_NAME: "Motionblind CCCC",
-            CONF_MAC_CODE: "CCCC",
+            CONF_ADDRESS: address,
+            CONF_LOCAL_NAME: display_name,
+            CONF_MAC_CODE: mac_code,
             CONF_BLIND_TYPE: blind_type.name.lower(),
         },
     )
