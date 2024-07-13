@@ -585,7 +585,7 @@ async def test_belgian_meter(
     )
     telegram.add(
         BELGIUM_MBUS2_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "007", "unit": ""}]),
+        CosemObject((0, 2), [{"value": "007", "unit": ""}]),
         "BELGIUM_MBUS2_DEVICE_TYPE",
     )
     telegram.add(
@@ -609,7 +609,7 @@ async def test_belgian_meter(
     )
     telegram.add(
         BELGIUM_MBUS3_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "003", "unit": ""}]),
+        CosemObject((0, 3), [{"value": "003", "unit": ""}]),
         "BELGIUM_MBUS3_DEVICE_TYPE",
     )
     telegram.add(
@@ -633,7 +633,7 @@ async def test_belgian_meter(
     )
     telegram.add(
         BELGIUM_MBUS4_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "007", "unit": ""}]),
+        CosemObject((0, 4), [{"value": "007", "unit": ""}]),
         "BELGIUM_MBUS4_DEVICE_TYPE",
     )
     telegram.add(
@@ -776,7 +776,7 @@ async def test_belgian_meter_alt(
     telegram = Telegram()
     telegram.add(
         BELGIUM_MBUS1_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "007", "unit": ""}]),
+        CosemObject((0, 1), [{"value": "007", "unit": ""}]),
         "BELGIUM_MBUS1_DEVICE_TYPE",
     )
     telegram.add(
@@ -785,7 +785,7 @@ async def test_belgian_meter_alt(
             (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        "BELGIUM_MBUS1_DEVICE_TYPE",
+        "BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
         BELGIUM_MBUS1_METER_READING1,
@@ -800,7 +800,7 @@ async def test_belgian_meter_alt(
     )
     telegram.add(
         BELGIUM_MBUS2_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "003", "unit": ""}]),
+        CosemObject((0, 2), [{"value": "003", "unit": ""}]),
         "BELGIUM_MBUS2_DEVICE_TYPE",
     )
     telegram.add(
@@ -820,11 +820,11 @@ async def test_belgian_meter_alt(
                 {"value": Decimal(678.901), "unit": "m3"},
             ],
         ),
-        BELGIUM_MBUS2_METER_READING2,
+        "BELGIUM_MBUS2_METER_READING2",
     )
     telegram.add(
         BELGIUM_MBUS3_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "007", "unit": ""}]),
+        CosemObject((0, 3), [{"value": "007", "unit": ""}]),
         "BELGIUM_MBUS3_DEVICE_TYPE",
     )
     telegram.add(
@@ -848,7 +848,7 @@ async def test_belgian_meter_alt(
     )
     telegram.add(
         BELGIUM_MBUS4_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "003", "unit": ""}]),
+        CosemObject((0, 4), [{"value": "003", "unit": ""}]),
         "BELGIUM_MBUS4_DEVICE_TYPE",
     )
     telegram.add(
@@ -969,7 +969,7 @@ async def test_belgian_meter_mbus(
     )
     telegram.add(
         BELGIUM_MBUS1_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "006", "unit": ""}]),
+        CosemObject((0, 1), [{"value": "006", "unit": ""}]),
         "BELGIUM_MBUS1_DEVICE_TYPE",
     )
     telegram.add(
@@ -982,7 +982,7 @@ async def test_belgian_meter_mbus(
     )
     telegram.add(
         BELGIUM_MBUS2_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "003", "unit": ""}]),
+        CosemObject((0, 2), [{"value": "003", "unit": ""}]),
         "BELGIUM_MBUS2_DEVICE_TYPE",
     )
     telegram.add(
@@ -995,7 +995,7 @@ async def test_belgian_meter_mbus(
     )
     telegram.add(
         BELGIUM_MBUS3_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "007", "unit": ""}]),
+        CosemObject((0, 3), [{"value": "007", "unit": ""}]),
         "BELGIUM_MBUS3_DEVICE_TYPE",
     )
     telegram.add(
@@ -1019,7 +1019,7 @@ async def test_belgian_meter_mbus(
     )
     telegram.add(
         BELGIUM_MBUS4_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "007", "unit": ""}]),
+        CosemObject((0, 4), [{"value": "007", "unit": ""}]),
         "BELGIUM_MBUS4_DEVICE_TYPE",
     )
     telegram.add(
