@@ -14,8 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     FIXTURE_ADDRESS,
     FIXTURE_BLIND_TYPE,
+    FIXTURE_LOCAL_NAME,
     FIXTURE_MAC,
-    FIXTURE_NAME,
     FIXTURE_SERVICE_INFO,
 )
 
@@ -47,7 +47,7 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
     assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_NAME,
+        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
         const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
         const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
     }
@@ -92,7 +92,7 @@ async def test_config_flow_manual_error_invalid_mac(hass: HomeAssistant) -> None
     assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_NAME,
+        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
         const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
         const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
     }
@@ -160,7 +160,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
     assert result["errors"] == {"base": const.ERROR_COULD_NOT_FIND_MOTOR}
 
     # Recover
-    motionblinds_ble_connect[1].name = FIXTURE_NAME
+    motionblinds_ble_connect[1].name = FIXTURE_LOCAL_NAME
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {const.CONF_MAC_CODE: FIXTURE_MAC},
@@ -177,7 +177,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
     assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_NAME,
+        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
         const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
         const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
     }
@@ -228,7 +228,7 @@ async def test_config_flow_bluetooth_success(hass: HomeAssistant) -> None:
     assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: FIXTURE_ADDRESS,
-        const.CONF_LOCAL_NAME: FIXTURE_NAME,
+        const.CONF_LOCAL_NAME: FIXTURE_LOCAL_NAME,
         const.CONF_MAC_CODE: FIXTURE_MAC.upper(),
         const.CONF_BLIND_TYPE: FIXTURE_BLIND_TYPE,
     }

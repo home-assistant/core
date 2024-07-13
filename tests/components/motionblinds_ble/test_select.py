@@ -67,9 +67,9 @@ async def test_select_update(
 ) -> None:
     """Test select state update."""
 
-    await setup_integration(hass, mock_config_entry)
+    name = await setup_integration(hass, mock_config_entry)
 
     update_func = register_callback(mock_motion_device).call_args[0][0]
 
     update_func(value)
-    assert hass.states.get(f"select.{select}").state == str(value.value)
+    assert hass.states.get(f"select.{name}_{select}").state == str(value.value)

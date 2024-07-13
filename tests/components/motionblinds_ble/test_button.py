@@ -19,11 +19,11 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("button", "name"),
+    ("button"),
     [
-        (ATTR_CONNECT, "mock_title_connect"),
-        (ATTR_DISCONNECT, "disconnect"),
-        (ATTR_FAVORITE, "favorite"),
+        ATTR_CONNECT,
+        ATTR_DISCONNECT,
+        ATTR_FAVORITE,
     ],
 )
 async def test_button(
@@ -31,11 +31,10 @@ async def test_button(
     mock_motion_device: Mock,
     hass: HomeAssistant,
     button: str,
-    name: str,
 ) -> None:
     """Test states of the button."""
 
-    await setup_integration(hass, mock_config_entry)
+    name = await setup_integration(hass, mock_config_entry)
 
     command = AsyncMock()
     setattr(mock_motion_device, button, command)
@@ -43,7 +42,7 @@ async def test_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.{name}"},
+        {ATTR_ENTITY_ID: f"button.{name}_{button}"},
         blocking=True,
     )
     command.assert_called_once()

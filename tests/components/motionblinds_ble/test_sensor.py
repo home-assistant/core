@@ -98,9 +98,9 @@ async def test_sensor(
 ) -> None:
     """Test sensors."""
 
-    await setup_integration(hass, mock_config_entry)
+    name = await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(f"{SENSOR_DOMAIN}.{sensor}").state == initial_value
+    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == initial_value
     update_func = register_callback(mock_motion_device).call_args[0][0]
     update_func(*args)
-    assert hass.states.get(f"{SENSOR_DOMAIN}.{sensor}").state == expected_value
+    assert hass.states.get(f"{SENSOR_DOMAIN}.{name}_{sensor}").state == expected_value

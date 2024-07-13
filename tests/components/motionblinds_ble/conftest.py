@@ -14,7 +14,7 @@ from homeassistant.components.motionblinds_ble.const import (
 )
 from homeassistant.const import CONF_ADDRESS
 
-from . import FIXTURE_ADDRESS, FIXTURE_NAME
+from . import FIXTURE_ADDRESS, FIXTURE_DISPLAY_NAME, FIXTURE_LOCAL_NAME
 
 from tests.common import MockConfigEntry
 
@@ -41,7 +41,7 @@ def mock_motion_device(blind_type) -> Generator[AsyncMock]:
     ):
         device = mock_device.return_value
         device.ble_device = Mock()
-        device.display_name = ""
+        device.display_name = FIXTURE_DISPLAY_NAME
         device.blind_type = blind_type
         yield device
 
@@ -68,7 +68,7 @@ def motion_blinds_connect_fixture(
 ) -> Generator[tuple[AsyncMock, Mock]]:
     """Mock motion blinds ble connection and entry setup."""
     device = Mock()
-    device.name = FIXTURE_NAME
+    device.name = FIXTURE_LOCAL_NAME
     device.address = FIXTURE_ADDRESS
 
     bleak_scanner = AsyncMock()

@@ -67,8 +67,6 @@ async def test_cover_service(
         )
         func.assert_called_once()
 
-    await hass.async_block_till_done()
-
 
 @pytest.mark.parametrize(
     ("running_type", "state"),
@@ -88,12 +86,12 @@ async def test_cover_update_running(
 ) -> None:
     """Test updating running status."""
 
-    await setup_integration(hass, mock_config_entry)
+    name = await setup_integration(hass, mock_config_entry)
 
     async_update_running = mock_motion_device.register_running_callback.call_args[0][0]
 
     async_update_running(running_type)
-    assert hass.states.get("cover.motionblinds_ble_cc_cc_cc_cc_cc_cc").state == state
+    assert hass.states.get(f"cover.{name}").state == state
 
 
 @pytest.mark.parametrize(
@@ -115,11 +113,11 @@ async def test_cover_update_position(
 ) -> None:
     """Test updating cover position and tilt."""
 
-    await setup_integration(hass, mock_config_entry)
+    name = await setup_integration(hass, mock_config_entry)
 
     async_update_position = mock_motion_device.register_position_callback.call_args[0][
         0
     ]
 
     async_update_position(position, tilt)
-    assert hass.states.get("cover.motionblinds_ble_cc_cc_cc_cc_cc_cc").state == state
+    assert hass.states.get(f"cover.{name}").state == state
