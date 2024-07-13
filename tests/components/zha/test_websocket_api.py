@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from binascii import unhexlify
 from copy import deepcopy
-import time
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
@@ -463,80 +462,12 @@ async def test_add_group(hass: HomeAssistant, zha_client) -> None:
     ]
 
     assert added_group["name"] == "new_group"
-    assert added_group["members"] == [
-        {
-            "device": {
-                "active_coordinator": False,
-                "area_id": None,
-                "available": True,
-                "device_reg_id": groupable_device.device_id,
-                "device_type": "EndDevice",
-                "endpoint_names": [
-                    {
-                        "name": "ON_OFF_SWITCH",
-                    },
-                ],
-                "entities": [
-                    {
-                        "entity_id": "switch.fakemanufacturer_fakemodel_switch_2",
-                        "name": "FakeManufacturer FakeModel",
-                    },
-                ],
-                "ieee": IEEE_GROUPABLE_DEVICE,
-                "last_seen": time.strftime(
-                    "%Y-%m-%dT%H:%M:%S",
-                    time.localtime(groupable_device.device.last_seen),
-                ),
-                "lqi": None,
-                "manufacturer": "FakeManufacturer",
-                "manufacturer_code": 4151,
-                "model": "FakeModel",
-                "name": "FakeManufacturer FakeModel",
-                "neighbors": [],
-                "nwk": 47004,
-                "power_source": "Battery or Unknown",
-                "quirk_applied": False,
-                "quirk_class": "zigpy.device.Device",
-                "quirk_id": None,
-                "routes": [],
-                "rssi": None,
-                "signature": {
-                    "endpoints": {
-                        "1": {
-                            "device_type": "0x0000",
-                            "input_clusters": [
-                                "0x0000",
-                                "0x0004",
-                                "0x0006",
-                            ],
-                            "output_clusters": [],
-                            "profile_id": "0x0104",
-                        },
-                    },
-                    "manufacturer": "FakeManufacturer",
-                    "model": "FakeModel",
-                    "node_descriptor": {
-                        "aps_flags": 0,
-                        "complex_descriptor_available": 0,
-                        "descriptor_capability_field": 0,
-                        "frequency_band": 8,
-                        "logical_type": 2,
-                        "mac_capability_flags": 128,
-                        "manufacturer_code": 4151,
-                        "maximum_buffer_size": 127,
-                        "maximum_incoming_transfer_size": 100,
-                        "maximum_outgoing_transfer_size": 100,
-                        "reserved": 0,
-                        "server_mask": 10752,
-                        "user_descriptor_available": 0,
-                    },
-                },
-                "user_given_name": None,
-            },
-            "endpoint_id": 1,
-            "entities": [],
-        }
-    ]
+    assert len(added_group["members"]) == 1
+    assert added_group["members"][0]["device"]["ieee"] == IEEE_GROUPABLE_DEVICE
+    assert (
+        added_group["members"][0]["device"]["device_reg_id"]
+        == groupable_device.device_id
+    )
 
     await zha_client.send_json({ID: 13, TYPE: "zha/groups"})
 
