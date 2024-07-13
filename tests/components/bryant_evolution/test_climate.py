@@ -2,13 +2,13 @@
 
 from contextlib import contextmanager
 from datetime import timedelta
-import itertools
 import logging
 from unittest.mock import AsyncMock, patch
 
 from evolutionhttp import BryantEvolutionLocalClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bryant_evolution.climate import SCAN_INTERVAL
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -51,15 +52,13 @@ async def trigger_polling(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
 
 
 async def test_setup_integration_success(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_evolution_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that an instance can be constructed."""
     state = hass.states.get("climate.system_1_zone_1")
-    assert state, (x.name() for x in hass.states.async_all())
-    assert state.state == "cool"
-    assert state.attributes["fan_mode"] == "auto"
-    assert state.attributes["current_temperature"] == 75
-    assert state.attributes["temperature"] == 72
+    assert state == snapshot
 
 
 async def test_setup_integration_prevented_by_unavailable_client(
@@ -172,7 +171,7 @@ async def test_set_temperature_mode_cool(
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     with disable_auto_entity_update():
         await hass.services.async_call(
-            "climate", SERVICE_SET_TEMPERATURE, data, blocking=True
+            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
         )
 
     # Verify effect.
@@ -199,7 +198,7 @@ async def test_set_temperature_mode_heat(
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     with disable_auto_entity_update():
         await hass.services.async_call(
-            "climate", SERVICE_SET_TEMPERATURE, data, blocking=True
+            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
         )
 
     # Verify effect.
@@ -230,7 +229,7 @@ async def test_set_temperature_mode_heat_cool(
         data = {"target_temp_low": 70, "target_temp_high": 80}
         data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         await hass.services.async_call(
-            "climate", SERVICE_SET_TEMPERATURE, data, blocking=True
+            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
         )
     state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes["target_temp_low"] == 70, state.attributes
@@ -252,7 +251,7 @@ async def test_set_fan_mode(
         data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         with disable_auto_entity_update():
             await hass.services.async_call(
-                "climate", SERVICE_SET_FAN_MODE, data, blocking=True
+                CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True
             )
             await hass.async_block_till_done()
         assert (
@@ -274,7 +273,7 @@ async def test_set_hvac_mode(
         data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         with disable_auto_entity_update():
             await hass.services.async_call(
-                "climate", SERVICE_SET_HVAC_MODE, data, blocking=True
+                CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True
             )
             await hass.async_block_till_done()
         evolution_mode = "auto" if mode == "heat_cool" else mode
@@ -282,12 +281,16 @@ async def test_set_hvac_mode(
         mock_client.set_hvac_mode.assert_called_with(evolution_mode)
 
 
-@pytest.mark.parametrize("curr_temp", [62, 70, 80])
+@pytest.mark.parametrize(
+    ("curr_temp", "expected_action"),
+    [(62, HVACAction.HEATING), (70, HVACAction.OFF), (80, HVACAction.COOLING)],
+)
 async def test_read_hvac_action_heat_cool(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     curr_temp: int,
+    expected_action: HVACAction,
 ) -> None:
     """Test that we can read the current HVAC action in heat_cool mode."""
     htsp = 68
@@ -300,20 +303,19 @@ async def test_read_hvac_action_heat_cool(
     mock_client.read_hvac_mode.return_value = ("auto", is_active)
     mock_client.read_current_temperature.return_value = curr_temp
     await trigger_polling(hass, freezer)
-    expected_action = (
-        HVACAction.HEATING
-        if curr_temp < 68
-        else HVACAction.COOLING
-        if curr_temp > 72
-        else HVACAction.OFF
-    )
     state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes[ATTR_HVAC_ACTION] == expected_action
 
 
 @pytest.mark.parametrize(
-    ("mode", "active"),
-    itertools.product(("heat", "cool", "off"), (True, False)),
+    ("mode", "active", "expected_action"),
+    [
+        ("heat", True, "heating"),
+        ("heat", False, "off"),
+        ("cool", True, "cooling"),
+        ("cool", False, "off"),
+        ("off", False, "off"),
+    ],
 )
 async def test_read_hvac_action(
     hass: HomeAssistant,
@@ -321,21 +323,13 @@ async def test_read_hvac_action(
     freezer: FrozenDateTimeFactory,
     mode: str,
     active: bool,
+    expected_action: str,
 ) -> None:
     """Test that we can read the current HVAC action."""
     # Initial state should be no action.
     assert (
         hass.states.get("climate.system_1_zone_1").attributes[ATTR_HVAC_ACTION]
         == HVACAction.OFF
-    )
-    action = (
-        "off"
-        if not active
-        else {
-            "heat": "heating",
-            "cool": "cooling",
-            "off": "off",
-        }[mode]
     )
     # Turn perturb the system and verify we see an action.
     mock_client = mock_evolution_entry.runtime_data[(1, 1)]
@@ -344,5 +338,5 @@ async def test_read_hvac_action(
     await trigger_polling(hass, freezer)
     assert (
         hass.states.get("climate.system_1_zone_1").attributes[ATTR_HVAC_ACTION]
-        == action
+        == expected_action
     )
