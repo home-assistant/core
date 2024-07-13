@@ -90,11 +90,13 @@ async def async_setup_entry(
     added_zones: set[str] = set()
 
     def _async_entity_listener() -> None:
-        """Handle additions/deletions of shopping lists."""
-        sensors: list[AirzoneSensor] = []
+        """Handle additions of sensors."""
+
+        nonlocal added_hotwater
+        nonlocal added_webserver
 
         if not added_hotwater and AZD_HOT_WATER in coordinator.data:
-            sensors.extend(
+            async_add_entities(
                 AirzoneHotWaterSensor(
                     coordinator,
                     description,
@@ -103,9 +105,10 @@ async def async_setup_entry(
                 for description in HOT_WATER_SENSOR_TYPES
                 if description.key in coordinator.data[AZD_HOT_WATER]
             )
+            added_hotwater = True
 
         if not added_webserver and AZD_WEBSERVER in coordinator.data:
-            sensors.extend(
+            async_add_entities(
                 AirzoneWebServerSensor(
                     coordinator,
                     description,
@@ -114,12 +117,13 @@ async def async_setup_entry(
                 for description in WEBSERVER_SENSOR_TYPES
                 if description.key in coordinator.data[AZD_WEBSERVER]
             )
+            added_webserver = True
 
         zones_data = coordinator.data.get(AZD_ZONES, {})
         received_zones = set(zones_data)
         new_zones = received_zones - added_zones
         if new_zones:
-            sensors.extend(
+            async_add_entities(
                 AirzoneZoneSensor(
                     coordinator,
                     description,
@@ -132,8 +136,6 @@ async def async_setup_entry(
                 if description.key in zones_data.get(system_zone_id)
             )
             added_zones.update(new_zones)
-
-        async_add_entities(sensors)
 
     coordinator.async_add_listener(_async_entity_listener)
     _async_entity_listener()
