@@ -9,10 +9,12 @@ import pytest
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
+    ATTR_MODE,
     ATTR_STEP,
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberMode,
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -286,6 +288,7 @@ async def test_rpc_device_virtual_number(
     assert state.attributes.get(ATTR_MAX) == 100
     assert state.attributes.get(ATTR_STEP) == 0.1
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+    assert state.attributes.get(ATTR_MODE) is NumberMode.BOX
 
     entry = entity_registry.async_get(entity_id)
     assert entry

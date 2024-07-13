@@ -24,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, LOGGER
+from .const import CONF_SLEEP_PERIOD, LOGGER, NUMBER_MODE_MAP
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -56,6 +56,7 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     max_fn: Callable[[dict], float] | None = None
     min_fn: Callable[[dict], float] | None = None
     step_fn: Callable[[dict], float] | None = None
+    mode_fn: Callable[[dict], NumberMode] | None = None
 
 
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
@@ -83,7 +84,9 @@ RPC_NUMBERS: Final = {
         has_entity_name=True,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
-        mode=NumberMode.BOX,
+        mode_fn=lambda config: NUMBER_MODE_MAP.get(
+            config["meta"]["ui"]["view"], NumberMode.BOX
+        ),
         step_fn=lambda config: config["meta"]["ui"]["step"],
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
@@ -217,6 +220,8 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
             )
         if callable(description.step_fn):
             self._attr_native_step = description.step_fn(coordinator.device.config[key])
+        if callable(description.mode_fn):
+            self._attr_mode = description.mode_fn(coordinator.device.config[key])
 
     @property
     def native_value(self) -> float | None:

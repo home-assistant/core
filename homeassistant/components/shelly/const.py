@@ -27,6 +27,8 @@ from aioshelly.const import (
     MODEL_WALL_DISPLAY,
 )
 
+from homeassistant.components.number import NumberMode
+
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
@@ -246,3 +248,5 @@ VIRTUAL_COMPONENTS_MAP = {
     "switch": {"types": ["boolean"], "mode": "toggle"},
     "text": {"types": ["text"], "mode": "field"},
 }
+
+NUMBER_MODE_MAP = {"field": NumberMode.BOX}
