@@ -6,6 +6,7 @@ from evolutionhttp import BryantEvolutionLocalClient, ZoneInfo
 
 from homeassistant import config_entries
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -14,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -73,10 +74,6 @@ async def test_form_cannot_connect(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
 
     with (
         patch.object(
