@@ -56,7 +56,7 @@ from .const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_COILS,
+    CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTERS,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
@@ -88,7 +88,7 @@ from .const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER_TYPE,
+    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
@@ -257,10 +257,10 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
             vol.Optional(
-                CONF_HVAC_ONOFF_REGISTER_TYPE, default=CALL_TYPE_WRITE_REGISTERS
+                CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE, default=CALL_TYPE_WRITE_REGISTERS
             ): vol.In(
                 [
-                    CALL_TYPE_WRITE_COILS,
+                    CALL_TYPE_WRITE_COIL,
                     CALL_TYPE_WRITE_REGISTERS,
                 ]
             ),

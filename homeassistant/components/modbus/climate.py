@@ -47,7 +47,7 @@ from .base_platform import BaseStructPlatform
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_WRITE_COILS,
+    CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
@@ -73,7 +73,7 @@ from .const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER_TYPE,
+    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
@@ -254,7 +254,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
-            self._hvac_onoff_register_type = config[CONF_HVAC_ONOFF_REGISTER_TYPE]
+            self._hvac_onoff_register_write_type = config[CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE]
             self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
@@ -277,14 +277,14 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     self._slave,
                     self._hvac_onoff_register,
                     [0 if hvac_mode == HVACMode.OFF else 1],
-                    self._hvac_onoff_register_type,
+                    self._hvac_onoff_register_write_type,
                 )
             else:
                 await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
                     0 if hvac_mode == HVACMode.OFF else 1,
-                    self._hvac_onoff_register_type,
+                    self._hvac_onoff_register_write_type,
                 )
 
         if self._hvac_mode_register is not None:
@@ -479,7 +479,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # in the mode register.
 
         if self._hvac_onoff_register is not None:
-            if self._hvac_onoff_register_type == CALL_TYPE_WRITE_COILS:
+            if self._hvac_onoff_register_write_type == CALL_TYPE_WRITE_COIL:
                 onoff = await self._async_read_register(
                     CALL_TYPE_COIL, self._hvac_onoff_register, raw=True
                 )
