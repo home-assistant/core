@@ -249,10 +249,25 @@ async def test_block_set_value_auth_error(
 
 
 @pytest.mark.parametrize(
-    ("name", "entity_id", "original_unit", "expected_unit"),
+    ("name", "entity_id", "original_unit", "expected_unit", "view", "mode"),
     [
-        ("Virtual number", "number.test_name_virtual_number", "%", "%"),
-        (None, "number.test_name_number_203", "", None),
+        (
+            "Virtual number",
+            "number.test_name_virtual_number",
+            "%",
+            "%",
+            "field",
+            NumberMode.BOX,
+        ),
+        (None, "number.test_name_number_203", "", None, "field", NumberMode.BOX),
+        (
+            "Virtual slider",
+            "number.test_name_virtual_slider",
+            "min",
+            "min",
+            "slider",
+            NumberMode.SLIDER,
+        ),
     ],
 )
 async def test_rpc_device_virtual_number(
@@ -264,6 +279,8 @@ async def test_rpc_device_virtual_number(
     entity_id: str,
     original_unit: str,
     expected_unit: str | None,
+    view: str,
+    mode: NumberMode,
 ) -> None:
     """Test a virtual number for RPC device."""
     config = deepcopy(mock_rpc_device.config)
@@ -271,7 +288,7 @@ async def test_rpc_device_virtual_number(
         "name": name,
         "min": 0,
         "max": 100,
-        "meta": {"ui": {"step": 0.1, "unit": original_unit, "view": "field"}},
+        "meta": {"ui": {"step": 0.1, "unit": original_unit, "view": view}},
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
@@ -288,7 +305,7 @@ async def test_rpc_device_virtual_number(
     assert state.attributes.get(ATTR_MAX) == 100
     assert state.attributes.get(ATTR_STEP) == 0.1
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
-    assert state.attributes.get(ATTR_MODE) is NumberMode.BOX
+    assert state.attributes.get(ATTR_MODE) is mode
 
     entry = entity_registry.async_get(entity_id)
     assert entry

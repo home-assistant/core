@@ -242,11 +242,14 @@ CONF_GEN = "gen"
 SHELLY_PLUS_RGBW_CHANNELS = 4
 
 VIRTUAL_COMPONENTS_MAP = {
-    "binary_sensor": {"types": ["boolean"], "mode": "label"},
-    "number": {"types": ["number"], "mode": "field"},
-    "sensor": {"types": ["number", "text"], "mode": "label"},
-    "switch": {"types": ["boolean"], "mode": "toggle"},
-    "text": {"types": ["text"], "mode": "field"},
+    "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
+    "number": {"types": ["number"], "modes": ["field", "slider"]},
+    "sensor": {"types": ["number", "text"], "modes": ["label"]},
+    "switch": {"types": ["boolean"], "modes": ["toggle"]},
+    "text": {"types": ["text"], "modes": ["field"]},
 }
 
-NUMBER_MODE_MAP = {"field": NumberMode.BOX}
+VIRTUAL_NUMBER_MODE_MAP = {
+    "field": NumberMode.BOX,
+    "slider": NumberMode.SLIDER,
+}

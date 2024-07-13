@@ -24,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, LOGGER, NUMBER_MODE_MAP
+from .const import CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -84,7 +84,7 @@ RPC_NUMBERS: Final = {
         has_entity_name=True,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
-        mode_fn=lambda config: NUMBER_MODE_MAP.get(
+        mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
             config["meta"]["ui"]["view"], NumberMode.BOX
         ),
         step_fn=lambda config: config["meta"]["ui"]["step"],
