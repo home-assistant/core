@@ -35,3 +35,6 @@ override_schedule_work_area:
     work_area_id:
       required: true
       example: "123"
+      selector:
+        text:
+          type: number
