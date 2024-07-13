@@ -63,20 +63,8 @@ async def async_setup_entry(
 ) -> None:
     """Add Airzone Water Heater from a config_entry."""
     coordinator = entry.runtime_data
-
-    added_hotwater: bool = False
-
-    def _async_entity_listener() -> None:
-        """Handle additions of Water Heater."""
-
-        nonlocal added_hotwater
-
-        if not added_hotwater and AZD_HOT_WATER in coordinator.data:
-            async_add_entities([AirzoneWaterHeater(coordinator, entry)])
-            added_hotwater = True
-
-    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
-    _async_entity_listener()
+    if AZD_HOT_WATER in coordinator.data:
+        async_add_entities([AirzoneWaterHeater(coordinator, entry)])
 
 
 class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
