@@ -23,7 +23,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("motionblinds_ble_connect")
-async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
+async def test_config_flow_manual_success(
+    hass: HomeAssistant, blind_type: MotionBlindType
+) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -41,7 +43,7 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
+        {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Motionblind {FIXTURE_MAC.upper()}"
