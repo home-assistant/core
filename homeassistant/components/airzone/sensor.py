@@ -85,42 +85,58 @@ async def async_setup_entry(
     """Add Airzone sensors from a config_entry."""
     coordinator = entry.runtime_data
 
-    sensors: list[AirzoneSensor] = [
-        AirzoneZoneSensor(
-            coordinator,
-            description,
-            entry,
-            system_zone_id,
-            zone_data,
-        )
-        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
-        for description in ZONE_SENSOR_TYPES
-        if description.key in zone_data
-    ]
+    added_hotwater: bool = False
+    added_webserver: bool = False
+    added_zones: set[str] = set()
 
-    if AZD_HOT_WATER in coordinator.data:
-        sensors.extend(
-            AirzoneHotWaterSensor(
-                coordinator,
-                description,
-                entry,
+    def _async_entity_listener() -> None:
+        """Handle additions/deletions of shopping lists."""
+        sensors: list[AirzoneSensor] = []
+
+        if not added_hotwater and AZD_HOT_WATER in coordinator.data:
+            sensors.extend(
+                AirzoneHotWaterSensor(
+                    coordinator,
+                    description,
+                    entry,
+                )
+                for description in HOT_WATER_SENSOR_TYPES
+                if description.key in coordinator.data[AZD_HOT_WATER]
             )
-            for description in HOT_WATER_SENSOR_TYPES
-            if description.key in coordinator.data[AZD_HOT_WATER]
-        )
 
-    if AZD_WEBSERVER in coordinator.data:
-        sensors.extend(
-            AirzoneWebServerSensor(
-                coordinator,
-                description,
-                entry,
+        if not added_webserver and AZD_WEBSERVER in coordinator.data:
+            sensors.extend(
+                AirzoneWebServerSensor(
+                    coordinator,
+                    description,
+                    entry,
+                )
+                for description in WEBSERVER_SENSOR_TYPES
+                if description.key in coordinator.data[AZD_WEBSERVER]
             )
-            for description in WEBSERVER_SENSOR_TYPES
-            if description.key in coordinator.data[AZD_WEBSERVER]
-        )
 
-    async_add_entities(sensors)
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            sensors.extend(
+                AirzoneZoneSensor(
+                    coordinator,
+                    description,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+                for description in ZONE_SENSOR_TYPES
+                if description.key in zones_data.get(system_zone_id)
+            )
+            added_zones.update(new_zones)
+
+        async_add_entities(sensors)
+
+    coordinator.async_add_listener(_async_entity_listener)
+    _async_entity_listener()
 
 
 class AirzoneSensor(AirzoneEntity, SensorEntity):
