@@ -18,6 +18,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("motionblinds_ble_connect")
 @pytest.mark.parametrize(
     ("button"),
     [

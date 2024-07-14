@@ -129,8 +129,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture(name="motionblinds_ble_connect", autouse=True)
-def motion_blinds_connect_fixture(
+@pytest.fixture
+def motionblinds_ble_connect(
     enable_bluetooth: None, local_name: str, address: str
 ) -> Generator[tuple[AsyncMock, Mock]]:
     """Mock motion blinds ble connection and entry setup."""
