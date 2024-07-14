@@ -3375,12 +3375,6 @@
           "config_flow": false,
           "iot_class": "cloud_polling",
           "name": "Logitech UE Smart Radio"
-        },
-        "squeezebox": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Squeezebox (Lyrion Music Server)"
         }
       }
     },
@@ -5761,6 +5755,12 @@
     },
     "sql": {
       "name": "SQL",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "squeezebox": {
+      "name": "Squeezebox (Lyrion Music Server)",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
