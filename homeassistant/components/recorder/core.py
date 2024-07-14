@@ -1174,7 +1174,8 @@ class Recorder(threading.Thread):
         if (
             (cause := err.__cause__)
             and isinstance(cause, sqlite3.DatabaseError)
-            and "malformed" in str(cause)
+            and (err_str := str(err))
+            and ("malformed" in err_str or "not a database" in err_str)
         ):
             _LOGGER.exception(
                 "Unrecoverable sqlite3 database corruption detected: %s", err
