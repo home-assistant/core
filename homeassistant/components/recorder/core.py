@@ -837,21 +837,15 @@ class Recorder(threading.Thread):
                         self.queue_task(EntityIDPostMigrationTask())
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
-                engine = self.engine
-                assert engine is not None
                 with contextlib.suppress(SQLAlchemyError):
                     # If the index of event_ids on the states table is still present
                     # or the event_id foreign key still exists we need to queue a
                     # task to remove it.
-                    if get_index_by_name(
-                        session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
-                    ) or next(
-                        (
-                            fk  # type: ignore[misc]
-                            for fk in inspect(engine).get_foreign_keys(TABLE_STATES)
-                            if fk["constrained_columns"] == ["event_id"]
-                        ),
-                        None,
+                    if (
+                        get_index_by_name(
+                            session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                        )
+                        or self._legacy_event_id_foreign_key_exists()
                     ):
                         self.queue_task(EventIdMigrationTask())
                         self.use_legacy_events_index = True
@@ -1301,6 +1295,21 @@ class Recorder(threading.Thread):
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
+
+    def _legacy_event_id_foreign_key_exists(self) -> bool:
+        """Check if the legacy event_id foreign key exists."""
+        engine = self.engine
+        assert engine is not None
+        return bool(
+            next(
+                (
+                    fk
+                    for fk in inspect(engine).get_foreign_keys(TABLE_STATES)
+                    if fk["constrained_columns"] == ["event_id"]
+                ),
+                None,
+            )
+        )
 
     def _migrate_states_context_ids(self) -> bool:
         """Migrate states context ids if needed."""
