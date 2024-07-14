@@ -20,15 +20,15 @@ from tests.components.bluetooth import generate_advertisement_data, generate_ble
 
 
 @pytest.fixture
-def blind_type() -> MotionBlindType:
-    """Blind type fixture."""
-    return MotionBlindType.ROLLER
+def address() -> str:
+    """Address fixture."""
+    return "cc:cc:cc:cc:cc:cc"
 
 
 @pytest.fixture
-def mac_code() -> str:
+def mac_code(address: str) -> str:
     """MAC code fixture."""
-    return "CCCC"
+    return "".join(address.split(":")[-3:-1]).upper()
 
 
 @pytest.fixture
@@ -50,9 +50,9 @@ def local_name(mac_code: str) -> str:
 
 
 @pytest.fixture
-def address(mac_code: str) -> str:
-    """Address fixture."""
-    return "cc:cc:cc:cc:cc:cc"
+def blind_type() -> MotionBlindType:
+    """Blind type fixture."""
+    return MotionBlindType.ROLLER
 
 
 @pytest.fixture
