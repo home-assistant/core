@@ -162,7 +162,7 @@
   "services": {
     "send_messages": {
       "name": "Send messages",
-      "description": "Sends text messages to user, group or bot.",
+      "description": "Sends text messages to user, group, channel or bot.",
       "fields": {
         "config_entry_id": {
           "name": "Telegram client",
@@ -244,7 +244,7 @@
     },
     "edit_message": {
       "name": "Edit message",
-      "description": "Edits text message of a previously sent message to user, group or bot.",
+      "description": "Edits text of a previously sent message to user, group, channel or bot.",
       "fields": {
         "config_entry_id": {
           "name": "Telegram client",
@@ -310,7 +310,7 @@
     },
     "delete_messages": {
       "name": "Delete messages",
-      "description": "Deletes previously sent messages to user, group or bot.",
+      "description": "Deletes previously sent messages to user, group, channel or bot.",
       "fields": {
         "config_entry_id": {
           "name": "Telegram client",

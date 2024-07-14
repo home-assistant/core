@@ -55,6 +55,7 @@ from .const import (
     KEY_CHAT,
     KEY_CHAT_ID,
     KEY_CHAT_INSTANCE,
+    KEY_CONFIG_ENTRY_ID,
     KEY_CONTACT,
     KEY_CONTENTS,
     KEY_CREATED,
@@ -243,7 +244,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle new message event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_NEW_MESSAGE}",
-            self._data_to_dict(
+            self._event_to_dict(
                 event,
                 [
                     KEY_CHAT,
@@ -263,7 +264,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle message edited event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_MESSAGE_EDITED}",
-            self._data_to_dict(
+            self._event_to_dict(
                 event,
                 [
                     KEY_CHAT,
@@ -283,7 +284,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle message read event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_MESSAGE_READ}",
-            self._data_to_dict(
+            self._event_to_dict(
                 event,
                 [
                     KEY_CHAT,
@@ -308,7 +309,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle message deleted event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_MESSAGE_DELETED}",
-            self._data_to_dict(
+            self._event_to_dict(
                 event,
                 [
                     KEY_CHAT,
@@ -326,7 +327,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
     @callback
     async def on_callback_query(self, event: events.callbackquery.CallbackQuery.Event):
         """Handle callback query event propagation."""
-        data = self._data_to_dict(
+        data = self._event_to_dict(
             event,
             [
                 KEY_CHAT,
@@ -359,7 +360,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle inline query event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_INLINE_QUERY}",
-            self._data_to_dict(
+            self._event_to_dict(
                 event,
                 [
                     KEY_CHAT,
@@ -382,7 +383,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle chat action event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_CHAT_ACTION}",
-            self._data_to_dict(
+            self._event_to_dict(
                 event,
                 [
                     KEY_ACTION_MESSAGE,
@@ -420,7 +421,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         """Handle user update event propagation."""
         self._hass.bus.async_fire(
             f"{DOMAIN}_{EVENT_USER_UPDATE}",
-            self._data_to_dict(
+            self._event_to_dict(
                 event,
                 [
                     KEY_ACTION,
@@ -489,7 +490,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
         message_ids = cv.ensure_list(data.get(KEY_MESSAGE_ID))
         self.last_deleted_message_id.set_state(message_ids[-1])
 
-    def _process_data(self, hass, data):
+    def _process_data(self, data):
         """Handle Send messages and Edit message services data processing."""
 
         def inline_button(data):
@@ -520,8 +521,8 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             data[FIELD_BUTTONS] = [
                 [inline_button(button) for button in row] for row in inline_keyboard
             ]
-        if file := data.get(FIELD_BUTTONS):
-            data[FIELD_FILE] = list(map(hass.config.path, file))
+        if file := data.get(FIELD_FILE):
+            data[FIELD_FILE] = list(map(self.hass.config.path, file))
 
     async def _async_update_data(self):
         """Handle sensors data update."""
@@ -734,7 +735,7 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
             return cleanup_data(data.to_dict())
         return data
 
-    def _data_to_dict(self, event, keys):
+    def _event_to_dict(self, event, keys):
         """Handle Telegram client data to dict conversion."""
         return dict(
             {
@@ -742,5 +743,5 @@ class TelegramClientCoordinator(DataUpdateCoordinator):
                 for key in keys
                 if hasattr(event, key)
             },
-            **{KEY_ME: self.data},
+            **{KEY_CONFIG_ENTRY_ID: self._entry.entry_id, KEY_ME: self.data},
         )
