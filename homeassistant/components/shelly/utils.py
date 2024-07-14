@@ -488,7 +488,11 @@ def get_http_port(data: MappingProxyType[str, Any]) -> int:
 
 def get_device_ip(host: str) -> str:
     """Get the device IP address from config entry data."""
-    ip_object = ip_address(host)
+    try:
+        ip_object = ip_address(host)
+    except ValueError:
+        # host contains hostname
+        return host
 
     if isinstance(ip_object, IPv6Address):
         return f"[{host}]"
