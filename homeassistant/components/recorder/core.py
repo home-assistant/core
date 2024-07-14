@@ -16,7 +16,14 @@ import time
 from typing import TYPE_CHECKING, Any, cast
 
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
+from sqlalchemy import (
+    create_engine,
+    event as sqlalchemy_event,
+    exc,
+    inspect,
+    select,
+    update,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -820,7 +827,7 @@ class Recorder(threading.Thread):
                     # If ix_states_entity_id_last_updated_ts still exists
                     # on the states table it means the entity id migration
                     # finished by the EntityIDPostMigrationTask did not
-                    # because they restarted in the middle of it. We need
+                    # complete because they restarted in the middle of it. We need
                     # to pick back up where we left off.
                     if get_index_by_name(
                         session,
@@ -830,11 +837,21 @@ class Recorder(threading.Thread):
                         self.queue_task(EntityIDPostMigrationTask())
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
+                engine = self.engine
+                assert engine is not None
                 with contextlib.suppress(SQLAlchemyError):
                     # If the index of event_ids on the states table is still present
-                    # we need to queue a task to remove it.
+                    # or the event_id foreign key still exists we need to queue a
+                    # task to remove it.
                     if get_index_by_name(
                         session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                    ) or next(
+                        (
+                            fk  # type: ignore[misc]
+                            for fk in inspect(engine).get_foreign_keys(TABLE_STATES)
+                            if fk["constrained_columns"] == ["event_id"]
+                        ),
+                        None,
                     ):
                         self.queue_task(EventIdMigrationTask())
                         self.use_legacy_events_index = True
