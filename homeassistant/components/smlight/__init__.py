@@ -11,9 +11,10 @@ from .coordinator import SmDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
+type SmConfigEntry = ConfigEntry[SmDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     """Set up SMLIGHT Zigbee from a config entry."""
     coordinator = SmDataUpdateCoordinator(hass, entry)
     await coordinator.async_handle_setup()
@@ -24,6 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

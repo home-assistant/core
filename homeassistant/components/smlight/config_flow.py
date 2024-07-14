@@ -11,11 +11,12 @@ from pysmlight.web import Api2
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
+from . import SmConfigEntry
 from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -39,7 +40,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.client: Api2
         self.host: str | None = None
-        self._reauth_entry: ConfigEntry | None = None
+        self._reauth_entry: SmConfigEntry | None = None
         self._title: str | None = None
 
     async def async_step_user(
