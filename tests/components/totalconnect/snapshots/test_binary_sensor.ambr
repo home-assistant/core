@@ -919,7 +919,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Police Emergency',
+    'original_name': 'Police emergency',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -931,7 +931,7 @@
 # name: test_entity_registry[binary_sensor.test_police_emergency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test Police Emergency',
+      'friendly_name': 'test Police emergency',
       'location_id': '123456',
     }),
     'context': <ANY>,
