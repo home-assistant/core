@@ -227,7 +227,8 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             data: NWSForecast = {
                 ATTR_FORECAST_DETAILED_DESCRIPTION: forecast_entry.get(
                     "detailedForecast"
-                ),
+                )
+                or forecast_entry.get("shortForecast"),
                 ATTR_FORECAST_TIME: cast(str, forecast_entry.get("startTime")),
             }
 
