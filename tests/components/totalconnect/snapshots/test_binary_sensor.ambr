@@ -895,6 +895,53 @@
     'state': 'off',
   })
 # ---
+# name: test_entity_registry[binary_sensor.test_police_or_safety_emergency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_police_or_safety_emergency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Police or Safety Emergency',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'police',
+    'unique_id': '123456_police',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[binary_sensor.test_police_or_safety_emergency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test Police or Safety Emergency',
+      'location_id': '123456',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_police_or_safety_emergency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_entity_registry[binary_sensor.test_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
