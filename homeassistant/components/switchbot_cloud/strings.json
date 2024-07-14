@@ -32,7 +32,7 @@
         },
         "command_type": {
           "name": "Command type",
-          "description": "Command type to set (usually \"command\")"
+          "description": "Command type to set (usually \"command\")."
         },
         "command": {
           "name": "Command",
