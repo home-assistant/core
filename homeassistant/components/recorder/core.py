@@ -1171,7 +1171,11 @@ class Recorder(threading.Thread):
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
-        if isinstance(err.__cause__, sqlite3.DatabaseError):
+        if (
+            (cause := err.__cause__)
+            and isinstance(cause, sqlite3.DatabaseError)
+            and "malformed" in str(cause)
+        ):
             _LOGGER.exception(
                 "Unrecoverable sqlite3 database corruption detected: %s", err
             )
