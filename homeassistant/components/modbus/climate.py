@@ -502,7 +502,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         )
         if result is None:
             self._attr_available = False
-            return False
+            return -1
 
         if raw:
             # Return the raw value read from the register, do not change
