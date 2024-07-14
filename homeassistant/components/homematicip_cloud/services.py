@@ -31,6 +31,7 @@ ATTR_CONFIG_OUTPUT_FILE_PREFIX = "config_output_file_prefix"
 ATTR_CONFIG_OUTPUT_PATH = "config_output_path"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
+ATTR_COOLING = "cooling"
 
 DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
 
@@ -42,6 +43,7 @@ SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
 SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
+SERVICE_SET_COOLING = "set_cooling"
 
 HMIPC_SERVICES = [
     SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION,
@@ -52,6 +54,7 @@ HMIPC_SERVICES = [
     SERVICE_DUMP_HAP_CONFIG,
     SERVICE_RESET_ENERGY_COUNTER,
     SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
+    SERVICE_SET_COOLING,
 ]
 
 SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION = vol.Schema(
@@ -107,6 +110,13 @@ SCHEMA_RESET_ENERGY_COUNTER = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): comp_entity_ids}
 )
 
+SCHEMA_SET_COOLING = vol.Schema(
+    {
+        vol.Optional(ATTR_COOLING, default=True): cv.boolean,
+        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
+    }
+)
+
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the HomematicIP Cloud services."""
@@ -135,6 +145,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await _async_reset_energy_counter(hass, service)
         elif service_name == SERVICE_SET_ACTIVE_CLIMATE_PROFILE:
             await _set_active_climate_profile(hass, service)
+        elif service_name == SERVICE_SET_COOLING:
+            await _async_set_cooling(hass, service)
 
     hass.services.async_register(
         domain=HMIPC_DOMAIN,
@@ -192,6 +204,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=SERVICE_RESET_ENERGY_COUNTER,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_RESET_ENERGY_COUNTER,
+    )
+
+    async_register_admin_service(
+        hass=hass,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_SET_COOLING,
+        service_func=async_call_hmipc_service,
+        schema=SCHEMA_SET_COOLING,
     )
 
 
@@ -322,6 +342,18 @@ async def _async_reset_energy_counter(hass: HomeAssistant, service: ServiceCall)
             for device in hap.home.devices:
                 if isinstance(device, AsyncSwitchMeasuring):
                     await device.reset_energy_counter()
+
+
+async def _async_set_cooling(hass: HomeAssistant, service: ServiceCall):
+    """Service to set the cooling mode."""
+    cooling = service.data[ATTR_COOLING]
+
+    if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
+        if home := _get_home(hass, hapid):
+            await home.set_cooling(cooling)
+    else:
+        for hap in hass.data[HMIPC_DOMAIN].values():
+            await hap.home.set_cooling(cooling)
 
 
 def _get_home(hass: HomeAssistant, hapid: str) -> AsyncHome | None:

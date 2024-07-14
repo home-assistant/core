@@ -134,6 +134,20 @@
           "description": "The ID of the measuring entity. Use 'all' keyword to reset all energy counters."
         }
       }
+    },
+    "set_cooling": {
+      "name": "Set cooling mode",
+      "description": "Set the cooling mode for the home.",
+      "fields": {
+        "accesspoint_id": {
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
+        },
+        "cooling": {
+          "name": "Cooling",
+          "description": "To enable or disable cooling"
+        }
+      }
     }
   }
 }
