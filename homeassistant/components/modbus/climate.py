@@ -502,12 +502,13 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         )
         if result is None:
             self._attr_available = False
-            return -1
+            return False
 
         if raw:
             # Return the raw value read from the register, do not change
             # the object's state
             self._attr_available = True
+
             if register_type in (CALL_TYPE_COIL):
                 return bool(result.bits[0] & 1)
             return int(result.registers[0])

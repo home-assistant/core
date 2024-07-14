@@ -1039,6 +1039,100 @@ async def test_service_climate_set_temperature(
                 ]
             },
         ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: True,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: False,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: True,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: False,
+                    }
+                ]
+            },
+        ),
     ],
 )
 async def test_service_set_hvac_mode(
