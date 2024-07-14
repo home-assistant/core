@@ -63,6 +63,7 @@ PLATFORMS: Final = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VALVE,
 ]

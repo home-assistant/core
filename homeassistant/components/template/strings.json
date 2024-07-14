@@ -13,6 +13,43 @@
         },
         "title": "Template binary sensor"
       },
+      "button": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "press": "Actions on press"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template button"
+      },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template image"
+      },
+      "select": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "select_option": "Actions on select",
+          "options": "Available options"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template select"
+      },
       "sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -31,9 +68,26 @@
         "description": "This helper allows you to create helper entities that define their state using a template.",
         "menu_options": {
           "binary_sensor": "Template a binary sensor",
-          "sensor": "Template a sensor"
+          "button": "Template a button",
+          "image": "Template a image",
+          "select": "Template a select",
+          "sensor": "Template a sensor",
+          "switch": "Template a switch"
         },
         "title": "Template helper"
+      },
+      "switch": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "turn_off": "Actions on turn off",
+          "turn_on": "Actions on turn on",
+          "value_template": "Value template"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template switch"
       }
     }
   },
@@ -49,6 +103,40 @@
         },
         "title": "[%key:component::template::config::step::binary_sensor::title%]"
       },
+      "button": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "press": "[%key:component::template::config::step::button::data::press%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::button::title%]"
+      },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::image::title%]"
+      },
+      "select": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "select_option": "[%key:component::template::config::step::select::data::select_option%]",
+          "options": "[%key:component::template::config::step::select::data::options%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::select::title%]"
+      },
       "sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -61,6 +149,19 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::sensor::title%]"
+      },
+      "switch": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::switch::title%]"
       }
     }
   },
@@ -95,6 +196,13 @@
         "update": "[%key:component::binary_sensor::entity_component::update::name%]",
         "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
         "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    },
+    "button_device_class": {
+      "options": {
+        "identify": "[%key:component::button::entity_component::identify::name%]",
+        "restart": "[%key:common::action::restart%]",
+        "update": "[%key:component::button::entity_component::update::name%]"
       }
     },
     "sensor_device_class": {

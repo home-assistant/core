@@ -30,10 +30,10 @@ ha-av==10.1.1
 ha-ffmpeg==3.2.0
 habluetooth==3.1.3
 hass-nabucasa==0.81.1
-hassil==1.7.1
+hassil==1.7.4
 home-assistant-bluetooth==1.12.2
-home-assistant-frontend==20240703.0
-home-assistant-intents==2024.7.3
+home-assistant-frontend==20240710.0
+home-assistant-intents==2024.7.10
 httpx==0.27.0
 ifaddr==0.2.0
 Jinja2==3.1.4
@@ -56,7 +56,7 @@ PyYAML==6.0.1
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
-ulid-transform==0.9.0
+ulid-transform==0.10.1
 urllib3>=1.26.5,<2
 voluptuous-openapi==0.0.4
 voluptuous-serialize==2.6.0
@@ -135,6 +135,9 @@ backoff>=2.0
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
 pydantic==1.10.17
+
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130

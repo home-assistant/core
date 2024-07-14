@@ -292,7 +292,9 @@ async def test_events_during_migration_queue_exhausted(
             new=create_engine_test,
         ),
         patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
-        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
+        patch.object(
+            recorder.core, "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG", sys.maxsize
+        ),
     ):
         await async_setup_recorder_instance(
             hass, {"commit_interval": 0}, wait_recorder=False
@@ -327,7 +329,7 @@ async def test_events_during_migration_queue_exhausted(
 
 @pytest.mark.parametrize(
     ("start_version", "live"),
-    [(0, True), (16, True), (18, True), (22, True), (25, True)],
+    [(0, True), (16, True), (18, True), (22, True), (25, True), (43, True)],
 )
 async def test_schema_migrate(
     hass: HomeAssistant,
@@ -682,3 +684,43 @@ def test_rebuild_sqlite_states_table_extra_columns(
         assert session.query(States).first().state == "on"
 
     engine.dispose()
+
+
+def test_restore_foreign_key_constraints_with_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we can drop and then restore foreign keys.
+
+    This is not supported on SQLite
+    """
+
+    constraints_to_restore = [
+        (
+            "events",
+            "data_id",
+            {
+                "comment": None,
+                "constrained_columns": ["data_id"],
+                "name": "events_data_id_fkey",
+                "options": {},
+                "referred_columns": ["data_id"],
+                "referred_schema": None,
+                "referred_table": "event_data",
+            },
+        ),
+    ]
+
+    connection = Mock()
+    connection.execute = Mock(side_effect=InternalError(None, None, None))
+    session = Mock()
+    session.connection = Mock(return_value=connection)
+    instance = Mock()
+    instance.get_session = Mock(return_value=session)
+    engine = Mock()
+
+    session_maker = Mock(return_value=session)
+    migration._restore_foreign_key_constraints(
+        session_maker, engine, constraints_to_restore
+    )
+
+    assert "Could not update foreign options in events table" in caplog.text

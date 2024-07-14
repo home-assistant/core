@@ -1,7 +1,6 @@
 """Test deCONZ gateway."""
 
-from copy import deepcopy
-from typing import Any
+from collections.abc import Callable
 from unittest.mock import patch
 
 import pydeconz
@@ -34,108 +33,18 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONTENT_TYPE_JSON,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .conftest import API_KEY, BRIDGEID, HOST, PORT
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-DEFAULT_URL = f"http://{HOST}:{PORT}/api/{API_KEY}"
-
-ENTRY_CONFIG = {CONF_API_KEY: API_KEY, CONF_HOST: HOST, CONF_PORT: PORT}
-
-ENTRY_OPTIONS = {}
-
-DECONZ_CONFIG = {
-    "bridgeid": BRIDGEID,
-    "ipaddress": HOST,
-    "mac": "00:11:22:33:44:55",
-    "modelid": "deCONZ",
-    "name": "deCONZ mock gateway",
-    "sw_version": "2.05.69",
-    "uuid": "1234",
-    "websocketport": 1234,
-}
-
-DECONZ_WEB_REQUEST = {
-    "config": DECONZ_CONFIG,
-    "groups": {},
-    "lights": {},
-    "sensors": {},
-}
-
-
-def mock_deconz_request(aioclient_mock, config, data):
-    """Mock a deCONZ get request."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    api_key = config[CONF_API_KEY]
-
-    aioclient_mock.get(
-        f"http://{host}:{port}/api/{api_key}",
-        json=deepcopy(data),
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-
-def mock_deconz_put_request(aioclient_mock, config, path):
-    """Mock a deCONZ put request."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    api_key = config[CONF_API_KEY]
-
-    aioclient_mock.put(
-        f"http://{host}:{port}/api/{api_key}{path}",
-        json={},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-
-async def setup_deconz_integration(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker | None = None,
-    *,
-    options: dict[str, Any] | UndefinedType = UNDEFINED,
-    entry_id="1",
-    unique_id=BRIDGEID,
-    source=SOURCE_USER,
-):
-    """Create the deCONZ gateway."""
-    config_entry = MockConfigEntry(
-        domain=DECONZ_DOMAIN,
-        source=source,
-        data=deepcopy(ENTRY_CONFIG),
-        options=deepcopy(ENTRY_OPTIONS if options is UNDEFINED else options),
-        entry_id=entry_id,
-        unique_id=unique_id,
-    )
-    config_entry.add_to_hass(hass)
-
-    if aioclient_mock:
-        mock_deconz_request(aioclient_mock, ENTRY_CONFIG, DECONZ_WEB_REQUEST)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
+from .conftest import BRIDGEID, HOST, PORT
 
 
 async def test_gateway_setup(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> None:
     """Successful setup."""
     # Patching async_forward_entry_setup* is not advisable, and should be refactored
@@ -144,7 +53,7 @@ async def test_gateway_setup(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ) as forward_entry_setup:
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+        config_entry = await config_entry_factory()
         gateway = DeconzHub.get_hub(hass, config_entry)
         assert gateway.bridgeid == BRIDGEID
         assert gateway.master is True
@@ -183,10 +92,11 @@ async def test_gateway_setup(
     assert gateway_entry.entry_type is dr.DeviceEntryType.SERVICE
 
 
+@pytest.mark.parametrize("config_entry_source", [SOURCE_HASSIO])
 async def test_gateway_device_configuration_url_when_addon(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> None:
     """Successful setup."""
     # Patching async_forward_entry_setup* is not advisable, and should be refactored
@@ -195,9 +105,7 @@ async def test_gateway_device_configuration_url_when_addon(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ):
-        config_entry = await setup_deconz_integration(
-            hass, aioclient_mock, source=SOURCE_HASSIO
-        )
+        config_entry = await config_entry_factory()
         gateway = DeconzHub.get_hub(hass, config_entry)
 
     gateway_entry = device_registry.async_get_device(
@@ -209,12 +117,10 @@ async def test_gateway_device_configuration_url_when_addon(
     )
 
 
-async def test_connection_status_signalling(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Make sure that connection status triggers a dispatcher send."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "name": "presence",
                 "type": "ZHAPresence",
@@ -223,29 +129,31 @@ async def test_connection_status_signalling(
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_connection_status_signalling(
+    hass: HomeAssistant, mock_websocket_state
+) -> None:
+    """Make sure that connection status triggers a dispatcher send."""
     assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
-    await mock_deconz_websocket(state=State.RETRYING)
+    await mock_websocket_state(State.RETRYING)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence").state == STATE_UNAVAILABLE
 
-    await mock_deconz_websocket(state=State.RUNNING)
+    await mock_websocket_state(State.RUNNING)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
 
 async def test_update_address(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    gateway = DeconzHub.get_hub(hass, config_entry)
+    gateway = DeconzHub.get_hub(hass, config_entry_setup)
     assert gateway.api.host == "1.2.3.4"
 
     with patch(
@@ -273,11 +181,10 @@ async def test_update_address(
 
 
 async def test_reset_after_successful_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    gateway = DeconzHub.get_hub(hass, config_entry)
+    gateway = DeconzHub.get_hub(hass, config_entry_setup)
 
     result = await gateway.async_reset()
     await hass.async_block_till_done()
@@ -285,9 +192,8 @@ async def test_reset_after_successful_setup(
     assert result is True
 
 
-async def test_get_deconz_api(hass: HomeAssistant) -> None:
+async def test_get_deconz_api(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Successful call."""
-    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
         assert await get_deconz_api(hass, config_entry)
 
@@ -302,10 +208,12 @@ async def test_get_deconz_api(hass: HomeAssistant) -> None:
     ],
 )
 async def test_get_deconz_api_fails(
-    hass: HomeAssistant, side_effect, raised_exception
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    side_effect: Exception,
+    raised_exception: Exception,
 ) -> None:
     """Failed call."""
-    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with (
         patch(
             "pydeconz.DeconzSession.refresh_state",
