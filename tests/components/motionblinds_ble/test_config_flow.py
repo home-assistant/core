@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry
 async def test_config_flow_manual_success(
     hass: HomeAssistant,
     blind_type: MotionBlindType,
+    mock_setup_entry: AsyncMock,
     mac_code: str,
     address: str,
     local_name: str,
@@ -57,6 +58,7 @@ async def test_config_flow_manual_success(
 @pytest.mark.usefixtures("motionblinds_ble_connect")
 async def test_config_flow_manual_error_invalid_mac(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mac_code: str,
     address: str,
     local_name: str,
@@ -108,7 +110,8 @@ async def test_config_flow_manual_error_invalid_mac(
 
 @pytest.mark.usefixtures("motionblinds_ble_connect")
 async def test_config_flow_manual_error_no_bluetooth_adapter(
-    hass: HomeAssistant, mac_code: str
+    hass: HomeAssistant,
+    mac_code: str,
 ) -> None:
     """No Bluetooth adapter error flow manually initialized by the user."""
 
@@ -146,6 +149,7 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
 async def test_config_flow_manual_error_could_not_find_motor(
     hass: HomeAssistant,
     motionblinds_ble_connect: tuple[AsyncMock, Mock],
+    mock_setup_entry: AsyncMock,
     mac_code: str,
     local_name: str,
     display_name: str,
@@ -198,7 +202,9 @@ async def test_config_flow_manual_error_could_not_find_motor(
 
 
 async def test_config_flow_manual_error_no_devices_found(
-    hass: HomeAssistant, motionblinds_ble_connect: tuple[AsyncMock, Mock], mac_code: str
+    hass: HomeAssistant,
+    motionblinds_ble_connect: tuple[AsyncMock, Mock],
+    mac_code: str,
 ) -> None:
     """No devices found error flow manually initialized by the user."""
 
@@ -225,6 +231,7 @@ async def test_config_flow_bluetooth_success(
     hass: HomeAssistant,
     mac_code: str,
     service_info: BluetoothServiceInfoBleak,
+    mock_setup_entry: AsyncMock,
     address: str,
     local_name: str,
     display_name: str,
@@ -257,7 +264,9 @@ async def test_config_flow_bluetooth_success(
 
 
 async def test_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the options flow."""
     mock_config_entry.add_to_hass(hass)

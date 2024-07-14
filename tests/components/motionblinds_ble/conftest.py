@@ -119,6 +119,16 @@ def mock_config_entry(
     )
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.motionblinds_ble.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 @pytest.fixture(name="motionblinds_ble_connect", autouse=True)
 def motion_blinds_connect_fixture(
     enable_bluetooth: None, local_name: str, address: str
@@ -139,10 +149,6 @@ def motion_blinds_connect_fixture(
         patch(
             "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_get_scanner",
             return_value=bleak_scanner,
-        ),
-        patch(
-            "homeassistant.components.motionblinds_ble.async_setup_entry",
-            return_value=True,
         ),
     ):
         yield bleak_scanner, device
