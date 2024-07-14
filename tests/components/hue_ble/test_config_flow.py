@@ -33,7 +33,7 @@ from tests.components.bluetooth import generate_ble_device
         "expected_error",
     ),
     [
-        pytest.param(
+        (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
             1,
             True,
@@ -41,9 +41,8 @@ from tests.components.bluetooth import generate_ble_device
             True,
             (True, []),
             None,
-            id="good_data",
         ),
-        pytest.param(
+        (
             None,
             0,
             True,
@@ -51,9 +50,8 @@ from tests.components.bluetooth import generate_ble_device
             True,
             (True, []),
             "no_scanners",
-            id="no_scanners",
         ),
-        pytest.param(
+        (
             None,
             1,
             True,
@@ -61,9 +59,8 @@ from tests.components.bluetooth import generate_ble_device
             True,
             (True, []),
             "not_found",
-            id="not_found",
         ),
-        pytest.param(
+        (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
             1,
             True,
@@ -71,9 +68,8 @@ from tests.components.bluetooth import generate_ble_device
             True,
             (True, []),
             "invalid_auth",
-            id="invalid_auth",
         ),
-        pytest.param(
+        (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
             1,
             True,
@@ -81,9 +77,8 @@ from tests.components.bluetooth import generate_ble_device
             True,
             (True, []),
             None,
-            id="unknown_auth_status",
         ),
-        pytest.param(
+        (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
             1,
             True,
@@ -91,9 +86,8 @@ from tests.components.bluetooth import generate_ble_device
             False,
             (True, []),
             "cannot_connect",
-            id="cannot_connect",
         ),
-        pytest.param(
+        (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
             1,
             True,
@@ -101,8 +95,16 @@ from tests.components.bluetooth import generate_ble_device
             True,
             (True, ["Error :P"]),
             "cannot_connect",
-            id="failed_poll",
         ),
+    ],
+    ids=[
+        "good_data",
+        "no_scanners",
+        "not_found",
+        "invalid_auth",
+        "unknown_auth_status",
+        "cannot_connect",
+        "failed_poll",
     ],
 )
 async def test_form(
@@ -244,11 +246,17 @@ async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     [
         (CannotConnect, "cannot_connect"),
         (InvalidAuth, "invalid_auth"),
-        (ScannerNotAvailable, "no_scanners),
+        (ScannerNotAvailable, "no_scanners"),
         (NotFound, "not_found"),
         (Exception, "unknown"),
     ],
-    ids=["cannot_connect", "device_not_authenticated", "scanner_not_avaliable", "device_not_found", "unknown"],
+    ids=[
+        "cannot_connect",
+        "device_not_authenticated",
+        "scanner_not_avaliable",
+        "device_not_found",
+        "unknown",
+    ],
 )
 async def test_bluetooth_form_exception(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, side_effect, error_message
