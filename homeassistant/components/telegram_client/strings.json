@@ -1,0 +1,338 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_id": "API ID",
+          "api_hash": "API hash",
+          "client_type": "Client type"
+        },
+        "title": "API parameters",
+        "description": "You can obtain `api_id` and `api_hash` using [this manual](https://core.telegram.org/api/obtaining_api_id#obtaining-api-id)."
+      },
+      "phone": {
+        "data": {
+          "phone": "Phone number"
+        },
+        "data_description": {
+          "phone": "Phone number in international format (+XXXXXXXXXXXX)."
+        },
+        "title": "Phone",
+        "description": "This is the phone number your account is linked to. It can be different from the app owner's phone."
+      },
+      "token": {
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "Token that you received from [@BotFather](https://t.me/BotFather) bot."
+        },
+        "title": "Bot token",
+        "description": "You can obtain `token` using [this manual](https://core.telegram.org/bots/features#botfather)."
+      },
+      "otp": {
+        "data": {
+          "otp": "One time password"
+        },
+        "data_description": {
+          "otp": "Code that you just received from Telegram."
+        },
+        "title": "OTP",
+        "description": "One time password is sent each time you logs in to the new app to protect your account."
+      },
+      "password": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Your account password."
+        },
+        "title": "Password",
+        "description": "Password is only required if your account is secured with 2FA."
+      },
+      "reauth_confirm": {
+        "title": "Reauthentication",
+        "description": "Press the button to start reauthentication process. You'll receive new OTP to submit on the next step."
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "new_message": "New message",
+          "message_edited": "Message edited",
+          "message_read": "Message read",
+          "message_deleted": "Message deleted",
+          "callback_query": "Callback query",
+          "inline_query": "Inline query",
+          "chat_action": "Chat action",
+          "user_update": "User update"
+        },
+        "title": "Events to listen",
+        "description": "Here you can set whitch events you want to listen and fire to Home Assistant event bus."
+      },
+      "new_message": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist mode (chats)",
+          "incoming": "Incoming",
+          "outgoing": "Outgoing",
+          "from_users": "From users",
+          "forwards": "Forwards",
+          "pattern": "Pattern"
+        },
+        "title": "New message event",
+        "description": "Here you can set parameters for new message events."
+      },
+      "message_edited": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist mode (chats)",
+          "incoming": "Incoming",
+          "outgoing": "Outgoing",
+          "from_users": "From users",
+          "forwards": "Forwards",
+          "pattern": "Pattern"
+        },
+        "title": "Message edited event",
+        "description": "Here you can set parameters for message edited events."
+      },
+      "message_read": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist mode (chats)",
+          "inbox": "Inbox"
+        },
+        "title": "Message read event",
+        "description": "Here you can set parameters for message read events."
+      },
+      "message_deleted": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist mode (chats)"
+        },
+        "title": "Message deleted event",
+        "description": "Here you can set parameters for message deleted events."
+      },
+      "callback_query": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist mode (chats)",
+          "data": "Data",
+          "pattern": "Pattern"
+        },
+        "title": "Callback query event",
+        "description": "Here you can set parameters for callback query events."
+      },
+      "inline_query": {
+        "data": {
+          "users": "Users",
+          "blacklist_users": "Blacklist mode (users)",
+          "pattern": "Pattern"
+        },
+        "title": "Inline query event",
+        "description": "Here you can set parameters for inline query events."
+      },
+      "chat_action": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist mode (chats)"
+        },
+        "title": "Chat action event",
+        "description": "Here you can set parameters for chat action events."
+      },
+      "user_update": {
+        "data": {
+          "chats": "Chats",
+          "blacklist_chats": "Blacklist mode (chats)"
+        },
+        "title": "User update event",
+        "description": "Here you can set parameters for user update events."
+      }
+    }
+  },
+  "services": {
+    "send_messages": {
+      "name": "Send messages",
+      "description": "Sends text messages to user, group, channel or bot.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Telegram client",
+          "description": "Telegram client to use for API calls. If not specified, then first one is used."
+        },
+        "target_username": {
+          "name": "Target username",
+          "description": "User, channel, bot username or phone number."
+        },
+        "target_id": {
+          "name": "Target ID",
+          "description": "User or group ID."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Message body. Optional if file is specified."
+        },
+        "reply_to": {
+          "name": "Reply to message id",
+          "description": "Mark the message as a reply to a previous message. Also can be used to send a message in a specific group topic."
+        },
+        "parse_mode": {
+          "name": "Parse mode",
+          "description": "Parser for the message text. Disable to send as a plain text."
+        },
+        "link_preview": {
+          "name": "Show link preview",
+          "description": "Enables previews for links in the message."
+        },
+        "file": {
+          "name": "File",
+          "description": "Path(s) to files relatively to config directory to attach to the message."
+        },
+        "force_document": {
+          "name": "Force document",
+          "description": "Attach file(s) as document(s) rather than image/audio/video."
+        },
+        "clear_draft": {
+          "name": "Clear draft",
+          "description": "Clears draft message to selected target after sending the message."
+        },
+        "keyboard": {
+          "name": "Keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message. E.g.\n\n`button1`\n\n```\n\n- button1\n\n- button2\n\n- button3\n\n```\n\n```\n\n- ['button1', 'button2', 'button3']\n\n- ['button4', 'button5', 'button6']\n\n```"
+        },
+        "inline_keyboard": {
+          "name": "Inline keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message."
+        },
+        "keyboard_resize": {
+          "name": "Resize keyboard",
+          "description": "Resizes keyboard to minimize space used. Can be used only if `keyboard` is defined."
+        },
+        "keyboard_single_use": {
+          "name": "Single use keyboard",
+          "description": "Hides keyboard after user press any button. Can be used only if `keyboard` is defined."
+        },
+        "silent": {
+          "name": "Silent",
+          "description": "Sends message without sound notification."
+        },
+        "supports_streaming": {
+          "name": "Support streaming",
+          "description": "Whether the sent video supports streaming or not."
+        },
+        "schedule": {
+          "name": "Schedule",
+          "description": "Schedule message delivery. Can be used only in `client` mode. Bots can't schedule message delivery."
+        },
+        "comment_to": {
+          "name": "Comment to",
+          "description": "Similar to `reply_to`, but replies in the linked group of a broadcast channel instead."
+        },
+        "nosound_video": {
+          "name": "Nosound video",
+          "description": "Displays video without audio track as a video. Otherwise Telegram will attempt to display such video as an animated gif."
+        }
+      }
+    },
+    "edit_message": {
+      "name": "Edit message",
+      "description": "Edits text of a previously sent message to user, group, channel or bot.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Telegram client",
+          "description": "Telegram client to use for API calls. If not specified, then first one is used."
+        },
+        "target_username": {
+          "name": "Target username",
+          "description": "User, channel, bot username or phone number."
+        },
+        "target_id": {
+          "name": "Target ID",
+          "description": "User or group ID."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Message ID to edit."
+        },
+        "text": {
+          "name": "Text",
+          "description": "New message text."
+        },
+        "parse_mode": {
+          "name": "Parse mode",
+          "description": "Parser for the message text. Disable to send as a plain text."
+        },
+        "link_preview": {
+          "name": "Show link preview",
+          "description": "Enables previews for links in the message."
+        },
+        "file": {
+          "name": "File",
+          "description": "Path(s) to files relatively to config directory to replace into the message."
+        },
+        "force_document": {
+          "name": "Force document",
+          "description": "Attach file(s) as document(s) rather than image/audio/video."
+        },
+        "keyboard": {
+          "name": "Keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message. E.g.\n\n`button1`\n\n```\n\n- button1\n\n- button2\n\n- button3\n\n```\n\n```\n\n- ['button1', 'button2', 'button3']\n\n- ['button4', 'button5', 'button6']\n\n```"
+        },
+        "inline_keyboard": {
+          "name": "Inline keyboard",
+          "description": "Button, list of buttons or list of lists of buttons to show under the message."
+        },
+        "keyboard_resize": {
+          "name": "Resize keyboard",
+          "description": "Resizes keyboard to minimize space used. Can be used only if `keyboard` is defined."
+        },
+        "keyboard_single_use": {
+          "name": "Single use keyboard",
+          "description": "Hides keyboard after user press any button. Can be used only if `keyboard` is defined."
+        },
+        "supports_streaming": {
+          "name": "Support streaming",
+          "description": "Whether the sent video supports streaming or not."
+        },
+        "schedule": {
+          "name": "Schedule",
+          "description": "Schedule message edition. Can be used only in `client` mode. Bots can't schedule message delivery."
+        }
+      }
+    },
+    "delete_messages": {
+      "name": "Delete messages",
+      "description": "Deletes previously sent messages to user, group, channel or bot.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Telegram client",
+          "description": "Telegram client to use for API calls. If not specified, then first one is used."
+        },
+        "target_username": {
+          "name": "Target username",
+          "description": "User, channel, bot username or phone number."
+        },
+        "target_id": {
+          "name": "Target ID",
+          "description": "User or group ID."
+        },
+        "message_ids": {
+          "name": "Message ID(s)",
+          "description": "Message ID(s) to delete."
+        },
+        "revoke": {
+          "name": "Revoke",
+          "description": "Deletes message from everyone."
+        }
+      }
+    }
+  }
+}

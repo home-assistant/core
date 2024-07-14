@@ -1,0 +1,13 @@
+{
+  "domain": "telegram_client",
+  "name": "Telegram client",
+  "codeowners": ["@lufton"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/telegram_client",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["Telethon==1.36.0"],
+  "ssdp": [],
+  "zeroconf": []
+}

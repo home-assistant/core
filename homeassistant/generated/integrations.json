@@ -6066,6 +6066,12 @@
         }
       }
     },
+    "telegram_client": {
+      "name": "Telegram client",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "telldus": {
       "name": "Telldus",
       "integrations": {
