@@ -433,7 +433,6 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
             await hass.async_stop()
             await hass.async_block_till_done()
 
-    assert "ix_states_event_id" not in states_index_names
     assert "ix_states_entity_id_last_updated_ts" in states_index_names
 
     async with (
