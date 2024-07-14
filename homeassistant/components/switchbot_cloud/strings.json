@@ -40,7 +40,7 @@
         },
         "parameter": {
           "name": "Parameter",
-          "description": "Parameter to set (optional)."
+          "description": "Command parameter to set (optional)."
         }
       }
     }
