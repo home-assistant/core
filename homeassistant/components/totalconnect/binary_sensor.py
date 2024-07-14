@@ -113,7 +113,7 @@ LOCATION_BINARY_SENSORS: tuple[TotalConnectAlarmBinarySensorEntityDescription, .
     ),
     TotalConnectAlarmBinarySensorEntityDescription(
         key="police",
-        device_class=BinarySensorDeviceClass.SAFETY,
+        translation_key="police",
         is_on_fn=lambda location: location.arming_state.is_triggered_police(),
     ),
 )
