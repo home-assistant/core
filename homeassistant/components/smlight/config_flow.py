@@ -175,23 +175,26 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle re-authentication of an existing config entry."""
+        errors = {}
         if user_input is not None:
             try:
                 await self.client.authenticate(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
-            except (SmlightAuthError, SmlightConnectionError):
+            except SmlightAuthError:
+                errors["base"] = "invalid_auth"
+            except SmlightConnectionError:
                 return self.async_abort(reason="reauth_failed")
+            else:
+                assert self._reauth_entry is not None
 
-            reauth_entry = self._reauth_entry
-            assert reauth_entry is not None
-
-            return self.async_update_reload_and_abort(
-                reauth_entry, data={**user_input, CONF_HOST: self.host}
-            )
+                return self.async_update_reload_and_abort(
+                    self._reauth_entry, data={**user_input, CONF_HOST: self.host}
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_AUTH_DATA_SCHEMA,
             description_placeholders=self.context["title_placeholders"],
+            errors=errors,
         )
