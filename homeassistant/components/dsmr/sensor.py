@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -377,30 +377,30 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
 )
 
-
-def create_mbus_entity(
-    mbus: int, mtype: int, device: MbusDevice
-) -> DSMRSensorEntityDescription | None:
-    """Create a new MBUS Entity."""
-    if mtype == 3 and hasattr(device, "MBUS_METER_READING"):
-        return DSMRSensorEntityDescription(
-            key=f"mbus{mbus}_gas_reading",
+SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
+    3: (
+        DSMRSensorEntityDescription(
+            key="gas_reading",
             translation_key="gas_meter_reading",
             obis_reference="MBUS_METER_READING",
+            dsmr_versions={"5B"},
             is_gas=True,
             device_class=SensorDeviceClass.GAS,
             state_class=SensorStateClass.TOTAL_INCREASING,
-        )
-    if mtype == 7 and hasattr(device, "MBUS_METER_READING"):
-        return DSMRSensorEntityDescription(
-            key=f"mbus{mbus}_water_reading",
+        ),
+    ),
+    7: (
+        DSMRSensorEntityDescription(
+            key="water_reading",
             translation_key="water_meter_reading",
             obis_reference="MBUS_METER_READING",
+            dsmr_versions={"5B"},
             is_water=True,
             device_class=SensorDeviceClass.WATER,
             state_class=SensorStateClass.TOTAL_INCREASING,
-        )
-    return None
+        ),
+    ),
+}
 
 
 def device_class_and_uom(
@@ -460,20 +460,26 @@ def rename_old_gas_to_mbus(
             dev_reg.async_remove_device(device_id)
 
 
-def create_mbus_entities(
-    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry
-) -> list[DSMREntity]:
-    """Create MBUS Entities."""
-    entities = []
+def is_supported_description(
+    data: Telegram | MbusDevice,
+    description: DSMRSensorEntityDescription,
+    dsmr_version: str,
+) -> bool:
+    """Check if this is a supported description for this telegram."""
+    return hasattr(data, description.obis_reference) and (
+        description.dsmr_versions is None or dsmr_version in description.dsmr_versions
+    )
 
-    for idx in range(1, 5):
-        device: MbusDevice | None = telegram.get_mbus_device_by_channel(idx)
-        if not device:
-            continue
+
+def create_mbus_entities(
+    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry, dsmr_version: str
+) -> Generator[DSMREntity]:
+    """Create MBUS Entities."""
+    mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
+    for device in mbus_devices:
         if (device_type := getattr(device, "MBUS_DEVICE_TYPE", None)) is None:
             continue
-        if (type_ := int(device_type.value)) not in (3, 7):
-            continue
+        type_ = int(device_type.value)
 
         if identifier := getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None):
             serial_ = identifier.value
@@ -481,18 +487,17 @@ def create_mbus_entities(
         else:
             serial_ = ""
 
-        if description := create_mbus_entity(idx, type_, device):
-            entities.append(
-                DSMREntity(
-                    description,
-                    entry,
-                    telegram,
-                    *device_class_and_uom(device, description),  # type: ignore[arg-type]
-                    serial_,
-                    idx,
-                )
+        for description in SENSORS_MBUS_DEVICE_TYPE.get(type_, ()):
+            if not is_supported_description(device, description, dsmr_version):
+                continue
+            yield DSMREntity(
+                description,
+                entry,
+                telegram,
+                *device_class_and_uom(device, description),  # type: ignore[arg-type]
+                serial_,
+                device.channel_id,
             )
-    return entities
 
 
 def get_dsmr_object(
@@ -528,8 +533,7 @@ async def async_setup_entry(
         add_entities_handler()
         add_entities_handler = None
 
-        if dsmr_version == "5B":
-            entities.extend(create_mbus_entities(hass, telegram, entry))
+        entities.extend(create_mbus_entities(hass, telegram, entry, dsmr_version))
 
         entities.extend(
             [
@@ -540,12 +544,8 @@ async def async_setup_entry(
                     *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
                 )
                 for description in SENSORS
-                if (
-                    description.dsmr_versions is None
-                    or dsmr_version in description.dsmr_versions
-                )
+                if is_supported_description(telegram, description, dsmr_version)
                 and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
-                and hasattr(telegram, description.obis_reference)
             ]
         )
         async_add_entities(entities)
