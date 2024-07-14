@@ -242,12 +242,13 @@ async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 @pytest.mark.parametrize(
     ("side_effect", "error_message"),
     [
-        pytest.param(CannotConnect, "cannot_connect", id="cannot_connect"),
-        pytest.param(InvalidAuth, "invalid_auth", id="device_not_authenticated"),
-        pytest.param(ScannerNotAvailable, "no_scanners", id="scanner_not_avaliable"),
-        pytest.param(NotFound, "not_found", id="device_not_found"),
-        pytest.param(Exception, "unknown", id="unknown"),
+        (CannotConnect, "cannot_connect"),
+        (InvalidAuth, "invalid_auth"),
+        (ScannerNotAvailable, "no_scanners),
+        (NotFound, "not_found"),
+        (Exception, "unknown"),
     ],
+    ids=["cannot_connect", "device_not_authenticated", "scanner_not_avaliable", "device_not_found", "unknown"],
 )
 async def test_bluetooth_form_exception(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, side_effect, error_message
