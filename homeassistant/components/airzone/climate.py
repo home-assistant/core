@@ -50,7 +50,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
+from . import AirzoneConfigEntry
+from .const import API_TEMPERATURE_STEP, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
 
@@ -97,19 +98,35 @@ HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        AirzoneClimate(
-            coordinator,
-            entry,
-            system_zone_id,
-            zone_data,
-        )
-        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
-    )
+    """Add Airzone climate from a config_entry."""
+    coordinator = entry.runtime_data
+
+    added_zones: set[str] = set()
+
+    def _async_entity_listener() -> None:
+        """Handle additions of climate."""
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            async_add_entities(
+                AirzoneClimate(
+                    coordinator,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+            )
+            added_zones.update(new_zones)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):

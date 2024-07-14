@@ -14,16 +14,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from . import ApSystemsConfigEntry, ApSystemsData
 from .coordinator import ApSystemsDataCoordinator
+from .entity import ApSystemsEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -111,43 +110,40 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ApSystemsConfigEntry,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
     config = config_entry.runtime_data
-    device_id = config_entry.unique_id
-    assert device_id
 
     add_entities(
-        ApSystemsSensorWithDescription(config, desc, device_id) for desc in SENSORS
+        ApSystemsSensorWithDescription(
+            data=config,
+            entity_description=desc,
+        )
+        for desc in SENSORS
     )
 
 
 class ApSystemsSensorWithDescription(
-    CoordinatorEntity[ApSystemsDataCoordinator], SensorEntity
+    CoordinatorEntity[ApSystemsDataCoordinator], ApSystemsEntity, SensorEntity
 ):
     """Base sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiSensorDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: ApSystemsDataCoordinator,
+        data: ApSystemsData,
         entity_description: ApsystemsLocalApiSensorDescription,
-        device_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(data.coordinator)
+        ApSystemsEntity.__init__(self, data)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device_id}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            serial_number=device_id,
-            manufacturer="APsystems",
-            model="EZ1-M",
-        )
+        self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:

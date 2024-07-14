@@ -7,7 +7,7 @@ import pytest
 from homeassistant import const
 from homeassistant.components import sensor
 
-from tests.common import (
+from .common import (
     help_test_all,
     import_and_test_deprecated_constant,
     import_and_test_deprecated_constant_enum,

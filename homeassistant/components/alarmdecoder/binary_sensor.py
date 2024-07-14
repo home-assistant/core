@@ -3,11 +3,11 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AlarmDecoderConfigEntry
 from .const import (
     CONF_RELAY_ADDR,
     CONF_RELAY_CHAN,
@@ -16,9 +16,7 @@ from .const import (
     CONF_ZONE_NUMBER,
     CONF_ZONE_RFID,
     CONF_ZONE_TYPE,
-    DATA_AD,
     DEFAULT_ZONE_OPTIONS,
-    DOMAIN,
     OPTIONS_ZONES,
     SIGNAL_REL_MESSAGE,
     SIGNAL_RFX_MESSAGE,
@@ -40,11 +38,13 @@ ATTR_RF_LOOP1 = "rf_loop1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AlarmDecoderConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up for AlarmDecoder sensor."""
 
-    client = hass.data[DOMAIN][entry.entry_id][DATA_AD]
+    client = entry.runtime_data.client
     zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
 
     entities = []

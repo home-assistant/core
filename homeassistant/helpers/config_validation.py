@@ -93,8 +93,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
     async_get_hass,
+    async_get_hass_or_none,
     split_entity_id,
     valid_entity_id,
 )
@@ -108,6 +108,7 @@ from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
 from .frame import get_integration_logger
+from .typing import VolDictType, VolSchemaType
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -662,11 +663,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
-
-    template_value = template_helper.Template(str(value), hass)
+    template_value = template_helper.Template(str(value), async_get_hass_or_none())
 
     try:
         template_value.ensure_valid()
@@ -684,11 +681,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
-
-    template_value = template_helper.Template(str(value), hass)
+    template_value = template_helper.Template(str(value), async_get_hass_or_none())
 
     try:
         template_value.ensure_valid()
@@ -988,8 +981,8 @@ def removed(
 
 def key_value_schemas(
     key: str,
-    value_schemas: dict[Hashable, vol.Schema],
-    default_schema: vol.Schema | None = None,
+    value_schemas: dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]],
+    default_schema: VolSchemaType | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
@@ -1023,12 +1016,12 @@ def key_value_schemas(
 # Validator helpers
 
 
-def key_dependency(
+def key_dependency[_KT: Hashable, _VT](
     key: Hashable, dependency: Hashable
-) -> Callable[[dict[Hashable, Any]], dict[Hashable, Any]]:
+) -> Callable[[dict[_KT, _VT]], dict[_KT, _VT]]:
     """Validate that all dependencies exist for key."""
 
-    def validator(value: dict[Hashable, Any]) -> dict[Hashable, Any]:
+    def validator(value: dict[_KT, _VT]) -> dict[_KT, _VT]:
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid("key dependencies require a dict")
@@ -1045,6 +1038,7 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from .. import data_entry_flow  # pylint: disable=import-outside-toplevel
     from . import selector  # pylint: disable=import-outside-toplevel
 
     if schema is positive_time_period_dict:
@@ -1055,6 +1049,15 @@ def custom_serializer(schema: Any) -> Any:
 
     if schema is boolean:
         return {"type": "boolean"}
+
+    if isinstance(schema, data_entry_flow.section):
+        return {
+            "type": "expandable",
+            "schema": voluptuous_serialize.convert(
+                schema.schema, custom_serializer=custom_serializer
+            ),
+            "expanded": not schema.options["collapsed"],
+        }
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
@@ -1201,7 +1204,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_FIELDS = {
+ENTITY_SERVICE_FIELDS: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
     # of static and dynamic templates. While this could be solved with a single
     # complex template, handling it like this, keeps config validation useful.
@@ -1307,7 +1310,7 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {
+SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
@@ -1353,7 +1356,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
-CONDITION_BASE_SCHEMA = {
+CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
@@ -1402,13 +1405,13 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:
+def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")
 
     if CONF_ATTRIBUTE in value:
-        validated: dict = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
+        validated: dict[str, Any] = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
     else:
         validated = STATE_CONDITION_STATE_SCHEMA(value)
 
@@ -1783,7 +1786,7 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
+_SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
@@ -1802,7 +1805,7 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_PARALLEL): vol.All(
-            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+            ensure_list, [vol.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)]
         ),
     }
 )
@@ -1818,6 +1821,7 @@ SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
 SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_SEQUENCE = "sequence"
 SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_VARIABLES = "variables"
@@ -1844,6 +1848,7 @@ ACTIONS_MAP = {
     CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_STOP: SCRIPT_ACTION_STOP,
     CONF_PARALLEL: SCRIPT_ACTION_PARALLEL,
+    CONF_SEQUENCE: SCRIPT_ACTION_SEQUENCE,
     CONF_SET_CONVERSATION_RESPONSE: SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
 }
 
@@ -1874,6 +1879,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_SEQUENCE: _SCRIPT_SEQUENCE_SCHEMA,
     SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,

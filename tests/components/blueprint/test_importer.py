@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.blueprint import importer
 from homeassistant.core import HomeAssistant
@@ -53,7 +54,9 @@ def test_get_github_import_url() -> None:
     )
 
 
-def test_extract_blueprint_from_community_topic(community_post, snapshot) -> None:
+def test_extract_blueprint_from_community_topic(
+    community_post, snapshot: SnapshotAssertion
+) -> None:
     """Test extracting blueprint."""
     imported_blueprint = importer._extract_blueprint_from_community_topic(
         "http://example.com", json.loads(community_post)
@@ -94,7 +97,10 @@ def test_extract_blueprint_from_community_topic_wrong_lang() -> None:
 
 
 async def test_fetch_blueprint_from_community_url(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, community_post, snapshot
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    community_post,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
@@ -132,7 +138,7 @@ async def test_fetch_blueprint_from_github_url(
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
         text=Path(
             hass.config.path("blueprints/automation/test_event_service.yaml")
-        ).read_text(),
+        ).read_text(encoding="utf8"),
     )
 
     imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
@@ -148,7 +154,9 @@ async def test_fetch_blueprint_from_github_url(
 
 
 async def test_fetch_blueprint_from_github_gist_url(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, snapshot
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
@@ -173,7 +181,7 @@ async def test_fetch_blueprint_from_website_url(
         "https://www.home-assistant.io/blueprints/awesome.yaml",
         text=Path(
             hass.config.path("blueprints/automation/test_event_service.yaml")
-        ).read_text(),
+        ).read_text(encoding="utf8"),
     )
 
     url = "https://www.home-assistant.io/blueprints/awesome.yaml"

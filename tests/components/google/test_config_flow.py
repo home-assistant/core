@@ -50,9 +50,8 @@ OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
 
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
+async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
-    return
 
 
 @pytest.fixture(autouse=True)
@@ -117,7 +116,7 @@ async def primary_calendar_status() -> HTTPStatus | None:
 
 @pytest.fixture(autouse=True)
 async def primary_calendar(
-    mock_calendar_get: Callable[[...], None],
+    mock_calendar_get: Callable[..., None],
     primary_calendar_error: ClientError | None,
     primary_calendar_status: HTTPStatus | None,
     primary_calendar_email: str,
@@ -656,9 +655,9 @@ async def test_options_flow_no_changes(
     assert config_entry.options == {"calendar_access": "read_write"}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_web_auth_compatibility(
     hass: HomeAssistant,
-    current_request_with_host: None,
     mock_code_flow: Mock,
     aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,

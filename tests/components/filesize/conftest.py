@@ -29,7 +29,7 @@ def mock_config_entry(tmp_path: Path) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.filesize.async_setup_entry", return_value=True

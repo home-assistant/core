@@ -56,7 +56,6 @@ async def test_options_reload(
         assert entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        await hass.async_block_till_done()
         await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_CONSIDER_HOME: 60},

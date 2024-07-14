@@ -12,7 +12,7 @@ from pytedee_async.exception import TedeeDataUpdateException, TedeeWebhookExcept
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
-    async_generate_path as webhook_generate_path,
+    async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
@@ -33,8 +33,10 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
     """Integration setup."""
 
     coordinator = TedeeApiCoordinator(hass)
@@ -51,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         serial_number=coordinator.bridge.serial,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     async def unregister_webhook(_: Any) -> None:
         await coordinator.async_unregister_webhook()
@@ -64,8 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await coordinator.tedee_client.cleanup_webhooks_by_host(instance_url)
         except (TedeeDataUpdateException, TedeeWebhookException) as ex:
             _LOGGER.warning("Failed to cleanup Tedee webhooks by host: %s", ex)
-        webhook_url = (
-            f"{instance_url}{webhook_generate_path(entry.data[CONF_WEBHOOK_ID])}"
+
+        webhook_url = webhook_generate_url(
+            hass, entry.data[CONF_WEBHOOK_ID], allow_external=False, allow_ip=True
         )
         webhook_name = "Tedee"
         if entry.title != NAME:
@@ -100,11 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def get_webhook_handler(

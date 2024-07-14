@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Collection, Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Sequence
 import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
-from functools import partial
-from itertools import islice
 import logging
 import os
 import time
@@ -120,7 +118,7 @@ def session_scope(
     session: Session | None = None,
     exception_filter: Callable[[Exception], bool] | None = None,
     read_only: bool = False,
-) -> Generator[Session, None, None]:
+) -> Generator[Session]:
     """Provide a transactional scope around a series of operations.
 
     read_only is used to indicate that the session is only used for reading
@@ -136,7 +134,7 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.get_transaction() and not read_only:
+        if not read_only and session.get_transaction():
             need_rollback = True
             session.commit()
     except Exception as err:
@@ -716,7 +714,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
 
 
 @contextmanager
-def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
+def write_lock_db_sqlite(instance: Recorder) -> Generator[None]:
     """Lock database for writes."""
     assert instance.engine is not None
     with instance.engine.connect() as connection:
@@ -741,8 +739,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance = get_instance(hass)
-    return instance.migration_in_progress
+    return hass.data[DATA_INSTANCE].migration_in_progress
 
 
 def async_migration_is_live(hass: HomeAssistant) -> bool:
@@ -753,8 +750,7 @@ def async_migration_is_live(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_is_live
+    return hass.data[DATA_INSTANCE].migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -773,10 +769,10 @@ def is_second_sunday(date_time: datetime) -> bool:
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
 
 
+@functools.lru_cache(maxsize=1)
 def get_instance(hass: HomeAssistant) -> Recorder:
     """Get the recorder instance."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance
+    return hass.data[DATA_INSTANCE]
 
 
 PERIOD_SCHEMA = vol.Schema(
@@ -857,36 +853,6 @@ def resolve_period(
             end_time += offset
 
     return (start_time, end_time)
-
-
-def take(take_num: int, iterable: Iterable) -> list[Any]:
-    """Return first n items of the iterable as a list.
-
-    From itertools recipes
-    """
-    return list(islice(iterable, take_num))
-
-
-def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
-    """Break *iterable* into lists of length *n*.
-
-    From more-itertools
-    """
-    return iter(partial(take, chunked_num, iter(iterable)), [])
-
-
-def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
-    """Break *collection* into iterables of length *n*.
-
-    Returns the collection if its length is less than *n*.
-
-    Unlike chunked, this function requires a collection so it can
-    determine the length of the collection and return the collection
-    if it is less than *n*.
-    """
-    if len(iterable) <= chunked_num:
-        return (iterable,)
-    return chunked(iterable, chunked_num)
 
 
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:

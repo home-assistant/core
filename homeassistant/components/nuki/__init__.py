@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import defaultdict
 from dataclasses import dataclass
-from datetime import timedelta
 from http import HTTPStatus
 import logging
 
@@ -26,26 +24,18 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 
-from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
+from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN
+from .coordinator import NukiCoordinator
 from .helpers import NukiWebhookException, parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
-UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass(slots=True)
@@ -276,85 +266,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
-    """Data Update Coordinator for the Nuki integration."""
-
-    def __init__(self, hass, bridge, locks, openers):
-        """Initialize my coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="nuki devices",
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=UPDATE_INTERVAL,
-        )
-        self.bridge = bridge
-        self.locks = locks
-        self.openers = openers
-
-    @property
-    def bridge_id(self):
-        """Return the parsed id of the Nuki bridge."""
-        return parse_id(self.bridge.info()["ids"]["hardwareId"])
-
-    async def _async_update_data(self) -> None:
-        """Fetch data from Nuki bridge."""
-        try:
-            # Note: TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with asyncio.timeout(10):
-                events = await self.hass.async_add_executor_job(
-                    self.update_devices, self.locks + self.openers
-                )
-        except InvalidCredentialsException as err:
-            raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
-        except RequestException as err:
-            raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
-
-        ent_reg = er.async_get(self.hass)
-        for event, device_ids in events.items():
-            for device_id in device_ids:
-                entity_id = ent_reg.async_get_entity_id(
-                    Platform.LOCK, DOMAIN, device_id
-                )
-                event_data = {
-                    "entity_id": entity_id,
-                    "type": event,
-                }
-                self.hass.bus.async_fire("nuki_event", event_data)
-
-    def update_devices(self, devices: list[NukiDevice]) -> dict[str, set[str]]:
-        """Update the Nuki devices.
-
-        Returns:
-            A dict with the events to be fired. The event type is the key and the device ids are the value
-
-        """
-
-        events: dict[str, set[str]] = defaultdict(set)
-
-        for device in devices:
-            for level in (False, True):
-                try:
-                    if isinstance(device, NukiOpener):
-                        last_ring_action_state = device.ring_action_state
-
-                        device.update(level)
-
-                        if not last_ring_action_state and device.ring_action_state:
-                            events["ring"].add(device.nuki_id)
-                    else:
-                        device.update(level)
-                except RequestException:
-                    continue
-
-                if device.state not in ERROR_STATES:
-                    break
-
-        return events
 
 
 class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):

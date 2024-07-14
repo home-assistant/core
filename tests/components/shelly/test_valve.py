@@ -24,14 +24,16 @@ GAS_VALVE_BLOCK_ID = 6
 
 
 async def test_block_device_gas_valve(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device Shelly Gas with Valve addon."""
-    registry = er.async_get(hass)
     await init_integration(hass, 1, MODEL_GAS)
     entity_id = "valve.test_name_valve"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-valve_0-valve"
 
