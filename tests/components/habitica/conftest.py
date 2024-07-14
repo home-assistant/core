@@ -1,7 +1,6 @@
 """Tests for the habitica component."""
 
 import json
-from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
@@ -11,7 +10,7 @@ from yarl import URL
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -23,13 +22,6 @@ def disable_plumbum():
     """
     with patch("plumbum.local"), patch("plumbum.colors"):
         yield
-
-
-def json_data(file) -> dict[str, Any]:
-    """Load json test data."""
-    path = Path(__file__).parent / "data" / f"{file}.json"
-
-    return json.loads(path.read_text())
 
 
 def assert_mock_called_with(
@@ -58,13 +50,18 @@ def assert_mock_called_with(
 def mock_habitica(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     """Mock aiohttp requests."""
 
-    aioclient_mock.get(f"{DEFAULT_URL}/api/v3/user", json=json_data("user"))
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user", json=load_json_object_fixture("user.json", DOMAIN)
+    )
     aioclient_mock.get(
         f"{DEFAULT_URL}/api/v3/tasks/user",
         params={"type": "completedTodos"},
-        json=json_data("completed_todos"),
+        json=load_json_object_fixture("completed_todos.json", DOMAIN),
     )
-    aioclient_mock.get(f"{DEFAULT_URL}/api/v3/tasks/user", json=json_data("tasks"))
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        json=load_json_object_fixture("tasks.json", DOMAIN),
+    )
 
     return aioclient_mock
 
