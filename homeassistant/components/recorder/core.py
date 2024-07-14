@@ -1175,6 +1175,9 @@ class Recorder(threading.Thread):
             (cause := err.__cause__)
             and isinstance(cause, sqlite3.DatabaseError)
             and (err_str := str(err))
+            # Make sure we do not move away a database when its only locked
+            # externally by another process. sqlite does not give us a named
+            # exception for this so we have to check the error message.
             and ("malformed" in err_str or "not a database" in err_str)
         ):
             _LOGGER.exception(
