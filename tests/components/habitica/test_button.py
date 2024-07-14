@@ -9,16 +9,16 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.habitica.const import DEFAULT_URL
+from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import assert_mock_called_with, json_data
+from .conftest import assert_mock_called_with
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -148,7 +148,8 @@ async def test_button_unavailable(
     """Test buttons are unavailable if conditions are not met."""
 
     aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user", json=json_data("user_buttons_unavailable")
+        f"{DEFAULT_URL}/api/v3/user",
+        json=load_json_object_fixture("user_buttons_unavailable.json", DOMAIN),
     )
     aioclient_mock.get(re.compile(r".*"), json={"data": []})
 
