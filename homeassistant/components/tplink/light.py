@@ -183,7 +183,6 @@ async def async_setup_entry(
 class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
-    _attr_supported_features = LightEntityFeature.TRANSITION
     _fixed_color_mode: ColorMode | None = None
 
     def __init__(
@@ -213,6 +212,11 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
+
+        # We enable transitions only for kasa devices.
+        # Use credentials as proxy for tapo device detection.
+        if device.credentials is None:
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
         super().__init__(device, coordinator, parent=parent)
 
@@ -349,6 +353,8 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
 class TPLinkLightEffectEntity(TPLinkLightEntity):
     """Representation of a TPLink Smart Light Strip."""
 
+    _attr_supported_features = LightEntityFeature.EFFECT
+
     def __init__(
         self,
         device: Device,
@@ -360,8 +366,6 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         """Initialize the light strip."""
         self._effect_module = effect_module
         super().__init__(device, coordinator, light_module=light_module)
-
-    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     @callback
     def _async_update_attrs(self) -> None:
