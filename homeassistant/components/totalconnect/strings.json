@@ -58,10 +58,10 @@
     },
     "binary_sensor": {
       "police": {
-        "name": "Police or Safety Emergency",
+        "name": "Police Emergency",
         "state": {
-          "off": "No emergency",
-          "on": "Police or Safety Emergency"
+          "off": "No Emergency",
+          "on": "Police Emergency"
         }
       }
     },
