@@ -16,7 +16,14 @@ import time
 from typing import TYPE_CHECKING, Any, cast
 
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
+from sqlalchemy import (
+    create_engine,
+    event as sqlalchemy_event,
+    exc,
+    inspect,
+    select,
+    update,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -820,7 +827,7 @@ class Recorder(threading.Thread):
                     # If ix_states_entity_id_last_updated_ts still exists
                     # on the states table it means the entity id migration
                     # finished by the EntityIDPostMigrationTask did not
-                    # because they restarted in the middle of it. We need
+                    # complete because they restarted in the middle of it. We need
                     # to pick back up where we left off.
                     if get_index_by_name(
                         session,
@@ -832,9 +839,13 @@ class Recorder(threading.Thread):
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
                 with contextlib.suppress(SQLAlchemyError):
                     # If the index of event_ids on the states table is still present
-                    # we need to queue a task to remove it.
-                    if get_index_by_name(
-                        session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                    # or the event_id foreign key still exists we need to queue a
+                    # task to remove it.
+                    if (
+                        get_index_by_name(
+                            session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                        )
+                        or self._legacy_event_id_foreign_key_exists()
                     ):
                         self.queue_task(EventIdMigrationTask())
                         self.use_legacy_events_index = True
@@ -1284,6 +1295,21 @@ class Recorder(threading.Thread):
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
+
+    def _legacy_event_id_foreign_key_exists(self) -> bool:
+        """Check if the legacy event_id foreign key exists."""
+        engine = self.engine
+        assert engine is not None
+        return bool(
+            next(
+                (
+                    fk
+                    for fk in inspect(engine).get_foreign_keys(TABLE_STATES)
+                    if fk["constrained_columns"] == ["event_id"]
+                ),
+                None,
+            )
+        )
 
     def _migrate_states_context_ids(self) -> bool:
         """Migrate states context ids if needed."""
