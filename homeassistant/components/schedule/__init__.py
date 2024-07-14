@@ -111,7 +111,8 @@ BASE_SCHEMA: VolDictType = {
 }
 
 # Extra data that the user can set on each time range
-CUSTOM_DATA_SCHEMA = vol.Or(vol.Schema({str: vol.Coerce(str)}), vol.Coerce(str))
+CUSTOM_DATA_VALUE = vol.Or(bool, str, int, float)
+CUSTOM_DATA_SCHEMA = vol.Or(vol.Schema({str: CUSTOM_DATA_VALUE}), CUSTOM_DATA_VALUE)
 
 TIME_RANGE_SCHEMA: VolDictType = {
     vol.Required(CONF_FROM): cv.time,
@@ -241,7 +242,7 @@ class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+        {ATTR_EDITABLE, ATTR_NEXT_EVENT, CONF_DATA}
     )
 
     _attr_has_entity_name = True
@@ -258,6 +259,10 @@ class Schedule(CollectionEntity):
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
+
+        # The "data" attribute is always excluded from the recorder, but
+        # also exclude any custom attributes that may be present on time ranges.
+        self._unrecorded_attributes = self.all_custom_data_keys()
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Schedule:
@@ -368,3 +373,23 @@ class Schedule(CollectionEntity):
                 self._update,
                 next_event,
             )
+
+    def all_custom_data_keys(self) -> frozenset[str]:
+        """Return the set of all currently used custom data attribute keys."""
+        data_keys = set()
+
+        for weekday in WEEKDAY_TO_CONF.values():
+            if not (weekday_config := self._config.get(weekday)):
+                continue  # this weekday is not configured
+
+            for time_range in weekday_config:
+                time_range_custom_data = time_range.get(CONF_DATA)
+
+                if not time_range_custom_data or not isinstance(
+                    time_range_custom_data, dict
+                ):
+                    continue  # this time range has no custom data, or it is a single value
+
+                data_keys.update(time_range_custom_data.keys())
+
+        return frozenset(data_keys)

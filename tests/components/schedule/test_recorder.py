@@ -7,7 +7,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.schedule.const import ATTR_NEXT_EVENT, DOMAIN
+from homeassistant.components.schedule.const import ATTR_NEXT_EVENT, CONF_DATA, DOMAIN
 from homeassistant.const import ATTR_EDITABLE, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -33,9 +33,11 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
                     "tuesday": [{"from": "2:00", "to": "3:00"}],
                     "wednesday": [{"from": "3:00", "to": "4:00"}],
                     "thursday": [{"from": "5:00", "to": "6:00"}],
-                    "friday": [{"from": "7:00", "to": "8:00"}],
+                    "friday": [
+                        {"from": "7:00", "to": "8:00", "data": {"party_level": "epic"}}
+                    ],
                     "saturday": [{"from": "9:00", "to": "10:00"}],
-                    "sunday": [{"from": "11:00", "to": "12:00"}],
+                    "sunday": [{"from": "11:00", "to": "12:00", "data": "VIPs only"}],
                 }
             }
         },
@@ -63,3 +65,5 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
             assert ATTR_FRIENDLY_NAME in state.attributes
             assert ATTR_ICON in state.attributes
             assert ATTR_NEXT_EVENT not in state.attributes
+            assert CONF_DATA not in state.attributes
+            assert "party_level" not in state.attributes
