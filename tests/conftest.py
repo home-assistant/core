@@ -1301,6 +1301,16 @@ def enable_migrate_entity_ids() -> bool:
 
 
 @pytest.fixture
+def enable_migrate_event_ids() -> bool:
+    """Fixture to control enabling of recorder's event id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_event_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def recorder_config() -> dict[str, Any] | None:
     """Fixture to override recorder config.
 
@@ -1416,6 +1426,7 @@ async def async_test_recorder(
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
+    enable_migrate_event_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
     """Yield context manager to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
@@ -1457,6 +1468,11 @@ async def async_test_recorder(
     migrate_entity_ids = (
         recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
     )
+    legacy_event_id_foreign_key_exists = (
+        recorder.Recorder._legacy_event_id_foreign_key_exists
+        if enable_migrate_event_ids
+        else None
+    )
     with (
         patch(
             "homeassistant.components.recorder.Recorder.async_nightly_tasks",
@@ -1491,6 +1507,11 @@ async def async_test_recorder(
         patch(
             "homeassistant.components.recorder.Recorder._migrate_entity_ids",
             side_effect=migrate_entity_ids,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._legacy_event_id_foreign_key_exists",
+            side_effect=legacy_event_id_foreign_key_exists,
             autospec=True,
         ),
         patch(

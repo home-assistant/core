@@ -61,6 +61,7 @@ PLATFORMS: Final = [
     Platform.COVER,
     Platform.EVENT,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,

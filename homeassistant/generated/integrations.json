@@ -635,12 +635,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "bayesian": {
-      "name": "Bayesian",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "bbox": {
       "name": "Bbox",
       "integration_type": "hub",
@@ -7162,6 +7156,12 @@
     }
   },
   "helper": {
+    "bayesian": {
+      "name": "Bayesian",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false
