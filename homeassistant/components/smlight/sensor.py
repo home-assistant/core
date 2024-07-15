@@ -151,6 +151,7 @@ class SmUptimeSensorEntity(SmSensorEntity):
                 SMLIGHT_SLZB_REBOOT_EVENT,
                 {
                     "device_id": self.coordinator.unique_id,
+                    "host": self.coordinator.hostname,
                 },
             )
             LOGGER.debug("SLZB device reboot detected")
