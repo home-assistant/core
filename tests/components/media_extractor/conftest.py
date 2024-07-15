@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.media_extractor import DOMAIN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-from tests.components.media_extractor import MockYoutubeDL
-from tests.components.media_extractor.const import AUDIO_QUERY
+from . import MockYoutubeDL
+from .const import AUDIO_QUERY
 
 
 @pytest.fixture(autouse=True)
@@ -28,12 +27,6 @@ async def setup_media_player(hass: HomeAssistant) -> None:
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "media_player", "play_media")
 
 
 @pytest.fixture(name="mock_youtube_dl")
@@ -57,7 +50,7 @@ def audio_media_extractor_config() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.media_extractor.async_setup_entry", return_value=True

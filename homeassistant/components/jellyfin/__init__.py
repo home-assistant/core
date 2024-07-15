@@ -58,9 +58,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        data = hass.data[DOMAIN].pop(entry.entry_id)
+        data.jellyfin_client.stop()
 
-    return True
+    return unloaded
 
 
 async def async_remove_config_entry_device(

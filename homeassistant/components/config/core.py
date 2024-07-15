@@ -61,6 +61,7 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("latitude"): cv.latitude,
         vol.Optional("location_name"): str,
         vol.Optional("longitude"): cv.longitude,
+        vol.Optional("radius"): cv.positive_int,
         vol.Optional("time_zone"): cv.time_zone,
         vol.Optional("update_units"): bool,
         vol.Optional("unit_system"): unit_system.validate_unit_system,

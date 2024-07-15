@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import NVR, Bootstrap, CloudAccount, Light
+from uiprotect import NotAuthorized, NvrError, ProtectApiClient
+from uiprotect.api import DEVICE_UPDATE_INTERVAL
+from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
 
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_DISABLE_RTSP,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -116,12 +116,12 @@ async def test_setup_too_old(
 
     old_bootstrap = ufp.api.bootstrap.copy()
     old_bootstrap.nvr = old_nvr
-    ufp.api.get_bootstrap.return_value = old_bootstrap
+    ufp.api.update.return_value = old_bootstrap
+    ufp.api.bootstrap = old_bootstrap
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
     assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
-    assert not ufp.api.update.called
 
 
 async def test_setup_cloud_account(
@@ -179,13 +179,13 @@ async def test_setup_failed_update_reauth(
     # to verify it is not transient
     ufp.api.update = AsyncMock(side_effect=NotAuthorized)
     for _ in range(AUTH_RETRIES):
-        await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+        await time_changed(hass, DEVICE_UPDATE_INTERVAL)
         assert len(hass.config_entries.flow._progress) == 0
 
     assert ufp.api.update.call_count == AUTH_RETRIES
     assert ufp.entry.state is ConfigEntryState.LOADED
 
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
     assert ufp.api.update.call_count == AUTH_RETRIES + 1
     assert len(hass.config_entries.flow._progress) == 1
 
@@ -193,18 +193,17 @@ async def test_setup_failed_update_reauth(
 async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test setup of unifiprotect entry with generic error."""
 
-    ufp.api.get_bootstrap = AsyncMock(side_effect=NvrError)
+    ufp.api.update = AsyncMock(side_effect=NvrError)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
     assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
-    assert not ufp.api.update.called
 
 
 async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test setup of unifiprotect entry with unauthorized error after multiple retries."""
 
-    ufp.api.get_bootstrap = AsyncMock(side_effect=NotAuthorized)
+    ufp.api.update = AsyncMock(side_effect=NotAuthorized)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
@@ -215,7 +214,6 @@ async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> No
 
     await hass.config_entries.async_reload(ufp.entry.entry_id)
     assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
-    assert not ufp.api.update.called
 
 
 async def test_setup_starts_discovery(

@@ -113,8 +113,8 @@ class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[FakeConfigFlow, None, None]:
+    hass: HomeAssistant, current_request_with_host: None
+) -> Generator[None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):

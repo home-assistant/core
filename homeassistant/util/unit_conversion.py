@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -167,6 +168,19 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.INCHES,
         UnitOfLength.YARDS,
     }
+
+
+class ConductivityConverter(BaseUnitConverter):
+    """Utility to convert electric current values."""
+
+    UNIT_CLASS = "conductivity"
+    NORMALIZED_UNIT = UnitOfConductivity.MICROSIEMENS
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfConductivity.MICROSIEMENS: 1,
+        UnitOfConductivity.MILLISIEMENS: 1e-3,
+        UnitOfConductivity.SIEMENS: 1e-6,
+    }
+    VALID_UNITS = set(UnitOfConductivity)
 
 
 class ElectricCurrentConverter(BaseUnitConverter):

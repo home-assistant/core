@@ -132,7 +132,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-) -> Generator[ComponentSetup, None, None]:
+) -> Generator[ComponentSetup]:
     """Set up the lidarr integration in Home Assistant."""
     config_entry.add_to_hass(hass)
 

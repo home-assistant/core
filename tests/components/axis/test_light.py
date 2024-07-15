@@ -9,7 +9,6 @@ import pytest
 import respx
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -70,9 +69,9 @@ def light_control_fixture(light_control_items: list[dict[str, Any]]) -> None:
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
 @pytest.mark.parametrize("light_control_items", [[]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_no_light_entity_without_light_control_representation(
     hass: HomeAssistant,
-    setup_config_entry: ConfigEntry,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
 ) -> None:
     """Verify no lights entities get created without light control representation."""
@@ -89,12 +88,10 @@ async def test_no_light_entity_without_light_control_representation(
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_lights(
     hass: HomeAssistant,
-    respx_mock: respx,
-    setup_config_entry: ConfigEntry,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
-    api_discovery_items: dict[str, Any],
 ) -> None:
     """Test that lights are loaded properly."""
     # Add light

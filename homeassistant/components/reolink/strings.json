@@ -233,6 +233,13 @@
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
+      },
+      "sleep": {
+        "name": "Sleep status",
+        "state": {
+          "off": "Awake",
+          "on": "Sleeping"
+        }
       }
     },
     "button": {
@@ -463,8 +470,8 @@
           "pantiltfirst": "Pan/tilt first"
         }
       },
-      "status_led": {
-        "name": "Status LED",
+      "doorbell_led": {
+        "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
@@ -536,6 +543,9 @@
       },
       "record": {
         "name": "Record"
+      },
+      "manual_record": {
+        "name": "Manual record"
       },
       "buzzer": {
         "name": "Buzzer on event"

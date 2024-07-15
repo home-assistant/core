@@ -84,9 +84,7 @@ class FakeSchedule:
 
 
 @pytest.fixture
-def fake_schedule(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> Generator[FakeSchedule, None, None]:
+def fake_schedule(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> FakeSchedule:
     """Fixture that tests can use to make fake events."""
 
     # Setup start time for all tests
@@ -104,7 +102,7 @@ def mock_test_entity(test_entities: list[MockCalendarEntity]) -> MockCalendarEnt
 @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_platform(
     hass: HomeAssistant,
-    mock_setup_integration: Any,
+    mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test."""
@@ -161,7 +159,7 @@ def calls_data(hass: HomeAssistant) -> Callable[[], list[dict[str, Any]]]:
 
 
 @pytest.fixture(autouse=True)
-def mock_update_interval() -> Generator[None, None, None]:
+def mock_update_interval() -> Generator[None]:
     """Fixture to override the update interval for refreshing events."""
     with patch(
         "homeassistant.components.calendar.trigger.UPDATE_INTERVAL",

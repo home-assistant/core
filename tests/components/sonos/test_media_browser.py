@@ -4,8 +4,7 @@ from functools import partial
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.components.media_player.const import MediaClass, MediaType
+from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.components.sonos.media_browser import (
     build_item_response,
     get_thumbnail_url_full,

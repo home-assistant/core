@@ -51,7 +51,7 @@ def platforms() -> list[str]:
 @pytest.fixture
 def error_caplog(
     caplog: pytest.LogCaptureFixture,
-) -> Generator[pytest.LogCaptureFixture, None, None]:
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init error messages."""
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         yield caplog
@@ -60,20 +60,22 @@ def error_caplog(
 @pytest.fixture
 def warning_caplog(
     caplog: pytest.LogCaptureFixture,
-) -> Generator[pytest.LogCaptureFixture, None, None]:
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init warning messages."""
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.nest"):
         yield caplog
 
 
 @pytest.fixture
-def subscriber_side_effect() -> None:
+def subscriber_side_effect() -> Any | None:
     """Fixture to inject failures into FakeSubscriber start."""
     return None
 
 
 @pytest.fixture
-def failing_subscriber(subscriber_side_effect: Any) -> YieldFixture[FakeSubscriber]:
+def failing_subscriber(
+    subscriber_side_effect: Any | None,
+) -> YieldFixture[FakeSubscriber]:
     """Fixture overriding default subscriber behavior to allow failure injection."""
     subscriber = FakeSubscriber()
     with patch(

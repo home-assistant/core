@@ -6,37 +6,12 @@ from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED
 import pytest
 
 from homeassistant.components.homeworks import EVENT_BUTTON_PRESS, EVENT_BUTTON_RELEASE
-from homeassistant.components.homeworks.const import CONF_DIMMERS, CONF_KEYPADS, DOMAIN
+from homeassistant.components.homeworks.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_capture_events
-
-
-async def test_import(
-    hass: HomeAssistant,
-    mock_homeworks: MagicMock,
-) -> None:
-    """Test the Homeworks YAML import."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_HOST: "192.168.0.1",
-                CONF_PORT: 1234,
-                CONF_DIMMERS: [],
-                CONF_KEYPADS: [],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.flow.async_progress()) == 1
-    assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "import"
 
 
 async def test_load_unload_config_entry(

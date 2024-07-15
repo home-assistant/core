@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.weatherflow_cloud.async_setup_entry",
@@ -18,7 +18,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_stations() -> Generator[AsyncMock, None, None]:
+def mock_get_stations() -> Generator[AsyncMock]:
     """Mock get_stations with a sequence of responses."""
     side_effects = [
         True,
@@ -32,7 +32,7 @@ def mock_get_stations() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_stations_500_error() -> Generator[AsyncMock, None, None]:
+def mock_get_stations_500_error() -> Generator[AsyncMock]:
     """Mock get_stations with a sequence of responses."""
     side_effects = [
         ClientResponseError(Mock(), (), status=500),
@@ -47,7 +47,7 @@ def mock_get_stations_500_error() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_stations_401_error() -> Generator[AsyncMock, None, None]:
+def mock_get_stations_401_error() -> Generator[AsyncMock]:
     """Mock get_stations with a sequence of responses."""
     side_effects = [ClientResponseError(Mock(), (), status=401), True, True, True]
 

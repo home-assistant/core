@@ -13,7 +13,7 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
     toggle_entity,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -23,13 +23,7 @@ from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import RequirementsNotFound
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-)
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 from tests.typing import WebSocketGenerator
 
 
@@ -46,7 +40,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def fake_integration(hass):
+def fake_integration(hass: HomeAssistant) -> None:
     """Set up a mock integration with device automation support."""
     DOMAIN = "fake_integration"
 
@@ -1384,15 +1378,9 @@ async def test_automation_with_bad_condition(
     assert expected_error.format(path="['condition'][0]") in caplog.text
 
 
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
 async def test_automation_with_sub_condition(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -1492,29 +1480,29 @@ async def test_automation_with_sub_condition(
     await hass.async_block_till_done()
     assert hass.states.get(entity_entry1.entity_id).state == STATE_ON
     assert hass.states.get(entity_entry2.entity_id).state == STATE_OFF
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "or event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "or event - test_event1"
 
     hass.states.async_set(entity_entry1.entity_id, STATE_OFF)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     hass.states.async_set(entity_entry2.entity_id, STATE_ON)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "or event - test_event1"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "or event - test_event1"
 
     hass.states.async_set(entity_entry1.entity_id, STATE_ON)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert [calls[2].data["some"], calls[3].data["some"]] == unordered(
+    assert len(service_calls) == 4
+    assert [service_calls[2].data["some"], service_calls[3].data["some"]] == unordered(
         ["or event - test_event1", "and event - test_event1"]
     )
 

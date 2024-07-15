@@ -23,6 +23,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
+from .button import async_create_preview_button
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .cover import async_create_preview_cover
 from .entity import GroupEntity
@@ -51,6 +52,7 @@ async def basic_group_options_schema(
     domain: str | list[str], handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
+    entity_selector: selector.Selector[Any] | vol.Schema
     if handler is None:
         entity_selector = selector.selector(
             {"entity": {"domain": domain, "multiple": True}}
@@ -145,6 +147,7 @@ async def light_switch_options_schema(
 
 GROUP_TYPES = [
     "binary_sensor",
+    "button",
     "cover",
     "event",
     "fan",
@@ -183,6 +186,11 @@ CONFIG_FLOW = {
         BINARY_SENSOR_CONFIG_SCHEMA,
         preview="group",
         validate_user_input=set_group_type("binary_sensor"),
+    ),
+    "button": SchemaFlowFormStep(
+        basic_group_config_schema("button"),
+        preview="group",
+        validate_user_input=set_group_type("button"),
     ),
     "cover": SchemaFlowFormStep(
         basic_group_config_schema("cover"),
@@ -233,6 +241,10 @@ OPTIONS_FLOW = {
         binary_sensor_options_schema,
         preview="group",
     ),
+    "button": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "button"),
+        preview="group",
+    ),
     "cover": SchemaFlowFormStep(
         partial(basic_group_options_schema, "cover"),
         preview="group",
@@ -274,6 +286,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Callable[[HomeAssistant, str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
+    "button": async_create_preview_button,
     "cover": async_create_preview_cover,
     "event": async_create_preview_event,
     "fan": async_create_preview_fan,

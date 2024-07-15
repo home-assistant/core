@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -37,7 +38,7 @@ ATTR_WATER_LEVEL = "water_level"
 
 SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
 
-SET_HUMIDITY_SCHEMA = {
+SET_HUMIDITY_SCHEMA: VolDictType = {
     vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
         vol.Coerce(float), vol.Range(min=0, max=100)
     ),

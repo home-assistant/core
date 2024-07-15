@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from nextdns import ApiError
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -16,9 +17,9 @@ from . import init_integration, mock_nextdns
 from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -29,9 +30,9 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_availability(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""

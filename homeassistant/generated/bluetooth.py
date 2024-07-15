@@ -349,6 +349,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "AP-*",
     },
     {
+        "domain": "led_ble",
+        "local_name": "MELK-*",
+    },
+    {
         "domain": "medcom_ble",
         "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
     },
@@ -618,6 +622,15 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             0,
         ],
         "manufacturer_id": 27,
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "thermobeacon",
+        "manufacturer_data_start": [
+            0,
+        ],
+        "manufacturer_id": 48,
         "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
     },
     {

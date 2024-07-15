@@ -1,5 +1,7 @@
 """Test the Aranet sensors."""
 
+import pytest
+
 from homeassistant.components.aranet.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -16,9 +18,8 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors_aranet_radiation(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_aranet_radiation(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors for Aranet Radiation device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -75,9 +76,8 @@ async def test_sensors_aranet_radiation(
     await hass.async_block_till_done()
 
 
-async def test_sensors_aranet2(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_aranet2(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors for Aranet2 device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -125,9 +125,8 @@ async def test_sensors_aranet2(
     await hass.async_block_till_done()
 
 
-async def test_sensors_aranet4(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_aranet4(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors for Aranet4 device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -189,9 +188,8 @@ async def test_sensors_aranet4(
     await hass.async_block_till_done()
 
 
-async def test_smart_home_integration_disabled(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_smart_home_integration_disabled(hass: HomeAssistant) -> None:
     """Test disabling smart home integration marks entities as unavailable."""
     entry = MockConfigEntry(
         domain=DOMAIN,

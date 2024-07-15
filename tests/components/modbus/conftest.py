@@ -4,6 +4,7 @@ import copy
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -60,7 +61,7 @@ def register_words_fixture():
 
 
 @pytest.fixture(name="config_addon")
-def config_addon_fixture():
+def config_addon_fixture() -> dict[str, Any] | None:
     """Add extra configuration items."""
     return None
 
@@ -182,7 +183,9 @@ async def do_next_cycle(
 
 
 @pytest.fixture(name="mock_test_state")
-async def mock_test_state_fixture(hass, request):
+async def mock_test_state_fixture(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> Any:
     """Mock restore cache."""
     mock_restore_cache(hass, request.param)
     return request.param

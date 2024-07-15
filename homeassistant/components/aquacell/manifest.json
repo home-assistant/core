@@ -1,0 +1,12 @@
+{
+  "domain": "aquacell",
+  "name": "Aquacell",
+  "codeowners": ["@Jordi1990"],
+  "config_flow": true,
+  "dependencies": ["http", "network"],
+  "documentation": "https://www.home-assistant.io/integrations/aquacell",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioaquacell"],
+  "requirements": ["aioaquacell==0.2.0"]
+}
