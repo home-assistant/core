@@ -12,6 +12,7 @@
           'start': '2024-03-01T19:00:00+00:00',
           'uid': '1140_300_MO,WE,FR',
           'work_area_id': None,
+          'work_area_name': None,
         }),
         dict({
           'end': '2024-03-02T08:00:00+00:00',
@@ -19,6 +20,7 @@
           'start': '2024-03-02T00:00:00+00:00',
           'uid': '0_480_TU,TH,SA',
           'work_area_id': None,
+          'work_area_name': None,
         }),
       ]),
       'tasks': list([
@@ -33,6 +35,7 @@
           'tuesday': False,
           'wednesday': True,
           'work_area_id': None,
+          'work_area_name': None,
         }),
         dict({
           'duration': 480,
@@ -45,6 +48,7 @@
           'tuesday': True,
           'wednesday': False,
           'work_area_id': None,
+          'work_area_name': None,
         }),
       ]),
     }),
@@ -68,6 +72,7 @@
       'mode': 'MAIN_AREA',
       'state': 'RESTRICTED',
       'work_area_id': 123456,
+      'work_area_name': 'Front lawn',
     }),
     'planner': dict({
       'next_start': 1685991600000,
@@ -112,6 +117,17 @@
       'name': 'Test Mower 1',
       'serial_number': 123,
     }),
+    'work_area_dict': dict({
+      '0': 'my_lawn',
+      '123456': 'Front lawn',
+      '654321': 'Back lawn',
+    }),
+    'work_area_names': list([
+      'Front lawn',
+      'Back lawn',
+      'my_lawn',
+      'no_work_area_active',
+    ]),
     'work_areas': dict({
       '0': dict({
         'cutting_height': 50,
