@@ -1,4 +1,4 @@
-"""The test for the Template sensor platform."""
+"""Test for Template helper."""
 
 from datetime import timedelta
 from unittest.mock import patch
@@ -271,13 +271,87 @@ async def async_yaml_patch_helper(hass, filename):
         await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    (
+        "config_entry_options",
+        "config_user_input",
+    ),
+    [
+        (
+            {
+                "name": "My template",
+                "state": "{{10}}",
+                "template_type": "sensor",
+            },
+            {
+                "state": "{{12}}",
+            },
+        ),
+        (
+            {
+                "template_type": "binary_sensor",
+                "name": "My template",
+                "state": "{{1 == 1}}",
+            },
+            {
+                "state": "{{1 == 2}}",
+            },
+        ),
+        (
+            {
+                "template_type": "image",
+                "name": "My template",
+                "url": "http://example.com",
+            },
+            {
+                "url": "http://example.com",
+            },
+        ),
+        (
+            {
+                "template_type": "button",
+                "name": "My template",
+            },
+            {},
+        ),
+        (
+            {
+                "template_type": "select",
+                "name": "My template",
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+            },
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+            },
+        ),
+        (
+            {
+                "template_type": "switch",
+                "name": "My template",
+                "value_template": "{{ true }}",
+            },
+            {
+                "value_template": "{{ true }}",
+            },
+        ),
+    ],
+)
 async def test_change_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    config_entry_options: dict[str, str],
+    config_user_input: dict[str, str],
 ) -> None:
-    """Test remove the device registry configuration entry when the device changes."""
+    """Test the link between the device and the config entry.
 
-    # Configure a device registry
+    Test, for each platform, that the device was linked to the
+    config entry and the link was removed when the device is
+    changed in the integration options.
+    """
+
+    # Configure devices registry
     entry_device1 = MockConfigEntry()
     entry_device1.add_to_hass(hass)
     device1 = device_registry.async_get_or_create(
@@ -300,60 +374,57 @@ async def test_change_device(
     device_id2 = device2.id
     assert device_id2 is not None
 
-    # Setup the config entry (binary_sensor)
-    sensor_config_entry = MockConfigEntry(
+    # Setup the config entry
+    template_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
-        options={
-            "template_type": "binary_sensor",
-            "name": "Teste",
-            "state": "{{15}}",
-            "device_id": device_id1,
-        },
-        title="Binary sensor template",
+        options=config_entry_options | {"device_id": device_id1},
+        title="Template",
     )
-    sensor_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(sensor_config_entry.entry_id)
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been added to the device 1 registry (current)
+    # Confirm that the config entry has been added to the device 1 registry (current)
     current_device = device_registry.async_get(device_id=device_id1)
-    assert sensor_config_entry.entry_id in current_device.config_entries
+    assert template_config_entry.entry_id in current_device.config_entries
 
-    # Change configuration options to use device 2 and reload the integration
-    result = await hass.config_entries.options.async_init(sensor_config_entry.entry_id)
+    # Change config options to use device 2 and reload the integration
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "state": "{{15}}",
-            "device_id": device_id2,
-        },
+        user_input=config_user_input | {"device_id": device_id2},
     )
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been removed from the device 1 registry (previous)
+    # Confirm that the config entry has been removed from the device 1 registry
     previous_device = device_registry.async_get(device_id=device_id1)
-    assert sensor_config_entry.entry_id not in previous_device.config_entries
+    assert template_config_entry.entry_id not in previous_device.config_entries
 
-    # Confirm that the configuration entry has been added to the device 2 registry (current)
+    # Confirm that the config entry has been added to the device 2 registry (current)
     current_device = device_registry.async_get(device_id=device_id2)
-    assert sensor_config_entry.entry_id in current_device.config_entries
+    assert template_config_entry.entry_id in current_device.config_entries
 
-    result = await hass.config_entries.options.async_init(sensor_config_entry.entry_id)
+    # Change the config options to remove the device and reload the integration
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "state": "{{15}}",
-        },
+        user_input=config_user_input,
     )
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been removed from the device 2 registry (previous)
+    # Confirm that the config entry has been removed from the device 2 registry
     previous_device = device_registry.async_get(device_id=device_id2)
-    assert sensor_config_entry.entry_id not in previous_device.config_entries
+    assert template_config_entry.entry_id not in previous_device.config_entries
 
-    # Confirm that there is no device with the helper configuration entry
+    # Confirm that there is no device with the helper config entry
     assert (
-        dr.async_entries_for_config_entry(device_registry, sensor_config_entry.entry_id)
+        dr.async_entries_for_config_entry(
+            device_registry, template_config_entry.entry_id
+        )
         == []
     )

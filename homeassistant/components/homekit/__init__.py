@@ -79,6 +79,7 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util.async_ import create_eager_task
 
 from . import (  # noqa: F401
     type_cameras,
@@ -163,6 +164,7 @@ BATTERY_CHARGING_SENSOR = (
     BinarySensorDeviceClass.BATTERY_CHARGING,
 )
 BATTERY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
+MOTION_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.MOTION)
 MOTION_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
 DOORBELL_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.DOORBELL)
 DOORBELL_BINARY_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
@@ -510,7 +512,7 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
             )
 
         reload_tasks = [
-            hass.config_entries.async_reload(entry.entry_id)
+            create_eager_task(hass.config_entries.async_reload(entry.entry_id))
             for entry in current_entries
         ]
 
@@ -1121,7 +1123,11 @@ class HomeKit:
             )
 
         if domain == CAMERA_DOMAIN:
-            if motion_binary_sensor_entity_id := lookup.get(MOTION_SENSOR):
+            if motion_event_entity_id := lookup.get(MOTION_EVENT_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_MOTION_SENSOR, motion_event_entity_id
+                )
+            elif motion_binary_sensor_entity_id := lookup.get(MOTION_SENSOR):
                 config[entity_id].setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id
                 )

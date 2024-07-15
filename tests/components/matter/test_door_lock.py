@@ -8,13 +8,10 @@ import pytest
 
 from homeassistant.components.lock import (
     STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_OPEN,
     STATE_UNLOCKED,
-    STATE_UNLOCKING,
     LockEntityFeature,
 )
-from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
+from homeassistant.const import ATTR_CODE, STATE_LOCKING, STATE_OPENING, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
@@ -66,16 +63,17 @@ async def test_lock(
     )
     matter_client.send_device_command.reset_mock()
 
+    await hass.async_block_till_done()
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_LOCKED
+    assert state.state == STATE_LOCKING
 
     set_node_attribute(door_lock, 1, 257, 0, 0)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_UNLOCKING
+    assert state.state == STATE_UNLOCKED
 
     set_node_attribute(door_lock, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
@@ -89,7 +87,7 @@ async def test_lock(
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_LOCKING
+    assert state.state == STATE_UNLOCKED
 
     set_node_attribute(door_lock, 1, 257, 0, None)
     await trigger_subscription_callback(hass, matter_client)
@@ -210,9 +208,14 @@ async def test_lock_with_unbolt(
         timed_request_timeout_ms=1000,
     )
 
+    await hass.async_block_till_done()
+    state = hass.states.get("lock.mock_door_lock_lock")
+    assert state
+    assert state.state == STATE_OPENING
+
     set_node_attribute(door_lock_with_unbolt, 1, 257, 3, 0)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_LOCKED

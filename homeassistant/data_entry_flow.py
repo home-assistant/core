@@ -112,9 +112,7 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-# ignore misc is required as vol.Invalid is not typed
-# mypy error: Class cannot subclass "Invalid" (has type "Any")
-class InvalidData(vol.Invalid):  # type: ignore[misc]
+class InvalidData(vol.Invalid):
     """Invalid data provided."""
 
     def __init__(
@@ -386,7 +384,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         ) is not None and user_input is not None:
             data_schema = cast(vol.Schema, data_schema)
             try:
-                user_input = data_schema(user_input)  # type: ignore[operator]
+                user_input = data_schema(user_input)
             except vol.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):

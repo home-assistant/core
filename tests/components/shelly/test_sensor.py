@@ -828,3 +828,130 @@ async def test_rpc_pulse_counter_frequency_sensors(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-input:2-counter_frequency_value"
+
+
+async def test_rpc_disabled_xfreq(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC input with the xfreq sensor disabled."""
+    status = deepcopy(mock_rpc_device.status)
+    status["input:2"] = {
+        "id": 2,
+        "counts": {"total": 56174, "xtotal": 561.74},
+        "freq": 208.00,
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_frequency_value"
+
+    state = hass.states.get(entity_id)
+    assert not state
+
+    entry = entity_registry.async_get(entity_id)
+    assert not entry
+
+
+@pytest.mark.parametrize(
+    ("name", "entity_id"),
+    [
+        ("Virtual sensor", "sensor.test_name_virtual_sensor"),
+        (None, "sensor.test_name_text_203"),
+    ],
+)
+async def test_rpc_device_virtual_sensor(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    name: str | None,
+    entity_id: str,
+) -> None:
+    """Test a virtual sensor for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    config["text:203"] = {
+        "name": name,
+        "meta": {"ui": {"view": "label"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["text:203"] = {"value": "lorem ipsum"}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "lorem ipsum"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-text:203-text"
+
+    monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
+    mock_rpc_device.mock_update()
+    assert hass.states.get(entity_id).state == "dolor sit amet"
+
+
+async def test_rpc_remove_virtual_sensor_when_mode_field(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test if the virtual sensor will be removed if the mode has been changed to a field."""
+    config = deepcopy(mock_rpc_device.config)
+    config["text:200"] = {"name": None, "meta": {"ui": {"view": "field"}}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["text:200"] = {"value": "lorem ipsum"}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    config_entry = await init_integration(hass, 3, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_text_200",
+        "text:200-text",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert not entry
+
+
+async def test_rpc_remove_virtual_sensor_when_orphaned(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    mock_rpc_device: Mock,
+) -> None:
+    """Check whether the virtual sensor will be removed if it has been removed from the device configuration."""
+    config_entry = await init_integration(hass, 3, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_text_200",
+        "text:200-text",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert not entry
