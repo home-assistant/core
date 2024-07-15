@@ -4,6 +4,7 @@ import asyncio
 import datetime as dt
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.tibber.const import DOMAIN
@@ -14,8 +15,8 @@ from homeassistant.exceptions import ServiceValidationError
 
 def generate_mock_home_data():
     """Create mock data from the tibber connection."""
-    today = remove_microseconds(dt.datetime.now())
-    tomorrow = remove_microseconds(today + dt.timedelta(days=1))
+    today = dt.datetime.now()
+    tomorrow = today + dt.timedelta(days=1)
     mock_homes = [
         MagicMock(
             name="first_home",
@@ -119,15 +120,13 @@ def create_mock_hass():
     return mock_hass
 
 
-def remove_microseconds(dt):
-    """Remove microseconds from a datetime object."""
-    return dt.replace(microsecond=0)
-
-
-async def test_get_prices():
+async def test_get_prices(
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test __get_prices with mock data."""
-    today = remove_microseconds(dt.datetime.now())
-    tomorrow = remove_microseconds(dt.datetime.now() + dt.timedelta(days=1))
+    today = dt.datetime.now()
+    freezer.move_to(today)
+    tomorrow = today + dt.timedelta(days=1)
     call = ServiceCall(
         DOMAIN,
         PRICE_SERVICE_NAME,
@@ -166,9 +165,12 @@ async def test_get_prices():
     }
 
 
-async def test_get_prices_no_input():
+async def test_get_prices_no_input(
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test __get_prices with no input."""
-    today = remove_microseconds(dt.datetime.now())
+    today = dt.datetime.now()
+    freezer.move_to(today)
     call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {})
 
     result = await __get_prices(call, hass=create_mock_hass())
@@ -203,9 +205,13 @@ async def test_get_prices_no_input():
     }
 
 
-async def test_get_prices_start_tomorrow():
+async def test_get_prices_start_tomorrow(
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test __get_prices with start date tomorrow."""
-    tomorrow = remove_microseconds(dt.datetime.now() + dt.timedelta(days=1))
+    today = dt.datetime.now()
+    freezer.move_to(today)
+    tomorrow = today + dt.timedelta(days=1)
     call = ServiceCall(
         DOMAIN, PRICE_SERVICE_NAME, {"start": tomorrow.date().isoformat()}
     )
@@ -242,7 +248,7 @@ async def test_get_prices_start_tomorrow():
     }
 
 
-async def test_get_prices_invalid_input():
+async def test_get_prices_invalid_input() -> None:
     """Test __get_prices with invalid input."""
 
     call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": "test"})
