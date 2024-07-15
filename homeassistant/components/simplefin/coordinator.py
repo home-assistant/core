@@ -36,7 +36,6 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
         try:
             return await self.client.fetch_data()
         except SimpleFinAuthError as err:
-            # raise ConfigEntryError("Authentication failed") from err
             raise ConfigEntryAuthFailed("Authentication failed") from err
 
         except SimpleFinPaymentRequiredError as err:

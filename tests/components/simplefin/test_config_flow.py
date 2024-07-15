@@ -173,12 +173,6 @@ async def test_reauth_flow(
     """Test reauth flow."""
     mock_config_entry.add_to_hass(hass)
 
-    # result = await hass.config_entries.flow.async_init(
-    #     DOMAIN,
-    #     context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-    #     data=mock_config_entry.data,
-    # )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
