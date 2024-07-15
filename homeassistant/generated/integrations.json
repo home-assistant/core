@@ -5466,12 +5466,6 @@
       "integration_type": "virtual",
       "supported_by": "overkiz"
     },
-    "simulated": {
-      "name": "Simulated",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "sinch": {
       "name": "Sinch SMS",
       "integration_type": "hub",
@@ -7235,6 +7229,12 @@
     "schedule": {
       "integration_type": "helper",
       "config_flow": false
+    },
+    "simulated": {
+      "name": "Simulated",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_polling"
     },
     "statistics": {
       "name": "Statistics",
