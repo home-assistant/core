@@ -199,7 +199,8 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
-        await self._device.toggle_mute()
+        if mute != self._device.status.muted:
+            await self._device.toggle_mute()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
