@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -38,7 +38,6 @@ RPC_SELECT_ENTITIES: Final = {
         key="enum",
         sub_key="value",
         has_entity_name=True,
-        options_fn=lambda config: config["options"],
     ),
 }
 
@@ -87,17 +86,22 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if callable(description.options_fn):
-            self._attr_options = description.options_fn(coordinator.device.config[key])
+        titles = self.coordinator.device.config[key]["meta"]["ui"]["titles"]
+        options = self.coordinator.device.config[key]["options"]
+        self._option_map = {
+            key: (titles[key] if titles[key] is not None else key) for key in options
+        }
+        self._rev_option_map = {title: key for key, title in self._option_map.items()}
+
+        self._attr_options = list(self._option_map.values())
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, str | None)
-
-        return self.attribute_value
+        return cast(str, self._option_map[self.attribute_value])
 
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
-        await self.call_rpc("Enum.Set", {"id": self._id, "value": option})
+        await self.call_rpc(
+            "Enum.Set", {"id": self._id, "value": self._rev_option_map[option]}
+        )
