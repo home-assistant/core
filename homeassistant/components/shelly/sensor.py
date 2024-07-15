@@ -1032,6 +1032,13 @@ RPC_SENSORS: Final = {
         if config["meta"]["ui"]["unit"]
         else None,
     ),
+    "enum": RpcSensorDescription(
+        key="enum",
+        sub_key="value",
+        has_entity_name=True,
+        options_fn=lambda config: config["options"],
+        device_class=SensorDeviceClass.ENUM,
+    ),
 }
 
 
@@ -1060,7 +1067,7 @@ async def async_setup_entry(
 
             # the user can remove virtual components from the device configuration, so
             # we need to remove orphaned entities
-            for component in ("text", "number"):
+            for component in ("enum", "number", "text"):
                 virtual_component_ids = get_virtual_component_ids(
                     coordinator.device.config, SENSOR_PLATFORM
                 )
@@ -1133,6 +1140,19 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     """Represent a RPC sensor."""
 
     entity_description: RpcSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if callable(description.options_fn):
+            self._attr_options = description.options_fn(coordinator.device.config[key])
 
     @property
     def native_value(self) -> StateType:
