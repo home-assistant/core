@@ -1134,21 +1134,6 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
 
     entity_description: RpcSensorDescription
 
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcSensorDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, key, attribute, description)
-
-        if callable(description.unit):
-            self._attr_native_unit_of_measurement = description.unit(
-                coordinator.device.config[key]
-            )
-
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
