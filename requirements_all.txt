@@ -2259,7 +2259,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.6.0
+python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v6.0.0
