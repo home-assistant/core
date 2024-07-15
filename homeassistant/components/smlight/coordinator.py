@@ -40,24 +40,21 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.hostname: str | None = self.get_hostname()
+        self.hostname: str | None = self.get_hostname(entry.data[CONF_HOST])
         self.unique_id: str | None = None
 
         self.client = Api2(
             host=entry.data[CONF_HOST], session=async_get_clientsession(hass)
         )
 
-    def get_hostname(self) -> str | None:
+    def get_hostname(self, host: str) -> str:
         """Get hostname. Fallback to IP if not available."""
-        if self.config_entry:
-            host = str(self.config_entry.data[CONF_HOST])
-            if is_ip_address(host):
-                try:
-                    host = socket.gethostbyaddr(host)[0]
-                except socket.herror:
-                    return host
-            return host.split(".", maxsplit=1)[0]
-        return None
+        if is_ip_address(host):
+            try:
+                host = socket.gethostbyaddr(host)[0]
+            except socket.herror:
+                return host
+        return host.split(".", maxsplit=1)[0]
 
     async def async_handle_setup(self) -> None:
         """Handle initial setup."""
