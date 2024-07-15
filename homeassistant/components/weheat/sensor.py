@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from weheat_backend_client.abstractions.heat_pump import HeatPump
+from weheat.abstractions.heat_pump import HeatPump
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry

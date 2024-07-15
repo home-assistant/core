@@ -27,11 +27,6 @@ LOGGER: Logger = getLogger(__package__)
 
 SENSORS = [
     SensorEntityDescription(
-        name="State",
-        key="heat_pump_state",
-        icon="mdi:auto-mode",
-    ),
-    SensorEntityDescription(
         name="Output power",
         key="power_output",
         icon="mdi:heat-wave",

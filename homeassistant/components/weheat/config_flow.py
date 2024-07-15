@@ -3,7 +3,7 @@
 import logging
 
 import voluptuous as vol
-from weheat_backend_client.abstractions import HeatPumpDiscovery
+from weheat.abstractions import HeatPumpDiscovery
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow

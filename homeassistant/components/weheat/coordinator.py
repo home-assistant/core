@@ -2,9 +2,9 @@
 
 from datetime import timedelta
 
-from weheat_backend_client.abstractions.discovery import HeatPumpDiscovery
-from weheat_backend_client.abstractions.heat_pump import HeatPump
-from weheat_backend_client.exceptions import (
+from weheat.abstractions.discovery import HeatPumpDiscovery
+from weheat.abstractions.heat_pump import HeatPump
+from weheat.exceptions import (
     ApiException,
     BadRequestException,
     ForbiddenException,

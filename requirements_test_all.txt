@@ -2250,7 +2250,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.weheat
-weheat-backend-client==2024.6.19rc3
+weheat==2024.7.8rc1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
