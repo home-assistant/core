@@ -124,7 +124,47 @@ async def test_select(
         ),
     ],
 )
+
+
 async def test_select_restore_state(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    core_rs,
+    zha_device_restored,
+) -> None:
+    """Test ZHA select entity restore state."""
+
+    entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
+    core_rs(entity_id, state="burglar")
+    await async_mock_load_restore_state_from_storage(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id, security.IasWd.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.IAS_WARNING_DEVICE,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+    )
+
+    zha_device = await zha_device_restored(zigpy_device)
+    cluster = zigpy_device.endpoints[1].ias_wd
+    assert cluster is not None
+    entity_id = find_entity_id(
+        Platform.SELECT,
+        zha_device,
+        hass,
+        qualifier="tone",
+    )
+
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name.lower()
+
+async def test_select_restore_state_after_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha,
