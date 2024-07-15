@@ -58,8 +58,8 @@ class ListAddItemIntent(intent.IntentHandler):
         response.response_type = intent.IntentResponseType.ACTION_DONE
         response.async_set_results(
             [
-                IntentResponseTarget(
-                    type=IntentResponseTargetType.ENTITY,
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
                     name=list_name,
                     id=match_result.states[0].entity_id,
                 )
