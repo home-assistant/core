@@ -15,9 +15,10 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .fever_smart import FeverSmartAdvParser
 
 _LOGGER = logging.getLogger(__name__)
+
+from pyfeversmart import FeverSmartAdvParser
 
 
 class ConfigFlow(ConfigFlow, domain=DOMAIN):

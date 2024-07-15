@@ -45,5 +45,8 @@
         }
       }
     }
-  }
+  },
+  "mounts": [
+    "source=/home/debian/github/pyfeversmart,target=/workspace/pyfeversmart,type=bind,consistency=cached"
+  ]
 }

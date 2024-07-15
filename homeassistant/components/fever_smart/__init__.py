@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from pyfeversmart import FeverSmartAdvParser
+
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
@@ -12,7 +14,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .fever_smart import FeverSmartAdvParser
 
 _LOGGER = logging.getLogger(__name__)
 
