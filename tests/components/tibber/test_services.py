@@ -12,11 +12,12 @@ from homeassistant.components.tibber.services import PRICE_SERVICE_NAME, __get_p
 from homeassistant.core import ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 
+STARTTIME = dt.datetime.fromtimestamp(1615766400)
+
 
 def generate_mock_home_data():
     """Create mock data from the tibber connection."""
-    today = dt.datetime.now()
-    tomorrow = today + dt.timedelta(days=1)
+    tomorrow = STARTTIME + dt.timedelta(days=1)
     mock_homes = [
         MagicMock(
             name="first_home",
@@ -27,13 +28,13 @@ def generate_mock_home_data():
                             "priceInfo": {
                                 "today": [
                                     {
-                                        "startsAt": today.isoformat(),
+                                        "startsAt": STARTTIME.isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
                                         "startsAt": (
-                                            today + dt.timedelta(hours=1)
+                                            STARTTIME + dt.timedelta(hours=1)
                                         ).isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
@@ -68,13 +69,13 @@ def generate_mock_home_data():
                             "priceInfo": {
                                 "today": [
                                     {
-                                        "startsAt": today.isoformat(),
+                                        "startsAt": STARTTIME.isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
                                         "startsAt": (
-                                            today + dt.timedelta(hours=1)
+                                            STARTTIME + dt.timedelta(hours=1)
                                         ).isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
@@ -124,13 +125,12 @@ async def test_get_prices(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test __get_prices with mock data."""
-    today = dt.datetime.now()
-    freezer.move_to(today)
-    tomorrow = today + dt.timedelta(days=1)
+    freezer.move_to(STARTTIME)
+    tomorrow = STARTTIME + dt.timedelta(days=1)
     call = ServiceCall(
         DOMAIN,
         PRICE_SERVICE_NAME,
-        {"start": today.date().isoformat(), "end": tomorrow.date().isoformat()},
+        {"start": STARTTIME.date().isoformat(), "end": tomorrow.date().isoformat()},
     )
 
     result = await __get_prices(call, hass=create_mock_hass())
@@ -139,24 +139,24 @@ async def test_get_prices(
         "prices": {
             "first_home": [
                 {
-                    "start_time": today,
+                    "start_time": STARTTIME,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": today + dt.timedelta(hours=1),
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
-                    "start_time": today,
+                    "start_time": STARTTIME,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": today + dt.timedelta(hours=1),
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
@@ -169,8 +169,7 @@ async def test_get_prices_no_input(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test __get_prices with no input."""
-    today = dt.datetime.now()
-    freezer.move_to(today)
+    freezer.move_to(STARTTIME)
     call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {})
 
     result = await __get_prices(call, hass=create_mock_hass())
@@ -179,24 +178,24 @@ async def test_get_prices_no_input(
         "prices": {
             "first_home": [
                 {
-                    "start_time": today,
+                    "start_time": STARTTIME,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": today + dt.timedelta(hours=1),
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
-                    "start_time": today,
+                    "start_time": STARTTIME,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": today + dt.timedelta(hours=1),
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
@@ -209,9 +208,8 @@ async def test_get_prices_start_tomorrow(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test __get_prices with start date tomorrow."""
-    today = dt.datetime.now()
-    freezer.move_to(today)
-    tomorrow = today + dt.timedelta(days=1)
+    freezer.move_to(STARTTIME)
+    tomorrow = STARTTIME + dt.timedelta(days=1)
     call = ServiceCall(
         DOMAIN, PRICE_SERVICE_NAME, {"start": tomorrow.date().isoformat()}
     )
