@@ -178,9 +178,6 @@ EXCEPTIONS = {
 }
 
 TODO = {
-    "PyMVGLive": AwesomeVersion(
-        "1.1.4"
-    ),  # No license and archived https://github.com/pc-coholic/PyMVGLive
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
@@ -194,9 +191,6 @@ TODO = {
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "pubnub": AwesomeVersion(
-        "8.0.0"
-    ),  # Proprietary license https://github.com/pubnub/python/blob/master/LICENSE
     "pyElectra": AwesomeVersion(
         "1.2.3"
     ),  # No License https://github.com/jafar-atili/pyElectra/issues/3
