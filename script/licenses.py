@@ -134,6 +134,7 @@ EXCEPTIONS = {
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
+    "chacha20poly1305-reuseable",  # Apache 2.0 or BSD 3-Clause
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
@@ -156,6 +157,7 @@ EXCEPTIONS = {
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
+    "pymitv",  # MIT
     "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
@@ -184,7 +186,6 @@ TODO = {
     "asterisk_mbox": AwesomeVersion(
         "0.5.0"
     ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
-    "chacha20poly1305-reuseable": AwesomeVersion("0.12.1"),  # has 2 licenses
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
@@ -192,7 +193,6 @@ TODO = {
         "1.2.3"
     ),  # No License https://github.com/jafar-atili/pyElectra/issues/3
     "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
-    "pymitv": AwesomeVersion("1.4.3"),  # Not sure why pip-licenses doesn't pick this up
     "refoss_ha": AwesomeVersion(
         "1.2.1"
     ),  # No License https://github.com/ashionky/refoss_ha/issues/4
