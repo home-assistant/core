@@ -191,9 +191,6 @@ TODO = {
     "concord232": AwesomeVersion(
         "0.15"
     ),  # No license https://github.com/JasonCarter80/concord232/issues/19
-    "dovado": AwesomeVersion(
-        "0.4.1"
-    ),  # No license https://github.com/molobrakos/dovado/issues/4
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
