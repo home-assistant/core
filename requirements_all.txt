@@ -672,9 +672,6 @@ colorlog==6.8.2
 # homeassistant.components.color_extractor
 colorthief==0.2.1
 
-# homeassistant.components.concord232
-concord232==0.15
-
 # homeassistant.components.upc_connect
 connect-box==0.3.1
 
