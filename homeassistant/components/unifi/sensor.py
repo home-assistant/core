@@ -218,9 +218,12 @@ def async_client_wan_monitor_supported_fn(
 
 @callback
 def async_client_wan_monitor_latency(
-    wan: TypedDeviceUptimeStatsWan, monitor_target: str
+    wan: TypedDeviceUptimeStatsWan | None, monitor_target: str
 ) -> int | None:
     """Retrieve the monitor target from WAN monitors."""
+
+    if wan is None:
+        return None
 
     monitors = wan["monitors"]
 
@@ -249,7 +252,7 @@ def async_device_latency_supported_fn(
 
 def make_wan_latency_sensors(
     supported_wan_fn: Callable[[UnifiHub, str], TypedDeviceUptimeStatsWan | None],
-    wan_fn: Callable[[UnifiHub, Device], TypedDeviceUptimeStatsWan],
+    wan_fn: Callable[[UnifiHub, Device], TypedDeviceUptimeStatsWan | None],
 ) -> tuple[UnifiSensorEntityDescription, ...]:
     """Create WAN latency sensors from WAN monitor data."""
 
@@ -584,12 +587,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors(
     supported_wan_fn=lambda hub, obj_id: hub.api.devices[obj_id].uptime_stats
     and hub.api.devices[obj_id].uptime_stats["WAN"],
-    wan_fn=lambda hub, device: device.uptime_stats["WAN"],
+    wan_fn=lambda hub, device: device.uptime_stats and device.uptime_stats["WAN"],
 )
 
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors(
-    supported_wan_fn=lambda hub, obj_id: hub.api.devices[obj_id].uptime_stats["WAN2"],
-    wan_fn=lambda hub, device: device.uptime_stats["WAN2"],
+    supported_wan_fn=lambda hub, obj_id: hub.api.devices[obj_id].uptime_stats
+    and hub.api.devices[obj_id].uptime_stats["WAN2"],
+    wan_fn=lambda hub, device: device.uptime_stats and device.uptime_stats["WAN2"],
 )
 
 
