@@ -1715,7 +1715,7 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     assert exc.value.domain == "test_do_not"
     assert exc.value.service == "exist"
 
-    assert str(exc.value) == "Service test_do_not.exist not found"
+    assert str(exc.value) == "Action test_do_not.exist not found"
 
 
 async def test_serviceregistry_async_service_raise_exception(
