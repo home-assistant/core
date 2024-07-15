@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -480,6 +480,20 @@ def is_rpc_wifi_stations_disabled(
 def get_http_port(data: MappingProxyType[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
+
+
+def get_host(host: str) -> str:
+    """Get the device IP address or hostname."""
+    try:
+        ip_object = ip_address(host)
+    except ValueError:
+        # host contains hostname
+        return host
+
+    if isinstance(ip_object, IPv6Address):
+        return f"[{host}]"
+
+    return host
 
 
 @callback
