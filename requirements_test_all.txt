@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.25
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.1
+DoorBirdPy==3.0.2
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.48.0
+PySwitchbot==0.48.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -161,7 +161,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.3
+aioairzone-cloud==0.5.4
 
 # homeassistant.components.airzone
 aioairzone==0.7.7
@@ -174,7 +174,7 @@ aioambient==2024.01.0
 aioapcaccess==0.4.2
 
 # homeassistant.components.aquacell
-aioaquacell==0.1.8
+aioaquacell==0.2.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.1.1
@@ -192,7 +192,7 @@ aioazuredevops==2.1.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.13.0
+aiobotocore==2.13.1
 
 # homeassistant.components.comelit
 aiocomelit==0.9.0
@@ -255,7 +255,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.4
+aiolifx==1.0.5
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -317,7 +317,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.6.0
+aioraven==0.7.0
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -528,6 +528,9 @@ bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
+
+# homeassistant.components.aws
+botocore==1.34.131
 
 # homeassistant.components.bring
 bring-api==0.7.1
@@ -1750,7 +1753,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.17
+pytedee-async==0.2.20
 
 # homeassistant.components.motionmount
 python-MotionMount==2.0.0
@@ -1783,7 +1786,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.3
+python-kasa[speedups]==0.7.0.4
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.5
@@ -2195,7 +2198,7 @@ unifi-discovery==1.2.0
 universal-silabs-flasher==0.0.21
 
 # homeassistant.components.upb
-upb-lib==0.5.7
+upb-lib==0.5.8
 
 # homeassistant.components.upcloud
 upcloud-api==2.5.1
@@ -2333,7 +2336,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.20
+zha==0.0.23
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0

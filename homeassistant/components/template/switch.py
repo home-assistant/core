@@ -60,10 +60,10 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
 
-SWICTH_CONFIG_SCHEMA = vol.Schema(
+SWITCH_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
         vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
@@ -109,7 +109,7 @@ async def async_setup_entry(
     """Initialize config entry."""
     _options = dict(config_entry.options)
     _options.pop("template_type")
-    validated_config = SWICTH_CONFIG_SCHEMA(_options)
+    validated_config = SWITCH_CONFIG_SCHEMA(_options)
     async_add_entities(
         [SwitchTemplate(hass, None, validated_config, config_entry.entry_id)]
     )
@@ -120,7 +120,7 @@ def async_create_preview_switch(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> SwitchTemplate:
     """Create a preview switch."""
-    validated_config = SWICTH_CONFIG_SCHEMA(config | {CONF_NAME: name})
+    validated_config = SWITCH_CONFIG_SCHEMA(config | {CONF_NAME: name})
     return SwitchTemplate(hass, None, validated_config, None)
 
 

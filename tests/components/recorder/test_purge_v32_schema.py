@@ -178,7 +178,7 @@ async def test_purge_old_states_encouters_database_corruption(
     await async_wait_recording_done(hass)
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError("not a database")
 
     with (
         patch(

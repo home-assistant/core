@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import re
 from types import MappingProxyType
 from typing import Any, cast
@@ -323,7 +323,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
             return f"{device_name} {key.replace(':', '_')}"
         if key.startswith("em1"):
             return f"{device_name} EM{key.split(':')[-1]}"
-        if key.startswith("boolean:"):
+        if key.startswith(("boolean:", "text:")):
             return key.replace(":", " ").title()
         return device_name
 
@@ -484,6 +484,20 @@ def is_rpc_wifi_stations_disabled(
 def get_http_port(data: MappingProxyType[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
+
+
+def get_host(host: str) -> str:
+    """Get the device IP address or hostname."""
+    try:
+        ip_object = ip_address(host)
+    except ValueError:
+        # host contains hostname
+        return host
+
+    if isinstance(ip_object, IPv6Address):
+        return f"[{host}]"
+
+    return host
 
 
 @callback

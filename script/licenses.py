@@ -178,9 +178,6 @@ EXCEPTIONS = {
 }
 
 TODO = {
-    "BlinkStick": AwesomeVersion(
-        "1.2.0"
-    ),  # Proprietary license https://github.com/arvydas/blinkstick-python
     "PyMVGLive": AwesomeVersion(
         "1.1.4"
     ),  # No license and archived https://github.com/pc-coholic/PyMVGLive
@@ -194,9 +191,6 @@ TODO = {
     "concord232": AwesomeVersion(
         "0.15"
     ),  # No license https://github.com/JasonCarter80/concord232/issues/19
-    "dovado": AwesomeVersion(
-        "0.4.1"
-    ),  # No license https://github.com/molobrakos/dovado/issues/4
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
