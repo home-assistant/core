@@ -392,7 +392,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -426,7 +426,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
       'friendly_name': 'My Home Station Lightning count',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_count',
@@ -442,7 +442,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -476,7 +476,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
       'friendly_name': 'My Home Station Lightning count last 1 hr',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_count_last_1_hr',
@@ -492,7 +492,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -526,7 +526,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
       'friendly_name': 'My Home Station Lightning count last 3 hr',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_count_last_3_hr',
