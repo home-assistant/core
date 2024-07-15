@@ -17,8 +17,8 @@ import orjson
 import pytest
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import group
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
@@ -3991,6 +3991,48 @@ async def test_device_attr(
     assert info.rate_limit is None
 
 
+async def test_config_entry_attr(hass: HomeAssistant) -> None:
+    """Test config entry attr."""
+    info = {
+        "domain": "mock_light",
+        "title": "mock title",
+        "source": config_entries.SOURCE_BLUETOOTH,
+        "disabled_by": config_entries.ConfigEntryDisabler.USER,
+    }
+    config_entry = MockConfigEntry(**info)
+    config_entry.add_to_hass(hass)
+
+    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
+
+    for key, value in info.items():
+        tpl = template.Template(
+            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
+            hass,
+        )
+        assert tpl.async_render(parse_result=False) == str(value)
+
+    for config_entry_id, key in (
+        (config_entry.entry_id, "invalid_key"),
+        (56, "domain"),
+    ):
+        with pytest.raises(TemplateError):
+            template.Template(
+                "{{ config_entry_attr("
+                + json.dumps(config_entry_id)
+                + ", '"
+                + key
+                + "') }}",
+                hass,
+            ).async_render()
+
+    assert (
+        template.Template(
+            "{{ config_entry_attr('invalid_id', 'domain') }}", hass
+        ).async_render(parse_result=False)
+        == "None"
+    )
+
+
 async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
     """Test issues function."""
     # Test no issues
@@ -5400,22 +5442,6 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
-
-
-async def test_legacy_templates(hass: HomeAssistant) -> None:
-    """Test if old template behavior works when legacy templates are enabled."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert (
-        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
-        == 12
-    )
-
-    await async_process_ha_core_config(hass, {"legacy_templates": True})
-    assert (
-        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
-        == "12"
-    )
 
 
 async def test_no_result_parsing(hass: HomeAssistant) -> None:

@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ARGUMENTS = "arguments"
 DEFAULT_NAME = "Vlc"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ARGUMENTS, default=""): cv.string,
         vol.Optional(CONF_NAME): cv.string,

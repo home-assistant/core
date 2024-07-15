@@ -50,6 +50,11 @@ PLATFORMS_BY_TYPE = {
         Platform.LOCK,
         Platform.SENSOR,
     ],
+    SupportedModels.LOCK_PRO.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
     SupportedModels.BLIND_TILT.value: [
         Platform.COVER,
         Platform.BINARY_SENSOR,
@@ -66,6 +71,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
     SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
     SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
 }
 
@@ -118,6 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 key_id=entry.data.get(CONF_KEY_ID),
                 encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
                 retry_count=entry.options[CONF_RETRY_COUNT],
+                model=switchbot_model,
             )
         except ValueError as error:
             raise ConfigEntryNotReady(

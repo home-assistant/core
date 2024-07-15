@@ -1,12 +1,12 @@
 """The tests for the recorder filter matching the EntityFilter component."""
 
+from collections.abc import AsyncGenerator
 import json
 from unittest.mock import patch
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.engine.row import Row
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.recorder import Recorder, get_instance
 from homeassistant.components.recorder.db_schema import EventData, Events, States

@@ -37,7 +37,7 @@ def track_changes(coll: collection.ObservableCollection):
 class MockEntity(collection.CollectionEntity):
     """Entity that is config based."""
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize entity."""
         self._config = config
 
@@ -52,21 +52,21 @@ class MockEntity(collection.CollectionEntity):
         raise NotImplementedError
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID of entity."""
         return self._config["id"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name of entity."""
         return self._config["name"]
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return state of entity."""
         return self._config["state"]
 
-    async def async_update_config(self, config):
+    async def async_update_config(self, config: ConfigType) -> None:
         """Update entity config."""
         self._config = config
         self.async_write_ha_state()

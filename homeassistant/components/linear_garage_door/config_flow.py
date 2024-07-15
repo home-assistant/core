@@ -75,9 +75,7 @@ class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = STEP_USER_DATA_SCHEMA
-
-        data_schema = vol.Schema(data_schema)
+        data_schema = vol.Schema(STEP_USER_DATA_SCHEMA)
 
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=data_schema)

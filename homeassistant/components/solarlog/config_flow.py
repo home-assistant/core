@@ -1,7 +1,7 @@
 """Config flow for solarlog integration."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import ParseResult, urlparse
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
@@ -58,11 +58,11 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         except SolarLogConnectionError:
             self._errors = {CONF_HOST: "cannot_connect"}
             return False
-        except SolarLogError:  # pylint: disable=broad-except
+        except SolarLogError:
             self._errors = {CONF_HOST: "unknown"}
             return False
         finally:
-            solarlog.client.close()
+            await solarlog.client.close()
 
         return True
 
@@ -117,3 +117,31 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         return await self.async_step_user(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        if TYPE_CHECKING:
+            assert entry is not None
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                entry,
+                reason="reconfigure_successful",
+                data={**entry.data, **user_input},
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "extended_data", default=entry.data["extended_data"]
+                    ): bool,
+                }
+            ),
+        )
