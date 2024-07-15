@@ -186,9 +186,6 @@ TODO = {
     "asterisk_mbox": AwesomeVersion(
         "0.5.0"
     ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
-    "concord232": AwesomeVersion(
-        "0.15"
-    ),  # No license https://github.com/JasonCarter80/concord232/issues/19
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
