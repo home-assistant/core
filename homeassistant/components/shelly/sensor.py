@@ -9,6 +9,7 @@ from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_PLATFORM,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -52,8 +53,10 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import (
+    async_remove_orphaned_virtual_entities,
     get_device_entry_gen,
     get_device_uptime,
+    get_virtual_component_ids,
     is_rpc_wifi_stations_disabled,
 )
 
@@ -1016,6 +1019,11 @@ RPC_SENSORS: Final = {
             or status[key].get("xfreq") is None
         ),
     ),
+    "text": RpcSensorDescription(
+        key="text",
+        sub_key="value",
+        has_entity_name=True,
+    ),
 }
 
 
@@ -1035,8 +1043,25 @@ async def async_setup_entry(
                 RpcSleepingSensor,
             )
         else:
+            coordinator = config_entry.runtime_data.rpc
+            assert coordinator
+
             async_setup_entry_rpc(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
+            )
+
+            # the user can remove virtual components from the device configuration, so
+            # we need to remove orphaned entities
+            virtual_sensor_ids = get_virtual_component_ids(
+                coordinator.device.config, SENSOR_PLATFORM
+            )
+            async_remove_orphaned_virtual_entities(
+                hass,
+                config_entry.entry_id,
+                coordinator.mac,
+                SENSOR_PLATFORM,
+                "text",
+                virtual_sensor_ids,
             )
         return
 

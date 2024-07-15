@@ -97,6 +97,7 @@ homeassistant.components.assist_pipeline.*
 homeassistant.components.asterisk_cdr.*
 homeassistant.components.asterisk_mbox.*
 homeassistant.components.asuswrt.*
+homeassistant.components.autarco.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*

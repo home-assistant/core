@@ -181,7 +181,7 @@
       "macaddress": "1C61B4*"
     },
     {
-      "hostname": "l5*",
+      "hostname": "l[59]*",
       "macaddress": "5CE931*"
     },
     {
@@ -189,8 +189,12 @@
       "macaddress": "3C52A1*"
     },
     {
-      "hostname": "l5*",
+      "hostname": "l[59]*",
       "macaddress": "5C628B*"
+    },
+    {
+      "hostname": "l[59]*",
+      "macaddress": "14EBB6*"
     },
     {
       "hostname": "tp*",
@@ -297,5 +301,5 @@
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.7.0.3"]
+  "requirements": ["python-kasa[speedups]==0.7.0.4"]
 }
