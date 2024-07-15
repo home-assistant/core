@@ -185,9 +185,6 @@ TODO = {
         "0.5.0"
     ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
     "chacha20poly1305-reuseable": AwesomeVersion("0.12.1"),  # has 2 licenses
-    "concord232": AwesomeVersion(
-        "0.15"
-    ),  # No license https://github.com/JasonCarter80/concord232/issues/19
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
