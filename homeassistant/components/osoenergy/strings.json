@@ -94,113 +94,113 @@
   },
   "services": {
     "get_profile": {
-      "name": "Get Heater Profile",
+      "name": "Get heater profile",
       "description": "Get the temperature profile of water heater"
     },
     "set_profile": {
-      "name": "Set Heater Profile",
+      "name": "Set heater profile",
       "description": "Set the temperature profile of water heater",
       "fields": {
         "hour_00": {
           "name": "00:00",
-          "description": "00:00 Hour"
+          "description": "00:00 hour"
         },
         "hour_01": {
           "name": "01:00",
-          "description": "01:00 Hour"
+          "description": "01:00 hour"
         },
         "hour_02": {
           "name": "02:00",
-          "description": "02:00 Hour"
+          "description": "02:00 hour"
         },
         "hour_03": {
           "name": "03:00",
-          "description": "03:00 Hour"
+          "description": "03:00 hour"
         },
         "hour_04": {
           "name": "04:00",
-          "description": "04:00 Hour"
+          "description": "04:00 hour"
         },
         "hour_05": {
           "name": "05:00",
-          "description": "05:00 Hour"
+          "description": "05:00 hour"
         },
         "hour_06": {
           "name": "06:00",
-          "description": "06:00 Hour"
+          "description": "06:00 hour"
         },
         "hour_07": {
           "name": "07:00",
-          "description": "07:00 Hour"
+          "description": "07:00 hour"
         },
         "hour_08": {
           "name": "08:00",
-          "description": "08:00 Hour"
+          "description": "08:00 hour"
         },
         "hour_09": {
           "name": "09:00",
-          "description": "09:00 Hour"
+          "description": "09:00 hour"
         },
         "hour_10": {
           "name": "10:00",
-          "description": "10:00 Hour"
+          "description": "10:00 hour"
         },
         "hour_11": {
           "name": "11:00",
-          "description": "11:00 Hour"
+          "description": "11:00 hour"
         },
         "hour_12": {
           "name": "12:00",
-          "description": "12:00 Hour"
+          "description": "12:00 hour"
         },
         "hour_13": {
           "name": "13:00",
-          "description": "13:00 Hour"
+          "description": "13:00 hour"
         },
         "hour_14": {
           "name": "14:00",
-          "description": "14:00 Hour"
+          "description": "14:00 hour"
         },
         "hour_15": {
           "name": "15:00",
-          "description": "15:00 Hour"
+          "description": "15:00 hour"
         },
         "hour_16": {
           "name": "16:00",
-          "description": "16:00 Hour"
+          "description": "16:00 hour"
         },
         "hour_17": {
           "name": "17:00",
-          "description": "17:00 Hour"
+          "description": "17:00 hour"
         },
         "hour_18": {
           "name": "18:00",
-          "description": "18:00 Hour"
+          "description": "18:00 hour"
         },
         "hour_19": {
           "name": "19:00",
-          "description": "19:00 Hour"
+          "description": "19:00 hour"
         },
         "hour_20": {
           "name": "20:00",
-          "description": "20:00 Hour"
+          "description": "20:00 hour"
         },
         "hour_21": {
           "name": "21:00",
-          "description": "21:00 Hour"
+          "description": "21:00 hour"
         },
         "hour_22": {
           "name": "22:00",
-          "description": "22:00 Hour"
+          "description": "22:00 hour"
         },
         "hour_23": {
           "name": "23:00",
-          "description": "23:00 Hour"
+          "description": "23:00 hour"
         }
       }
     },
     "set_v40_min": {
-      "name": "Set V40 Min",
+      "name": "Set v40 min",
       "description": "Set the minimum quantity of water at 40°C for a heater",
       "fields": {
         "v40_min": {
@@ -210,8 +210,8 @@
       }
     },
     "turn_off": {
-      "name": "Turn off Heating",
-      "description": "Turn off Heating for one hour or until min temperature is reached",
+      "name": "Turn off heating",
+      "description": "Turn off heating for one hour or until min temperature is reached",
       "fields": {
         "until_temp_limit": {
           "name": "Until temperature limit",
@@ -220,8 +220,8 @@
       }
     },
     "turn_on": {
-      "name": "Turn on Heating",
-      "description": "Turn on Heating for one hour or until max temperature is reached",
+      "name": "Turn on heating",
+      "description": "Turn on heating for one hour or until max temperature is reached",
       "fields": {
         "until_temp_limit": {
           "name": "Until temperature limit",

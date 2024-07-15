@@ -67,11 +67,14 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
-    service_set_profile_schema = {}
-    for hour in range(24):
-        service_set_profile_schema[vol.Optional(f"hour_{hour:02d}")] = vol.All(
-            vol.Coerce(int), vol.Range(min=10, max=75)
-        )
+    service_set_profile_schema = cv.make_entity_service_schema(
+        {
+            vol.Optional(f"hour_{hour:02d}"): vol.All(
+                vol.Coerce(int), vol.Range(min=10, max=75)
+            )
+            for hour in range(24)
+        }
+    )
 
     platform.async_register_entity_service(
         SERVICE_SET_PROFILE,
