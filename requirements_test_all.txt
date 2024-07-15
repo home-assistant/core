@@ -2292,7 +2292,7 @@ weatherflow4py==0.2.21
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat-backend-client==2024.6.19rc3
+weheat==2024.7.8rc1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8

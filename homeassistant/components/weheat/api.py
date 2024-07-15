@@ -3,7 +3,7 @@
 # import my_pypi_package
 
 from aiohttp import ClientSession
-from weheat_backend_client.abstractions import AbstractAuth
+from weheat.abstractions import AbstractAuth
 
 from homeassistant.helpers import config_entry_oauth2_flow
 
