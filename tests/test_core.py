@@ -1852,7 +1852,7 @@ async def test_serviceregistry_return_response_invalid(
     ("supports_response", "return_response", "expected_error"),
     [
         (SupportsResponse.NONE, True, "does not return responses"),
-        (SupportsResponse.ONLY, False, "call requires responses"),
+        (SupportsResponse.ONLY, False, "action requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
