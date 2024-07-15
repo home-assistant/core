@@ -207,6 +207,10 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
 
+        if callable(description.max_fn):
+            self._attr_native_max_value = description.max_fn(
+                coordinator.device.config[key]
+            )
         if callable(description.min_fn):
             self._attr_native_min_value = description.min_fn(
                 coordinator.device.config[key]
