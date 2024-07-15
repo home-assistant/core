@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.BusDataMessage import BusDataMessage
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId import (
@@ -31,7 +30,12 @@ import pytest
 
 from homeassistant.components.hausbus.device import HausbusDevice
 from homeassistant.components.hausbus.entity import HausbusEntity
-from homeassistant.components.hausbus.light import HausbusLight
+from homeassistant.components.hausbus.light import (
+    HausbusDimmerLight,
+    HausbusLedLight,
+    HausbusLight,
+    HausbusRGBDimmerLight,
+)
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR, ColorMode
 from homeassistant.core import HomeAssistant
 
@@ -44,7 +48,7 @@ async def test_create_dimmer(hass: HomeAssistant) -> None:
     device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
     instance = Dimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
-    light = HausbusLight(
+    light = HausbusDimmerLight(
         object_id.getInstanceId(),
         device,
         instance,
@@ -52,6 +56,7 @@ async def test_create_dimmer(hass: HomeAssistant) -> None:
 
     # Assert that the color mode is set according to the light type
     assert ColorMode.BRIGHTNESS in light._attr_supported_color_modes
+    assert light._attr_color_mode == ColorMode.BRIGHTNESS
 
 
 async def test_create_led(hass: HomeAssistant) -> None:
@@ -60,7 +65,7 @@ async def test_create_led(hass: HomeAssistant) -> None:
     device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
     instance = Led.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
-    light = HausbusLight(
+    light = HausbusLedLight(
         object_id.getInstanceId(),
         device,
         instance,
@@ -68,6 +73,7 @@ async def test_create_led(hass: HomeAssistant) -> None:
 
     # Assert that the color mode is set according to the light type
     assert ColorMode.BRIGHTNESS in light._attr_supported_color_modes
+    assert light._attr_color_mode == ColorMode.BRIGHTNESS
 
 
 async def test_create_rgbdimmer(hass: HomeAssistant) -> None:
@@ -76,7 +82,7 @@ async def test_create_rgbdimmer(hass: HomeAssistant) -> None:
     device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
     instance = RGBDimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
-    light = HausbusLight(
+    light = HausbusRGBDimmerLight(
         object_id.getInstanceId(),
         device,
         instance,
@@ -84,22 +90,7 @@ async def test_create_rgbdimmer(hass: HomeAssistant) -> None:
 
     # Assert that the color mode is set according to the light type
     assert ColorMode.HS in light._attr_supported_color_modes
-
-
-async def test_color_mode_generic_light(hass: HomeAssistant) -> None:
-    """Test creating a RGB Dimmer channel."""
-
-    device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
-    instance = ABusFeature(65536)  # = 0x00 01 00 00
-    object_id = ObjectId(instance.getObjectId())  # = 0x00 01 00 00
-    light = HausbusLight(
-        object_id.getInstanceId(),
-        device,
-        instance,
-    )
-
-    # Assert that the color mode is set according to the light type
-    assert light.color_mode == ColorMode.ONOFF
+    assert light._attr_color_mode == ColorMode.HS
 
 
 @pytest.mark.parametrize(
@@ -123,7 +114,7 @@ async def test_get_dimmer_status() -> None:
     device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
     instance = Dimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
-    light = HausbusLight(
+    light = HausbusDimmerLight(
         object_id.getInstanceId(),
         device,
         instance,
@@ -142,7 +133,7 @@ async def test_get_led_status() -> None:
     device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
     instance = Led.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
-    light = HausbusLight(
+    light = HausbusLedLight(
         object_id.getInstanceId(),
         device,
         instance,
@@ -161,7 +152,7 @@ async def test_get_rgbdimmer_status() -> None:
     device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
     instance = RGBDimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
-    light = HausbusLight(
+    light = HausbusRGBDimmerLight(
         object_id.getInstanceId(),
         device,
         instance,

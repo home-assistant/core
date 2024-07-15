@@ -25,9 +25,18 @@ from homeassistant.core import HomeAssistant
 from .device import HausbusDevice
 from .entity import HausbusEntity
 from .event_handler import IEventHandler
+from .light import (
+    Dimmer,
+    HausbusDimmerLight,
+    HausbusLedLight,
+    HausbusLight,
+    HausbusRGBDimmerLight,
+    Led,
+    RGBDimmer,
+)
 
 
-class HausbusGateway(IBusDataListener, IEventHandler):
+class HausbusGateway(IBusDataListener, IEventHandler):  # type: ignore[misc]
     """Manages a single Haus-Bus gateway."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -83,19 +92,38 @@ class HausbusGateway(IBusDataListener, IEventHandler):
             return channels.get(channel_id, None)
         return None
 
-    def add_light_channel(self, instance: ABusFeature, object_id: ObjectId) -> None:
-        """Add a new Haus-Bus Light Channel to this gateways channel list."""
-        from .light import HausbusLight
-
-        device = self.get_device(object_id)
-        if device is not None:
-            light = HausbusLight(
+    def create_light_entity(
+        self, device: HausbusDevice, instance: ABusFeature, object_id: ObjectId
+    ) -> HausbusLight | None:
+        """Create a light entity according to the type of instance."""
+        if isinstance(instance, Dimmer):
+            return HausbusDimmerLight(
                 object_id.getInstanceId(),
                 device,
                 instance,
             )
+        if isinstance(instance, Led):
+            return HausbusLedLight(
+                object_id.getInstanceId(),
+                device,
+                instance,
+            )
+        if isinstance(instance, RGBDimmer):
+            return HausbusRGBDimmerLight(
+                object_id.getInstanceId(),
+                device,
+                instance,
+            )
+        return None
+
+    def add_light_channel(self, instance: ABusFeature, object_id: ObjectId) -> None:
+        """Add a new Haus-Bus Light Channel to this gateways channel list."""
+
+        device = self.get_device(object_id)
+        if device is not None:
+            light = self.create_light_entity(device, instance, object_id)
             channel_list = self.get_channel_list(object_id)
-            if channel_list is not None:
+            if light is not None and channel_list is not None:
                 channel_list[self.get_channel_id(object_id)] = light
                 asyncio.run_coroutine_threadsafe(
                     self._new_channel_listeners[LIGHT_DOMAIN](light), self.hass.loop
@@ -104,8 +132,6 @@ class HausbusGateway(IBusDataListener, IEventHandler):
 
     def add_channel(self, instance: ABusFeature) -> None:
         """Add a new Haus-Bus Channel to this gateways channel list."""
-        from .light import HausbusLight
-
         object_id = ObjectId(instance.getObjectId())
         channel_list = self.get_channel_list(object_id)
         if (
@@ -117,8 +143,6 @@ class HausbusGateway(IBusDataListener, IEventHandler):
 
     def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
-        from .light import HausbusLight
-
         object_id = ObjectId(busDataMessage.getSenderObjectId())
         data = busDataMessage.getData()
 

@@ -20,6 +20,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.Dimmer import Dimmer
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.ObjectId import ObjectId
 
+from homeassistant.components.hausbus.device import HausbusDevice
 from homeassistant.components.hausbus.gateway import HausbusGateway
 from homeassistant.components.hausbus.light import HausbusLight
 from homeassistant.components.light import ColorMode
@@ -145,6 +146,19 @@ async def test_get_channel(hass: HomeAssistant) -> None:
     # Assert that the channel is setup correctly
     assert channel.color_mode == ColorMode.BRIGHTNESS
     assert channel.name == "Dimmer 1"
+
+
+async def test_create_generic_light_channel(hass: HomeAssistant) -> None:
+    """Test creating a light channel that is not supported."""
+    gateway = await create_gateway(hass)
+    device = HausbusDevice(
+        "bridge_id", "device_id", "sw_version", "hw_version", EFirmwareId.ESP32
+    )
+    sender = 66051  # = 0x00 01 02 03, with class_id = 0x02 and instance_id = 0x03
+    instance = ABusFeature(sender)
+
+    light = gateway.create_light_entity(device, instance, sender)
+    assert light is None
 
 
 async def test_get_unknown_channel(hass: HomeAssistant) -> None:
