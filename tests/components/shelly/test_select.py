@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_PLATFORM,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -20,10 +20,10 @@ from . import init_integration, register_device, register_entity
 
 
 @pytest.mark.parametrize(
-    ("name", "entity_id"),
+    ("name", "entity_id", "value", "expected_state"),
     [
-        ("Virtual enum", "select.test_name_virtual_enum"),
-        (None, "select.test_name_enum_203"),
+        ("Virtual enum", "select.test_name_virtual_enum", "lorem ipsum", "lorem ipsum"),
+        (None, "select.test_name_enum_203", None, STATE_UNKNOWN),
     ],
 )
 async def test_rpc_device_virtual_enum(
@@ -33,6 +33,8 @@ async def test_rpc_device_virtual_enum(
     monkeypatch: pytest.MonkeyPatch,
     name: str | None,
     entity_id: str,
+    value: str | None,
+    expected_state: str,
 ) -> None:
     """Test a virtual enum for RPC device."""
     config = deepcopy(mock_rpc_device.config)
@@ -44,14 +46,14 @@ async def test_rpc_device_virtual_enum(
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
-    status["enum:203"] = {"value": "lorem ipsum"}
+    status["enum:203"] = {"value": value}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
     await init_integration(hass, 3)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "lorem ipsum"
+    assert state.state == expected_state
     assert state.attributes.get(ATTR_OPTIONS) == [
         "lorem ipsum",
         "dolor sit amet",
