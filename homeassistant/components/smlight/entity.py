@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -22,17 +21,13 @@ class SmEntity(CoordinatorEntity[SmDataUpdateCoordinator]):
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize entity with device."""
         super().__init__(coordinator)
-
+        mac = format_mac(coordinator.data.info.MAC)
         self._attr_device_info: DeviceInfo = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.info.MAC)},
+            identifiers={(DOMAIN, mac)},
             configuration_url=f"http://{coordinator.client.host}",
+            connections={(CONNECTION_NETWORK_MAC, mac)},
             manufacturer=ATTR_MANUFACTURER,
             model=coordinator.data.info.model,
             name=coordinator.hostname,
             sw_version=f"core: {coordinator.data.info.sw_version} / zb: {coordinator.data.info.zb_version}",
         )
-
-        if (mac := coordinator.config_entry.data.get(CONF_MAC)) is not None:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
-            }
