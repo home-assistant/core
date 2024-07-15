@@ -263,8 +263,8 @@ async def test_block_set_value_auth_error(
         (
             "Virtual slider",
             "number.test_name_virtual_slider",
-            "min",
-            "min",
+            "Hz",
+            "Hz",
             "slider",
             NumberMode.SLIDER,
         ),
