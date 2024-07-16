@@ -42,17 +42,17 @@ def process_service_info(
         # Do not fire events on data restore
         address = service_info.device.address
         for event in update.events.values():
-            event_type = event.event_type
-            signal = format_event_dispatcher_name(address, event_type)
+            key = event.device_key.key
+            signal = format_event_dispatcher_name(address, key)
             _LOGGER.debug("Firing signal %s", signal)
             async_dispatcher_send(hass, signal)
 
     return update
 
 
-def format_event_dispatcher_name(address: str, event_type: str) -> str:
+def format_event_dispatcher_name(address: str, key: str) -> str:
     """Format an event dispatcher name."""
-    return f"{DOMAIN}_{address}_{event_type}"
+    return f"{DOMAIN}_{address}_{key}"
 
 
 class GoveeBLEBluetoothProcessorCoordinator(
