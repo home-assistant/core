@@ -61,6 +61,7 @@ from .utils import (
     async_create_issue_unsupported_firmware,
     get_block_device_sleep_period,
     get_device_entry_gen,
+    get_host,
     get_http_port,
     get_rpc_device_wakeup_period,
     update_device_fw_info,
@@ -147,7 +148,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             model=MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.entry)} ({self.model})",
-            configuration_url=f"http://{self.entry.data[CONF_HOST]}:{get_http_port(self.entry.data)}",
+            configuration_url=f"http://{get_host(self.entry.data[CONF_HOST])}:{get_http_port(self.entry.data)}",
         )
         self.device_id = device_entry.id
 
@@ -551,7 +552,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
-            if event_type == "config_changed":
+            if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()
                 LOGGER.info(
                     "Config for %s changed, reloading entry in %s seconds",
@@ -739,6 +740,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.update_status()
+            await self.device.get_dynamic_components()
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {err!r}") from err
         except InvalidAuthError:

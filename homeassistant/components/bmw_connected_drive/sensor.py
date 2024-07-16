@@ -131,7 +131,7 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
     BMWSensorEntityDescription(
         key="fuel_and_battery.remaining_fuel",
         translation_key="remaining_fuel",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,

@@ -581,6 +581,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "autarco": {
+      "name": "Autarco",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "avion": {
       "name": "Avi-on",
       "integration_type": "hub",
@@ -628,12 +634,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "bayesian": {
-      "name": "Bayesian",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "bbox": {
       "name": "Bbox",
@@ -1840,12 +1840,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "filter": {
-      "name": "Filter",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "fints": {
       "name": "FinTS",
       "integration_type": "service",
@@ -2908,6 +2902,12 @@
       "name": "iSmartWindow",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "israel_rail": {
+      "name": "Israel Railways",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "iss": {
       "name": "International Space Station (ISS)",
@@ -5164,7 +5164,7 @@
       "integrations": {
         "russound_rio": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_push",
           "name": "Russound RIO"
         },
@@ -7156,6 +7156,12 @@
     }
   },
   "helper": {
+    "bayesian": {
+      "name": "Bayesian",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false
@@ -7164,6 +7170,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "filter": {
+      "name": "Filter",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_push"
     },
     "generic_hygrostat": {
       "integration_type": "helper",
