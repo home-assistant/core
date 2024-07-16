@@ -12,7 +12,6 @@ import yaml
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform

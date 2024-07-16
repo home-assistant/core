@@ -162,7 +162,7 @@ class AirMonitorV1(AirMonitorB1):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def unit_of_measurement(self):
         """Return the unit of measurement."""
         return None
 

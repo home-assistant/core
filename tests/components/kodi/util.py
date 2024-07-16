@@ -2,9 +2,6 @@
 
 from ipaddress import ip_address
 
-import jsonrpc_async
-from pykodi.kodi import jsonrpc_websocket
-
 from homeassistant.components import zeroconf
 from homeassistant.components.kodi.const import DEFAULT_SSL
 
@@ -87,7 +84,7 @@ class MockConnection:
         """Mock close."""
 
     @property
-    def server(self) -> jsonrpc_async.Server | None:
+    def server(self):
         """Mock server."""
         return None
 
@@ -116,6 +113,6 @@ class MockWSConnection:
         """Mock close."""
 
     @property
-    def server(self) -> jsonrpc_websocket.Server | None:
+    def server(self):
         """Mock server."""
         return None

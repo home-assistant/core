@@ -66,14 +66,12 @@ async def handle_webhook(
     ):
         data["webhook_id"] = webhook_id
         hass.bus.async_fire(MESSAGE_RECEIVED, data)
-        return None
+        return
 
     _LOGGER.warning(
         "Mailgun webhook received an unauthenticated message - webhook_id: %s",
         webhook_id,
     )
-
-    return None
 
 
 async def verify_webhook(hass, token=None, timestamp=None, signature=None):

@@ -14,7 +14,7 @@ class RoonApiMock:
     """Class to mock the Roon API for testing."""
 
     @property
-    def token(self) -> str | None:
+    def token(self):
         """Return a good authentication key."""
         return "good_token"
 
@@ -37,7 +37,7 @@ class RoonApiMockNoToken(RoonApiMock):
     """Class to mock the Roon API for testing, with failed authorisation."""
 
     @property
-    def token(self) -> str | None:
+    def token(self):
         """Return a bad authentication key."""
         return None
 

@@ -138,7 +138,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return self.source_id == "tuner"
 
     @property
-    def media_content_id(self) -> str | None:
+    def media_content_id(self):
         """Return the content ID of current playing media."""
         return None
 

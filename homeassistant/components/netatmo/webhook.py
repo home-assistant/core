@@ -2,7 +2,7 @@
 
 import logging
 
-from aiohttp.web import Request, Response
+from aiohttp.web import Request
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ SUBEVENT_TYPE_MAP = {
 
 async def async_handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> Response | None:
+) -> None:
     """Handle webhook callback."""
     try:
         data = await request.json()
@@ -52,7 +52,6 @@ async def async_handle_webhook(
 
     else:
         async_evaluate_event(hass, data)
-    return None
 
 
 def async_evaluate_event(hass: HomeAssistant, event_data: dict) -> None:

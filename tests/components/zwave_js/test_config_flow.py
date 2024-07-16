@@ -105,7 +105,7 @@ def mock_get_addon_discovery_info(
 @pytest.fixture(name="server_version_side_effect")
 def server_version_side_effect_fixture() -> Any | None:
     """Return the server version side effect."""
-    return
+    return None
 
 
 @pytest.fixture(name="get_server_version", autouse=True)
