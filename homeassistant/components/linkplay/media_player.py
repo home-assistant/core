@@ -6,13 +6,13 @@ from collections.abc import Callable
 import logging
 from typing import Any, Concatenate
 
-from linkplay.bridge import LinkPlayBridge, LinkPlayMultiroom
+from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
-from linkplay.controller import LinkPlayController
 from linkplay.exceptions import LinkPlayException, LinkPlayRequestException
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -20,16 +20,15 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry
-from .const import BRIDGE_DISCOVERED, DOMAIN
-from .utils import get_active_multiroom, get_info_from_project
+from .const import DOMAIN
+from .utils import get_info_from_project
 
 _LOGGER = logging.getLogger(__name__)
 STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
@@ -101,13 +100,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a media player from a config entry."""
 
-    @callback
-    def add_entity(bridge: LinkPlayBridge) -> None:
-        async_add_entities(
-            [LinkPlayMediaPlayerEntity(entry.runtime_data.controller, bridge)]
-        )
-
-    entry.async_on_unload(async_dispatcher_connect(hass, BRIDGE_DISCOVERED, add_entity))
+    async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
 
 
 def exception_wrap[_LinkPlayEntityT: LinkPlayMediaPlayerEntity, **_P, _R](
@@ -129,7 +122,6 @@ def exception_wrap[_LinkPlayEntityT: LinkPlayMediaPlayerEntity, **_P, _R](
 class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LinkPlay media player."""
 
-    _controller: LinkPlayController
     _bridge: LinkPlayBridge
     _attr_sound_mode_list = list(EQUALIZER_MAP.values())
     _attr_should_poll = True
@@ -138,10 +130,9 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, controller: LinkPlayController, bridge: LinkPlayBridge) -> None:
+    def __init__(self, bridge: LinkPlayBridge) -> None:
         """Initialize the LinkPlay media player."""
 
-        self._controller = controller
         self._bridge = bridge
         self._attr_unique_id = self._bridge.device.uuid
 
@@ -169,24 +160,7 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             name=self._bridge.device.name,
             suggested_area=None,
             sw_version=self._bridge.device.properties["firmware"],
-            via_device=(DOMAIN, DOMAIN),
         )
-
-    @property
-    def group_members(self) -> list[str]:
-        """List of members which are currently grouped together."""
-
-        multiroom = get_active_multiroom(self.hass, self._bridge)
-        if multiroom is None:
-            return []
-
-        uuids = [multiroom.leader.device.uuid] + [
-            follower.device.uuid for follower in multiroom.followers
-        ]
-
-        uuids.remove(self._bridge.device.uuid)
-
-        return uuids
 
     async def async_update(self) -> None:
         """Update the state of the media player."""
@@ -229,13 +203,29 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     @exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self._bridge.player.status == PlayingStatus.PAUSED:
-            await self._bridge.player.resume()
+        await self._bridge.player.resume()
 
     @exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Return a BrowseMedia instance.
+
+        The BrowseMedia instance will be used by the
+        "media_player/browse_media" websocket command.
+        """
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            # This allows filtering content. In this case it will only show audio sources.
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
 
     @exception_wrap
     async def async_play_media(
@@ -246,33 +236,6 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             self.hass, media_id, self.entity_id
         )
         await self._bridge.player.play(media.url)
-
-    @exception_wrap
-    async def async_join_players(self, group_members: list[str]) -> None:
-        """Join `group_members` as a player group with the current player."""
-        multiroom = get_active_multiroom(self.hass, self._bridge)
-        if multiroom is None:
-            multiroom = LinkPlayMultiroom(self._bridge)
-
-        for group_member in group_members:
-            bridge = next(
-                (
-                    bridge
-                    for bridge in self._controller.bridges
-                    if bridge.device.uuid == group_member
-                ),
-                None,
-            )
-            await multiroom.add_follower(bridge)
-
-        await self._controller.discover_multirooms()
-
-    @exception_wrap
-    async def async_unjoin_player(self) -> None:
-        """Remove this player from any group."""
-        multiroom = get_active_multiroom(self.hass, self._bridge)
-        if multiroom is not None:
-            multiroom.remove_follower(self._bridge)
 
     def _update_properties(self) -> None:
         """Update the properties of the media player."""

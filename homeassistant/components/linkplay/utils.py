@@ -2,9 +2,6 @@
 
 from typing import Final
 
-from linkplay.bridge import LinkPlayBridge, LinkPlayMultiroom
-from linkplay.controller import LinkPlayController
-
 MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
 MANUFACTURER_GENERIC: Final[str] = "Generic"
 MODELS_ARTSOUND_SMART_ZONE4: Final[str] = "Smart Zone 4 AMP"
@@ -21,19 +18,3 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_ARTSOUND, MODELS_ARTSOUND_SMART_HYDE
         case _:
             return MANUFACTURER_GENERIC, MODELS_GENERIC
-
-
-def get_active_multiroom(
-    controller: LinkPlayController, bridge: LinkPlayBridge
-) -> LinkPlayMultiroom | None:
-    """Get the active multiroom for given bridge."""
-
-    for multiroom in controller.multirooms:
-        if multiroom.leader.device.uuid == bridge.device.uuid:
-            return multiroom
-
-        for follower in multiroom.followers:
-            if follower.device.uuid == bridge.device.uuid:
-                return multiroom
-
-    return None
