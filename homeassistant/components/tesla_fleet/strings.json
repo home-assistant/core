@@ -1,21 +1,29 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Account is already configured"
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "already_configured": "Configuration updated for profile.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "error": {
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "subscription_required": "Subscription required, please visit {short_url}",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Enter an access token from {url}."
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Withings integration needs to re-authenticate your account"
       }
+    },
+    "create_entry": {
+      "default": "Successfully authenticated with Tesla."
     }
   },
   "entity": {

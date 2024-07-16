@@ -60,7 +60,7 @@ SHIFT_STATES = {"P": "p", "D": "d", "R": "r", "N": "n"}
 
 @dataclass(frozen=True, kw_only=True)
 class TeslaFleetSensorEntityDescription(SensorEntityDescription):
-    """Describes TeslaFleet Sensor entity."""
+    """Describes Tesla Fleet Sensor entity."""
 
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
@@ -283,7 +283,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
 
 @dataclass(frozen=True, kw_only=True)
 class TeslaFleetTimeEntityDescription(SensorEntityDescription):
-    """Describes TeslaFleet Sensor entity."""
+    """Describes Tesla Fleet Sensor entity."""
 
     variance: int
 
@@ -421,7 +421,7 @@ async def async_setup_entry(
     entry: TeslaFleetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the TeslaFleet sensor platform from a config entry."""
+    """Set up the Tesla Fleet sensor platform from a config entry."""
     async_add_entities(
         chain(
             (  # Add vehicles
@@ -460,7 +460,7 @@ async def async_setup_entry(
 
 
 class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
-    """Base class for TeslaFleet vehicle metric sensors."""
+    """Base class for Tesla Fleet vehicle metric sensors."""
 
     entity_description: TeslaFleetSensorEntityDescription
 
@@ -489,7 +489,7 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
 
 
 class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
-    """Base class for TeslaFleet vehicle time sensors."""
+    """Base class for Tesla Fleet vehicle time sensors."""
 
     entity_description: TeslaFleetTimeEntityDescription
 

@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL_SECONDS = 60
+VEHICLE_INTERVAL_SECONDS = 120
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
 
