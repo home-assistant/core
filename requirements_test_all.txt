@@ -164,7 +164,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.5.4
 
 # homeassistant.components.airzone
-aioairzone==0.7.7
+aioairzone==0.8.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -317,7 +317,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.6.0
+aioraven==0.7.0
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -682,7 +682,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.7.1
+env-canada==0.7.2
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -827,7 +827,7 @@ googlemaps==2.5.1
 gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
-govee-ble==0.31.3
+govee-ble==0.37.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.1
@@ -901,7 +901,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.52
+holidays==0.53
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240710.0
@@ -951,7 +951,7 @@ ifaddr==0.2.0
 imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.3
+incomfort-client==0.6.3-1
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1774,7 +1774,7 @@ python-fullykiosk==0.0.14
 # python-gammu==3.2.4
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.6.0
+python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v6.0.0
@@ -2183,7 +2183,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==5.2.2
+uiprotect==5.3.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2306,7 +2306,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==6.4.2
+yalexs==6.4.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
@@ -2333,7 +2333,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.20
+zha==0.0.23
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0
