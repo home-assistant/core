@@ -66,7 +66,7 @@ async def test_full_local_flow(
         (socket.gaierror, "invalid_host"),
         (
             ClientResponseError(AsyncMock(), (), status=HTTPStatus.UNAUTHORIZED),
-            "unauthorized",
+            "invalid_auth",
         ),
         (
             ClientResponseError(AsyncMock(), (), status=HTTPStatus.NOT_FOUND),
@@ -227,7 +227,7 @@ async def test_full_cloud_flow(
         (socket.gaierror, "invalid_host"),
         (
             ClientResponseError(AsyncMock(), (), status=HTTPStatus.UNAUTHORIZED),
-            "unauthorized",
+            "invalid_auth",
         ),
         (
             ClientResponseError(AsyncMock(), (), status=HTTPStatus.NOT_FOUND),
@@ -403,7 +403,7 @@ async def test_import_cloud_flow(
         (socket.gaierror, "invalid_host"),
         (
             ClientResponseError(AsyncMock(), (), status=HTTPStatus.UNAUTHORIZED),
-            "unauthorized",
+            "invalid_auth",
         ),
         (
             ClientResponseError(AsyncMock(), (), status=HTTPStatus.NOT_FOUND),

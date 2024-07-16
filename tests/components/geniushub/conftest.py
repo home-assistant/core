@@ -25,16 +25,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_geniushub_client() -> Generator[AsyncMock]:
     """Mock a GeniusHub client."""
-    with (
-        patch(
-            "homeassistant.components.geniushub.GeniusService",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.geniushub.config_flow.GeniusService",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.geniushub.config_flow.GeniusService",
+        autospec=True,
+    ) as mock_client:
         client = mock_client.return_value
         client.request.return_value = {
             "data": {

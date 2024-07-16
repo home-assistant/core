@@ -74,7 +74,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except aiohttp.ClientResponseError as err:
                 if err.status == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "unauthorized"
+                    errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "invalid_host"
             except (TimeoutError, aiohttp.ClientConnectionError):
@@ -107,7 +107,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 await service.request("GET", "version")
             except aiohttp.ClientResponseError as err:
                 if err.status == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "unauthorized"
+                    errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "invalid_host"
             except socket.gaierror:

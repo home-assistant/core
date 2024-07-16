@@ -4,24 +4,22 @@
       "user": {
         "title": "Genius Hub Configuration",
         "menu_options": {
-          "local_api": "Local (recommended): IP address and user credentials",
-          "cloud_api": "Cloud: API token and MAC address"
+          "local_api": "Local: IP address and user credentials",
+          "cloud_api": "Cloud: API token"
         }
       },
       "local_api": {
-        "title": "Genius Hub Local Configuration",
+        "title": "Genius Hub local configuration",
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]",
-          "mac": "MAC address",
+          "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         }
       },
       "cloud_api": {
-        "title": "Genius Hub Cloud Configuration",
+        "title": "Genius Hub cloud configuration",
         "data": {
-          "token": "[%key:common::config_flow::data::access_token%]",
-          "mac": "MAC address"
+          "token": "[%key:common::config_flow::data::access_token%]"
         }
       }
     },
@@ -30,7 +28,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
