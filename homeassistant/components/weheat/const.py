@@ -31,7 +31,6 @@ SENSORS = [
         name="Output power",
         key="power_output",
         icon="mdi:heat-wave",
-        # native_unit_of_measurement="W",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
