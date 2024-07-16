@@ -1345,7 +1345,7 @@
       "iot_class": "local_push"
     },
     "dsmr": {
-      "name": "DSMR Slimme Meter",
+      "name": "DSMR Smart Meter",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
