@@ -2189,7 +2189,7 @@ class MigrationTask(RecorderTask):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(MigrationTask(self.migrator))
         else:
-            self.migrator.migration_done(instance, True)
+            self.migrator.migration_done(instance)
 
 
 @dataclass(slots=True)
@@ -2217,15 +2217,15 @@ class BaseRunTimeMigration(ABC):
         if self.needs_migrate(session):
             instance.queue_task(self.task(self))
         else:
-            self.migration_done(instance, False)
+            self.migration_done(instance)
 
     @staticmethod
     @abstractmethod
     def migrate_data(instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
 
-    def migration_done(self, instance: Recorder, did_migrate: bool) -> None:
-        """Will be called after migrate returns True."""
+    def migration_done(self, instance: Recorder) -> None:
+        """Will be called after migrate returns True or if migration is not needed."""
 
     @abstractmethod
     def needs_migrate_query(self) -> StatementLambdaElement:
@@ -2302,7 +2302,7 @@ class EventTypeIDMigration(BaseRunTimeMigration):
         """Migrate some data, returns True if migration is completed."""
         return migrate_event_type_ids(instance)
 
-    def migration_done(self, instance: Recorder, did_migrate: bool) -> None:
+    def migration_done(self, instance: Recorder) -> None:
         """Will be called after migrate returns True."""
         _LOGGER.debug("Activating event_types manager as all data is migrated")
         instance.event_type_manager.active = True
@@ -2327,7 +2327,7 @@ class EntityIDMigration(BaseRunTimeMigration):
         """Migrate some data, returns True if migration is completed."""
         return migrate_entity_ids(instance)
 
-    def migration_done(self, instance: Recorder, did_migrate: bool) -> None:
+    def migration_done(self, instance: Recorder) -> None:
         """Will be called after migrate returns True."""
         # The migration has finished, now we start the post migration
         # to remove the old entity_id data from the states table
@@ -2335,24 +2335,21 @@ class EntityIDMigration(BaseRunTimeMigration):
         # so we set active to True
         _LOGGER.debug("Activating states_meta manager as all data is migrated")
         instance.states_meta_manager.active = True
-        if did_migrate:
-            instance.queue_task(EntityIDPostMigrationTask())
-        else:
-            with (
-                contextlib.suppress(SQLAlchemyError),
-                session_scope(session=instance.get_session()) as session,
+        with (
+            contextlib.suppress(SQLAlchemyError),
+            session_scope(session=instance.get_session()) as session,
+        ):
+            # If ix_states_entity_id_last_updated_ts still exists
+            # on the states table it means the entity id migration
+            # finished by the EntityIDPostMigrationTask did not
+            # complete because they restarted in the middle of it. We need
+            # to pick back up where we left off.
+            if get_index_by_name(
+                session,
+                TABLE_STATES,
+                LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
             ):
-                # If ix_states_entity_id_last_updated_ts still exists
-                # on the states table it means the entity id migration
-                # finished by the EntityIDPostMigrationTask did not
-                # complete because they restarted in the middle of it. We need
-                # to pick back up where we left off.
-                if get_index_by_name(
-                    session,
-                    TABLE_STATES,
-                    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
-                ):
-                    instance.queue_task(EntityIDPostMigrationTask())
+                instance.queue_task(EntityIDPostMigrationTask())
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
