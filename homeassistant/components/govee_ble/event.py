@@ -81,15 +81,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up a govee ble event."""
     coordinator = entry.runtime_data
+    if not (model_info := coordinator.model_info):
+        return
     address = coordinator.address
-    sensor_type = coordinator.device_data.sensor_type
-    _LOGGER.warning(
-        "SENSOR_TYPE: %s - model %s", sensor_type, coordinator.device_data.device_type
-    )
+    sensor_type = model_info.sensor_type
     if sensor_type is SensorType.MOTION:
         descriptions = [MOTION_DESCRIPTION]
     elif sensor_type is SensorType.BUTTON:
-        button_count = coordinator.device_data.button_count
+        button_count = model_info.button_count
         descriptions = BUTTON_DESCRIPTIONS[0:button_count]
     else:
         return

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from logging import Logger
 
-from govee_ble import GoveeBluetoothDeviceData, SensorUpdate
+from govee_ble import GoveeBluetoothDeviceData, ModelInfo, SensorUpdate, get_model_info
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -31,9 +31,11 @@ def process_service_info(
     data = coordinator.device_data
     update = data.update(service_info)
     if entry.data.get(CONF_DEVICE_TYPE) is None:
+        device_type = data.device_type
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_DEVICE_TYPE: data.device_type}
+            entry, data={**entry.data, CONF_DEVICE_TYPE: device_type}
         )
+        coordinator.set_model_info(device_type)
     if update.events and hass.state is CoreState.running:
         # Do not fire events on data restore
         address = service_info.device.address
@@ -55,7 +57,7 @@ def format_event_dispatcher_name(address: str, event_type: str) -> str:
 class GoveeBLEBluetoothProcessorCoordinator(
     PassiveBluetoothProcessorCoordinator[SensorUpdate]
 ):
-    """Define a BTHome Bluetooth Passive Update Processor Coordinator."""
+    """Define a govee ble Bluetooth Passive Update Processor Coordinator."""
 
     def __init__(
         self,
@@ -71,3 +73,10 @@ class GoveeBLEBluetoothProcessorCoordinator(
         super().__init__(hass, logger, address, mode, update_method)
         self.device_data = device_data
         self.entry = entry
+        self.model_info: ModelInfo | None = None
+        if device_type := entry.data.get(CONF_DEVICE_TYPE):
+            self.set_model_info(device_type)
+
+    def set_model_info(self, device_type: str) -> None:
+        """Set the model info."""
+        self.model_info = get_model_info(device_type)
