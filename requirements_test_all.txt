@@ -465,6 +465,10 @@ aurorapy==0.2.7
 # homeassistant.components.autarco
 autarco==2.0.0
 
+# homeassistant.components.generic
+# homeassistant.components.stream
+av==12.2.0
+
 # homeassistant.components.axis
 axis==62
 
@@ -855,10 +859,6 @@ guppy3==3.1.4.post1
 
 # homeassistant.components.iaqualink
 h2==4.1.0
-
-# homeassistant.components.generic
-# homeassistant.components.stream
-ha-av==10.1.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.0
