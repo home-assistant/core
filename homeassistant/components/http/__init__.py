@@ -30,7 +30,6 @@ from cryptography.x509.oid import NameOID
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import cloud
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -271,6 +270,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     def _async_check_ssl_issue(_: Event) -> None:
+        from homeassistant.components import (  # pylint: disable=import-outside-toplevel
+            cloud,
+        )
+
         if (
             hass.config.external_url is None
             and ssl_certificate is not None
