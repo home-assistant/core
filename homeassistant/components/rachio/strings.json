@@ -33,6 +33,11 @@
         "name": "Rain"
       }
     },
+    "calendar": {
+      "calendar": {
+        "name": "Rachio Base Station {base}"
+      }
+    },
     "switch": {
       "standby": {
         "name": "Standby"

@@ -88,8 +88,8 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
             update_interval=timedelta(minutes=30),
         )
 
-    async def _async_update_data(self) -> Any:
-        """Add data for the past week and the next 60 days."""
+    async def _async_update_data(self) -> list[dict[str, Any]]:
+        """Retrieve data for the past week and the next 60 days."""
         _time_start: datetime = dt_util.now() - timedelta(days=7)
         _time_end: datetime = dt_util.now() + timedelta(days=60)
         start: dict[str, int] = {
@@ -112,7 +112,7 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
             )
         except Timeout as err:
             raise UpdateFailed(f"Could not connect to the Rachio API: {err}") from err
-        events: list = []
+        events = []
         # Flatten and sort dates
         for event in schedule[1][KEY_DAY_VIEWS]:
             events.extend(event[KEY_PROGRAM_RUN_SUMMARIES])

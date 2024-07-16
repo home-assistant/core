@@ -67,9 +67,10 @@ class RachioCalendarEntity(
         super().__init__(coordinator)
         self.base_station = base_station
         self._event: CalendarEvent | None = None
-        self._serial_number = coordinator.base_station[KEY_SERIAL_NUMBER]
         self._location = coordinator.base_station[KEY_ADDRESS][KEY_LOCALITY]
-        self._attr_name = f"Rachio Smart Hose Timer Events - {self._serial_number}"
+        self._attr_translation_placeholders = {
+            "base": coordinator.base_station[KEY_SERIAL_NUMBER]
+        }
         self._attr_unique_id = f"{coordinator.base_station[KEY_ID]}-calendar"
         self._previous_event: dict[str, Any] | None = None
 
@@ -115,9 +116,9 @@ class RachioCalendarEntity(
             not event[KEY_SKIPPABLE] or KEY_SKIP in event[KEY_RUN_SUMMARIES][0]
         ):  # Not being skippable indicates the event is in the past
             event = next(schedule, None)
-            self._previous_event = event  # Store for future use
             if not event:  # Schedule only has past or skipped events
                 return None
+        self._previous_event = event  # Store for future use
         return event
 
     async def async_get_events(
@@ -135,11 +136,11 @@ class RachioCalendarEntity(
             )
             if event_start > end_date:
                 break
-            if run[KEY_SKIPPABLE]:
+            if run[KEY_SKIPPABLE]:  # Future events
                 event_end = event_start + timedelta(
                     seconds=int(run[KEY_TOTAL_RUN_DURATION])
                 )
-            else:
+            else:  # Past events
                 event_end = event_start + timedelta(
                     seconds=int(run[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS])
                 )
