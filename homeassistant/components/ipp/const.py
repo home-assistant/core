@@ -16,5 +16,9 @@ ATTR_URI_SUPPORTED = "uri_supported"
 
 # Config Keys
 CONF_BASE_PATH = "base_path"
+CONF_PROTO_LEGACY = "proto_legacy"
 CONF_SERIAL = "serial"
 CONF_TLS = "tls"
+
+IPP_PROTO_VERSION_LEGACY = (1, 1)
+IPP_PROTO_VERSION_DEFAULT = (2, 0)
