@@ -790,6 +790,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.TOTAL_FORWARD_ENERGY,
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
