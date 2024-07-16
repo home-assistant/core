@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from govee_ble import SensorType
 
 from homeassistant.components.event import (
@@ -19,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import GoveeBLEConfigEntry, format_event_dispatcher_name
 
-_LOGGER = logging.getLogger(__name__)
 BUTTON_DESCRIPTIONS = [
     EventEntityDescription(
         key=f"button_{i}",
