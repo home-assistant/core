@@ -83,7 +83,7 @@ class SCSGateCover(CoverEntity):
         return self._name
 
     @property
-    def is_closed(self) -> bool | None:
+    def is_closed(self) -> None:
         """Return if the cover is closed."""
         return None
 
