@@ -318,7 +318,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="belgium_max_current_per_phase",
         translation_key="max_current_per_phase",
-        obis_reference="FUSE_THRESHOLD_L1",
+        obis_reference="BELGIUM_MAX_CURRENT_PER_PHASE",
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
