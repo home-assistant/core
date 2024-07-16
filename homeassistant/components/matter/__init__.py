@@ -260,7 +260,7 @@ async def async_remove_config_entry_device(
         await matter.matter_client.remove_node(node.node_id)
     except NodeNotExists:
         # Ignore if the server has already removed the node.
-        LOGGER.info("Node %s didn't exist on the Matter server", node.node_id)
+        LOGGER.debug("Node %s didn't exist on the Matter server", node.node_id)
     finally:
         # Make sure potentially orphan devices of a bridge are removed too.
         if node.is_bridge_device:
