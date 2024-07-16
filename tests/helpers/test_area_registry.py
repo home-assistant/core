@@ -1,6 +1,6 @@
 """Tests for the Area Registry."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
 
@@ -165,11 +165,18 @@ async def test_update_area(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
     label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can read areas."""
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    freezer.move_to(created_at)
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
     floor_registry.async_create("first")
     area = area_registry.async_create("mock")
+    assert area.modified_at == created_at
+
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
+    freezer.move_to(modified_at)
 
     updated_area = area_registry.async_update(
         area.id,
@@ -191,7 +198,8 @@ async def test_update_area(
         name="mock1",
         normalized_name=ANY,
         picture="/image/example.png",
-        created_at=area.created_at,
+        created_at=created_at,
+        modified_at=modified_at,
     )
     assert len(area_registry.areas) == 1
 
