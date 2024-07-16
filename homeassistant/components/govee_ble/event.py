@@ -19,11 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import (
-    GoveeBLEBluetoothProcessorCoordinator,
-    GoveeBLEConfigEntry,
-    format_event_dispatcher_name,
-)
+from .coordinator import GoveeBLEConfigEntry, format_event_dispatcher_name
 
 BUTTON_DESCRIPTIONS = [
     EventEntityDescription(
@@ -52,7 +48,6 @@ class GoveeBluetoothEventEntity(EventEntity):
         self,
         model_info: ModelInfo,
         service_info: BluetoothServiceInfoBleak | None,
-        coordinator: GoveeBLEBluetoothProcessorCoordinator,
         address: str,
         description: EventEntityDescription,
     ) -> None:
@@ -108,8 +103,6 @@ async def async_setup_entry(
         return
     last_service_info = async_last_service_info(hass, address, False)
     async_add_entities(
-        GoveeBluetoothEventEntity(
-            model_info, last_service_info, coordinator, address, description
-        )
+        GoveeBluetoothEventEntity(model_info, last_service_info, address, description)
         for description in descriptions
     )
