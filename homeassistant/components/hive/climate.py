@@ -142,9 +142,10 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         self.device = await self.hive.heating.getClimate(self.device)
         self._attr_available = self.device["deviceData"].get("online")
         if self._attr_available:
-
             self._attr_hvac_mode = HIVE_TO_HASS_STATE.get(self.device["status"]["mode"])
-            self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION.get(self.device["status"]["action"])
+            self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION.get(
+                self.device["status"]["action"]
+            )
             self._attr_current_temperature = self.device["status"][
                 "current_temperature"
             ]
