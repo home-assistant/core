@@ -333,11 +333,9 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        (
-            "Adding index `%s` to table `%s`. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
-            "be patient!"
-        ),
+        "Adding index `%s` to table `%s`. Note: this can take several "
+        "minutes on large databases and slow computers. Please "
+        "be patient!",
         index_name,
         table_name,
     )
@@ -351,7 +349,7 @@ def _create_index(
                 "Index %s already exists on %s, continuing", index_name, table_name
             )
 
-    _LOGGER.debug("Finished creating %s", index_name)
+    _LOGGER.warning("Finished adding index `%s` to table `%s`", index_name, table_name)
 
 
 def _execute_or_collect_error(
@@ -384,11 +382,9 @@ def _drop_index(
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
     _LOGGER.warning(
-        (
-            "Dropping index `%s` from table `%s`. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
-            "be patient!"
-        ),
+        "Dropping index `%s` from table `%s`. Note: this can take several "
+        "minutes on large databases and slow computers. Please "
+        "be patient!",
         index_name,
         table_name,
     )
@@ -397,8 +393,8 @@ def _drop_index(
         index_to_drop = get_index_by_name(session, table_name, index_name)
 
     if index_to_drop is None:
-        _LOGGER.debug(
-            "The index %s on table %s no longer exists", index_name, table_name
+        _LOGGER.warning(
+            "The index `%s` on table `%s` no longer exists", index_name, table_name
         )
         return
 
@@ -415,18 +411,16 @@ def _drop_index(
         f"DROP INDEX {index_to_drop}",
     ):
         if _execute_or_collect_error(session_maker, query, errors):
-            _LOGGER.debug(
-                "Finished dropping index %s from table %s", index_name, table_name
+            _LOGGER.warning(
+                "Finished dropping index `%s` from table `%s`", index_name, table_name
             )
             return
 
     if not quiet:
         _LOGGER.warning(
-            (
-                "Failed to drop index `%s` from table `%s`. Schema "
-                "Migration will continue; this is not a "
-                "critical operation: %s"
-            ),
+            "Failed to drop index `%s` from table `%s`. Schema "
+            "Migration will continue; this is not a "
+            "critical operation: %s",
             index_name,
             table_name,
             errors,
@@ -552,9 +546,12 @@ def _update_states_table_with_foreign_key_options(
 ) -> None:
     """Add the options to foreign key constraints."""
     inspector = sqlalchemy.inspect(engine)
+    tmp_states_table = Table(TABLE_STATES, MetaData())
     alters = [
         {
-            "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+            "old_fk": ForeignKeyConstraint(
+                (), (), name=foreign_key["name"], table=tmp_states_table
+            ),
             "columns": foreign_key["constrained_columns"],
         }
         for foreign_key in inspector.get_foreign_keys(TABLE_STATES)
@@ -571,11 +568,6 @@ def _update_states_table_with_foreign_key_options(
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
-    old_states_table = Table(  # noqa: F841
-        TABLE_STATES,
-        MetaData(),
-        *(alter["old_fk"] for alter in alters),  # type: ignore[arg-type]
-    )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
@@ -601,14 +593,14 @@ def _drop_foreign_key_constraints(
         for foreign_key in inspector.get_foreign_keys(table)
         if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
+
+    ## Bind the ForeignKeyConstraints to the table
+    tmp_table = Table(table, MetaData())
     drops = [
-        ForeignKeyConstraint((), (), name=foreign_key["name"])
+        ForeignKeyConstraint((), (), name=foreign_key["name"], table=tmp_table)
         for foreign_key in inspector.get_foreign_keys(table)
         if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
-
-    # Bind the ForeignKeyConstraints to the table
-    old_table = Table(table, MetaData(), *drops)  # noqa: F841
 
     for drop in drops:
         with session_scope(session=session_maker()) as session:

@@ -143,7 +143,7 @@
     'state': '2021-10-10T10:30:10+00:00',
   })
 # ---
-# name: test_valid_config[sensor.mock_title_duration-entry]
+# name: test_valid_config[sensor.mock_title_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -155,7 +155,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_duration',
+    'entity_id': 'sensor.mock_title_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -165,31 +165,123 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': None,
     'platform': 'israel_rail',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'באר יעקב אשקלון_duration',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'translation_key': 'platform',
+    'unique_id': 'באר יעקב אשקלון_platform',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_valid_config[sensor.mock_title_duration-state]
+# name: test_valid_config[sensor.mock_title_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Israel rail.',
-      'device_class': 'duration',
-      'friendly_name': 'Mock Title Duration',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'friendly_name': 'Mock Title None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_duration',
+    'entity_id': 'sensor.mock_title_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1200',
+    'state': '1',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_none_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_none_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'israel_rail',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'trains',
+    'unique_id': 'באר יעקב אשקלון_trains',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'friendly_name': 'Mock Title None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_none_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_none_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'israel_rail',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'train_number',
+    'unique_id': 'באר יעקב אשקלון_train_number',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_none_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'friendly_name': 'Mock Title None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_none_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1234',
   })
 # ---
 # name: test_valid_config[sensor.mock_title_platform-entry]
@@ -239,6 +331,150 @@
     'state': '1',
   })
 # ---
+# name: test_valid_config[sensor.mock_title_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'israel_rail',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure0',
+    'unique_id': 'באר יעקב אשקלון_departure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-10-10T10:10:10+00:00',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_timestamp_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_timestamp_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'israel_rail',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure1',
+    'unique_id': 'באר יעקב אשקלון_departure1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_timestamp_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_timestamp_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-10-10T10:20:10+00:00',
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_timestamp_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_timestamp_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'israel_rail',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure2',
+    'unique_id': 'באר יעקב אשקלון_departure2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valid_config[sensor.mock_title_timestamp_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Israel rail.',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_timestamp_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-10-10T10:30:10+00:00',
+  })
+# ---
 # name: test_valid_config[sensor.mock_title_train_number-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -286,7 +522,7 @@
     'state': '1234',
   })
 # ---
-# name: test_valid_config[sensor.mock_title_transfers-entry]
+# name: test_valid_config[sensor.mock_title_trains-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -298,7 +534,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_transfers',
+    'entity_id': 'sensor.mock_title_trains',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -310,26 +546,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Transfers',
+    'original_name': 'Trains',
     'platform': 'israel_rail',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'transfers',
-    'unique_id': 'באר יעקב אשקלון_transfers',
+    'translation_key': 'trains',
+    'unique_id': 'באר יעקב אשקלון_trains',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_valid_config[sensor.mock_title_transfers-state]
+# name: test_valid_config[sensor.mock_title_trains-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Transfers',
+      'friendly_name': 'Mock Title Trains',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_transfers',
+    'entity_id': 'sensor.mock_title_trains',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---

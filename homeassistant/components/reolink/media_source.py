@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
+from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.enums import VodRequestType
 
 from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
@@ -183,6 +184,9 @@ class ReolinkVODMediaSource(MediaSource):
                 device_name = device.name
                 if device.name_by_user is not None:
                     device_name = device.name_by_user
+
+                if host.api.model in DUAL_LENS_MODELS:
+                    device_name = f"{device_name} lens {ch}"
 
                 children.append(
                     BrowseMediaSource(

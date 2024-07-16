@@ -174,7 +174,9 @@ async def test_database_migration_encounters_corruption(
     assert recorder.util.async_migration_in_progress(hass) is False
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
 
     with (
         patch(
@@ -329,7 +331,7 @@ async def test_events_during_migration_queue_exhausted(
 
 @pytest.mark.parametrize(
     ("start_version", "live"),
-    [(0, True), (16, True), (18, True), (22, True), (25, True), (43, True)],
+    [(0, True), (9, True), (16, True), (18, True), (22, True), (25, True), (43, True)],
 )
 async def test_schema_migrate(
     hass: HomeAssistant,
