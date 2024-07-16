@@ -11,6 +11,7 @@ from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
+from dsmr_parser import obis_references
 from dsmr_parser.obis_references import (
     BELGIUM_CURRENT_AVERAGE_DEMAND,
     BELGIUM_MAXIMUM_DEMAND_MONTH,
@@ -40,6 +41,7 @@ from dsmr_parser.obis_references import (
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 import pytest
 
+from homeassistant.components.dsmr.sensor import SENSORS
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -1518,3 +1520,9 @@ async def test_gas_meter_providing_energy_reading(
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfEnergy.GIGA_JOULE
     )
+
+
+def test_all_obis_references_exists():
+    """Verify that all attributes exist by name in database."""
+    for sensor in SENSORS:
+        assert hasattr(obis_references, sensor.obis_reference)
