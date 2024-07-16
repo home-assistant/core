@@ -546,9 +546,12 @@ def _update_states_table_with_foreign_key_options(
 ) -> None:
     """Add the options to foreign key constraints."""
     inspector = sqlalchemy.inspect(engine)
+    tmp_states_table = Table(TABLE_STATES, MetaData())
     alters = [
         {
-            "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+            "old_fk": ForeignKeyConstraint(
+                (), (), name=foreign_key["name"], table=tmp_states_table
+            ),
             "columns": foreign_key["constrained_columns"],
         }
         for foreign_key in inspector.get_foreign_keys(TABLE_STATES)
@@ -565,11 +568,6 @@ def _update_states_table_with_foreign_key_options(
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
-    old_states_table = Table(  # noqa: F841
-        TABLE_STATES,
-        MetaData(),
-        *(alter["old_fk"] for alter in alters),  # type: ignore[arg-type]
-    )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
@@ -595,14 +593,14 @@ def _drop_foreign_key_constraints(
         for foreign_key in inspector.get_foreign_keys(table)
         if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
+
+    ## Bind the ForeignKeyConstraints to the table
+    tmp_table = Table(table, MetaData())
     drops = [
-        ForeignKeyConstraint((), (), name=foreign_key["name"])
+        ForeignKeyConstraint((), (), name=foreign_key["name"], table=tmp_table)
         for foreign_key in inspector.get_foreign_keys(table)
         if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
-
-    # Bind the ForeignKeyConstraints to the table
-    old_table = Table(table, MetaData(), *drops)  # noqa: F841
 
     for drop in drops:
         with session_scope(session=session_maker()) as session:
