@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, IPP_PROTO_VERSION_DEFAULT, IPP_PROTO_VERSION_LEGACY
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -30,6 +30,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         base_path: str,
         tls: bool,
         verify_ssl: bool,
+        proto_legacy: bool,
         device_id: str,
     ) -> None:
         """Initialize global IPP data updater."""
@@ -41,6 +42,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             tls=tls,
             verify_ssl=verify_ssl,
             session=async_get_clientsession(hass, verify_ssl),
+            ipp_version=IPP_PROTO_VERSION_LEGACY if data[CONF_PROTO_LEGACY] else IPP_PROTO_VERSION_DEFAULT,
         )
 
         super().__init__(

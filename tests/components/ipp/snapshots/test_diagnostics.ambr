@@ -90,6 +90,7 @@
         'base_path': '/ipp/print',
         'host': '192.168.1.31',
         'port': 631,
+        'proto_legacy': False,
         'ssl': False,
         'uuid': 'cfe92100-67c4-11d4-a45f-f8d027761251',
         'verify_ssl': True,

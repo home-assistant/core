@@ -15,7 +15,7 @@ from pyipp import (
 )
 import pytest
 
-from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
+from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_PROTO_LEGACY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL, CONF_UUID
 from homeassistant.core import HomeAssistant
@@ -23,6 +23,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     MOCK_USER_INPUT,
+    MOCK_USER_INPUT_PROTO_LEGACY,
     MOCK_ZEROCONF_IPP_SERVICE_INFO,
     MOCK_ZEROCONF_IPPS_SERVICE_INFO,
 )
@@ -131,6 +132,30 @@ async def test_user_connection_upgrade_required(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "connection_upgrade"}
 
+async def test_user_legacy_printer(hass: HomeAssistant) -> None:
+    """Test that a legacy printer can be added."""
+    fixture = await hass.async_add_executor_job(
+        load_fixture, "ipp/printer_proto_legacy.json"
+    )
+    mock_legacy_printer = Printer.from_dict(json.loads(fixture))
+    user_input = MOCK_USER_INPUT_PROTO_LEGACY.copy()
+    with patch(
+        "homeassistant.components.ipp.config_flow.IPP", autospec=True
+    ) as ipp_mock:
+        client = ipp_mock.return_value
+        client.printer.return_value = mock_legacy_printer
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=user_input,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "192.168.1.32"
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == "192.168.1.32"
+    assert result["data"][CONF_PROTO_LEGACY] is True
 
 async def test_zeroconf_connection_upgrade_required(
     hass: HomeAssistant,
