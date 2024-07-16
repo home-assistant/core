@@ -5,6 +5,8 @@ from __future__ import annotations
 import datetime
 import time
 
+# Do not add any Home Assistant import here
+
 
 def _utcnow() -> datetime.datetime:
     """Make utcnow patchable by freezegun."""
@@ -16,8 +18,8 @@ def _monotonic() -> float:
     return time.monotonic()
 
 
-# Before importing anything else, replace partial dt_util.utcnow
-# with a regular function which can be found by freezegun
+# Before importing any other Home Assistant functionality, import and replace
+# partial dt_util.utcnow with a regular function which can be found by freezegun
 from homeassistant import util  # noqa: E402
 from homeassistant.util import dt as dt_util  # noqa: E402
 
