@@ -161,6 +161,11 @@ def process_plex_payload(
     if not plex_server:
         plex_server = get_plex_server(hass)
 
+    if isinstance(content, dict):
+        if plex_user := content.pop("username", None):
+            _LOGGER.debug("Switching to Plex user: %s", plex_user)
+            plex_server = plex_server.switch_user(plex_user)
+
     if content_type == "station":
         if not supports_playqueues:
             raise HomeAssistantError("Plex stations are not supported on this device")
