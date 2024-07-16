@@ -87,16 +87,7 @@ async def mock_envoy(
             algorithm="HS256",
         )
         mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
-        mock_envoy.close_dry_contact = AsyncMock(return_value={})
-        mock_envoy.disable_charge_from_grid = AsyncMock(return_value={})
-        mock_envoy.enable_charge_from_grid = AsyncMock(return_value={})
-        mock_envoy.go_off_grid = AsyncMock(return_value={})
-        mock_envoy.go_on_grid = AsyncMock(return_value={})
-        mock_envoy.open_dry_contact = AsyncMock(return_value={})
         mock_envoy.serial_number = "1234"
-        mock_envoy.set_reserve_soc = AsyncMock(return_value={})
-        mock_envoy.set_storage_mode = AsyncMock(return_value={})
-        mock_envoy.update_dry_contact = AsyncMock(return_value={})
         mock = Mock()
         mock.status_code = 200
         mock.text = "Testing request \nreplies."
@@ -110,7 +101,7 @@ async def mock_envoy(
 
         # Load envoy model from fixture
         load_envoy_fixture(mock_envoy, fixture_name)
-        mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
+        mock_envoy.update.return_value = mock_envoy.data
 
         yield mock_envoy
 
