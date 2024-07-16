@@ -576,7 +576,13 @@ def _update_states_table_with_foreign_key_options(
                 connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
-                        connection.execute(AddConstraint(fkc))  # type: ignore[no-untyped-call]
+                        # AddConstraint mutates the constraint passed to it, we need to
+                        # copy it to avoid changing the behavior of the table schema.
+                        # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
+                        tmp_constraint = fkc._copy()  # noqa: SLF001
+                        constrained_table = Base.metadata.tables[TABLE_STATES]
+                        constrained_table.append_constraint(tmp_constraint)
+                        connection.execute(AddConstraint(tmp_constraint))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
@@ -634,10 +640,18 @@ def _restore_foreign_key_constraints(
             )
             continue
 
+        # AddConstraint mutates the constraint passed to it, we need to
+        # copy it to avoid changing the behavior of the table schema.
+        # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
+        tmp_constraint = constraint._copy()  # noqa: SLF001
+        constrained_table = Base.metadata.tables[table]
+        constrained_table.append_constraint(tmp_constraint)
+        add_constraint = AddConstraint(tmp_constraint)  # type: ignore[no-untyped-call]
+
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(AddConstraint(constraint))  # type: ignore[no-untyped-call]
+                connection.execute(add_constraint)
             except (InternalError, OperationalError):
                 _LOGGER.exception("Could not update foreign options in %s table", table)
 

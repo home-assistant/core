@@ -688,6 +688,97 @@ def test_rebuild_sqlite_states_table_extra_columns(
     engine.dispose()
 
 
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
+    """Test we can drop and then restore foreign keys.
+
+    This is not supported on SQLite
+    """
+
+    constraints_to_recreate = (
+        ("events", "data_id"),
+        ("states", "event_id"),  # This won't be found
+        ("states", "old_state_id"),
+    )
+
+    expected_dropped_constraints = [
+        (
+            "events",
+            "data_id",
+            {
+                "comment": None,
+                "constrained_columns": ["data_id"],
+                "name": "events_data_id_fkey",
+                "options": {},
+                "referred_columns": ["data_id"],
+                "referred_schema": None,
+                "referred_table": "event_data",
+            },
+        ),
+        (
+            "states",
+            "old_state_id",
+            {
+                "comment": None,
+                "constrained_columns": ["old_state_id"],
+                "name": "states_old_state_id_fkey",
+                "options": {},
+                "referred_columns": ["state_id"],
+                "referred_schema": None,
+                "referred_table": "states",
+            },
+        ),
+    ]
+
+    engine = create_engine(recorder_db_url)
+    db_schema.Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        dropped_constraints_1 = [
+            dropped_constraint
+            for table, column in constraints_to_recreate
+            for dropped_constraint in migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+    assert dropped_constraints_1 == expected_dropped_constraints
+
+    # Check we don't find the constrained columns again (they are removed)
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        dropped_constraints_2 = [
+            dropped_constraint
+            for table, column in constraints_to_recreate
+            for dropped_constraint in migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+    assert dropped_constraints_2 == []
+
+    # Restore the constraints
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        migration._restore_foreign_key_constraints(
+            session_maker, engine, dropped_constraints_1
+        )
+
+    # Check we do find the constrained columns again (they are restored)
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        dropped_constraints_3 = [
+            dropped_constraint
+            for table, column in constraints_to_recreate
+            for dropped_constraint in migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+    assert dropped_constraints_3 == expected_dropped_constraints
+
+    engine.dispose()
+
+
 def test_restore_foreign_key_constraints_with_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
