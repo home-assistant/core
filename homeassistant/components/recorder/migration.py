@@ -2207,17 +2207,14 @@ class BaseRunTimeMigration(ABC):
     migration_id: str
     task = MigrationTask
 
-    def __init__(
-        self, session: Session, schema_version: int, migration_changes: dict[str, int]
-    ) -> None:
+    def __init__(self, schema_version: int, migration_changes: dict[str, int]) -> None:
         """Initialize a new BaseRunTimeMigration."""
         self.schema_version = schema_version
-        self.session = session
         self.migration_changes = migration_changes
 
-    def do_migrate(self, instance: Recorder) -> None:
+    def do_migrate(self, instance: Recorder, session: Session) -> None:
         """Start migration if needed."""
-        if self.needs_migrate():
+        if self.needs_migrate(session):
             instance.queue_task(self.task(self))
         else:
             self.migration_done(instance, False)
@@ -2234,7 +2231,7 @@ class BaseRunTimeMigration(ABC):
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Return the query to check if the migration needs to run."""
 
-    def needs_migrate(self) -> bool:
+    def needs_migrate(self, session: Session) -> bool:
         """Return if the migration needs to run.
 
         If the migration needs to run, it will return True.
@@ -2252,8 +2249,8 @@ class BaseRunTimeMigration(ABC):
         # We do not know if the migration is done from the
         # migration changes table so we must check the data
         # This is the slow path
-        if not execute_stmt_lambda_element(self.session, self.needs_migrate_query()):
-            _mark_migration_done(self.session, self.__class__)
+        if not execute_stmt_lambda_element(session, self.needs_migrate_query()):
+            _mark_migration_done(session, self.__class__)
             return False
         return True
 
@@ -2341,14 +2338,17 @@ class EntityIDMigration(BaseRunTimeMigration):
         if did_migrate:
             instance.queue_task(EntityIDPostMigrationTask())
         else:
-            with contextlib.suppress(SQLAlchemyError):
+            with (
+                contextlib.suppress(SQLAlchemyError),
+                session_scope(session=instance.get_session()) as session,
+            ):
                 # If ix_states_entity_id_last_updated_ts still exists
                 # on the states table it means the entity id migration
                 # finished by the EntityIDPostMigrationTask did not
                 # complete because they restarted in the middle of it. We need
                 # to pick back up where we left off.
                 if get_index_by_name(
-                    self.session,
+                    session,
                     TABLE_STATES,
                     LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
                 ):

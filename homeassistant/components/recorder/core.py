@@ -807,8 +807,8 @@ class Recorder(threading.Thread):
                 EventTypeIDMigration,
                 EntityIDMigration,
             ):
-                migrator = migrator_cls(session, schema_version, migration_changes)
-                migrator.do_migrate(self)
+                migrator = migrator_cls(schema_version, migration_changes)
+                migrator.do_migrate(self, session)
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
                 with contextlib.suppress(SQLAlchemyError):
