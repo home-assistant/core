@@ -41,7 +41,7 @@ def async_handle_timer_event(
                     "importance": "high",
                     # iOS
                     "push": {
-                        "interruption-level": "passive",
+                        "interruption-level": "time-sensitive",
                     },
                 },
             },

@@ -62,7 +62,7 @@ async def test_timer_events(
             "group": "timers",
             "importance": "high",
             "push": {
-                "interruption-level": "passive",
+                "interruption-level": "time-sensitive",
             },
         },
     }
