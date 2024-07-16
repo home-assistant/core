@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
@@ -29,7 +29,8 @@ def process_service_info(
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     coordinator = entry.runtime_data
     update = coordinator.device_data.update(service_info)
-    if update.events:
+    if update.events and hass.state is CoreState.running:
+        # Do not fire events on data restore
         address = service_info.device.address
         for event in update.events.values():
             event_type = event.event_type
