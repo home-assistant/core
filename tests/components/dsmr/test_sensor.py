@@ -28,7 +28,7 @@ from dsmr_parser.obis_references import (
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 import pytest
 
-from homeassistant.components.dsmr.sensor import SENSORS
+from homeassistant.components.dsmr.sensor import SENSORS, SENSORS_MBUS_DEVICE_TYPE
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -1525,3 +1525,7 @@ def test_all_obis_references_exists():
     """Verify that all attributes exist by name in database."""
     for sensor in SENSORS:
         assert hasattr(obis_references, sensor.obis_reference)
+
+    for sensors in SENSORS_MBUS_DEVICE_TYPE.values():
+        for sensor in sensors:
+            assert hasattr(obis_references, sensor.obis_reference)
