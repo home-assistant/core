@@ -5,7 +5,7 @@ from datetime import date
 from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
-from amberelectric.model.site import Site, SiteStatus
+from amberelectric.models.site import Site
 import pytest
 
 from homeassistant.components.amberelectric.config_flow import filter_sites
@@ -28,7 +28,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 def mock_invalid_key_api() -> Generator:
     """Return an authentication error."""
 
-    with patch("amberelectric.api.AmberApi.create") as mock:
+    with patch("amberelectric.AmberApi") as mock:
         mock.return_value.get_sites.side_effect = ApiException(status=403)
         yield mock
 
@@ -36,7 +36,7 @@ def mock_invalid_key_api() -> Generator:
 @pytest.fixture(name="api_error")
 def mock_api_error() -> Generator:
     """Return an authentication error."""
-    with patch("amberelectric.api.AmberApi.create") as mock:
+    with patch("amberelectric.AmberApi") as mock:
         mock.return_value.get_sites.side_effect = ApiException(status=500)
         yield mock
 
@@ -45,16 +45,16 @@ def mock_api_error() -> Generator:
 def mock_single_site_api() -> Generator:
     """Return a single site."""
     site = Site(
-        "01FG0AGP818PXK0DWHXJRRT2DH",
-        "11111111111",
-        [],
-        "Jemena",
-        SiteStatus.ACTIVE,
-        date(2002, 1, 1),
-        None,
+        id="01FG0AGP818PXK0DWHXJRRT2DH",
+        nmi="11111111111",
+        channels=[],
+        network="Jemena",
+        status="active",
+        activeFrom=date(2002, 1, 1),
+        closedOn=None,
     )
 
-    with patch("amberelectric.api.AmberApi.create") as mock:
+    with patch("amberelectric.AmberApi") as mock:
         mock.return_value.get_sites.return_value = [site]
         yield mock
 
@@ -63,16 +63,16 @@ def mock_single_site_api() -> Generator:
 def mock_single_site_pending_api() -> Generator:
     """Return a single site."""
     site = Site(
-        "01FG0AGP818PXK0DWHXJRRT2DH",
-        "11111111111",
-        [],
-        "Jemena",
-        SiteStatus.PENDING,
-        None,
-        None,
+        id="01FG0AGP818PXK0DWHXJRRT2DH",
+        nmi="11111111111",
+        channels=[],
+        network="Jemena",
+        status="pending",
+        activeFrom=None,
+        closedOn=None,
     )
 
-    with patch("amberelectric.api.AmberApi.create") as mock:
+    with patch("amberelectric.AmberApi") as mock:
         mock.return_value.get_sites.return_value = [site]
         yield mock
 
@@ -82,35 +82,35 @@ def mock_single_site_rejoin_api() -> Generator:
     """Return a single site."""
     instance = Mock()
     site_1 = Site(
-        "01HGD9QB72HB3DWQNJ6SSCGXGV",
-        "11111111111",
-        [],
-        "Jemena",
-        SiteStatus.CLOSED,
-        date(2002, 1, 1),
-        date(2002, 6, 1),
+        id="01HGD9QB72HB3DWQNJ6SSCGXGV",
+        nmi="11111111111",
+        channels=[],
+        network="Jemena",
+        status="closed",
+        activeFrom=date(2002, 1, 1),
+        closedOn=date(2002, 6, 1),
     )
     site_2 = Site(
-        "01FG0AGP818PXK0DWHXJRRT2DH",
-        "11111111111",
-        [],
-        "Jemena",
-        SiteStatus.ACTIVE,
-        date(2003, 1, 1),
-        None,
+        id="01FG0AGP818PXK0DWHXJRRT2DH",
+        nmi="11111111111",
+        channels=[],
+        network="Jemena",
+        status="active",
+        activeFrom=date(2003, 1, 1),
+        closedOn=None,
     )
     site_3 = Site(
-        "01FG0AGP818PXK0DWHXJRRT2DH",
-        "11111111112",
-        [],
-        "Jemena",
-        SiteStatus.CLOSED,
-        date(2003, 1, 1),
-        date(2003, 6, 1),
+        id="01FG0AGP818PXK0DWHXJRRT2DH",
+        nmi="11111111112",
+        channels=[],
+        network="Jemena",
+        status="closed",
+        activeFrom=date(2003, 1, 1),
+        closedOn=date(2003, 6, 1),
     )
     instance.get_sites.return_value = [site_1, site_2, site_3]
 
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
+    with patch("amberelectric.AmberApi", return_value=instance):
         yield instance
 
 
@@ -120,7 +120,7 @@ def mock_no_site_api() -> Generator:
     instance = Mock()
     instance.get_sites.return_value = []
 
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
+    with patch("amberelectric.AmberApi", return_value=instance):
         yield instance
 
 
@@ -279,9 +279,5 @@ async def test_site_deduplication(single_site_rejoin_api: Mock) -> None:
     """Test site deduplication."""
     filtered = filter_sites(single_site_rejoin_api.get_sites())
     assert len(filtered) == 2
-    assert (
-        next(s for s in filtered if s.nmi == "11111111111").status == SiteStatus.ACTIVE
-    )
-    assert (
-        next(s for s in filtered if s.nmi == "11111111112").status == SiteStatus.CLOSED
-    )
+    assert next(s for s in filtered if s.nmi == "11111111111").status == "active"
+    assert next(s for s in filtered if s.nmi == "11111111112").status == "closed"

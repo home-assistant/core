@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from amberelectric.model.channel import ChannelType
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.forecast_interval import ForecastInterval
+from amberelectric.models.channel import ChannelType
+from amberelectric.models.current_interval import CurrentInterval
+from amberelectric.models.forecast_interval import ForecastInterval
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -73,7 +73,7 @@ class AmberPriceSensor(AmberSensor):
         """Return the current price in $/kWh."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -87,9 +87,9 @@ class AmberPriceSensor(AmberSensor):
             return data
 
         data["duration"] = interval.duration
-        data["date"] = interval.date.isoformat()
+        data["date"] = interval.var_date.isoformat()
         data["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             data["per_kwh"] = data["per_kwh"] * -1
         data["nem_date"] = interval.nem_time.isoformat()
         data["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
@@ -103,6 +103,14 @@ class AmberPriceSensor(AmberSensor):
         if interval.range is not None:
             data["range_min"] = format_cents_to_dollars(interval.range.min)
             data["range_max"] = format_cents_to_dollars(interval.range.max)
+
+        if interval.advanced_price is not None:
+            data["advanced_price_low"] = -1 * format_cents_to_dollars(
+                interval.advanced_price.low
+            )
+            data["advanced_price_high"] = -1 * format_cents_to_dollars(
+                interval.advanced_price.high
+            )
 
         return data
 
@@ -120,7 +128,7 @@ class AmberForecastSensor(AmberSensor):
             return None
         interval = intervals[0]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -142,10 +150,10 @@ class AmberForecastSensor(AmberSensor):
         for interval in intervals:
             datum = {}
             datum["duration"] = interval.duration
-            datum["date"] = interval.date.isoformat()
+            datum["date"] = interval.var_date.isoformat()
             datum["nem_date"] = interval.nem_time.isoformat()
             datum["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-            if interval.channel_type == ChannelType.FEED_IN:
+            if interval.channel_type == ChannelType.FEEDIN:
                 datum["per_kwh"] = datum["per_kwh"] * -1
             datum["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
             datum["start_time"] = interval.start_time.isoformat()
@@ -157,6 +165,14 @@ class AmberForecastSensor(AmberSensor):
             if interval.range is not None:
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
                 datum["range_max"] = format_cents_to_dollars(interval.range.max)
+
+            if interval.advanced_price is not None:
+                data["advanced_price_low"] = format_cents_to_dollars(
+                    interval.advanced_price.low
+                )
+                data["advanced_price_high"] = format_cents_to_dollars(
+                    interval.advanced_price.high
+                )
 
             data["forecasts"].append(datum)
 
@@ -214,7 +230,9 @@ async def async_setup_entry(
             state_class=SensorStateClass.MEASUREMENT,
             translation_key=channel_type,
         )
-        entities.append(AmberPriceSensor(coordinator, description, channel_type))
+        entities.append(
+            AmberPriceSensor(coordinator, description, ChannelType(channel_type))
+        )
 
     for channel_type in current:
         description = SensorEntityDescription(
@@ -226,7 +244,9 @@ async def async_setup_entry(
             translation_key=channel_type,
         )
         entities.append(
-            AmberPriceDescriptorSensor(coordinator, description, channel_type)
+            AmberPriceDescriptorSensor(
+                coordinator, description, ChannelType(channel_type)
+            )
         )
 
     for channel_type in forecasts:
@@ -237,7 +257,9 @@ async def async_setup_entry(
             state_class=SensorStateClass.MEASUREMENT,
             translation_key=channel_type,
         )
-        entities.append(AmberForecastSensor(coordinator, description, channel_type))
+        entities.append(
+            AmberForecastSensor(coordinator, description, ChannelType(channel_type))
+        )
 
     renewables_description = SensorEntityDescription(
         key="renewables",
