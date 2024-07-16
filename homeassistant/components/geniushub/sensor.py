@@ -6,13 +6,12 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, GeniusDevice, GeniusEntity
+from . import GeniusDevice, GeniusEntity, GeniusHubConfigEntry
 
 GH_STATE_ATTR = "batteryLevel"
 
@@ -25,16 +24,12 @@ GH_LEVEL_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GeniusHubConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Genius Hub sensor entities."""
-    config = hass.data[DOMAIN][entry.entry_id]
-    # Update our config to include new repos and remove those that have been removed.
-    if entry.options:
-        config.update(entry.options)
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
     entities: list[GeniusBattery | GeniusIssue] = [
         GeniusBattery(broker, d, GH_STATE_ATTR)
@@ -43,7 +38,7 @@ async def async_setup_entry(
     ]
     entities.extend([GeniusIssue(broker, i) for i in list(GH_LEVEL_MAPPING)])
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class GeniusBattery(GeniusDevice, SensorEntity):

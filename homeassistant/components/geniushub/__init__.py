@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from geniushubclient import GeniusHub, GeniusService
+from geniushubclient import GeniusHub
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,7 +32,6 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -118,40 +117,6 @@ PLATFORMS = (
 )
 
 
-async def validate_input(
-    hass: HomeAssistant, hass_data_in: dict[str, Any]
-) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys with values provided by the user.
-    """
-    hass_data = dict(hass_data_in)
-    mac = hass_data.pop(CONF_MAC, "")
-
-    if CONF_HOST in hass_data:
-        source = "Local: "
-        URL = "auth/release"
-        service = GeniusService(
-            hass_data.pop(CONF_HOST), **hass_data, session=async_get_clientsession(hass)
-        )
-    else:
-        source = "Cloud: "
-        URL = "version"
-        service = GeniusService(
-            hass_data.pop(CONF_TOKEN),
-            **hass_data,
-            session=async_get_clientsession(hass),
-        )
-
-    response = await service.request("GET", URL)
-
-    _LOGGER.debug("__init__.py:validate_input: ", extra=hass_data_in)
-    if source == "Local: ":
-        mac = response["data"]["UID"]
-
-    return {"title": source + mac}
-
-
 async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
     """Import a config entry from configuration.yaml."""
 
@@ -160,7 +125,10 @@ async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
         context={"source": config_entries.SOURCE_IMPORT},
         data=base_config[DOMAIN],
     )
-    if result["type"] == FlowResultType.CREATE_ENTRY:
+    if (
+        result["type"] is FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
         async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
@@ -199,23 +167,28 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+type GeniusHubConfigEntry = ConfigEntry[GeniusBroker]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> bool:
     """Create a Genius Hub system."""
-    hass.data.setdefault(DOMAIN, {})
-    hass_data = dict(config.data)
-    hass.data[DOMAIN][config.entry_id] = hass_data
 
-    # Create a Genius Hub client and broker
-    if CONF_HOST in hass_data:
-        args = (hass_data.pop(CONF_HOST),)
+    session = async_get_clientsession(hass)
+    if CONF_HOST in entry.data:
+        client = GeniusHub(
+            entry.data[CONF_HOST],
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+            session=session,
+        )
     else:
-        args = (hass_data.pop(CONF_TOKEN),)
+        client = GeniusHub(entry.data[CONF_TOKEN], session=session)
 
-    hub_uid = hass_data.pop(CONF_MAC, None)
+    unique_id = entry.unique_id or entry.entry_id
 
-    client = GeniusHub(*args, **hass_data, session=async_get_clientsession(hass))
-
-    broker = hass.data[DOMAIN]["broker"] = GeniusBroker(hass, client, hub_uid)
+    broker = entry.runtime_data = GeniusBroker(
+        hass, client, entry.data.get(CONF_MAC, unique_id)
+    )
 
     try:
         await client.update()
@@ -228,7 +201,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
     setup_service_functions(hass, broker)
 
-    await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -270,29 +243,12 @@ def setup_service_functions(hass: HomeAssistant, broker):
 class GeniusBroker:
     """Container for geniushub client and data."""
 
-    def __init__(
-        self, hass: HomeAssistant, client: GeniusHub, hub_uid: str | None
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: GeniusHub, hub_uid: str) -> None:
         """Initialize the geniushub client."""
         self.hass = hass
         self.client = client
-        self._hub_uid = hub_uid
+        self.hub_uid = hub_uid
         self._connect_error = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.hub_uid)},
-            manufacturer="Genius",
-            model="self._device.type,",
-            name="self._device.name,",
-        )
-
-    @property
-    def hub_uid(self) -> str:
-        """Return the Hub UID (MAC address)."""
-        return self._hub_uid if self._hub_uid is not None else self.client.uid
 
     async def async_update(self, now, **kwargs) -> None:
         """Update the geniushub client's data."""

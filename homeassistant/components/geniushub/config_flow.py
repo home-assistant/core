@@ -1,4 +1,4 @@
-"""Config flow for Geniushub logger integration."""
+"""Config flow for Geniushub integration."""
 
 from __future__ import annotations
 
@@ -8,37 +8,30 @@ import socket
 from typing import Any
 
 import aiohttp
+from geniushubclient import GeniusService
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import validate_input
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 CLOUD_API_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_MAC): cv.string,
+        vol.Required(CONF_TOKEN): str,
     }
 )
 
 
 LOCAL_API_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MAC): cv.string,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -52,7 +45,6 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """User config step for determine cloud or local."""
-        _LOGGER.debug("ConfigFlow.async_step_user")
         return self.async_show_menu(
             step_id="user",
             menu_options=["local_api", "cloud_api"],
@@ -62,44 +54,40 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Version 3 configuration."""
-        _LOGGER.debug("ConfigFlow.async_step_local_api: ", extra=user_input)
-        if user_input is None:
-            return self.async_show_form(
-                step_id="local_api", data_schema=LOCAL_API_SCHEMA
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                }
             )
-
-        self._async_abort_entries_match(user_input)
-        errors = {}
-
-        try:
-            info = await validate_input(self.hass, user_input)
-
-        except socket.gaierror:
-            errors["base"] = "invalid_host"
-
-        except aiohttp.ClientResponseError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED:
-                errors["base"] = "unauthorized"
-            else:
+            service = GeniusService(
+                user_input[CONF_HOST],
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+                session=async_get_clientsession(self.hass),
+            )
+            try:
+                response = await service.request("GET", "auth/release")
+            except socket.gaierror:
                 errors["base"] = "invalid_host"
-
-        except (TimeoutError, aiohttp.ClientConnectionError):
-            errors["base"] = "cannot_connect"
-
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            _LOGGER.debug(
-                "ConfigFlow.async_step_local_api: validation passed:",
-                extra=user_input,
-            )
-            return self.async_create_entry(title=info["title"], data=user_input)
-
-        _LOGGER.debug(
-            "ConfigFlow.async_step_local_api: validation failed: ",
-            extra=user_input,
-        )
+            except aiohttp.ClientResponseError as err:
+                if err.status == HTTPStatus.UNAUTHORIZED:
+                    errors["base"] = "unauthorized"
+                else:
+                    errors["base"] = "invalid_host"
+            except (TimeoutError, aiohttp.ClientConnectionError):
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(response["data"]["UID"])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
 
         return self.async_show_form(
             step_id="local_api", errors=errors, data_schema=LOCAL_API_SCHEMA
@@ -109,86 +97,40 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Version 1 configuration."""
-        _LOGGER.debug("ConfigFlow.async_step_cloud_api: ", extra=user_input)
-        if user_input is None:
-            return self.async_show_form(
-                step_id="cloud_api", data_schema=CLOUD_API_SCHEMA
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._async_abort_entries_match(user_input)
+            service = GeniusService(
+                user_input[CONF_TOKEN], session=async_get_clientsession(self.hass)
             )
-
-        self._async_abort_entries_match(user_input)
-        errors = {}
-
-        try:
-            info = await validate_input(self.hass, user_input)
-
-        except aiohttp.ClientResponseError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED:
-                errors["base"] = "unauthorized_token"
-            else:
+            try:
+                await service.request("GET", "version")
+            except aiohttp.ClientResponseError as err:
+                if err.status == HTTPStatus.UNAUTHORIZED:
+                    errors["base"] = "unauthorized"
+                else:
+                    errors["base"] = "invalid_host"
+            except socket.gaierror:
                 errors["base"] = "invalid_host"
-
-        except socket.gaierror:
-            errors["base"] = "invalid_host"
-
-        except (TimeoutError, aiohttp.ClientConnectionError):
-            errors["base"] = "cannot_connect"
-
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            _LOGGER.debug(
-                "ConfigFlow.async_step_cloud_api: validation passed: ",
-                extra=user_input,
-            )
-            return self.async_create_entry(title=info["title"], data=user_input)
-
-        _LOGGER.debug(
-            "ConfigFlow.async_step_cloud_api: validation failed: ",
-            extra=user_input,
-        )
+            except (TimeoutError, aiohttp.ClientConnectionError):
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title="Genius hub", data=user_input)
 
         return self.async_show_form(
-            step_id="cloud_api", errors=errors, data_schema=LOCAL_API_SCHEMA
+            step_id="cloud_api", errors=errors, data_schema=CLOUD_API_SCHEMA
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
-        self._async_abort_entries_match(user_input)
-        errors = {}
-        # return self.async_create_entry(title="title", data=user_input)
-
-        try:
-            info = await validate_input(self.hass, user_input)
-
-        except socket.gaierror:
-            errors["base"] = "invalid_host"
-
-        except aiohttp.ClientResponseError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED:
-                errors["base"] = "unauthorized"
-            else:
-                errors["base"] = "invalid_host"
-
-        except (TimeoutError, aiohttp.ClientConnectionError):
-            errors["base"] = "cannot_connect"
-
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+        if CONF_HOST in user_input:
+            result = await self.async_step_local_api(user_input)
         else:
-            _LOGGER.debug(
-                "ConfigFlow.async_step_import: validation passed:",
-                extra=user_input,
-            )
-            return self.async_create_entry(title=info["title"], data=user_input)
-
-        _LOGGER.debug(
-            "ConfigFlow.async_step_import: validation failed: ",
-            extra=user_input,
-        )
-
-        return self.async_show_form(
-            step_id="user",
-            errors=errors,
-        )
+            result = await self.async_step_cloud_api(user_input)
+        if result["type"] is FlowResultType.FORM:
+            assert result["errors"]
+            return self.async_abort(reason=result["errors"]["base"])
+        return result
