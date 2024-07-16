@@ -1,7 +1,6 @@
 """Test Enphase Envoy sensors."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -30,12 +29,11 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_sensor(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    setup_enphase_envoy: AsyncGenerator[None],
+    mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_envoy: Mock,
 ) -> None:
     """Test sensor platform entities against snapshot."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

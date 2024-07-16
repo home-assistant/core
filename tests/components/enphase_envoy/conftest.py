@@ -1,12 +1,11 @@
 """Define test fixtures for Enphase Envoy."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import jwt
 from pyenphase import (
-    Envoy,
     EnvoyData,
     EnvoyEncharge,
     EnvoyEnchargeAggregate,
@@ -30,16 +29,26 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.enphase_envoy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(
-    hass: HomeAssistant, config: dict[str, str], serial_number: str
+    hass: HomeAssistant, config: dict[str, str]
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
-        title=f"Envoy {serial_number}" if serial_number else "Envoy",
-        unique_id=serial_number,
+        title="Envoy 1234",
+        unique_id="1234",
         data=config,
     )
 
@@ -55,88 +64,46 @@ def config_fixture() -> dict[str, str]:
     }
 
 
-@pytest.fixture(name="mock_envoy")
-async def mock_envoy_fixture(
-    mock_auth: EnvoyTokenAuth,
-    mock_authenticate: AsyncMock,
-    mock_setup: AsyncMock,
+@pytest.fixture
+async def mock_envoy(
     request: pytest.FixtureRequest,
-    serial_number: str,
 ) -> AsyncGenerator[AsyncMock, None]:
     """Define a mocked Envoy fixture."""
-    mock_envoy = Mock(spec=Envoy)
-    # Add the fixtures specified
-    mock_envoy.auth = mock_auth
-    mock_envoy.authenticate = mock_authenticate
-    mock_envoy.close_dry_contact = AsyncMock(return_value={})
-    mock_envoy.disable_charge_from_grid = AsyncMock(return_value={})
-    mock_envoy.enable_charge_from_grid = AsyncMock(return_value={})
-    mock_envoy.go_off_grid = AsyncMock(return_value={})
-    mock_envoy.go_on_grid = AsyncMock(return_value={})
-    mock_envoy.open_dry_contact = AsyncMock(return_value={})
-    mock_envoy.serial_number = serial_number
-    mock_envoy.set_reserve_soc = AsyncMock(return_value={})
-    mock_envoy.set_storage_mode = AsyncMock(return_value={})
-    mock_envoy.setup = mock_setup
-    mock_envoy.update_dry_contact = AsyncMock(return_value={})
-
-    # determine fixture file name, default envoy if no request passed
-    fixture_name = "envoy"
-    if hasattr(request, "param"):
-        fixture_name = request.param
-
-    # Load envoy model from fixture
-    load_envoy_fixture(mock_envoy, fixture_name)
-    mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
-
-    return mock_envoy
-
-
-@pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(
-    hass: HomeAssistant,
-    config: dict[str, str],
-    mock_envoy: Mock,
-) -> AsyncGenerator[None]:
-    """Define a fixture to set up Enphase Envoy."""
     with (
         patch(
             "homeassistant.components.enphase_envoy.config_flow.Envoy",
-            return_value=mock_envoy,
-        ),
+            autospec=True,
+        ) as mock_client,
         patch(
             "homeassistant.components.enphase_envoy.Envoy",
-            return_value=mock_envoy,
+            new=mock_client,
         ),
     ):
-        yield
+        mock_envoy = mock_client.return_value
+        # Add the fixtures specified
+        token = jwt.encode(
+            payload={"name": "envoy", "exp": 1907837780},
+            key="secret",
+            algorithm="HS256",
+        )
+        mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+        mock_envoy.serial_number = "1234"
+        mock = Mock()
+        mock.status_code = 200
+        mock.text = "Testing request \nreplies."
+        mock.headers = {"Hello": "World"}
+        mock_envoy.request.return_value = mock
 
+        # determine fixture file name, default envoy if no request passed
+        fixture_name = "envoy"
+        if hasattr(request, "param"):
+            fixture_name = request.param
 
-@pytest.fixture(name="mock_authenticate")
-def mock_authenticate() -> AsyncMock:
-    """Define a mocked Envoy.authenticate fixture."""
-    return AsyncMock()
+        # Load envoy model from fixture
+        load_envoy_fixture(mock_envoy, fixture_name)
+        mock_envoy.update.return_value = mock_envoy.data
 
-
-@pytest.fixture(name="mock_auth")
-def mock_auth(serial_number: str) -> EnvoyTokenAuth:
-    """Define a mocked EnvoyAuth fixture."""
-    token = jwt.encode(
-        payload={"name": "envoy", "exp": 1907837780}, key="secret", algorithm="HS256"
-    )
-    return EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial=serial_number)
-
-
-@pytest.fixture(name="mock_setup")
-def mock_setup() -> AsyncMock:
-    """Define a mocked Envoy.setup fixture."""
-    return AsyncMock()
-
-
-@pytest.fixture(name="serial_number")
-def serial_number_fixture() -> str:
-    """Define a serial number fixture."""
-    return "1234"
+        yield mock_envoy
 
 
 def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
