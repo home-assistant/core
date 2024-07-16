@@ -173,6 +173,14 @@ async def test_reconfigure_flow(
         {CONF_LOCAL_ACCESS_TOKEN: LOCAL_ACCESS_TOKEN, CONF_HOST: "192.168.1.43"},
     )
 
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry
+    assert entry.title == "My Tedee"
+    assert entry.data == {
+        CONF_HOST: "192.168.1.43",
+        CONF_LOCAL_ACCESS_TOKEN: LOCAL_ACCESS_TOKEN,
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+    }
