@@ -53,7 +53,7 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="reauth_successful")
 
         return self.async_abort(
-            reason="wrong_account",
+            reason="reauth_account_mismatch",
             description_placeholders={"title": self.reauth_entry.title},
         )
 

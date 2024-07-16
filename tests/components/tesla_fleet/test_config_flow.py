@@ -15,14 +15,18 @@ from homeassistant.components.tesla_fleet.application_credentials import (
     TOKEN_URL,
 )
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
+
+REDIRECT = "https://example.com/auth/external/callback"
+UNIQUE_ID = "uid"
 
 
 @pytest.fixture
@@ -38,8 +42,26 @@ async def component_setup(hass: HomeAssistant) -> None:
     assert result
 
 
-REDIRECT = "https://example.com/auth/external/callback"
-UNIQUE_ID = "uid"
+@pytest.fixture
+async def access_token(hass: HomeAssistant) -> dict[str, str | list[str]]:
+    """Return a valid access token."""
+    return config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "sub": UNIQUE_ID,
+            "aud": [],
+            "scp": [
+                "vehicle_device_data",
+                "vehicle_cmds",
+                "vehicle_charging_cmds",
+                "energy_device_data",
+                "energy_cmds",
+                "offline_access",
+                "openid",
+            ],
+            "ou_code": "NA",
+        },
+    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -48,6 +70,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     component_setup,
+    access_token,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(  # not working
@@ -79,24 +102,6 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    access_token = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "sub": UNIQUE_ID,
-            "aud": [],
-            "scp": [
-                "vehicle_device_data",
-                "vehicle_cmds",
-                "vehicle_charging_cmds",
-                "energy_device_data",
-                "energy_cmds",
-                "offline_access",
-                "openid",
-            ],
-            "ou_code": "NA",
-        },
-    )
-
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         TOKEN_URL,
@@ -122,3 +127,119 @@ async def test_full_flow(
     assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == access_token
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauthentication(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    component_setup,
+    access_token,
+) -> None:
+    """Test Tesla Fleet reauthentication."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=UNIQUE_ID,
+        version=1,
+        data={},
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_account_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    component_setup,
+    access_token,
+) -> None:
+    """Test Tesla Fleet reauthentication with different account."""
+    old_entry = MockConfigEntry(domain=DOMAIN, unique_id="baduid", version=1, data={})
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_account_mismatch"
