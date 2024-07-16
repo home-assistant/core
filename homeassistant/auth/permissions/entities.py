@@ -66,9 +66,6 @@ def _lookup_area(
     if entity_entry.device_id is None:
         return None
 
-    # if entity_entry is None or entity_entry.device_id is None:
-    #     return None
-
     device_entry = perm_lookup.device_registry.async_get(entity_entry.device_id)
 
     if device_entry is None or device_entry.area_id is None:
