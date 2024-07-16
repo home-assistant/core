@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN
+from .const import CONF_DEVICE_TYPE, DOMAIN
 
 type GoveeBLEConfigEntry = ConfigEntry[GoveeBLEBluetoothProcessorCoordinator]
 
@@ -28,7 +28,12 @@ def process_service_info(
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     coordinator = entry.runtime_data
-    update = coordinator.device_data.update(service_info)
+    data = coordinator.device_data
+    update = data.update(service_info)
+    if entry.data.get(CONF_DEVICE_TYPE) is None:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_DEVICE_TYPE: data.device_type}
+        )
     if update.events and hass.state is CoreState.running:
         # Do not fire events on data restore
         address = service_info.device.address
