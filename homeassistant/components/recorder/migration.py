@@ -9,7 +9,7 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from time import time
-from typing import TYPE_CHECKING, cast, final
+from typing import TYPE_CHECKING, Any, cast, final
 from uuid import UUID
 
 import sqlalchemy
@@ -653,16 +653,22 @@ def _apply_update(
     new_version: int,
     old_version: int,
 ) -> None:
-    """Return a migrator for a specific schema version."""
-    try:
-        migrator_cls = _SchemaVersionMigrators[new_version]
-    except KeyError as err:
-        raise ValueError(f"Unsupported schema version {new_version}") from err
+    """Perform operations to bring schema up to date."""
+    migrator_cls = _SchemaVersionMigrator.get_migrator(new_version)
     migrator_cls(instance, hass, engine, session_maker, old_version).apply_update()
 
 
 class _SchemaVersionMigrator(ABC):
     """Perform operations to bring schema up to date."""
+
+    __migrators: dict[int, type[_SchemaVersionMigrator]] = {}
+
+    def __init_subclass__(cls, target_version: int, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if target_version in _SchemaVersionMigrator.__migrators:
+            raise ValueError("Duplicated version")
+        _SchemaVersionMigrator.__migrators[target_version] = cls
 
     def __init__(
         self,
@@ -682,6 +688,16 @@ class _SchemaVersionMigrator(ABC):
         dialect = try_parse_enum(SupportedDialect, engine.dialect.name)
         self.column_types = _COLUMN_TYPES_FOR_DIALECT.get(dialect, _SQLITE_COLUMN_TYPES)
 
+    @classmethod
+    def get_migrator(cls, target_version: int) -> type[_SchemaVersionMigrator]:
+        """Return a migrator for a specific schema version."""
+        try:
+            return cls.__migrators[target_version]
+        except KeyError as err:
+            raise ValueError(
+                f"No migrator for schema version {target_version}"
+            ) from err
+
     @final
     def apply_update(self) -> None:
         """Perform operations to bring schema up to date."""
@@ -692,13 +708,13 @@ class _SchemaVersionMigrator(ABC):
         """Version specific update method."""
 
 
-class _SchemaVersion1Migrator(_SchemaVersionMigrator):
+class _SchemaVersion1Migrator(_SchemaVersionMigrator, target_version=1):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This used to create ix_events_time_fired, but it was removed in version 32
 
 
-class _SchemaVersion2Migrator(_SchemaVersionMigrator):
+class _SchemaVersion2Migrator(_SchemaVersionMigrator, target_version=2):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Create compound start/end index for recorder_runs
@@ -706,13 +722,13 @@ class _SchemaVersion2Migrator(_SchemaVersionMigrator):
         # This used to create ix_states_last_updated bit it was removed in version 32
 
 
-class _SchemaVersion3Migrator(_SchemaVersionMigrator):
+class _SchemaVersion3Migrator(_SchemaVersionMigrator, target_version=3):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # There used to be a new index here, but it was removed in version 4.
 
 
-class _SchemaVersion4Migrator(_SchemaVersionMigrator):
+class _SchemaVersion4Migrator(_SchemaVersionMigrator, target_version=4):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Queries were rewritten in this schema release. Most indexes from
@@ -733,14 +749,14 @@ class _SchemaVersion4Migrator(_SchemaVersionMigrator):
         # but it was removed in version 32
 
 
-class _SchemaVersion5Migrator(_SchemaVersionMigrator):
+class _SchemaVersion5Migrator(_SchemaVersionMigrator, target_version=5):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Create supporting index for States.event_id foreign key
         _create_index(self.session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
 
 
-class _SchemaVersion6Migrator(_SchemaVersionMigrator):
+class _SchemaVersion6Migrator(_SchemaVersionMigrator, target_version=6):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(
@@ -761,14 +777,14 @@ class _SchemaVersion6Migrator(_SchemaVersionMigrator):
         # but it was removed in version 28
 
 
-class _SchemaVersion7Migrator(_SchemaVersionMigrator):
+class _SchemaVersion7Migrator(_SchemaVersionMigrator, target_version=7):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # There used to be a ix_states_entity_id index here,
         # but it was removed in later schema
 
 
-class _SchemaVersion8Migrator(_SchemaVersionMigrator):
+class _SchemaVersion8Migrator(_SchemaVersionMigrator, target_version=8):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(self.session_maker, "events", ["context_parent_id CHARACTER(36)"])
@@ -777,7 +793,7 @@ class _SchemaVersion8Migrator(_SchemaVersionMigrator):
         # but it was removed in version 28
 
 
-class _SchemaVersion9Migrator(_SchemaVersionMigrator):
+class _SchemaVersion9Migrator(_SchemaVersionMigrator, target_version=9):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # We now get the context from events with a join
@@ -801,20 +817,20 @@ class _SchemaVersion9Migrator(_SchemaVersionMigrator):
         _drop_index(self.session_maker, "events", "ix_events_event_type")
 
 
-class _SchemaVersion10Migrator(_SchemaVersionMigrator):
+class _SchemaVersion10Migrator(_SchemaVersionMigrator, target_version=10):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Now done in step 11
 
 
-class _SchemaVersion11Migrator(_SchemaVersionMigrator):
+class _SchemaVersion11Migrator(_SchemaVersionMigrator, target_version=11):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _create_index(self.session_maker, "states", "ix_states_old_state_id")
         _update_states_table_with_foreign_key_options(self.session_maker, self.engine)
 
 
-class _SchemaVersion12Migrator(_SchemaVersionMigrator):
+class _SchemaVersion12Migrator(_SchemaVersionMigrator, target_version=12):
     def _apply_update(self) -> None:
         """Version specific update method."""
         if self.engine.dialect.name == SupportedDialect.MYSQL:
@@ -826,7 +842,7 @@ class _SchemaVersion12Migrator(_SchemaVersionMigrator):
             )
 
 
-class _SchemaVersion13Migrator(_SchemaVersionMigrator):
+class _SchemaVersion13Migrator(_SchemaVersionMigrator, target_version=13):
     def _apply_update(self) -> None:
         """Version specific update method."""
         if self.engine.dialect.name == SupportedDialect.MYSQL:
@@ -848,7 +864,7 @@ class _SchemaVersion13Migrator(_SchemaVersionMigrator):
             )
 
 
-class _SchemaVersion14Migrator(_SchemaVersionMigrator):
+class _SchemaVersion14Migrator(_SchemaVersionMigrator, target_version=14):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _modify_columns(
@@ -856,13 +872,13 @@ class _SchemaVersion14Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion15Migrator(_SchemaVersionMigrator):
+class _SchemaVersion15Migrator(_SchemaVersionMigrator, target_version=15):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This dropped the statistics table, done again in version 18.
 
 
-class _SchemaVersion16Migrator(_SchemaVersionMigrator):
+class _SchemaVersion16Migrator(_SchemaVersionMigrator, target_version=16):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _drop_foreign_key_constraints(
@@ -870,13 +886,13 @@ class _SchemaVersion16Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion17Migrator(_SchemaVersionMigrator):
+class _SchemaVersion17Migrator(_SchemaVersionMigrator, target_version=17):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This dropped the statistics table, done again in version 18.
 
 
-class _SchemaVersion18Migrator(_SchemaVersionMigrator):
+class _SchemaVersion18Migrator(_SchemaVersionMigrator, target_version=18):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Recreate the statistics and statistics meta tables.
@@ -901,7 +917,7 @@ class _SchemaVersion18Migrator(_SchemaVersionMigrator):
         cast(Table, Statistics.__table__).create(self.engine)
 
 
-class _SchemaVersion19Migrator(_SchemaVersionMigrator):
+class _SchemaVersion19Migrator(_SchemaVersionMigrator, target_version=19):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This adds the statistic runs table, insert a fake run to prevent duplicating
@@ -910,7 +926,7 @@ class _SchemaVersion19Migrator(_SchemaVersionMigrator):
             session.add(StatisticsRuns(start=get_start_time()))
 
 
-class _SchemaVersion20Migrator(_SchemaVersionMigrator):
+class _SchemaVersion20Migrator(_SchemaVersionMigrator, target_version=20):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This changed the precision of statistics from float to double
@@ -929,7 +945,7 @@ class _SchemaVersion20Migrator(_SchemaVersionMigrator):
             )
 
 
-class _SchemaVersion21Migrator(_SchemaVersionMigrator):
+class _SchemaVersion21Migrator(_SchemaVersionMigrator, target_version=21):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Try to change the character set of the statistic_meta table
@@ -938,7 +954,7 @@ class _SchemaVersion21Migrator(_SchemaVersionMigrator):
                 _correct_table_character_set_and_collation(table, self.session_maker)
 
 
-class _SchemaVersion22Migrator(_SchemaVersionMigrator):
+class _SchemaVersion22Migrator(_SchemaVersionMigrator, target_version=22):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Recreate the all statistics tables for Oracle DB with Identity columns
@@ -1010,14 +1026,14 @@ class _SchemaVersion22Migrator(_SchemaVersionMigrator):
                     )
 
 
-class _SchemaVersion23Migrator(_SchemaVersionMigrator):
+class _SchemaVersion23Migrator(_SchemaVersionMigrator, target_version=23):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Add name column to StatisticsMeta
         _add_columns(self.session_maker, "statistics_meta", ["name VARCHAR(255)"])
 
 
-class _SchemaVersion24Migrator(_SchemaVersionMigrator):
+class _SchemaVersion24Migrator(_SchemaVersionMigrator, target_version=24):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This used to create the unique indices for start and statistic_id
@@ -1025,7 +1041,7 @@ class _SchemaVersion24Migrator(_SchemaVersionMigrator):
         # of removing any duplicate if they still exist.
 
 
-class _SchemaVersion25Migrator(_SchemaVersionMigrator):
+class _SchemaVersion25Migrator(_SchemaVersionMigrator, target_version=25):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(
@@ -1036,13 +1052,13 @@ class _SchemaVersion25Migrator(_SchemaVersionMigrator):
         _create_index(self.session_maker, "states", "ix_states_attributes_id")
 
 
-class _SchemaVersion26Migrator(_SchemaVersionMigrator):
+class _SchemaVersion26Migrator(_SchemaVersionMigrator, target_version=26):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _create_index(self.session_maker, "statistics_runs", "ix_statistics_runs_start")
 
 
-class _SchemaVersion27Migrator(_SchemaVersionMigrator):
+class _SchemaVersion27Migrator(_SchemaVersionMigrator, target_version=27):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(
@@ -1051,7 +1067,7 @@ class _SchemaVersion27Migrator(_SchemaVersionMigrator):
         _create_index(self.session_maker, "events", "ix_events_data_id")
 
 
-class _SchemaVersion28Migrator(_SchemaVersionMigrator):
+class _SchemaVersion28Migrator(_SchemaVersionMigrator, target_version=28):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(self.session_maker, "events", ["origin_idx INTEGER"])
@@ -1073,7 +1089,7 @@ class _SchemaVersion28Migrator(_SchemaVersionMigrator):
         # in the events table we can drop the index on states.event_id
 
 
-class _SchemaVersion29Migrator(_SchemaVersionMigrator):
+class _SchemaVersion29Migrator(_SchemaVersionMigrator, target_version=29):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Recreate statistics_meta index to block duplicated statistic_id
@@ -1107,7 +1123,7 @@ class _SchemaVersion29Migrator(_SchemaVersionMigrator):
             )
 
 
-class _SchemaVersion30Migrator(_SchemaVersionMigrator):
+class _SchemaVersion30Migrator(_SchemaVersionMigrator, target_version=30):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This added a column to the statistics_meta table, removed again before
@@ -1117,7 +1133,7 @@ class _SchemaVersion30Migrator(_SchemaVersionMigrator):
         # ALTER TABLE statistics_meta DROP COLUMN state_unit_of_measurement
 
 
-class _SchemaVersion31Migrator(_SchemaVersionMigrator):
+class _SchemaVersion31Migrator(_SchemaVersionMigrator, target_version=31):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Once we require SQLite >= 3.35.5, we should drop the column:
@@ -1148,7 +1164,7 @@ class _SchemaVersion31Migrator(_SchemaVersionMigrator):
         _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
 
 
-class _SchemaVersion32Migrator(_SchemaVersionMigrator):
+class _SchemaVersion32Migrator(_SchemaVersionMigrator, target_version=32):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Migration is done in two steps to ensure we can start using
@@ -1159,7 +1175,7 @@ class _SchemaVersion32Migrator(_SchemaVersionMigrator):
         _drop_index(self.session_maker, "events", "ix_events_time_fired")
 
 
-class _SchemaVersion33Migrator(_SchemaVersionMigrator):
+class _SchemaVersion33Migrator(_SchemaVersionMigrator, target_version=33):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # This index is no longer used and can cause MySQL to use the wrong index
@@ -1168,7 +1184,7 @@ class _SchemaVersion33Migrator(_SchemaVersionMigrator):
         # There was an index cleanup here but its now done in schema 39
 
 
-class _SchemaVersion34Migrator(_SchemaVersionMigrator):
+class _SchemaVersion34Migrator(_SchemaVersionMigrator, target_version=34):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Once we require SQLite >= 3.35.5, we should drop the columns:
@@ -1215,7 +1231,7 @@ class _SchemaVersion34Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion35Migrator(_SchemaVersionMigrator):
+class _SchemaVersion35Migrator(_SchemaVersionMigrator, target_version=35):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Migration is done in two steps to ensure we can start using
@@ -1236,7 +1252,7 @@ class _SchemaVersion35Migrator(_SchemaVersionMigrator):
         # for the post migration cleanup and can be removed in a future version.
 
 
-class _SchemaVersion36Migrator(_SchemaVersionMigrator):
+class _SchemaVersion36Migrator(_SchemaVersionMigrator, target_version=36):
     def _apply_update(self) -> None:
         """Version specific update method."""
         for table in ("states", "events"):
@@ -1253,7 +1269,7 @@ class _SchemaVersion36Migrator(_SchemaVersionMigrator):
         _create_index(self.session_maker, "states", "ix_states_context_id_bin")
 
 
-class _SchemaVersion37Migrator(_SchemaVersionMigrator):
+class _SchemaVersion37Migrator(_SchemaVersionMigrator, target_version=37):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(
@@ -1268,7 +1284,7 @@ class _SchemaVersion37Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion38Migrator(_SchemaVersionMigrator):
+class _SchemaVersion38Migrator(_SchemaVersionMigrator, target_version=38):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(
@@ -1282,7 +1298,7 @@ class _SchemaVersion38Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion39Migrator(_SchemaVersionMigrator):
+class _SchemaVersion39Migrator(_SchemaVersionMigrator, target_version=39):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Dropping indexes with PostgreSQL never worked correctly if there was a prefix
@@ -1342,7 +1358,7 @@ class _SchemaVersion39Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion40Migrator(_SchemaVersionMigrator):
+class _SchemaVersion40Migrator(_SchemaVersionMigrator, target_version=40):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # ix_events_event_type_id is a left-prefix of ix_events_event_type_id_time_fired_ts
@@ -1359,14 +1375,14 @@ class _SchemaVersion40Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion41Migrator(_SchemaVersionMigrator):
+class _SchemaVersion41Migrator(_SchemaVersionMigrator, target_version=41):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _create_index(self.session_maker, "event_types", "ix_event_types_event_type")
         _create_index(self.session_maker, "states_meta", "ix_states_meta_entity_id")
 
 
-class _SchemaVersion42Migrator(_SchemaVersionMigrator):
+class _SchemaVersion42Migrator(_SchemaVersionMigrator, target_version=42):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # If the user had a previously failed migration, or they
@@ -1379,7 +1395,7 @@ class _SchemaVersion42Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion43Migrator(_SchemaVersionMigrator):
+class _SchemaVersion43Migrator(_SchemaVersionMigrator, target_version=43):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _add_columns(
@@ -1389,7 +1405,7 @@ class _SchemaVersion43Migrator(_SchemaVersionMigrator):
         )
 
 
-class _SchemaVersion44Migrator(_SchemaVersionMigrator):
+class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # We skip this step for SQLITE, it doesn't have differently sized integers
@@ -1452,54 +1468,6 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator):
         _restore_foreign_key_constraints(
             self.session_maker, self.engine, dropped_constraints
         )
-
-
-_SchemaVersionMigrators: dict[int, type[_SchemaVersionMigrator]] = {
-    1: _SchemaVersion1Migrator,
-    2: _SchemaVersion2Migrator,
-    3: _SchemaVersion3Migrator,
-    4: _SchemaVersion4Migrator,
-    5: _SchemaVersion5Migrator,
-    6: _SchemaVersion6Migrator,
-    7: _SchemaVersion7Migrator,
-    8: _SchemaVersion8Migrator,
-    9: _SchemaVersion9Migrator,
-    10: _SchemaVersion10Migrator,
-    11: _SchemaVersion11Migrator,
-    12: _SchemaVersion12Migrator,
-    13: _SchemaVersion13Migrator,
-    14: _SchemaVersion14Migrator,
-    15: _SchemaVersion15Migrator,
-    16: _SchemaVersion16Migrator,
-    17: _SchemaVersion17Migrator,
-    18: _SchemaVersion18Migrator,
-    19: _SchemaVersion19Migrator,
-    20: _SchemaVersion20Migrator,
-    21: _SchemaVersion21Migrator,
-    22: _SchemaVersion22Migrator,
-    23: _SchemaVersion23Migrator,
-    24: _SchemaVersion24Migrator,
-    25: _SchemaVersion25Migrator,
-    26: _SchemaVersion26Migrator,
-    27: _SchemaVersion27Migrator,
-    28: _SchemaVersion28Migrator,
-    29: _SchemaVersion29Migrator,
-    30: _SchemaVersion30Migrator,
-    31: _SchemaVersion31Migrator,
-    32: _SchemaVersion32Migrator,
-    33: _SchemaVersion33Migrator,
-    34: _SchemaVersion34Migrator,
-    35: _SchemaVersion35Migrator,
-    36: _SchemaVersion36Migrator,
-    37: _SchemaVersion37Migrator,
-    38: _SchemaVersion38Migrator,
-    39: _SchemaVersion39Migrator,
-    40: _SchemaVersion40Migrator,
-    41: _SchemaVersion41Migrator,
-    42: _SchemaVersion42Migrator,
-    43: _SchemaVersion43Migrator,
-    44: _SchemaVersion44Migrator,
-}
 
 
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
