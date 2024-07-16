@@ -854,13 +854,10 @@ class SonosSpeaker:
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
-            try:
-                group = event and event.zone_player_uui_ds_in_group
-                if group:
-                    assert isinstance(group, str)
-                    return group.split(",")
-            except AttributeError:
-                pass
+            if group := (event and getattr(event, "zone_player_uui_ds_in_group", None)):
+                assert isinstance(group, str)
+                return group.split(",")
+
             return await self.hass.async_add_executor_job(_get_soco_group)
 
         @callback
