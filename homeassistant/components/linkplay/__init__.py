@@ -1,6 +1,7 @@
 """Support for LinkPlay devices."""
 
 from dataclasses import dataclass
+import logging
 
 from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_bridge
@@ -22,14 +23,22 @@ class LinkPlayData:
 
 type LinkPlayConfigEntry = ConfigEntry[LinkPlayData]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
     """Async setup hass config entry. Called when an entry has been setup."""
 
     session = async_get_clientsession(hass)
-    bridge = await linkplay_factory_bridge(entry.data[CONF_HOST], session)
-    entry.runtime_data = LinkPlayData(bridge=bridge)
+    if (
+        bridge := await linkplay_factory_bridge(entry.data[CONF_HOST], session)
+    ) is None:
+        _LOGGER.error(
+            "Failed to connect to LinkPlay device at %s", entry.data[CONF_HOST]
+        )
+        return False
 
+    entry.runtime_data = LinkPlayData(bridge=bridge)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
