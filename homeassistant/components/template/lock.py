@@ -96,12 +96,12 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
-        self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
-        self._code_format = None
-        self._code_format_template_error = None
         if CONF_OPEN in config:
             self._command_open = Script(hass, config[CONF_OPEN], name, DOMAIN)
             self._attr_supported_features = LockEntityFeature.OPEN
+        self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
+        self._code_format = None
+        self._code_format_template_error = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
@@ -204,6 +204,20 @@ class TemplateLock(TemplateEntity, LockEntity):
             self._command_unlock, run_variables=tpl_vars, context=self._context
         )
 
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open the device."""
+        self._raise_template_error_if_available()
+
+        if self._optimistic:
+            self._state = False
+            self.async_write_ha_state()
+
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
+
+        await self.async_run_script(
+            self._command_open, run_variables=tpl_vars, context=self._context
+        )
+
     def _raise_template_error_if_available(self):
         if self._code_format_template_error is not None:
             raise ServiceValidationError(
@@ -215,10 +229,3 @@ class TemplateLock(TemplateEntity, LockEntity):
                     "cause": str(self._code_format_template_error),
                 },
             )
-
-    async def async_open(self, **kwargs: Any) -> None:
-        """Open the device."""
-        if self._optimistic:
-            self._state = False
-            self.async_write_ha_state()
-        await self.async_run_script(self._command_open, context=self._context)
