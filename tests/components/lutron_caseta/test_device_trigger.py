@@ -125,7 +125,11 @@ async def _async_setup_lutron_with_picos(hass):
 async def test_get_triggers(hass: HomeAssistant) -> None:
     """Test we get the expected triggers from a lutron pico."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    # Fetching the config entry runtime_data is a legacy pattern
+    # and should not be copied for new integrations
+    data: LutronCasetaData = hass.config_entries.async_get_entry(
+        config_entry_id
+    ).runtime_data
     keypads = data.keypad_data.keypads
     device_id = keypads[list(keypads)[0]]["dr_device_id"]
 
@@ -359,7 +363,11 @@ async def test_validate_trigger_config_unknown_device(
     """Test for no press with an unknown device."""
 
     config_entry_id = await _async_setup_lutron_with_picos(hass)
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    # Fetching the config entry runtime_data is a legacy pattern
+    # and should not be copied for new integrations
+    data: LutronCasetaData = hass.config_entries.async_get_entry(
+        config_entry_id
+    ).runtime_data
     keypads = data.keypad_data.keypads
     lutron_device_id = list(keypads)[0]
     keypad = keypads[lutron_device_id]
@@ -406,7 +414,11 @@ async def test_validate_trigger_invalid_triggers(
 ) -> None:
     """Test for click_event with invalid triggers."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    # Fetching the config entry runtime_data is a legacy pattern
+    # and should not be copied for new integrations
+    data: LutronCasetaData = hass.config_entries.async_get_entry(
+        config_entry_id
+    ).runtime_data
     keypads = data.keypad_data.keypads
     lutron_device_id = list(keypads)[0]
     keypad = keypads[lutron_device_id]
