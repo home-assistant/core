@@ -11,6 +11,7 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    ENTITY_ID_FORMAT,
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +30,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
+from .const import CONF_OBJECT_ID, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_ICON_SCHEMA,
@@ -54,6 +55,7 @@ SELECT_SCHEMA = (
             vol.Required(ATTR_OPTIONS): cv.template,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_OBJECT_ID): cv.string,
         }
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
@@ -128,6 +130,7 @@ class TemplateSelect(TemplateEntity, SelectEntity):
     """Representation of a template select."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,

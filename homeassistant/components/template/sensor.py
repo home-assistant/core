@@ -43,7 +43,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -88,6 +87,8 @@ SENSOR_SCHEMA = vol.All(
         {
             vol.Required(CONF_STATE): cv.template,
             vol.Optional(ATTR_LAST_RESET): cv.template,
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+            vol.Optional(CONF_OBJECT_ID): cv.string,
         }
     )
     .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
@@ -255,6 +256,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -275,10 +277,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             hass,
             config.get(CONF_DEVICE_ID),
         )
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
 
     @callback
     def _async_setup_templates(self) -> None:

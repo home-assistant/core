@@ -115,6 +115,20 @@ async def test_setup_minimal(
             template.DOMAIN,
             "binary_sensor.virtual_thingy",
         ),
+        (
+            {
+                "template": {
+                    "binary_sensor": {
+                        "name": "virtual thingy",
+                        "state": "{{ True }}",
+                        "device_class": "motion",
+                        "object_id": "customized_id",
+                    }
+                },
+            },
+            template.DOMAIN,
+            "binary_sensor.customized_id",
+        ),
     ],
 )
 async def test_setup(hass: HomeAssistant, start_ha, entity_id) -> None:
@@ -236,6 +250,9 @@ async def test_setup_config_entry(
 async def test_setup_invalid_sensors(hass: HomeAssistant, count, start_ha) -> None:
     """Test setup with no sensors."""
     assert len(hass.states.async_entity_ids("binary_sensor")) == count
+
+
+# async def test_setup_custom_object_ids(hass: HomeAssistant, start_ha) -> None:
 
 
 @pytest.mark.parametrize("count", [1])

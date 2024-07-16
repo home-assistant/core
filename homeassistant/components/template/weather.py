@@ -41,7 +41,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -52,13 +51,13 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
+from .const import CONF_OBJECT_ID
 from .coordinator import TriggerUpdateCoordinator
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
 from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
-    set()
-    .union(Forecast.__annotations__.keys())
+    set().union(Forecast.__annotations__.keys())
     # Manually add the forecast resulting attributes that only exists
     #  as native_* in the Forecast definition
     .union(("apparent_temperature", "wind_gust_speed", "dew_point"))
@@ -121,6 +120,7 @@ WEATHER_SCHEMA = vol.Schema(
         vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_OBJECT_ID): cv.string,
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
         vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
@@ -172,6 +172,8 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
 
     _attr_should_poll = False
 
+    _entity_id_format = ENTITY_ID_FORMAT
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -181,7 +183,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         """Initialize the Template weather."""
         super().__init__(hass, config=config, unique_id=unique_id)
 
-        name = self._attr_name
         self._condition_template = config[CONF_CONDITION_TEMPLATE]
         self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
         self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
@@ -208,8 +209,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)
         self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
         self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
-
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
         self._condition = None
         self._temperature = None

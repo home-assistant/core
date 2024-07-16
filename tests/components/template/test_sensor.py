@@ -113,6 +113,60 @@ async def test_template_legacy(hass: HomeAssistant, start_ha) -> None:
     assert hass.states.get(TEST_NAME).state == "It Works."
 
 
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("config", "domain", "entity_id"),
+    [
+        (
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test": {
+                            "friendly_name": "virtual thingy",
+                            "value_template": "{{ 'correct' }}",
+                        }
+                    },
+                },
+            },
+            sensor.DOMAIN,
+            "sensor.test",
+        ),
+        (
+            {
+                "template": {
+                    "sensor": {
+                        "name": "virtual thingy",
+                        "state": "{{ 'correct' }}",
+                    }
+                },
+            },
+            template.DOMAIN,
+            "sensor.virtual_thingy",
+        ),
+        (
+            {
+                "template": {
+                    "sensor": {
+                        "name": "virtual thingy",
+                        "state": "{{ 'correct' }}",
+                        "object_id": "customized_id",
+                    }
+                },
+            },
+            template.DOMAIN,
+            "sensor.customized_id",
+        ),
+    ],
+)
+async def test_setup(hass: HomeAssistant, start_ha, entity_id) -> None:
+    """Test the setup."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "virtual thingy"
+    assert state.state == "correct"
+
+
 @pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",

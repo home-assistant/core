@@ -290,3 +290,34 @@ async def test_device_id(
     template_entity = entity_registry.async_get("button.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+async def test_custom_entity_id(hass: HomeAssistant) -> None:
+    """Test: Define custom entity_id."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "button": {
+                        "press": {"service": "script.press"},
+                        "name": "Button {{ 1 + 1 }}",
+                        "object_id": "benjamin",
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(
+        hass,
+        STATE_UNKNOWN,
+        {
+            CONF_FRIENDLY_NAME: "Button 2",
+        },
+        "button.benjamin",
+    )

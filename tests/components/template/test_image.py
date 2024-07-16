@@ -272,6 +272,34 @@ async def test_unique_id(
     assert entry.unique_id == "b-a"
 
 
+async def test_custom_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test custom entity_id configuration."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "image": {
+                        "url": "http://example.com",
+                        "unique_id": "random-uuid",
+                        "object_id": "best_image_ever",
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get("image.best_image_ever")
+    assert entry
+    assert entry.unique_id == "random-uuid"
+
+
 @respx.mock
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
 async def test_custom_entity_picture(

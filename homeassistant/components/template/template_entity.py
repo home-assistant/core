@@ -31,7 +31,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -56,6 +56,7 @@ from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
+    CONF_OBJECT_ID,
     CONF_PICTURE,
 )
 
@@ -249,6 +250,9 @@ class TemplateEntity(Entity):
     _attr_entity_picture = None
     _attr_icon = None
 
+    _entity_id_format: str
+    _object_id: str | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -291,6 +295,7 @@ class TemplateEntity(Entity):
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
+            self._object_id = config.get(CONF_OBJECT_ID)
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -331,6 +336,25 @@ class TemplateEntity(Entity):
                 self._attr_icon = self._icon_template.async_render(
                     variables=variables, parse_result=False
                 )
+
+        self._init_entity_id(hass)
+
+    def _init_entity_id(self, hass: HomeAssistant) -> None:
+        """Set entity_id from object_id if defined in config."""
+
+        if self._object_id:
+            if not hasattr(self, "_entity_id_format"):
+                _LOGGER.warning(
+                    "Template entity class %s does not define its _entity_id_format attribute. "
+                    "Assigned object id '%s' will be ignored.",
+                    self.__class__.__name__,
+                    self._object_id,
+                )
+                return
+
+            self.entity_id = async_generate_entity_id(
+                self._entity_id_format, self._object_id, hass=hass
+            )
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:

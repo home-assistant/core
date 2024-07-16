@@ -318,9 +318,9 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
     assert events[0].event_type == "test_number_event"
 
 
-def _verify(hass, expected_current_option, expected_options, entity_name=_TEST_SELECT):
+def _verify(hass, expected_current_option, expected_options, entity_id=_TEST_SELECT):
     """Verify select's state."""
-    state = hass.states.get(entity_name)
+    state = hass.states.get(entity_id)
     attributes = state.attributes
     assert state.state == str(expected_current_option)
     assert attributes.get(SELECT_ATTR_OPTIONS) == expected_options
@@ -498,3 +498,33 @@ async def test_device_id(
     template_entity = entity_registry.async_get("select.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+async def test_custom_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test custom entity_id configuration."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "select": {
+                        "name": "A or B?",
+                        "state": "{{ 'a' }}",
+                        "options": "{{ ['a', 'b'] }}",
+                        "select_option": {"service": "script.select_option"},
+                        "object_id": "my_select",
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.my_select")
+    assert state
+    assert state.state == "a"

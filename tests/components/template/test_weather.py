@@ -928,3 +928,31 @@ async def test_trigger_entity_restore_state_fail(
     state = hass.states.get("weather.test")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("temperature") is None
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "weather": [
+                {
+                    "platform": "template",
+                    "object_id": "super_weather",
+                    "name": "forecast",
+                    "condition_template": "sunny",
+                    "temperature_template": "{{ 15 }}",
+                    "humidity_template": "{{ 50 }}",
+                },
+            ]
+        },
+    ],
+)
+async def test_custom_entity_id(
+    hass: HomeAssistant,
+    start_ha,
+) -> None:
+    """Test forecast service invalid when is_daytime missing in twice_daily forecast."""
+
+    state = hass.states.get("weather.super_weather")
+    assert state.state == "sunny"

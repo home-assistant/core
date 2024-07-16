@@ -460,3 +460,32 @@ async def test_icon_template_with_trigger(hass: HomeAssistant) -> None:
     state = hass.states.get(_TEST_NUMBER)
     assert float(state.state) == 51
     assert state.attributes[ATTR_ICON] == "mdi:greater"
+
+
+async def test_custom_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test custom entity_id configuration."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "number": {
+                        "state": 42,
+                        "step": 1,
+                        "set_value": {"service": "script.set_value"},
+                        "object_id": "fortytwo",
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.fortytwo")
+    assert state
+    assert float(state.state) == 42.0
