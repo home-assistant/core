@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from govee_ble import SensorType
 
 from homeassistant.components.event import (
@@ -17,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import GoveeBLEConfigEntry, format_event_dispatcher_name
 
+_LOGGER = logging.getLogger(__name__)
 BUTTON_DESCRIPTIONS = [
     EventEntityDescription(
         key=f"button_{i}",
@@ -80,6 +83,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     address = coordinator.address
     sensor_type = coordinator.device_data.sensor_type
+    _LOGGER.warning(
+        "SENSOR_TYPE: %s - model %s", sensor_type, coordinator.device_data.device_type
+    )
     if sensor_type is SensorType.MOTION:
         descriptions = [MOTION_DESCRIPTION]
     elif sensor_type is SensorType.BUTTON:
