@@ -37,7 +37,7 @@ ATTR_SOFTWARE_UPDATE = "software_update"
 
 @dataclass
 class MatterUpdateExtraStoredData(ExtraStoredData):
-    """Extra stored data for Z-Wave node firmware update entity."""
+    """Extra stored data for Matter node firmware update entity."""
 
     software_update: MatterSoftwareVersion | None = None
 
