@@ -30,8 +30,7 @@ def process_service_info(
     coordinator = entry.runtime_data
     data = coordinator.device_data
     update = data.update(service_info)
-    if entry.data.get(CONF_DEVICE_TYPE) is None:
-        device_type = data.device_type
+    if not coordinator.model_info and (device_type := data.device_type):
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_DEVICE_TYPE: device_type}
         )
