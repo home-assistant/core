@@ -26,7 +26,9 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_device: DeviceData | None = None
-        self._discovered_devices: dict[str, DeviceData] = {}
+        self._discovered_devices: dict[
+            str, tuple[DeviceData, BluetoothServiceInfoBleak]
+        ] = {}
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -70,8 +72,8 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            device = self._discovered_devices[address]
-            title = device.title or device.get_device_name() or device.device_type
+            device, service_info = self._discovered_devices[address]
+            title = device.title or device.get_device_name() or service_info.name
             return self.async_create_entry(
                 title=title, data={CONF_DEVICE_TYPE: device.device_type}
             )
@@ -83,7 +85,7 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
             device = DeviceData()
             if device.supported(discovery_info):
-                self._discovered_devices[address] = device
+                self._discovered_devices[address] = (device, discovery_info)
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
