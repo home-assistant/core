@@ -57,10 +57,6 @@ class ZhaFan(FanEntity, ZHAEntity):
 
         if ZHAFanEntityFeature.SET_SPEED in zha_features:
             features |= FanEntityFeature.SET_SPEED
-        if ZHAFanEntityFeature.OSCILLATE in zha_features:
-            features |= FanEntityFeature.OSCILLATE
-        if ZHAFanEntityFeature.DIRECTION in zha_features:
-            features |= FanEntityFeature.DIRECTION
         if ZHAFanEntityFeature.PRESET_MODE in zha_features:
             features |= FanEntityFeature.PRESET_MODE
 
