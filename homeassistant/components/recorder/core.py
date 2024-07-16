@@ -75,7 +75,6 @@ from .const import (
     SupportedDialect,
 )
 from .db_schema import (
-    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
     LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -91,7 +90,6 @@ from .db_schema import (
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .migration import (
-    BaseRunTimeMigration,
     EntityIDMigration,
     EventsContextIDMigration,
     EventTypeIDMigration,
@@ -115,7 +113,6 @@ from .tasks import (
     CommitTask,
     CompileMissingStatisticsTask,
     DatabaseLockTask,
-    EntityIDPostMigrationTask,
     EventIdMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
@@ -804,37 +801,14 @@ class Recorder(threading.Thread):
                 for row in execute_stmt_lambda_element(session, get_migration_changes())
             }
 
-            migrator: BaseRunTimeMigration
-            for migrator_cls in (StatesContextIDMigration, EventsContextIDMigration):
-                migrator = migrator_cls(session, schema_version, migration_changes)
-                if migrator.needs_migrate():
-                    self.queue_task(migrator.task())
-
-            migrator = EventTypeIDMigration(session, schema_version, migration_changes)
-            if migrator.needs_migrate():
-                self.queue_task(migrator.task())
-            else:
-                _LOGGER.debug("Activating event_types manager as all data is migrated")
-                self.event_type_manager.active = True
-
-            migrator = EntityIDMigration(session, schema_version, migration_changes)
-            if migrator.needs_migrate():
-                self.queue_task(migrator.task())
-            else:
-                _LOGGER.debug("Activating states_meta manager as all data is migrated")
-                self.states_meta_manager.active = True
-                with contextlib.suppress(SQLAlchemyError):
-                    # If ix_states_entity_id_last_updated_ts still exists
-                    # on the states table it means the entity id migration
-                    # finished by the EntityIDPostMigrationTask did not
-                    # complete because they restarted in the middle of it. We need
-                    # to pick back up where we left off.
-                    if get_index_by_name(
-                        session,
-                        TABLE_STATES,
-                        LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
-                    ):
-                        self.queue_task(EntityIDPostMigrationTask())
+            for migrator_cls in (
+                StatesContextIDMigration,
+                EventsContextIDMigration,
+                EventTypeIDMigration,
+                EntityIDMigration,
+            ):
+                migrator = migrator_cls(schema_version, migration_changes)
+                migrator.do_migrate(self, session)
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
                 with contextlib.suppress(SQLAlchemyError):
@@ -1318,22 +1292,6 @@ class Recorder(threading.Thread):
                 None,
             )
         )
-
-    def _migrate_states_context_ids(self) -> bool:
-        """Migrate states context ids if needed."""
-        return migration.migrate_states_context_ids(self)
-
-    def _migrate_events_context_ids(self) -> bool:
-        """Migrate events context ids if needed."""
-        return migration.migrate_events_context_ids(self)
-
-    def _migrate_event_type_ids(self) -> bool:
-        """Migrate event type ids if needed."""
-        return migration.migrate_event_type_ids(self)
-
-    def _migrate_entity_ids(self) -> bool:
-        """Migrate entity_ids if needed."""
-        return migration.migrate_entity_ids(self)
 
     def _post_migrate_entity_ids(self) -> bool:
         """Post migrate entity_ids if needed."""
