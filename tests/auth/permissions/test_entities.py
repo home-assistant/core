@@ -276,6 +276,17 @@ def test_entities_areas_area_true_with_different_device_area(
     assert compiled("light.kitchen", "edit") is False
     assert compiled("switch.kitchen", "read") is False
 
+    # Checking that the area of the device doesn't grant permissions if the entity has its own area
+    policy = {"area_ids": {"mock-area-id-2": {"read": True, "control": True}}}
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(
+        policy, PermissionLookup(entity_registry, device_registry)
+    )
+    assert compiled("light.kitchen", "read") is False
+    assert compiled("light.kitchen", "control") is False
+    assert compiled("light.kitchen", "edit") is False
+    assert compiled("switch.kitchen", "read") is False
+
 
 def test_entities_areas_area_true_without_device(hass: HomeAssistant) -> None:
     """Test entity ID policy for areas with specific area."""
