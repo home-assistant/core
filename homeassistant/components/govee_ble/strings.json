@@ -21,6 +21,7 @@
   "entity": {
     "event": {
       "motion": {
+        "name": "Motion sensor",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -30,6 +31,7 @@
         }
       },
       "button_0": {
+        "name": "Button 1",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -39,6 +41,7 @@
         }
       },
       "button_1": {
+        "name": "Button 2",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -48,6 +51,7 @@
         }
       },
       "button_2": {
+        "name": "Button 3",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -57,6 +61,7 @@
         }
       },
       "button_3": {
+        "name": "Button 4",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -66,6 +71,7 @@
         }
       },
       "button_4": {
+        "name": "Button 5",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -75,6 +81,7 @@
         }
       },
       "button_5": {
+        "name": "Button 6",
         "state_attributes": {
           "event_type": {
             "state": {
