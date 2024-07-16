@@ -2178,7 +2178,7 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
 
 @dataclass(slots=True)
 class MigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate states context ids."""
+    """Base class for migration tasks."""
 
     migrator: BaseRunTimeMigration
     commit_before = False
@@ -2194,7 +2194,7 @@ class MigrationTask(RecorderTask):
 
 @dataclass(slots=True)
 class CommitBeforeMigrationTask(MigrationTask):
-    """An object to insert into the recorder queue to migrate states context ids."""
+    """Base class for migration tasks which commit first."""
 
     commit_before = True
 
