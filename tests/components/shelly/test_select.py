@@ -22,7 +22,7 @@ from . import init_integration, register_device, register_entity
 @pytest.mark.parametrize(
     ("name", "entity_id", "value", "expected_state"),
     [
-        ("Virtual enum", "select.test_name_virtual_enum", "lorem ipsum", "lorem ipsum"),
+        ("Virtual enum", "select.test_name_virtual_enum", "option 1", "Title 1"),
         (None, "select.test_name_enum_203", None, STATE_UNKNOWN),
     ],
 )
@@ -40,8 +40,13 @@ async def test_rpc_device_virtual_enum(
     config = deepcopy(mock_rpc_device.config)
     config["enum:203"] = {
         "name": name,
-        "options": ["lorem ipsum", "dolor sit amet", "sed do eiusmod"],
-        "meta": {"ui": {"view": "dropdown"}},
+        "options": ["option 1", "option 2", "option 3"],
+        "meta": {
+            "ui": {
+                "view": "dropdown",
+                "titles": {"option 1": "Title 1", "option 2": None},
+            }
+        },
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
@@ -55,28 +60,30 @@ async def test_rpc_device_virtual_enum(
     assert state
     assert state.state == expected_state
     assert state.attributes.get(ATTR_OPTIONS) == [
-        "lorem ipsum",
-        "dolor sit amet",
-        "sed do eiusmod",
+        "Title 1",
+        "option 2",
+        "option 3",
     ]
 
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-enum:203-enum"
 
-    monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "dolor sit amet")
+    monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 2")
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "dolor sit amet"
+    assert hass.states.get(entity_id).state == "option 2"
 
-    monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "sed do eiusmod")
+    monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 1")
     await hass.services.async_call(
         SELECT_PLATFORM,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "sed do eiusmod"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Title 1"},
         blocking=True,
     )
+    # 'Title 1' corresponds to 'option 1'
+    assert mock_rpc_device.call_rpc.call_args[0][1] == {"id": 203, "value": "option 1"}
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "sed do eiusmod"
+    assert hass.states.get(entity_id).state == "Title 1"
 
 
 async def test_rpc_remove_virtual_enum_when_mode_label(
@@ -91,7 +98,9 @@ async def test_rpc_remove_virtual_enum_when_mode_label(
     config["enum:200"] = {
         "name": None,
         "options": ["one", "two"],
-        "meta": {"ui": {"view": "label"}},
+        "meta": {
+            "ui": {"view": "label", "titles": {"one": "Title 1", "two": "Title 2"}}
+        },
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 

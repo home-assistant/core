@@ -87,21 +87,21 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
         super().__init__(coordinator, key, attribute, description)
 
         titles = self.coordinator.device.config[key]["meta"]["ui"]["titles"]
-        options = self.coordinator.device.config[key]["options"]
-        self._option_map = {
-            key: (titles[key] if titles[key] is not None else key) for key in options
+        opts = self.coordinator.device.config[key]["options"]
+        self.option_map = {
+            opt: (titles[opt] if titles.get(opt) is not None else opt) for opt in opts
         }
-        self._rev_option_map = {title: key for key, title in self._option_map.items()}
+        self.reversed_option_map = {tit: opt for opt, tit in self.option_map.items()}
 
-        self._attr_options = list(self._option_map.values())
+        self._attr_options = list(self.option_map.values())
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return cast(str, self._option_map[self.attribute_value])
+        return cast(str | None, self.option_map.get(self.attribute_value))
 
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
         await self.call_rpc(
-            "Enum.Set", {"id": self._id, "value": self._rev_option_map[option]}
+            "Enum.Set", {"id": self._id, "value": self.reversed_option_map[option]}
         )
