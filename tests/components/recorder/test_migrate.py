@@ -4,7 +4,7 @@ import datetime
 import importlib
 import sqlite3
 import sys
-from unittest.mock import Mock, PropertyMock, call, patch
+from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
 from sqlalchemy import create_engine, text
@@ -702,34 +702,64 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         ("states", "old_state_id"),
     )
 
-    expected_dropped_constraints = [
-        (
-            "events",
-            "data_id",
-            {
-                "comment": None,
-                "constrained_columns": ["data_id"],
-                "name": "events_data_id_fkey",
-                "options": {},
-                "referred_columns": ["data_id"],
-                "referred_schema": None,
-                "referred_table": "event_data",
-            },
-        ),
-        (
-            "states",
-            "old_state_id",
-            {
-                "comment": None,
-                "constrained_columns": ["old_state_id"],
-                "name": "states_old_state_id_fkey",
-                "options": {},
-                "referred_columns": ["state_id"],
-                "referred_schema": None,
-                "referred_table": "states",
-            },
-        ),
-    ]
+    db_engine = recorder_db_url.partition("://")[0]
+
+    expected_dropped_constraints = {
+        "mysql": [
+            (
+                "events",
+                "data_id",
+                {
+                    "constrained_columns": ["data_id"],
+                    "name": ANY,
+                    "options": {},
+                    "referred_columns": ["data_id"],
+                    "referred_schema": None,
+                    "referred_table": "event_data",
+                },
+            ),
+            (
+                "states",
+                "old_state_id",
+                {
+                    "constrained_columns": ["old_state_id"],
+                    "name": ANY,
+                    "options": {},
+                    "referred_columns": ["state_id"],
+                    "referred_schema": None,
+                    "referred_table": "states",
+                },
+            ),
+        ],
+        "postgresql": [
+            (
+                "events",
+                "data_id",
+                {
+                    "comment": None,
+                    "constrained_columns": ["data_id"],
+                    "name": "events_data_id_fkey",
+                    "options": {},
+                    "referred_columns": ["data_id"],
+                    "referred_schema": None,
+                    "referred_table": "event_data",
+                },
+            ),
+            (
+                "states",
+                "old_state_id",
+                {
+                    "comment": None,
+                    "constrained_columns": ["old_state_id"],
+                    "name": "states_old_state_id_fkey",
+                    "options": {},
+                    "referred_columns": ["state_id"],
+                    "referred_schema": None,
+                    "referred_table": "states",
+                },
+            ),
+        ],
+    }
 
     engine = create_engine(recorder_db_url)
     db_schema.Base.metadata.create_all(engine)
@@ -743,7 +773,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
                 session_maker, engine, table, column
             )
         ]
-    assert dropped_constraints_1 == expected_dropped_constraints
+    assert dropped_constraints_1 == expected_dropped_constraints[db_engine]
 
     # Check we don't find the constrained columns again (they are removed)
     with Session(engine) as session:
@@ -774,7 +804,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
                 session_maker, engine, table, column
             )
         ]
-    assert dropped_constraints_3 == expected_dropped_constraints
+    assert dropped_constraints_3 == expected_dropped_constraints[db_engine]
 
     engine.dispose()
 
