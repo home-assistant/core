@@ -3,6 +3,7 @@
 from functools import partial
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -11,6 +12,7 @@ from homeassistant.helpers import (
     floor_registry as fr,
     label_registry as lr,
 )
+from homeassistant.util.dt import utcnow
 
 from tests.common import ANY, async_capture_events, flush_store
 
@@ -24,9 +26,14 @@ async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
     assert len(areas) == len(area_registry.areas)
 
 
-async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
+async def test_create_area(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Make sure that we can create an area."""
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
+    # freezer.move_to("2021-01-09 12:00:00+00:00")
 
     # Create area with only mandatory parameters
     area = area_registry.async_create("mock")
@@ -40,6 +47,8 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
         name="mock",
         normalized_name=ANY,
         picture=None,
+        created_at=utcnow(),
+        modified_at=utcnow(),
     )
     assert len(area_registry.areas) == 1
 
@@ -57,6 +66,8 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
         aliases={"alias_1", "alias_2"},
         labels={"label1", "label2"},
         picture="/image/example.png",
+        created_at=utcnow(),
+        modified_at=utcnow(),
     )
 
     assert area == ar.AreaEntry(
@@ -68,6 +79,8 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
         name="mock 2",
         normalized_name=ANY,
         picture="/image/example.png",
+        created_at=utcnow(),
+        modified_at=utcnow(),
     )
     assert len(area_registry.areas) == 2
 
@@ -176,6 +189,7 @@ async def test_update_area(
         name="mock1",
         normalized_name=ANY,
         picture="/image/example.png",
+        created_at=area.created_at,
     )
     assert len(area_registry.areas) == 1
 
@@ -285,6 +299,8 @@ async def test_loading_area_from_storage(
                     "labels": ["mock-label1", "mock-label2"],
                     "name": "mock",
                     "picture": "blah",
+                    "created_at": utcnow().isoformat(),
+                    "modified_at": utcnow().isoformat(),
                 }
             ]
         },
@@ -329,6 +345,8 @@ async def test_migration_from_1_1(
                     "labels": [],
                     "name": "mock",
                     "picture": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                 }
             ]
         },
