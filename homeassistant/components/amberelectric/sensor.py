@@ -52,7 +52,7 @@ class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
         self,
         coordinator: AmberUpdateCoordinator,
         description: SensorEntityDescription,
-        channel_type: ChannelType,
+        channel_type: str,
     ) -> None:
         """Initialize the Sensor."""
         super().__init__(coordinator)
@@ -230,9 +230,7 @@ async def async_setup_entry(
             state_class=SensorStateClass.MEASUREMENT,
             translation_key=channel_type,
         )
-        entities.append(
-            AmberPriceSensor(coordinator, description, ChannelType(channel_type))
-        )
+        entities.append(AmberPriceSensor(coordinator, description, channel_type))
 
     for channel_type in current:
         description = SensorEntityDescription(
@@ -244,9 +242,7 @@ async def async_setup_entry(
             translation_key=channel_type,
         )
         entities.append(
-            AmberPriceDescriptorSensor(
-                coordinator, description, ChannelType(channel_type)
-            )
+            AmberPriceDescriptorSensor(coordinator, description, channel_type)
         )
 
     for channel_type in forecasts:
@@ -257,9 +253,7 @@ async def async_setup_entry(
             state_class=SensorStateClass.MEASUREMENT,
             translation_key=channel_type,
         )
-        entities.append(
-            AmberForecastSensor(coordinator, description, ChannelType(channel_type))
-        )
+        entities.append(AmberForecastSensor(coordinator, description, channel_type))
 
     renewables_description = SensorEntityDescription(
         key="renewables",

@@ -46,8 +46,10 @@ def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) ->
     return interval.channel_type == ChannelType.FEEDIN
 
 
-def normalize_descriptor(descriptor: PriceDescriptor) -> str | None:
+def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
     """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
+    if descriptor is None:
+        return None
     if descriptor.value == "spike":
         return "spike"
     if descriptor.value == "high":

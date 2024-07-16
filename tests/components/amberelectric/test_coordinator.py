@@ -11,6 +11,7 @@ from amberelectric.models.channel import Channel, ChannelType
 from amberelectric.models.interval import Interval
 from amberelectric.models.price_descriptor import PriceDescriptor
 from amberelectric.models.site import Site
+from amberelectric.models.site_status import SiteStatus
 from amberelectric.models.spike_status import SpikeStatus
 from dateutil import parser
 import pytest
@@ -43,7 +44,7 @@ def mock_api_current_price() -> Generator:
         nmi="11111111111",
         channels=[Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100")],
         network="Jemena",
-        status="active",
+        status=SiteStatus("active"),
         activeFrom=date(2021, 1, 1),
         closedOn=None,
     )
@@ -55,7 +56,7 @@ def mock_api_current_price() -> Generator:
             Channel(identifier="E2", type=ChannelType.CONTROLLEDLOAD, tariff="A180"),
         ],
         network="Jemena",
-        status="active",
+        status=SiteStatus("active"),
         activeFrom=date(2021, 1, 1),
         closedOn=None,
     )
@@ -67,7 +68,7 @@ def mock_api_current_price() -> Generator:
             Channel(identifier="E2", type=ChannelType.FEEDIN, tariff="A100"),
         ],
         network="Jemena",
-        status="active",
+        status=SiteStatus("active"),
         activeFrom=date(2021, 1, 1),
         closedOn=None,
     )

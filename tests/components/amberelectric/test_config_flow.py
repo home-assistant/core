@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
 from amberelectric.models.site import Site
+from amberelectric.models.site_status import SiteStatus
 import pytest
 
 from homeassistant.components.amberelectric.config_flow import filter_sites
@@ -49,7 +50,7 @@ def mock_single_site_api() -> Generator:
         nmi="11111111111",
         channels=[],
         network="Jemena",
-        status="active",
+        status=SiteStatus.ACTIVE,
         activeFrom=date(2002, 1, 1),
         closedOn=None,
     )
@@ -86,7 +87,7 @@ def mock_single_site_rejoin_api() -> Generator:
         nmi="11111111111",
         channels=[],
         network="Jemena",
-        status="closed",
+        status=SiteStatus.CLOSED,
         activeFrom=date(2002, 1, 1),
         closedOn=date(2002, 6, 1),
     )
@@ -95,7 +96,7 @@ def mock_single_site_rejoin_api() -> Generator:
         nmi="11111111111",
         channels=[],
         network="Jemena",
-        status="active",
+        status=SiteStatus.ACTIVE,
         activeFrom=date(2003, 1, 1),
         closedOn=None,
     )
@@ -104,7 +105,7 @@ def mock_single_site_rejoin_api() -> Generator:
         nmi="11111111112",
         channels=[],
         network="Jemena",
-        status="closed",
+        status=SiteStatus.CLOSED,
         activeFrom=date(2003, 1, 1),
         closedOn=date(2003, 6, 1),
     )

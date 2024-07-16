@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import amberelectric
 from amberelectric.models.site import Site
+from amberelectric.models.site_status import SiteStatus
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -24,7 +25,7 @@ def generate_site_selector_name(site: Site) -> str:
     """Generate the name to show in the site drop down in the configuration flow."""
     # For some reason the generated API key returns this as any, not a string. Thanks pydantic
     nmi = str(site.nmi)
-    if site.status == "closed":
+    if site.status == SiteStatus.CLOSED:
         if site.closed_on is None:
             return nmi + " (Closed)"
         return nmi + " (Closed: " + site.closed_on.isoformat() + ")"
