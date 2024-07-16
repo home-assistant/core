@@ -515,6 +515,19 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
                 coordinator.device.config[key]
             )
 
+        self.option_map: dict[str, str] = {}
+        self.reversed_option_map: dict[str, str] = {}
+        if "enum" in key:
+            titles = self.coordinator.device.config[key]["meta"]["ui"]["titles"]
+            options = self.coordinator.device.config[key]["options"]
+            self.option_map = {
+                opt: (titles[opt] if titles.get(opt) is not None else opt)
+                for opt in options
+            }
+            self.reversed_option_map = {
+                tit: opt for opt, tit in self.option_map.items()
+            }
+
     @property
     def sub_status(self) -> Any:
         """Device status by entity key."""

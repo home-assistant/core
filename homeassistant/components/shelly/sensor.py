@@ -1148,16 +1148,22 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         attribute: str,
         description: RpcSensorDescription,
     ) -> None:
-        """Initialize sensor."""
+        """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if callable(description.options_fn):
-            self._attr_options = description.options_fn(coordinator.device.config[key])
+        if self.option_map:
+            self._attr_options = list(self.option_map.values())
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.attribute_value
+        if not self.option_map:
+            return self.attribute_value
+
+        if not isinstance(self.attribute_value, str):
+            return None
+
+        return self.option_map[self.attribute_value]
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):

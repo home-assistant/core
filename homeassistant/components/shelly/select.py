@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -86,19 +86,15 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        titles = self.coordinator.device.config[key]["meta"]["ui"]["titles"]
-        opts = self.coordinator.device.config[key]["options"]
-        self.option_map = {
-            opt: (titles[opt] if titles.get(opt) is not None else opt) for opt in opts
-        }
-        self.reversed_option_map = {tit: opt for opt, tit in self.option_map.items()}
-
         self._attr_options = list(self.option_map.values())
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return cast(str | None, self.option_map.get(self.attribute_value))
+        if not isinstance(self.attribute_value, str):
+            return None
+
+        return self.option_map[self.attribute_value]
 
     async def async_select_option(self, option: str) -> None:
         """Change the value."""

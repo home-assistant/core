@@ -1072,7 +1072,12 @@ async def test_rpc_remove_number_virtual_sensor_when_orphaned(
 @pytest.mark.parametrize(
     ("name", "entity_id", "value", "expected_state"),
     [
-        ("Virtual enum sensor", "sensor.test_name_virtual_enum_sensor", "one", "one"),
+        (
+            "Virtual enum sensor",
+            "sensor.test_name_virtual_enum_sensor",
+            "one",
+            "Title 1",
+        ),
         (None, "sensor.test_name_enum_203", None, STATE_UNKNOWN),
     ],
 )
@@ -1091,7 +1096,7 @@ async def test_rpc_device_virtual_enum_sensor(
     config["enum:203"] = {
         "name": name,
         "options": ["one", "two", "three"],
-        "meta": {"ui": {"view": "label"}},
+        "meta": {"ui": {"view": "label", "titles": {"one": "Title 1", "two": None}}},
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
@@ -1105,7 +1110,7 @@ async def test_rpc_device_virtual_enum_sensor(
     assert state
     assert state.state == expected_state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert state.attributes.get(ATTR_OPTIONS) == ["one", "two", "three"]
+    assert state.attributes.get(ATTR_OPTIONS) == ["Title 1", "two", "three"]
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -1128,7 +1133,12 @@ async def test_rpc_remove_enum_virtual_sensor_when_mode_dropdown(
     config["enum:200"] = {
         "name": None,
         "options": ["option 1", "option 2", "option 3"],
-        "meta": {"ui": {"view": "dropdown"}},
+        "meta": {
+            "ui": {
+                "view": "dropdown",
+                "titles": {"option 1": "Title 1", "option 2": None},
+            }
+        },
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
