@@ -34,20 +34,7 @@ from .coordinator import (
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
-PLATFORMS: Final = [
-    # Platform.BINARY_SENSOR,
-    # Platform.BUTTON,
-    # Platform.CLIMATE,
-    # Platform.COVER,
-    # Platform.DEVICE_TRACKER,
-    # Platform.LOCK,
-    # Platform.MEDIA_PLAYER,
-    # Platform.NUMBER,
-    # Platform.SELECT,
-    Platform.SENSOR,
-    # Platform.SWITCH,
-    # Platform.UPDATE,
-]
+PLATFORMS: Final = [Platform.SENSOR]
 
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
 
@@ -58,12 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     """Set up TeslaFleet config."""
 
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-    # refresh_token = entry.data[CONF_TOKEN][CONF_REFRESH_TOKEN]
     session = async_get_clientsession(hass)
 
-    token = jwt.decode(
-        entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN], options={"verify_signature": False}
-    )
+    token = jwt.decode(access_token, options={"verify_signature": False})
     scopes = token["scp"]
     region = token["ou_code"].lower()
 

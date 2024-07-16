@@ -5,7 +5,6 @@ from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -83,11 +82,6 @@ class TeslaFleetEntity(
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
-    def raise_for_scope(self):
-        """Raise an error if a scope is not available."""
-        if not self.scoped:
-            raise ServiceValidationError("Missing required scope")
-
 
 class TeslaFleetVehicleEntity(TeslaFleetEntity):
     """Parent class for TeslaFleet Vehicle entities."""
@@ -99,7 +93,7 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
         data: TeslaFleetVehicleData,
         key: str,
     ) -> None:
-        """Initialize common aspects of a TeslaFleet entity."""
+        """Initialize common aspects of a Tesla Fleet entity."""
 
         self._attr_unique_id = f"{data.vin}-{key}"
         self.vehicle = data
@@ -121,7 +115,7 @@ class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
         data: TeslaFleetEnergyData,
         key: str,
     ) -> None:
-        """Initialize common aspects of a TeslaFleet Energy Site Live entity."""
+        """Initialize common aspects of a Tesla Fleet Energy Site Live entity."""
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
@@ -129,14 +123,14 @@ class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
 
 
 class TeslaFleetEnergyInfoEntity(TeslaFleetEntity):
-    """Parent class for TeslaFleet Energy Site Info Entities."""
+    """Parent class for TeslaFleet Energy Site Info entities."""
 
     def __init__(
         self,
         data: TeslaFleetEnergyData,
         key: str,
     ) -> None:
-        """Initialize common aspects of a TeslaFleet Energy Site Info entity."""
+        """Initialize common aspects of a Tesla Fleet Energy Site Info entity."""
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
@@ -146,7 +140,7 @@ class TeslaFleetEnergyInfoEntity(TeslaFleetEntity):
 class TeslaFleetWallConnectorEntity(
     TeslaFleetEntity, CoordinatorEntity[TeslaFleetEnergySiteLiveCoordinator]
 ):
-    """Parent class for TeslaFleet Wall Connector Entities."""
+    """Parent class for Tesla Fleet Wall Connector entities."""
 
     _attr_has_entity_name = True
 
@@ -156,7 +150,7 @@ class TeslaFleetWallConnectorEntity(
         din: str,
         key: str,
     ) -> None:
-        """Initialize common aspects of a TeslaFleet entity."""
+        """Initialize common aspects of a Tesla Fleet entity."""
         self.din = din
         self._attr_unique_id = f"{data.id}-{din}-{key}"
 
