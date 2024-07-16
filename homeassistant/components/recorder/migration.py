@@ -576,7 +576,13 @@ def _update_states_table_with_foreign_key_options(
                 connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
-                        connection.execute(AddConstraint(fkc))  # type: ignore[no-untyped-call]
+                        # AddConstraint mutates the constraint passed to it, we need to
+                        # undo that to avoid changing the behavior of the table schema.
+                        # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
+                        create_rule = fkc._create_rule  # noqa: SLF001
+                        add_constraint = AddConstraint(fkc)  # type: ignore[no-untyped-call]
+                        fkc._create_rule = create_rule  # noqa: SLF001
+                        connection.execute(add_constraint)
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
@@ -634,10 +640,17 @@ def _restore_foreign_key_constraints(
             )
             continue
 
+        # AddConstraint mutates the constraint passed to it, we need to
+        # undo that to avoid changing the behavior of the table schema.
+        # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
+        create_rule = constraint._create_rule  # noqa: SLF001
+        add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
+        constraint._create_rule = create_rule  # noqa: SLF001
+
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(AddConstraint(constraint))  # type: ignore[no-untyped-call]
+                connection.execute(add_constraint)
             except (InternalError, OperationalError):
                 _LOGGER.exception("Could not update foreign options in %s table", table)
 
