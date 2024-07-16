@@ -15,6 +15,7 @@ from uuid import UUID
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
+from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     IntegrityError,
@@ -24,7 +25,7 @@ from sqlalchemy.exc import (
     SQLAlchemyError,
 )
 from sqlalchemy.orm.session import Session
-from sqlalchemy.schema import AddConstraint, DropConstraint
+from sqlalchemy.schema import AddConstraint, CreateTable, DropConstraint
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -55,6 +56,7 @@ from .const import (
     SupportedDialect,
 )
 from .db_schema import (
+    BIG_INTEGER_SQL,
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
     LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
@@ -67,6 +69,7 @@ from .db_schema import (
     Base,
     Events,
     EventTypes,
+    LegacyBase,
     MigrationChanges,
     SchemaChanges,
     States,
@@ -243,6 +246,23 @@ def live_migration(schema_status: SchemaValidationStatus) -> bool:
     return schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
 
 
+def pre_migrate_schema(engine: Engine) -> None:
+    """Prepare for migration.
+
+    This function is called before calling Base.metadata.create_all.
+    """
+    inspector = sqlalchemy.inspect(engine)
+
+    if inspector.has_table("statistics_meta") and not inspector.has_table(
+        "statistics_short_term"
+    ):
+        # Prepare for migration from schema with statistics_meta table but no
+        # statistics_short_term table
+        LegacyBase.metadata.create_all(
+            engine, (LegacyBase.metadata.tables["statistics_short_term"],)
+        )
+
+
 def migrate_schema(
     instance: Recorder,
     hass: HomeAssistant,
@@ -313,11 +333,9 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        (
-            "Adding index `%s` to table `%s`. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
-            "be patient!"
-        ),
+        "Adding index `%s` to table `%s`. Note: this can take several "
+        "minutes on large databases and slow computers. Please "
+        "be patient!",
         index_name,
         table_name,
     )
@@ -331,7 +349,7 @@ def _create_index(
                 "Index %s already exists on %s, continuing", index_name, table_name
             )
 
-    _LOGGER.debug("Finished creating %s", index_name)
+    _LOGGER.warning("Finished adding index `%s` to table `%s`", index_name, table_name)
 
 
 def _execute_or_collect_error(
@@ -364,11 +382,9 @@ def _drop_index(
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
     _LOGGER.warning(
-        (
-            "Dropping index `%s` from table `%s`. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
-            "be patient!"
-        ),
+        "Dropping index `%s` from table `%s`. Note: this can take several "
+        "minutes on large databases and slow computers. Please "
+        "be patient!",
         index_name,
         table_name,
     )
@@ -377,8 +393,8 @@ def _drop_index(
         index_to_drop = get_index_by_name(session, table_name, index_name)
 
     if index_to_drop is None:
-        _LOGGER.debug(
-            "The index %s on table %s no longer exists", index_name, table_name
+        _LOGGER.warning(
+            "The index `%s` on table `%s` no longer exists", index_name, table_name
         )
         return
 
@@ -395,18 +411,16 @@ def _drop_index(
         f"DROP INDEX {index_to_drop}",
     ):
         if _execute_or_collect_error(session_maker, query, errors):
-            _LOGGER.debug(
-                "Finished dropping index %s from table %s", index_name, table_name
+            _LOGGER.warning(
+                "Finished dropping index `%s` from table `%s`", index_name, table_name
             )
             return
 
     if not quiet:
         _LOGGER.warning(
-            (
-                "Failed to drop index `%s` from table `%s`. Schema "
-                "Migration will continue; this is not a "
-                "critical operation: %s"
-            ),
+            "Failed to drop index `%s` from table `%s`. Schema "
+            "Migration will continue; this is not a "
+            "critical operation: %s",
             index_name,
             table_name,
             errors,
@@ -532,9 +546,12 @@ def _update_states_table_with_foreign_key_options(
 ) -> None:
     """Add the options to foreign key constraints."""
     inspector = sqlalchemy.inspect(engine)
+    tmp_states_table = Table(TABLE_STATES, MetaData())
     alters = [
         {
-            "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+            "old_fk": ForeignKeyConstraint(
+                (), (), name=foreign_key["name"], table=tmp_states_table
+            ),
             "columns": foreign_key["constrained_columns"],
         }
         for foreign_key in inspector.get_foreign_keys(TABLE_STATES)
@@ -551,11 +568,6 @@ def _update_states_table_with_foreign_key_options(
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
-    old_states_table = Table(  # noqa: F841
-        TABLE_STATES,
-        MetaData(),
-        *(alter["old_fk"] for alter in alters),  # type: ignore[arg-type]
-    )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
@@ -572,18 +584,23 @@ def _update_states_table_with_foreign_key_options(
 
 
 def _drop_foreign_key_constraints(
-    session_maker: Callable[[], Session], engine: Engine, table: str, columns: list[str]
-) -> None:
+    session_maker: Callable[[], Session], engine: Engine, table: str, column: str
+) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
-    drops = [
-        ForeignKeyConstraint((), (), name=foreign_key["name"])
+    dropped_constraints = [
+        (table, column, foreign_key)
         for foreign_key in inspector.get_foreign_keys(table)
-        if foreign_key["name"] and foreign_key["constrained_columns"] == columns
+        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
 
-    # Bind the ForeignKeyConstraints to the table
-    old_table = Table(table, MetaData(), *drops)  # noqa: F841
+    ## Bind the ForeignKeyConstraints to the table
+    tmp_table = Table(table, MetaData())
+    drops = [
+        ForeignKeyConstraint((), (), name=foreign_key["name"], table=tmp_table)
+        for foreign_key in inspector.get_foreign_keys(table)
+        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+    ]
 
     for drop in drops:
         with session_scope(session=session_maker()) as session:
@@ -594,8 +611,35 @@ def _drop_foreign_key_constraints(
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
                     TABLE_STATES,
-                    columns,
+                    column,
                 )
+
+    return dropped_constraints
+
+
+def _restore_foreign_key_constraints(
+    session_maker: Callable[[], Session],
+    engine: Engine,
+    dropped_constraints: list[tuple[str, str, ReflectedForeignKeyConstraint]],
+) -> None:
+    """Restore foreign key constraints."""
+    for table, column, dropped_constraint in dropped_constraints:
+        constraints = Base.metadata.tables[table].foreign_key_constraints
+        for constraint in constraints:
+            if constraint.column_keys == [column]:
+                break
+        else:
+            _LOGGER.info(
+                "Did not find a matching constraint for %s", dropped_constraint
+            )
+            continue
+
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(AddConstraint(constraint))  # type: ignore[no-untyped-call]
+            except (InternalError, OperationalError):
+                _LOGGER.exception("Could not update foreign options in %s table", table)
 
 
 @database_job_retry_wrapper("Apply migration update", 10)
@@ -722,7 +766,7 @@ def _apply_update(  # noqa: C901
         pass
     elif new_version == 16:
         _drop_foreign_key_constraints(
-            session_maker, engine, TABLE_STATES, ["old_state_id"]
+            session_maker, engine, TABLE_STATES, "old_state_id"
         )
     elif new_version == 17:
         # This dropped the statistics table, done again in version 18.
@@ -1089,6 +1133,66 @@ def _apply_update(  # noqa: C901
             "states",
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
+    elif new_version == 44:
+        # We skip this step for SQLITE, it doesn't have differently sized integers
+        if engine.dialect.name == SupportedDialect.SQLITE:
+            return
+        identity_sql = (
+            "NOT NULL AUTO_INCREMENT"
+            if engine.dialect.name == SupportedDialect.MYSQL
+            else ""
+        )
+        # First drop foreign key constraints
+        foreign_columns = (
+            ("events", ("data_id", "event_type_id")),
+            ("states", ("event_id", "old_state_id", "attributes_id", "metadata_id")),
+            ("statistics", ("metadata_id",)),
+            ("statistics_short_term", ("metadata_id",)),
+        )
+        dropped_constraints = [
+            dropped_constraint
+            for table, columns in foreign_columns
+            for column in columns
+            for dropped_constraint in _drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+        _LOGGER.debug("Dropped foreign key constraints: %s", dropped_constraints)
+
+        # Then modify the constrained columns
+        for table, columns in foreign_columns:
+            _modify_columns(
+                session_maker,
+                engine,
+                table,
+                [f"{column} {BIG_INTEGER_SQL}" for column in columns],
+            )
+
+        # Then modify the ID columns
+        id_columns = (
+            ("events", "event_id"),
+            ("event_data", "data_id"),
+            ("event_types", "event_type_id"),
+            ("states", "state_id"),
+            ("state_attributes", "attributes_id"),
+            ("states_meta", "metadata_id"),
+            ("statistics", "id"),
+            ("statistics_short_term", "id"),
+            ("statistics_meta", "id"),
+            ("recorder_runs", "run_id"),
+            ("schema_changes", "change_id"),
+            ("statistics_runs", "run_id"),
+        )
+        for table, column in id_columns:
+            _modify_columns(
+                session_maker,
+                engine,
+                table,
+                [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
+            )
+        # Finally restore dropped constraints
+        _restore_foreign_key_constraints(session_maker, engine, dropped_constraints)
+
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1181,7 +1285,7 @@ def post_schema_migration(
         _wipe_old_string_time_columns(instance, instance.engine, instance.event_session)
     if old_version < 35 <= new_version:
         # In version 34 we migrated all the created, start, and last_reset
-        # columns to be timestamps. In version 34 we need to wipe the old columns
+        # columns to be timestamps. In version 35 we need to wipe the old columns
         # since they are no longer used and take up a significant amount of space.
         _wipe_old_string_statistics_columns(instance)
 
@@ -1738,14 +1842,15 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         # Only drop the index if there are no more event_ids in the states table
         # ex all NULL
         assert instance.engine is not None, "engine should never be None"
-        if instance.dialect_name != SupportedDialect.SQLITE:
+        if instance.dialect_name == SupportedDialect.SQLITE:
             # SQLite does not support dropping foreign key constraints
-            # so we can't drop the index at this time but we can avoid
-            # looking for legacy rows during purge
+            # so we have to rebuild the table
+            rebuild_sqlite_table(session_maker, instance.engine, States)
+        else:
             _drop_foreign_key_constraints(
-                session_maker, instance.engine, TABLE_STATES, ["event_id"]
+                session_maker, instance.engine, TABLE_STATES, "event_id"
             )
-            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
         instance.use_legacy_events_index = False
 
     return True
@@ -1894,3 +1999,68 @@ def _mark_migration_done(
             migration_id=migration.migration_id, version=migration.migration_version
         )
     )
+
+
+def rebuild_sqlite_table(
+    session_maker: Callable[[], Session], engine: Engine, table: type[Base]
+) -> None:
+    """Rebuild an SQLite table.
+
+    This must only be called after all migrations are complete
+    and the database is in a consistent state.
+
+    If the table is not migrated to the current schema this
+    will likely fail.
+    """
+    table_table = cast(Table, table.__table__)
+    orig_name = table_table.name
+    temp_name = f"{table_table.name}_temp_{int(time())}"
+
+    _LOGGER.warning(
+        "Rebuilding SQLite table %s; This will take a while; Please be patient!",
+        orig_name,
+    )
+
+    try:
+        # 12 step SQLite table rebuild
+        # https://www.sqlite.org/lang_altertable.html
+        with session_scope(session=session_maker()) as session:
+            # Step 1 - Disable foreign keys
+            session.connection().execute(text("PRAGMA foreign_keys=OFF"))
+        # Step 2 - create a transaction
+        with session_scope(session=session_maker()) as session:
+            # Step 3 - we know all the indexes, triggers, and views associated with table X
+            new_sql = str(CreateTable(table_table).compile(engine)).strip("\n") + ";"
+            source_sql = f"CREATE TABLE {orig_name}"
+            replacement_sql = f"CREATE TABLE {temp_name}"
+            assert source_sql in new_sql, f"{source_sql} should be in new_sql"
+            new_sql = new_sql.replace(source_sql, replacement_sql)
+            # Step 4 - Create temp table
+            session.execute(text(new_sql))
+            column_names = ",".join([column.name for column in table_table.columns])
+            # Step 5 - Transfer content
+            sql = f"INSERT INTO {temp_name} SELECT {column_names} FROM {orig_name};"  # noqa: S608
+            session.execute(text(sql))
+            # Step 6 - Drop the original table
+            session.execute(text(f"DROP TABLE {orig_name}"))
+            # Step 7 - Rename the temp table
+            session.execute(text(f"ALTER TABLE {temp_name} RENAME TO {orig_name}"))
+            # Step 8 - Recreate indexes
+            for index in table_table.indexes:
+                index.create(session.connection())
+            # Step 9 - Recreate views (there are none)
+            # Step 10 - Check foreign keys
+            session.execute(text("PRAGMA foreign_key_check"))
+            # Step 11 - Commit transaction
+            session.commit()
+    except SQLAlchemyError:
+        _LOGGER.exception("Error recreating SQLite table %s", table_table.name)
+        # Swallow the exception since we do not want to ever raise
+        # an integrity error as it would cause the database
+        # to be discarded and recreated from scratch
+    else:
+        _LOGGER.warning("Rebuilding SQLite table %s finished", orig_name)
+    finally:
+        with session_scope(session=session_maker()) as session:
+            # Step 12 - Re-enable foreign keys
+            session.connection().execute(text("PRAGMA foreign_keys=ON"))

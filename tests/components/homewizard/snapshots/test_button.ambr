@@ -72,6 +72,7 @@
     }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
+    'model_id': None,
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

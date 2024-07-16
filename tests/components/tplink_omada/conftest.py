@@ -1,6 +1,6 @@
 """Test fixtures for TP-Link Omada integration."""
 
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,7 +17,6 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from typing_extensions import Generator
 
 from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN

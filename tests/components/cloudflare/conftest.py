@@ -1,9 +1,9 @@
 """Define fixtures available for all tests."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from . import get_mock_client
 
