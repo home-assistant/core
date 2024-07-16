@@ -224,7 +224,7 @@ async def test_migrate_events_context_ids(
 
     with freeze_time(now):
         # This is a threadsafe way to add a task to the recorder
-        migrator = migration.EventsContextIDMigration(None, None, None)
+        migrator = migration.EventsContextIDMigration(None, None)
         recorder_mock.queue_task(migrator.task(migrator))
         await _async_wait_migration_done(hass)
 
@@ -415,7 +415,7 @@ async def test_migrate_states_context_ids(
     await recorder_mock.async_add_executor_job(_insert_states)
 
     await async_wait_recording_done(hass)
-    migrator = migration.StatesContextIDMigration(None, None, None)
+    migrator = migration.StatesContextIDMigration(None, None)
     recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
 
@@ -564,7 +564,7 @@ async def test_migrate_event_type_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EventTypeIDMigration(None, None, None)
+    migrator = migration.EventTypeIDMigration(None, None)
     recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
 
@@ -653,7 +653,7 @@ async def test_migrate_entity_ids(hass: HomeAssistant, recorder_mock: Recorder) 
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EntityIDMigration(None, None, None)
+    migrator = migration.EntityIDMigration(None, None)
     recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
     await _async_wait_migration_done(hass)
 
@@ -787,7 +787,7 @@ async def test_migrate_null_entity_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EntityIDMigration(None, None, None)
+    migrator = migration.EntityIDMigration(None, None)
     recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
     await _async_wait_migration_done(hass)
 
@@ -870,7 +870,7 @@ async def test_migrate_null_event_type_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EventTypeIDMigration(None, None, None)
+    migrator = migration.EventTypeIDMigration(None, None)
     recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
 
