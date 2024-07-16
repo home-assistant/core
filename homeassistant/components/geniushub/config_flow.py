@@ -10,8 +10,7 @@ from typing import Any
 import aiohttp
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -29,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 CLOUD_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_MAC): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+        vol.Required(CONF_MAC): cv.string,
     }
 )
 
@@ -39,20 +38,20 @@ LOCAL_API_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MAC): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+        vol.Optional(CONF_MAC): cv.string,
     }
 )
 
 
-class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Solis logger."""
+class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Geniushub."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """User config step for determine v1 or v3."""
+        """User config step for determine cloud or local."""
         _LOGGER.debug("ConfigFlow.async_step_user")
         return self.async_show_menu(
             step_id="user",
@@ -103,8 +102,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user",
-            errors=errors,
+            step_id="local_api", errors=errors, data_schema=LOCAL_API_SCHEMA
         )
 
     async def async_step_cloud_api(
@@ -135,7 +133,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (TimeoutError, aiohttp.ClientConnectionError):
             errors["base"] = "cannot_connect"
 
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -151,8 +149,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user",
-            errors=errors,
+            step_id="cloud_api", errors=errors, data_schema=LOCAL_API_SCHEMA
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
@@ -173,14 +170,10 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 errors["base"] = "invalid_host"
 
-        except TimeoutError:
+        except (TimeoutError, aiohttp.ClientConnectionError):
             errors["base"] = "cannot_connect"
 
-        except aiohttp.ClientConnectionError:
-            errors["base"] = "cannot_connect"
-
-        except Exception as e:  # pylint: disable=broad-except
-            _LOGGER.error("Error in genius hub client", exc_info=e)
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
