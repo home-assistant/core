@@ -9,8 +9,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONFIG
-
 from tests.common import MockConfigEntry
 
 
@@ -18,7 +16,7 @@ async def setup_platform(hass: HomeAssistant, platforms: list[Platform] | None =
     """Set up the Tesla Fleet platform."""
 
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, data=CONFIG, minor_version=2, unique_id="abc-123"
+        domain=DOMAIN, data={}, minor_version=2, unique_id="abc-123"
     )
     mock_entry.add_to_hass(hass)
 

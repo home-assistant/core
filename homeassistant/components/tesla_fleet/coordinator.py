@@ -20,11 +20,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL_SECONDS = 300
+VEHICLE_INTERVAL_SECONDS = 60
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
 
-ENERGY_INTERVAL_SECONDS = 300
+ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 
 ENDPOINTS = [
@@ -78,9 +78,16 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.update_interval = VEHICLE_INTERVAL
 
         try:
+            # Check if the vehicle is awake using a non-rate limited API call
+            state = (await self.api.vehicle())["response"]
+            if state and state["state"] != TeslaFleetState.ONLINE:
+                self.data["state"] = state["state"]
+                return self.data
+
+            # This is a rated limited API call
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
         except VehicleOffline:
-            self.data["state"] = TeslaFleetState.OFFLINE
+            self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
         except RateLimited as e:
             LOGGER.warning(

@@ -10,21 +10,11 @@ import pytest
 from .const import (
     COMMAND_OK,
     LIVE_STATUS,
-    METADATA,
     PRODUCTS,
     SITE_INFO,
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
 )
-
-
-@pytest.fixture(autouse=True)
-def mock_metadata():
-    """Mock Tesla Fleet Api metadata method."""
-    with patch(
-        "homeassistant.components.teslemetry.Teslemetry.metadata", return_value=METADATA
-    ) as mock_products:
-        yield mock_products
 
 
 @pytest.fixture(autouse=True)

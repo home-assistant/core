@@ -1,14 +1,11 @@
-"""Constants for the teslemetry tests."""
+"""Constants for the Tesla Fleet tests."""
 
-from homeassistant.components.teslemetry.const import DOMAIN, TeslemetryState
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.components.tesla_fleet.const import DOMAIN, TeslaFleetState
 
 from tests.common import load_json_object_fixture
 
-CONFIG = {CONF_ACCESS_TOKEN: "1234567890"}
-
-WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
-WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
+WAKE_UP_ONLINE = {"response": {"state": TeslaFleetState.ONLINE}, "error": None}
+WAKE_UP_ASLEEP = {"response": {"state": TeslaFleetState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
@@ -29,23 +26,3 @@ COMMAND_NOERROR = {"answer": 42}
 COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERROR)
 
 RESPONSE_OK = {"response": {}, "error": None}
-
-METADATA = {
-    "uid": "abc-123",
-    "region": "NA",
-    "scopes": [
-        "openid",
-        "offline_access",
-        "user_data",
-        "vehicle_device_data",
-        "vehicle_cmds",
-        "vehicle_charging_cmds",
-        "energy_device_data",
-        "energy_cmds",
-    ],
-}
-METADATA_NOSCOPE = {
-    "uid": "abc-123",
-    "region": "NA",
-    "scopes": ["openid", "offline_access", "vehicle_device_data"],
-}

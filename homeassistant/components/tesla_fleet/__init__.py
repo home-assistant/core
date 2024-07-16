@@ -26,7 +26,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
@@ -111,8 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             vin = product["vin"]
             api = VehicleSpecific(tesla.vehicle, vin)
             coordinator = TeslaFleetVehicleDataCoordinator(hass, api, product)
-
-            # await coordinator.async_config_entry_first_refresh()
 
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},

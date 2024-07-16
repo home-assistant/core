@@ -1,8 +1,7 @@
-"""application_credentials platform the Tesla Fleet integration."""
+"""Application Credentials platform the Tesla Fleet integration."""
 
 import base64
 import hashlib
-import logging
 import secrets
 from typing import Any
 

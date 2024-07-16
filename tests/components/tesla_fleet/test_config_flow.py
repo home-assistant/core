@@ -1,25 +1,45 @@
 """Test the Tesla Fleet config flow."""
 
 from unittest.mock import patch
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.tesla_fleet.application_credentials import (
     AUTHORIZE_URL,
     CLIENT_ID,
+    TOKEN_URL,
 )
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-BAD_CONFIG = {CONF_ACCESS_TOKEN: "bad_access_token"}
+
+@pytest.fixture
+async def component_setup(hass: HomeAssistant) -> None:
+    """Fixture for setting up the integration."""
+    result = await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, ""), "cred"
+    )
+
+    assert result
+
+
+REDIRECT = "https://example.com/auth/external/callback"
+UNIQUE_ID = "uid"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -27,47 +47,64 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    component_setup,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(  # not working
         DOMAIN, context={"source": SOURCE_USER}
     )
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
+            "redirect_uri": REDIRECT,
         },
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    assert result["url"].startswith(AUTHORIZE_URL)
     parsed_url = urlparse(result["url"])
-    assert parsed_url.netloc == AUTHORIZE_URL
-    assert parsed_url.query["response_type"] == "code"
-    assert parsed_url.query["client_id"] == CLIENT_ID
-    assert (
-        parsed_url.query["redirect_uri"] == "https://example.com/auth/external/callback"
-    )
-    assert parsed_url.query["state"] == state
-    assert parsed_url.query["scope"] == " ".join(SCOPES)
-    assert parsed_url.query["code_challenge"] is not None
+    parsed_query = parse_qs(parsed_url.query)
+    assert parsed_query["response_type"][0] == "code"
+    assert parsed_query["client_id"][0] == CLIENT_ID
+    assert parsed_query["redirect_uri"][0] == REDIRECT
+    assert parsed_query["state"][0] == state
+    assert parsed_query["scope"][0] == " ".join(SCOPES)
+    assert parsed_query["code_challenge"][0] is not None
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
+    access_token = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "sub": UNIQUE_ID,
+            "aud": [],
+            "scp": [
+                "vehicle_device_data",
+                "vehicle_cmds",
+                "vehicle_charging_cmds",
+                "energy_device_data",
+                "energy_cmds",
+                "offline_access",
+                "openid",
+            ],
+            "ou_code": "NA",
+        },
+    )
+
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://wbsapi.withings.net/v2/oauth2",
+        TOKEN_URL,
         json={
-            "body": {
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "userid": 600,
-            },
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
         },
     )
     with patch(
@@ -79,10 +116,9 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Withings"
+    assert result["title"] == UNIQUE_ID
     assert "result" in result
-    assert result["result"].unique_id == "600"
+    assert result["result"].unique_id == UNIQUE_ID
     assert "token" in result["result"].data
-    assert "webhook_id" in result["result"].data
-    assert result["result"].data["token"]["access_token"] == "mock-access-token"
+    assert result["result"].data["token"]["access_token"] == access_token
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
