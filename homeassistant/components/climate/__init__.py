@@ -25,13 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -45,7 +39,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_HVAC_MODE_AUTO,
     _DEPRECATED_HVAC_MODE_COOL,
@@ -118,24 +111,30 @@ from .const import (  # noqa: F401
     HVACMode,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=60)
+
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-SCAN_INTERVAL = timedelta(seconds=60)
-
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
 
-_LOGGER = logging.getLogger(__name__)
-
+# Can be removed in 2025.1 after deprecation period of the new feature flags
+CHECK_TURN_ON_OFF_FEATURE_FLAG = (
+    ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+)
 
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
     ),
-    make_entity_service_schema(
+    cv.make_entity_service_schema(
         {
             vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
@@ -384,6 +383,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         supported_features = self.supported_features
+        if supported_features & CHECK_TURN_ON_OFF_FEATURE_FLAG:
+            # The entity supports both turn_on and turn_off, the backwards compatibility
+            # checks are not needed
+            return
+
         if not supported_features & ClimateEntityFeature.TURN_OFF and (
             type(self).async_turn_off is not ClimateEntity.async_turn_off
             or type(self).turn_off is not ClimateEntity.turn_off

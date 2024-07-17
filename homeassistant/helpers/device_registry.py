@@ -55,7 +55,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 5
+STORAGE_VERSION_MINOR = 7
 
 CLEANUP_DELAY = 10
 
@@ -101,6 +101,7 @@ class DeviceInfo(TypedDict, total=False):
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
+    model_id: str | None
     name: str | None
     serial_number: str | None
     suggested_area: str | None
@@ -127,6 +128,7 @@ DEVICE_INFO_TYPES = {
         "identifiers",
         "manufacturer",
         "model",
+        "model_id",
         "name",
         "serial_number",
         "suggested_area",
@@ -144,6 +146,9 @@ DEVICE_INFO_TYPES = {
 }
 
 DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
+
+# Integrations which may share a device with a native integration
+LOW_PRIO_CONFIG_ENTRY_DOMAINS = {"homekit_controller", "matter", "mqtt", "upnp"}
 
 
 class _EventDeviceRegistryUpdatedData_CreateRemove(TypedDict):
@@ -183,6 +188,35 @@ class DeviceInfoError(HomeAssistantError):
         )
         self.device_info = device_info
         self.domain = domain
+
+
+class DeviceCollisionError(HomeAssistantError):
+    """Raised when a device collision is detected."""
+
+
+class DeviceIdentifierCollisionError(DeviceCollisionError):
+    """Raised when a device identifier collision is detected."""
+
+    def __init__(
+        self, identifiers: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Identifiers {identifiers} already registered with {existing_device}"
+        )
+
+
+class DeviceConnectionCollisionError(DeviceCollisionError):
+    """Raised when a device connection collision is detected."""
+
+    def __init__(
+        self, normalized_connections: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Connections {normalized_connections} "
+            f"already registered with {existing_device}"
+        )
 
 
 def _validate_device_info(
@@ -248,7 +282,6 @@ class DeviceEntry:
     configuration_url: str | None = attr.ib(default=None)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
-    primary_integration: str | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
     hw_version: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
@@ -256,8 +289,10 @@ class DeviceEntry:
     labels: set[str] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
+    model_id: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    primary_config_entry: str | None = attr.ib(default=None)
     serial_number: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
@@ -289,9 +324,10 @@ class DeviceEntry:
             "labels": list(self.labels),
             "manufacturer": self.manufacturer,
             "model": self.model,
+            "model_id": self.model_id,
             "name_by_user": self.name_by_user,
             "name": self.name,
-            "primary_integration": self.primary_integration,
+            "primary_config_entry": self.primary_config_entry,
             "serial_number": self.serial_number,
             "sw_version": self.sw_version,
             "via_device_id": self.via_device_id,
@@ -331,8 +367,10 @@ class DeviceEntry:
                     "labels": list(self.labels),
                     "manufacturer": self.manufacturer,
                     "model": self.model,
+                    "model_id": self.model_id,
                     "name_by_user": self.name_by_user,
                     "name": self.name,
+                    "primary_config_entry": self.primary_config_entry,
                     "serial_number": self.serial_number,
                     "sw_version": self.sw_version,
                     "via_device_id": self.via_device_id,
@@ -446,6 +484,14 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2024.3
                 for device in old_data["devices"]:
                     device["labels"] = device.get("labels", [])
+            if old_minor_version < 6:
+                # Introduced in 2024.7
+                for device in old_data["devices"]:
+                    device.setdefault("primary_config_entry", None)
+            if old_minor_version < 7:
+                # Introduced in 2024.8
+                for device in old_data["devices"]:
+                    device.setdefault("model_id", None)
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -647,12 +693,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         default_name: str | None | UndefinedType = UNDEFINED,
         # To disable a device if it gets created
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
-        domain: str | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,
         identifiers: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
+        model_id: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
@@ -699,6 +745,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 ("identifiers", identifiers),
                 ("manufacturer", manufacturer),
                 ("model", model),
+                ("model_id", model_id),
                 ("name", name),
                 ("serial_number", serial_number),
                 ("suggested_area", suggested_area),
@@ -762,17 +809,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self.async_update_device(
             device.id,
+            allow_collisions=True,
             add_config_entry_id=config_entry_id,
+            add_config_entry=config_entry,
             configuration_url=configuration_url,
             device_info_type=device_info_type,
             disabled_by=disabled_by,
-            domain=domain,
             entry_type=entry_type,
             hw_version=hw_version,
             manufacturer=manufacturer,
             merge_connections=connections or UNDEFINED,
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
+            model_id=model_id,
             name=name,
             serial_number=serial_number,
             suggested_area=suggested_area,
@@ -786,15 +835,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return device
 
     @callback
-    def async_update_device(
+    def async_update_device(  # noqa: C901
         self,
         device_id: str,
         *,
+        add_config_entry: ConfigEntry | UndefinedType = UNDEFINED,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
+        # Temporary flag so we don't blow up when collisions are implicitly introduced
+        # by calls to async_get_or_create. Must not be set by integrations.
+        allow_collisions: bool = False,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         device_info_type: str | UndefinedType = UNDEFINED,
-        domain: str | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,
@@ -803,6 +855,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
+        model_id: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
@@ -820,6 +873,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
         config_entries = old.config_entries
+
+        if add_config_entry_id is not UNDEFINED and add_config_entry is UNDEFINED:
+            config_entry = self.hass.config_entries.async_get_entry(add_config_entry_id)
+            if config_entry is None:
+                raise HomeAssistantError(
+                    f"Can't link device to unknown config entry {add_config_entry_id}"
+                )
+            add_config_entry = config_entry
+
+        if not new_connections and not new_identifiers:
+            raise HomeAssistantError(
+                "A device must have at least one of identifiers or connections"
+            )
 
         if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
             raise HomeAssistantError(
@@ -858,11 +924,26 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
-        if (
-            add_config_entry_id is not UNDEFINED
-            and add_config_entry_id not in old.config_entries
-        ):
-            config_entries = old.config_entries | {add_config_entry_id}
+        if add_config_entry is not UNDEFINED:
+            primary_entry_id = old.primary_config_entry
+            if (
+                device_info_type == "primary"
+                and add_config_entry.entry_id != primary_entry_id
+            ):
+                if (
+                    primary_entry_id is None
+                    or not (
+                        primary_entry := self.hass.config_entries.async_get_entry(
+                            primary_entry_id
+                        )
+                    )
+                    or primary_entry.domain in LOW_PRIO_CONFIG_ENTRY_DOMAINS
+                ):
+                    new_values["primary_config_entry"] = add_config_entry.entry_id
+                    old_values["primary_config_entry"] = old.primary_config_entry
+
+            if add_config_entry.entry_id not in old.config_entries:
+                config_entries = old.config_entries | {add_config_entry.entry_id}
 
         if (
             remove_config_entry_id is not UNDEFINED
@@ -871,6 +952,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if config_entries == {remove_config_entry_id}:
                 self.async_remove_device(device_id)
                 return None
+
+            if remove_config_entry_id == old.primary_config_entry:
+                new_values["primary_config_entry"] = None
+                old_values["primary_config_entry"] = old.primary_config_entry
 
             config_entries = config_entries - {remove_config_entry_id}
 
@@ -888,12 +973,36 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = old_value | setvalue
                 old_values[attr_name] = old_value
 
+        if merge_connections is not UNDEFINED:
+            normalized_connections = self._validate_connections(
+                device_id,
+                merge_connections,
+                allow_collisions,
+            )
+            old_connections = old.connections
+            if not normalized_connections.issubset(old_connections):
+                new_values["connections"] = old_connections | normalized_connections
+                old_values["connections"] = old_connections
+
+        if merge_identifiers is not UNDEFINED:
+            merge_identifiers = self._validate_identifiers(
+                device_id, merge_identifiers, allow_collisions
+            )
+            old_identifiers = old.identifiers
+            if not merge_identifiers.issubset(old_identifiers):
+                new_values["identifiers"] = old_identifiers | merge_identifiers
+                old_values["identifiers"] = old_identifiers
+
         if new_connections is not UNDEFINED:
-            new_values["connections"] = _normalize_connections(new_connections)
+            new_values["connections"] = self._validate_connections(
+                device_id, new_connections, False
+            )
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
-            new_values["identifiers"] = new_identifiers
+            new_values["identifiers"] = self._validate_identifiers(
+                device_id, new_identifiers, False
+            )
             old_values["identifiers"] = old.identifiers
 
         if configuration_url is not UNDEFINED:
@@ -908,6 +1017,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("labels", labels),
             ("manufacturer", manufacturer),
             ("model", model),
+            ("model_id", model_id),
             ("name", name),
             ("name_by_user", name_by_user),
             ("serial_number", serial_number),
@@ -918,10 +1028,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
-
-        if device_info_type == "primary" and domain is not UNDEFINED:
-            new_values["primary_integration"] = domain
-            old_values["primary_integration"] = old.primary_integration
 
         if old.is_new:
             new_values["is_new"] = False
@@ -952,6 +1058,53 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.hass.bus.async_fire_internal(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
+
+    @callback
+    def _validate_connections(
+        self,
+        device_id: str,
+        connections: set[tuple[str, str]],
+        allow_collisions: bool,
+    ) -> set[tuple[str, str]]:
+        """Normalize and validate connections, raise on collision with other devices."""
+        normalized_connections = _normalize_connections(connections)
+        if allow_collisions:
+            return normalized_connections
+
+        for connection in normalized_connections:
+            # We need to iterate over each connection because if there is a
+            # conflict, the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(connections={connection})
+            ) and existing_device.id != device_id:
+                raise DeviceConnectionCollisionError(
+                    normalized_connections, existing_device
+                )
+
+        return normalized_connections
+
+    @callback
+    def _validate_identifiers(
+        self,
+        device_id: str,
+        identifiers: set[tuple[str, str]],
+        allow_collisions: bool,
+    ) -> set[tuple[str, str]]:
+        """Validate identifiers, raise on collision with other devices."""
+        if allow_collisions:
+            return identifiers
+
+        for identifier in identifiers:
+            # We need to iterate over each identifier because if there is a
+            # conflict, the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(identifiers={identifier})
+            ) and existing_device.id != device_id:
+                raise DeviceIdentifierCollisionError(identifiers, existing_device)
+
+        return identifiers
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
@@ -1015,8 +1168,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     labels=set(device["labels"]),
                     manufacturer=device["manufacturer"],
                     model=device["model"],
+                    model_id=device["model_id"],
                     name_by_user=device["name_by_user"],
                     name=device["name"],
+                    primary_config_entry=device["primary_config_entry"],
                     serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],

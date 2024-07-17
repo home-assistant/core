@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, RestoreSensor, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    RestoreSensor,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -20,11 +24,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -65,7 +66,7 @@ UNIT_TIME = {
 DEFAULT_ROUND = 3
 DEFAULT_TIME_WINDOW = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_SOURCE): cv.entity_id,
@@ -90,27 +91,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    source_entity = registry.async_get(source_entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        source_entity_id,
+    )
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
         # Before we had support for optional selectors, "none" was used for selecting nothing

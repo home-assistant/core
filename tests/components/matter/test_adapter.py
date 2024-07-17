@@ -81,7 +81,7 @@ async def test_device_registry_single_node_device_alt(
     assert entry is not None
 
     # test name is derived from productName (because nodeLabel is absent)
-    assert entry.name == "Mock OnOffPluginUnit (powerplug/switch)"
+    assert entry.name == "Mock OnOffPluginUnit"
 
     # test serial id NOT present as additional identifier
     assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
@@ -163,13 +163,13 @@ async def test_node_added_subscription(
         )
     )
 
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert not entity_state
 
     node_added_callback(EventType.NODE_ADDED, node)
     await hass.async_block_till_done()
 
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
 
 
@@ -185,6 +185,78 @@ async def test_device_registry_single_node_composed_device(
     )
     dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
+
+
+async def test_device_registry_single_node_with_connection(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test that a device with mac address adds a connection to the HA device entry."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "thermostat",
+        matter_client,
+    )
+
+    assert device_registry.async_get_device(connections={("mac", "DC:54:75:5F:BA:AC")})
+
+
+async def test_device_registry_single_node_without_mac_address_has_no_mac_connection(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test that a device without mac address doesn't have a `mac` connection in the HA device entry."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "temperature-sensor",
+        matter_client,
+    )
+
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+
+    for connection_type, _ in entry.connections:
+        assert connection_type != dr.CONNECTION_NETWORK_MAC
+
+
+async def test_device_registry_node_with_EUI64_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test that a device with a mac address has a `zigbee` connection in the HA device entry."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "eve-energy-plug",
+        matter_client,
+    )
+
+    assert device_registry.async_get_device(
+        connections={("zigbee", "ca:6b:4a:23:f6:f8:bb:ee")}
+    )
+
+
+async def test_multi_endpoint_name(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "multi-endpoint-light",
+        matter_client,
+    )
+    entity_state = hass.states.get("light.inovelli_light_1")
+    assert entity_state
+    assert entity_state.name == "Inovelli Light (1)"
+    entity_state = hass.states.get("light.inovelli_light_6")
+    assert entity_state
+    assert entity_state.name == "Inovelli Light (6)"
 
 
 async def test_get_clean_name_() -> None:

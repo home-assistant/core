@@ -96,7 +96,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .helpers.json import json_bytes, json_fragment
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import UNDEFINED, UndefinedType, VolSchemaType
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -158,12 +158,29 @@ class ConfigSource(enum.StrEnum):
     YAML = "yaml"
 
 
-class EventStateChangedData(TypedDict):
-    """EventStateChanged data."""
+class EventStateEventData(TypedDict):
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    old_state: State | None
     new_state: State | None
+
+
+class EventStateChangedData(EventStateEventData):
+    """EVENT_STATE_CHANGED data.
+
+    A state changed event is fired when on state write the state is changed.
+    """
+
+    old_state: State | None
+
+
+class EventStateReportedData(EventStateEventData):
+    """EVENT_STATE_REPORTED data.
+
+    A state reported event is fired when on state write the state is unchanged.
+    """
+
+    old_last_reported: datetime.datetime
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
@@ -1291,6 +1308,11 @@ class EventOrigin(enum.Enum):
         """Return the event."""
         return self.value
 
+    @cached_property
+    def idx(self) -> int:
+        """Return the index of the origin."""
+        return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
+
 
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
@@ -1604,26 +1626,7 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-            # Special case for EVENT_STATE_REPORTED, we also want to listen to
-            # EVENT_STATE_CHANGED
-            self._listeners[EVENT_STATE_REPORTED].append(filterable_job)
-            self._listeners[EVENT_STATE_CHANGED].append(filterable_job)
-            return functools.partial(
-                self._async_remove_multiple_listeners,
-                (EVENT_STATE_REPORTED, EVENT_STATE_CHANGED),
-                filterable_job,
-            )
         return self._async_listen_filterable_job(event_type, filterable_job)
-
-    @callback
-    def _async_remove_multiple_listeners(
-        self,
-        keys: Iterable[EventType[_DataT] | str],
-        filterable_job: _FilterableJobType[Any],
-    ) -> None:
-        """Remove multiple listeners for specific event_types."""
-        for key in keys:
-            self._async_remove_listener(key, filterable_job)
 
     @callback
     def _async_listen_filterable_job(
@@ -2240,16 +2243,45 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        new_state = str(new_state)
-        attributes = attributes or {}
-        old_state = self._states_data.get(entity_id)
-        if old_state is None:
-            # If the state is missing, try to convert the entity_id to lowercase
-            # and try again.
-            entity_id = entity_id.lower()
-            old_state = self._states_data.get(entity_id)
+        self.async_set_internal(
+            entity_id.lower(),
+            str(new_state),
+            attributes or {},
+            force_update,
+            context,
+            state_info,
+            timestamp or time.time(),
+        )
 
-        if old_state is None:
+    @callback
+    def async_set_internal(
+        self,
+        entity_id: str,
+        new_state: str,
+        attributes: Mapping[str, Any] | None,
+        force_update: bool,
+        context: Context | None,
+        state_info: StateInfo | None,
+        timestamp: float,
+    ) -> None:
+        """Set the state of an entity, add entity if it does not exist.
+
+        This method is intended to only be used by core internally
+        and should not be considered a stable API. We will make
+        breaking changes to this function in the future and it
+        should not be used in integrations.
+
+        This method must be run in the event loop.
+        """
+        # Most cases the key will be in the dict
+        # so we optimize for the happy path as
+        # python 3.11+ has near zero overhead for
+        # try when it does not raise an exception.
+        old_state: State | None
+        try:
+            old_state = self._states_data[entity_id]
+        except KeyError:
+            old_state = None
             same_state = False
             same_attr = False
             last_changed = None
@@ -2269,16 +2301,18 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        if timestamp is None:
-            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
+
+        if context is None:
+            context = Context(id=ulid_at_time(timestamp))
 
         if same_state and same_attr:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
             old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
-            self._bus.async_fire_internal(
+            # Avoid creating an EventStateReportedData
+            self._bus.async_fire_internal(  # type: ignore[misc]
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
@@ -2289,9 +2323,6 @@ class StateMachine:
                 time_fired=timestamp,
             )
             return
-
-        if context is None:
-            context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:
             if TYPE_CHECKING:
@@ -2355,7 +2386,7 @@ class Service:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None,
+        schema: VolSchemaType | None,
         domain: str,
         service: str,
         context: Context | None = None,
@@ -2503,7 +2534,7 @@ class ServiceRegistry:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
     ) -> None:
@@ -2530,7 +2561,7 @@ class ServiceRegistry:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
     ) -> None:

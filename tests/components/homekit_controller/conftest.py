@@ -1,6 +1,6 @@
 """HomeKit controller session fixtures."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import datetime
 from unittest.mock import MagicMock, patch
 
@@ -8,7 +8,6 @@ from aiohomekit.testing import FakeController
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 import homeassistant.util.dt as dt_util
 

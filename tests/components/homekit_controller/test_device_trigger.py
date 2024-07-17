@@ -17,18 +17,12 @@ from homeassistant.setup import async_setup_component
 
 from .common import setup_test_component
 
-from tests.common import async_get_device_automations, async_mock_service
+from tests.common import async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 def create_remote(accessory):
@@ -245,7 +239,7 @@ async def test_handle_events(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     get_next_aid: Callable[[], int],
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test that events are handled."""
     helper = await setup_test_component(hass, get_next_aid(), create_remote)
@@ -309,8 +303,8 @@ async def test_handle_events(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "device - button1 - single_press - 0"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "device - button1 - single_press - 0"
 
     # Make sure automation doesn't trigger for long press
     helper.pairing.testing.update_named_service(
@@ -318,7 +312,7 @@ async def test_handle_events(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     # Make sure automation doesn't trigger for double press
     helper.pairing.testing.update_named_service(
@@ -326,7 +320,7 @@ async def test_handle_events(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     # Make sure second automation fires for long press
     helper.pairing.testing.update_named_service(
@@ -334,8 +328,8 @@ async def test_handle_events(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "device - button2 - long_press - 0"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "device - button2 - long_press - 0"
 
     # Turn the automations off
     await hass.services.async_call(
@@ -344,6 +338,7 @@ async def test_handle_events(
         {"entity_id": "automation.long_press"},
         blocking=True,
     )
+    assert len(service_calls) == 3
 
     await hass.services.async_call(
         "automation",
@@ -351,6 +346,7 @@ async def test_handle_events(
         {"entity_id": "automation.single_press"},
         blocking=True,
     )
+    assert len(service_calls) == 4
 
     # Make sure event no longer fires
     helper.pairing.testing.update_named_service(
@@ -358,15 +354,15 @@ async def test_handle_events(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 4
 
 
 async def test_handle_events_late_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
     get_next_aid: Callable[[], int],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test that events are handled when setup happens after startup."""
     helper = await setup_test_component(hass, get_next_aid(), create_remote)
@@ -439,8 +435,8 @@ async def test_handle_events_late_setup(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "device - button1 - single_press - 0"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "device - button1 - single_press - 0"
 
     # Make sure automation doesn't trigger for a polled None
     helper.pairing.testing.update_named_service(
@@ -448,7 +444,7 @@ async def test_handle_events_late_setup(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     # Make sure automation doesn't trigger for long press
     helper.pairing.testing.update_named_service(
@@ -456,7 +452,7 @@ async def test_handle_events_late_setup(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     # Make sure automation doesn't trigger for double press
     helper.pairing.testing.update_named_service(
@@ -464,7 +460,7 @@ async def test_handle_events_late_setup(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     # Make sure second automation fires for long press
     helper.pairing.testing.update_named_service(
@@ -472,8 +468,8 @@ async def test_handle_events_late_setup(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "device - button2 - long_press - 0"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "device - button2 - long_press - 0"
 
     # Turn the automations off
     await hass.services.async_call(
@@ -482,6 +478,7 @@ async def test_handle_events_late_setup(
         {"entity_id": "automation.long_press"},
         blocking=True,
     )
+    assert len(service_calls) == 3
 
     await hass.services.async_call(
         "automation",
@@ -489,6 +486,7 @@ async def test_handle_events_late_setup(
         {"entity_id": "automation.single_press"},
         blocking=True,
     )
+    assert len(service_calls) == 4
 
     # Make sure event no longer fires
     helper.pairing.testing.update_named_service(
@@ -496,4 +494,4 @@ async def test_handle_events_late_setup(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 4

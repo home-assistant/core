@@ -10,7 +10,6 @@ from .const import LOGGER
 from .coordinator import WLEDDataUpdateCoordinator
 
 PLATFORMS = (
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,

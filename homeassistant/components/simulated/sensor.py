@@ -8,7 +8,10 @@ from random import Random
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -35,7 +38,7 @@ DEFAULT_SEED = 999
 DEFAULT_UNIT = "value"
 DEFAULT_RELATIVE_TO_EPOCH = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_AMP, default=DEFAULT_AMP): vol.Coerce(float),
         vol.Optional(CONF_FWHM, default=DEFAULT_FWHM): vol.Coerce(float),

@@ -9,6 +9,7 @@ import logging
 from time import monotonic
 from typing import TypeVar
 
+from httpx import ConnectError
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 
@@ -47,6 +48,8 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
             raise UpdateFailed("Invalid authentication") from None
         except PrusaLinkError as err:
             raise UpdateFailed(str(err)) from err
+        except (TimeoutError, ConnectError) as err:
+            raise UpdateFailed("Cannot connect") from err
 
         self.update_interval = self._get_update_interval(data)
         return data

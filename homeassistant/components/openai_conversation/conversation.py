@@ -1,7 +1,8 @@
 """Conversation support for OpenAI."""
 
+from collections.abc import Callable
 import json
-from typing import Literal
+from typing import Any, Literal
 
 import openai
 from openai._types import NOT_GIVEN
@@ -58,9 +59,14 @@ async def async_setup_entry(
     async_add_entities([agent])
 
 
-def _format_tool(tool: llm.Tool) -> ChatCompletionToolParam:
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> ChatCompletionToolParam:
     """Format tool specification."""
-    tool_spec = FunctionDefinition(name=tool.name, parameters=convert(tool.parameters))
+    tool_spec = FunctionDefinition(
+        name=tool.name,
+        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+    )
     if tool.description:
         tool_spec["description"] = tool.description
     return ChatCompletionToolParam(type="function", function=tool_spec)
@@ -86,6 +92,10 @@ class OpenAIConversationEntity(
             model="ChatGPT",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -139,7 +149,9 @@ class OpenAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            tools = [_format_tool(tool) for tool in llm_api.tools]
+            tools = [
+                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+            ]
 
         if user_input.conversation_id is None:
             conversation_id = ulid.ulid_now()
@@ -172,28 +184,20 @@ class OpenAIConversationEntity(
             user_name = user.name
 
         try:
-            if llm_api:
-                api_prompt = llm_api.api_prompt
-            else:
-                api_prompt = llm.async_render_no_api_prompt(self.hass)
-
-            prompt = "\n".join(
-                (
-                    template.Template(
-                        llm.BASE_PROMPT
-                        + options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                        self.hass,
-                    ).async_render(
-                        {
-                            "ha_name": self.hass.config.location_name,
-                            "user_name": user_name,
-                            "llm_context": llm_context,
-                        },
-                        parse_result=False,
-                    ),
-                    api_prompt,
+            prompt_parts = [
+                template.Template(
+                    llm.BASE_PROMPT
+                    + options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                    self.hass,
+                ).async_render(
+                    {
+                        "ha_name": self.hass.config.location_name,
+                        "user_name": user_name,
+                        "llm_context": llm_context,
+                    },
+                    parse_result=False,
                 )
-            )
+            ]
 
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
@@ -206,6 +210,11 @@ class OpenAIConversationEntity(
                 response=intent_response, conversation_id=conversation_id
             )
 
+        if llm_api:
+            prompt_parts.append(llm_api.api_prompt)
+
+        prompt = "\n".join(prompt_parts)
+
         # Create a copy of the variable because we attach it to the trace
         messages = [
             ChatCompletionSystemMessageParam(role="system", content=prompt),
@@ -214,6 +223,7 @@ class OpenAIConversationEntity(
         ]
 
         LOGGER.debug("Prompt: %s", messages)
+        LOGGER.debug("Tools: %s", tools)
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
         )

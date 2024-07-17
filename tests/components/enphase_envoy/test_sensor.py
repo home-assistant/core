@@ -1,58 +1,39 @@
 """Test Enphase Envoy sensors."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from . import setup_integration
 
-
-@pytest.fixture(name="setup_enphase_envoy_sensor")
-async def setup_enphase_envoy_sensor_fixture(hass, config, mock_envoy):
-    """Define a fixture to set up Enphase Envoy with sensor platform only."""
-    with (
-        patch(
-            "homeassistant.components.enphase_envoy.config_flow.Envoy",
-            return_value=mock_envoy,
-        ),
-        patch(
-            "homeassistant.components.enphase_envoy.Envoy",
-            return_value=mock_envoy,
-        ),
-        patch(
-            "homeassistant.components.enphase_envoy.PLATFORMS",
-            [Platform.SENSOR],
-        ),
-    ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-        yield
+from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy",
+        "envoy_1p_metered",
+        "envoy_metered_batt_relay",
+        "envoy_nobatt_metered_3p",
+        "envoy_tot_cons_metered",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    setup_enphase_envoy_sensor,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test enphase_envoy sensor entities."""
-    # compare registered entities against snapshot of prior run
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries
-    assert entity_entries == snapshot
-
-    # Test if all entities still have same state
-    for entity_entry in entity_entries:
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+    """Test sensor platform entities against snapshot."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

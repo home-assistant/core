@@ -193,12 +193,12 @@ def test_platform_config() -> None:
 def test_ensure_list() -> None:
     """Test ensure_list."""
     schema = vol.Schema(cv.ensure_list)
-    assert [] == schema(None)
-    assert [1] == schema(1)
-    assert [1] == schema([1])
-    assert ["1"] == schema("1")
-    assert ["1"] == schema(["1"])
-    assert [{"1": "2"}] == schema({"1": "2"})
+    assert schema(None) == []
+    assert schema(1) == [1]
+    assert schema([1]) == [1]
+    assert schema("1") == ["1"]
+    assert schema(["1"]) == ["1"]
+    assert schema({"1": "2"}) == [{"1": "2"}]
 
 
 def test_entity_id() -> None:
@@ -865,7 +865,7 @@ def schema():
 
 
 @pytest.fixture
-def version(monkeypatch):
+def version(monkeypatch: pytest.MonkeyPatch) -> None:
     """Patch the version used for testing to 0.5.0."""
     monkeypatch.setattr(homeassistant.const, "__version__", "0.5.0")
 
@@ -965,7 +965,7 @@ def test_deprecated_with_replacement_key(
     assert (
         "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
-    assert {"jupiter": True} == output
+    assert output == {"jupiter": True}
 
     caplog.clear()
     assert len(caplog.records) == 0
@@ -1036,7 +1036,7 @@ def test_deprecated_with_replacement_key_and_default(
     assert (
         "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
-    assert {"jupiter": True} == output
+    assert output == {"jupiter": True}
 
     caplog.clear()
     assert len(caplog.records) == 0
@@ -1049,7 +1049,7 @@ def test_deprecated_with_replacement_key_and_default(
     test_data = {"venus": True}
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 0
-    assert {"venus": True, "jupiter": False} == output
+    assert output == {"venus": True, "jupiter": False}
 
     deprecated_schema_with_default = vol.All(
         vol.Schema(
@@ -1068,7 +1068,7 @@ def test_deprecated_with_replacement_key_and_default(
     assert (
         "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
-    assert {"jupiter": True} == output
+    assert output == {"jupiter": True}
 
 
 def test_deprecated_cant_find_module() -> None:
@@ -1240,7 +1240,7 @@ def test_enum() -> None:
         schema("value3")
 
 
-def test_socket_timeout():
+def test_socket_timeout() -> None:
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 
@@ -1679,7 +1679,7 @@ def test_color_hex() -> None:
         cv.color_hex(123456)
 
 
-def test_determine_script_action_ambiguous():
+def test_determine_script_action_ambiguous() -> None:
     """Test determine script action with ambiguous actions."""
     assert (
         cv.determine_script_action(
@@ -1696,6 +1696,6 @@ def test_determine_script_action_ambiguous():
     )
 
 
-def test_determine_script_action_non_ambiguous():
+def test_determine_script_action_non_ambiguous() -> None:
     """Test determine script action with a non ambiguous action."""
     assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"

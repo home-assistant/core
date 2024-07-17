@@ -256,7 +256,7 @@ async def async_validate_config_item(
     return await _async_validate_config_item(hass, object_id, config, True, False)
 
 
-async def async_validate_config(hass, config):
+async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
     scripts = {}
     for _, p_config in config_per_platform(config, DOMAIN):

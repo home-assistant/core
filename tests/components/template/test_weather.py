@@ -18,7 +18,6 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
     Forecast,
 )
@@ -96,10 +95,7 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
@@ -224,7 +220,6 @@ async def test_forecasts(
     ("service", "expected"),
     [
         (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -308,7 +303,6 @@ async def test_forecast_invalid(
     ("service", "expected"),
     [
         (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -377,7 +371,6 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
     ("service", "expected"),
     [
         (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -444,10 +437,7 @@ async def test_forecast_invalid_datetime_missing(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
@@ -679,10 +669,7 @@ async def test_trigger_action(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(

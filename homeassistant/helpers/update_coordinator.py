@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import randint
 from time import monotonic
@@ -14,7 +15,7 @@ import urllib.error
 
 import aiohttp
 import requests
-from typing_extensions import Generator, TypeVar
+from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -471,7 +472,7 @@ class BaseCoordinatorEntity[
         self.coordinator = coordinator
         self.coordinator_context = context
 
-    @property
+    @cached_property
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False

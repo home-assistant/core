@@ -1,0 +1,240 @@
+# serializer version: 1
+# name: test_states[my_device-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tplink',
+        '123456789ABCDEFGH',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'TP-Link',
+    'model': 'HS100',
+    'model_id': None,
+    'name': 'my_device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_states[select.my_device_alarm_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Doorbell Ring 1',
+        'Doorbell Ring 2',
+        'Doorbell Ring 3',
+        'Doorbell Ring 4',
+        'Doorbell Ring 5',
+        'Doorbell Ring 6',
+        'Doorbell Ring 7',
+        'Doorbell Ring 8',
+        'Doorbell Ring 9',
+        'Doorbell Ring 10',
+        'Phone Ring',
+        'Alarm 1',
+        'Alarm 2',
+        'Alarm 3',
+        'Alarm 4',
+        'Dripping Tap',
+        'Alarm 5',
+        'Connection 1',
+        'Connection 2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.my_device_alarm_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm sound',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_sound',
+    'unique_id': '123456789ABCDEFGH_alarm_sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[select.my_device_alarm_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Alarm sound',
+      'options': list([
+        'Doorbell Ring 1',
+        'Doorbell Ring 2',
+        'Doorbell Ring 3',
+        'Doorbell Ring 4',
+        'Doorbell Ring 5',
+        'Doorbell Ring 6',
+        'Doorbell Ring 7',
+        'Doorbell Ring 8',
+        'Doorbell Ring 9',
+        'Doorbell Ring 10',
+        'Phone Ring',
+        'Alarm 1',
+        'Alarm 2',
+        'Alarm 3',
+        'Alarm 4',
+        'Dripping Tap',
+        'Alarm 5',
+        'Connection 1',
+        'Connection 2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.my_device_alarm_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Phone Ring',
+  })
+# ---
+# name: test_states[select.my_device_alarm_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'normal',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.my_device_alarm_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm volume',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_volume',
+    'unique_id': '123456789ABCDEFGH_alarm_volume',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[select.my_device_alarm_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Alarm volume',
+      'options': list([
+        'low',
+        'normal',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.my_device_alarm_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_states[select.my_device_light_preset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Off',
+        'Preset 1',
+        'Preset 2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.my_device_light_preset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light preset',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_preset',
+    'unique_id': '123456789ABCDEFGH_light_preset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[select.my_device_light_preset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Light preset',
+      'options': list([
+        'Off',
+        'Preset 1',
+        'Preset 2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.my_device_light_preset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Off',
+  })
+# ---
