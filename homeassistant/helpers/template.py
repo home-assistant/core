@@ -2327,7 +2327,7 @@ def regex_match(value, find="", ignorecase=False):
     """Match value using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return bool(_regex_cache(find, flags).match(value))
 
 
@@ -2338,7 +2338,7 @@ def regex_replace(value="", find="", replace="", ignorecase=False):
     """Replace using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return _regex_cache(find, flags).sub(replace, value)
 
 
@@ -2346,7 +2346,7 @@ def regex_search(value, find="", ignorecase=False):
     """Search using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return bool(_regex_cache(find, flags).search(value))
 
 
@@ -2359,7 +2359,7 @@ def regex_findall(value, find="", ignorecase=False):
     """Find all matches using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return _regex_cache(find, flags).findall(value)
 
 

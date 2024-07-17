@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from knocki import KnockiConnectionError
+from knocki import KnockiConnectionError, KnockiInvalidAuthError
 import pytest
 
 from homeassistant.components.knocki.const import DOMAIN
@@ -72,7 +72,11 @@ async def test_duplcate_entry(
 @pytest.mark.parametrize(("field"), ["login", "link"])
 @pytest.mark.parametrize(
     ("exception", "error"),
-    [(KnockiConnectionError, "cannot_connect"), (Exception, "unknown")],
+    [
+        (KnockiConnectionError, "cannot_connect"),
+        (KnockiInvalidAuthError, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
 )
 async def test_exceptions(
     hass: HomeAssistant,

@@ -4,7 +4,11 @@ from dataclasses import asdict
 from datetime import date
 from typing import cast
 
-from aiomealie.exceptions import MealieConnectionError, MealieNotFoundError
+from aiomealie.exceptions import (
+    MealieConnectionError,
+    MealieNotFoundError,
+    MealieValidationError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -15,12 +19,15 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_END_DATE,
+    ATTR_INCLUDE_TAGS,
     ATTR_RECIPE_ID,
     ATTR_START_DATE,
+    ATTR_URL,
     DOMAIN,
 )
 from .coordinator import MealieConfigEntry
@@ -29,8 +36,8 @@ SERVICE_GET_MEALPLAN = "get_mealplan"
 SERVICE_GET_MEALPLAN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_START_DATE): date,
-        vol.Optional(ATTR_END_DATE): date,
+        vol.Optional(ATTR_START_DATE): cv.date,
+        vol.Optional(ATTR_END_DATE): cv.date,
     }
 )
 
@@ -39,6 +46,15 @@ SERVICE_GET_RECIPE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_RECIPE_ID): str,
+    }
+)
+
+SERVICE_IMPORT_RECIPE = "import_recipe"
+SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_URL): str,
+        vol.Optional(ATTR_INCLUDE_TAGS): bool,
     }
 )
 
@@ -103,6 +119,28 @@ def setup_services(hass: HomeAssistant) -> None:
             ) from err
         return {"recipe": asdict(recipe)}
 
+    async def async_import_recipe(call: ServiceCall) -> ServiceResponse:
+        """Import a recipe."""
+        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        url = call.data[ATTR_URL]
+        include_tags = call.data.get(ATTR_INCLUDE_TAGS, False)
+        client = entry.runtime_data.client
+        try:
+            recipe = await client.import_recipe(url, include_tags)
+        except MealieValidationError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="could_not_import_recipe",
+            ) from err
+        except MealieConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
+        if call.return_response:
+            return {"recipe": asdict(recipe)}
+        return None
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_MEALPLAN,
@@ -116,4 +154,11 @@ def setup_services(hass: HomeAssistant) -> None:
         async_get_recipe,
         schema=SERVICE_GET_RECIPE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_IMPORT_RECIPE,
+        async_import_recipe,
+        schema=SERVICE_IMPORT_RECIPE_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
