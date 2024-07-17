@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import Final
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -39,6 +40,10 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+REGISTER_MODULES: Final[list[Module]] = [
+    Module.SYSTEM,
+]
 
 
 @pytest.fixture
@@ -83,7 +88,7 @@ def mock_version() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_websocket_client(
     register_data_listener_model: RegisterDataListener = RegisterDataListener(
-        modules=[Module.SYSTEM]
+        modules=REGISTER_MODULES,
     ),
 ) -> Generator[MagicMock, None, None]:
     """Return a mocked WebSocketClient client."""
