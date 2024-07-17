@@ -1,4 +1,4 @@
-"""Base entities for the Motionblinds Bluetooth integration."""
+"""Base entities for the Fluss+ integration."""
 
 import logging
 
@@ -15,26 +15,33 @@ class FlussEntity(Entity):
     """Base class for Fluss entities."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     device: FlussButton
     entry: ConfigEntry
 
-    def __init__(
+    def __init__(  # noqa: D107
         self,
         device: FlussButton,
         entry: ConfigEntry,
         entity_description: EntityDescription,
         unique_id_suffix: str | None = None,
     ) -> None:
+        self.device = device
+        self.entry = entry
+        self.entity_description = entity_description
+
         """Initialize the entity."""
         if unique_id_suffix is None:
             self._attr_unique_id = entry.data[CONF_ADDRESS]
         else:
             self._attr_unique_id = f"{entry.data[CONF_ADDRESS]}_{unique_id_suffix}"
-        self.device = device
-        self.entry = entry
-        self.entity_description = entity_description
+        if (
+            CONF_ADDRESS not in entry.data
+            or entry.data[CONF_ADDRESS] != self._attr_unique_id
+        ):
+            data = dict(entry.data)
+            data[CONF_ADDRESS] = self._attr_unique_id
+            self.hass.config_entries.async_update_entry(entry, data=data)
 
     async def async_update(self) -> None:
         """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""

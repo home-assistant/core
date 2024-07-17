@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 
 
-class PlaceholderHub:
-    """Placeholder class to store APIs."""
+class ApiKeyStorageHub:
+    """ApiKeyStorageHub class to store APIs."""
 
     def __init__(self, apikey: str) -> None:
         """Initialize."""
@@ -38,10 +38,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    hub = PlaceholderHub(data[CONF_API_KEY])
+    hub = ApiKeyStorageHub(data[CONF_API_KEY])
 
     if not await hub.authenticate():
-        raise InvalidAuth
+        raise InvalidAuth("Invalid authentication provided.")
 
     return {"title": "Fluss+"}
 
@@ -56,9 +56,13 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+                return self.async_create_entry(
+                    title=info.get("title", "Fluss Device"), data=user_input
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -66,11 +70,24 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(title=info["title"], data=user_input)
 
+        if errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_API_KEY): str,
+                    }
+                ),
+                errors=errors,
+            )
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): str,
+                }
+            ),
         )
 
 

@@ -20,6 +20,10 @@ class FlussApiClientError(Exception):
     """Exception to indicate a general API error."""
 
 
+class FlussDeviceError(Exception):
+    """Exception to indicate that an error occurred when retriveing devices."""
+
+
 class FlussApiClientCommunicationError(FlussApiClientError):
     """Exception to indicate a communication error."""
 

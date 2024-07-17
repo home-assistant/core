@@ -6,8 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import FlussApiClient
-from .const import DOMAIN
+from .api import FlussApiClient, FlussDeviceError
 from .device import FlussButton
 
 LOGGER = logging.getLogger(__package__)
@@ -18,16 +17,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fluss Devices."""
 
-    api: FlussApiClient = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
+    api: FlussApiClient = entry_data["api"]
 
-    devices = await api.async_get_devices()
-    if isinstance(devices, dict) and "devices" in devices:
-        devices = devices["devices"]
-
-    if not isinstance(devices, list):
+    try:
+        devices_data = await api.async_get_devices()
+        devices = devices_data["devices"]
+    except FlussDeviceError as e:
+        LOGGER.error("Error fetching devices: %s", e)
         return
+
+    device_info_list = []
+    for device in devices:
+        device_info = {
+            "deviceId": device.get("deviceId"),
+            "deviceName": device.get("deviceName"),
+            "userType": device.get("userPermissions", {}).get("userType"),
+        }
+        device_info_list.append(device_info)
 
     buttons = [
         FlussButton(api, device) for device in devices if isinstance(device, dict)
     ]
-    async_add_entities(buttons, update_before_add=True)
+    async_add_entities(buttons)
