@@ -20,11 +20,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -58,12 +54,6 @@ def _same_lists(list_a, list_b):
         return False
 
     return all(item in list_b for item in list_a)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_triggers(
@@ -194,7 +184,7 @@ async def test_no_triggers(
 async def test_if_fires_on_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     setup_zha,
 ) -> None:
     """Test for remote triggers firing."""
@@ -262,14 +252,14 @@ async def test_if_fires_on_event(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["message"] == "service called"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["message"] == "service called"
 
 
 async def test_device_offline_fires(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     setup_zha,
 ) -> None:
     """Test for device offline triggers firing."""
@@ -317,14 +307,13 @@ async def test_device_offline_fires(
     zha_device.available = False
     zha_device.emit_zha_event({"device_event_type": "device_offline"})
 
-    assert len(calls) == 1
-    assert calls[0].data["message"] == "service called"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["message"] == "service called"
 
 
 async def test_exception_no_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
     setup_zha,
 ) -> None:
@@ -378,7 +367,6 @@ async def test_exception_no_triggers(
 async def test_exception_bad_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
     setup_zha,
 ) -> None:
