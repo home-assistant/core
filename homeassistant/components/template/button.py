@@ -7,17 +7,17 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.button import (
+    DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
+    ButtonEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
-)
-from homeassistant.components.button import (
-    DEVICE_CLASSES_SCHEMA,
-    ENTITY_ID_FORMAT,
-    ButtonEntity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_PRESS, CONF_OBJECT_ID, DOMAIN
+from .const import CONF_OBJECT_ID, CONF_PRESS, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_ICON_SCHEMA,

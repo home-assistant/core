@@ -345,8 +345,8 @@ class TemplateEntity(Entity):
         if self._object_id:
             if not hasattr(self, "_entity_id_format"):
                 _LOGGER.warning(
-                    "Template entity class %s does not define its _entity_id_format attribute. "
-                    "Assigned object id '%s' will be ignored.",
+                    "Template entity class %s does not define its _entity_id_format attribute, "
+                    "assigned object id '%s' will be ignored",
                     self.__class__.__name__,
                     self._object_id,
                 )

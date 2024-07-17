@@ -7,6 +7,11 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.image import (
+    DOMAIN as IMAGE_DOMAIN,
+    ENTITY_ID_FORMAT,
+    ImageEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -14,11 +19,6 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_URL,
     CONF_VERIFY_SSL,
-)
-from homeassistant.components.image import (
-    DOMAIN as IMAGE_DOMAIN,
-    ENTITY_ID_FORMAT,
-    ImageEntity,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
