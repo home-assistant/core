@@ -264,15 +264,22 @@ async def test_update_floor_with_normalized_name_already_in_use(
 
 
 async def test_load_floors(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can load/save data correctly."""
+    floor1_created = datetime.fromisoformat("2024-01-01T00:00:00+00:00")
+    freezer.move_to(floor1_created)
     floor1 = floor_registry.async_create(
         "First floor",
         icon="mdi:home-floor-1",
         aliases={"first", "ground"},
         level=1,
     )
+
+    floor2_created = datetime.fromisoformat("2024-02-01T00:00:00+00:00")
+    freezer.move_to(floor2_created)
     floor2 = floor_registry.async_create(
         "Second floor",
         icon="mdi:home-floor-2",
@@ -290,20 +297,10 @@ async def test_load_floors(
     assert list(floor_registry.floors) == list(registry2.floors)
 
     floor1_registry2 = registry2.async_get_floor_by_name("First floor")
-    assert floor1_registry2.floor_id == floor1.floor_id
-    assert floor1_registry2.name == floor1.name
-    assert floor1_registry2.icon == floor1.icon
-    assert floor1_registry2.aliases == floor1.aliases
-    assert floor1_registry2.level == floor1.level
-    assert floor1_registry2.normalized_name == floor1.normalized_name
+    assert floor1_registry2 == floor1
 
     floor2_registry2 = registry2.async_get_floor_by_name("Second floor")
-    assert floor2_registry2.floor_id == floor2.floor_id
-    assert floor2_registry2.name == floor2.name
-    assert floor2_registry2.icon == floor2.icon
-    assert floor2_registry2.aliases == floor2.aliases
-    assert floor2_registry2.level == floor2.level
-    assert floor2_registry2.normalized_name == floor2.normalized_name
+    assert floor2_registry2 == floor2
 
 
 @pytest.mark.parametrize("load_registries", [False])
