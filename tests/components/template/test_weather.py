@@ -952,7 +952,6 @@ async def test_custom_entity_id(
     hass: HomeAssistant,
     start_ha,
 ) -> None:
-    """Test forecast service invalid when is_daytime missing in twice_daily forecast."""
-
+    """Test custom entity_id configuration."""
     state = hass.states.get("weather.super_weather")
     assert state.state == "sunny"

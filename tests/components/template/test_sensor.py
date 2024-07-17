@@ -160,7 +160,7 @@ async def test_template_legacy(hass: HomeAssistant, start_ha) -> None:
     ],
 )
 async def test_setup(hass: HomeAssistant, start_ha, entity_id) -> None:
-    """Test the setup."""
+    """Test the setup (legacy, current and current with object_id)."""
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "virtual thingy"

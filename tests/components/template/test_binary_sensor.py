@@ -132,7 +132,7 @@ async def test_setup_minimal(
     ],
 )
 async def test_setup(hass: HomeAssistant, start_ha, entity_id) -> None:
-    """Test the setup."""
+    """Test the setup (legacy, current and current with object_id)."""
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "virtual thingy"
@@ -250,9 +250,6 @@ async def test_setup_config_entry(
 async def test_setup_invalid_sensors(hass: HomeAssistant, count, start_ha) -> None:
     """Test setup with no sensors."""
     assert len(hass.states.async_entity_ids("binary_sensor")) == count
-
-
-# async def test_setup_custom_object_ids(hass: HomeAssistant, start_ha) -> None:
 
 
 @pytest.mark.parametrize("count", [1])
