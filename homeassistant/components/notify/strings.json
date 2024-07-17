@@ -44,7 +44,7 @@
     },
     "persistent_notification": {
       "name": "Send a persistent notification",
-      "description": "Sends a notification that is visible in the **Notifications** panel.",
+      "description": "Sends a notification that is visible in the notifications panel.",
       "fields": {
         "message": {
           "name": "Message",
