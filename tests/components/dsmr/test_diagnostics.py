@@ -1,4 +1,4 @@
-"""Test Hue diagnostics."""
+"""Test DSMR diagnostics."""
 
 import datetime
 from decimal import Decimal

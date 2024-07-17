@@ -1,4 +1,4 @@
-"""Diagnostics support for Internet Printing Protocol (IPP)."""
+"""Diagnostics support for DSMR."""
 
 from __future__ import annotations
 
