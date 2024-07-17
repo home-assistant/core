@@ -1792,10 +1792,7 @@ class Script:
         await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
     async def _async_get_condition(self, config):
-        if isinstance(config, template.Template):
-            config_cache_key = config.template
-        else:
-            config_cache_key = frozenset((k, str(v)) for k, v in config.items())
+        config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._config_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config)
             self._config_cache[config_cache_key] = cond
