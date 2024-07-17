@@ -5,7 +5,8 @@
         "data": {
           "device_id": "Device ID",
           "api_token": "[%key:common::config_flow::data::api_token%]"
-        }
+        },
+        "description": "Enter the Device ID or MAC address of the device to connect to and your token API key from ParemTech"
       }
     },
     "error": {
