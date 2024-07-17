@@ -30,6 +30,7 @@ class OpenBLESensorsDevice:
 DEVICE_TYPES = {
     0xC0: OpenBLESensorsDevice("PSS CFG Beacon"),
     0x55: OpenBLESensorsDevice("Soil Sensor"),
+    0x7E: OpenBLESensorsDevice("Room Sensor"),
 }
 
 MFR_ID = 0x0877
@@ -69,6 +70,15 @@ class OpenBLESensorsBluetoothDeviceData(BluetoothData):
             impedance = struct.unpack("<i", data[2:6])[0]
             self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
             self.update_predefined_sensor(SensorLibrary.IMPEDANCE__OHM, impedance)
+        elif device_type == "Room Sensor":
+            batt = data[1]
+            temp = data[2] + data[3] / 100.0
+            press = 10 * (data[4] + data[5] / 100.0)
+            humidity = data[6] + data[7] / 100.0
+            self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
+            self.update_predefined_sensor(SensorLibrary.TEMPERATURE__CELSIUS, temp)
+            self.update_predefined_sensor(SensorLibrary.PRESSURE__MBAR, press)
+            self.update_predefined_sensor(SensorLibrary.HUMIDITY__PERCENTAGE, humidity)
         else:
             batt = data[3]
             self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
