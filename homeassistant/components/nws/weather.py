@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
 import voluptuous as vol
 
@@ -42,6 +42,7 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
 from . import NWSConfigEntry, NWSData, base_unique_id, device_info
@@ -236,28 +237,14 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             return observation.get("visibility")
         return None
 
-    @overload
     def _forecast(
         self,
         nws_forecast: list[dict[str, Any]],
         mode: str,
-    ) -> list[Forecast]: ...
-
-    @overload
-    def _forecast(
-        self,
-        nws_forecast: None,
-        mode: str,
-    ) -> None: ...
-
-    def _forecast(
-        self,
-        nws_forecast: list[dict[str, Any]] | None,
-        mode: str,
-    ) -> list[Forecast] | None:
+    ) -> list[Forecast]:
         """Return forecast."""
         if nws_forecast is None:
-            return None
+            return []
         forecast: list[Forecast] = []
         for forecast_entry in nws_forecast:
             data: Forecast = {
@@ -306,28 +293,14 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             forecast.append(data)
         return forecast
 
-    @overload
-    def _forecast_extra(
-        self,
-        nws_forecast: None,
-        mode: str,
-    ) -> None: ...
-
-    @overload
-    def _forecast_extra(
-        self,
-        nws_forecast: list[dict[str, Any]],
-        mode: str,
-    ) -> list[ExtraForecast]: ...
-
     def _forecast_extra(
         self,
         nws_forecast: list[dict[str, Any]] | None,
         mode: str,
-    ) -> list[ExtraForecast] | None:
+    ) -> list[ExtraForecast]:
         """Return forecast."""
         if nws_forecast is None:
-            return None
+            return []
         forecast: list[ExtraForecast] = []
         for forecast_entry in nws_forecast:
             data: ExtraForecast = {
@@ -371,9 +344,6 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             nws_forecast = self._forecast_extra(self.nws.forecast_hourly, HOURLY)
         else:
             nws_forecast = self._forecast_extra(self.nws.forecast, DAYNIGHT)
-        if nws_forecast is None:
-            nws_forecast = []
-
         return {
-            "forecast": nws_forecast,
+            "forecast": cast(JsonValueType, nws_forecast),
         }
