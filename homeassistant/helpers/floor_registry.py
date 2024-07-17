@@ -41,8 +41,8 @@ class _FloorStoreData(TypedDict):
     icon: str | None
     level: int | None
     name: str
-    created_at: datetime
-    modified_at: datetime
+    created_at: str
+    modified_at: str
 
 
 class FloorRegistryStoreData(TypedDict):
@@ -88,7 +88,9 @@ class FloorRegistryStore(Store[FloorRegistryStoreData]):
             if old_minor_version < 2:
                 # Version 1.2 implements migration and adds created_at and modified_at
                 for floor in old_data["floors"]:
-                    floor["created_at"] = floor["modified_at"] = utc_from_timestamp(0)
+                    floor["created_at"] = floor["modified_at"] = utc_from_timestamp(
+                        0
+                    ).isoformat()
 
         return old_data  # type: ignore[return-value]
 
@@ -250,8 +252,8 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
                     name=floor["name"],
                     level=floor["level"],
                     normalized_name=normalized_name,
-                    created_at=floor["created_at"],
-                    modified_at=floor["modified_at"],
+                    created_at=datetime.fromisoformat(floor["created_at"]),
+                    modified_at=datetime.fromisoformat(floor["modified_at"]),
                 )
 
         self.floors = floors
@@ -268,8 +270,8 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
                     "icon": entry.icon,
                     "level": entry.level,
                     "name": entry.name,
-                    "created_at": entry.created_at,
-                    "modified_at": entry.modified_at,
+                    "created_at": entry.created_at.isoformat(),
+                    "modified_at": entry.modified_at.isoformat(),
                 }
                 for entry in self.floors.values()
             ]
