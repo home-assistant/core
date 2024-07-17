@@ -1,7 +1,7 @@
 """Tesla Fleet integration."""
 
 import asyncio
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 import jwt
 from tesla_fleet_api import EnergySpecific, TeslaFleetApi, VehicleSpecific
@@ -58,9 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     async def _refresh_token() -> str:
         async with refresh_lock:
             await oauth_session.async_ensure_token_valid()
-            token = oauth_session.token[CONF_ACCESS_TOKEN]
-            if TYPE_CHECKING:
-                assert isinstance(token, str)
+            token: str = oauth_session.token[CONF_ACCESS_TOKEN]
             return token
 
     # Create API connection
