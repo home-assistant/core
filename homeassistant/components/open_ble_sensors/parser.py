@@ -75,7 +75,9 @@ class OpenBLESensorsBluetoothDeviceData(BluetoothData):
             temp = data[3] + data[4] / 100.0
             press = 10 * (data[5] + data[6] / 100.0)
             humidity = data[7] + data[8] / 100.0
-            self.update_predefined_sensor(SensorLibrary.VOLTAGE__ELECTRIC_POTENTIAL_VOLT, batt / 1000.0)
+            self.update_predefined_sensor(
+                SensorLibrary.VOLTAGE__ELECTRIC_POTENTIAL_VOLT, batt / 1000.0
+            )
             self.update_predefined_sensor(SensorLibrary.TEMPERATURE__CELSIUS, temp)
             self.update_predefined_sensor(SensorLibrary.PRESSURE__MBAR, press)
             self.update_predefined_sensor(SensorLibrary.HUMIDITY__PERCENTAGE, humidity)
