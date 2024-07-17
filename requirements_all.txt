@@ -813,7 +813,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.7.1
+env-canada==0.7.2
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -989,7 +989,7 @@ goslide-api==0.5.1
 gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
-govee-ble==0.33.0
+govee-ble==0.37.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.1
@@ -1084,7 +1084,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.52
+holidays==0.53
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240710.0
@@ -1149,7 +1149,7 @@ ihcsdk==2.8.5
 imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.3
+incomfort-client==0.6.3-1
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0

@@ -744,8 +744,8 @@ build.json @home-assistant/supervisor
 /tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
-/homeassistant/components/knocki/ @joostlek @jgatto1
-/tests/components/knocki/ @joostlek @jgatto1
+/homeassistant/components/knocki/ @joostlek @jgatto1 @JakeBosh
+/tests/components/knocki/ @joostlek @jgatto1 @JakeBosh
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
@@ -885,8 +885,6 @@ build.json @home-assistant/supervisor
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus/ @janiversen
-/tests/components/modbus/ @janiversen
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
