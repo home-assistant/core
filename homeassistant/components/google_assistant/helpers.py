@@ -30,6 +30,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     start,
+    translation,
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -747,7 +748,10 @@ class GoogleEntity:
     @callback
     def async_update(self):
         """Update the entity with latest info from Home Assistant."""
-        self.state = self.hass.states.get(self.entity_id)
+        if (state := self.hass.states.get(self.entity_id)) is None:
+            return
+
+        self.state = state
 
         if self._traits is None:
             return
@@ -827,3 +831,18 @@ def async_get_entities(
         if entity := async_get_google_entity_if_supported(hass, config, state):
             entities.append(entity)
     return entities
+
+
+async def async_ensure_translations(
+    hass: HomeAssistant, config: AbstractConfig, entities: list[GoogleEntity]
+):
+    """Ensure translations are loaded for all traits."""
+    entity_registry = er.async_get(hass)
+
+    integrations = {DOMAIN}
+    for entity in entities:
+        integrations.add(entity.state.domain)
+        if entry := entity_registry.async_get(entity.state.entity_id):
+            integrations.add(entry.platform)
+    for language in config.languages:
+        await translation.async_load_integrations(hass, integrations, language)

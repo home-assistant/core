@@ -60,6 +60,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    BASE_PLATFORMS,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ALARM_ARMED_AWAY,
@@ -73,7 +74,6 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -105,16 +105,15 @@ PIN_DATA = helpers.RequestData(
 
 @pytest.fixture(autouse=True)
 async def _load_translations(hass: HomeAssistant) -> None:
-    """Override loading translations once."""
+    """Load translation needed for traits."""
 
-    for platform in Platform:
-        hass.config.top_level_components.add(platform)
-    hass.config.top_level_components.add(input_select.DOMAIN)
-    hass.config.top_level_components.add(const.DOMAIN)
+    integrations = set(BASE_PLATFORMS)
+    integrations.add(input_select.DOMAIN)
+    integrations.add(const.DOMAIN)
+
+    hass.config.top_level_components |= integrations
     for language in BASIC_CONFIG.languages:
-        await translation._async_get_translations_cache(hass).async_load(
-            language, hass.config.top_level_components
-        )
+        await translation.async_load_integrations(hass, integrations, language)
 
 
 @pytest.mark.parametrize(

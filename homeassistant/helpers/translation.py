@@ -416,11 +416,13 @@ def async_setup(hass: HomeAssistant) -> None:
     )
 
 
-async def async_load_integrations(hass: HomeAssistant, integrations: set[str]) -> None:
+async def async_load_integrations(
+    hass: HomeAssistant, integrations: set[str], language: str | None = None
+) -> None:
     """Load translations for integrations."""
-    await _async_get_translations_cache(hass).async_load(
-        hass.config.language, integrations
-    )
+    if language is None:
+        language = hass.config.language
+    await _async_get_translations_cache(hass).async_load(language, integrations)
 
 
 @callback

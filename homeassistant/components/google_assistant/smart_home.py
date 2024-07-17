@@ -22,7 +22,12 @@ from .const import (
 )
 from .data_redaction import async_redact_msg
 from .error import SmartHomeError
-from .helpers import GoogleEntity, RequestData, async_get_entities
+from .helpers import (
+    GoogleEntity,
+    RequestData,
+    async_ensure_translations,
+    async_get_entities,
+)
 
 EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
 
@@ -108,6 +113,8 @@ async def async_devices_sync_response(hass, config, agent_user_id):
     entities = async_get_entities(hass, config)
     instance_uuid = await instance_id.async_get(hass)
     devices = []
+
+    await async_ensure_translations(hass, config, entities)
 
     for entity in entities:
         if not entity.should_expose():
