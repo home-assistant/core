@@ -71,42 +71,42 @@ def aidot_light(mock_hass, mock_device, mock_user_info, mock_lan_ctrl, monkeypat
 
 
 @pytest.mark.asyncio
-async def test_turn_on_with_brightness(aidot_light)-> None:
+async def test_turn_on_with_brightness(aidot_light) -> None:
     """Test turning on the light with brightness."""
     await aidot_light.async_turn_on(brightness=128)
     aidot_light.lanCtrl.sendDevAttr.assert_called_once_with({"dim": 100})
 
 
 @pytest.mark.asyncio
-async def test_turn_on_with_color_temp(aidot_light)-> None:
+async def test_turn_on_with_color_temp(aidot_light) -> None:
     """Test turning on the light with color temperature."""
     await aidot_light.async_turn_on(color_temp_kelvin=3000)
     aidot_light.lanCtrl.sendDevAttr.assert_called_once_with({"cct": 3000})
 
 
 @pytest.mark.asyncio
-async def test_turn_on_with_rgbw(aidot_light)-> None:
+async def test_turn_on_with_rgbw(aidot_light) -> None:
     """Test turning on the light with RGBW color."""
     await aidot_light.async_turn_on(rgbw_color=(255, 255, 255, 255))
     aidot_light.lanCtrl.sendDevAttr.assert_called_once_with({"rgbw": 0xFFFFFFFF})
 
 
 @pytest.mark.asyncio
-async def test_turn_on(aidot_light)-> None:
+async def test_turn_on(aidot_light) -> None:
     """Test turning on the light."""
     await aidot_light.async_turn_on()
     aidot_light.lanCtrl.sendDevAttr.assert_called_once_with({"OnOff": 1})
 
 
 @pytest.mark.asyncio
-async def test_turn_off(aidot_light)-> None:
+async def test_turn_off(aidot_light) -> None:
     """Test turning off the light."""
     await aidot_light.async_turn_off()
     aidot_light.lanCtrl.sendDevAttr.assert_called_once_with({"OnOff": 1})
 
 
 @pytest.mark.asyncio
-async def test_turn_on_not_logged_in(aidot_light, mock_lan_ctrl)-> None:
+async def test_turn_on_not_logged_in(aidot_light, mock_lan_ctrl) -> None:
     """Test turning on the light when not logged in."""
     mock_lan_ctrl.connectAndLogin = False
     with pytest.raises(HomeAssistantError):

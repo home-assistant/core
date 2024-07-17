@@ -43,7 +43,7 @@ def mock_config_entry():
 @patch("homeassistant.components.tplink.Discover.discover")
 async def test_async_setup_entry(
     mock_discover, mock_device_registry, mock_hass, mock_config_entry
-)-> None:
+) -> None:
     """Test the async_setup_entry function of the aidot integration."""
     result = await async_setup_entry(mock_hass, mock_config_entry)
     assert result is True
@@ -57,7 +57,7 @@ async def test_async_setup_entry(
     mock_discover.broadcast_message.assert_called_once()
 
 
-async def test_cleanup_device_registry(mock_hass)-> None:
+async def test_cleanup_device_registry(mock_hass) -> None:
     """Test the cleanup_device_registry function of the aidot integration."""
     device_registry_mock = AsyncMock()
     mock_hass.data = {DOMAIN: {}}
@@ -74,7 +74,7 @@ async def test_cleanup_device_registry(mock_hass)-> None:
         device_registry_mock.async_remove_device.assert_any_call("dev_id2")
 
 
-async def test_async_unload_entry(mock_hass, mock_config_entry)-> None:
+async def test_async_unload_entry(mock_hass, mock_config_entry) -> None:
     """Test the async_unload_entry function of the aidot integration."""
     mock_hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     result = await async_unload_entry(mock_hass, mock_config_entry)

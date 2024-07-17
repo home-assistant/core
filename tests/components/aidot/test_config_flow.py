@@ -31,7 +31,7 @@ def hass():
 
 
 @pytest.mark.asyncio
-async def test_flow_user_init(mock_login_control)-> None:
+async def test_flow_user_init(mock_login_control) -> None:
     """Test the initial user step of the config flow."""
     flow = ConfigFlow()
     flow.hass = hass
@@ -56,7 +56,7 @@ async def test_flow_user_init(mock_login_control)-> None:
 
 
 @pytest.mark.asyncio
-async def test_flow_user_login_success(mock_login_control)-> None:
+async def test_flow_user_login_success(mock_login_control) -> None:
     """Test user login and house selection."""
     flow = ConfigFlow()
     flow.hass = hass
@@ -91,7 +91,7 @@ async def test_flow_user_login_success(mock_login_control)-> None:
 
 
 @pytest.mark.asyncio
-async def test_flow_user_invalid_host(mock_login_control)-> None:
+async def test_flow_user_invalid_host(mock_login_control) -> None:
     """Test handling invalid host error."""
     flow = ConfigFlow()
     flow.hass = hass
@@ -110,7 +110,7 @@ async def test_flow_user_invalid_host(mock_login_control)-> None:
 
 
 @pytest.mark.asyncio
-async def test_flow_user_cannot_connect(mock_login_control)-> None:
+async def test_flow_user_cannot_connect(mock_login_control) -> None:
     """Test handling cannot connect error."""
     flow = ConfigFlow()
     flow.hass = hass
@@ -131,7 +131,7 @@ async def test_flow_user_cannot_connect(mock_login_control)-> None:
 
 
 @pytest.mark.asyncio
-async def test_flow_choose_house(mock_login_control)-> None:
+async def test_flow_choose_house(mock_login_control) -> None:
     """Test house selection step."""
     flow = ConfigFlow()
     flow.hass = hass
