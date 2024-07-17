@@ -5,7 +5,7 @@
       'forecast': list([
         dict({
           'datetime': '2019-08-12T20:00:00-04:00',
-          'dewpoint': 4,
+          'short_description': 'A short forecast.',
         }),
       ]),
     }),
@@ -19,6 +19,7 @@
           'datetime': '2019-08-12T20:00:00-04:00',
           'detailed_description': 'A detailed forecast.',
           'is_daytime': False,
+          'short_description': 'A short forecast.',
         }),
       ]),
     }),

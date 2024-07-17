@@ -47,7 +47,7 @@ from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConver
 from . import NWSConfigEntry, NWSData, base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
-    ATTR_FORECAST_DEWPOINT,
+    ATTR_FORECAST_SHORT_DESCRIPTION,
     ATTRIBUTION,
     CONDITION_CLASSES,
     DAYNIGHT,
@@ -120,7 +120,7 @@ class ExtraForecast(TypedDict, total=False):
     is_daytime: bool | None
     # extra attributes
     detailed_description: str | None
-    dewpoint: float | None
+    short_description: float | None
 
 
 def _calculate_unique_id(entry_data: MappingProxyType[str, Any], mode: str) -> str:
@@ -340,8 +340,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
                     "detailedForecast"
                 )
 
-            elif mode == HOURLY:
-                data[ATTR_FORECAST_DEWPOINT] = forecast_entry.get("dewpoint")
+            data[ATTR_FORECAST_SHORT_DESCRIPTION] = forecast_entry.get("shortForecast")
             forecast.append(data)
         return forecast
 
