@@ -50,6 +50,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    ScriptRunResult,
     script_stack_cv,
 )
 from homeassistant.helpers.service import async_set_service_schema
@@ -82,7 +83,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
@@ -498,8 +499,16 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
     icon = None
     _attr_should_poll = False
+    _attr_unique_id: str
 
-    def __init__(self, hass, key, cfg, raw_config, blueprint_inputs):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        key: str,
+        cfg: ConfigType,
+        raw_config: ConfigType | None,
+        blueprint_inputs: ConfigType | None,
+    ) -> None:
         """Initialize the script."""
         self.icon = cfg.get(CONF_ICON)
         self.description = cfg[CONF_DESCRIPTION]
@@ -529,7 +538,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._attr_name = self.script.name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         script = self.script
         attrs = {
@@ -544,7 +553,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return attrs
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if script is on."""
         return self.script.is_running
 
@@ -564,11 +573,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return self.script.referenced_areas
 
     @property
-    def referenced_blueprint(self):
+    def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
             return None
-        return self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
+        path: str = self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
+        return path
 
     @cached_property
     def referenced_devices(self) -> set[str]:
@@ -581,24 +591,24 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return self.script.referenced_entities
 
     @callback
-    def async_change_listener(self):
+    def async_change_listener(self) -> None:
         """Update state."""
         self.async_write_ha_state()
         self._changed.set()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Run the script.
 
         Depending on the script's run mode, this may do nothing, restart the script or
         fire an additional parallel run.
         """
-        variables = kwargs.get("variables")
-        context = kwargs.get("context")
-        wait = kwargs.get("wait", True)
+        variables: dict[str, Any] | None = kwargs.get("variables")
+        context: Context = kwargs["context"]
+        wait: bool = kwargs.get("wait", True)
         await self._async_start_run(variables, context, wait)
 
     async def _async_start_run(
-        self, variables: dict, context: Context, wait: bool
+        self, variables: dict[str, Any] | None, context: Context, wait: bool
     ) -> ServiceResponse:
         """Start the run of a script."""
         self.async_set_context(context)
@@ -633,10 +643,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         await self._changed.wait()
         return None
 
-    async def _async_run(self, variables, context):
+    async def _async_run(
+        self, variables: dict[str, Any] | None, context: Context
+    ) -> ScriptRunResult | None:
         with trace_script(
             self.hass,
-            self.unique_id,
+            self._attr_unique_id,
             self.raw_config,
             self._blueprint_inputs,
             context,
@@ -651,7 +663,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
                 script_vars = {"this": this, **(variables or {})}
                 return await self.script.async_run(script_vars, context)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop running the script.
 
         If multiple runs are in progress, all will be stopped.
@@ -696,12 +708,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         ):
             self.script.last_triggered = parse_datetime(last_triggered)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Stop script and remove service when it will be removed from HA."""
         await self.script.async_stop()
 
         # remove service
-        self.hass.services.async_remove(DOMAIN, self.unique_id)
+        self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})
