@@ -1955,21 +1955,13 @@ class ModesTrait(_Trait):
 
         return features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
-    def _attr_is_state(self, attr_name: str) -> bool:
-        return attr_name is ATTR_STATE
-
     def _generate(self, attr: str, settings: list[str]):
         """Generate a list of modes."""
-
-        attr_name: str | UndefinedType = attr
-        if attr is ATTR_STATE:
-            attr_name = UNDEFINED
-
         return {
             "name": attr,
             "name_values": [
                 {"name_synonym": synonyms, "lang": language}
-                for language, synonyms in self._synonyms(attr=attr_name).items()
+                for language, synonyms in self._synonyms(attr=attr).items()
             ],
             "settings": [
                 {
@@ -1977,7 +1969,7 @@ class ModesTrait(_Trait):
                     "setting_values": [
                         {"setting_synonym": synonyms, "lang": language}
                         for language, synonyms in self._synonyms(
-                            value=setting, attr=attr_name
+                            value=setting, attr=attr
                         ).items()
                     ],
                 }

@@ -12,6 +12,7 @@ import string
 from typing import Any
 
 from homeassistant.const import (
+    ATTR_STATE,
     EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -527,9 +528,10 @@ def async_translation_suffix(
     value: str | UndefinedType = UNDEFINED,
 ) -> str:
     """Construct a translation suffix."""
-    if attribute is UNDEFINED and value is UNDEFINED:
+    attribute_undef = attribute is UNDEFINED or attribute == ATTR_STATE
+    if attribute_undef and value is UNDEFINED:
         return "name"
-    if attribute is UNDEFINED:
+    if attribute_undef:
         return f"state.{value}"
     if value is UNDEFINED:
         return f"state_attributes.{attribute}.name"
