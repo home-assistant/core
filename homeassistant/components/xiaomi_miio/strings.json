@@ -93,6 +93,18 @@
           "high": "High"
         }
       }
+    },
+    "fan": {
+      "generic_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "nature": "Nature",
+              "normal": "Normal"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

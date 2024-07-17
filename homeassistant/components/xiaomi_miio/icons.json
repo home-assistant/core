@@ -1,4 +1,18 @@
 {
+  "entity": {
+    "fan": {
+      "generic_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "nature": "mdi:leaf",
+              "normal": "mdi:weather-windy"
+            }
+          }
+        }
+      }
+    }
+  },
   "services": {
     "fan_reset_filter": "mdi:refresh",
     "fan_set_extra_features": "mdi:cog",
