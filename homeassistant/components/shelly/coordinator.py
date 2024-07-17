@@ -668,6 +668,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is RpcUpdateType.ONLINE:
+            if self.device.connected:
+                LOGGER.debug("Device %s already connected", self.name)
+                return
             self.entry.async_create_background_task(
                 self.hass,
                 self._async_device_connect_task(),
