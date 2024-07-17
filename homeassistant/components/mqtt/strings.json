@@ -14,7 +14,7 @@
     },
     "payload_template_deprecation": {
       "title": "Deprecated option used in mqtt publish action call",
-      "description": "Deprecated `payload_template` option used in MQTT publish action call to topic `{topic}` from payload template `{payload_template}`. Use the `payload` option instead. In automations templates are supported nativly. Update the automation or script to use the `topic` option instead and restart Home Assistant to fix this issue."
+      "description": "Deprecated `payload_template` option used in MQTT publish action call to topic `{topic}` from payload template `{payload_template}`. Use the `payload` option instead. In automations templates are supported nativly. Update the automation or script to use the `payload` option instead and restart Home Assistant to fix this issue."
     },
     "topic_template_deprecation": {
       "title": "Deprecated option used in mqtt publish action call",
