@@ -185,6 +185,6 @@ async def init_integration(
     """Initialize the System Bridge integration."""
     assert await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     return mock_config_entry
