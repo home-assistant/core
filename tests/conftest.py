@@ -1465,7 +1465,7 @@ async def async_test_recorder(
     legacy_event_id_foreign_key_exists = (
         migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
         if enable_migrate_event_ids
-        else None
+        else lambda _: None
     )
     with (
         patch(
