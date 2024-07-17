@@ -108,13 +108,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             != config.get(CONF_CONNECTION_TYPE)
         ):
             updates.pop(CONF_CREDENTIALS_HASH, None)
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug(
-                    "Connection type changed for %s from %s to: %s",
-                    host,
-                    entry_config_dict.get(CONF_CONNECTION_TYPE),
-                    config.get(CONF_CONNECTION_TYPE),
-                )
+            _LOGGER.debug(
+                "Connection type changed for %s from %s to: %s",
+                host,
+                entry_config_dict.get(CONF_CONNECTION_TYPE),
+                config.get(CONF_CONNECTION_TYPE),
+            )
         return updates
 
     @callback
