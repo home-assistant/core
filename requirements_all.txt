@@ -2450,7 +2450,7 @@ rapt-ble==0.1.2
 raspyrfm-client==1.2.8
 
 # homeassistant.components.refoss
-refoss-ha==1.2.1
+refoss-ha==1.2.4
 
 # homeassistant.components.rainmachine
 regenmaschine==2024.03.0
@@ -2713,7 +2713,7 @@ temperusb==1.6.1
 
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.6.2
+tesla-fleet-api==0.7.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
