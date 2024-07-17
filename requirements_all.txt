@@ -989,7 +989,7 @@ goslide-api==0.5.1
 gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
-govee-ble==0.37.0
+govee-ble==0.38.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.1
@@ -2679,10 +2679,10 @@ switchbot-api==2.2.1
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.0.3
+systembridgeconnector==4.1.0
 
 # homeassistant.components.system_bridge
-systembridgemodels==4.0.4
+systembridgemodels==4.1.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.1
@@ -2713,7 +2713,7 @@ temperusb==1.6.1
 
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.6.2
+tesla-fleet-api==0.7.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
