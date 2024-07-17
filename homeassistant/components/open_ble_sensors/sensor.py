@@ -103,6 +103,15 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=Units.OHM,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    (
+        OpenBLESensorsSensorDeviceClass.VOLTAGE,
+        Units.ELECTRIC_POTENTIAL_VOLT,
+    ): SensorEntityDescription(
+        key=f"{OpenBLESensorsSensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_VOLT}",
+        device_class=OpenBLESensorsSensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=Units.ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
