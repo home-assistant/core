@@ -155,7 +155,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# Service call validation schema
+# The use of a topic_template and payload_template in an mqtt publish action call
+# have been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
+
+# Publish action call validation schema
 MQTT_PUBLISH_SCHEMA = vol.All(
     vol.Schema(
         {

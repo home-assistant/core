@@ -8,6 +8,7 @@ publish:
       selector:
         text:
     payload:
+      required: true
       example: "The temperature is {{ states('sensor.temperature') }}"
       selector:
         template:
