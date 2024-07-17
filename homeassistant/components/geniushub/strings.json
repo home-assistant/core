@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Genius Hub Configuration",
+        "title": "Genius Hub configuration",
         "menu_options": {
           "local_api": "Local: IP address and user credentials",
           "cloud_api": "Cloud: API token"
