@@ -1451,16 +1451,22 @@ async def async_test_recorder(
         else None
     )
     migrate_states_context_ids = (
-        migration.migrate_states_context_ids if enable_migrate_context_ids else None
+        migration.StatesContextIDMigration.migrate_data
+        if enable_migrate_context_ids
+        else None
     )
     migrate_events_context_ids = (
-        migration.migrate_events_context_ids if enable_migrate_context_ids else None
+        migration.EventsContextIDMigration.migrate_data
+        if enable_migrate_context_ids
+        else None
     )
     migrate_event_type_ids = (
-        migration.migrate_event_type_ids if enable_migrate_event_type_ids else None
+        migration.EventTypeIDMigration.migrate_data
+        if enable_migrate_event_type_ids
+        else None
     )
     migrate_entity_ids = (
-        migration.migrate_entity_ids if enable_migrate_entity_ids else None
+        migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
     )
     legacy_event_id_foreign_key_exists = (
         recorder.Recorder._legacy_event_id_foreign_key_exists
@@ -1484,22 +1490,22 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_events_context_ids",
+            "homeassistant.components.recorder.migration.EventsContextIDMigration.migrate_data",
             side_effect=migrate_events_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_states_context_ids",
+            "homeassistant.components.recorder.migration.StatesContextIDMigration.migrate_data",
             side_effect=migrate_states_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_event_type_ids",
+            "homeassistant.components.recorder.migration.EventTypeIDMigration.migrate_data",
             side_effect=migrate_event_type_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_entity_ids",
+            "homeassistant.components.recorder.migration.EntityIDMigration.migrate_data",
             side_effect=migrate_entity_ids,
             autospec=True,
         ),
