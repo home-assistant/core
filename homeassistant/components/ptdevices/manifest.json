@@ -1,0 +1,9 @@
+{
+  "domain": "ptdevices",
+  "name": "PTDevices",
+  "codeowners": ["@ParemTech-Inc"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ptdevices",
+  "iot_class": "cloud_polling",
+  "requirements": ["aioptdevices==2024.7.1"]
+}

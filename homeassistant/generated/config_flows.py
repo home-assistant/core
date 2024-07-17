@@ -521,6 +521,7 @@ FLOWS = {
         "prusalink",
         "ps4",
         "pterodactyl",
+        "ptdevices",
         "pure_energie",
         "purpleair",
         "pushbullet",

@@ -1,0 +1,123 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "device_id": "Device ID",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "device_id": {
+        "name": "ID"
+      },
+      "device_mac": {
+        "name": "MAC Address"
+      },
+      "device_share_id": {
+        "name": "Share ID"
+      },
+      "device_created": {
+        "name": "Creation Date"
+      },
+      "user_id": {
+        "name": "User ID"
+      },
+      "device_type": {
+        "name": "Type"
+      },
+      "device_title": {
+        "name": "Title"
+      },
+      "device_version": {
+        "name": "Receiver Firmware Version"
+      },
+      "device_loc": {
+        "name": "Location"
+      },
+      "device_addr": {
+        "name": "Installation Address"
+      },
+      "device_status": {
+        "name": "Status"
+      },
+      "device_delivery_notes": {
+        "name": "Delivery Notes"
+      },
+      "device_units": {
+        "name": "Units"
+      },
+      "device_reported": {
+        "name": "Last RX Report"
+      },
+      "tx_reported": {
+        "name": "Last TX Report"
+      },
+      "rx_updated_on": {
+        "name": "Last RX Firmware Updated"
+      },
+      "device_wifi_signal": {
+        "name": "WiFi Signal Strength"
+      },
+      "tx_signal": {
+        "name": "LoRa Siganl Strength"
+      },
+      "level_percent": {
+        "name": "Level Percent"
+      },
+      "battery_voltage": {
+        "name": "Battery Voltage"
+      },
+      "battery_status": {
+        "name": "Battery Status"
+      },
+      "level_volume": {
+        "name": "Level Volume"
+      },
+      "level_depth": {
+        "name": "Level Depth"
+      },
+      "enclosure_temp": {
+        "name": "Device Temperature"
+      },
+      "tank_depth": {
+        "name": "Tank Depth"
+      },
+      "tank_shape": {
+        "name": "Tank Shape"
+      },
+      "tank_diameter": {
+        "name": "Tank Diameter"
+      },
+      "tank_width": {
+        "name": "Tank Width"
+      },
+      "tank_length": {
+        "name": "Tank Length"
+      },
+      "power_x": {
+        "name": "Sleep Time"
+      },
+      "power_y": {
+        "name": "Max Level Change"
+      },
+      "power_z": {
+        "name": "Max Sleep Count"
+      },
+      "temp_units": {
+        "name": "Temperature Units"
+      }
+    }
+  }
+}

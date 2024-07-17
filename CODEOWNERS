@@ -1237,6 +1237,8 @@ build.json @home-assistant/supervisor
 /tests/components/ps4/ @ktnrg45
 /homeassistant/components/pterodactyl/ @elmurato
 /tests/components/pterodactyl/ @elmurato
+/homeassistant/components/ptdevices/ @ParemTech-Inc
+/tests/components/ptdevices/ @ParemTech-Inc
 /homeassistant/components/pure_energie/ @klaasnicolaas
 /tests/components/pure_energie/ @klaasnicolaas
 /homeassistant/components/purpleair/ @bachya
