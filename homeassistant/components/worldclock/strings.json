@@ -12,7 +12,7 @@
         },
         "data_description": {
           "time_zone": "Select timezone from list",
-          "time_format": "Change the time format if needed, by default is represented by hours and minutes."
+          "time_format": "Select a pre-defined format from the list or define your own format."
         }
       }
     }

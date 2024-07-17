@@ -15,6 +15,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -22,6 +23,18 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_TIME_FORMAT, DEFAULT_NAME, DEFAULT_TIME_STR_FORMAT, DOMAIN
+
+TIME_STR_OPTIONS = [
+    SelectOptionDict(
+        value=DEFAULT_TIME_STR_FORMAT, label=f"14:05 ({DEFAULT_TIME_STR_FORMAT})"
+    ),
+    SelectOptionDict(value="%I:%M %p", label="11:05 am (%I:%M %p)"),
+    SelectOptionDict(value="%Y-%m-%d %H:%M", label="2024-01-01 14:05 (%Y-%m-%d %H:%M)"),
+    SelectOptionDict(
+        value="%a, %b %d, %Y %I:%M %p",
+        label="Monday, Jan 01, 2024 11:05 am (%a, %b %d, %Y %I:%M %p)",
+    ),
+]
 
 
 async def validate_duplicate(
@@ -53,7 +66,15 @@ async def get_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 
 
 DATA_SCHEMA_OPTIONS = vol.Schema(
-    {vol.Optional(CONF_TIME_FORMAT, default=DEFAULT_TIME_STR_FORMAT): TextSelector()}
+    {
+        vol.Optional(CONF_TIME_FORMAT, default=DEFAULT_TIME_STR_FORMAT): SelectSelector(
+            SelectSelectorConfig(
+                options=TIME_STR_OPTIONS,
+                custom_value=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+    }
 )
 
 
