@@ -1,6 +1,6 @@
 """deCONZ device automation tests."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 from pytest_unordered import unordered
@@ -18,6 +18,7 @@ from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
@@ -32,10 +33,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .conftest import WebsocketDataType
 
 from tests.common import async_get_device_automations
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -43,15 +43,10 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
-async def test_get_triggers(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test triggers work."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "config": {
                     "alert": "none",
@@ -72,10 +67,15 @@ async def test_get_triggers(
                 "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test triggers work."""
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -149,15 +149,10 @@ async def test_get_triggers(
     assert triggers == unordered(expected_triggers)
 
 
-async def test_get_triggers_for_alarm_event(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test triggers work."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "config": {
                     "battery": 95,
@@ -185,10 +180,15 @@ async def test_get_triggers_for_alarm_event(
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_get_triggers_for_alarm_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test triggers work."""
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:00")}
     )
@@ -246,14 +246,10 @@ async def test_get_triggers_for_alarm_event(
     assert triggers == unordered(expected_triggers)
 
 
-async def test_get_triggers_manage_unsupported_remotes(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Verify no triggers for an unsupported remote."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "config": {
                     "alert": "none",
@@ -273,10 +269,13 @@ async def test_get_triggers_manage_unsupported_remotes(
                 "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_get_triggers_manage_unsupported_remotes(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Verify no triggers for an unsupported remote."""
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -290,17 +289,10 @@ async def test_get_triggers_manage_unsupported_remotes(
     assert triggers == unordered(expected_triggers)
 
 
-async def test_functional_device_trigger(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_deconz_websocket,
-    service_calls: list[ServiceCall],
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test proper matching and attachment of device trigger automation."""
-
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "config": {
                     "alert": "none",
@@ -321,10 +313,16 @@ async def test_functional_device_trigger(
                 "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_functional_device_trigger(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Test proper matching and attachment of device trigger automation."""
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
@@ -354,13 +352,11 @@ async def test_functional_device_trigger(
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
     event_changed_sensor = {
-        "t": "event",
-        "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": {"buttonevent": 1002},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
@@ -368,12 +364,9 @@ async def test_functional_device_trigger(
 
 
 @pytest.mark.skip(reason="Temporarily disabled until automation validation is improved")
-async def test_validate_trigger_unknown_device(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_validate_trigger_unknown_device(hass: HomeAssistant) -> None:
     """Test unknown device does not return a trigger config."""
-    await setup_deconz_integration(hass, aioclient_mock)
-
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
@@ -402,14 +395,12 @@ async def test_validate_trigger_unknown_device(
 
 async def test_validate_trigger_unsupported_device(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test unsupported device doesn't return a trigger config."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
         model="unsupported",
     )
@@ -444,14 +435,12 @@ async def test_validate_trigger_unsupported_device(
 
 async def test_validate_trigger_unsupported_trigger(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test unsupported trigger does not return a trigger config."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
         model="TRADFRI on/off switch",
     )
@@ -488,14 +477,12 @@ async def test_validate_trigger_unsupported_trigger(
 
 async def test_attach_trigger_no_matching_event(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test no matching event for device doesn't return a trigger config."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
         name="Tradfri switch",
         model="TRADFRI on/off switch",

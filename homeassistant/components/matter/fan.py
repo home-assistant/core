@@ -313,6 +313,7 @@ DISCOVERY_SCHEMAS = [
             clusters.FanControl.Attributes.RockSetting,
             clusters.FanControl.Attributes.WindSetting,
             clusters.FanControl.Attributes.AirflowDirection,
+            clusters.OnOff.Attributes.OnOff,
         ),
     ),
 ]

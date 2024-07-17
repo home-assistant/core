@@ -10,18 +10,11 @@ from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
-
-
-def get_entry_client(hass: HomeAssistant, entry: ConfigEntry) -> Client:
-    """Retrieve client associated with a config entry."""
-    client: Client = hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id]
-    return client
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 
 class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):

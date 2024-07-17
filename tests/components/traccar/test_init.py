@@ -45,7 +45,7 @@ async def traccar_client(
 
 
 @pytest.fixture(autouse=True)
-async def setup_zones(hass):
+async def setup_zones(hass: HomeAssistant) -> None:
     """Set up Zone config in HA."""
     assert await async_setup_component(
         hass,

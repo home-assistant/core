@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+from pathlib import Path
 import re
 from tempfile import TemporaryDirectory
 import threading
@@ -1714,7 +1715,7 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     assert exc.value.domain == "test_do_not"
     assert exc.value.service == "exist"
 
-    assert str(exc.value) == "Service test_do_not.exist not found"
+    assert str(exc.value) == "Action test_do_not.exist not found"
 
 
 async def test_serviceregistry_async_service_raise_exception(
@@ -1805,7 +1806,7 @@ async def test_services_call_return_response_requires_blocking(
             return_response=True,
         )
     assert str(exc.value) == (
-        "A non blocking service call with argument blocking=False "
+        "A non blocking action call with argument blocking=False "
         "can't be used together with argument return_response=True"
     )
 
@@ -1851,7 +1852,7 @@ async def test_serviceregistry_return_response_invalid(
     ("supports_response", "return_response", "expected_error"),
     [
         (SupportsResponse.NONE, True, "does not return responses"),
-        (SupportsResponse.ONLY, False, "call requires responses"),
+        (SupportsResponse.ONLY, False, "action requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
@@ -2009,8 +2010,9 @@ async def test_config_is_allowed_path() -> None:
         config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
         test_file = os.path.join(tmp_dir, "test.jpg")
-        with open(test_file, "w", encoding="utf8") as tmp_file:
-            tmp_file.write("test")
+        await asyncio.get_running_loop().run_in_executor(
+            None, Path(test_file).write_text, "test"
+        )
 
         valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
         for path in valid:
