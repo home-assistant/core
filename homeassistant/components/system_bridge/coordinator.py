@@ -79,7 +79,15 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         if not self.websocket_client.connected:
-            await self.websocket_client.connect()
+            try:
+                await self.websocket_client.connect()
+            except ConnectionErrorException as exception:
+                self.logger.warning(
+                    "[check_websocket_connected] Connection error occurred for %s: %s",
+                    self.title,
+                    exception,
+                )
+                await self.clean_disconnect()
 
     async def close_websocket(self) -> None:
         """Close WebSocket connection."""
@@ -157,24 +165,20 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
         if self.listen_task is None or not self.websocket_client.connected:
+            await self.check_websocket_connected()
+
+            self.logger.debug("Create listener task for %s", self.title)
+            self.listen_task = self.hass.async_create_background_task(
+                self._listen_for_data(),
+                name="System Bridge WebSocket Listener",
+                eager_start=False,
+            )
+            self.logger.debug("Listening for data from %s", self.title)
+
             try:
-                await self.check_websocket_connected()
-
-                self.logger.debug("Create listener task for %s", self.title)
-                self.listen_task = self.hass.async_create_background_task(
-                    self._listen_for_data(),
-                    name="System Bridge WebSocket Listener",
-                    eager_start=False,
-                )
-                self.logger.debug("Listening for data from %s", self.title)
-
                 await self.websocket_client.register_data_listener(
                     RegisterDataListener(modules=MODULES)
                 )
-                self.logger.debug("Registered data listener for %s", self.title)
-
-                self.last_update_success = True
-                self.async_update_listeners()
             except AuthenticationException as exception:
                 self.logger.error(
                     "Authentication failed at setup for %s: %s", self.title, exception
@@ -183,18 +187,17 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 raise ConfigEntryAuthFailed from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
                 self.logger.warning(
-                    "Connection error occurred for %s: %s",
+                    "[register] Connection error occurred for %s: %s",
                     self.title,
                     exception,
                 )
                 await self.clean_disconnect()
-            except TimeoutError as exception:
-                self.logger.warning(
-                    "Timed out waiting for %s: %s",
-                    self.title,
-                    exception,
-                )
-                await self.clean_disconnect()
+                return self.data
+
+            self.logger.debug("Registered data listener for %s", self.title)
+
+            self.last_update_success = True
+            self.async_update_listeners()
 
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(
