@@ -2,10 +2,11 @@
 
 from unittest.mock import patch
 
+import jwt
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.tesla_fleet.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -15,15 +16,40 @@ from tests.common import MockConfigEntry
 async def setup_platform(hass: HomeAssistant, platforms: list[Platform] | None = None):
     """Set up the Tesla Fleet platform."""
 
+    uid = "abc-123"
+    access_token = jwt.encode(
+        {
+            "sub": uid,
+            "aud": [],
+            "scp": [
+                "vehicle_device_data",
+                "vehicle_cmds",
+                "vehicle_charging_cmds",
+                "energy_device_data",
+                "energy_cmds",
+                "offline_access",
+                "openid",
+            ],
+            "ou_code": "NA",
+        },
+        key="",
+        algorithm="none",
+    )
+
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, minor_version=2, unique_id="abc-123"
+        domain=DOMAIN,
+        data={
+            CONF_TOKEN: {CONF_ACCESS_TOKEN: access_token},
+            "auth_implementation": DOMAIN,
+        },
+        unique_id=uid,
     )
     mock_entry.add_to_hass(hass)
 
     if platforms is None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
     else:
-        with patch("homeassistant.components.teslemetry.PLATFORMS", platforms):
+        with patch("homeassistant.components.tesla_fleet.PLATFORMS", platforms):
             await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
