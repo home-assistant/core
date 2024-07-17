@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
@@ -33,7 +33,7 @@ async def test_switch(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch platform entities against snapshot."""
-    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [SWITCH_DOMAIN]):
         await setup_integration(hass, config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
@@ -55,7 +55,7 @@ async def test_no_switch(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch platform entities are not created."""
-    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [SWITCH_DOMAIN]):
         await setup_integration(hass, config_entry)
     assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
 
@@ -69,11 +69,11 @@ async def test_switch_operation(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test switch platform operation."""
-    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [SWITCH_DOMAIN]):
         await setup_integration(hass, config_entry)
 
     sn = mock_envoy.data.enpower.serial_number
-    test_entity = f"{Platform.SWITCH}.enpower_{sn}_grid_enabled"
+    test_entity = f"{SWITCH_DOMAIN}.enpower_{sn}_grid_enabled"
 
     # validate envoy value is reflected in entity
     assert (entity_state := hass.states.get(test_entity))
@@ -81,7 +81,7 @@ async def test_switch_operation(
 
     # test grid status switch operation
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: test_entity},
         blocking=True,
@@ -90,7 +90,7 @@ async def test_switch_operation(
     mock_envoy.go_off_grid.reset_mock()
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: test_entity},
         blocking=True,
@@ -99,7 +99,7 @@ async def test_switch_operation(
     mock_envoy.go_on_grid.reset_mock()
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: test_entity},
         blocking=True,
