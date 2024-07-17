@@ -106,10 +106,6 @@ async def test_migrate_times(
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
         patch.multiple(
             "homeassistant.components.recorder.Recorder",
-            _migrate_events_context_ids=DEFAULT,
-            _migrate_states_context_ids=DEFAULT,
-            _migrate_event_type_ids=DEFAULT,
-            _migrate_entity_ids=DEFAULT,
             _post_migrate_entity_ids=DEFAULT,
             _cleanup_legacy_states_event_ids=DEFAULT,
         ),
@@ -262,10 +258,6 @@ async def test_migrate_can_resume_entity_id_post_migration(
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
         patch.multiple(
             "homeassistant.components.recorder.Recorder",
-            _migrate_events_context_ids=DEFAULT,
-            _migrate_states_context_ids=DEFAULT,
-            _migrate_event_type_ids=DEFAULT,
-            _migrate_entity_ids=DEFAULT,
             _post_migrate_entity_ids=DEFAULT,
             _cleanup_legacy_states_event_ids=DEFAULT,
         ),
@@ -388,10 +380,6 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
         patch.multiple(
             "homeassistant.components.recorder.Recorder",
-            _migrate_events_context_ids=DEFAULT,
-            _migrate_states_context_ids=DEFAULT,
-            _migrate_event_type_ids=DEFAULT,
-            _migrate_entity_ids=DEFAULT,
             _post_migrate_entity_ids=DEFAULT,
             _cleanup_legacy_states_event_ids=DEFAULT,
         ),
