@@ -51,7 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     scopes = token["scp"]
     region = token["ou_code"].lower()
 
-    # Setup OAuth refresh
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
     refresh_lock = asyncio.Lock()
