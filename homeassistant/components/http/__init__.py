@@ -275,17 +275,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         if (
-            hass.config.external_url is None
+            (hass.config.external_url is None or hass.config.internal_url is None)
             and ssl_certificate is not None
             and not cloud.async_is_connected(hass)
         ):
             ir.async_create_issue(
                 hass,
                 HA_DOMAIN,
-                "ssl_configured_without_external_url",
+                "ssl_configured_without_configured_urls",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
-                translation_key="ssl_configured_without_external_url",
+                translation_key="ssl_configured_without_configured_urls",
             )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
