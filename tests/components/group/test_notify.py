@@ -7,12 +7,20 @@ from unittest.mock import MagicMock, call, patch
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.components.group import SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
+from homeassistant.components.demo.notify import EVENT_NOTIFY
+from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.notify import (
+    ATTR_MESSAGE,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, get_fixture_path, mock_platform
+from tests.common import MockConfigEntry, MockPlatform, get_fixture_path, mock_platform
 
 
 class MockNotifyPlatform(MockPlatform):
@@ -217,3 +225,43 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
     assert hass.services.has_service(notify.DOMAIN, "test_service2")
     assert not hass.services.has_service(notify.DOMAIN, "group_notify")
     assert hass.services.has_service(notify.DOMAIN, "new_group_notify")
+
+
+async def test_notify_entity_group(hass: HomeAssistant) -> None:
+    """Test sending a message to a notify group."""
+    await async_setup_component(hass, "demo", {"demo": {}})
+    await hass.async_block_till_done()
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.notifier"],
+            "hide_members": True,
+        },
+        title="Test Group",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service_called = False
+
+    def _service_listener(_: Event) -> None:
+        nonlocal service_called
+        service_called = True
+
+    hass.bus.async_listen_once(EVENT_NOTIFY, _service_listener)
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Test notification",
+            ATTR_ENTITY_ID: "notify.test_group",
+        },
+        blocking=True,
+    )
+
+    assert service_called
