@@ -55,7 +55,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 6
+STORAGE_VERSION_MINOR = 7
 
 CLEANUP_DELAY = 10
 
@@ -101,6 +101,7 @@ class DeviceInfo(TypedDict, total=False):
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
+    model_id: str | None
     name: str | None
     serial_number: str | None
     suggested_area: str | None
@@ -127,6 +128,7 @@ DEVICE_INFO_TYPES = {
         "identifiers",
         "manufacturer",
         "model",
+        "model_id",
         "name",
         "serial_number",
         "suggested_area",
@@ -287,6 +289,7 @@ class DeviceEntry:
     labels: set[str] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
+    model_id: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
     primary_config_entry: str | None = attr.ib(default=None)
@@ -321,6 +324,7 @@ class DeviceEntry:
             "labels": list(self.labels),
             "manufacturer": self.manufacturer,
             "model": self.model,
+            "model_id": self.model_id,
             "name_by_user": self.name_by_user,
             "name": self.name,
             "primary_config_entry": self.primary_config_entry,
@@ -363,6 +367,7 @@ class DeviceEntry:
                     "labels": list(self.labels),
                     "manufacturer": self.manufacturer,
                     "model": self.model,
+                    "model_id": self.model_id,
                     "name_by_user": self.name_by_user,
                     "name": self.name,
                     "primary_config_entry": self.primary_config_entry,
@@ -483,6 +488,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2024.7
                 for device in old_data["devices"]:
                     device.setdefault("primary_config_entry", None)
+            if old_minor_version < 7:
+                # Introduced in 2024.8
+                for device in old_data["devices"]:
+                    device.setdefault("model_id", None)
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -689,6 +698,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         identifiers: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
+        model_id: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
@@ -735,6 +745,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 ("identifiers", identifiers),
                 ("manufacturer", manufacturer),
                 ("model", model),
+                ("model_id", model_id),
                 ("name", name),
                 ("serial_number", serial_number),
                 ("suggested_area", suggested_area),
@@ -810,6 +821,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             merge_connections=connections or UNDEFINED,
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
+            model_id=model_id,
             name=name,
             serial_number=serial_number,
             suggested_area=suggested_area,
@@ -843,6 +855,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
+        model_id: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
@@ -1004,6 +1017,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("labels", labels),
             ("manufacturer", manufacturer),
             ("model", model),
+            ("model_id", model_id),
             ("name", name),
             ("name_by_user", name_by_user),
             ("serial_number", serial_number),
@@ -1154,6 +1168,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     labels=set(device["labels"]),
                     manufacturer=device["manufacturer"],
                     model=device["model"],
+                    model_id=device["model_id"],
                     name_by_user=device["name_by_user"],
                     name=device["name"],
                     primary_config_entry=device["primary_config_entry"],
