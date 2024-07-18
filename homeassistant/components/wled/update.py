@@ -61,7 +61,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return bool(super().available and self.releases_coordinator.last_update_success)
+        return super().available and self.releases_coordinator.last_update_success
 
     @property
     def installed_version(self) -> str | None:
