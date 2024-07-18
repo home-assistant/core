@@ -309,10 +309,11 @@ class MqttClientSetup:
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
-            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+            client_id = mqtt._base62(uuid.uuid4().int, padding=22)  # type: ignore[attr-defined]
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
-            client_id,
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+            client_id=client_id,
             protocol=proto,
             transport=transport,
             reconnect_on_failure=False,
@@ -1132,13 +1133,10 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         mid: int,
-        _granted_qos_reason: tuple[int, ...] | mqtt.ReasonCodes | None = None,
-        _properties_reason: mqtt.ReasonCodes | None = None,
+        _reason: mqtt.ReasonCodes | None = None,
+        _properties: mqtt.Properties | None = None,
     ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
-        # The callback signature for on_unsubscribe is different from on_subscribe
-        # see https://github.com/eclipse/paho.mqtt.python/issues/687
-        # properties and reason codes are not used in Home Assistant
         future = self._async_get_mid_future(mid)
         if future.done() and (future.cancelled() or future.exception()):
             # Timed out or cancelled
