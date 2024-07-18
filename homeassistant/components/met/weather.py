@@ -21,7 +21,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -37,6 +36,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from . import MetWeatherConfigEntry
 from .const import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -53,11 +53,11 @@ DEFAULT_NAME = "Met.no"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MetWeatherConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator: MetDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
     name: str | None
@@ -120,7 +120,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: MetDataUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: MetWeatherConfigEntry,
         name: str,
         is_metric: bool,
     ) -> None:

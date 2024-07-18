@@ -4,12 +4,12 @@ from urllib.parse import urlencode
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AxisConfigEntry
 from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE
 from .entity import AxisEntity
 from .hub import AxisHub
@@ -17,13 +17,13 @@ from .hub import AxisHub
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AxisConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 
-    hub = AxisHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
 
     if (
         not (prop := hub.api.vapix.params.property_handler.get("0"))

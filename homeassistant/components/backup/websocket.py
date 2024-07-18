@@ -92,7 +92,7 @@ async def handle_backup_start(
 
     try:
         await manager.pre_backup_actions()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "pre_backup_actions_failed", str(err))
         return
 
@@ -114,7 +114,7 @@ async def handle_backup_end(
 
     try:
         await manager.post_backup_actions()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "post_backup_actions_failed", str(err))
         return
 

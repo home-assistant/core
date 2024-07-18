@@ -1,4 +1,4 @@
-"""Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+"""Support for WaterHeater entities of the Evohome integration."""
 
 from __future__ import annotations
 

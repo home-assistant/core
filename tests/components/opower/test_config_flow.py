@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
+def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.opower.async_setup_entry", return_value=True
@@ -26,7 +26,7 @@ def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_unload_entry() -> Generator[AsyncMock, None, None]:
+def mock_unload_entry() -> Generator[AsyncMock]:
     """Mock unloading a config entry."""
     with patch(
         "homeassistant.components.opower.async_unload_entry",
@@ -279,6 +279,7 @@ async def test_form_valid_reauth(
 ) -> None:
     """Test that we can handle a valid reauth."""
     mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    hass.config.components.add(DOMAIN)
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -328,6 +329,7 @@ async def test_form_valid_reauth_with_mfa(
         },
     )
     mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    hass.config.components.add(DOMAIN)
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 

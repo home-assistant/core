@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, MockModule, mock_integration, mock_pla
 
 
 @pytest.fixture
-def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool], None, None]:
+def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool]]:
     """Register a handler."""
     handler_conf = {"discovered": False}
 
@@ -30,7 +30,7 @@ def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool], None,
 
 
 @pytest.fixture
-def webhook_flow_conf(hass: HomeAssistant) -> Generator[None, None, None]:
+def webhook_flow_conf(hass: HomeAssistant) -> Generator[None]:
     """Register a handler."""
     with patch.dict(config_entries.HANDLERS):
         config_entry_flow.register_webhook_flow("test_single", "Test Single", {}, False)

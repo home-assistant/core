@@ -41,7 +41,7 @@
     },
     "set_central_heating_ovrd": {
       "name": "Set central heating override",
-      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a set_control_setpoint service call with a value other than 0), the gateway automatically enables the central heating override to start heating. This service can then be used to control the central heating override status. To return control of the central heating to the thermostat, call the set_control_setpoint service with temperature value 0. You will only need this if you are writing your own software thermostat.\n.",
+      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a set_control_setpoint action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the set_control_setpoint action with temperature value 0. You will only need this if you are writing your own software thermostat.\n.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -188,6 +188,24 @@
         "temperature": {
           "name": "Temperature",
           "description": "The setback temperature to configure on the gateway."
+        }
+      }
+    },
+    "send_transparent_command": {
+      "name": "Send transparent command",
+      "description": "Sends custom otgw commands (https://otgw.tclcode.com/firmware.html) through a transparent interface.",
+      "fields": {
+        "gateway_id": {
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
+        },
+        "transp_cmd": {
+          "name": "Command",
+          "description": "The command to be sent to the OpenTherm Gateway."
+        },
+        "transp_arg": {
+          "name": "Argument",
+          "description": "The argument of the command to be sent to the OpenTherm Gateway."
         }
       }
     }

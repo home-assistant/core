@@ -9,6 +9,7 @@ from accuweather.const import ENDPOINT
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
+from . import AccuWeatherConfigEntry
 from .const import DOMAIN
 
 
@@ -22,9 +23,11 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    remaining_requests = list(hass.data[DOMAIN].values())[
-        0
-    ].coordinator_observation.accuweather.requests_remaining
+    config_entry: AccuWeatherConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    remaining_requests = (
+        config_entry.runtime_data.coordinator_observation.accuweather.requests_remaining
+    )
 
     return {
         "can_reach_server": system_health.async_check_can_reach_url(hass, ENDPOINT),

@@ -8,10 +8,11 @@ from homeassistant.helpers import device_registry as dr
 
 
 async def test_sensor_device_registry(
-    hass: HomeAssistant, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_added_config_entry: ConfigEntry,
 ) -> None:
     """Test sensor is added to device registry."""
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={("schlage", "test")})
     assert device.model == "<model-name>"
     assert device.sw_version == "1.0"

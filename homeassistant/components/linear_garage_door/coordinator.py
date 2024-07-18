@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from linear_garage_door import Linear
 from linear_garage_door.errors import InvalidLoginError
@@ -18,8 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 
 @dataclass
@@ -63,7 +61,7 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
 
         return await self.execute(update_data)
 
-    async def execute(self, func: Callable[[Linear], Awaitable[_T]]) -> _T:
+    async def execute[_T](self, func: Callable[[Linear], Awaitable[_T]]) -> _T:
         """Execute an API call."""
         linear = Linear()
         try:

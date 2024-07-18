@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import axis
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
@@ -17,12 +16,15 @@ from .config import AxisConfig
 from .entity_loader import AxisEntityLoader
 from .event_source import AxisEventSource
 
+if TYPE_CHECKING:
+    from .. import AxisConfigEntry
+
 
 class AxisHub:
     """Manages a Axis device."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: axis.AxisDevice
+        self, hass: HomeAssistant, config_entry: AxisConfigEntry, api: axis.AxisDevice
     ) -> None:
         """Initialize the device."""
         self.hass = hass
@@ -36,13 +38,6 @@ class AxisHub:
         self.unique_id = format_mac(api.vapix.serial_number)
 
         self.additional_diagnostics: dict[str, Any] = {}
-
-    @callback
-    @staticmethod
-    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> AxisHub:
-        """Get Axis hub from config entry."""
-        hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
-        return hub
 
     @property
     def available(self) -> bool:
@@ -63,7 +58,7 @@ class AxisHub:
 
     @staticmethod
     async def async_new_address_callback(
-        hass: HomeAssistant, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: AxisConfigEntry
     ) -> None:
         """Handle signals of device getting new address.
 
@@ -71,7 +66,7 @@ class AxisHub:
         This is a static method because a class method (bound method),
         cannot be used with weak references.
         """
-        hub = AxisHub.get_hub(hass, config_entry)
+        hub = config_entry.runtime_data
         hub.config = AxisConfig.from_config_entry(config_entry)
         hub.event_source.config_entry = config_entry
         hub.api.config.host = hub.config.host

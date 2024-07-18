@@ -1,8 +1,10 @@
 """Provide a base class for registries that use a normalized name index."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from functools import lru_cache
-from typing import TypeVar
+
+from homeassistant.util import dt as dt_util
 
 from .registry import BaseRegistryItems
 
@@ -13,9 +15,8 @@ class NormalizedNameBaseRegistryEntry:
 
     name: str
     normalized_name: str
-
-
-_VT = TypeVar("_VT", bound=NormalizedNameBaseRegistryEntry)
+    created_at: datetime = field(default_factory=dt_util.utcnow)
+    modified_at: datetime = field(default_factory=dt_util.utcnow)
 
 
 @lru_cache(maxsize=1024)
@@ -24,7 +25,9 @@ def normalize_name(name: str) -> str:
     return name.casefold().replace(" ", "")
 
 
-class NormalizedNameBaseRegistryItems(BaseRegistryItems[_VT]):
+class NormalizedNameBaseRegistryItems[_VT: NormalizedNameBaseRegistryEntry](
+    BaseRegistryItems[_VT]
+):
     """Base container for normalized name registry items, maps key -> entry.
 
     Maintains an additional index:

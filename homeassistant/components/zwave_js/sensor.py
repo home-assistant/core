@@ -530,7 +530,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
     driver = client.driver
     assert driver is not None  # Driver is ready before platforms are loaded.
 
@@ -688,6 +688,23 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
 class ZWaveNumericSensor(ZwaveSensor):
     """Representation of a Z-Wave Numeric sensor."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo,
+        entity_description: SensorEntityDescription,
+        unit_of_measurement: str | None = None,
+    ) -> None:
+        """Initialize a ZWaveBasicSensor entity."""
+        super().__init__(
+            config_entry, driver, info, entity_description, unit_of_measurement
+        )
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            self._attr_name = self.generate_name(
+                include_value_name=True, alternate_value_name="Basic"
+            )
 
     @callback
     def on_value_update(self) -> None:

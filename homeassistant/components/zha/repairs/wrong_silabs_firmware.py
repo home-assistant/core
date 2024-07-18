@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from ..core.const import DOMAIN
+from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ async def probe_silabs_firmware_type(
 
     try:
         await flasher.probe_app_type()
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.debug("Failed to probe application type", exc_info=True)
 
     return flasher.app_type

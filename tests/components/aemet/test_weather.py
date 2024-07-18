@@ -18,7 +18,6 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -35,7 +34,7 @@ async def test_aemet_weather(
 ) -> None:
     """Test states of the weather."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 
@@ -56,10 +55,7 @@ async def test_aemet_weather(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
@@ -69,7 +65,7 @@ async def test_forecast_service(
 ) -> None:
     """Test multiple forecast."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 
@@ -109,7 +105,7 @@ async def test_forecast_subscription(
     """Test multiple forecast."""
     client = await hass_ws_client(hass)
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 

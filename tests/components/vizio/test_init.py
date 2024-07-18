@@ -43,7 +43,7 @@ async def test_tv_load_and_unload(
     assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
     assert DOMAIN in hass.data
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     entities = hass.states.async_entity_ids(Platform.MEDIA_PLAYER)
     assert len(entities) == 1
@@ -67,7 +67,7 @@ async def test_speaker_load_and_unload(
     assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
     assert DOMAIN in hass.data
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     entities = hass.states.async_entity_ids(Platform.MEDIA_PLAYER)
     assert len(entities) == 1

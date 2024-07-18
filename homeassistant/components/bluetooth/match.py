@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from fnmatch import translate
 from functools import lru_cache
 import re
-from typing import TYPE_CHECKING, Final, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Final, TypedDict
 
 from lru import LRU
 
@@ -148,10 +148,9 @@ class IntegrationMatcher:
         return matched_domains
 
 
-_T = TypeVar("_T", BluetoothMatcher, BluetoothCallbackMatcherWithCallback)
-
-
-class BluetoothMatcherIndexBase(Generic[_T]):
+class BluetoothMatcherIndexBase[
+    _T: (BluetoothMatcher, BluetoothCallbackMatcherWithCallback)
+]:
     """Bluetooth matcher base for the bluetooth integration.
 
     The indexer puts each matcher in the bucket that it is most

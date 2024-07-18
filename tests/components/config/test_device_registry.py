@@ -68,8 +68,10 @@ async def test_list_devices(
             "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
+            "model_id": None,
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
@@ -86,8 +88,10 @@ async def test_list_devices(
             "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
+            "model_id": None,
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": dev1,
@@ -117,8 +121,10 @@ async def test_list_devices(
             "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
+            "model_id": None,
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
@@ -146,7 +152,7 @@ async def test_update_device(
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
     payload_key: str,
-    payload_value: str | None | dr.DeviceEntryDisabler,
+    payload_value: str | dr.DeviceEntryDisabler | None,
 ) -> None:
     """Test update entry."""
     entry = MockConfigEntry(title=None)
@@ -278,14 +284,7 @@ async def test_remove_config_entry_from_device(
 
     # Try removing a config entry from the device, it should fail because
     # async_remove_config_entry_device returns False
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_1.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -294,14 +293,7 @@ async def test_remove_config_entry_from_device(
     can_remove = True
 
     # Remove the 1st config entry
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_1.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
 
     assert response["success"]
     assert response["result"]["config_entries"] == [entry_2.entry_id]
@@ -312,14 +304,7 @@ async def test_remove_config_entry_from_device(
     }
 
     # Remove the 2nd config entry
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert response["result"] is None
@@ -398,28 +383,14 @@ async def test_remove_config_entry_from_device_fails(
     assert device_entry.id != fake_device_id
 
     # Try removing a non existing config entry from the device
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": fake_entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, fake_entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown config entry"
 
     # Try removing a config entry which does not support removal from the device
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_1.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -428,28 +399,14 @@ async def test_remove_config_entry_from_device_fails(
     )
 
     # Try removing a config entry from a device which does not exist
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": fake_device_id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(fake_device_id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown device"
 
     # Try removing a config entry from a device which it's not connected to
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert set(response["result"]["config_entries"]) == {
@@ -457,28 +414,14 @@ async def test_remove_config_entry_from_device_fails(
         entry_3.entry_id,
     }
 
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Config entry not in device"
 
     # Try removing a config entry which can't be loaded from a device - allowed
-    await ws_client.send_json_auto_id(
-        {
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_3.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_3.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"

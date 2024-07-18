@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from aiohttp.web_exceptions import HTTPException
 from apyhiveapi import Auth, Hive
@@ -27,9 +27,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
-
-_HiveEntityT = TypeVar("_HiveEntityT", bound="HiveEntity")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +128,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-def refresh_system(
+def refresh_system[_HiveEntityT: HiveEntity, **_P](
     func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""

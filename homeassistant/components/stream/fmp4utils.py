@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 def find_box(
     mp4_bytes: bytes, target_type: bytes, box_start: int = 0
-) -> Generator[int, None, None]:
+) -> Generator[int]:
     """Find location of first box (or sub box if box_start provided) of given type."""
     if box_start == 0:
         index = 0

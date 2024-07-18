@@ -104,7 +104,7 @@ def test_run_does_not_block_forever_with_shielded_task(
             try:
                 await asyncio.sleep(2)
             except asyncio.CancelledError:
-                raise Exception
+                raise Exception  # pylint: disable=broad-exception-raised
 
         async def async_shielded(*_):
             try:
@@ -115,11 +115,11 @@ def test_run_does_not_block_forever_with_shielded_task(
         tasks.append(asyncio.ensure_future(asyncio.shield(async_shielded())))
         tasks.append(asyncio.ensure_future(asyncio.sleep(2)))
         tasks.append(asyncio.ensure_future(async_raise()))
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
         return 0
 
     with (
-        patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1),
+        patch.object(runner, "TASK_CANCELATION_TIMEOUT", 0.1),
         patch("homeassistant.bootstrap.async_setup_hass", return_value=hass),
         patch("threading._shutdown"),
         patch("homeassistant.core.HomeAssistant.async_run", _async_create_tasks),
@@ -141,11 +141,12 @@ async def test_unhandled_exception_traceback(
 
     async def _unhandled_exception():
         raised.set()
+        # pylint: disable-next=broad-exception-raised
         raise Exception("This is unhandled")
 
     try:
         hass.loop.set_debug(True)
-        task = asyncio.create_task(_unhandled_exception())
+        task = asyncio.create_task(_unhandled_exception(), name="name_of_task")
         await raised.wait()
         # Delete it without checking result to trigger unhandled exception
         del task
@@ -155,9 +156,10 @@ async def test_unhandled_exception_traceback(
     assert "Task exception was never retrieved" in caplog.text
     assert "This is unhandled" in caplog.text
     assert "_unhandled_exception" in caplog.text
+    assert "name_of_task" in caplog.text
 
 
-def test__enable_posix_spawn() -> None:
+def test_enable_posix_spawn() -> None:
     """Test that we can enable posix_spawn on musllinux."""
 
     def _mock_sys_tags_any() -> Iterator[packaging.tags.Tag]:

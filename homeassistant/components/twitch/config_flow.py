@@ -50,7 +50,7 @@ class OAuth2FlowHandler(
             self.flow_impl,
         )
 
-        client = await Twitch(
+        client = Twitch(
             app_id=implementation.client_id,
             authenticate_app=False,
         )

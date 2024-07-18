@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
 
 
-PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): cv.string,
@@ -48,7 +48,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
     except ConnectionError as ex:
         _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
         return None
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 

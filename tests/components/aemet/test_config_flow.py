@@ -71,7 +71,7 @@ async def test_form_options(
 ) -> None:
     """Test the form options."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     with patch(
         "homeassistant.components.aemet.AEMET.api_call",
@@ -112,7 +112,7 @@ async def test_form_duplicated_id(
 ) -> None:
     """Test setting up duplicated entry."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     with patch(
         "homeassistant.components.aemet.AEMET.api_call",

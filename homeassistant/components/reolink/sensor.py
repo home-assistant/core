@@ -8,14 +8,16 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from reolink_aio.api import Host
+from reolink_aio.enums import BatteryEnum
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -37,7 +39,7 @@ class ReolinkSensorEntityDescription(
 ):
     """A class that describes sensor entities for a camera channel."""
 
-    value: Callable[[Host, int], int | float]
+    value: Callable[[Host, int], StateType]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,7 +49,7 @@ class ReolinkHostSensorEntityDescription(
 ):
     """A class that describes host sensor entities."""
 
-    value: Callable[[Host], int | None]
+    value: Callable[[Host], StateType]
 
 
 SENSORS = (
@@ -59,6 +61,39 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda api, ch: api.ptz_pan_position(ch),
         supported=lambda api, ch: api.supported(ch, "ptz_position"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="battery_percent",
+        cmd_key="GetBatteryInfo",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, ch: api.battery_percentage(ch),
+        supported=lambda api, ch: api.supported(ch, "battery"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="battery_temperature",
+        cmd_key="GetBatteryInfo",
+        translation_key="battery_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda api, ch: api.battery_temperature(ch),
+        supported=lambda api, ch: api.supported(ch, "battery"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="battery_state",
+        cmd_key="GetBatteryInfo",
+        translation_key="battery_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[state.name for state in BatteryEnum],
+        value=lambda api, ch: BatteryEnum(api.battery_status(ch)).name,
+        supported=lambda api, ch: api.supported(ch, "battery"),
     ),
 )
 

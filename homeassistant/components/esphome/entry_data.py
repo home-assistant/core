@@ -38,6 +38,7 @@ from aioesphomeapi import (
     TextInfo,
     TextSensorInfo,
     TimeInfo,
+    UpdateInfo,
     UserService,
     ValveInfo,
     build_unique_id,
@@ -53,6 +54,9 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
+
+type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
+
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
 
@@ -82,6 +86,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
 }
 
@@ -244,7 +249,10 @@ class RuntimeEntryData:
                 callback_(static_info)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
+        self,
+        hass: HomeAssistant,
+        entry: ESPHomeConfigEntry,
+        platforms: set[Platform],
     ) -> None:
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
@@ -252,7 +260,11 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo], mac: str
+        self,
+        hass: HomeAssistant,
+        entry: ESPHomeConfigEntry,
+        infos: list[EntityInfo],
+        mac: str,
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -374,7 +386,7 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.
@@ -443,7 +455,7 @@ class RuntimeEntryData:
             await self.store.async_save(self._pending_storage())
 
     async def async_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
+        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
     ) -> None:
         """Handle options update."""
         if self.original_options == entry.options:

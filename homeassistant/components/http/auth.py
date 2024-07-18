@@ -4,18 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from http import HTTPStatus
 from ipaddress import ip_address
 import logging
-import os
 import secrets
 import time
 from typing import Any, Final
 
 from aiohttp import hdrs
-from aiohttp.web import Application, Request, Response, StreamResponse, middleware
-from aiohttp.web_exceptions import HTTPBadRequest
-from aiohttp_session import session_middleware
+from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
 from jwt import api_jws
 from yarl import URL
@@ -25,21 +21,13 @@ from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import singleton
 from homeassistant.helpers.http import current_request
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
-from .const import (
-    DOMAIN,
-    KEY_AUTHENTICATED,
-    KEY_HASS_REFRESH_TOKEN_ID,
-    KEY_HASS_USER,
-    StrictConnectionMode,
-)
-from .session import HomeAssistantCookieStorage
+from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,11 +39,6 @@ SAFE_QUERY_PARAMS: Final = ["height", "width"]
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
 CONTENT_USER_NAME = "Home Assistant Content"
-STRICT_CONNECTION_EXCLUDED_PATH = "/api/webhook/"
-STRICT_CONNECTION_GUARD_PAGE_NAME = "strict_connection_guard_page.html"
-STRICT_CONNECTION_GUARD_PAGE = os.path.join(
-    os.path.dirname(__file__), STRICT_CONNECTION_GUARD_PAGE_NAME
-)
 
 
 @callback
@@ -137,7 +120,6 @@ def async_user_not_allowed_do_auth(
 async def async_setup_auth(
     hass: HomeAssistant,
     app: Application,
-    strict_connection_mode_non_cloud: StrictConnectionMode,
 ) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
@@ -159,10 +141,6 @@ async def async_setup_auth(
         await store.async_save(data)
 
     hass.data[STORAGE_KEY] = refresh_token.id
-
-    if strict_connection_mode_non_cloud is StrictConnectionMode.GUARD_PAGE:
-        # Load the guard page content on setup
-        await _read_strict_connection_guard_page(hass)
 
     @callback
     def async_validate_auth_header(request: Request) -> bool:
@@ -252,37 +230,6 @@ async def async_setup_auth(
             authenticated = True
             auth_type = "signed request"
 
-        if not authenticated and not request.path.startswith(
-            STRICT_CONNECTION_EXCLUDED_PATH
-        ):
-            strict_connection_mode = strict_connection_mode_non_cloud
-            strict_connection_func = (
-                _async_perform_strict_connection_action_on_non_local
-            )
-            if is_cloud_connection(hass):
-                from homeassistant.components.cloud.util import (  # pylint: disable=import-outside-toplevel
-                    get_strict_connection_mode,
-                )
-
-                strict_connection_mode = get_strict_connection_mode(hass)
-                strict_connection_func = _async_perform_strict_connection_action
-
-            if (
-                strict_connection_mode is not StrictConnectionMode.DISABLED
-                and not await hass.auth.session.async_validate_request_for_strict_connection_session(
-                    request
-                )
-                and (
-                    resp := await strict_connection_func(
-                        hass,
-                        request,
-                        strict_connection_mode is StrictConnectionMode.GUARD_PAGE,
-                    )
-                )
-                is not None
-            ):
-                return resp
-
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
@@ -294,69 +241,4 @@ async def async_setup_auth(
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)
 
-    app.middlewares.append(session_middleware(HomeAssistantCookieStorage(hass)))
     app.middlewares.append(auth_middleware)
-
-
-async def _async_perform_strict_connection_action_on_non_local(
-    hass: HomeAssistant,
-    request: Request,
-    guard_page: bool,
-) -> StreamResponse | None:
-    """Perform strict connection mode action if the request is not local.
-
-    The function does the following:
-    - Try to get the IP address of the request. If it fails, assume it's not local
-    - If the request is local, return None (allow the request to continue)
-    - If guard_page is True, return a response with the content
-    - Otherwise close the connection and raise an exception
-    """
-    try:
-        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
-    except ValueError:
-        _LOGGER.debug("Invalid IP address: %s", request.remote)
-        ip_address_ = None
-
-    if ip_address_ and is_local(ip_address_):
-        return None
-
-    return await _async_perform_strict_connection_action(hass, request, guard_page)
-
-
-async def _async_perform_strict_connection_action(
-    hass: HomeAssistant,
-    request: Request,
-    guard_page: bool,
-) -> StreamResponse | None:
-    """Perform strict connection mode action.
-
-    The function does the following:
-    - If guard_page is True, return a response with the content
-    - Otherwise close the connection and raise an exception
-    """
-
-    _LOGGER.debug("Perform strict connection action for %s", request.remote)
-    if guard_page:
-        return Response(
-            text=await _read_strict_connection_guard_page(hass),
-            content_type="text/html",
-            status=HTTPStatus.IM_A_TEAPOT,
-        )
-
-    if transport := request.transport:
-        # it should never happen that we don't have a transport
-        transport.close()
-
-    # We need to raise an exception to stop processing the request
-    raise HTTPBadRequest
-
-
-@singleton.singleton(f"{DOMAIN}_{STRICT_CONNECTION_GUARD_PAGE_NAME}")
-async def _read_strict_connection_guard_page(hass: HomeAssistant) -> str:
-    """Read the strict connection guard page from disk via executor."""
-
-    def read_guard_page() -> str:
-        with open(STRICT_CONNECTION_GUARD_PAGE, encoding="utf-8") as file:
-            return file.read()
-
-    return await hass.async_add_executor_job(read_guard_page)

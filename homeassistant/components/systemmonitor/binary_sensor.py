@@ -17,7 +17,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -25,7 +24,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN, DOMAIN_COORDINATOR
+from . import SystemMonitorConfigEntry
+from .const import CONF_PROCESS, DOMAIN
 from .coordinator import SystemMonitorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,10 +89,12 @@ SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SystemMonitorConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up System Montor binary sensors based on a config entry."""
-    coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
+    """Set up System Monitor binary sensors based on a config entry."""
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         SystemMonitorSensor(

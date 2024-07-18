@@ -1,6 +1,7 @@
 """Tests for the Entity Registry."""
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 from unittest.mock import patch
 
@@ -29,7 +30,7 @@ from tests.common import (
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
 
-async def test_get(entity_registry: er.EntityRegistry):
+async def test_get(entity_registry: er.EntityRegistry) -> None:
     """Test we can get an item."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
 
@@ -397,13 +398,6 @@ async def test_filter_on_load(
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",  # We store the string representation
                 },
-                # This entry should have the entity_category reset to None
-                {
-                    "entity_id": "test.system_entity",
-                    "platform": "super_platform",
-                    "unique_id": "system-entity",
-                    "entity_category": "system",
-                },
             ]
         },
     }
@@ -411,13 +405,12 @@ async def test_filter_on_load(
     await er.async_load(hass)
     registry = er.async_get(hass)
 
-    assert len(registry.entities) == 5
+    assert len(registry.entities) == 4
     assert set(registry.entities.keys()) == {
         "test.disabled_hass",
         "test.disabled_user",
         "test.named",
         "test.no_name",
-        "test.system_entity",
     }
 
     entry_with_name = registry.async_get_or_create(
@@ -440,11 +433,6 @@ async def test_filter_on_load(
     assert entry_disabled_hass.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
-
-    entry_system_category = registry.async_get_or_create(
-        "test", "system_entity", "system-entity"
-    )
-    assert entry_system_category.entity_category is None
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -523,7 +511,7 @@ async def test_load_bad_data(
                     "id": "00003",
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
-                    "unique_id": 234,  # Should trigger warning
+                    "unique_id": 234,  # Should not load
                 },
                 {
                     "config_entry_id": None,
@@ -548,7 +536,11 @@ async def test_load_bad_data(
 
     assert (
         "'test' from integration super_platform has a non string unique_id '123', "
-        "please create a bug report" in caplog.text
+        "please create a bug report" not in caplog.text
+    )
+    assert (
+        "'test' from integration super_platform has a non string unique_id '234', "
+        "please create a bug report" not in caplog.text
     )
     assert (
         "Entity registry entry 'test.test2' from integration super_platform could not "
@@ -628,7 +620,7 @@ async def test_removing_config_entry_id(
 
 async def test_deleted_entity_removing_config_entry_id(
     entity_registry: er.EntityRegistry,
-):
+) -> None:
     """Test that we update config entry id in registry on deleted entity."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
 
@@ -1536,9 +1528,7 @@ def test_entity_registry_items() -> None:
     assert entities.get_entry(entry2.id) is None
 
 
-async def test_disabled_by_str_not_allowed(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_disabled_by_str_not_allowed(entity_registry: er.EntityRegistry) -> None:
     """Test we need to pass disabled by type."""
     with pytest.raises(ValueError):
         entity_registry.async_get_or_create(
@@ -1553,7 +1543,7 @@ async def test_disabled_by_str_not_allowed(
 
 
 async def test_entity_category_str_not_allowed(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we need to pass entity category type."""
     with pytest.raises(ValueError):
@@ -1582,9 +1572,7 @@ async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> 
         )
 
 
-async def test_unique_id_non_hashable(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_unique_id_non_hashable(entity_registry: er.EntityRegistry) -> None:
     """Test unique_id which is not hashable."""
     with pytest.raises(TypeError):
         entity_registry.async_get_or_create("light", "hue", ["not", "valid"])
@@ -1595,9 +1583,7 @@ async def test_unique_id_non_hashable(
 
 
 async def test_unique_id_non_string(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unique_id which is not a string."""
     entity_registry.async_get_or_create("light", "hue", 1234)
@@ -1691,7 +1677,7 @@ async def test_restore_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-):
+) -> None:
     """Make sure entity registry id is stable and entity_id is reused if possible."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
@@ -1785,7 +1771,7 @@ async def test_restore_entity(
 
 async def test_async_migrate_entry_delete_self(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
-):
+) -> None:
     """Test async_migrate_entry."""
     config_entry1 = MockConfigEntry(domain="test1")
     config_entry2 = MockConfigEntry(domain="test2")
@@ -1820,7 +1806,7 @@ async def test_async_migrate_entry_delete_self(
 
 async def test_async_migrate_entry_delete_other(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
-):
+) -> None:
     """Test async_migrate_entry."""
     config_entry1 = MockConfigEntry(domain="test1")
     config_entry2 = MockConfigEntry(domain="test2")
@@ -1988,3 +1974,46 @@ async def test_entries_for_category(entity_registry: er.EntityRegistry) -> None:
     assert not er.async_entries_for_category(entity_registry, "", "id")
     assert not er.async_entries_for_category(entity_registry, "scope1", "unknown")
     assert not er.async_entries_for_category(entity_registry, "scope1", "")
+
+
+async def test_get_or_create_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create_from a thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls entity_registry.async_get_or_create from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            entity_registry.async_get_or_create, "light", "hue", "1234"
+        )
+
+
+async def test_async_update_entity_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls entity_registry.async_update_entity from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                entity_registry.async_update_entity,
+                entry.entity_id,
+                new_unique_id="5678",
+            )
+        )
+
+
+async def test_async_remove_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_remove from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls entity_registry.async_remove from a thread.",
+    ):
+        await hass.async_add_executor_job(entity_registry.async_remove, entry.entity_id)

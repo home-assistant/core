@@ -26,8 +26,8 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
-MessageHandler = Callable[[HomeAssistant, "ActiveConnection", dict[str, Any]], None]
-BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
+type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
+type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
 
 class ActiveConnection:
@@ -171,7 +171,7 @@ class ActiveConnection:
 
         try:
             handler(self.hass, self, payload)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Error handling binary message")
             self.binary_handlers[index] = None
 
@@ -227,7 +227,7 @@ class ActiveConnection:
                 handler(self.hass, self, msg)
             else:
                 handler(self.hass, self, schema(msg))
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             self.async_handle_exception(msg, err)
 
         self.last_id = cur_id
@@ -238,7 +238,7 @@ class ActiveConnection:
         for unsub in self.subscriptions.values():
             try:
                 unsub()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If one fails, make sure we still try the rest
                 self.logger.exception(
                     "Error unsubscribing from subscription: %s", unsub

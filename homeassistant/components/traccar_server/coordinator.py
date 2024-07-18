@@ -35,7 +35,7 @@ class TraccarServerCoordinatorDataDevice(TypedDict):
     attributes: dict[str, Any]
 
 
-TraccarServerCoordinatorData = dict[int, TraccarServerCoordinatorDataDevice]
+type TraccarServerCoordinatorData = dict[int, TraccarServerCoordinatorDataDevice]
 
 
 class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorData]):

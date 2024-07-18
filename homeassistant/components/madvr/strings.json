@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup madVR Envy",
+        "description": "Your device needs to be turned in order to add the integation. ",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your madVR Envy device.",
+          "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hdr_flag": {
+        "name": "HDR flag"
+      },
+      "outgoing_hdr_flag": {
+        "name": "Outgoing HDR flag"
+      },
+      "power_state": {
+        "name": "Power state"
+      },
+      "signal_state": {
+        "name": "Signal state"
+      }
+    }
+  }
+}

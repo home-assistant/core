@@ -21,6 +21,7 @@ homeassistant.helpers.entity_platform
 homeassistant.helpers.entity_values
 homeassistant.helpers.event
 homeassistant.helpers.reload
+homeassistant.helpers.script
 homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
@@ -48,6 +49,7 @@ homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
+homeassistant.components.airgradient.*
 homeassistant.components.airly.*
 homeassistant.components.airnow.*
 homeassistant.components.airq.*
@@ -65,7 +67,6 @@ homeassistant.components.alexa.*
 homeassistant.components.alpha_vantage.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
-homeassistant.components.ambiclimate.*
 homeassistant.components.ambient_network.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
@@ -84,6 +85,7 @@ homeassistant.components.api.*
 homeassistant.components.apple_tv.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
+homeassistant.components.apsystems.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aquostv.*
 homeassistant.components.aranet.*
@@ -96,6 +98,7 @@ homeassistant.components.assist_pipeline.*
 homeassistant.components.asterisk_cdr.*
 homeassistant.components.asterisk_mbox.*
 homeassistant.components.asuswrt.*
+homeassistant.components.autarco.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
@@ -244,6 +247,7 @@ homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
+homeassistant.components.imgw_pib.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
@@ -259,6 +263,7 @@ homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.jvc_projector.*
 homeassistant.components.kaleidescape.*
+homeassistant.components.knocki.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lacrosse.*
@@ -284,6 +289,7 @@ homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
+homeassistant.components.madvr.*
 homeassistant.components.mailbox.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*
@@ -300,6 +306,7 @@ homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
+homeassistant.components.monzo.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
@@ -338,7 +345,6 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
-homeassistant.components.poolsense.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
@@ -367,6 +373,7 @@ homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.ring.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
 homeassistant.components.rpi_power.*
@@ -378,6 +385,7 @@ homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.scrape.*
+homeassistant.components.script.*
 homeassistant.components.search.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*
@@ -426,6 +434,7 @@ homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.text.*
+homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*

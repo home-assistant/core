@@ -15,6 +15,26 @@
       "connectable": false
     },
     {
+      "local_name": "GV5121*",
+      "connectable": false
+    },
+    {
+      "local_name": "GV5122*",
+      "connectable": false
+    },
+    {
+      "local_name": "GV5123*",
+      "connectable": false
+    },
+    {
+      "local_name": "GV5125*",
+      "connectable": false
+    },
+    {
+      "local_name": "GV5126*",
+      "connectable": false
+    },
+    {
       "manufacturer_id": 1,
       "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
       "connectable": false
@@ -83,6 +103,10 @@
       "manufacturer_id": 19506,
       "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
       "connectable": false
+    },
+    {
+      "manufacturer_id": 61320,
+      "connectable": false
     }
   ],
   "codeowners": ["@bdraco", "@PierreAronnax"],
@@ -90,5 +114,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
   "iot_class": "local_push",
-  "requirements": ["govee-ble==0.31.2"]
+  "requirements": ["govee-ble==0.38.0"]
 }

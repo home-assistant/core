@@ -20,7 +20,9 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 
     return format_python_namespace(
         {"BLUETOOTH": match_list},
-        annotations={"BLUETOOTH": "list[dict[str, bool | str | int | list[int]]]"},
+        annotations={
+            "BLUETOOTH": "Final[list[dict[str, bool | str | int | list[int]]]]"
+        },
     )
 
 

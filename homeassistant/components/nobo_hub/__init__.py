@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ip=ip_address,
         discover=discover,
         synchronous=False,
-        timezone=dt_util.DEFAULT_TIME_ZONE,
+        timezone=dt_util.get_default_time_zone(),
     )
     await hub.connect()
 

@@ -129,7 +129,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.3.0
+anyio==4.4.0
 h11==0.14.0
 httpcore==1.0.5
 
@@ -155,7 +155,10 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.12
+pydantic==1.10.17
+
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -214,6 +217,14 @@ pycountry>=23.12.11
 
 # scapy<2.5.0 will not work with python3.12
 scapy>=2.5.0
+
+# tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
+# Only tuf>=4 includes a constraint to <1.0.
+# https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
+tuf>=4.0.0
+
+# https://github.com/jd/tenacity/issues/471
+tenacity!=8.4.0
 """
 
 GENERATED_MESSAGE = (

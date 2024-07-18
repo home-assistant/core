@@ -365,7 +365,7 @@ class DeviceTrackerPlatform:
 
                 hass.config.components.add(full_name)
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception(
                     "Error setting up platform %s %s", self.type, self.name
                 )

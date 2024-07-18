@@ -148,7 +148,7 @@ async def async_setup_legacy(
                     return
 
                 tts.async_register_legacy_engine(p_type, provider, p_config)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 

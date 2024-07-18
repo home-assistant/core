@@ -5,14 +5,20 @@ from unittest.mock import patch
 
 import pytest
 from syrupy import SnapshotAssertion
-from total_connect_client.exceptions import ServiceUnavailable, TotalConnectError
+from total_connect_client.exceptions import (
+    AuthenticationError,
+    ServiceUnavailable,
+    TotalConnectError,
+)
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.totalconnect import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.totalconnect.alarm_control_panel import (
     SERVICE_ALARM_ARM_AWAY_INSTANT,
     SERVICE_ALARM_ARM_HOME_INSTANT,
 )
+from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.components.totalconnect.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
@@ -566,3 +572,25 @@ async def test_other_update_failures(hass: HomeAssistant) -> None:
         await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 6
+
+
+async def test_authentication_error(hass: HomeAssistant) -> None:
+    """Test other failures seen during updates."""
+    entry = await setup_platform(hass, ALARM_DOMAIN)
+
+    with patch(TOTALCONNECT_REQUEST, side_effect=AuthenticationError):
+        await async_update_entity(hass, ENTITY_ID)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

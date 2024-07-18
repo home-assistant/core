@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -27,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirthingsDataCoordinatorType
+from . import AirthingsConfigEntry, AirthingsDataCoordinatorType
 from .const import DOMAIN
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -102,12 +101,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AirthingsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airthings sensor."""
 
-    coordinator: AirthingsDataCoordinatorType = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = [
         AirthingsHeaterEnergySensor(
             coordinator,

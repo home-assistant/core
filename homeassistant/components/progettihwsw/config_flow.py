@@ -51,7 +51,7 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
 
         relay_modes_schema = {}
         for i in range(1, int(self.s1_in["relay_count"]) + 1):
-            relay_modes_schema[vol.Required(f"relay_{str(i)}", default="bistable")] = (
+            relay_modes_schema[vol.Required(f"relay_{i!s}", default="bistable")] = (
                 vol.In(
                     {
                         "bistable": "Bistable (ON/OFF Mode)",
@@ -78,7 +78,7 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
                 user_input.update(info)

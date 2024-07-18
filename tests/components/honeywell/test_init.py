@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, create_autospec, patch
 
+from aiohttp.client_exceptions import ClientConnectionError
 import aiosomecomfort
 import pytest
 
@@ -120,11 +121,23 @@ async def test_login_error(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize(
+    "the_error",
+    [
+        aiosomecomfort.ConnectionError,
+        aiosomecomfort.device.ConnectionTimeout,
+        aiosomecomfort.device.SomeComfortError,
+        ClientConnectionError,
+    ],
+)
 async def test_connection_error(
-    hass: HomeAssistant, client: MagicMock, config_entry: MagicMock
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MagicMock,
+    the_error: Exception,
 ) -> None:
     """Test Connection errors from API."""
-    client.login.side_effect = aiosomecomfort.ConnectionError
+    client.login.side_effect = the_error
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -160,13 +173,12 @@ async def test_remove_stale_device(
         identifiers={("OtherDomain", 7654321)},
     )
 
+    config_entry.add_to_hass(hass)
     device_registry.async_update_device(
         device_entry_other.id,
         add_config_entry_id=config_entry.entry_id,
         merge_identifiers={(DOMAIN, 7654321)},
     )
-
-    config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

@@ -10,12 +10,11 @@ from typing import Any
 from adguardhome import AdGuardHome
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AdGuardData
+from . import AdGuardConfigEntry, AdGuardData
 from .const import DOMAIN
 from .entity import AdGuardHomeEntity
 
@@ -85,11 +84,11 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AdGuardConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home sensor based on a config entry."""
-    data: AdGuardData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         [AdGuardHomeSensor(data, entry, description) for description in SENSORS],
@@ -105,7 +104,7 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
     def __init__(
         self,
         data: AdGuardData,
-        entry: ConfigEntry,
+        entry: AdGuardConfigEntry,
         description: AdGuardHomeEntityDescription,
     ) -> None:
         """Initialize AdGuard Home sensor."""

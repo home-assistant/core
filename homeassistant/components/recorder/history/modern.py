@@ -738,16 +738,18 @@ def _sorted_states_to_dict(
             or split_entity_id(entity_id)[0] in NEED_ATTRIBUTE_DOMAINS
         ):
             ent_results.extend(
-                state_class(
-                    db_state,
-                    attr_cache,
-                    start_time_ts,
-                    entity_id,
-                    db_state[state_idx],
-                    db_state[last_updated_ts_idx],
-                    False,
-                )
-                for db_state in group
+                [
+                    state_class(
+                        db_state,
+                        attr_cache,
+                        start_time_ts,
+                        entity_id,
+                        db_state[state_idx],
+                        db_state[last_updated_ts_idx],
+                        False,
+                    )
+                    for db_state in group
+                ]
             )
             continue
 
@@ -782,24 +784,30 @@ def _sorted_states_to_dict(
         if compressed_state_format:
             # Compressed state format uses the timestamp directly
             ent_results.extend(
-                {
-                    attr_state: (prev_state := state),
-                    attr_time: row[last_updated_ts_idx],
-                }
-                for row in group
-                if (state := row[state_idx]) != prev_state
+                [
+                    {
+                        attr_state: (prev_state := state),
+                        attr_time: row[last_updated_ts_idx],
+                    }
+                    for row in group
+                    if (state := row[state_idx]) != prev_state
+                ]
             )
             continue
 
         # Non-compressed state format returns an ISO formatted string
         _utc_from_timestamp = dt_util.utc_from_timestamp
         ent_results.extend(
-            {
-                attr_state: (prev_state := state),
-                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
-            }
-            for row in group
-            if (state := row[state_idx]) != prev_state
+            [
+                {
+                    attr_state: (prev_state := state),
+                    attr_time: _utc_from_timestamp(
+                        row[last_updated_ts_idx]
+                    ).isoformat(),
+                }
+                for row in group
+                if (state := row[state_idx]) != prev_state
+            ]
         )
 
     if descending:

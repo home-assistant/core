@@ -50,9 +50,9 @@ def get_hardware_variant(config_entry: ConfigEntry) -> HardwareVariant:
     return HardwareVariant.from_usb_product_name(config_entry.data["product"])
 
 
-def get_zha_device_path(config_entry: ConfigEntry) -> str:
+def get_zha_device_path(config_entry: ConfigEntry) -> str | None:
     """Get the device path from a ZHA config entry."""
-    return cast(str, config_entry.data["device"]["path"])
+    return cast(str | None, config_entry.data.get("device", {}).get("path", None))
 
 
 @singleton(OTBR_ADDON_MANAGER_DATA)
@@ -94,13 +94,15 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
 
     for zha_config_entry in hass.config_entries.async_entries(ZHA_DOMAIN):
         zha_path = get_zha_device_path(zha_config_entry)
-        device_guesses[zha_path].append(
-            FirmwareGuess(
-                is_running=(zha_config_entry.state == ConfigEntryState.LOADED),
-                firmware_type=ApplicationType.EZSP,
-                source="zha",
+
+        if zha_path is not None:
+            device_guesses[zha_path].append(
+                FirmwareGuess(
+                    is_running=(zha_config_entry.state == ConfigEntryState.LOADED),
+                    firmware_type=ApplicationType.EZSP,
+                    source="zha",
+                )
             )
-        )
 
     if is_hassio(hass):
         otbr_addon_manager = get_otbr_addon_manager(hass)

@@ -10,10 +10,10 @@ DOMAIN = "teslemetry"
 LOGGER = logging.getLogger(__package__)
 
 MODELS = {
-    "model3": "Model 3",
-    "modelx": "Model X",
-    "modely": "Model Y",
-    "models": "Model S",
+    "S": "Model S",
+    "3": "Model 3",
+    "X": "Model X",
+    "Y": "Model Y",
 }
 
 
