@@ -17,7 +17,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the demo entity platform."""
-    async_add_entities([DemoNotifyEntity(unique_id="notify", device_name="Notifier")])
+    async_add_entities(
+        [
+            DemoNotifyEntity(unique_id="notify", device_name="Notifier"),
+            DemoNotifyEntity(unique_id="notify-2", device_name="Second notifier"),
+        ]
+    )
 
 
 class DemoNotifyEntity(NotifyEntity):
