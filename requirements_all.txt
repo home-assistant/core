@@ -2896,7 +2896,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.18.0
+wled==0.19.2
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9
