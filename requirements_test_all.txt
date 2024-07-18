@@ -1786,7 +1786,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.4
+python-kasa[speedups]==0.7.0.5
 
 # homeassistant.components.matter
 python-matter-server==6.2.2
@@ -2321,7 +2321,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.07.01
+yt-dlp==2024.07.16
 
 # homeassistant.components.zamg
 zamg==0.3.6
