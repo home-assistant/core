@@ -136,3 +136,29 @@ GV5121_MOTION_SERVICE_INFO_2 = BluetoothServiceInfo(
     service_uuids=[],
     source="24:4C:AB:03:E6:B8",
 )
+
+
+GV5123_OPEN_SERVICE_INFO = BluetoothServiceInfo(
+    name="GV51230B3D",
+    address="C1:37:37:32:0F:45",
+    rssi=-36,
+    manufacturer_data={
+        61320: b"=\xec\x00\x00\xdeCw\xd5^U\xf9\x91In6\xbd\xc6\x7f\x8b,'\x06t\x97"
+    },
+    service_data={},
+    service_uuids=[],
+    source="24:4C:AB:03:E6:B8",
+)
+
+
+GV5123_CLOSED_SERVICE_INFO = BluetoothServiceInfo(
+    name="GV51230B3D",
+    address="C1:37:37:32:0F:45",
+    rssi=-36,
+    manufacturer_data={
+        61320: b"=\xec\x00\x01Y\xdbk\xd9\xbe\xd7\xaf\xf7*&\xaaK\xd7-\xfa\x94W>[\xe9"
+    },
+    service_data={},
+    service_uuids=[],
+    source="24:4C:AB:03:E6:B8",
+)

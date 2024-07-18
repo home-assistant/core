@@ -17,7 +17,7 @@ from .coordinator import (
     process_service_info,
 )
 
-PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
