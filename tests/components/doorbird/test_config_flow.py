@@ -1,9 +1,10 @@
 """Test the DoorBird config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from doorbirdpy import DoorBird
 import pytest
 
 from homeassistant import config_entries
@@ -18,16 +19,12 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    VALID_CONFIG,
-    get_mock_doorbirdapi_return_values,
-    get_mock_doorbirdapi_side_effects,
-)
+from . import VALID_CONFIG, get_mock_doorbird_api
 
 from tests.common import MockConfigEntry
 
 
-async def test_user_form(hass: HomeAssistant, doorbird_api: MagicMock) -> None:
+async def test_user_form(hass: HomeAssistant, doorbird_api: DoorBird) -> None:
     """Test we get the user form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -155,7 +152,7 @@ async def test_form_zeroconf_non_ipv4_ignored(hass: HomeAssistant) -> None:
 
 
 async def test_form_zeroconf_correct_oui(
-    hass: HomeAssistant, doorbird_api: MagicMock
+    hass: HomeAssistant, doorbird_api: DoorBird
 ) -> None:
     """Test we can setup from zeroconf with the correct OUI source."""
 
@@ -213,10 +210,12 @@ async def test_form_zeroconf_correct_oui(
     ],
 )
 async def test_form_zeroconf_correct_oui_wrong_device(
-    hass: HomeAssistant, doorbell_state_side_effect
+    hass: HomeAssistant,
+    doorbird_api: DoorBird,
+    doorbell_state_side_effect: Exception | None,
 ) -> None:
     """Test we can setup from zeroconf with the correct OUI source but not a doorstation."""
-    doorbirdapi = get_mock_doorbirdapi_return_values(info={"WIFI_MAC_ADDR": "macaddr"})
+    doorbirdapi = get_mock_doorbird_api(info={"WIFI_MAC_ADDR": "macaddr"})
     type(doorbirdapi).doorbell_state = AsyncMock(side_effect=doorbell_state_side_effect)
 
     with patch(
@@ -247,7 +246,7 @@ async def test_form_user_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    doorbirdapi = get_mock_doorbirdapi_side_effects(info=OSError)
+    doorbirdapi = get_mock_doorbird_api(info_side_effect=OSError)
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
         return_value=doorbirdapi,
@@ -270,7 +269,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
     mock_error = aiohttp.ClientResponseError(
         request_info=Mock(), history=Mock(), status=401
     )
-    doorbirdapi = get_mock_doorbirdapi_side_effects(info=mock_error)
+    doorbirdapi = get_mock_doorbird_api(info_side_effect=mock_error)
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
         return_value=doorbirdapi,
@@ -332,7 +331,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     mock_error = aiohttp.ClientResponseError(
         request_info=Mock(), history=Mock(), status=401
     )
-    doorbirdapi = get_mock_doorbirdapi_side_effects(info=mock_error)
+    doorbirdapi = get_mock_doorbird_api(info_side_effect=mock_error)
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
         return_value=doorbirdapi,
@@ -348,7 +347,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
-    doorbirdapi = get_mock_doorbirdapi_return_values(info={"WIFI_MAC_ADDR": "macaddr"})
+    doorbirdapi = get_mock_doorbird_api(info={"WIFI_MAC_ADDR": "macaddr"})
     with (
         patch(
             "homeassistant.components.doorbird.config_flow.DoorBird",
