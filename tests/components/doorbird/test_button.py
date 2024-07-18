@@ -24,8 +24,7 @@ async def test_relay_button(
     )
     button_1 = hass.states.get(relay_1_entity_id)
     assert button_1.state != STATE_UNKNOWN
-    api = doorbird_entry.api
-    assert api.energize_relay.call_count == 1
+    assert doorbird_entry.api.energize_relay.call_count == 1
 
 
 async def test_ir_button(
@@ -42,8 +41,7 @@ async def test_ir_button(
     )
     ir_button = hass.states.get(ir_entity_id)
     assert ir_button.state != STATE_UNKNOWN
-    api = doorbird_entry.api
-    assert api.turn_light_on.call_count == 1
+    assert doorbird_entry.api.turn_light_on.call_count == 1
 
 
 async def test_reset_favorites_button(
@@ -60,5 +58,4 @@ async def test_reset_favorites_button(
     )
     reset_button = hass.states.get(reset_entity_id)
     assert reset_button.state != STATE_UNKNOWN
-    api = doorbird_entry.api
-    assert api.delete_favorite.call_count == 1
+    assert doorbird_entry.api.delete_favorite.call_count == 1
