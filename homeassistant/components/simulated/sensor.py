@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 from random import Random
 
@@ -55,27 +55,31 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the simulated sensor."""
-    name = config.get(CONF_NAME)
-    unit = config.get(CONF_UNIT)
-    amp = config.get(CONF_AMP)
-    mean = config.get(CONF_MEAN)
-    period = config.get(CONF_PERIOD)
-    phase = config.get(CONF_PHASE)
-    fwhm = config.get(CONF_FWHM)
-    seed = config.get(CONF_SEED)
-    relative_to_epoch = config.get(CONF_RELATIVE_TO_EPOCH)
+    name = config[CONF_NAME]
+    unit = config[CONF_UNIT]
+    amp = config[CONF_AMP]
+    mean = config[CONF_MEAN]
+    period = config[CONF_PERIOD]
+    phase = config[CONF_PHASE]
+    fwhm = config[CONF_FWHM]
+    seed = config[CONF_SEED]
+    relative_to_epoch = config[CONF_RELATIVE_TO_EPOCH]
 
-    sensor = SimulatedSensor(
-        name, unit, amp, mean, period, phase, fwhm, seed, relative_to_epoch
+    async_add_entities(
+        [
+            SimulatedSensor(
+                name, unit, amp, mean, period, phase, fwhm, seed, relative_to_epoch
+            )
+        ],
+        True,
     )
-    add_entities([sensor], True)
 
 
 class SimulatedSensor(SensorEntity):
@@ -84,11 +88,20 @@ class SimulatedSensor(SensorEntity):
     _attr_icon = "mdi:chart-line"
 
     def __init__(
-        self, name, unit, amp, mean, period, phase, fwhm, seed, relative_to_epoch
-    ):
+        self,
+        name: str,
+        unit: str,
+        amp: float,
+        mean: float,
+        period: int,
+        phase: float,
+        fwhm: float,
+        seed: int,
+        relative_to_epoch: bool,
+    ) -> None:
         """Init the class."""
-        self._name = name
-        self._unit = unit
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
         self._amp = amp
         self._mean = mean
         self._period = period
@@ -102,15 +115,23 @@ class SimulatedSensor(SensorEntity):
             else dt_util.utcnow()
         )
         self._relative_to_epoch = relative_to_epoch
-        self._state = None
+        self._attr_extra_state_attributes = {
+            "amplitude": amp,
+            "mean": mean,
+            "period": period,
+            "phase": phase,
+            "spread": fwhm,
+            "seed": seed,
+            "relative_to_epoch": relative_to_epoch,
+        }
 
-    def time_delta(self):
+    def time_delta(self) -> timedelta:
         """Return the time delta."""
         dt0 = self._start_time
         dt1 = dt_util.utcnow()
         return dt1 - dt0
 
-    def signal_calc(self):
+    def signal_calc(self) -> float:
         """Calculate the signal."""
         mean = self._mean
         amp = self._amp
@@ -119,7 +140,7 @@ class SimulatedSensor(SensorEntity):
         fwhm = self._fwhm / 2
         phase = math.radians(self._phase)
         if period == 0:
-            periodic = 0
+            periodic = 0.0
         else:
             periodic = amp * (math.sin((2 * math.pi * time_delta / period) + phase))
         noise = self._random.gauss(mu=0, sigma=fwhm)
@@ -127,32 +148,4 @@ class SimulatedSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update the sensor."""
-        self._state = self.signal_calc()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit
-
-    @property
-    def extra_state_attributes(self):
-        """Return other details about the sensor state."""
-        return {
-            "amplitude": self._amp,
-            "mean": self._mean,
-            "period": self._period,
-            "phase": self._phase,
-            "spread": self._fwhm,
-            "seed": self._seed,
-            "relative_to_epoch": self._relative_to_epoch,
-        }
+        self._attr_native_value = self.signal_calc()

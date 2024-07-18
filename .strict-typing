@@ -395,6 +395,7 @@ homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
+homeassistant.components.simulated.*
 homeassistant.components.siren.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*

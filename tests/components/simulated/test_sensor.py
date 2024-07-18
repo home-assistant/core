@@ -1,5 +1,7 @@
 """The tests for the simulated sensor."""
 
+from freezegun.api import FrozenDateTimeFactory, freeze_time
+
 from homeassistant.components.simulated.sensor import (
     CONF_AMP,
     CONF_FWHM,
@@ -22,7 +24,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_simulated_sensor_default_config(hass: HomeAssistant) -> None:
+@freeze_time("2022-02-02 01:01:01")
+async def test_simulated_sensor_default_config(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test default config."""
     config = {"sensor": {"platform": "simulated"}}
     assert await async_setup_component(hass, "sensor", config)
@@ -30,6 +36,7 @@ async def test_simulated_sensor_default_config(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.get("sensor.simulated")
+    assert state.state == "0.105"
 
     assert state.attributes.get(CONF_FRIENDLY_NAME) == DEFAULT_NAME
     assert state.attributes.get(CONF_AMP) == DEFAULT_AMP
