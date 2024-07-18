@@ -1,7 +1,6 @@
 """Test Enphase Envoy sensors."""
 
-import itertools
-from typing import Any
+from itertools import chain
 from unittest.mock import AsyncMock, patch
 
 from pyenphase.const import PHASENAMES
@@ -116,18 +115,16 @@ async def test_sensor_production_phase_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    PRODUCTION_PHASE_TARGET: list[float] = list(
-        itertools.chain(
-            *[
-                (
-                    phase_data.watts_now / 1000.0,
-                    phase_data.watt_hours_today / 1000.0,
-                    phase_data.watt_hours_last_7_days / 1000.0,
-                    phase_data.watt_hours_lifetime / 1000000.0,
-                )
-                for phase_data in mock_envoy.data.system_production_phases.values()
-            ]
-        )
+    PRODUCTION_PHASE_TARGET = chain(
+        *[
+            (
+                phase_data.watts_now / 1000.0,
+                phase_data.watt_hours_today / 1000.0,
+                phase_data.watt_hours_last_7_days / 1000.0,
+                phase_data.watt_hours_lifetime / 1000000.0,
+            )
+            for phase_data in mock_envoy.data.system_production_phases.values()
+        ]
     )
 
     for name, target in list(
@@ -206,18 +203,16 @@ async def test_sensor_consumption_phase_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    CONSUMPTION_PHASE_TARGET: list[float] = list(
-        itertools.chain(
-            *[
-                (
-                    phase_data.watts_now / 1000.0,
-                    phase_data.watt_hours_today / 1000.0,
-                    phase_data.watt_hours_last_7_days / 1000.0,
-                    phase_data.watt_hours_lifetime / 1000000.0,
-                )
-                for phase_data in mock_envoy.data.system_consumption_phases.values()
-            ]
-        )
+    CONSUMPTION_PHASE_TARGET = chain(
+        *[
+            (
+                phase_data.watts_now / 1000.0,
+                phase_data.watt_hours_today / 1000.0,
+                phase_data.watt_hours_last_7_days / 1000.0,
+                phase_data.watt_hours_lifetime / 1000000.0,
+            )
+            for phase_data in mock_envoy.data.system_consumption_phases.values()
+        ]
     )
 
     for name, target in list(
@@ -303,14 +298,11 @@ async def test_sensor_production_ct_phase_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    CT_PRODUCTION_NAMES_FLOAT_TARGET: list[int] = list(
-        itertools.chain(
-            *[
-                (len(phase_data.status_flags),)
-                for phase_data in mock_envoy.data.ctmeter_production_phases.values()
-            ]
-        )
-    )
+    CT_PRODUCTION_NAMES_FLOAT_TARGET = [
+        len(phase_data.status_flags)
+        for phase_data in mock_envoy.data.ctmeter_production_phases.values()
+    ]
+
     for name, target in list(
         zip(
             CT_PRODUCTION_NAMES_FLOAT_PHASE,
@@ -321,14 +313,10 @@ async def test_sensor_production_ct_phase_data(
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert target == float(entity_state.state)
 
-    CT_PRODUCTION_NAMES_STR_TARGET: list[str] = list(
-        itertools.chain(
-            *[
-                (phase_data.metering_status,)
-                for phase_data in mock_envoy.data.ctmeter_production_phases.values()
-            ]
-        )
-    )
+    CT_PRODUCTION_NAMES_STR_TARGET = [
+        phase_data.metering_status
+        for phase_data in mock_envoy.data.ctmeter_production_phases.values()
+    ]
 
     for name, target in list(
         zip(
@@ -432,21 +420,20 @@ async def test_sensor_consumption_ct_phase_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    CT_CONSUMPTION_NAMES_FLOAT_PHASE_TARGET: list[Any | int] = list(
-        itertools.chain(
-            *[
-                (
-                    phase_data.energy_delivered / 1000000.0,
-                    phase_data.energy_received / 1000000.0,
-                    phase_data.active_power / 1000.0,
-                    phase_data.frequency,
-                    phase_data.voltage,
-                    len(phase_data.status_flags),
-                )
-                for phase_data in mock_envoy.data.ctmeter_consumption_phases.values()
-            ]
-        )
+    CT_CONSUMPTION_NAMES_FLOAT_PHASE_TARGET = chain(
+        *[
+            (
+                phase_data.energy_delivered / 1000000.0,
+                phase_data.energy_received / 1000000.0,
+                phase_data.active_power / 1000.0,
+                phase_data.frequency,
+                phase_data.voltage,
+                len(phase_data.status_flags),
+            )
+            for phase_data in mock_envoy.data.ctmeter_consumption_phases.values()
+        ]
     )
+
     for name, target in list(
         zip(
             CT_CONSUMPTION_NAMES_FLOAT_PHASE,
@@ -457,14 +444,10 @@ async def test_sensor_consumption_ct_phase_data(
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert target == float(entity_state.state)
 
-    CT_CONSUMPTION_NAMES_STR_PHASE_TARGET: list[Any] = list(
-        itertools.chain(
-            *[
-                (phase_data.metering_status,)
-                for phase_data in mock_envoy.data.ctmeter_consumption_phases.values()
-            ]
-        )
-    )
+    CT_CONSUMPTION_NAMES_STR_PHASE_TARGET = [
+        phase_data.metering_status
+        for phase_data in mock_envoy.data.ctmeter_consumption_phases.values()
+    ]
 
     for name, target in list(
         zip(
@@ -561,20 +544,19 @@ async def test_sensor_storage_ct_phase_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    CT_STORAGE_NAMES_FLOAT_PHASE_TARGET: list[float | int] = list(
-        itertools.chain(
-            *[
-                (
-                    phase_data.energy_delivered / 1000000.0,
-                    phase_data.energy_received / 1000000.0,
-                    phase_data.active_power / 1000.0,
-                    phase_data.voltage,
-                    len(phase_data.status_flags),
-                )
-                for phase_data in mock_envoy.data.ctmeter_storage_phases.values()
-            ]
-        )
+    CT_STORAGE_NAMES_FLOAT_PHASE_TARGET = chain(
+        *[
+            (
+                phase_data.energy_delivered / 1000000.0,
+                phase_data.energy_received / 1000000.0,
+                phase_data.active_power / 1000.0,
+                phase_data.voltage,
+                len(phase_data.status_flags),
+            )
+            for phase_data in mock_envoy.data.ctmeter_storage_phases.values()
+        ]
     )
+
     for name, target in list(
         zip(
             CT_STORAGE_NAMES_FLOAT_PHASE,
@@ -585,14 +567,10 @@ async def test_sensor_storage_ct_phase_data(
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert target == float(entity_state.state)
 
-    CT_STORAGE_NAMES_STR_PHASE_TARGET: list[Any] = list(
-        itertools.chain(
-            *[
-                (phase_data.metering_status,)
-                for phase_data in mock_envoy.data.ctmeter_storage_phases.values()
-            ]
-        )
-    )
+    CT_STORAGE_NAMES_STR_PHASE_TARGET = [
+        phase_data.metering_status
+        for phase_data in mock_envoy.data.ctmeter_storage_phases.values()
+    ]
 
     for name, target in list(
         zip(
