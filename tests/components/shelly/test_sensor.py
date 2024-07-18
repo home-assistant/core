@@ -450,6 +450,7 @@ async def test_rpc_sleeping_sensor(
 ) -> None:
     """Test RPC online sleeping sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = await init_integration(hass, 2, sleep_period=1000)
 
@@ -601,6 +602,7 @@ async def test_rpc_sleeping_update_entity_service(
     await async_setup_component(hass, "homeassistant", {})
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000)
 
