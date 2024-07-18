@@ -829,6 +829,8 @@ build.json @home-assistant/supervisor
 /tests/components/lutron/ @cdheiser @wilburCForce
 /homeassistant/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
 /tests/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
+/homeassistant/components/lviv_poweroff/ @tsdaemon
+/tests/components/lviv_poweroff/ @tsdaemon
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
