@@ -19,7 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import VALID_CONFIG, get_mock_doorbird_api
+from . import VALID_CONFIG, get_mock_doorbird_api, mock_unauthorized_exception
 
 from tests.common import MockConfigEntry
 
@@ -266,9 +266,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_error = aiohttp.ClientResponseError(
-        request_info=Mock(), history=Mock(), status=401
-    )
+    mock_error = mock_unauthorized_exception()
     doorbirdapi = get_mock_doorbird_api(info_side_effect=mock_error)
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
@@ -328,9 +326,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert len(flows) == 1
     flow = flows[0]
 
-    mock_error = aiohttp.ClientResponseError(
-        request_info=Mock(), history=Mock(), status=401
-    )
+    mock_error = mock_unauthorized_exception()
     doorbirdapi = get_mock_doorbird_api(info_side_effect=mock_error)
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",

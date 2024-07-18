@@ -16,6 +16,11 @@ VALID_CONFIG = {
 }
 
 
+def mock_unauthorized_exception() -> aiohttp.ClientResponseError:
+    """Return a mock unauthorized exception."""
+    return aiohttp.ClientResponseError(request_info=Mock(), history=Mock(), status=401)
+
+
 def get_mock_doorbird_api(
     info: dict[str, Any] | None = None,
     info_side_effect: Exception | None = None,
@@ -30,8 +35,6 @@ def get_mock_doorbird_api(
     type(doorbirdapi_mock).change_favorite = AsyncMock(return_value=True)
     type(doorbirdapi_mock).schedule = AsyncMock(return_value=schedule)
     type(doorbirdapi_mock).doorbell_state = AsyncMock(
-        side_effect=aiohttp.ClientResponseError(
-            request_info=Mock(), history=Mock(), status=401
-        )
+        side_effect=mock_unauthorized_exception()
     )
     return doorbirdapi_mock
