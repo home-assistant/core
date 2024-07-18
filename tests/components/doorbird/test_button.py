@@ -17,13 +17,11 @@ async def test_relay_button(
     """Test pressing a relay button."""
     doorbird_entry = await doorbird_mocker()
     relay_1_entity_id = "button.mydoorbird_relay_1"
-    button_1 = hass.states.get(relay_1_entity_id)
-    assert button_1.state == STATE_UNKNOWN
+    assert hass.states.get(relay_1_entity_id).state == STATE_UNKNOWN
     await hass.services.async_call(
         DOMAIN, SERVICE_PRESS, {"entity_id": relay_1_entity_id}, blocking=True
     )
-    button_1 = hass.states.get(relay_1_entity_id)
-    assert button_1.state != STATE_UNKNOWN
+    assert hass.states.get(relay_1_entity_id).state != STATE_UNKNOWN
     assert doorbird_entry.api.energize_relay.call_count == 1
 
 
@@ -34,13 +32,11 @@ async def test_ir_button(
     """Test pressing the IR button."""
     doorbird_entry = await doorbird_mocker()
     ir_entity_id = "button.mydoorbird_ir"
-    ir_button = hass.states.get(ir_entity_id)
-    assert ir_button.state == STATE_UNKNOWN
+    assert hass.states.get(ir_entity_id).state == STATE_UNKNOWN
     await hass.services.async_call(
         DOMAIN, SERVICE_PRESS, {"entity_id": ir_entity_id}, blocking=True
     )
-    ir_button = hass.states.get(ir_entity_id)
-    assert ir_button.state != STATE_UNKNOWN
+    assert hass.states.get(ir_entity_id).state != STATE_UNKNOWN
     assert doorbird_entry.api.turn_light_on.call_count == 1
 
 
@@ -51,11 +47,9 @@ async def test_reset_favorites_button(
     """Test pressing the reset favorites button."""
     doorbird_entry = await doorbird_mocker()
     reset_entity_id = "button.mydoorbird_reset_favorites"
-    reset_button = hass.states.get(reset_entity_id)
-    assert reset_button.state == STATE_UNKNOWN
+    assert hass.states.get(reset_entity_id).state == STATE_UNKNOWN
     await hass.services.async_call(
         DOMAIN, SERVICE_PRESS, {"entity_id": reset_entity_id}, blocking=True
     )
-    reset_button = hass.states.get(reset_entity_id)
-    assert reset_button.state != STATE_UNKNOWN
+    assert hass.states.get(reset_entity_id).state != STATE_UNKNOWN
     assert doorbird_entry.api.delete_favorite.call_count == 1
