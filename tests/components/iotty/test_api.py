@@ -41,7 +41,7 @@ async def test_api_create_ok(
         hass, DOMAIN, local_oauth_impl
     )
 
-    _ = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
+    api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
 
 
 @patch(
@@ -54,7 +54,7 @@ async def test_api_getaccesstoken_tokennotvalid_reloadtoken(
     mock_aioclient: None,
     aiohttp_client_session: ClientSession,
 ) -> None:
-    """A new, valid token is returned if th current token is not valid."""
+    """If a request with an invalid token is made, a request for a new token is done, and the resulting token is used for future calls."""
     config_entry_oauth2_flow.async_register_implementation(
         hass, DOMAIN, local_oauth_impl
     )

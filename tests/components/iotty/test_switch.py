@@ -227,3 +227,72 @@ async def test_devices_insertion_ok(
     # Should have three devices
     assert hass.states.async_entity_ids_count() == 3
     assert hass.states.async_entity_ids() == snapshot
+
+
+async def test_api_not_ok_entities_stay_the_same_as_before(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_devices_twolightswitches,
+    mock_get_status_filled,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test case of incorrect response from iotty API on getting device status."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Should have two devices
+    assert hass.states.async_entity_ids_count() == 2
+    assert hass.states.async_entity_ids() == snapshot
+
+    mock_get_status_filled.return_value = {RESULT: "Not a valid restul"}
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should have three devices
+    assert hass.states.async_entity_ids_count() == 2
+    assert hass.states.async_entity_ids() == snapshot
+
+
+async def test_api_throws_response_entities_stay_the_same_as_before(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_devices_twolightswitches,
+    mock_get_status_filled,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test case of incorrect response from iotty API on getting device status."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Should have two devices
+    assert hass.states.async_entity_ids_count() == 2
+    assert hass.states.async_entity_ids() == snapshot
+
+    mock_get_devices_twolightswitches.return_value = test_ls_one_added
+    mock_get_status_filled.side_effect = Exception("Something went wrong")
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should have three devices
+    assert hass.states.async_entity_ids_count() == 2
+    assert hass.states.async_entity_ids() == snapshot

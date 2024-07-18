@@ -117,11 +117,6 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[IottyDataUpdateCoordinato
         self._attr_unique_id = iotty_device.device_id
 
     @property
-    def device_id(self) -> str:
-        """Get the ID of this iotty Device."""
-        return self._iotty_device.device_id
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
@@ -159,17 +154,12 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[IottyDataUpdateCoordinato
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        try:
-            device: Device = next(
-                device
-                for device in self.coordinator.data.devices
-                if device.device_id == self._iotty_device.device_id
-            )
-            if isinstance(device, LightSwitch):
-                self._iotty_device.is_on = device.is_on
-            self.async_write_ha_state()
-        except StopIteration:
-            _LOGGER.debug(
-                "Device with id [%s] is no longer handled by iotty",
-                self._iotty_device.device_id,
-            )
+
+        device: Device = next(
+            device
+            for device in self.coordinator.data.devices
+            if device.device_id == self._iotty_device.device_id
+        )
+        if isinstance(device, LightSwitch):
+            self._iotty_device.is_on = device.is_on
+        self.async_write_ha_state()
