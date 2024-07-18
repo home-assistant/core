@@ -38,18 +38,19 @@ async def async_setup_entry(
     """Set up switch(es) for KNX platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
 
-    yaml_config: list[ConfigType] | None
+    entities: list[KnxEntity] = []
     if yaml_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
-        async_add_entities(
+        entities.extend(
             KnxYamlSwitch(knx_module.xknx, entity_config)
             for entity_config in yaml_config
         )
-    ui_config: dict[str, ConfigType] | None
     if ui_config := knx_module.config_store.data["entities"].get(Platform.SWITCH):
-        async_add_entities(
+        entities.extend(
             KnxUiSwitch(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
         )
+    if entities:
+        async_add_entities(entities)
 
     @callback
     def add_new_ui_switch(unique_id: str, config: dict[str, Any]) -> None:
