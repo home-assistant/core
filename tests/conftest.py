@@ -1301,6 +1301,16 @@ def enable_migrate_entity_ids() -> bool:
 
 
 @pytest.fixture
+def enable_migrate_event_ids() -> bool:
+    """Fixture to control enabling of recorder's event id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_event_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def recorder_config() -> dict[str, Any] | None:
     """Fixture to override recorder config.
 
@@ -1416,6 +1426,7 @@ async def async_test_recorder(
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
+    enable_migrate_event_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
     """Yield context manager to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
@@ -1440,22 +1451,27 @@ async def async_test_recorder(
         else None
     )
     migrate_states_context_ids = (
-        recorder.Recorder._migrate_states_context_ids
+        migration.StatesContextIDMigration.migrate_data
         if enable_migrate_context_ids
         else None
     )
     migrate_events_context_ids = (
-        recorder.Recorder._migrate_events_context_ids
+        migration.EventsContextIDMigration.migrate_data
         if enable_migrate_context_ids
         else None
     )
     migrate_event_type_ids = (
-        recorder.Recorder._migrate_event_type_ids
+        migration.EventTypeIDMigration.migrate_data
         if enable_migrate_event_type_ids
         else None
     )
     migrate_entity_ids = (
-        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
+        migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
+    )
+    legacy_event_id_foreign_key_exists = (
+        recorder.Recorder._legacy_event_id_foreign_key_exists
+        if enable_migrate_event_ids
+        else None
     )
     with (
         patch(
@@ -1474,23 +1490,28 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+            "homeassistant.components.recorder.migration.EventsContextIDMigration.migrate_data",
             side_effect=migrate_events_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+            "homeassistant.components.recorder.migration.StatesContextIDMigration.migrate_data",
             side_effect=migrate_states_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+            "homeassistant.components.recorder.migration.EventTypeIDMigration.migrate_data",
             side_effect=migrate_event_type_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+            "homeassistant.components.recorder.migration.EntityIDMigration.migrate_data",
             side_effect=migrate_entity_ids,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._legacy_event_id_foreign_key_exists",
+            side_effect=legacy_event_id_foreign_key_exists,
             autospec=True,
         ),
         patch(

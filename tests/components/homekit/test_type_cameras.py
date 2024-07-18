@@ -31,7 +31,13 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.components.homekit.type_switches import Switch
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -132,9 +138,7 @@ def _get_failing_mock_ffmpeg():
     return ffmpeg
 
 
-async def test_camera_stream_source_configured(
-    hass: HomeAssistant, run_driver, events
-) -> None:
+async def test_camera_stream_source_configured(hass: HomeAssistant, run_driver) -> None:
     """Test a camera that can stream with a configured source."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
     await async_setup_component(
@@ -254,7 +258,7 @@ async def test_camera_stream_source_configured(
 
 
 async def test_camera_stream_source_configured_with_failing_ffmpeg(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera that can stream with a configured source with ffmpeg failing."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -310,9 +314,7 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
         await _async_stop_all_streams(hass, acc)
 
 
-async def test_camera_stream_source_found(
-    hass: HomeAssistant, run_driver, events
-) -> None:
+async def test_camera_stream_source_found(hass: HomeAssistant, run_driver) -> None:
     """Test a camera that can stream and we get the source from the entity."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
     await async_setup_component(
@@ -398,9 +400,7 @@ async def test_camera_stream_source_found(
     )
 
 
-async def test_camera_stream_source_fails(
-    hass: HomeAssistant, run_driver, events
-) -> None:
+async def test_camera_stream_source_fails(hass: HomeAssistant, run_driver) -> None:
     """Test a camera that can stream and we cannot get the source from the entity."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
     await async_setup_component(
@@ -441,7 +441,7 @@ async def test_camera_stream_source_fails(
         await _async_stop_all_streams(hass, acc)
 
 
-async def test_camera_with_no_stream(hass: HomeAssistant, run_driver, events) -> None:
+async def test_camera_with_no_stream(hass: HomeAssistant, run_driver) -> None:
     """Test a camera that cannot stream."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
     await async_setup_component(hass, camera.DOMAIN, {camera.DOMAIN: {}})
@@ -474,7 +474,7 @@ async def test_camera_with_no_stream(hass: HomeAssistant, run_driver, events) ->
 
 
 async def test_camera_stream_source_configured_and_copy_codec(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera that can stream with a configured source."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -549,7 +549,7 @@ async def test_camera_stream_source_configured_and_copy_codec(
 
 
 async def test_camera_stream_source_configured_and_override_profile_names(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera that can stream with a configured source over overridden profile names."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -625,7 +625,7 @@ async def test_camera_stream_source_configured_and_override_profile_names(
 
 
 async def test_camera_streaming_fails_after_starting_ffmpeg(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera that can stream with a configured source."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -702,7 +702,7 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(
 
 
 async def test_camera_with_linked_motion_sensor(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera with a linked motion sensor can update."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -795,9 +795,7 @@ async def test_camera_with_linked_motion_sensor(
     assert char.value is True
 
 
-async def test_camera_with_linked_motion_event(
-    hass: HomeAssistant, run_driver, events
-) -> None:
+async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) -> None:
     """Test a camera with a linked motion event entity can update."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
     await async_setup_component(
@@ -891,9 +889,57 @@ async def test_camera_with_linked_motion_event(
     await hass.async_block_till_done()
     assert char.value is False
 
+    # Ensure re-adding does not fire an event
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # But a second update does
+    broker.reset_mock()
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
+
+    # Now go unavailable
+    broker.reset_mock()
+    hass.states.async_set(
+        motion_entity_id,
+        STATE_UNAVAILABLE,
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # Going from unavailable to a state should not fire an event
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # But a another update does
+    broker.reset_mock()
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
+
 
 async def test_camera_with_a_missing_linked_motion_sensor(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera with a configured linked motion sensor that is missing."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -925,7 +971,7 @@ async def test_camera_with_a_missing_linked_motion_sensor(
 
 
 async def test_camera_with_linked_doorbell_sensor(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera with a linked doorbell sensor can update."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -1041,7 +1087,7 @@ async def test_camera_with_linked_doorbell_sensor(
 
 
 async def test_camera_with_linked_doorbell_event(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera with a linked doorbell event can update."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -1156,9 +1202,38 @@ async def test_camera_with_linked_doorbell_event(
     assert char.value is None
     assert char2.value is None
 
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        doorbell_entity_id,
+        STATE_UNAVAILABLE,
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    # Ensure re-adding does not fire an event
+    assert not broker.mock_calls
+    broker.reset_mock()
+
+    # going from unavailable to a state should not fire an event
+    hass.states.async_set(
+        doorbell_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # But a second update does
+    hass.states.async_set(
+        doorbell_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
+
 
 async def test_camera_with_a_missing_linked_doorbell_sensor(
-    hass: HomeAssistant, run_driver, events
+    hass: HomeAssistant, run_driver
 ) -> None:
     """Test a camera with a configured linked doorbell sensor that is missing."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})

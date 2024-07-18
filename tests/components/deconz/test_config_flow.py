@@ -33,7 +33,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
+from .conftest import API_KEY, BRIDGEID
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -223,11 +223,11 @@ async def test_manual_configuration_after_discovery_ResponseError(
 
 
 async def test_manual_configuration_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test that manual configuration can update existing config entry."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
@@ -267,15 +267,14 @@ async def test_manual_configuration_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
 
 
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_manual_configuration_dont_update_configuration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that _create_entry work and that bridgeid can be requested."""
-    await setup_deconz_integration(hass, aioclient_mock)
-
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
@@ -368,7 +367,10 @@ async def test_manual_configuration_timeout_get_bridge(
     ],
 )
 async def test_link_step_fails(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, raised_error, error_string
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    raised_error: Exception,
+    error_string: str,
 ) -> None:
     """Test config flow should abort if no API key was possible to retrieve."""
     aioclient_mock.get(
@@ -400,14 +402,14 @@ async def test_link_step_fails(
 
 
 async def test_reauth_flow_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Verify reauth flow can update gateway API key."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data=config_entry.data,
+        data=config_entry_setup.data,
         context={"source": SOURCE_REAUTH},
     )
 
@@ -434,7 +436,7 @@ async def test_reauth_flow_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_API_KEY] == new_api_key
+    assert config_entry_setup.data[CONF_API_KEY] == new_api_key
 
 
 async def test_flow_ssdp_discovery(
