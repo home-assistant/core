@@ -1,4 +1,4 @@
-"""Test KNX devices."""
+"""Test KNX config store."""
 
 from typing import Any
 
