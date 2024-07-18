@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 
 from homeassistant.components.button import DOMAIN, SERVICE_PRESS
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockDoorbirdEntry
@@ -19,7 +19,7 @@ async def test_relay_button(
     relay_1_entity_id = "button.mydoorbird_relay_1"
     assert hass.states.get(relay_1_entity_id).state == STATE_UNKNOWN
     await hass.services.async_call(
-        DOMAIN, SERVICE_PRESS, {"entity_id": relay_1_entity_id}, blocking=True
+        DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: relay_1_entity_id}, blocking=True
     )
     assert hass.states.get(relay_1_entity_id).state != STATE_UNKNOWN
     assert doorbird_entry.api.energize_relay.call_count == 1
@@ -34,7 +34,7 @@ async def test_ir_button(
     ir_entity_id = "button.mydoorbird_ir"
     assert hass.states.get(ir_entity_id).state == STATE_UNKNOWN
     await hass.services.async_call(
-        DOMAIN, SERVICE_PRESS, {"entity_id": ir_entity_id}, blocking=True
+        DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ir_entity_id}, blocking=True
     )
     assert hass.states.get(ir_entity_id).state != STATE_UNKNOWN
     assert doorbird_entry.api.turn_light_on.call_count == 1
@@ -49,7 +49,7 @@ async def test_reset_favorites_button(
     reset_entity_id = "button.mydoorbird_reset_favorites"
     assert hass.states.get(reset_entity_id).state == STATE_UNKNOWN
     await hass.services.async_call(
-        DOMAIN, SERVICE_PRESS, {"entity_id": reset_entity_id}, blocking=True
+        DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: reset_entity_id}, blocking=True
     )
     assert hass.states.get(reset_entity_id).state != STATE_UNKNOWN
     assert doorbird_entry.api.delete_favorite.call_count == 1
