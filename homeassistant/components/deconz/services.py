@@ -1,4 +1,4 @@
-"""deCONZ services."""
+"""deCONZ actions."""
 
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
@@ -16,54 +16,52 @@ from .config_flow import get_master_hub
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
 from .hub import DeconzHub
 
-DECONZ_SERVICES = "deconz_services"
+ACTION_FIELD = "field"
+ACTION_ENTITY = "entity"
+ACTION_DATA = "data"
 
-SERVICE_FIELD = "field"
-SERVICE_ENTITY = "entity"
-SERVICE_DATA = "data"
-
-SERVICE_CONFIGURE_DEVICE = "configure"
-SERVICE_CONFIGURE_DEVICE_SCHEMA = vol.All(
+ACTION_CONFIGURE_DEVICE = "configure"
+ACTION_CONFIGURE_DEVICE_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(SERVICE_ENTITY): cv.entity_id,
-            vol.Optional(SERVICE_FIELD): cv.matches_regex("/.*"),
-            vol.Required(SERVICE_DATA): dict,
+            vol.Optional(ACTION_ENTITY): cv.entity_id,
+            vol.Optional(ACTION_FIELD): cv.matches_regex("/.*"),
+            vol.Required(ACTION_DATA): dict,
             vol.Optional(CONF_BRIDGE_ID): str,
         }
     ),
-    cv.has_at_least_one_key(SERVICE_ENTITY, SERVICE_FIELD),
+    cv.has_at_least_one_key(ACTION_ENTITY, ACTION_FIELD),
 )
 
-SERVICE_DEVICE_REFRESH = "device_refresh"
-SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
+ACTION_DEVICE_REFRESH = "device_refresh"
+ACTION_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
 SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
-SUPPORTED_SERVICES = (
-    SERVICE_CONFIGURE_DEVICE,
-    SERVICE_DEVICE_REFRESH,
-    SERVICE_REMOVE_ORPHANED_ENTRIES,
+SUPPORTED_ACTIONS = (
+    ACTION_CONFIGURE_DEVICE,
+    ACTION_DEVICE_REFRESH,
+    ACTION_REMOVE_ORPHANED_ENTRIES,
 )
 
-SERVICE_TO_SCHEMA = {
-    SERVICE_CONFIGURE_DEVICE: SERVICE_CONFIGURE_DEVICE_SCHEMA,
-    SERVICE_DEVICE_REFRESH: SELECT_GATEWAY_SCHEMA,
-    SERVICE_REMOVE_ORPHANED_ENTRIES: SELECT_GATEWAY_SCHEMA,
+ACTION_TO_SCHEMA = {
+    ACTION_CONFIGURE_DEVICE: ACTION_CONFIGURE_DEVICE_SCHEMA,
+    ACTION_DEVICE_REFRESH: SELECT_GATEWAY_SCHEMA,
+    ACTION_REMOVE_ORPHANED_ENTRIES: SELECT_GATEWAY_SCHEMA,
 }
 
 
 @callback
-def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for deCONZ integration."""
+def async_setup_actions(hass: HomeAssistant) -> None:
+    """Set up actions for deCONZ integration."""
 
-    async def async_call_deconz_service(service_call: ServiceCall) -> None:
-        """Call correct deCONZ service."""
-        service = service_call.service
-        service_data = service_call.data
+    async def async_call_deconz_action(service_call: ServiceCall) -> None:
+        """Call correct deCONZ action."""
+        action = service_call.service
+        action_data = service_call.data
 
-        if CONF_BRIDGE_ID in service_data:
+        if CONF_BRIDGE_ID in action_data:
             found_hub = False
-            bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
+            bridge_id = normalize_bridge_id(action_data[CONF_BRIDGE_ID])
 
             for possible_hub in hass.data[DOMAIN].values():
                 if possible_hub.bridgeid == bridge_id:
@@ -81,25 +79,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 LOGGER.error("No master gateway available")
                 return
 
-        if service == SERVICE_CONFIGURE_DEVICE:
-            await async_configure_service(hub, service_data)
+        if action == ACTION_CONFIGURE_DEVICE:
+            await async_configure_action(hub, action_data)
 
-        elif service == SERVICE_DEVICE_REFRESH:
-            await async_refresh_devices_service(hub)
+        elif action == ACTION_DEVICE_REFRESH:
+            await async_refresh_devices_action(hub)
 
-        elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
-            await async_remove_orphaned_entries_service(hub)
+        elif action == ACTION_REMOVE_ORPHANED_ENTRIES:
+            await async_remove_orphaned_entries_action(hub)
 
-    for service in SUPPORTED_SERVICES:
+    for action in SUPPORTED_ACTIONS:
         hass.services.async_register(
             DOMAIN,
-            service,
-            async_call_deconz_service,
-            schema=SERVICE_TO_SCHEMA[service],
+            action,
+            async_call_deconz_action,
+            schema=ACTION_TO_SCHEMA[action],
         )
 
 
-async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
+async def async_configure_action(hub: DeconzHub, data: ReadOnlyDict) -> None:
     """Set attribute of device in deCONZ.
 
     Entity is used to resolve to a device path (e.g. '/lights/1').
@@ -115,9 +113,9 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
     See Dresden Elektroniks REST API documentation for details:
     http://dresden-elektronik.github.io/deconz-rest-doc/rest/
     """
-    field = data.get(SERVICE_FIELD, "")
-    entity_id = data.get(SERVICE_ENTITY)
-    data = data[SERVICE_DATA]
+    field = data.get(ACTION_FIELD, "")
+    entity_id = data.get(ACTION_ENTITY)
+    data = data[ACTION_DATA]
 
     if entity_id:
         try:
@@ -129,7 +127,7 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
     await hub.api.request("put", field, json=data)
 
 
-async def async_refresh_devices_service(hub: DeconzHub) -> None:
+async def async_refresh_devices_action(hub: DeconzHub) -> None:
     """Refresh available devices from deCONZ."""
     hub.ignore_state_updates = True
     await hub.api.refresh_state()
@@ -137,7 +135,7 @@ async def async_refresh_devices_service(hub: DeconzHub) -> None:
     hub.ignore_state_updates = False
 
 
-async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
+async def async_remove_orphaned_entries_action(hub: DeconzHub) -> None:
     """Remove orphaned deCONZ entries from device and entity registries."""
     device_registry = dr.async_get(hub.hass)
     entity_registry = er.async_get(hub.hass)
@@ -162,12 +160,12 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
         if hub_host and hub_host.id in devices_to_be_removed:
             devices_to_be_removed.remove(hub_host.id)
 
-    # Don't remove the Gateway service entry
-    hub_service = device_registry.async_get_device(
+    # Don't remove the Gateway action entry
+    hub_action = device_registry.async_get_device(
         identifiers={(DOMAIN, hub.api.config.bridge_id)}
     )
-    if hub_service and hub_service.id in devices_to_be_removed:
-        devices_to_be_removed.remove(hub_service.id)
+    if hub_action and hub_action.id in devices_to_be_removed:
+        devices_to_be_removed.remove(hub_action.id)
 
     # Don't remove devices belonging to available events
     for event in hub.events:

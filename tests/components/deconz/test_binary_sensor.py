@@ -12,7 +12,7 @@ from homeassistant.components.deconz.const import (
     CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
-from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
+from homeassistant.components.deconz.services import ACTION_DEVICE_REFRESH
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -627,7 +627,7 @@ async def test_add_new_binary_sensor(
 @pytest.mark.parametrize(
     "config_entry_options", [{CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False}]
 )
-async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
+async def test_add_new_binary_sensor_ignored_load_entities_on_action_call(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     config_entry_setup: ConfigEntry,
@@ -670,7 +670,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     deconz_payload["sensors"] = {"1": sensor}
     mock_requests()
 
-    await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
+    await hass.services.async_call(DECONZ_DOMAIN, ACTION_DEVICE_REFRESH)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1

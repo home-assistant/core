@@ -1,4 +1,4 @@
-"""deCONZ service tests."""
+"""deCONZ action tests."""
 
 from collections.abc import Callable
 from typing import Any
@@ -13,12 +13,12 @@ from homeassistant.components.deconz.const import (
 )
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 from homeassistant.components.deconz.services import (
-    SERVICE_CONFIGURE_DEVICE,
-    SERVICE_DATA,
-    SERVICE_DEVICE_REFRESH,
-    SERVICE_ENTITY,
-    SERVICE_FIELD,
-    SERVICE_REMOVE_ORPHANED_ENTRIES,
+    ACTION_CONFIGURE_DEVICE,
+    ACTION_DATA,
+    ACTION_DEVICE_REFRESH,
+    ACTION_ENTITY,
+    ACTION_FIELD,
+    ACTION_REMOVE_ORPHANED_ENTRIES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -32,21 +32,21 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_configure_service_with_field(
+async def test_configure_action_with_field(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
-    """Test that service invokes pydeconz with the correct path and data."""
+    """Test that action invokes pydeconz with the correct path and data."""
     data = {
-        SERVICE_FIELD: "/lights/2",
+        ACTION_FIELD: "/lights/2",
         CONF_BRIDGE_ID: BRIDGEID,
-        SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
+        ACTION_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
     aioclient_mock = mock_put_request("/lights/2")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DECONZ_DOMAIN, ACTION_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -65,19 +65,19 @@ async def test_configure_service_with_field(
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_configure_service_with_entity(
+async def test_configure_action_with_entity(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
-    """Test that service invokes pydeconz with the correct path and data."""
+    """Test that action invokes pydeconz with the correct path and data."""
     data = {
-        SERVICE_ENTITY: "light.test",
-        SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
+        ACTION_ENTITY: "light.test",
+        ACTION_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
     aioclient_mock = mock_put_request("/lights/1")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DECONZ_DOMAIN, ACTION_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -96,39 +96,39 @@ async def test_configure_service_with_entity(
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_configure_service_with_entity_and_field(
+async def test_configure_action_with_entity_and_field(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
-    """Test that service invokes pydeconz with the correct path and data."""
+    """Test that action invokes pydeconz with the correct path and data."""
     data = {
-        SERVICE_ENTITY: "light.test",
-        SERVICE_FIELD: "/state",
-        SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
+        ACTION_ENTITY: "light.test",
+        ACTION_FIELD: "/state",
+        ACTION_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
     aioclient_mock = mock_put_request("/lights/1/state")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DECONZ_DOMAIN, ACTION_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_configure_service_with_faulty_bridgeid(
+async def test_configure_action_with_faulty_bridgeid(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that service fails on a bad bridge id."""
+    """Test that action fails on a bad bridge id."""
     aioclient_mock.clear_requests()
 
     data = {
         CONF_BRIDGE_ID: "Bad bridge id",
-        SERVICE_FIELD: "/lights/1",
-        SERVICE_DATA: {"on": True},
+        ACTION_FIELD: "/lights/1",
+        ACTION_DATA: {"on": True},
     }
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+        DECONZ_DOMAIN, ACTION_CONFIGURE_DEVICE, service_data=data
     )
     await hass.async_block_till_done()
 
@@ -136,30 +136,30 @@ async def test_configure_service_with_faulty_bridgeid(
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_configure_service_with_faulty_field(hass: HomeAssistant) -> None:
-    """Test that service fails on a bad field."""
-    data = {SERVICE_FIELD: "light/2", SERVICE_DATA: {}}
+async def test_configure_action_with_faulty_field(hass: HomeAssistant) -> None:
+    """Test that action fails on a bad field."""
+    data = {ACTION_FIELD: "light/2", ACTION_DATA: {}}
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+            DECONZ_DOMAIN, ACTION_CONFIGURE_DEVICE, service_data=data
         )
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_configure_service_with_faulty_entity(
+async def test_configure_action_with_faulty_entity(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that service on a non existing entity."""
+    """Test that action on a non existing entity."""
     aioclient_mock.clear_requests()
 
     data = {
-        SERVICE_ENTITY: "light.nonexisting",
-        SERVICE_DATA: {},
+        ACTION_ENTITY: "light.nonexisting",
+        ACTION_DATA: {},
     }
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+        DECONZ_DOMAIN, ACTION_CONFIGURE_DEVICE, service_data=data
     )
     await hass.async_block_till_done()
 
@@ -168,19 +168,19 @@ async def test_configure_service_with_faulty_entity(
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_MASTER_GATEWAY: False}])
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_calling_service_with_no_master_gateway_fails(
+async def test_calling_action_with_no_master_gateway_fails(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that service call fails when no master gateway exist."""
+    """Test that action call fails when no master gateway exist."""
     aioclient_mock.clear_requests()
 
     data = {
-        SERVICE_FIELD: "/lights/1",
-        SERVICE_DATA: {"on": True},
+        ACTION_FIELD: "/lights/1",
+        ACTION_DATA: {"on": True},
     }
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+        DECONZ_DOMAIN, ACTION_CONFIGURE_DEVICE, service_data=data
     )
     await hass.async_block_till_done()
 
@@ -188,13 +188,13 @@ async def test_calling_service_with_no_master_gateway_fails(
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_service_refresh_devices(
+async def test_action_refresh_devices(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     deconz_payload: dict[str, Any],
     mock_requests: Callable[[], None],
 ) -> None:
-    """Test that service can refresh devices."""
+    """Test that action can refresh devices."""
     assert len(hass.states.async_all()) == 0
 
     aioclient_mock.clear_requests()
@@ -232,7 +232,7 @@ async def test_service_refresh_devices(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
+        DECONZ_DOMAIN, ACTION_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
     )
     await hass.async_block_till_done()
 
@@ -254,7 +254,7 @@ async def test_service_refresh_devices(
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_service_refresh_devices_trigger_no_state_update(
+async def test_action_refresh_devices_trigger_no_state_update(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     deconz_payload: dict[str, Any],
@@ -300,7 +300,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
+        DECONZ_DOMAIN, ACTION_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
     )
     await hass.async_block_till_done()
 
@@ -335,13 +335,13 @@ async def test_service_refresh_devices_trigger_no_state_update(
         }
     ],
 )
-async def test_remove_orphaned_entries_service(
+async def test_remove_orphaned_entries_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_setup: ConfigEntry,
 ) -> None:
-    """Test service works and also don't remove more than expected."""
+    """Test action works and also don't remove more than expected."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry_setup.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "123")},
@@ -378,7 +378,7 @@ async def test_remove_orphaned_entries_service(
 
     await hass.services.async_call(
         DECONZ_DOMAIN,
-        SERVICE_REMOVE_ORPHANED_ENTRIES,
+        ACTION_REMOVE_ORPHANED_ENTRIES,
         service_data={CONF_BRIDGE_ID: BRIDGEID},
     )
     await hass.async_block_till_done()

@@ -14,14 +14,14 @@ from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import DeconzHub, get_deconz_api
-from .services import async_setup_services
+from .services import async_setup_actions
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up services."""
-    async_setup_services(hass)
+    async_setup_actions(hass)
     return True
 
 

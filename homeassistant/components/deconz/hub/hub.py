@@ -124,7 +124,7 @@ class DeconzHub:
         def async_add_device(_: EventType, device_id: str) -> None:
             """Add device or add it to ignored_devices set.
 
-            If ignore_state_updates is True means device_refresh service is used.
+            If ignore_state_updates is True means device_refresh action is used.
             Device_refresh is expected to load new devices.
             """
             if (
