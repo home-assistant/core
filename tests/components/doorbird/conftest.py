@@ -1,5 +1,6 @@
 """Test configuration for DoorBird tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -28,7 +29,7 @@ def doorbird_schedule() -> list[DoorBirdScheduleEntry]:
 @pytest.fixture
 def doorbird_api(
     doorbird_info: dict[str, Any], doorbird_schedule: dict[str, Any]
-) -> MagicMock:
+) -> Generator[Any, Any, MagicMock]:
     """Mock the DoorBirdAPI."""
     api = get_mock_doorbirdapi_return_values(
         info=doorbird_info, schedule=doorbird_schedule
