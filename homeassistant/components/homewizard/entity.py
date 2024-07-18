@@ -10,13 +10,13 @@ from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 TYPE_MODEL_MAP = {
-    "HWE-P1": "P1 Meter",
-    "HWE-SKT": "Energy Socket",
-    "HWE-WTR": "Water Meter",
-    "HWE-KWH1": "kWh Meter",
-    "HWE-KWH3": "kWh Meter",
-    "SDM230-wifi": "kWh Meter",
-    "SDM630-wifi": "kWh Meter",
+    "HWE-P1": "Wi-Fi P1 Meter",
+    "HWE-SKT": "Wi-Fi Energy Socket",
+    "HWE-WTR": "Wi-Fi Water Meter",
+    "HWE-KWH1": "Wi-Fi kWh Meter",
+    "HWE-KWH3": "Wi-Fi kWh Meter",
+    "SDM230-wifi": "Wi-Fi kWh Meter",
+    "SDM630-wifi": "Wi-Fi kWh Meter",
 }
 
 
