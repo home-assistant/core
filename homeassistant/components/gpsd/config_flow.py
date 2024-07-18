@@ -38,7 +38,10 @@ class GPSDConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match(user_input)
 
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock: socket.socket = await self.hass.async_add_executor_job(
+                lambda: socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            )
+
             try:
                 sock.connect((user_input[CONF_HOST], user_input[CONF_PORT]))
                 sock.shutdown(2)

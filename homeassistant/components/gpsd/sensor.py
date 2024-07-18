@@ -88,8 +88,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             GpsdSensor(
-                config_entry.data[CONF_HOST],
-                config_entry.data[CONF_PORT],
+                config_entry.runtime_data,
                 config_entry.entry_id,
                 description,
             )
@@ -135,8 +134,7 @@ class GpsdSensor(SensorEntity):
 
     def __init__(
         self,
-        host: str,
-        port: int,
+        agps_thread: AGPS3mechanism,
         unique_id: str,
         description: GpsdSensorDescription,
     ) -> None:
@@ -148,9 +146,7 @@ class GpsdSensor(SensorEntity):
         )
         self._attr_unique_id = f"{unique_id}-{self.entity_description.key}"
 
-        self.agps_thread = AGPS3mechanism()
-        self.agps_thread.stream_data(host=host, port=port)
-        self.agps_thread.run_thread()
+        self.agps_thread = agps_thread
 
     @property
     def native_value(self) -> str | None:
