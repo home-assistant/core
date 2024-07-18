@@ -51,6 +51,7 @@ FLOWS = {
         "android_ip_webcam",
         "androidtv",
         "androidtv_remote",
+        "anglian_water",
         "anova",
         "anthemav",
         "aosmith",
