@@ -237,7 +237,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.1.5
+aiohomekit==3.2.0
 
 # homeassistant.components.hue
 aiohue==4.7.1
@@ -827,7 +827,7 @@ googlemaps==2.5.1
 gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
-govee-ble==0.37.0
+govee-ble==0.38.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.1
@@ -2104,10 +2104,10 @@ surepy==0.9.0
 switchbot-api==2.2.1
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.0.3
+systembridgeconnector==4.1.0
 
 # homeassistant.components.system_bridge
-systembridgemodels==4.0.4
+systembridgemodels==4.1.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.1
@@ -2270,7 +2270,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wled
-wled==0.18.0
+wled==0.19.2
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9
