@@ -9,6 +9,7 @@ from homeassistant import config as hass_config
 from homeassistant.components.filter.sensor import (
     DOMAIN,
     LowPassFilter,
+    OffsetFilter,
     OutlierFilter,
     RangeFilter,
     ThrottleFilter,
@@ -425,6 +426,28 @@ def test_lowpass(values: list[State]) -> None:
         except ValueError:
             assert state.state == "unknown"
     assert filtered.state == 18.05
+
+
+def test_offset(values: list[State]) -> None:
+    """Test if offset filter works."""
+    offset = -3.14
+
+    filt = OffsetFilter(entity=None, precision=2, offset=offset)
+    for unf_state in values:
+        unf = float(unf_state.state)
+        filtered = filt.filter_state(unf_state)
+        assert filtered.state == unf + offset
+
+
+def test_offset_zero(values: list[State]) -> None:
+    """Test if offset filter works with a zero offset."""
+    offset = 0
+
+    filt = OffsetFilter(entity=None, precision=2, offset=offset)
+    for unf_state in values:
+        unf = float(unf_state.state)
+        filtered = filt.filter_state(unf_state)
+        assert filtered.state == unf
 
 
 def test_range(values: list[State]) -> None:

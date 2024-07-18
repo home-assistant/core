@@ -61,6 +61,7 @@ FILTER_NAME_OUTLIER = "outlier"
 FILTER_NAME_THROTTLE = "throttle"
 FILTER_NAME_TIME_THROTTLE = "time_throttle"
 FILTER_NAME_TIME_SMA = "time_simple_moving_average"
+FILTER_NAME_OFFSET = "offset"
 FILTERS: Registry[str, type[Filter]] = Registry()
 
 CONF_FILTERS = "filters"
@@ -71,6 +72,7 @@ CONF_FILTER_RADIUS = "radius"
 CONF_FILTER_TIME_CONSTANT = "time_constant"
 CONF_FILTER_LOWER_BOUND = "lower_bound"
 CONF_FILTER_UPPER_BOUND = "upper_bound"
+CONF_FILTER_OFFSET = "offset"
 CONF_TIME_SMA_TYPE = "type"
 
 TIME_SMA_LAST = "last"
@@ -150,6 +152,13 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     }
 )
 
+FILTER_OFFSET_SCHEMA = FILTER_SCHEMA.extend(
+    {
+        vol.Required(CONF_FILTER_NAME): FILTER_NAME_OFFSET,
+        vol.Optional(CONF_FILTER_OFFSET): vol.Coerce(float),
+    }
+)
+
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): vol.Any(
@@ -169,6 +178,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                     FILTER_THROTTLE_SCHEMA,
                     FILTER_TIME_THROTTLE_SCHEMA,
                     FILTER_RANGE_SCHEMA,
+                    FILTER_OFFSET_SCHEMA,
                 )
             ],
         ),
@@ -546,6 +556,41 @@ class RangeFilter(Filter, SensorEntity):
                 new_state,
             )
             new_state.state = self._lower_bound
+
+        return new_state
+
+
+@FILTERS.register(FILTER_NAME_OFFSET)
+class OffsetFilter(Filter, SensorEntity):
+    """Offset filter.
+
+    Adjusts the state by adding a constant offset (positive or negative). filtered = state + offset.
+    """
+
+    def __init__(
+        self,
+        *,
+        entity: str,
+        precision: int | None = None,
+        offset: float | None = None,
+    ) -> None:
+        """Initialize Filter.
+
+        :param offset: the offset
+        """
+        super().__init__(
+            FILTER_NAME_OFFSET, DEFAULT_WINDOW_SIZE, precision=precision, entity=entity
+        )
+        self._offset = offset
+
+    def _filter_state(self, new_state: FilterState) -> FilterState:
+        """Implement the offset filter."""
+
+        # We can cast safely here thanks to self._only_numbers = True
+        new_state_value = cast(float, new_state.state)
+
+        if self._offset is not None:
+            new_state.state = new_state_value + self._offset
 
         return new_state
 
