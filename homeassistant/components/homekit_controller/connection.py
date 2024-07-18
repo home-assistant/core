@@ -845,6 +845,20 @@ class HKDevice:
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
+        if (
+            len(self.entity_map.accessories) == 1
+            and self.available
+            and not (self.pollable_characteristics - self.watchable_characteristics)
+            and self.pairing.is_available
+            and await self.pairing.controller.async_reachable(
+                self.unique_id, timeout=5.0
+            )
+        ):
+            # If its a single accessory and all chars are watchable,
+            # we don't need to poll.
+            _LOGGER.debug("Accessory is reachable, skip polling: %s", self.unique_id)
+            return
+
         if not self.pollable_characteristics:
             self.async_update_available_state()
             _LOGGER.debug(

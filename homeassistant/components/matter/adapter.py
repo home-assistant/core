@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from chip.clusters.Objects import GeneralDiagnostics
 from matter_server.client.models.device_types import BridgedDevice
-from matter_server.common.helpers.util import convert_mac_address
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,30 +20,6 @@ from .helpers import get_device_id
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint, MatterNode
-
-
-def get_connections_for_endpoint(endpoint: MatterEndpoint) -> set[tuple[str, str]]:
-    """Return a set of connections for a MatterEndpoint."""
-    network_interfaces: list[GeneralDiagnostics.Structs.NetworkInterface] = (
-        endpoint.get_attribute_value(
-            None, GeneralDiagnostics.Attributes.NetworkInterfaces
-        )
-        or []
-    )
-
-    hardware_addresses: set[str] = {
-        convert_mac_address(network_interface.hardwareAddress)
-        for network_interface in network_interfaces
-        if network_interface.hardwareAddress
-    }
-
-    return {
-        (dr.CONNECTION_NETWORK_MAC, address)
-        if len(address) == 17
-        else (dr.CONNECTION_ZIGBEE, address)
-        for address in hardware_addresses
-        if len(address) in (17, 23)  # EUI-48 -> 17, EUI-64 -> 23
-    }
 
 
 def get_clean_name(name: str | None) -> str | None:
@@ -211,9 +185,6 @@ class MatterAdapter:
             endpoint,
         )
         identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
-
-        connections = get_connections_for_endpoint(endpoint)
-
         serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
         if (
@@ -232,7 +203,6 @@ class MatterAdapter:
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
-            connections=connections,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
