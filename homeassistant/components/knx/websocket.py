@@ -239,7 +239,7 @@ def ws_subscribe_telegram(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/validate_entity",
-        **CREATE_ENTITY_BASE_SCHEMA,
+        **CREATE_ENTITY_BASE_SCHEMA,  # type: ignore[dict-item]
     }
 )
 @callback
@@ -263,7 +263,7 @@ def ws_validate_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/create_entity",
-        **CREATE_ENTITY_BASE_SCHEMA,
+        **CREATE_ENTITY_BASE_SCHEMA,  # type: ignore[dict-item]
     }
 )
 @websocket_api.async_response
@@ -299,7 +299,7 @@ async def ws_create_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/update_entity",
-        **UPDATE_ENTITY_BASE_SCHEMA,
+        **UPDATE_ENTITY_BASE_SCHEMA,  # type: ignore[dict-item]
     }
 )
 @websocket_api.async_response
