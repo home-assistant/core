@@ -11,12 +11,7 @@ from unittest import mock
 
 from aiohomekit.controller.abstract import AbstractDescription, AbstractPairing
 from aiohomekit.hkjson import loads as hkloads
-from aiohomekit.model import (
-    Accessories,
-    AccessoriesState,
-    Accessory,
-    mixin as model_mixin,
-)
+from aiohomekit.model import Accessories, AccessoriesState, Accessory
 from aiohomekit.testing import FakeController, FakePairing
 
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -282,7 +277,7 @@ async def device_config_changed(hass: HomeAssistant, accessories: Accessories):
 
 
 async def setup_test_component(
-    hass, setup_accessory, capitalize=False, suffix=None, connection=None
+    hass, aid, setup_accessory, capitalize=False, suffix=None, connection=None
 ):
     """Load a fake homekit accessory based on a homekit accessory model.
 
@@ -291,7 +286,7 @@ async def setup_test_component(
     If suffix is set, entityId will include the suffix
     """
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     setup_accessory(accessory)
 
@@ -397,8 +392,3 @@ async def assert_devices_and_entities_created(
 
     # Root device must not have a via, otherwise its not the device
     assert root_device.via_device_id is None
-
-
-def get_next_aid():
-    """Get next aid."""
-    return model_mixin.id_counter + 1
