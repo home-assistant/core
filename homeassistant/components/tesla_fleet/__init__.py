@@ -93,6 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             api = VehicleSpecific(tesla.vehicle, vin)
             coordinator = TeslaFleetVehicleDataCoordinator(hass, api, product)
 
+            await coordinator.async_config_entry_first_refresh()
+
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",

@@ -86,69 +86,72 @@ async def test_vehicle_refresh_offline(
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_vehicle_refresh_error(
-    hass: HomeAssistant, mock_vehicle_data, side_effect, state
+    hass: HomeAssistant, mock_vehicle_state, side_effect, state
 ) -> None:
     """Test coordinator refresh with an error."""
-    mock_vehicle_data.side_effect = side_effect
+    mock_vehicle_state.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
 
 
 async def test_vehicle_sleep(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_vehicle_state,
+    mock_vehicle_data,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
     await setup_platform(hass, [Platform.CLIMATE])
-    assert mock_vehicle_data.call_count == 1
+    assert mock_vehicle_state.call_count == 1
 
     freezer.tick(VEHICLE_WAIT + VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     # Let vehicle sleep, no updates for 15 minutes
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+    assert mock_vehicle_state.call_count == 2
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     # No polling, call_count should not increase
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+    assert mock_vehicle_state.call_count == 2
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     # No polling, call_count should not increase
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+    assert mock_vehicle_state.call_count == 2
 
     freezer.tick(VEHICLE_WAIT)
     async_fire_time_changed(hass)
     # Vehicle didn't sleep, go back to normal
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 3
+    assert mock_vehicle_state.call_count == 3
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     # Regular polling
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 4
+    assert mock_vehicle_state.call_count == 4
 
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     # Vehicle active
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 5
+    assert mock_vehicle_state.call_count == 5
 
     freezer.tick(VEHICLE_WAIT)
     async_fire_time_changed(hass)
     # Dont let sleep when active
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 6
+    assert mock_vehicle_state.call_count == 6
 
     freezer.tick(VEHICLE_WAIT)
     async_fire_time_changed(hass)
     # Dont let sleep when active
     await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 7
+    assert mock_vehicle_state.call_count == 7
 
 
 # Test Energy Live Coordinator

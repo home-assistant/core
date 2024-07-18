@@ -5,7 +5,8 @@ import pytest
 from syrupy import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     InvalidToken,
-    SubscriptionRequired,
+    LoginRequired,
+    OAuthExpired,
     TeslaFleetError,
     VehicleOffline,
 )
@@ -16,52 +17,65 @@ from homeassistant.components.tesla_fleet.coordinator import (
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
-from .const import VEHICLE_DATA_ALT
+from .const import VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
-    (SubscriptionRequired, ConfigEntryState.SETUP_ERROR),
+    (OAuthExpired, ConfigEntryState.SETUP_ERROR),
+    (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
 ]
 
 
-async def test_load_unload(hass: HomeAssistant) -> None:
+async def test_load_unload(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
     """Test load and unload."""
 
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-    assert isinstance(entry.runtime_data, TeslaFleetData)
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert isinstance(normal_config_entry.runtime_data, TeslaFleetData)
+    assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hasattr(entry, "runtime_data")
+    assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not hasattr(normal_config_entry, "runtime_data")
 
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_init_error(
-    hass: HomeAssistant, mock_products, side_effect, state
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products,
+    side_effect,
+    state,
 ) -> None:
     """Test init with errors."""
 
     mock_products.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is state
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is state
 
 
 # Test devices
 async def test_devices(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry."""
-    entry = await setup_platform(hass)
-    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    await setup_platform(hass, normal_config_entry)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, normal_config_entry.entry_id
+    )
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
@@ -69,36 +83,71 @@ async def test_devices(
 
 # Vehicle Coordinator
 async def test_vehicle_refresh_offline(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_state,
+    mock_vehicle_data,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    entry = await setup_platform(hass, [Platform.CLIMATE])
-    assert entry.state is ConfigEntryState.LOADED
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    mock_vehicle_state.assert_called_once()
     mock_vehicle_data.assert_called_once()
+    mock_vehicle_state.reset_mock()
     mock_vehicle_data.reset_mock()
 
+    # Test the unlikely condition that a vehicle state is online but actually offline
     mock_vehicle_data.side_effect = VehicleOffline
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    mock_vehicle_state.assert_called_once()
     mock_vehicle_data.assert_called_once()
+    mock_vehicle_state.reset_mock()
+    mock_vehicle_data.reset_mock()
+
+    # Test the normal condition that a vehcile state is offline
+    mock_vehicle_state.return_value = VEHICLE_ASLEEP
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_vehicle_state.assert_called_once()
+    mock_vehicle_data.assert_not_called()
 
 
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect"), ERRORS)
 async def test_vehicle_refresh_error(
-    hass: HomeAssistant, mock_vehicle_data, side_effect, state
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_state,
+    side_effect,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator refresh with an error."""
-    mock_vehicle_data.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is state
+    """Test coordinator refresh makes entity unavailable."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    mock_vehicle_state.side_effect = side_effect
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "unavailable"
 
 
 async def test_vehicle_sleep(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    await setup_platform(hass, [Platform.CLIMATE])
+    await setup_platform(hass, normal_config_entry)
     assert mock_vehicle_data.call_count == 1
 
     freezer.tick(VEHICLE_WAIT + VEHICLE_INTERVAL)
@@ -154,20 +203,28 @@ async def test_vehicle_sleep(
 # Test Energy Live Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_live_refresh_error(
-    hass: HomeAssistant, mock_live_status, side_effect, state
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status,
+    side_effect,
+    state,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_live_status.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is state
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is state
 
 
 # Test Energy Site Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_site_refresh_error(
-    hass: HomeAssistant, mock_site_info, side_effect, state
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info,
+    side_effect,
+    state,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_site_info.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is state
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is state

@@ -4,8 +4,8 @@ from homeassistant.components.tesla_fleet.const import DOMAIN, TeslaFleetState
 
 from tests.common import load_json_object_fixture
 
-WAKE_UP_ONLINE = {"response": {"state": TeslaFleetState.ONLINE}, "error": None}
-WAKE_UP_ASLEEP = {"response": {"state": TeslaFleetState.ASLEEP}, "error": None}
+VEHICLE_ONLINE = {"response": {"state": TeslaFleetState.ONLINE}, "error": None}
+VEHICLE_ASLEEP = {"response": {"state": TeslaFleetState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)

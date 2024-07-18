@@ -5,10 +5,6 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.tesla_fleet.application_credentials import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -19,7 +15,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -27,19 +22,6 @@ from tests.typing import ClientSessionGenerator
 
 REDIRECT = "https://example.com/auth/external/callback"
 UNIQUE_ID = "uid"
-
-
-@pytest.fixture
-async def component_setup(hass: HomeAssistant) -> None:
-    """Fixture for setting up the integration."""
-    result = await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, ""), "cred"
-    )
-
-    assert result
 
 
 @pytest.fixture
@@ -69,7 +51,6 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    component_setup,
     access_token,
 ) -> None:
     """Check full flow."""
@@ -134,7 +115,6 @@ async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    component_setup,
     access_token,
 ) -> None:
     """Test Tesla Fleet reauthentication."""
@@ -196,7 +176,6 @@ async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    component_setup,
     access_token,
 ) -> None:
     """Test Tesla Fleet reauthentication with different account."""
