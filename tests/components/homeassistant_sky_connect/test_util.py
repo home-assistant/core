@@ -5,16 +5,18 @@ from unittest.mock import AsyncMock, patch
 from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
+from homeassistant.components.homeassistant_hardware.util import (
+    FirmwareGuess,
+    get_zha_device_path,
+    guess_firmware_type,
+)
 from homeassistant.components.homeassistant_sky_connect.const import (
     DOMAIN,
     HardwareVariant,
 )
 from homeassistant.components.homeassistant_sky_connect.util import (
-    FirmwareGuess,
     get_hardware_variant,
     get_usb_service_info,
-    get_zha_device_path,
-    guess_firmware_type,
 )
 from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.config_entries import ConfigEntryState
@@ -136,15 +138,15 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.util.is_hassio",
+            "homeassistant.components.homeassistant_hardware.util.is_hassio",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.homeassistant_sky_connect.util.get_otbr_addon_manager",
+            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_manager",
             return_value=mock_otbr_addon_manager,
         ),
         patch(
-            "homeassistant.components.homeassistant_sky_connect.util.get_multiprotocol_addon_manager",
+            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
             return_value=mock_multipan_addon_manager,
         ),
     ):

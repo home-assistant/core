@@ -480,9 +480,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
     """Base config flow for installing firmware."""
 
-    @abstractmethod
     @staticmethod
     @callback
+    @abstractmethod
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:

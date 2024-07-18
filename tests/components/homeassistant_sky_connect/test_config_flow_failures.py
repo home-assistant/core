@@ -11,7 +11,7 @@ from homeassistant.components.hassio.addon_manager import (
     AddonInfo,
     AddonState,
 )
-from homeassistant.components.homeassistant_sky_connect.config_flow import (
+from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
 )

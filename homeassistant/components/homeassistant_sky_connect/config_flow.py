@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from universal_silabs_flasher.const import ApplicationType
 
@@ -21,11 +21,16 @@ from .util import get_hardware_variant, get_usb_service_info
 _LOGGER = logging.getLogger(__name__)
 
 
-class TranslationPlaceholderProtocol(Protocol):
-    """Protocol describing `BaseFirmwareInstallFlow`'s translation placeholders."""
+if TYPE_CHECKING:
 
-    def _get_translation_placeholders(self) -> dict[str, str]:
-        return {}
+    class TranslationPlaceholderProtocol(Protocol):
+        """Protocol describing `BaseFirmwareInstallFlow`'s translation placeholders."""
+
+        def _get_translation_placeholders(self) -> dict[str, str]:
+            return {}
+else:
+    # Multiple inheritance with `Protocol` seems to break
+    TranslationPlaceholderProtocol = object
 
 
 class SkyConnectTranslationMixin(TranslationPlaceholderProtocol):

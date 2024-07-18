@@ -11,20 +11,20 @@ from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components import usb
 from homeassistant.components.hassio.addon_manager import AddonInfo, AddonState
+from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
+    STEP_PICK_FIRMWARE_THREAD,
+    STEP_PICK_FIRMWARE_ZIGBEE,
+)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
     get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
-from homeassistant.components.homeassistant_sky_connect.config_flow import (
-    STEP_PICK_FIRMWARE_THREAD,
-    STEP_PICK_FIRMWARE_ZIGBEE,
-)
-from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.components.homeassistant_sky_connect.util import (
+from homeassistant.components.homeassistant_hardware.util import (
     get_otbr_addon_manager,
     get_zigbee_flasher_addon_manager,
 )
+from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -110,19 +110,19 @@ def mock_addon_info(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.config_flow.get_otbr_addon_manager",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.get_otbr_addon_manager",
             return_value=mock_otbr_manager,
         ),
         patch(
-            "homeassistant.components.homeassistant_sky_connect.config_flow.get_zigbee_flasher_addon_manager",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.get_zigbee_flasher_addon_manager",
             return_value=mock_flasher_manager,
         ),
         patch(
-            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.is_hassio",
             return_value=is_hassio,
         ),
         patch(
-            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_type",
             return_value=app_type,
         ),
     ):

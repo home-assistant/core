@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from universal_silabs_flasher.const import ApplicationType
 
+from homeassistant.components.homeassistant_hardware.util import FirmwareGuess
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.components.homeassistant_sky_connect.util import FirmwareGuess
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
