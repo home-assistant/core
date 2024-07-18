@@ -121,7 +121,7 @@ class ExtraForecast(TypedDict, total=False):
     is_daytime: bool | None
     # extra attributes
     detailed_description: str | None
-    short_description: float | None
+    short_description: str | None
 
 
 def _calculate_unique_id(entry_data: MappingProxyType[str, Any], mode: str) -> str:
