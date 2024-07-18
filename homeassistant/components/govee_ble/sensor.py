@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from govee_ble import DeviceClass, DeviceKey, SensorUpdate, Units
+from govee_ble import DeviceClass, SensorUpdate, Units
 from govee_ble.parser import ERROR
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -28,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import GoveeBLEConfigEntry, GoveeBLEPassiveBluetoothDataProcessor
+from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -70,13 +70,6 @@ SENSOR_DESCRIPTIONS = {
 }
 
 
-def _device_key_to_bluetooth_entity_key(
-    device_key: DeviceKey,
-) -> PassiveBluetoothEntityKey:
-    """Convert a device key to an entity key."""
-    return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
-
-
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
 ) -> PassiveBluetoothDataUpdate:
@@ -87,18 +80,18 @@ def sensor_update_to_bluetooth_data_update(
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
-            _device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
+            device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
             if description.device_class and description.native_unit_of_measurement
         },
         entity_data={
-            _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
+            device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
         entity_names={
-            _device_key_to_bluetooth_entity_key(device_key): sensor_values.name
+            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
     )
