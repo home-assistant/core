@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .coordinator import GoveeBLEBluetoothProcessorCoordinator, GoveeBLEConfigEntry
+from .coordinator import GoveeBLEConfigEntry, GoveeBLEPassiveBluetoothDataProcessor
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -130,10 +130,12 @@ class GoveeBluetoothSensorEntity(
 ):
     """Representation of a govee ble sensor."""
 
+    processor: GoveeBLEPassiveBluetoothDataProcessor
+
     @property
     def available(self) -> bool:
         """Return False if sensor is in error."""
-        coordinator: GoveeBLEBluetoothProcessorCoordinator = self.processor.coordinator
+        coordinator = self.processor.coordinator
         return self.processor.entity_data.get(self.entity_key) != ERROR and (
             ((model_info := coordinator.model_info) and model_info.sleepy)
             or super().available

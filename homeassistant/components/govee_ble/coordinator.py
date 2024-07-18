@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
 )
 from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothDataProcessor,
     PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -77,3 +78,11 @@ class GoveeBLEBluetoothProcessorCoordinator(
     def set_model_info(self, device_type: str) -> None:
         """Set the model info."""
         self.model_info = get_model_info(device_type)
+
+
+class GoveeBLEPassiveBluetoothDataProcessor[_T](
+    PassiveBluetoothDataProcessor[_T, SensorUpdate]
+):
+    """Define a govee-ble Bluetooth Passive Update Data Processor."""
+
+    coordinator: GoveeBLEBluetoothProcessorCoordinator
