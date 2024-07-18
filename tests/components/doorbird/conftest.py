@@ -77,6 +77,7 @@ async def doorbird_mocker(
         entry: MockConfigEntry | None = None,
         api: DoorBird | None = None,
         info: dict[str, Any] | None = None,
+        info_side_effect: Exception | None = None,
         schedule: list[DoorBirdScheduleEntry] | None = None,
     ) -> None:
         """Create a MockDoorbirdEntry from defaults or specific values."""
@@ -87,7 +88,9 @@ async def doorbird_mocker(
             options={CONF_EVENTS: ["event1", "event2", "event3"]},
         )
         api = api or get_mock_doorbird_api(
-            info=info or doorbird_info, schedule=schedule or doorbird_schedule
+            info=info or doorbird_info,
+            info_side_effect=info_side_effect,
+            schedule=schedule or doorbird_schedule,
         )
         entry.add_to_hass(hass)
         with patch_doorbird_api_entry_points(api):
