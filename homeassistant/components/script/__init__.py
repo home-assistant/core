@@ -43,6 +43,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -60,7 +65,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import parse_datetime
 
-from .config import ScriptConfig
+from .config import ScriptConfig, ValidationStatus
 from .const import (
     ATTR_LAST_ACTION,
     ATTR_LAST_TRIGGERED,
@@ -288,7 +293,8 @@ class ScriptEntityConfig:
     key: str
     raw_blueprint_inputs: ConfigType | None
     raw_config: ConfigType | None
-    validation_failed: bool
+    validation_error: str | None
+    validation_status: ValidationStatus
 
 
 async def _prepare_script_config(
@@ -303,11 +309,17 @@ async def _prepare_script_config(
     for key, config_block in conf.items():
         raw_config = cast(ScriptConfig, config_block).raw_config
         raw_blueprint_inputs = cast(ScriptConfig, config_block).raw_blueprint_inputs
-        validation_failed = cast(ScriptConfig, config_block).validation_failed
+        validation_error = cast(ScriptConfig, config_block).validation_error
+        validation_status = cast(ScriptConfig, config_block).validation_status
 
         script_configs.append(
             ScriptEntityConfig(
-                config_block, key, raw_blueprint_inputs, raw_config, validation_failed
+                config_block,
+                key,
+                raw_blueprint_inputs,
+                raw_config,
+                validation_error,
+                validation_status,
             )
         )
 
@@ -321,11 +333,13 @@ async def _create_script_entities(
     entities: list[BaseScriptEntity] = []
 
     for script_config in script_configs:
-        if script_config.validation_failed:
+        if script_config.validation_status != ValidationStatus.OK:
             entities.append(
                 UnavailableScriptEntity(
                     script_config.key,
                     script_config.raw_config,
+                    cast(str, script_config.validation_error),
+                    script_config.validation_status,
                 )
             )
             continue
@@ -457,11 +471,15 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self,
         key: str,
         raw_config: ConfigType | None,
+        validation_error: str,
+        validation_status: ValidationStatus,
     ) -> None:
         """Initialize a script entity."""
         self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
+        self._validation_error = validation_error
+        self._validation_status = validation_status
 
     @cached_property
     def referenced_labels(self) -> set[str]:
@@ -492,6 +510,31 @@ class UnavailableScriptEntity(BaseScriptEntity):
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
+
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the automation has errors."""
+        await super().async_added_to_hass()
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{self.entity_id}_validation_{self._validation_status}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key=f"validation_{self._validation_status}",
+            translation_placeholders={
+                "edit": f"/config/script/edit/{self.unique_id}",
+                "entity_id": self.entity_id,
+                "error": self._validation_error,
+                "name": self._attr_name or self.entity_id,
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        async_delete_issue(
+            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
+        )
 
 
 class ScriptEntity(BaseScriptEntity, RestoreEntity):
