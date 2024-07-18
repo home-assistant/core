@@ -7,12 +7,16 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     LoginRequired,
     OAuthExpired,
+    RateLimited,
     TeslaFleetError,
     VehicleOffline,
 )
 
 from homeassistant.components.tesla_fleet.coordinator import (
+    ENERGY_INTERVAL,
+    ENERGY_INTERVAL_SECONDS,
     VEHICLE_INTERVAL,
+    VEHICLE_INTERVAL_SECONDS,
     VEHICLE_WAIT,
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
@@ -140,6 +144,37 @@ async def test_vehicle_refresh_error(
     assert state.state == "unavailable"
 
 
+async def test_vehicle_refresh_ratelimited(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429."""
+
+    mock_vehicle_data.side_effect = RateLimited(
+        {"after": VEHICLE_INTERVAL_SECONDS + 10}
+    )
+    await setup_platform(hass, normal_config_entry)
+
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "unknown"
+    assert mock_vehicle_data.call_count == 1
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should not call for another 10 seconds
+    assert mock_vehicle_data.call_count == 1
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 2
+
+
 async def test_vehicle_sleep(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
@@ -228,3 +263,65 @@ async def test_energy_site_refresh_error(
     mock_site_info.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is state
+
+
+async def test_energy_live_refresh_ratelimited(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    mock_live_status.side_effect = RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10})
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_live_status.call_count == 2
+
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should not call for another 10 seconds
+    assert mock_live_status.call_count == 2
+
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_live_status.call_count == 3
+
+
+async def test_energy_info_refresh_ratelimited(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    mock_site_info.side_effect = RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10})
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_site_info.call_count == 2
+
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should not call for another 10 seconds
+    assert mock_site_info.call_count == 2
+
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_site_info.call_count == 3

@@ -54,7 +54,7 @@ async def test_full_flow(
     access_token,
 ) -> None:
     """Check full flow."""
-    result = await hass.config_entries.flow.async_init(  # not working
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
