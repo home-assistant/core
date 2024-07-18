@@ -3,7 +3,10 @@
     "flow_title": "{host}",
     "step": {
       "user": {
-        "description": "Create a Haus-Bus integration and perform auto-discovery of Haus-Bus devices."
+        "description": "Perform auto-discovery of Haus-Bus devices."
+      },
+      "search_timeout": {
+        "description": "Device discovery timeout. Click Submit to try again."
       }
     },
     "abort": {
