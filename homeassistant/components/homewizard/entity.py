@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, ATTR_MODEL
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
+
+TYPE_MODEL_MAP = {
+    "HWE-P1": "P1 Meter",
+    "HWE-SKT": "Energy Socket",
+    "HWE-WTR": "Water Meter",
+    "HWE-KWH1": "kWh Meter",
+    "HWE-KWH3": "kWh Meter",
+    "SDM230-wifi": "kWh Meter",
+    "SDM630-wifi": "kWh Meter",
+}
 
 
 class HomeWizardEntity(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator]):
@@ -21,8 +31,11 @@ class HomeWizardEntity(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             manufacturer="HomeWizard",
             sw_version=coordinator.data.device.firmware_version,
-            model=coordinator.data.device.product_type,
+            model_id=coordinator.data.device.product_type,
         )
+
+        if product_type := coordinator.data.device.product_type:
+            self._attr_device_info[ATTR_MODEL] = TYPE_MODEL_MAP.get(product_type)
 
         if (serial_number := coordinator.data.device.serial) is not None:
             self._attr_device_info[ATTR_CONNECTIONS] = {
