@@ -23,7 +23,7 @@
         }
       },
       "reconfigure_confirm": {
-        "title": "Reconfigure tedee",
+        "title": "Reconfigure Tedee",
         "description": "Update the settings of this integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
