@@ -6,13 +6,13 @@ from typing import Any
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.deconz.actions import ACTION_DEVICE_REFRESH
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
-from homeassistant.components.deconz.services import ACTION_DEVICE_REFRESH
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

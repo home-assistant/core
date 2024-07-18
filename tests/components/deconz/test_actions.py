@@ -6,13 +6,7 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.deconz.const import (
-    CONF_BRIDGE_ID,
-    CONF_MASTER_GATEWAY,
-    DOMAIN as DECONZ_DOMAIN,
-)
-from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
-from homeassistant.components.deconz.services import (
+from homeassistant.components.deconz.actions import (
     ACTION_CONFIGURE_DEVICE,
     ACTION_DATA,
     ACTION_DEVICE_REFRESH,
@@ -20,6 +14,12 @@ from homeassistant.components.deconz.services import (
     ACTION_FIELD,
     ACTION_REMOVE_ORPHANED_ENTRIES,
 )
+from homeassistant.components.deconz.const import (
+    CONF_BRIDGE_ID,
+    CONF_MASTER_GATEWAY,
+    DOMAIN as DECONZ_DOMAIN,
+)
+from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
