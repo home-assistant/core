@@ -1,5 +1,6 @@
 """Tests for HKDevice."""
 
+from collections.abc import Callable
 import dataclasses
 from unittest import mock
 
@@ -343,7 +344,9 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
     assert config_entry.data["Connection"] == "BLE"
 
 
-async def test_skip_polling_all_watchable_accessory_mode(hass: HomeAssistant) -> None:
+async def test_skip_polling_all_watchable_accessory_mode(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we skip polling if available and all chars are watchable accessory mode."""
 
     def _create_accessory(accessory):
@@ -357,7 +360,7 @@ async def test_skip_polling_all_watchable_accessory_mode(hass: HomeAssistant) ->
 
         return service
 
-    helper = await setup_test_component(hass, _create_accessory)
+    helper = await setup_test_component(hass, get_next_aid(), _create_accessory)
 
     with mock.patch.object(
         helper.pairing,
