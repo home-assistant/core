@@ -6,7 +6,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -80,7 +84,7 @@ async def test_number_operation(
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: test_entity,
-            "value": test_value,
+            ATTR_VALUE: test_value,
         },
         blocking=True,
     )
