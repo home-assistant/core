@@ -24,7 +24,7 @@ async def test_auth_fails(
     hass: HomeAssistant,
     doorbird_mocker: Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]],
 ) -> None:
-    """Test basic setup."""
+    """Test basic setup with an auth failure."""
     doorbird_entry = await doorbird_mocker(
         info_side_effect=mock_unauthorized_exception()
     )
