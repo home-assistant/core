@@ -1,5 +1,6 @@
 """Common fixutres with default mocks as well as common test helper methods."""
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -7,7 +8,6 @@ import pytest
 from Tami4EdgeAPI.device import Device
 from Tami4EdgeAPI.device_metadata import DeviceMetadata
 from Tami4EdgeAPI.water_quality import UV, Filter, WaterQuality
-from typing_extensions import Generator
 
 from homeassistant.components.tami4.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant

@@ -7,7 +7,7 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.components.recorder import Recorder, get_instance
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -24,14 +24,13 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-def mock_history(hass):
+def mock_history(hass: HomeAssistant) -> None:
     """Mock history component loaded."""
     hass.config.components.add("history")
 
 
-async def test_demo_statistics(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_demo_statistics(hass: HomeAssistant) -> None:
     """Test that the kitchen sink component makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -63,9 +62,8 @@ async def test_demo_statistics(
     } in statistic_ids
 
 
-async def test_demo_statistics_growth(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
     """Test that the kitchen sink sum statistics adds to the previous state."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
@@ -104,8 +102,8 @@ async def test_demo_statistics_growth(
 
 
 @pytest.mark.freeze_time("2023-10-21")
+@pytest.mark.usefixtures("mock_history")
 async def test_issues_created(
-    mock_history,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,

@@ -1,6 +1,7 @@
 """deCONZ binary sensor platform tests."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -12,6 +13,7 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_OFF,
@@ -22,22 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_request,
-    setup_deconz_integration,
-)
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_no_binary_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no sensors in deconz results in no sensor entities."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
+from .conftest import WebsocketDataType
 
 TEST_DATA = [
     (  # Alarm binary sensor
@@ -466,22 +453,17 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
+@pytest.mark.parametrize(("sensor_1_payload", "expected"), TEST_DATA)
 async def test_binary_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    mock_deconz_websocket,
-    sensor_data,
-    expected,
+    config_entry_setup: ConfigEntry,
+    mock_websocket_data: WebsocketDataType,
+    expected: dict[str, Any],
 ) -> None:
     """Test successful creation of binary sensor entities."""
-    with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
-        config_entry = await setup_deconz_integration(
-            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
-        )
-
     assert len(hass.states.async_all()) == expected["entity_count"]
 
     # Verify state data
@@ -500,65 +482,60 @@ async def test_binary_sensors(
     # Verify device registry data
 
     assert (
-        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
         == expected["device_count"]
     )
 
     # Change state
 
     event_changed_sensor = {
-        "t": "event",
-        "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": expected["websocket_event"],
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Unload entry
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
 
     # Remove entry
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_not_allow_clip_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that CLIP sensors are not allowed."""
-    data = {
-        "sensors": {
-            "1": {
-                "name": "CLIP presence sensor",
-                "type": "CLIPPresence",
-                "state": {"presence": False},
-                "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
+@pytest.mark.parametrize(
+    "sensor_1_payload",
+    [
+        {
+            "name": "CLIP presence sensor",
+            "type": "CLIPPresence",
+            "state": {"presence": False},
+            "config": {},
+            "uniqueid": "00:00:00:00:00:00:00:02-00",
         }
-    }
-
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(
-            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: False}
-        )
-
+    ],
+)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: False}])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_not_allow_clip_sensor(hass: HomeAssistant) -> None:
+    """Test that CLIP sensors are not allowed."""
     assert len(hass.states.async_all()) == 0
 
 
-async def test_allow_clip_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that CLIP sensors can be allowed."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "name": "Presence sensor",
                 "type": "ZHAPresence",
@@ -585,12 +562,11 @@ async def test_allow_clip_sensor(
                 "uniqueid": "/sensors/3",
             },
         }
-    }
-
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(
-            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
-        )
+    ],
+)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
+async def test_allow_clip_sensor(hass: HomeAssistant, config_entry_setup) -> None:
+    """Test that CLIP sensors can be allowed."""
 
     assert len(hass.states.async_all()) == 3
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
@@ -600,7 +576,7 @@ async def test_allow_clip_sensor(
     # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry_setup, options={CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
@@ -611,7 +587,7 @@ async def test_allow_clip_sensor(
     # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry_setup, options={CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 
@@ -620,12 +596,15 @@ async def test_allow_clip_sensor(
     assert hass.states.get("binary_sensor.clip_flag_boot_time").state == STATE_ON
 
 
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_add_new_binary_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new binary sensor works."""
+    assert len(hass.states.async_all()) == 0
+
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
@@ -638,22 +617,23 @@ async def test_add_new_binary_sensor(
             "uniqueid": "00:00:00:00:00:00:00:00-00",
         },
     }
-
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False}]
+)
 async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    mock_deconz_websocket,
+    config_entry_setup: ConfigEntry,
+    deconz_payload: dict[str, Any],
+    mock_requests: Callable[[str], None],
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -664,35 +644,31 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
         "sensor": sensor,
     }
 
-    config_entry = await setup_deconz_integration(
-        hass,
-        aioclient_mock,
-        options={CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False},
-    )
-
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
     assert (
-        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, config_entry_setup.entry_id
+            )
+        )
         == 0
     )
 
-    aioclient_mock.clear_requests()
-    data = {"config": {}, "groups": {}, "lights": {}, "sensors": {"1": sensor}}
-    mock_deconz_request(aioclient_mock, config_entry.data, data)
+    deconz_payload["sensors"] = {"1": sensor}
+    mock_requests()
 
     await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
     await hass.async_block_till_done()
@@ -701,11 +677,16 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     assert hass.states.get("binary_sensor.presence_sensor")
 
 
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False}]
+)
 async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    mock_deconz_websocket,
+    config_entry_setup: ConfigEntry,
+    deconz_payload: dict[str, Any],
+    mock_requests: Callable[[str], None],
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -716,38 +697,34 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
         "sensor": sensor,
     }
 
-    config_entry = await setup_deconz_integration(
-        hass,
-        aioclient_mock,
-        options={CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False},
-    )
-
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
     assert (
-        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, config_entry_setup.entry_id
+            )
+        )
         == 0
     )
 
-    aioclient_mock.clear_requests()
-    data = {"config": {}, "groups": {}, "lights": {}, "sensors": {"1": sensor}}
-    mock_deconz_request(aioclient_mock, config_entry.data, data)
+    deconz_payload["sensors"] = {"1": sensor}
+    mock_requests()
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_ALLOW_NEW_DEVICES: True}
+        config_entry_setup, options={CONF_ALLOW_NEW_DEVICES: True}
     )
     await hass.async_block_till_done()
 

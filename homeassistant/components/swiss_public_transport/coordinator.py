@@ -23,8 +23,6 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
-    next_departure: datetime | None
-    next_on_departure: datetime | None
     duration: int | None
     platform: str
     remaining_time: str
@@ -88,8 +86,6 @@ class SwissPublicTransportDataUpdateCoordinator(
         return [
             DataConnection(
                 departure=self.nth_departure_time(i),
-                next_departure=self.nth_departure_time(i + 1),
-                next_on_departure=self.nth_departure_time(i + 2),
                 train_number=connections[i]["number"],
                 platform=connections[i]["platform"],
                 transfers=connections[i]["transfers"],

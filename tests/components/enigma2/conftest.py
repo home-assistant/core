@@ -78,7 +78,7 @@ class MockDevice:
                 }
             }
 
-    def get_version(self):
+    def get_version(self) -> str | None:
         """Return the version."""
         return None
 

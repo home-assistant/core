@@ -1,7 +1,6 @@
 """Tests for home_connect binary_sensor entities."""
 
-from collections.abc import Awaitable, Callable, Generator
-from typing import Any
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -26,9 +25,8 @@ def platforms() -> list[str]:
     return [Platform.BINARY_SENSOR]
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_binary_sensors(
-    bypass_throttle: Generator[None, Any, None],
-    hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
@@ -51,10 +49,10 @@ async def test_binary_sensors(
         ("", "unavailable"),
     ],
 )
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_binary_sensors_door_states(
     expected: str,
     state: str,
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],

@@ -543,5 +543,5 @@ async def test_register_static_paths(
         "Detected code that calls hass.http.register_static_path "
         "which is deprecated because it does blocking I/O in the "
         "event loop, instead call "
-        "`await hass.http.async_register_static_path"
+        "`await hass.http.async_register_static_paths"
     ) in caplog.text

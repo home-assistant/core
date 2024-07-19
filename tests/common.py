@@ -3,7 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping, Sequence
+from collections.abc import (
+    AsyncGenerator,
+    Callable,
+    Coroutine,
+    Generator,
+    Mapping,
+    Sequence,
+)
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -23,7 +30,6 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
-from typing_extensions import AsyncGenerator, Generator
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -70,7 +76,6 @@ from homeassistant.helpers import (
     intent,
     issue_registry as ir,
     label_registry as lr,
-    recorder as recorder_helper,
     restore_state as rs,
     storage,
     translation,
@@ -83,7 +88,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -381,7 +385,7 @@ def async_mock_service(
     calls = []
 
     @callback
-    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
+    def mock_service_log(call):
         """Mock service call."""
         calls.append(call)
         if raise_exception is not None:
@@ -1160,30 +1164,6 @@ def assert_setup_component(count, domain=None):
     assert (
         res_len == count
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
-
-
-def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
-    """Initialize the recorder."""
-    # Local import to avoid processing recorder and SQLite modules when running a
-    # testcase which does not use the recorder.
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
-
-    config = dict(add_config) if add_config else {}
-    if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = db_url
-        if recorder.CONF_COMMIT_INTERVAL not in config:
-            config[recorder.CONF_COMMIT_INTERVAL] = 0
-
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
-        if recorder.DOMAIN not in hass.data:
-            recorder_helper.async_initialize_recorder(hass)
-        assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
-        assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info(
-        "Test recorder successfully started, database location: %s",
-        config[recorder.CONF_DB_URL],
-    )
 
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:

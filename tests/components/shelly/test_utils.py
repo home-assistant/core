@@ -23,6 +23,7 @@ from homeassistant.components.shelly.utils import (
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_device_uptime,
+    get_host,
     get_number_of_channels,
     get_release_url,
     get_rpc_channel_name,
@@ -274,3 +275,19 @@ def test_get_release_url(
     result = get_release_url(gen, model, beta)
 
     assert result is expected
+
+
+@pytest.mark.parametrize(
+    ("host", "expected"),
+    [
+        ("shelly_device.local", "shelly_device.local"),
+        ("192.168.178.12", "192.168.178.12"),
+        (
+            "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+            "[2001:0db8:85a3:0000:0000:8a2e:0370:7334]",
+        ),
+    ],
+)
+def test_get_host(host: str, expected: str) -> None:
+    """Test get_host function."""
+    assert get_host(host) == expected

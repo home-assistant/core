@@ -2,9 +2,11 @@
   "domain": "pyload",
   "name": "pyLoad",
   "codeowners": ["@tr4nt0r"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pyload",
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["pyloadapi"],
-  "requirements": ["PyLoadAPI==1.1.0"]
+  "quality_scale": "platinum",
+  "requirements": ["PyLoadAPI==1.3.2"]
 }

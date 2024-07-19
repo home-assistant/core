@@ -20,19 +20,12 @@ from tests.common import (
     async_fire_time_changed,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    async_mock_service,
 )
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(
@@ -180,7 +173,7 @@ async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -273,8 +266,8 @@ async def test_if_fires_on_state_change(
     # Fake that the entity is turning on.
     hass.states.async_set(entry.entity_id, STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert {calls[0].data["some"], calls[1].data["some"]} == {
+    assert len(service_calls) == 2
+    assert {service_calls[0].data["some"], service_calls[1].data["some"]} == {
         f"turn_on - device - {entry.entity_id} - off - on - None",
         f"turn_on_or_off - device - {entry.entity_id} - off - on - None",
     }
@@ -282,8 +275,8 @@ async def test_if_fires_on_state_change(
     # Fake that the entity is turning off.
     hass.states.async_set(entry.entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert {calls[2].data["some"], calls[3].data["some"]} == {
+    assert len(service_calls) == 4
+    assert {service_calls[2].data["some"], service_calls[3].data["some"]} == {
         f"turn_off - device - {entry.entity_id} - on - off - None",
         f"turn_on_or_off - device - {entry.entity_id} - on - off - None",
     }
@@ -293,7 +286,7 @@ async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -342,9 +335,9 @@ async def test_if_fires_on_state_change_legacy(
     # Fake that the entity is turning on.
     hass.states.async_set(entry.entity_id, STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"turn_on - device - {entry.entity_id} - off - on - None"
     )
 
@@ -353,7 +346,7 @@ async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for triggers firing with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -399,16 +392,16 @@ async def test_if_fires_on_state_change_with_for(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     await hass.async_block_till_done()
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"turn_off device - {entry.entity_id} - on - off - 0:00:05"
     )

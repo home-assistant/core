@@ -1,5 +1,6 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
+from typing import Any
 from unittest.mock import ANY
 
 import pytest
@@ -20,7 +21,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""

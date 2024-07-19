@@ -317,4 +317,4 @@ async def test_full_valid_platform_config(
     assert await async_setup_component(hass, "sensor", VALID_PLATFORM_CONFIG_FULL)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(DEFAULT_SUMMARY.keys())
-    assert len(issue_registry.issues) == 1
+    assert len(issue_registry.issues) == 2

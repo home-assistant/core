@@ -104,12 +104,12 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES = {
-    TYPE_FAUCET: "Valve",
+    TYPE_FAUCET: "ValveSwitch",
     TYPE_OUTLET: "Outlet",
-    TYPE_SHOWER: "Valve",
-    TYPE_SPRINKLER: "Valve",
+    TYPE_SHOWER: "ValveSwitch",
+    TYPE_SPRINKLER: "ValveSwitch",
     TYPE_SWITCH: "Switch",
-    TYPE_VALVE: "Valve",
+    TYPE_VALVE: "ValveSwitch",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -244,6 +244,9 @@ def get_accessory(  # noqa: C901
         else:
             a_type = "Switch"
 
+    elif state.domain == "valve":
+        a_type = "Valve"
+
     elif state.domain == "vacuum":
         a_type = "Vacuum"
 
@@ -289,7 +292,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         name: str,
         entity_id: str,
         aid: int,
-        config: dict,
+        config: dict[str, Any],
         *args: Any,
         category: int = CATEGORY_OTHER,
         device_id: str | None = None,

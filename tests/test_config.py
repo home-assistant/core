@@ -2,17 +2,18 @@
 
 import asyncio
 from collections import OrderedDict
+from collections.abc import Generator
 import contextlib
 import copy
 import logging
 import os
+from pathlib import Path
 from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
@@ -412,11 +413,10 @@ async def test_ensure_config_exists_creates_config(hass: HomeAssistant) -> None:
 
 async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) -> None:
     """Test that calling ensure_config_exists uses existing config."""
-    create_file(YAML_PATH)
+    await hass.async_add_executor_job(create_file, YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH, encoding="utf8") as fp:
-        content = fp.read()
+    content = await hass.async_add_executor_job(Path(YAML_PATH).read_text)
 
     # File created with create_file are empty
     assert content == ""
@@ -424,12 +424,11 @@ async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) ->
 
 async def test_ensure_existing_files_is_not_overwritten(hass: HomeAssistant) -> None:
     """Test that calling async_create_default_config does not overwrite existing files."""
-    create_file(SECRET_PATH)
+    await hass.async_add_executor_job(create_file, SECRET_PATH)
 
     await config_util.async_create_default_config(hass)
 
-    with open(SECRET_PATH, encoding="utf8") as fp:
-        content = fp.read()
+    content = await hass.async_add_executor_job(Path(SECRET_PATH).read_text)
 
     # File created with create_file are empty
     assert content == ""
@@ -490,9 +489,10 @@ def test_load_yaml_config_preserves_key_order() -> None:
         fp.write("hello: 2\n")
         fp.write("world: 1\n")
 
-    assert [("hello", 2), ("world", 1)] == list(
-        config_util.load_yaml_config_file(YAML_PATH).items()
-    )
+    assert list(config_util.load_yaml_config_file(YAML_PATH).items()) == [
+        ("hello", 2),
+        ("world", 1),
+    ]
 
 
 async def test_create_default_config_returns_none_if_write_error(
