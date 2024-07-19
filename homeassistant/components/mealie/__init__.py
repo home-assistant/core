@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
 
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -42,7 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     client = MealieClient(
         entry.data[CONF_HOST],
         token=entry.data[CONF_API_TOKEN],
-        session=async_get_clientsession(hass),
+        session=async_get_clientsession(
+            hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, True)
+        ),
     )
     try:
         about = await client.get_about()

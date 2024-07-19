@@ -19,6 +19,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
@@ -35,8 +36,8 @@ SERVICE_GET_MEALPLAN = "get_mealplan"
 SERVICE_GET_MEALPLAN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_START_DATE): date,
-        vol.Optional(ATTR_END_DATE): date,
+        vol.Optional(ATTR_START_DATE): cv.date,
+        vol.Optional(ATTR_END_DATE): cv.date,
     }
 )
 

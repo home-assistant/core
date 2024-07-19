@@ -1715,7 +1715,7 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     assert exc.value.domain == "test_do_not"
     assert exc.value.service == "exist"
 
-    assert str(exc.value) == "Service test_do_not.exist not found"
+    assert str(exc.value) == "Action test_do_not.exist not found"
 
 
 async def test_serviceregistry_async_service_raise_exception(
@@ -1806,7 +1806,7 @@ async def test_services_call_return_response_requires_blocking(
             return_response=True,
         )
     assert str(exc.value) == (
-        "A non blocking service call with argument blocking=False "
+        "A non blocking action call with argument blocking=False "
         "can't be used together with argument return_response=True"
     )
 
@@ -1852,7 +1852,7 @@ async def test_serviceregistry_return_response_invalid(
     ("supports_response", "return_response", "expected_error"),
     [
         (SupportsResponse.NONE, True, "does not return responses"),
-        (SupportsResponse.ONLY, False, "call requires responses"),
+        (SupportsResponse.ONLY, False, "action requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
@@ -3231,7 +3231,7 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     evt = threading.Event()
     loop = asyncio.get_running_loop()
 
-    def executor_func() -> None:
+    def executor_func() -> threading.Event:
         evt.set()
         return evt
 
