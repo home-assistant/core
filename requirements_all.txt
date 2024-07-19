@@ -939,7 +939,7 @@ georss-generic-client==0.8
 georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
-georss-qld-bushfire-alert-client==0.7
+georss-qld-bushfire-alert-client==0.8
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
