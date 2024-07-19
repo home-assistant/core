@@ -64,7 +64,7 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
             name=config_entry.data[CONF_HOST],
         )
 
-    async def async_setup(self) -> None:
+    async def _async_setup(self) -> None:
         """Provide needed data to the device info."""
 
         about = await self.device.get_about()
