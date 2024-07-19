@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.madvr.async_setup_entry",
@@ -24,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_madvr_client() -> Generator[AsyncMock, None, None]:
+def mock_madvr_client() -> Generator[AsyncMock]:
     """Mock a MadVR client."""
     with (
         patch(
