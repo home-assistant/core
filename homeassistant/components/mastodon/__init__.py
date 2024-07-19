@@ -5,6 +5,7 @@ from __future__ import annotations
 from mastodon.Mastodon import MastodonError, MastodonUnauthorizedError
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -28,7 +29,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_BASE_URL,
     DATA_HASS_CONFIG,
-    DEFAULT_NAME,
     DEFAULT_URL,
     DOMAIN,
     INSTANCE_VERSION,
@@ -38,22 +38,15 @@ from .utils import create_mastodon_instance
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): str,
-                    vol.Required(CONF_CLIENT_SECRET): str,
-                    vol.Required(CONF_ACCESS_TOKEN): str,
-                    vol.Optional(CONF_BASE_URL, default=DEFAULT_URL): cv.url,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_SECRET): cv.string,
+        vol.Optional(CONF_BASE_URL, default=DEFAULT_URL): cv.string,
+    }
 )
 
 
