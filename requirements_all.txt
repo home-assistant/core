@@ -526,10 +526,10 @@ axis==62
 azure-eventhub==5.11.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-data[aio]==3.1.0
+azure-kusto-data[aio]==4.5.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-ingest==3.1.0
+azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
@@ -939,7 +939,7 @@ georss-generic-client==0.8
 georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
-georss-qld-bushfire-alert-client==0.7
+georss-qld-bushfire-alert-client==0.8
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
@@ -1087,7 +1087,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240710.0
+home-assistant-frontend==20240719.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.10
@@ -1165,6 +1165,9 @@ insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
+
+# homeassistant.components.iotty
+iottycloud==0.1.3
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
@@ -1658,9 +1661,6 @@ py-synologydsm-api==2.4.4
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
 
-# homeassistant.components.seventeentrack
-py17track==2021.12.2
-
 # homeassistant.components.atome
 pyAtome==0.1.1
 
@@ -1768,7 +1768,7 @@ pycmus==0.1.1
 pycomfoconnect==0.5.1
 
 # homeassistant.components.coolmaster
-pycoolmasternet-async==0.1.5
+pycoolmasternet-async==0.2.0
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
@@ -2158,6 +2158,9 @@ pyserial==3.5
 
 # homeassistant.components.sesame
 pysesame2==1.0.1
+
+# homeassistant.components.seventeentrack
+pyseventeentrack==1.0.0
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1
@@ -2711,6 +2714,7 @@ temperusb==1.6.1
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 
+# homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
 tesla-fleet-api==0.7.2
