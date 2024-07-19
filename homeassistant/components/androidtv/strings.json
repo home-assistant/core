@@ -101,7 +101,7 @@
     },
     "learn_sendevent": {
       "name": "Learn sendevent",
-      "description": "Translates a key press on a remote into ADB 'sendevent' commands. You must press one button on the remote within 8 seconds of calling this service."
+      "description": "Translates a key press on a remote into ADB 'sendevent' commands. You must press one button on the remote within 8 seconds of performing this action."
     }
   },
   "exceptions": {

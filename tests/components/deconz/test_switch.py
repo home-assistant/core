@@ -16,6 +16,8 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -54,7 +56,7 @@ async def test_power_plugs(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that all supported switch entities are created."""
     assert len(hass.states.async_all()) == 4
@@ -64,13 +66,11 @@ async def test_power_plugs(
     assert hass.states.get("switch.unsupported_switch") is None
 
     event_changed_light = {
-        "t": "event",
-        "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"on": False},
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.on_off_switch").state == STATE_OFF
@@ -127,7 +127,7 @@ async def test_power_plugs(
 async def test_remove_legacy_on_off_output_as_light(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
 ) -> None:
     """Test that switch platform cleans up legacy light entities."""
     assert entity_registry.async_get_or_create(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from kasa import (
@@ -52,6 +53,8 @@ from .const import (
     DOMAIN,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
@@ -88,15 +91,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _update_config_if_entry_in_setup_error(
+    def _get_config_updates(
         self, entry: ConfigEntry, host: str, config: dict
-    ) -> ConfigFlowResult | None:
-        """If discovery encounters a device that is in SETUP_ERROR or SETUP_RETRY update the device config."""
-        if entry.state not in (
-            ConfigEntryState.SETUP_ERROR,
-            ConfigEntryState.SETUP_RETRY,
-        ):
-            return None
+    ) -> dict | None:
+        """Return updates if the host or device config has changed."""
         entry_data = entry.data
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
         if entry_config_dict == config and entry_data[CONF_HOST] == host:
@@ -110,11 +108,31 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             != config.get(CONF_CONNECTION_TYPE)
         ):
             updates.pop(CONF_CREDENTIALS_HASH, None)
-        return self.async_update_reload_and_abort(
-            entry,
-            data=updates,
-            reason="already_configured",
-        )
+            _LOGGER.debug(
+                "Connection type changed for %s from %s to: %s",
+                host,
+                entry_config_dict.get(CONF_CONNECTION_TYPE),
+                config.get(CONF_CONNECTION_TYPE),
+            )
+        return updates
+
+    @callback
+    def _update_config_if_entry_in_setup_error(
+        self, entry: ConfigEntry, host: str, config: dict
+    ) -> ConfigFlowResult | None:
+        """If discovery encounters a device that is in SETUP_ERROR or SETUP_RETRY update the device config."""
+        if entry.state not in (
+            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
+        ):
+            return None
+        if updates := self._get_config_updates(entry, host, config):
+            return self.async_update_reload_and_abort(
+                entry,
+                data=updates,
+                reason="already_configured",
+            )
+        return None
 
     async def _async_handle_discovery(
         self, host: str, formatted_mac: str, config: dict | None = None
@@ -454,7 +472,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
             credentials = Credentials(username, password)
             try:
-                await self._async_try_discover_and_update(
+                device = await self._async_try_discover_and_update(
                     host,
                     credentials=credentials,
                     raise_on_progress=True,
@@ -467,6 +485,11 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 placeholders["error"] = str(ex)
             else:
                 await set_credentials(self.hass, username, password)
+                config = device.config.to_dict(exclude_credentials=True)
+                if updates := self._get_config_updates(reauth_entry, host, config):
+                    self.hass.config_entries.async_update_entry(
+                        reauth_entry, data=updates
+                    )
                 self.hass.async_create_task(
                     self._async_reload_requires_auth_entries(), eager_start=False
                 )

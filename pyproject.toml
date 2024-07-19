@@ -62,7 +62,7 @@ dependencies    = [
     "requests==2.32.3",
     "SQLAlchemy==2.0.31",
     "typing-extensions>=4.12.2,<5.0",
-    "ulid-transform==0.9.0",
+    "ulid-transform==0.10.1",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
@@ -693,7 +693,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.5.0"
+required-version = ">=0.5.2"
 
 [tool.ruff.lint]
 select = [
@@ -725,6 +725,7 @@ select = [
     "E", # pycodestyle
     "F", # pyflakes/autoflake
     "FLY", # flynt
+    "FURB", # refurb
     "G", # flake8-logging-format
     "I", # isort
     "INP", # flake8-no-pep420
@@ -746,6 +747,7 @@ select = [
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF010", # Use explicit conversion flag
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF017", # Avoid quadratic list summation
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up

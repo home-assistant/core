@@ -25,6 +25,7 @@
     }),
     'manufacturer': 'devolo',
     'model': 'dLAN pro 1200+ WiFi ac',
+    'model_id': '2730',
     'name': 'Mock Title',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
