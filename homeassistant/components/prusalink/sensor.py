@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Generic, TypeVar, cast
 
-from pyprusalink.types import JobInfo, PrinterState, PrinterStatus, PrinterInfo
+from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
 from pyprusalink.types_legacy import LegacyPrinterStatus
 
 from homeassistant.components.sensor import (
@@ -193,16 +193,12 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="info.nozzle_diameter",
             translation_key="nozzle_diameter",
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
             value_fn=lambda data: cast(str, data["nozzle_diameter"]),
             entity_registry_enabled_default=False,
         ),
-        PrusaLinkSensorEntityDescription[PrinterStatus](
-            key="info.mmu",
-            translation_key="mmu",
-            value_fn=lambda data: cast(str, data["mmu"]),
-            entity_registry_enabled_default=False,
-        ),
-    )
+    ),
 }
 
 
