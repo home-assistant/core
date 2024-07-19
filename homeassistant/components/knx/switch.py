@@ -111,6 +111,8 @@ class KnxYamlSwitch(_KnxSwitch):
 class KnxUiSwitch(_KnxSwitch):
     """Representation of a KNX switch configured from UI."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
     ) -> None:
@@ -132,6 +134,5 @@ class KnxUiSwitch(_KnxSwitch):
         self._attr_unique_id = unique_id
         if device_info := config["entity"].get("device_info"):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
-            self._attr_has_entity_name = True
 
         knx_module.config_store.entities[unique_id] = self
