@@ -70,6 +70,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device):
         """Init the class."""
@@ -77,7 +78,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         self._attr_supported_features = self._determine_features()
 
     def _determine_features(self):
-        flags = FanEntityFeature(0)
+        flags = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
         if self._device.get_capability(Capability.fan_speed):
             flags |= FanEntityFeature.SET_SPEED
