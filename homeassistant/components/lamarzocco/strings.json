@@ -23,7 +23,7 @@
         }
       },
       "bluetooth_selection": {
-        "description": "Select your machine from Bluetooth devices.",
+        "description": "Select your device from available Bluetooth devices.",
         "data": {
           "mac": "Bluetooth device"
         }

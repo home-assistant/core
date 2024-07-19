@@ -219,7 +219,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         bt_options = [
             SelectOptionDict(
                 value=device_mac,
-                label=device_name,
+                label=f"{device_name} ({device_mac})",
             )
             for device_name, device_mac in self._discovered.items()
         ]
