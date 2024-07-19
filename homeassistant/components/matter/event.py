@@ -32,7 +32,7 @@ EVENT_TYPES_MAP = {
     3: "short_release",  # clusters.Switch.Events.ShortRelease
     4: "long_release",  # clusters.Switch.Events.LongRelease
     5: "multi_press_ongoing",  # clusters.Switch.Events.MultiPressOngoing
-    6: "multi_press_completed",  # clusters.Switch.Events.MultiPressCompleted
+    6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
 }
 
 
