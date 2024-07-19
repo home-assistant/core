@@ -16,9 +16,23 @@ VALID_CONFIG = {
 }
 
 
+def _get_aiohttp_client_error(status: int) -> aiohttp.ClientResponseError:
+    """Return a mock aiohttp client response error."""
+    return aiohttp.ClientResponseError(
+        request_info=Mock(),
+        history=Mock(),
+        status=status,
+    )
+
+
 def mock_unauthorized_exception() -> aiohttp.ClientResponseError:
     """Return a mock unauthorized exception."""
-    return aiohttp.ClientResponseError(request_info=Mock(), history=Mock(), status=401)
+    return _get_aiohttp_client_error(401)
+
+
+def mock_not_found_exception() -> aiohttp.ClientResponseError:
+    """Return a mock not found exception."""
+    return _get_aiohttp_client_error(404)
 
 
 def get_mock_doorbird_api(
