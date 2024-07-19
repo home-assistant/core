@@ -297,6 +297,45 @@ async def async_yaml_patch_helper(hass, filename):
                 "state": "{{1 == 2}}",
             },
         ),
+        (
+            {
+                "template_type": "image",
+                "name": "My template",
+                "url": "http://example.com",
+            },
+            {
+                "url": "http://example.com",
+            },
+        ),
+        (
+            {
+                "template_type": "button",
+                "name": "My template",
+            },
+            {},
+        ),
+        (
+            {
+                "template_type": "select",
+                "name": "My template",
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+            },
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+            },
+        ),
+        (
+            {
+                "template_type": "switch",
+                "name": "My template",
+                "value_template": "{{ true }}",
+            },
+            {
+                "value_template": "{{ true }}",
+            },
+        ),
     ],
 )
 async def test_change_device(

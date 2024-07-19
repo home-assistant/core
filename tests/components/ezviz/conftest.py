@@ -1,11 +1,11 @@
 """Define pytest.fixtures available for all tests."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from pyezviz import EzvizClient
 from pyezviz.test_cam_rtsp import TestRTSPAuth
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 

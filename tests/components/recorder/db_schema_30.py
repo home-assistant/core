@@ -33,6 +33,7 @@ from sqlalchemy import (
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -109,7 +110,7 @@ STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
-    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+    def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 

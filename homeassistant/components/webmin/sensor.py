@@ -235,7 +235,7 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.mac_address}_{description.key}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> int | float:
