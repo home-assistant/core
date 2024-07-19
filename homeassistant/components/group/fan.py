@@ -47,6 +47,8 @@ SUPPORTED_FLAGS = {
     FanEntityFeature.SET_SPEED,
     FanEntityFeature.DIRECTION,
     FanEntityFeature.OSCILLATE,
+    FanEntityFeature.TURN_OFF,
+    FanEntityFeature.TURN_ON,
 }
 
 DEFAULT_NAME = "Fan Group"
@@ -107,6 +109,7 @@ class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
     _attr_available: bool = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a FanGroup entity."""
@@ -200,11 +203,15 @@ class FanGroup(GroupEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
-        await self._async_call_all_entities(SERVICE_TURN_ON)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_ON, FanEntityFeature.TURN_ON, {}
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fans off."""
-        await self._async_call_all_entities(SERVICE_TURN_OFF)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_OFF, FanEntityFeature.TURN_OFF, {}
+        )
 
     async def _async_call_supported_entities(
         self, service: str, support_flag: int, data: dict[str, Any]
