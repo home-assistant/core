@@ -36,11 +36,11 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     setup_credentials,
 ) -> None:
     """Check full flow."""
@@ -85,11 +85,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
 ) -> None:
     """Test reauthentication flow."""
