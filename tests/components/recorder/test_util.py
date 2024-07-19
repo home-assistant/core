@@ -26,6 +26,8 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
+    MIN_VERSION_SQLITE,
+    UPCOMING_MIN_VERSION_SQLITE,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -723,6 +725,64 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+
+
+async def test_issue_for_old_sqlite(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create an issue for old sqlite versions."""
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+    min_version = str(MIN_VERSION_SQLITE)
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[min_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "sqlite",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "min_version": str(UPCOMING_MIN_VERSION_SQLITE),
+        "server_version": min_version,
+    }
+
+    min_version = str(UPCOMING_MIN_VERSION_SQLITE)
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "sqlite",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
+    assert issue is None
+    assert database_engine is not None
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])

@@ -12,6 +12,14 @@ from ..const import SupportedDialect
 class UnsupportedDialect(Exception):
     """The dialect or its version is not supported."""
 
+    def __init__(self, dialect: str) -> None:
+        """Initialize the exception."""
+        self.dialect = dialect
+
+    def __str__(self) -> str:
+        """Return the exception as a string."""
+        return f"Unsupported dialect: {self.dialect}"
+
 
 @dataclass
 class DatabaseEngine:

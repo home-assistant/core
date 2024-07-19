@@ -386,7 +386,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
         dialect_name,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
-    raise UnsupportedDialect
+    raise UnsupportedDialect(dialect_name)
 
 
 def _fail_unsupported_version(
@@ -403,7 +403,7 @@ def _fail_unsupported_version(
         dialect_name,
         minimum_version,
     )
-    raise UnsupportedDialect
+    raise UnsupportedDialect(dialect_name)
 
 
 def _delete_issue_deprecated_version(hass: HomeAssistant, dialect_name: str) -> None:
@@ -412,7 +412,10 @@ def _delete_issue_deprecated_version(hass: HomeAssistant, dialect_name: str) -> 
 
 
 def _create_issue_deprecated_version(
-    hass: HomeAssistant, server_version: str, dialect_name: str, min_version: str
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    dialect_name: str,
+    min_version: AwesomeVersion,
 ) -> None:
     """Warn about upcoming unsupported database version."""
     ir.create_issue(
@@ -423,8 +426,8 @@ def _create_issue_deprecated_version(
         severity=ir.IssueSeverity.CRITICAL,
         translation_key=f"{dialect_name}_too_old",
         translation_placeholders={
-            "server_version": server_version,
-            "min_version": min_version,
+            "server_version": str(server_version),
+            "min_version": str(min_version),
         },
     )
 
