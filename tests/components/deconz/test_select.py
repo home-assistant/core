@@ -24,29 +24,27 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 TEST_DATA = [
     (  # Presence Device Mode
         {
-            "1": {
-                "config": {
-                    "devicemode": "undirected",
-                    "on": True,
-                    "reachable": True,
-                    "sensitivity": 3,
-                    "triggerdistance": "medium",
-                },
-                "etag": "13ff209f9401b317987d42506dd4cd79",
-                "lastannounced": None,
-                "lastseen": "2022-06-28T23:13Z",
-                "manufacturername": "aqara",
-                "modelid": "lumi.motion.ac01",
-                "name": "Aqara FP1",
-                "state": {
-                    "lastupdated": "2022-06-28T23:13:38.577",
-                    "presence": True,
-                    "presenceevent": "leave",
-                },
-                "swversion": "20210121",
-                "type": "ZHAPresence",
-                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
-            }
+            "config": {
+                "devicemode": "undirected",
+                "on": True,
+                "reachable": True,
+                "sensitivity": 3,
+                "triggerdistance": "medium",
+            },
+            "etag": "13ff209f9401b317987d42506dd4cd79",
+            "lastannounced": None,
+            "lastseen": "2022-06-28T23:13Z",
+            "manufacturername": "aqara",
+            "modelid": "lumi.motion.ac01",
+            "name": "Aqara FP1",
+            "state": {
+                "lastupdated": "2022-06-28T23:13:38.577",
+                "presence": True,
+                "presenceevent": "leave",
+            },
+            "swversion": "20210121",
+            "type": "ZHAPresence",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         },
         {
             "entity_count": 5,
@@ -59,35 +57,33 @@ TEST_DATA = [
                 "options": ["leftright", "undirected"],
             },
             "option": PresenceConfigDeviceMode.LEFT_AND_RIGHT.value,
-            "request": "/sensors/1/config",
+            "request": "/sensors/0/config",
             "request_data": {"devicemode": "leftright"},
         },
     ),
     (  # Presence Sensitivity
         {
-            "1": {
-                "config": {
-                    "devicemode": "undirected",
-                    "on": True,
-                    "reachable": True,
-                    "sensitivity": 3,
-                    "triggerdistance": "medium",
-                },
-                "etag": "13ff209f9401b317987d42506dd4cd79",
-                "lastannounced": None,
-                "lastseen": "2022-06-28T23:13Z",
-                "manufacturername": "aqara",
-                "modelid": "lumi.motion.ac01",
-                "name": "Aqara FP1",
-                "state": {
-                    "lastupdated": "2022-06-28T23:13:38.577",
-                    "presence": True,
-                    "presenceevent": "leave",
-                },
-                "swversion": "20210121",
-                "type": "ZHAPresence",
-                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
-            }
+            "config": {
+                "devicemode": "undirected",
+                "on": True,
+                "reachable": True,
+                "sensitivity": 3,
+                "triggerdistance": "medium",
+            },
+            "etag": "13ff209f9401b317987d42506dd4cd79",
+            "lastannounced": None,
+            "lastseen": "2022-06-28T23:13Z",
+            "manufacturername": "aqara",
+            "modelid": "lumi.motion.ac01",
+            "name": "Aqara FP1",
+            "state": {
+                "lastupdated": "2022-06-28T23:13:38.577",
+                "presence": True,
+                "presenceevent": "leave",
+            },
+            "swversion": "20210121",
+            "type": "ZHAPresence",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         },
         {
             "entity_count": 5,
@@ -100,35 +96,33 @@ TEST_DATA = [
                 "options": ["High", "Medium", "Low"],
             },
             "option": "Medium",
-            "request": "/sensors/1/config",
+            "request": "/sensors/0/config",
             "request_data": {"sensitivity": 2},
         },
     ),
     (  # Presence Trigger Distance
         {
-            "1": {
-                "config": {
-                    "devicemode": "undirected",
-                    "on": True,
-                    "reachable": True,
-                    "sensitivity": 3,
-                    "triggerdistance": "medium",
-                },
-                "etag": "13ff209f9401b317987d42506dd4cd79",
-                "lastannounced": None,
-                "lastseen": "2022-06-28T23:13Z",
-                "manufacturername": "aqara",
-                "modelid": "lumi.motion.ac01",
-                "name": "Aqara FP1",
-                "state": {
-                    "lastupdated": "2022-06-28T23:13:38.577",
-                    "presence": True,
-                    "presenceevent": "leave",
-                },
-                "swversion": "20210121",
-                "type": "ZHAPresence",
-                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
-            }
+            "config": {
+                "devicemode": "undirected",
+                "on": True,
+                "reachable": True,
+                "sensitivity": 3,
+                "triggerdistance": "medium",
+            },
+            "etag": "13ff209f9401b317987d42506dd4cd79",
+            "lastannounced": None,
+            "lastseen": "2022-06-28T23:13Z",
+            "manufacturername": "aqara",
+            "modelid": "lumi.motion.ac01",
+            "name": "Aqara FP1",
+            "state": {
+                "lastupdated": "2022-06-28T23:13:38.577",
+                "presence": True,
+                "presenceevent": "leave",
+            },
+            "swversion": "20210121",
+            "type": "ZHAPresence",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         },
         {
             "entity_count": 5,
@@ -141,14 +135,14 @@ TEST_DATA = [
                 "options": ["far", "medium", "near"],
             },
             "option": PresenceConfigTriggerDistance.FAR.value,
-            "request": "/sensors/1/config",
+            "request": "/sensors/0/config",
             "request_data": {"triggerdistance": "far"},
         },
     ),
 ]
 
 
-@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_0_payload", "expected"), TEST_DATA)
 async def test_select(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
