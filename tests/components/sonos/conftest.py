@@ -216,7 +216,6 @@ class SoCoMockFactory:
         mock_soco.get_battery_info.return_value = self.battery_info
         mock_soco.all_zones = {mock_soco}
         mock_soco.group.coordinator = mock_soco
-        mock_soco.snapshot = Mock(return_value=True)
         self.mock_list[ip_address] = mock_soco
         return mock_soco
 
