@@ -1277,7 +1277,6 @@ omit =
     homeassistant/components/sonos/household_coordinator.py
     homeassistant/components/sonos/media.py
     homeassistant/components/sonos/media_browser.py
-    homeassistant/components/sonos/speaker.py
     homeassistant/components/sonos/switch.py
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/__init__.py
