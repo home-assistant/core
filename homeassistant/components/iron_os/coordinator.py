@@ -7,6 +7,7 @@ import logging
 
 from pynecil import CommunicationError, DeviceInfoResponse, LiveDataResponse, Pynecil
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -20,7 +21,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     """Pinecil coordinator."""
 
-    device: DeviceInfoResponse | None = None
+    device: DeviceInfoResponse
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, pinecil: Pynecil) -> None:
         """Initialize Pinecil coordinator."""
@@ -36,8 +38,7 @@ class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
         """Fetch data from Pinecil."""
 
         try:
-            if not self.device:
-                self.device = await self.pinecil.get_device_info()
+            self.device = await self.pinecil.get_device_info()
             return await self.pinecil.get_live_data()
 
         except CommunicationError as e:

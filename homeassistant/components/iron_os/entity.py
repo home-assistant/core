@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -21,13 +21,9 @@ class PinecilBaseEntity(CoordinatorEntity[PinecilCoordinator]):
         self,
         coordinator: PinecilCoordinator,
         entity_description: EntityDescription,
-        context: Any = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        if TYPE_CHECKING:
-            assert coordinator.device
-            assert coordinator.config_entry
 
         self.entity_description = entity_description
         self._attr_unique_id = (
