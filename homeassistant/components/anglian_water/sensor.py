@@ -33,8 +33,7 @@ class AnglianWaterEntityDescription(SensorEntityDescription):
 SENSORS: tuple[AnglianWaterEntityDescription, ...] = (
     AnglianWaterEntityDescription(
         key="previous_consumption",
-        name="Previous Consumption",
-        icon="mdi:water",
+        translation_key="previous_consumption",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL,

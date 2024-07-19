@@ -14,5 +14,12 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "maintenance": "Anglian Water is currently performing maintenance, please try again later"
     }
+  },
+  "entity": {
+    "sensor": {
+      "previous_consumption": {
+        "name": "Previous Consumption"
+      }
+    }
   }
 }
