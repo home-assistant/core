@@ -18,6 +18,7 @@ PLATFORMS = [
 UNSUPPORTED_DEVICES = [
     "Heatbox1",
     "Heatbox2_SRC",
+    "E3_TCU41_x04",
     "E3_FloorHeatingCircuitChannel",
     "E3_FloorHeatingCircuitDistributorBox",
     "E3_RoomControl_One_522",

@@ -3231,7 +3231,7 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     evt = threading.Event()
     loop = asyncio.get_running_loop()
 
-    def executor_func() -> None:
+    def executor_func() -> threading.Event:
         evt.set()
         return evt
 
