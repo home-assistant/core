@@ -263,6 +263,7 @@ async def test_rpc_sleeping_binary_sensor(
 ) -> None:
     """Test RPC online sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     config_entry = await init_integration(hass, 2, sleep_period=1000)
 

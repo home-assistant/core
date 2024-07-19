@@ -157,6 +157,9 @@ backoff>=2.0
 # v2 has breaking changes (#99218).
 pydantic==1.10.17
 
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
+
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
 pubnub!=6.4.0

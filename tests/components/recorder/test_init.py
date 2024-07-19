@@ -1707,7 +1707,9 @@ async def test_database_corruption_while_running(
     hass.states.async_set("test.lost", "on", {})
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
 
     await async_wait_recording_done(hass)
     with patch.object(

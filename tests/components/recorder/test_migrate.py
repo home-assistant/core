@@ -165,7 +165,9 @@ async def test_database_migration_encounters_corruption(
     assert recorder.util.async_migration_in_progress(hass) is False
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
 
     with (
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),

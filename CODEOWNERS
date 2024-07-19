@@ -777,6 +777,8 @@ build.json @home-assistant/supervisor
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
+/homeassistant/components/lifx/ @Djelibeybi
+/tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linear_garage_door/ @IceBotYT

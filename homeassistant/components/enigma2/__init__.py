@@ -16,6 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .const import CONF_SOURCE_BOUQUET
+
 type Enigma2ConfigEntry = ConfigEntry[OpenWebIfDevice]
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -35,7 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Enigma2ConfigEntry) -> b
         hass, verify_ssl=entry.data[CONF_VERIFY_SSL], base_url=base_url
     )
 
-    entry.runtime_data = OpenWebIfDevice(session)
+    entry.runtime_data = OpenWebIfDevice(
+        session, source_bouquet=entry.options.get(CONF_SOURCE_BOUQUET)
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

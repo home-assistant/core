@@ -1178,7 +1178,15 @@ class Recorder(threading.Thread):
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
-        if isinstance(err.__cause__, sqlite3.DatabaseError):
+        if (
+            (cause := err.__cause__)
+            and isinstance(cause, sqlite3.DatabaseError)
+            and (cause_str := str(cause))
+            # Make sure we do not move away a database when its only locked
+            # externally by another process. sqlite does not give us a named
+            # exception for this so we have to check the error message.
+            and ("malformed" in cause_str or "not a database" in cause_str)
+        ):
             _LOGGER.exception(
                 "Unrecoverable sqlite3 database corruption detected: %s", err
             )
