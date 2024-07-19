@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -163,18 +164,23 @@ async def async_setup_entry(
     weather_coordinator = domain_data.coordinator
 
     if domain_data.mode == OWM_MODE_FREE_FORECAST:
-        return
-
-    entities: list[AbstractOpenWeatherMapSensor] = [
-        OpenWeatherMapSensor(
-            name,
-            f"{config_entry.unique_id}-{description.key}",
-            description,
-            weather_coordinator,
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
         )
-        for description in WEATHER_SENSOR_TYPES
-    ]
-    async_add_entities(entities)
+        for entry in entries:
+            entity_registry.async_remove(entry.entity_id)
+    else:
+        entities: list[AbstractOpenWeatherMapSensor] = [
+            OpenWeatherMapSensor(
+                name,
+                f"{config_entry.unique_id}-{description.key}",
+                description,
+                weather_coordinator,
+            )
+            for description in WEATHER_SENSOR_TYPES
+        ]
+        async_add_entities(entities)
 
 
 class AbstractOpenWeatherMapSensor(SensorEntity):
