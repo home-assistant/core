@@ -5,31 +5,7 @@
     'switch.test_light_switch_1_test_serial_1',
   ])
 # ---
-# name: test_api_not_ok_entities_stay_the_same_as_before.1
-  list([
-    'switch.test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1',
-  ])
-# ---
-# name: test_api_not_ok_returns_same_devices_as_before
-  list([
-    'switch.test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1',
-  ])
-# ---
-# name: test_api_not_ok_returns_same_devices_as_before.1
-  list([
-    'switch.test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1',
-  ])
-# ---
 # name: test_api_throws_response_entities_stay_the_same_as_before
-  list([
-    'switch.test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1',
-  ])
-# ---
-# name: test_api_throws_response_entities_stay_the_same_as_before.1
   list([
     'switch.test_light_switch_0_test_serial_0',
     'switch.test_light_switch_1_test_serial_1',
@@ -57,6 +33,7 @@
     }),
     'manufacturer': 'iotty',
     'model': None,
+    'model_id': None,
     'name': '[TEST] Light switch 0 (TEST_SERIAL_0)',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

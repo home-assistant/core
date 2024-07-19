@@ -250,7 +250,8 @@ async def test_api_not_ok_entities_stay_the_same_as_before(
 
     # Should have two devices
     assert hass.states.async_entity_ids_count() == 2
-    assert hass.states.async_entity_ids() == snapshot
+    entity_ids = hass.states.async_entity_ids()
+    assert entity_ids == snapshot
 
     mock_get_status_filled.return_value = {RESULT: "Not a valid restul"}
 
@@ -258,9 +259,9 @@ async def test_api_not_ok_entities_stay_the_same_as_before(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should have three devices
+    # Should still have have two devices
     assert hass.states.async_entity_ids_count() == 2
-    assert hass.states.async_entity_ids() == snapshot
+    assert hass.states.async_entity_ids() == entity_ids
 
 
 async def test_api_throws_response_entities_stay_the_same_as_before(
@@ -284,7 +285,8 @@ async def test_api_throws_response_entities_stay_the_same_as_before(
 
     # Should have two devices
     assert hass.states.async_entity_ids_count() == 2
-    assert hass.states.async_entity_ids() == snapshot
+    entity_ids = hass.states.async_entity_ids()
+    assert entity_ids == snapshot
 
     mock_get_devices_twolightswitches.return_value = test_ls_one_added
     mock_get_status_filled.side_effect = Exception("Something went wrong")
@@ -293,6 +295,6 @@ async def test_api_throws_response_entities_stay_the_same_as_before(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should have three devices
+    # Should still have have two devices
     assert hass.states.async_entity_ids_count() == 2
-    assert hass.states.async_entity_ids() == snapshot
+    assert hass.states.async_entity_ids() == entity_ids

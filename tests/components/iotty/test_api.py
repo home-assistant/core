@@ -54,7 +54,11 @@ async def test_api_getaccesstoken_tokennotvalid_reloadtoken(
     mock_aioclient: None,
     aiohttp_client_session: ClientSession,
 ) -> None:
-    """If a request with an invalid token is made, a request for a new token is done, and the resulting token is used for future calls."""
+    """Test getting access token.
+
+    If a request with an invalid token is made, a request for a new token is done,
+    and the resulting token is used for future calls.
+    """
     config_entry_oauth2_flow.async_register_implementation(
         hass, DOMAIN, local_oauth_impl
     )
