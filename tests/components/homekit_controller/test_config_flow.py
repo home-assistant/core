@@ -211,13 +211,13 @@ def setup_mock_accessory(controller):
     bridge = Accessories()
 
     accessory = Accessory.create_with_info(
+        1,
         name="Koogeek-LS1-20833F",
         manufacturer="Koogeek",
         model="LS1",
         serial_number="12345",
         firmware_revision="1.1",
     )
-    accessory.aid = 1
 
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
@@ -9,7 +10,6 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
@@ -23,7 +23,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="frozen_time")
-def mock_frozen_time() -> None:
+def mock_frozen_time() -> str | None:
     """Fixture to set a frozen time used in tests.
 
     This is needed so that it can run before other fixtures.
@@ -32,7 +32,7 @@ def mock_frozen_time() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
+def mock_set_frozen_time(frozen_time: str | None) -> Generator[None]:
     """Fixture to freeze time that also can work for other fixtures."""
     if not frozen_time:
         yield
@@ -44,9 +44,9 @@ def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
 @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_platform(
     hass: HomeAssistant,
-    set_time_zone: Any,
-    frozen_time: Any,
-    mock_setup_integration: Any,
+    set_time_zone: None,
+    frozen_time: str | None,
+    mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test and fixtures are set up in the right order."""

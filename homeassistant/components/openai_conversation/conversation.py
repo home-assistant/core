@@ -92,6 +92,10 @@ class OpenAIConversationEntity(
             model="ChatGPT",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -219,6 +223,7 @@ class OpenAIConversationEntity(
         ]
 
         LOGGER.debug("Prompt: %s", messages)
+        LOGGER.debug("Tools: %s", tools)
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
         )

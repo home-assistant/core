@@ -7,17 +7,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pyloadapi.api import PyLoadAPI
+from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PyLoadConfigEntry
-from .const import DOMAIN, MANUFACTURER, SERVICE_NAME
-from .coordinator import PyLoadCoordinator
+from .const import DOMAIN
+from .entity import BasePyLoadEntity
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -76,32 +75,22 @@ async def async_setup_entry(
     )
 
 
-class PyLoadBinarySensor(CoordinatorEntity[PyLoadCoordinator], ButtonEntity):
+class PyLoadBinarySensor(BasePyLoadEntity, ButtonEntity):
     """Representation of a pyLoad button."""
 
-    _attr_has_entity_name = True
     entity_description: PyLoadButtonEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PyLoadCoordinator,
-        entity_description: PyLoadButtonEntityDescription,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator)
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        )
-        self.entity_description = entity_description
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer=MANUFACTURER,
-            model=SERVICE_NAME,
-            configuration_url=coordinator.pyload.api_url,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            translation_key=DOMAIN,
-        )
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.press_fn(self.coordinator.pyload)
+        try:
+            await self.entity_description.press_fn(self.coordinator.pyload)
+        except CannotConnect as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
+        except InvalidAuth as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_auth_exception",
+            ) from e

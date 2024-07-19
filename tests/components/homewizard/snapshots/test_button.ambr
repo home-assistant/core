@@ -71,9 +71,11 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
+    'model': 'Wi-Fi P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '4.19',

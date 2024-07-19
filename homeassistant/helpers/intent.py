@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Collection, Coroutine, Iterable
+from collections.abc import Callable, Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -37,6 +37,9 @@ from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
+type _IntentSlotsType = dict[
+    str | tuple[str, str], VolSchemaType | Callable[[Any], Any]
+]
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -51,6 +54,8 @@ INTENT_DECREASE_TIMER = "HassDecreaseTimer"
 INTENT_PAUSE_TIMER = "HassPauseTimer"
 INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
 INTENT_TIMER_STATUS = "HassTimerStatus"
+INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
+INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -808,8 +813,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         self,
         intent_type: str,
         speech: str | None = None,
-        required_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
-        optional_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
+        required_slots: _IntentSlotsType | None = None,
+        optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
@@ -825,7 +830,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.description = description
         self.platforms = platforms
 
-        self.required_slots: dict[tuple[str, str], VolSchemaType] = {}
+        self.required_slots: _IntentSlotsType = {}
         if required_slots:
             for key, value_schema in required_slots.items():
                 if isinstance(key, str):
@@ -834,7 +839,7 @@ class DynamicServiceIntentHandler(IntentHandler):
 
                 self.required_slots[key] = value_schema
 
-        self.optional_slots: dict[tuple[str, str], VolSchemaType] = {}
+        self.optional_slots: _IntentSlotsType = {}
         if optional_slots:
             for key, value_schema in optional_slots.items():
                 if isinstance(key, str):
@@ -1108,8 +1113,8 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         domain: str,
         service: str,
         speech: str | None = None,
-        required_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
-        optional_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
+        required_slots: _IntentSlotsType | None = None,
+        optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,

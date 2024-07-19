@@ -68,8 +68,10 @@ async def test_list_devices(
             "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
+            "model_id": None,
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
@@ -86,8 +88,10 @@ async def test_list_devices(
             "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
+            "model_id": None,
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": dev1,
@@ -117,8 +121,10 @@ async def test_list_devices(
             "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
+            "model_id": None,
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
@@ -274,7 +280,7 @@ async def test_remove_config_entry_from_device(
         config_entry_id=entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == [entry_1.entry_id, entry_2.entry_id]
+    assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
 
     # Try removing a config entry from the device, it should fail because
     # async_remove_config_entry_device returns False
@@ -293,9 +299,9 @@ async def test_remove_config_entry_from_device(
     assert response["result"]["config_entries"] == [entry_2.entry_id]
 
     # Check that the config entry was removed from the device
-    assert device_registry.async_get(device_entry.id).config_entries == [
+    assert device_registry.async_get(device_entry.id).config_entries == {
         entry_2.entry_id
-    ]
+    }
 
     # Remove the 2nd config entry
     response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
@@ -365,11 +371,11 @@ async def test_remove_config_entry_from_device_fails(
         config_entry_id=entry_3.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == [
+    assert device_entry.config_entries == {
         entry_1.entry_id,
         entry_2.entry_id,
         entry_3.entry_id,
-    ]
+    }
 
     fake_entry_id = "abc123"
     assert entry_1.entry_id != fake_entry_id

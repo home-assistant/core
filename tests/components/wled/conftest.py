@@ -1,11 +1,11 @@
 """Fixtures for WLED integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
-from wled import Device as WLEDDevice
+from wled import Device as WLEDDevice, Releases
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -51,7 +51,24 @@ def device_fixture() -> str:
 
 
 @pytest.fixture
-def mock_wled(device_fixture: str) -> Generator[MagicMock]:
+def mock_wled_releases() -> Generator[MagicMock]:
+    """Return a mocked WLEDReleases client."""
+    with patch(
+        "homeassistant.components.wled.coordinator.WLEDReleases", autospec=True
+    ) as wled_releases_mock:
+        wled_releases = wled_releases_mock.return_value
+        wled_releases.releases.return_value = Releases(
+            beta="1.0.0b5",
+            stable="0.99.0",
+        )
+
+        yield wled_releases
+
+
+@pytest.fixture
+def mock_wled(
+    device_fixture: str, mock_wled_releases: MagicMock
+) -> Generator[MagicMock]:
     """Return a mocked WLED client."""
     with (
         patch(
@@ -60,11 +77,12 @@ def mock_wled(device_fixture: str) -> Generator[MagicMock]:
         patch("homeassistant.components.wled.config_flow.WLED", new=wled_mock),
     ):
         wled = wled_mock.return_value
-        wled.update.return_value = WLEDDevice(
+        wled.update.return_value = WLEDDevice.from_dict(
             load_json_object_fixture(f"{device_fixture}.json", DOMAIN)
         )
         wled.connected = False
         wled.host = "127.0.0.1"
+
         yield wled
 
 

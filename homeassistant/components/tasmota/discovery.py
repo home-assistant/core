@@ -248,6 +248,7 @@ async def async_start(  # noqa: C901
 
         if not payload:
             return
+        assert isinstance(command_topic, str)
 
         # Warn and add issues if there are duplicated topics
         if warn_if_topic_duplicated(hass, command_topic, mac, tasmota_device_config):

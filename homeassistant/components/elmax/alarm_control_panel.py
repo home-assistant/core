@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from elmax_api.exceptions import ElmaxApiError
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
 from elmax_api.model.command import AreaCommand
 from elmax_api.model.panel import PanelStatus
@@ -12,10 +13,17 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
+    STATE_ALARM_TRIGGERED,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import InvalidStateError
+from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .common import ElmaxEntity
 from .const import DOMAIN
@@ -66,6 +74,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_has_entity_name = True
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _pending_state: str | None = None
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -74,31 +83,70 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
                 f"Cannot arm {self.name}: please check for open windows/doors first"
             )
 
-        await self.coordinator.http_client.execute_command(
-            endpoint_id=self._device.endpoint_id,
-            command=AreaCommand.ARM_TOTALLY,
-            extra_payload={"code": code},
-        )
-        await self.coordinator.async_refresh()
+        self._pending_state = STATE_ALARM_ARMING
+        self.async_write_ha_state()
+
+        try:
+            await self.coordinator.http_client.execute_command(
+                endpoint_id=self._device.endpoint_id,
+                command=AreaCommand.ARM_TOTALLY,
+                extra_payload={"code": code},
+            )
+        except ElmaxApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="alarm_operation_failed_generic",
+                translation_placeholders={"operation": "arm"},
+            ) from err
+        finally:
+            await self.coordinator.async_refresh()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         # Elmax alarm panels do always require a code to be passed for disarm operations
         if code is None or code == "":
             raise ValueError("Please input the disarm code.")
-        await self.coordinator.http_client.execute_command(
-            endpoint_id=self._device.endpoint_id,
-            command=AreaCommand.DISARM,
-            extra_payload={"code": code},
-        )
-        await self.coordinator.async_refresh()
+
+        self._pending_state = STATE_ALARM_DISARMING
+        self.async_write_ha_state()
+
+        try:
+            await self.coordinator.http_client.execute_command(
+                endpoint_id=self._device.endpoint_id,
+                command=AreaCommand.DISARM,
+                extra_payload={"code": code},
+            )
+        except ElmaxApiError as err:
+            if err.status_code == 403:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="invalid_disarm_code"
+                ) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="alarm_operation_failed_generic",
+                translation_placeholders={"operation": "disarm"},
+            ) from err
+        finally:
+            await self.coordinator.async_refresh()
+
+    @property
+    def state(self) -> StateType:
+        """Return the state of the entity."""
+        if self._pending_state is not None:
+            return self._pending_state
+        if (
+            state := self.coordinator.get_area_state(self._device.endpoint_id)
+        ) is not None:
+            if state.status == AlarmStatus.TRIGGERED:
+                return ALARM_STATE_TO_HA.get(AlarmStatus.TRIGGERED)
+            return ALARM_STATE_TO_HA.get(state.armed_status)
+        return None
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_state = ALARM_STATE_TO_HA.get(
-            self.coordinator.get_area_state(self._device.endpoint_id).armed_status
-        )
+        # Just reset the local pending_state so that it no longer overrides the one from coordinator.
+        self._pending_state = None
         super()._handle_coordinator_update()
 
 
@@ -108,4 +156,5 @@ ALARM_STATE_TO_HA = {
     AlarmArmStatus.ARMED_P2: STATE_ALARM_ARMED_AWAY,
     AlarmArmStatus.ARMED_P1: STATE_ALARM_ARMED_AWAY,
     AlarmArmStatus.NOT_ARMED: STATE_ALARM_DISARMED,
+    AlarmStatus.TRIGGERED: STATE_ALARM_TRIGGERED,
 }

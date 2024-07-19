@@ -1,9 +1,9 @@
 """Tests for the comfoconnect sensor platform."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.core import HomeAssistant

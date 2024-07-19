@@ -1,9 +1,9 @@
 """Fixtures for Webmin integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.webmin.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import (
@@ -37,14 +37,21 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def async_init_integration(
+    hass: HomeAssistant, with_mac_address: bool = True
+) -> MockConfigEntry:
     """Set up the Webmin integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, options=TEST_USER_INPUT, title="name")
     entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",
-        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+        return_value=load_json_object_fixture(
+            "webmin_update.json"
+            if with_mac_address
+            else "webmin_update_without_mac.json",
+            DOMAIN,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

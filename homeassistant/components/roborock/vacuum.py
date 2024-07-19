@@ -17,15 +17,14 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
+from . import RoborockConfigEntry
 from .const import DOMAIN, GET_MAPS_SERVICE_NAME
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockCoordinatedEntityV1
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: STATE_IDLE,  # "Starting"
@@ -56,16 +55,14 @@ STATE_CODE_TO_STATE = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
     async_add_entities(
-        RoborockVacuum(slugify(device_id), coordinator)
-        for device_id, coordinator in coordinators.items()
+        RoborockVacuum(coordinator)
+        for coordinator in config_entry.runtime_data.v1
+        if isinstance(coordinator, RoborockDataUpdateCoordinator)
     )
 
     platform = entity_platform.async_get_current_platform()
@@ -78,7 +75,7 @@ async def async_setup_entry(
     )
 
 
-class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
+class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
@@ -99,14 +96,13 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntity.__init__(
+        RoborockCoordinatedEntityV1.__init__(
             self,
-            unique_id,
+            coordinator.duid_slug,
             coordinator,
             listener_request=[
                 RoborockDataProtocol.FAN_POWER,

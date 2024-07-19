@@ -179,21 +179,19 @@ async def test_get_hvac_modes(
 
     state = hass.states.get(ENTITY_CLIMATE)
     modes = state.attributes.get("hvac_modes")
-    assert [
+    assert modes == [
         HVACMode.AUTO,
         HVACMode.OFF,
         HVACMode.COOL,
         HVACMode.HEAT,
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
-    ] == modes
+    ]
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_set_operation_bad_attr_and_state(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting operation mode without required attribute.
 
@@ -454,9 +452,7 @@ async def test_turn_on_and_off_without_power_command(
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_set_fan_mode_bad_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting fan mode without required attribute."""
     await mqtt_mock_entry()
@@ -551,9 +547,7 @@ async def test_set_fan_mode(
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_set_swing_mode_bad_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting swing mode without required attribute."""
     await mqtt_mock_entry()
@@ -1023,7 +1017,16 @@ async def test_handle_action_received(
 
     # Cycle through valid modes
     # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
-    actions = ["off", "preheating", "heating", "cooling", "drying", "idle", "fan"]
+    actions = [
+        "off",
+        "preheating",
+        "defrosting",
+        "heating",
+        "cooling",
+        "drying",
+        "idle",
+        "fan",
+    ]
     assert all(elem in actions for elem in HVACAction)
     for action in actions:
         async_fire_mqtt_message(hass, "action", action)
@@ -1046,9 +1049,7 @@ async def test_handle_action_received(
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_set_preset_mode_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting of the preset mode."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1104,9 +1105,7 @@ async def test_set_preset_mode_optimistic(
     ],
 )
 async def test_set_preset_mode_explicit_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting of the preset mode."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1523,9 +1522,7 @@ async def test_get_with_templates(
     ],
 )
 async def test_set_and_templates(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting various attributes with templates."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1879,11 +1876,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        climate.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, climate.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1894,11 +1887,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        climate.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, climate.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -2074,11 +2063,7 @@ async def test_entity_id_update_subscriptions(
         }
     }
     await help_test_entity_id_update_subscriptions(
-        hass,
-        mqtt_mock_entry,
-        climate.DOMAIN,
-        config,
-        ["test-topic", "avty-topic"],
+        hass, mqtt_mock_entry, climate.DOMAIN, config, ["test-topic", "avty-topic"]
     )
 
 
@@ -2170,20 +2155,8 @@ async def test_precision_whole(
 @pytest.mark.parametrize(
     ("service", "topic", "parameters", "payload", "template"),
     [
-        (
-            climate.SERVICE_TURN_ON,
-            "power_command_topic",
-            {},
-            "ON",
-            None,
-        ),
-        (
-            climate.SERVICE_TURN_OFF,
-            "power_command_topic",
-            {},
-            "OFF",
-            None,
-        ),
+        (climate.SERVICE_TURN_ON, "power_command_topic", {}, "ON", None),
+        (climate.SERVICE_TURN_OFF, "power_command_topic", {}, "OFF", None),
         (
             climate.SERVICE_SET_HVAC_MODE,
             "mode_command_topic",
@@ -2346,9 +2319,7 @@ async def test_publishing_with_custom_encoding(
     ],
 )
 async def test_humidity_configuration_validity(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    valid: bool,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, valid: bool
 ) -> None:
     """Test the validity of humidity configurations."""
     assert await mqtt_mock_entry()
@@ -2357,8 +2328,7 @@ async def test_humidity_configuration_validity(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = climate.DOMAIN
@@ -2381,8 +2351,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = climate.DOMAIN

@@ -16,9 +16,7 @@ pytestmark = [pytest.mark.usefixtures("init_integration")]
 
 
 @pytest.fixture
-def mock_device_execute_response(
-    data: dict[str, Any],
-) -> Generator[dict[str, Any], None, None]:
+def mock_device_execute_response(data: dict[str, Any]) -> Generator[dict[str, Any]]:
     """Mock the device execute function response."""
 
     response = {
