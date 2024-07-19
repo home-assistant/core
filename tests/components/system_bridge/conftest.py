@@ -64,7 +64,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_notify_platform() -> Generator[AsyncMock, None, None]:
+def mock_setup_notify_platform() -> Generator[AsyncMock]:
     """Mock notify platform setup."""
     with patch(
         "homeassistant.helpers.discovery.async_load_platform",
@@ -73,7 +73,7 @@ def mock_setup_notify_platform() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_version() -> Generator[AsyncMock, None, None]:
+def mock_version() -> Generator[AsyncMock]:
     """Return a mocked Version class."""
     with patch(
         "homeassistant.components.system_bridge.Version",
@@ -90,7 +90,7 @@ def mock_websocket_client(
     register_data_listener_model: RegisterDataListener = RegisterDataListener(
         modules=REGISTER_MODULES,
     ),
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Return a mocked WebSocketClient client."""
 
     with (

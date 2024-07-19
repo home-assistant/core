@@ -1,7 +1,6 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable, Generator
-from typing import Any
 from unittest.mock import MagicMock, Mock
 
 from homeconnect.api import HomeConnectError
@@ -48,7 +47,7 @@ def platforms() -> list[str]:
 
 
 async def test_switches(
-    bypass_throttle: Generator[None, Any, None],
+    bypass_throttle: Generator[None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -119,7 +118,7 @@ async def test_switch_functionality(
     status: dict,
     service: str,
     state: str,
-    bypass_throttle: Generator[None, Any, None],
+    bypass_throttle: Generator[None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -189,7 +188,7 @@ async def test_switch_exception_handling(
     status: dict,
     service: str,
     mock_attr: str,
-    bypass_throttle: Generator[None, Any, None],
+    bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,

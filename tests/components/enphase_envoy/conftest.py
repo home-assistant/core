@@ -67,7 +67,7 @@ def config_fixture() -> dict[str, str]:
 @pytest.fixture
 async def mock_envoy(
     request: pytest.FixtureRequest,
-) -> AsyncGenerator[AsyncMock, None]:
+) -> AsyncGenerator[AsyncMock]:
     """Define a mocked Envoy fixture."""
     with (
         patch(
