@@ -20,6 +20,8 @@ from .const import TessieState
 from .entity import TessieEnergyEntity, TessieEntity
 from .models import TessieEnergyData, TessieVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TessieBinarySensorEntityDescription(BinarySensorEntityDescription):
