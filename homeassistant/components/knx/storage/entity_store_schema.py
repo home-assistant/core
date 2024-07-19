@@ -21,7 +21,7 @@ BASE_ENTITY_SCHEMA = vol.All(
     vol.Any(
         vol.Schema(
             {
-                vol.Required("name"): str,
+                vol.Required("name"): vol.All(str, vol.IsTrue()),
             },
             extra=vol.ALLOW_EXTRA,
         ),
