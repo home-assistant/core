@@ -185,16 +185,16 @@ def fixture_light_data() -> dict[str, Any]:
 
 
 @pytest.fixture(name="sensor_payload")
-def fixture_sensor_data(sensor_1_payload: dict[str, Any]) -> dict[str, Any]:
+def fixture_sensor_data(sensor_0_payload: dict[str, Any]) -> dict[str, Any]:
     """Sensor data."""
-    if sensor_1_payload:
-        return {"1": sensor_1_payload}
+    if sensor_0_payload:
+        return {"0": sensor_0_payload}
     return {}
 
 
-@pytest.fixture(name="sensor_1_payload")
-def fixture_sensor_1_data() -> dict[str, Any]:
-    """Sensor 1 data."""
+@pytest.fixture(name="sensor_0_payload")
+def fixture_sensor_0_data() -> dict[str, Any]:
+    """Sensor 0 data."""
     return {}
 
 

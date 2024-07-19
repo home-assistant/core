@@ -899,7 +899,7 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_1_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_0_payload", "expected"), TEST_DATA)
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
 async def test_sensors(
     hass: HomeAssistant,
@@ -952,7 +952,7 @@ async def test_sensors(
 
     # Change state
 
-    event_changed_sensor = {"r": "sensors", "id": "1"}
+    event_changed_sensor = {"r": "sensors"}
     event_changed_sensor |= expected["websocket_event"]
     await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
