@@ -111,8 +111,12 @@ async def async_setup_entry(
         )
 
     if nmbs_type == "liveboard":
+        station_from = config_entry.data.get(CONF_STATION_FROM, None)
+        station_to = config_entry.data.get(CONF_STATION_TO, None)
         station_live = config_entry.data[CONF_STATION_LIVE]
-        async_add_entities([NMBSLiveBoard(api_client, station_live)])
+        async_add_entities(
+            [NMBSLiveBoard(api_client, station_live, station_from, station_to)]
+        )
 
 
 class NMBSLiveBoard(SensorEntity):
@@ -120,10 +124,12 @@ class NMBSLiveBoard(SensorEntity):
 
     _attr_attribution = "https://api.irail.be/"
 
-    def __init__(self, api_client, live_station):
+    def __init__(self, api_client, live_station, station_from=None, station_to=None):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
+        self._station_from = station_from
+        self._station_to = station_to
         self._attrs = {}
         self._state = None
 
@@ -135,7 +141,10 @@ class NMBSLiveBoard(SensorEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        unique_id = f"{self._station}"
+        if self._station_from is not None and self._station_to is not None:
+            unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
+        else:
+            unique_id = f"{self._station}"
 
         return f"nmbs_live_{unique_id}"
 
