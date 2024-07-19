@@ -51,8 +51,7 @@ async def test_lock_from_light(
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
-    event_changed_light = {"r": "lights", "state": {"on": True}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"on": True}})
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
@@ -131,12 +130,12 @@ async def test_lock_from_sensor(
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
-    event_changed_light = {
+    event_changed_sensor = {
         "r": "sensors",
         "id": "1",
         "state": {"lockstate": "locked"},
     }
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED

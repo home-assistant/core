@@ -476,8 +476,7 @@ async def test_light_state_change(
     """Verify light can change state on websocket event."""
     assert hass.states.get("light.hue_go").state == STATE_ON
 
-    event_changed_light = {"r": "lights", "state": {"on": False}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"on": False}})
     await hass.async_block_till_done()
 
     assert hass.states.get("light.hue_go").state == STATE_OFF

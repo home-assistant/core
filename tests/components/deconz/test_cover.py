@@ -68,8 +68,7 @@ async def test_cover(
 
     # Event signals cover is open
 
-    event_changed_light = {"r": "lights", "state": {"lift": 0, "open": True}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"lift": 0, "open": True}})
     await hass.async_block_till_done()
 
     cover = hass.states.get("cover.window_covering_device")

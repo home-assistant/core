@@ -42,8 +42,7 @@ async def test_sirens(
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("siren.warning_device").state == STATE_ON
 
-    event_changed_light = {"r": "lights", "state": {"alert": None}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"alert": None}})
     await hass.async_block_till_done()
 
     assert hass.states.get("siren.warning_device").state == STATE_OFF

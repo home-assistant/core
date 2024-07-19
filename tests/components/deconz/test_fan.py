@@ -56,36 +56,31 @@ async def test_fans(
 
     # Test states
 
-    event_changed_light = {"r": "lights", "state": {"speed": 1}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"speed": 1}})
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 25
 
-    event_changed_light = {"r": "lights", "state": {"speed": 2}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"speed": 2}})
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 50
 
-    event_changed_light = {"r": "lights", "state": {"speed": 3}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"speed": 3}})
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
 
-    event_changed_light = {"r": "lights", "state": {"speed": 4}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"speed": 4}})
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
 
-    event_changed_light = {"r": "lights", "state": {"speed": 0}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"speed": 0}})
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
@@ -177,8 +172,7 @@ async def test_fans(
 
     # Events with an unsupported speed does not get converted
 
-    event_changed_light = {"r": "lights", "state": {"speed": 5}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"speed": 5}})
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON

@@ -65,8 +65,7 @@ async def test_power_plugs(
     assert hass.states.get("switch.on_off_relay").state == STATE_ON
     assert hass.states.get("switch.unsupported_switch") is None
 
-    event_changed_light = {"r": "lights", "state": {"on": False}}
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"on": False}})
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.on_off_switch").state == STATE_OFF
