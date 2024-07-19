@@ -1,12 +1,12 @@
 """Configuration for Israel rail tests."""
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
 from israelrailapi.api import TrainRoute
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.israel_rail import CONF_DESTINATION, CONF_START, DOMAIN
 
