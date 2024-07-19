@@ -46,7 +46,7 @@ class FlowResultType(StrEnum):
     MENU = "menu"
 
 
-# RESULT_TYPE_* is deprecated, to be removed in 2022.9
+# RESULT_TYPE_* is deprecated, to be removed in 2025.1
 _DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
 _DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
     FlowResultType.CREATE_ENTRY, "2025.1"
@@ -532,7 +532,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
             report(
                 (
                     "does not use FlowResultType enum for data entry flow result type. "
-                    "This is deprecated and will stop working in Home Assistant 2022.9"
+                    "This is deprecated and will stop working in Home Assistant 2025.1"
                 ),
                 error_if_core=False,
             )

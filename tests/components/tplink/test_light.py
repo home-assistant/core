@@ -533,16 +533,16 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EFFECT_LIST] == ["Off", "Effect1", "Effect2"]
 
     # Ensure setting color temp when an effect
-    # is in progress calls set_hsv to clear the effect
+    # is in progress calls set_effect to clear the effect
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
-    light.set_hsv.assert_called_once_with(0, 0, None)
+    light_effect.set_effect.assert_called_once_with(LightEffect.LIGHT_EFFECTS_OFF)
     light.set_color_temp.assert_called_once_with(4000, brightness=None, transition=None)
-    light.set_hsv.reset_mock()
+    light_effect.set_effect.reset_mock()
     light.set_color_temp.reset_mock()
 
     await hass.services.async_call(
