@@ -145,8 +145,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = self._device.motion_detection
             self.async_write_ha_state()
 
-        if self._last_event is None:
-            return
+        if self._last_event is None:  # pragma: no cover
+            return  # Unreachable
 
         if self._last_event["recording"]["status"] != "ready":
             return
@@ -165,8 +165,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
 
     @exception_wrap
     def _get_video(self) -> str | None:
-        if self._last_event is None:
-            return None
+        if self._last_event is None:  # pragma: no cover
+            return None  # Unreachable
         event_id = self._last_event.get("id")
         assert event_id and isinstance(event_id, int)
         return self._device.recording_url(event_id)
