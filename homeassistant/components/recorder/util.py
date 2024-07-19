@@ -29,6 +29,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.issue_registry import delete_issue
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -406,19 +407,26 @@ def _fail_unsupported_version(
     raise UnsupportedDialect
 
 
-def _warn_deprecated_version(
-    server_version: str, dialect_name: str, minimum_version: str
+def _delete_issue_deprecated_version(hass: HomeAssistant, dialect_name: str) -> None:
+    """Delete the issue about upcoming unsupported database version."""
+    delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
+
+
+def _create_issue_deprecated_version(
+    hass: HomeAssistant, server_version: str, dialect_name: str, min_version: str
 ) -> None:
     """Warn about upcoming unsupported database version."""
-    _LOGGER.warning(
-        (
-            "Support for version %s of %s is ending; the minimum supported version is %s. "
-            "Starting with Home Assistant 2024.2 this prevents the recorder from "
-            "starting. Please upgrade your database software"
-        ),
-        server_version,
-        dialect_name,
-        minimum_version,
+    ir.create_issue(
+        hass,
+        DOMAIN,
+        f"{dialect_name}_too_old",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        translation_key=f"{dialect_name}_too_old",
+        translation_placeholders={
+            "server_version": server_version,
+            "min_version": min_version,
+        },
     )
 
 
@@ -531,9 +539,14 @@ def setup_connection_for_dialect(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
             if not version or version < UPCOMING_MIN_VERSION_SQLITE:
-                _warn_deprecated_version(
-                    version or version_string, "SQLite", UPCOMING_MIN_VERSION_SQLITE
+                _create_issue_deprecated_version(
+                    instance.hass,
+                    version or version_string,
+                    dialect_name,
+                    UPCOMING_MIN_VERSION_SQLITE,
                 )
+            else:
+                _delete_issue_deprecated_version(instance.hass, dialect_name)
 
             if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
                 max_bind_vars = SQLITE_MODERN_MAX_BIND_VARS
