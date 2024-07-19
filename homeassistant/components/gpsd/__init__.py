@@ -27,12 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> bool
     agps_thread = AGPS3mechanism()
     entry.runtime_data = GPSDData(agps_thread)
 
-    await hass.async_add_executor_job(
-        agps_thread.stream_data,
-        entry.data.get(CONF_HOST),
-        entry.data.get(CONF_PORT),
-    )
-    await hass.async_add_executor_job(agps_thread.run_thread)
+    def setup_agps() -> None:
+        host = entry.data.get(CONF_HOST)
+        port = entry.data.get(CONF_PORT)
+        agps_thread.stream_data(host, port)
+        agps_thread.run_thread()
+
+    await hass.async_add_executor_job(setup_agps)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
