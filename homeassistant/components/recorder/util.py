@@ -406,19 +406,23 @@ def _fail_unsupported_version(
     raise UnsupportedDialect
 
 
-def _delete_issue_deprecated_version(hass: HomeAssistant, dialect_name: str) -> None:
+@callback
+def _async_delete_issue_deprecated_version(
+    hass: HomeAssistant, dialect_name: str
+) -> None:
     """Delete the issue about upcoming unsupported database version."""
-    ir.delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
+    ir.async_delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
 
 
-def _create_issue_deprecated_version(
+@callback
+def _async_create_issue_deprecated_version(
     hass: HomeAssistant,
     server_version: AwesomeVersion,
     dialect_name: str,
     min_version: AwesomeVersion,
 ) -> None:
     """Warn about upcoming unsupported database version."""
-    ir.create_issue(
+    ir.async_create_issue(
         hass,
         DOMAIN,
         f"{dialect_name}_too_old",
@@ -550,14 +554,17 @@ def setup_connection_for_dialect(
 
             # No elif here since _fail_unsupported_version raises
             if version < UPCOMING_MIN_VERSION_SQLITE:
-                _create_issue_deprecated_version(
+                instance.hass.add_job(
+                    _async_create_issue_deprecated_version,
                     instance.hass,
                     version or version_string,
                     dialect_name,
                     UPCOMING_MIN_VERSION_SQLITE,
                 )
             else:
-                _delete_issue_deprecated_version(instance.hass, dialect_name)
+                instance.hass.add_job(
+                    _async_delete_issue_deprecated_version, instance.hass, dialect_name
+                )
 
             if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
                 max_bind_vars = SQLITE_MODERN_MAX_BIND_VARS

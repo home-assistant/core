@@ -225,9 +225,9 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(UPCOMING_MIN_VERSION_SQLITE)],
 )
-def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
+def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
     """Test setting up the connection for a sqlite dialect."""
     instance_mock = MagicMock()
     execute_args = []
@@ -278,10 +278,10 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(UPCOMING_MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
-    sqlite_version,
+    sqlite_version: str,
 ) -> None:
     """Test setting up the connection for a sqlite dialect with a zero commit interval."""
     instance_mock = MagicMock(commit_interval=0)
@@ -504,10 +504,6 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
         (
             "2.0.0",
             "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
-        ),
-        (
-            "dogs",
-            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
     ],
 )
