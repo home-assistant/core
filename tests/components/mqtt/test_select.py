@@ -67,9 +67,7 @@ DEFAULT_CONFIG = {
 }
 
 
-def _test_run_select_setup_params(
-    topic: str,
-) -> Generator[tuple[ConfigType, str], None]:
+def _test_run_select_setup_params(topic: str) -> Generator[tuple[ConfigType, str]]:
     yield (
         {
             mqtt.DOMAIN: {
@@ -593,7 +591,7 @@ async def test_entity_debug_info_message(
 
 def _test_options_attributes_options_config(
     request: tuple[list[str]],
-) -> Generator[tuple[ConfigType, list[str]], None]:
+) -> Generator[tuple[ConfigType, list[str]]]:
     for option in request:
         yield (
             {

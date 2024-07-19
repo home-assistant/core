@@ -1,11 +1,11 @@
 """Fixtures for the recorder component tests."""
 
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 import threading
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import db_schema
