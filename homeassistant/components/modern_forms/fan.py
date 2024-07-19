@@ -70,8 +70,14 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
 
     SPEED_RANGE = (1, 6)  # off is not included
 
-    _attr_supported_features = FanEntityFeature.DIRECTION | FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.DIRECTION
+        | FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _attr_translation_key = "fan"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
