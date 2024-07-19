@@ -1,24 +1,31 @@
 """Tests for the Ollama integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+import logging
 
 from ollama import Message, ResponseError
 import pytest
+from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components import conversation, ollama
 from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     intent,
+    llm,
 )
 
 from tests.common import MockConfigEntry
 
+_LOGGER = logging.getLogger(__name__)
 
 @pytest.mark.parametrize("agent_id", [None, "conversation.mock_title"])
 async def test_chat(
@@ -123,6 +130,352 @@ async def test_chat(
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
     assert "The current time is" in detail_event["data"]["messages"][0]["content"]
+
+async def test_template_variables(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that template variables work."""
+    context = Context(user_id="12345")
+    mock_user = Mock()
+    mock_user.id = "12345"
+    mock_user.name = "Test User"
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            "prompt": (
+                "The user name is {{ user_name }}. "
+                "The user id is {{ llm_context.context.user_id }}."
+            ),
+        },
+    )
+    with (
+        patch("ollama.AsyncClient.list"),
+        patch(
+            "ollama.AsyncClient.chat",
+            return_value={"message": {"role": "assistant", "content": "test response"}},
+        ) as mock_chat,
+        patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        result = await conversation.async_converse(
+            hass, "hello", None, context, agent_id=mock_config_entry.entry_id
+        )
+
+    assert (
+        result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    ), result
+
+    args = mock_chat.call_args.kwargs
+    prompt = args["messages"][0]["content"]
+
+    assert "The user name is Test User." in prompt
+    assert "The user id is 12345." in prompt
+
+
+@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+async def test_function_call(
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test function call from the assistant."""
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.return_value = "Test response"
+
+    mock_get_tools.return_value = [mock_tool]
+
+    def completion_result(*args, messages, tools, **kwargs):
+        _LOGGER.debug("tools=%s", tools)
+        for message in messages:
+            if message["role"] == "tool":
+                return {
+                    "message": {
+                        "role": "assistant",
+                        "content": "I have successfully called the function",
+                    }
+                }
+        assert tools
+        return {
+            "message": {
+                "role": "assistant",
+                "content": "Calling tool",
+                "tool_calls": [{
+                    "function": {
+                        "name": "test_tool",
+                        "arguments": '{"param1": "test_value"}'
+                    }
+                }]
+            }
+        }
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        side_effect=completion_result,
+    ) as mock_chat:
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert mock_chat.call_count == 2
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "I have successfully called the function"
+    )
+    mock_tool.async_call.assert_awaited_once_with(
+        hass,
+        llm.ToolInput(
+            tool_name="test_tool",
+            tool_args={"param1": "test_value"},
+        ),
+        llm.LLMContext(
+            platform="ollama",
+            context=context,
+            user_prompt="Please call the test function",
+            language="en",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    # Test Conversation tracing
+    traces = trace.async_get_traces()
+    assert traces
+    last_trace = traces[-1].as_dict()
+    trace_events = last_trace.get("events", [])
+    assert [event["event_type"] for event in trace_events] == [
+        trace.ConversationTraceEventType.ASYNC_PROCESS,
+        trace.ConversationTraceEventType.AGENT_DETAIL,
+        trace.ConversationTraceEventType.LLM_TOOL_CALL,
+    ]
+
+
+@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+async def test_malformed_function_args(
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test getting function args for an unknown function."""
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.return_value = "Test response"
+
+    mock_get_tools.return_value = [mock_tool]
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            if message["content"].startswith("TOOL_ARGS"):
+                return {
+                    "message": {
+                        "role": "assistant",
+                        "content": "I was not able to call the function",
+                    }
+                }
+
+        return {
+            "message": {
+                "role": "assistant",
+                "content": "TOOL_ARGS unknown_tool",
+            }
+        }
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        side_effect=completion_result,
+    ) as mock_chat:
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert mock_tool.async_call.call_count == 0
+    assert mock_chat.call_count == 2
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "I was not able to call the function"
+    )
+
+
+@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+async def test_malformed_function_call(
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test function call that was unrecognized."""
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.return_value = "Test response"
+
+    mock_get_tools.return_value = [mock_tool]
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            if message["content"].startswith("TOOL_CALL"):
+                return {
+                    "message": {
+                        "role": "assistant",
+                        "content": "I was not able to call the function",
+                    }
+                }
+
+        return {
+            "message": {
+                "role": "assistant",
+                "content": 'TOOL_CALL name="test_tool", param1="test_value"',
+            }
+        }
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        side_effect=completion_result,
+    ) as mock_chat:
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert mock_tool.async_call.call_count == 0
+    assert mock_chat.call_count == 2
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "I was not able to call the function"
+    )
+
+
+@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+async def test_function_exception(
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test function call with exception."""
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
+
+    mock_get_tools.return_value = [mock_tool]
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            if message["content"].startswith("TOOL_CALL"):
+                return {
+                    "message": {
+                        "role": "assistant",
+                        "content": "There was an error calling the function",
+                    }
+                }
+
+        return {
+            "message": {
+                "role": "assistant",
+                "content": 'TOOL_CALL {"name": "test_tool", "parameters": {"param1": "test_value"}}',
+            }
+        }
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        side_effect=completion_result,
+    ) as mock_chat:
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert mock_chat.call_count == 2
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "There was an error calling the function"
+    )
+    mock_tool.async_call.assert_awaited_once_with(
+        hass,
+        llm.ToolInput(
+            tool_name="test_tool",
+            tool_args={"param1": "test_value"},
+        ),
+        llm.LLMContext(
+            platform="ollama",
+            context=context,
+            user_prompt="Please call the test function",
+            language="en",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+
+async def test_unknown_hass_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_init_component,
+) -> None:
+    """Test when we reference an API that no longer exists."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_LLM_HASS_API: "non-existing",
+        },
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+    )
+
+    assert result == snapshot
 
 
 async def test_message_history_trimming(
