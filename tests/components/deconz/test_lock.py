@@ -24,22 +24,20 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    "light_payload",
+    "light_0_payload",
     [
         {
-            "1": {
-                "etag": "5c2ec06cde4bd654aef3a555fcd8ad12",
-                "hascolor": False,
-                "lastannounced": None,
-                "lastseen": "2020-08-22T15:29:03Z",
-                "manufacturername": "Danalock",
-                "modelid": "V3-BTZB",
-                "name": "Door lock",
-                "state": {"alert": "none", "on": False, "reachable": True},
-                "swversion": "19042019",
-                "type": "Door Lock",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "etag": "5c2ec06cde4bd654aef3a555fcd8ad12",
+            "hascolor": False,
+            "lastannounced": None,
+            "lastseen": "2020-08-22T15:29:03Z",
+            "manufacturername": "Danalock",
+            "modelid": "V3-BTZB",
+            "name": "Door lock",
+            "state": {"alert": "none", "on": False, "reachable": True},
+            "swversion": "19042019",
+            "type": "Door Lock",
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -53,11 +51,7 @@ async def test_lock_from_light(
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
-    event_changed_light = {
-        "r": "lights",
-        "id": "1",
-        "state": {"on": True},
-    }
+    event_changed_light = {"r": "lights", "state": {"on": True}}
     await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
@@ -65,7 +59,7 @@ async def test_lock_from_light(
 
     # Verify service calls
 
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service lock door
 
