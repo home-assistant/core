@@ -38,8 +38,14 @@ class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
         """Fetch data from Pinecil."""
 
         try:
-            self.device = await self.pinecil.get_device_info()
             return await self.pinecil.get_live_data()
 
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        self.device = await self.pinecil.get_device_info()
+
+        return await super()._async_setup()
