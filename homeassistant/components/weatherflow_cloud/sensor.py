@@ -32,7 +32,7 @@ class WeatherFlowCloudSensorEntityDescription(
 ):
     """Describes a weatherflow sensor."""
 
-    value_fn: Callable[[Observation], int | str | datetime | None]
+    value_fn: Callable[[Observation], StateType | datetime]
 
 
 WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
@@ -204,6 +204,6 @@ class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
         self._attr_unique_id = f"{station_id}_{description.key}"
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.station.observation.obs[0])
