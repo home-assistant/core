@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SunWEG sensor."""
-    coordinator: SunWEGDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: SunWEGDataUpdateCoordinator = config_entry.runtime_data
 
     entities = [
         SunWEGSensor(
