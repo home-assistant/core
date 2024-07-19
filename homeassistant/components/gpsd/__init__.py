@@ -45,7 +45,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> boo
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         agps_thread = entry.runtime_data.agps_thread
         await hass.async_add_executor_job(
-            lambda: lambda: agps_thread.stream_data(
+            lambda: agps_thread.stream_data(
                 host=entry.data.get(CONF_HOST),
                 port=entry.data.get(CONF_PORT),
                 enable=False,
