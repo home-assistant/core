@@ -19,7 +19,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
@@ -27,7 +26,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from .const import DOMAIN
+from . import WizConfigEntry
 from .entity import WizToggleEntity
 from .models import WizData
 
@@ -61,13 +60,12 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WizConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
-    wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    if wiz_data.bulb.bulbtype.bulb_type != BulbClass.SOCKET:
-        async_add_entities([WizBulbEntity(wiz_data, entry.title)])
+    if entry.runtime_data.bulb.bulbtype.bulb_type != BulbClass.SOCKET:
+        async_add_entities([WizBulbEntity(entry.runtime_data, entry.title)])
 
 
 class WizBulbEntity(WizToggleEntity, LightEntity):
