@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "base_url": "[%key:common::config_flow::data::url%]",
+          "client_id": "Client Key",
+          "client_secret": "Client Secret",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "base_url": "The URL of your Mastodon instance."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please reauthenticate with Mastodon.",
+        "data": {
+          "client_id": "Client Key",
+          "client_secret": "Client Secret",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
+      "reconfigure_confirm": {
+        "description": "Update your configuration information for {name}.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "base_url": "[%key:common::config_flow::data::url%]",
+          "client_id": "Client Key",
+          "client_secret": "Client Secret",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_client_id": "You have to use the same client key that was used to configure the integration."
+    },
+    "error": {
+      "credential_error": "The credentials are incorrect."
+    }
+  },
+  "issues": {
+    "import_yaml_error": {
+      "title": "The Mastodon YAML configuration import failed",
+      "description": "Configuring Mastodon using YAML is being removed but there was a connection error when trying to import the YAML configuration for `{client_id}`.\n\nPlease verify your app registration is correct and restart Home Assistant to try again or remove the Mastodon YAML configuration from your configuration.yaml file and continue to set up the integration manually."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "followers_count": {
+        "name": "Followers"
+      },
+      "following_count": {
+        "name": "Following"
+      },
+      "statuses_count": {
+        "name": "Statuses"
+      }
+    }
+  }
+}
