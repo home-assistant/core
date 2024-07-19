@@ -1,9 +1,7 @@
 """Test the BryantEvolutionClient type."""
 
-from contextlib import contextmanager
 from datetime import timedelta
 import logging
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -26,15 +24,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@contextmanager
-def disable_auto_entity_update():
-    """Context manager to disable auto entity updates."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.async_update_ha_state", return_value=None
-    ) as patch_update:
-        yield patch_update
 
 
 async def trigger_polling(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -68,13 +57,15 @@ async def test_set_temperature_mode_cool(
     state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes["temperature"] == 75, state.attributes
 
-    # Make the call
+    # Make the call, modifting the mock client to throw an exception on
+    # read to ensure that the update is visible iff we call
+    # async_update_ha_state.
     data = {"temperature": 70}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-    with disable_auto_entity_update():
-        await hass.services.async_call(
-            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
-        )
+    client.read_cooling_setpoint.side_effect = Exception("fake failure")
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
+    )
 
     # Verify effect.
     client.set_cooling_setpoint.assert_called_once_with(70)
@@ -95,16 +86,16 @@ async def test_set_temperature_mode_heat(
     client.read_heating_setpoint.return_value = 60
     await trigger_polling(hass, freezer)
 
-    # Make the call
+    # Make the call, modifting the mock client to throw an exception on
+    # read to ensure that the update is visible iff we call
+    # async_update_ha_state.
     data = {"temperature": 65}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-    with disable_auto_entity_update():
-        await hass.services.async_call(
-            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
-        )
-
+    client.read_heating_setpoint.side_effect = Exception("fake failure")
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
+    )
     # Verify effect.
-    client.set_heating_setpoint.assert_called_once_with(65)
     state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes["temperature"] == 65, state.attributes
 
@@ -127,12 +118,16 @@ async def test_set_temperature_mode_heat_cool(
     assert state.attributes["target_temp_low"] == 40
     assert state.attributes["target_temp_high"] == 90
 
-    with disable_auto_entity_update():
-        data = {"target_temp_low": 70, "target_temp_high": 80}
-        data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-        await hass.services.async_call(
-            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
-        )
+    # Make the call, modifting the mock client to throw an exception on
+    # read to ensure that the update is visible iff we call
+    # async_update_ha_state.
+    mock_client.read_heating_setpoint.side_effect = Exception("fake failure")
+    mock_client.read_cooling_setpoint.side_effect = Exception("fake failure")
+    data = {"target_temp_low": 70, "target_temp_high": 80}
+    data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
+    )
     state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes["target_temp_low"] == 70, state.attributes
     assert state.attributes["target_temp_high"] == 80, state.attributes
@@ -147,15 +142,16 @@ async def test_set_fan_mode(
     mock_client = mock_evolution_entry.runtime_data[(1, 1)]
     fan_modes = ["auto", "low", "med", "high"]
     for mode in fan_modes:
-        # Change the fan mode, pausing reads to the device so that we
-        # verify that changes are locally committed.
+        # Make the call, modifting the mock client to throw an exception on
+        # read to ensure that the update is visible iff we call
+        # async_update_ha_state.
+        mock_client.read_fan_mode.side_effect = Exception("fake failure")
         data = {ATTR_FAN_MODE: mode}
         data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-        with disable_auto_entity_update():
-            await hass.services.async_call(
-                CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True
-            )
-            await hass.async_block_till_done()
+        await hass.services.async_call(
+            CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True
+        )
+        await hass.async_block_till_done()
         assert (
             hass.states.get("climate.system_1_zone_1").attributes[ATTR_FAN_MODE] == mode
         )
@@ -169,15 +165,16 @@ async def test_set_hvac_mode(
     mock_client = mock_evolution_entry.runtime_data[(1, 1)]
     hvac_modes = ["heat_cool", "heat", "cool", "off"]
     for mode in hvac_modes:
-        # Change the mode, pausing reads to the device so that we
-        # verify that changes are locally committed.
+        # Make the call, modifting the mock client to throw an exception on
+        # read to ensure that the update is visible iff we call
+        # async_update_ha_state.
         data = {ATTR_HVAC_MODE: mode}
         data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-        with disable_auto_entity_update():
-            await hass.services.async_call(
-                CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True
-            )
-            await hass.async_block_till_done()
+        mock_client.read_hvac_mode.side_effect = Exception("fake failure")
+        await hass.services.async_call(
+            CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True
+        )
+        await hass.async_block_till_done()
         evolution_mode = "auto" if mode == "heat_cool" else mode
         assert hass.states.get("climate.system_1_zone_1").state == evolution_mode
         mock_client.set_hvac_mode.assert_called_with(evolution_mode)
