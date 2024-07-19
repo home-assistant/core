@@ -1,18 +1,15 @@
 """Test DoorBird init."""
 
-from collections.abc import Callable, Coroutine
-from typing import Any
-
 from homeassistant.components.doorbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import mock_unauthorized_exception
-from .conftest import MockDoorbirdEntry
+from .conftest import DoorbirdMockerType
 
 
 async def test_basic_setup(
-    doorbird_mocker: Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]],
+    doorbird_mocker: DoorbirdMockerType,
 ) -> None:
     """Test basic setup."""
     doorbird_entry = await doorbird_mocker()
@@ -22,7 +19,7 @@ async def test_basic_setup(
 
 async def test_auth_fails(
     hass: HomeAssistant,
-    doorbird_mocker: Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]],
+    doorbird_mocker: DoorbirdMockerType,
 ) -> None:
     """Test basic setup with an auth failure."""
     doorbird_entry = await doorbird_mocker(

@@ -543,7 +543,7 @@ async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
     assert result["reason"] == error
 
 
-async def _test_provision_error(hass: HomeAssistant, exc) -> None:
+async def _test_provision_error(hass: HomeAssistant, exc) -> str:
     """Test bluetooth flow with error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
