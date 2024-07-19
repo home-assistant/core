@@ -11,7 +11,7 @@ from pydeconz.websocket import Signal
 import pytest
 
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
@@ -45,7 +45,7 @@ def fixture_config_entry(
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
     config_entry_source: str,
-) -> ConfigEntry:
+) -> MockConfigEntry:
     """Define a config entry fixture."""
     return MockConfigEntry(
         domain=DECONZ_DOMAIN,
