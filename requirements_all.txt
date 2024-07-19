@@ -526,10 +526,10 @@ axis==62
 azure-eventhub==5.11.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-data[aio]==3.1.0
+azure-kusto-data[aio]==4.5.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-ingest==3.1.0
+azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
