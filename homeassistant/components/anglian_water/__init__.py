@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pyanglianwater import API, AnglianWater
 from pyanglianwater.exceptions import ServiceUnavailableError
 
@@ -13,12 +15,23 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_DEVICE_ID, DOMAIN
 from .coordinator import AnglianWaterDataUpdateCoordinator
 
+type AnglianWaterConfigEntry = ConfigEntry[AnglianWaterConfig]
+
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class AnglianWaterConfig:
+    """Represent a config for Anglian Water."""
+
+    coordinator: AnglianWaterDataUpdateCoordinator
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AnglianWaterConfigEntry
+) -> bool:
     """Set up this integration using UI."""
     try:
         _api = await API.create_via_login_existing_device(
@@ -26,25 +39,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
             entry.data[CONF_DEVICE_ID],
         )
-        _aw = AnglianWater()
-        _aw.api = _api
-        # for future:
-        _aw.current_tariff = "not_set"
-        _aw.current_tariff_rate = 0.0
-
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN][entry.entry_id] = coordinator = (
-            AnglianWaterDataUpdateCoordinator(hass=hass, client=_aw)
-        )
-        await coordinator.async_config_entry_first_refresh()
-
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     except ServiceUnavailableError as exception:
         raise ConfigEntryNotReady(
             exception, translation_domain=DOMAIN, translation_key="maintenance"
         ) from exception
+    _aw = AnglianWater()
+    _aw.api = _api
+    # for future:
+    _aw.current_tariff = "not_set"
+    _aw.current_tariff_rate = 0.0
+
+    entry.runtime_data = AnglianWaterConfig(
+        coordinator=AnglianWaterDataUpdateCoordinator(hass=hass, client=_aw)
+    )
+
+    await entry.runtime_data.coordinator.async_config_entry_first_refresh()
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
 
 

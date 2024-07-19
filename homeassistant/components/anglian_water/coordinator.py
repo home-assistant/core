@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from pyanglianwater import AnglianWater
 from pyanglianwater.exceptions import (
@@ -15,13 +16,13 @@ from pyanglianwater.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
 
-class AnglianWaterDataUpdateCoordinator(DataUpdateCoordinator):
+class AnglianWaterDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the API."""
 
     config_entry: ConfigEntry
@@ -38,23 +39,20 @@ class AnglianWaterDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(minutes=20),
         )
-        self.client: AnglianWater = client
+        self.client = client
 
-    async def _async_update_data(self, token_refreshed: bool = False):
+    async def _async_update_data(self):
         """Update data via library."""
         try:
             await self.client.update()
         except InvalidUsernameError as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
+            raise ConfigEntryError(exception) from exception
         except InvalidPasswordError as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
+            raise ConfigEntryError(exception) from exception
         except UnknownEndpointError as exception:
             raise UpdateFailed(exception) from exception
         except ServiceUnavailableError as exception:
             raise UpdateFailed(exception) from exception
-        except ExpiredAccessTokenError as exception:
-            if not token_refreshed:
-                await self.client.api.refresh_login()
-                await self._async_update_data(True)
-            else:
-                raise UpdateFailed(exception) from exception
+        except ExpiredAccessTokenError:
+            await self.client.api.refresh_login()
+            await self.client.update(True)

@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/haanglianwater",
   "iot_class": "cloud_polling",
-  "loggers": ["pyanglianwater", "anglian_water"],
+  "loggers": ["pyanglianwater"],
   "requirements": ["pyanglianwater==0.3.0"]
 }
