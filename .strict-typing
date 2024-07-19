@@ -255,6 +255,7 @@ homeassistant.components.integration.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
 homeassistant.components.ios.*
+homeassistant.components.iotty.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.islamic_prayer_times.*
