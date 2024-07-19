@@ -61,31 +61,42 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
         )
         is None
     )
+    assert hass.states.get(f"{DOMAIN}.{device_name}_last_restart_of_the_device") is None
 
     await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(
-    ("name", "get_method", "interval"),
+    ("name", "get_method", "interval", "expected_state"),
     [
         (
             "connected_wi_fi_clients",
             "async_get_wifi_connected_station",
             SHORT_UPDATE_INTERVAL,
+            "1",
         ),
         (
             "neighboring_wi_fi_networks",
             "async_get_wifi_neighbor_access_points",
             LONG_UPDATE_INTERVAL,
+            "1",
         ),
         (
             "connected_plc_devices",
             "async_get_network_overview",
             LONG_UPDATE_INTERVAL,
+            "1",
+        ),
+        (
+            "last_restart_of_the_device",
+            "async_uptime",
+            SHORT_UPDATE_INTERVAL,
+            "2023-01-13T11:58:50+00:00",
         ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
 async def test_sensor(
     hass: HomeAssistant,
     mock_device: MockDevice,
@@ -95,6 +106,7 @@ async def test_sensor(
     name: str,
     get_method: str,
     interval: timedelta,
+    expected_state: str,
 ) -> None:
     """Test state change of a sensor device."""
     entry = configure_integration(hass)
@@ -125,7 +137,7 @@ async def test_sensor(
 
     state = hass.states.get(state_key)
     assert state is not None
-    assert state.state == "1"
+    assert state.state == expected_state
 
     await hass.config_entries.async_unload(entry.entry_id)
 
