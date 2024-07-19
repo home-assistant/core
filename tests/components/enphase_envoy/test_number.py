@@ -1,6 +1,5 @@
 """Test Enphase Envoy number sensors."""
 
-from random import randint
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -107,14 +106,16 @@ async def test_number_operation_relays(
 
     entity_base = f"{Platform.NUMBER}."
 
-    for contact_id, dry_contact in mock_envoy.data.dry_contact_settings.items():
+    for counter, (contact_id, dry_contact) in enumerate(
+        mock_envoy.data.dry_contact_settings.items()
+    ):
         name = dry_contact.load_name.lower().replace(" ", "_")
         test_entity = f"{entity_base}{name}_cutoff_battery_level"
         assert (entity_state := hass.states.get(test_entity))
         assert mock_envoy.data.dry_contact_settings[contact_id].soc_low == float(
             entity_state.state
         )
-        test_value = 10.0 + randint(0, 9)
+        test_value = 10.0 + counter
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -135,7 +136,7 @@ async def test_number_operation_relays(
         assert mock_envoy.data.dry_contact_settings[contact_id].soc_high == float(
             entity_state.state
         )
-        test_value = 80.0 - randint(0, 9)
+        test_value = 80.0 - counter
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
