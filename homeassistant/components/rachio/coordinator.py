@@ -91,8 +91,9 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Retrieve data for the past week and the next 60 days."""
-        _time_start: datetime = dt_util.now() - timedelta(days=7)
-        _time_end: datetime = dt_util.now() + timedelta(days=60)
+        _now: datetime = dt_util.now()
+        _time_start = _now - timedelta(days=7)
+        _time_end = _now + timedelta(days=60)
         start: dict[str, int] = {
             YEAR: _time_start.year,
             MONTH: _time_start.month,
