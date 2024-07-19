@@ -254,7 +254,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mqtt_data.client.async_restore_tracked_subscriptions(
                 mqtt_data.subscriptions_to_restore
             )
-            mqtt_data.subscriptions_to_restore = set()
+            mqtt_data.subscriptions_to_restore = []
         mqtt_data.reload_dispatchers.append(
             entry.add_update_listener(_async_config_entry_updated)
         )
