@@ -37,5 +37,5 @@ class PinecilBaseEntity(CoordinatorEntity[PinecilCoordinator]):
             model=MODEL,
             name="Pinecil",
             sw_version=coordinator.device.build,
-            serial_number=coordinator.device.device_sn,
+            serial_number=f"{coordinator.device.device_sn} (ID:{coordinator.device.device_id})",
         )
