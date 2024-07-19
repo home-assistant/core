@@ -5,13 +5,14 @@ import logging
 from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
 from ..const import DOMAIN
+from .const import CONF_DATA
 
 if TYPE_CHECKING:
     from ..knx_entity import KnxEntity
@@ -84,8 +85,8 @@ class KNXConfigStore:
             raise ConfigStoreException(f"Entity not found: {entity_id}")
         try:
             return {
-                "platform": entry.domain,
-                "data": self.data["entities"][entry.domain][entry.unique_id],
+                CONF_PLATFORM: entry.domain,
+                CONF_DATA: self.data["entities"][entry.domain][entry.unique_id],
             }
         except KeyError as err:
             raise ConfigStoreException(f"Entity data not found: {entity_id}") from err

@@ -25,9 +25,23 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import CONF_RESPOND_TO_READ, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
+from .const import (
+    CONF_INVERT,
+    CONF_RESPOND_TO_READ,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    KNX_ADDRESS,
+)
 from .knx_entity import KnxEntity
 from .schema import SwitchSchema
+from .storage.const import (
+    CONF_DEVICE_INFO,
+    CONF_ENTITY,
+    CONF_GA_PASSIVE,
+    CONF_GA_STATE,
+    CONF_GA_SWITCH,
+    CONF_GA_WRITE,
+)
 
 
 async def async_setup_entry(
@@ -120,19 +134,19 @@ class KnxUiSwitch(_KnxSwitch):
         super().__init__(
             device=XknxSwitch(
                 knx_module.xknx,
-                name=config["entity"][CONF_NAME],
-                group_address=config["knx"]["ga_switch"]["write"],
+                name=config[CONF_ENTITY][CONF_NAME],
+                group_address=config[DOMAIN][CONF_GA_SWITCH][CONF_GA_WRITE],
                 group_address_state=[
-                    config["knx"]["ga_switch"]["state"],
-                    *config["knx"]["ga_switch"]["passive"],
+                    config[DOMAIN][CONF_GA_SWITCH][CONF_GA_STATE],
+                    *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
                 ],
-                respond_to_read=config["knx"][CONF_RESPOND_TO_READ],
-                invert=config["knx"]["invert"],
+                respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
+                invert=config[DOMAIN][CONF_INVERT],
             )
         )
-        self._attr_entity_category = config["entity"][CONF_ENTITY_CATEGORY]
+        self._attr_entity_category = config[CONF_ENTITY][CONF_ENTITY_CATEGORY]
         self._attr_unique_id = unique_id
-        if device_info := config["entity"].get("device_info"):
+        if device_info := config[CONF_ENTITY].get(CONF_DEVICE_INFO):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
 
         knx_module.config_store.entities[unique_id] = self

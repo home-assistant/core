@@ -6,6 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from ..validation import ga_validator, maybe_ga_validator
+from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
 
 
 class GASelector:
@@ -57,24 +58,24 @@ class GASelector:
             else:
                 schema[vol.Optional(key, default=None)] = maybe_ga_validator
 
-        add_ga_item("write", self.write, self.write_required)
-        add_ga_item("state", self.state, self.state_required)
+        add_ga_item(CONF_GA_WRITE, self.write, self.write_required)
+        add_ga_item(CONF_GA_STATE, self.state, self.state_required)
 
     def _add_passive(self, schema: dict[vol.Marker, Any]) -> None:
         """Add passive group addresses validator to the schema."""
         if self.passive:
-            schema[vol.Optional("passive", default=list)] = vol.Any(
+            schema[vol.Optional(CONF_GA_PASSIVE, default=list)] = vol.Any(
                 [ga_validator],
                 vol.All(  # Coerce `None` to an empty list if passive is allowed
                     vol.IsFalse(), vol.SetTo(list)
                 ),
             )
         else:
-            schema[vol.Remove("passive")] = object
+            schema[vol.Remove(CONF_GA_PASSIVE)] = object
 
     def _add_dpt(self, schema: dict[vol.Marker, Any]) -> None:
         """Add DPT validator to the schema."""
         if self.dpt is not None:
-            schema[vol.Required("dpt")] = vol.In([item.value for item in self.dpt])
+            schema[vol.Required(CONF_DPT)] = vol.In([item.value for item in self.dpt])
         else:
-            schema[vol.Remove("dpt")] = object
+            schema[vol.Remove(CONF_DPT)] = object

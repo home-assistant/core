@@ -10,6 +10,7 @@ from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.components.http import StaticPathConfig
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import UNDEFINED
@@ -17,6 +18,7 @@ from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN
 from .storage.config_store import ConfigStoreException
+from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
     CREATE_ENTITY_BASE_SCHEMA,
     UPDATE_ENTITY_BASE_SCHEMA,
@@ -282,8 +284,8 @@ async def ws_create_entity(
     try:
         entity_id = await knx.config_store.create_entity(
             # use validation result so defaults are applied
-            validated_data["platform"],
-            validated_data["data"],
+            validated_data[CONF_PLATFORM],
+            validated_data[CONF_DATA],
         )
     except ConfigStoreException as err:
         connection.send_error(
@@ -317,9 +319,9 @@ async def ws_update_entity(
     knx: KNXModule = hass.data[DOMAIN]
     try:
         await knx.config_store.update_entity(
-            validated_data["platform"],
-            validated_data["entity_id"],
-            validated_data["data"],
+            validated_data[CONF_PLATFORM],
+            validated_data[CONF_ENTITY_ID],
+            validated_data[CONF_DATA],
         )
     except ConfigStoreException as err:
         connection.send_error(
@@ -335,7 +337,7 @@ async def ws_update_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/delete_entity",
-        vol.Required("entity_id"): str,
+        vol.Required(CONF_ENTITY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -347,7 +349,7 @@ async def ws_delete_entity(
     """Delete entity from entity store and remove it."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        await knx.config_store.delete_entity(msg["entity_id"])
+        await knx.config_store.delete_entity(msg[CONF_ENTITY_ID])
     except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
@@ -380,7 +382,7 @@ def ws_get_entity_entries(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/get_entity_config",
-        vol.Required("entity_id"): str,
+        vol.Required(CONF_ENTITY_ID): str,
     }
 )
 @callback
@@ -392,7 +394,7 @@ def ws_get_entity_config(
     """Get entity configuration from entity store."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        config_info = knx.config_store.get_entity_config(msg["entity_id"])
+        config_info = knx.config_store.get_entity_config(msg[CONF_ENTITY_ID])
     except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
