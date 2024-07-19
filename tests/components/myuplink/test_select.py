@@ -23,7 +23,7 @@ ENTITY_FRIENDLY_NAME = "Gotham City comfort mode"
 ENTITY_UID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-47041"
 
 
-async def test_entity_registry(
+async def test_select_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_myuplink_client: MagicMock,
@@ -34,13 +34,7 @@ async def test_entity_registry(
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry.unique_id == ENTITY_UID
 
-
-async def test_attributes(
-    hass: HomeAssistant,
-    mock_myuplink_client: MagicMock,
-    setup_platform: None,
-) -> None:
-    """Test the select attributes are correct."""
+    # Test the select attributes are correct.
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == "Economy"
@@ -50,55 +44,33 @@ async def test_attributes(
     }
 
 
-@pytest.mark.parametrize(
-    ("service", "option"),
-    [
-        (SERVICE_SELECT_OPTION, "Economy"),
-    ],
-)
 async def test_selecting(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
     setup_platform: None,
-    service: str,
-    option: str,
 ) -> None:
     """Test select option service."""
 
     await hass.services.async_call(
         TEST_PLATFORM,
-        service,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Economy"},
         blocking=True,
     )
     await hass.async_block_till_done()
     mock_myuplink_client.async_set_device_points.assert_called_once()
 
-
-@pytest.mark.parametrize(
-    ("service", "option"),
-    [
-        (SERVICE_SELECT_OPTION, "Economy"),
-    ],
-)
-async def test_api_failure(
-    hass: HomeAssistant,
-    mock_myuplink_client: MagicMock,
-    setup_platform: None,
-    service: str,
-    option: str,
-) -> None:
-    """Test handling of exception from API."""
+    # Test handling of exception from API.
 
     mock_myuplink_client.async_set_device_points.side_effect = ClientError
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TEST_PLATFORM,
-            service,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Economy"},
             blocking=True,
         )
-    mock_myuplink_client.async_set_device_points.assert_called_once()
+    assert mock_myuplink_client.async_set_device_points.call_count == 2
 
 
 @pytest.mark.parametrize(
