@@ -603,7 +603,6 @@ async def test_add_new_binary_sensor(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": {
             "id": "Presence sensor id",
             "name": "Presence sensor",
@@ -642,7 +641,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": sensor,
     }
 
@@ -663,7 +661,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
         == 0
     )
 
-    deconz_payload["sensors"] = {"1": sensor}
+    deconz_payload["sensors"]["0"] = sensor
     mock_requests()
 
     await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
@@ -695,7 +693,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": sensor,
     }
 
@@ -716,7 +713,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
         == 0
     )
 
-    deconz_payload["sensors"] = {"1": sensor}
+    deconz_payload["sensors"]["0"] = sensor
     mock_requests()
 
     hass.config_entries.async_update_entry(
