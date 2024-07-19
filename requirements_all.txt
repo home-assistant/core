@@ -1661,9 +1661,6 @@ py-synologydsm-api==2.4.4
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
 
-# homeassistant.components.seventeentrack
-py17track==2021.12.2
-
 # homeassistant.components.atome
 pyAtome==0.1.1
 
@@ -2161,6 +2158,9 @@ pyserial==3.5
 
 # homeassistant.components.sesame
 pysesame2==1.0.1
+
+# homeassistant.components.seventeentrack
+pyseventeentrack==1.0.0
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1

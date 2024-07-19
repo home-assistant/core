@@ -1341,9 +1341,6 @@ py-sucks==0.9.10
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.4.4
 
-# homeassistant.components.seventeentrack
-py17track==2021.12.2
-
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 
@@ -1709,6 +1706,9 @@ pysensibo==1.0.36
 # homeassistant.components.usb
 # homeassistant.components.zwave_js
 pyserial==3.5
+
+# homeassistant.components.seventeentrack
+pyseventeentrack==1.0.0
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1
