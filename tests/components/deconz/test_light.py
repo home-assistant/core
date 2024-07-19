@@ -46,7 +46,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    ("light_0_payload", "expected"),
+    ("light_payload", "expected"),
     [
         (  # RGB light in color temp color mode
             {
@@ -437,7 +437,7 @@ async def test_lights(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "colorcapabilities": 31,
@@ -673,7 +673,7 @@ async def test_light_service_calls(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "colorcapabilities": 0,
@@ -741,7 +741,7 @@ async def test_ikea_default_transition_time(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "etag": "87a89542bf9b9d0aa8134919056844f8",
@@ -788,7 +788,7 @@ async def test_lidl_christmas_light(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "etag": "26839cb118f5bf7ba1f2108256644010",
@@ -1153,7 +1153,7 @@ async def test_empty_group(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "ctmax": 454,
@@ -1444,7 +1444,7 @@ async def test_verify_group_supported_features(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "capabilities": {

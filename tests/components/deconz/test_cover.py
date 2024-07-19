@@ -132,7 +132,7 @@ async def test_cover(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "etag": "87269755b9b3a046485fdae8d96b252c",
@@ -211,7 +211,7 @@ async def test_tilt_cover(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "etag": "4cefc909134c8e99086b55273c2bde67",

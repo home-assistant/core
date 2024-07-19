@@ -52,7 +52,7 @@ async def test_configure_service_with_field(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "name": "Test",
@@ -81,7 +81,7 @@ async def test_configure_service_with_entity(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "name": "Test",
@@ -305,7 +305,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "name": "Light 0 name",

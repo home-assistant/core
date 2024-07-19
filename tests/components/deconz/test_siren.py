@@ -22,7 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "name": "Warning device",

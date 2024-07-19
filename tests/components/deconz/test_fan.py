@@ -21,7 +21,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "etag": "432f3de28965052961a99e3c5494daf4",

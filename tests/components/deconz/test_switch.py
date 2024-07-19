@@ -107,7 +107,7 @@ async def test_power_plugs(
 
 
 @pytest.mark.parametrize(
-    "light_0_payload",
+    "light_payload",
     [
         {
             "name": "On Off output device",
