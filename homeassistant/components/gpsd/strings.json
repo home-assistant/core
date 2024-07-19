@@ -20,7 +20,7 @@
     "sensor": {
       "latitude": { "name": "[%key:common::config_flow::data::latitude%]" },
       "longitude": { "name": "[%key:common::config_flow::data::longitude%]" },
-      "elevation": { "name": "Altitude" },
+      "elevation": { "name": "[%key:common::config_flow::data::elevation%]" },
       "time": {
         "name": "[%key:component::time_date::selector::display_options::options::time%]"
       },
@@ -40,7 +40,7 @@
             "name": "[%key:common::config_flow::data::longitude%]"
           },
           "elevation": {
-            "name": "[%key:component::gpsd::entity::sensor::elevation::name%]"
+            "name": "[%key:common::config_flow::data::elevation%]"
           },
           "gps_time": {
             "name": "[%key:component::time_date::selector::display_options::options::time%]"
