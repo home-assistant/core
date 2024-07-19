@@ -53,7 +53,7 @@ async def test_flow_wrong_login(hass: HomeAssistant) -> None:
 async def test_flow_unknown_error(hass: HomeAssistant) -> None:
     """Test unknown error throwing error."""
     with patch(
-        "homeassistant.components.anova.config_flow.API.create_via_login",
+        "homeassistant.components.anglian_water.config_flow.API.create_via_login",
         side_effect=Exception(),
     ):
         result = await hass.config_entries.flow.async_init(

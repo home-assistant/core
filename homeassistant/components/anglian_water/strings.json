@@ -18,7 +18,7 @@
   "entity": {
     "sensor": {
       "previous_consumption": {
-        "name": "Previous Consumption"
+        "name": "Yesterday consumption"
       }
     }
   }

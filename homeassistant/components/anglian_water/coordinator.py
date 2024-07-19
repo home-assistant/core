@@ -45,14 +45,10 @@ class AnglianWaterDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update data via library."""
         try:
             await self.client.update()
-        except InvalidUsernameError as exception:
+        except (InvalidUsernameError, InvalidPasswordError) as exception:
             raise ConfigEntryError(exception) from exception
-        except InvalidPasswordError as exception:
-            raise ConfigEntryError(exception) from exception
-        except UnknownEndpointError as exception:
-            raise UpdateFailed(exception) from exception
-        except ServiceUnavailableError as exception:
+        except (UnknownEndpointError, ServiceUnavailableError) as exception:
             raise UpdateFailed(exception) from exception
         except ExpiredAccessTokenError:
             await self.client.api.refresh_login()
-            await self.client.update(True)
+            await self.client.update()
