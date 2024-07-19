@@ -598,8 +598,8 @@ async def test_ws_delete_all_refresh_tokens(
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
-    delete_token_type: dict[str:str],
-    delete_current_token: dict[str:bool],
+    delete_token_type: dict[str, str],
+    delete_current_token: dict[str, bool],
     expected_remaining_normal_tokens: int,
     expected_remaining_long_lived_tokens: int,
 ) -> None:
