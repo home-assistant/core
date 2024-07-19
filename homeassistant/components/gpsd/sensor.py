@@ -89,7 +89,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             GpsdSensor(
-                config_entry.runtime_data.agps_thread,
+                config_entry.runtime_data,
                 config_entry.entry_id,
                 description,
             )

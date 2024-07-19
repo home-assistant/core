@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from gps3.agps3threaded import AGPS3mechanism
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,20 +10,13 @@ from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type GPSDConfigEntry = ConfigEntry[GPSDData]
-
-
-@dataclass
-class GPSDData:
-    """GPSD data type."""
-
-    agps_thread: AGPS3mechanism
+type GPSDConfigEntry = ConfigEntry[AGPS3mechanism]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> bool:
     """Set up GPSD from a config entry."""
     agps_thread = AGPS3mechanism()
-    entry.runtime_data = GPSDData(agps_thread)
+    entry.runtime_data = agps_thread
 
     def setup_agps() -> None:
         host = entry.data.get(CONF_HOST)
