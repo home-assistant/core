@@ -386,7 +386,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
         dialect_name,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
-    raise UnsupportedDialect(dialect_name)
+    raise UnsupportedDialect
 
 
 def _fail_unsupported_version(
@@ -403,7 +403,7 @@ def _fail_unsupported_version(
         dialect_name,
         minimum_version,
     )
-    raise UnsupportedDialect(dialect_name)
+    raise UnsupportedDialect
 
 
 def _delete_issue_deprecated_version(hass: HomeAssistant, dialect_name: str) -> None:
