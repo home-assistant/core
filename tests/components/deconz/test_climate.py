@@ -51,7 +51,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -174,7 +174,7 @@ async def test_simple_climate_device(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "Thermostat",
@@ -344,7 +344,7 @@ async def test_climate_device_without_cooling_support(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -443,7 +443,7 @@ async def test_climate_device_with_cooling_support(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -577,7 +577,7 @@ async def test_climate_device_with_fan_support(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -759,7 +759,7 @@ async def test_clip_climate_device(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "Thermostat",
@@ -839,7 +839,7 @@ async def test_add_new_climate_device(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "CLIP thermostat sensor",
@@ -858,7 +858,7 @@ async def test_not_allow_clip_thermostat(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -895,7 +895,7 @@ async def test_no_mode_no_state(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {

@@ -240,7 +240,7 @@ async def test_deconz_events(
     ],
 )
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -409,7 +409,7 @@ async def test_deconz_alarm_events(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -509,7 +509,7 @@ async def test_deconz_presence_events(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {

@@ -142,7 +142,7 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_0_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 async def test_select(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

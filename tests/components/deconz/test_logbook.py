@@ -27,7 +27,7 @@ from tests.components.logbook.common import MockRow, mock_humanify
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -62,8 +62,8 @@ async def test_humanifying_deconz_alarm_event(
     sensor_payload: dict[str, Any],
 ) -> None:
     """Test humanifying deCONZ alarm event."""
-    keypad_event_id = slugify(sensor_payload["0"]["name"])
-    keypad_serial = serial_from_unique_id(sensor_payload["0"]["uniqueid"])
+    keypad_event_id = slugify(sensor_payload["name"])
+    keypad_serial = serial_from_unique_id(sensor_payload["uniqueid"])
     keypad_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, keypad_serial)}
     )

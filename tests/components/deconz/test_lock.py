@@ -93,7 +93,7 @@ async def test_lock_from_light(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {

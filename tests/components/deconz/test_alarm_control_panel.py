@@ -67,7 +67,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
     ],
 )
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {

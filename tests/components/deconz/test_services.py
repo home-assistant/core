@@ -236,7 +236,7 @@ async def test_service_refresh_devices(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "Switch 1",
@@ -314,7 +314,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
     ],
 )
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "Switch 1",

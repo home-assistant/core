@@ -122,6 +122,8 @@ def fixture_get_request(
     if "state" in light_payload:
         light_payload = {"0": light_payload}
     data.setdefault("lights", light_payload)
+    if "state" in sensor_payload or "config" in sensor_payload:
+        sensor_payload = {"0": sensor_payload}
     data.setdefault("sensors", sensor_payload)
 
     def __mock_requests(host: str = "") -> None:
@@ -185,16 +187,13 @@ def fixture_light_data() -> dict[str, Any]:
 
 
 @pytest.fixture(name="sensor_payload")
-def fixture_sensor_data(sensor_0_payload: dict[str, Any]) -> dict[str, Any]:
-    """Sensor data."""
-    if sensor_0_payload:
-        return {"0": sensor_0_payload}
-    return {}
+def fixture_sensor_data() -> dict[str, Any]:
+    """Sensor data.
 
-
-@pytest.fixture(name="sensor_0_payload")
-def fixture_sensor_0_data() -> dict[str, Any]:
-    """Sensor 0 data."""
+    Should be
+     - one sensor data payload {"config": ..., "state": ...} ("0")
+     - multiple sensors {"1": ..., "2": ...}
+    """
     return {}
 
 

@@ -454,7 +454,7 @@ TEST_DATA = [
 
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
-@pytest.mark.parametrize(("sensor_0_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 async def test_binary_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -510,7 +510,7 @@ async def test_binary_sensors(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "CLIP presence sensor",

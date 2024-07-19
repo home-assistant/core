@@ -899,7 +899,7 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_0_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
 async def test_sensors(
     hass: HomeAssistant,
@@ -971,7 +971,7 @@ async def test_sensors(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "CLIP temperature sensor",
@@ -1112,7 +1112,7 @@ async def test_dont_add_sensor_if_state_is_none(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "config": {
@@ -1342,7 +1342,7 @@ async def test_special_danfoss_battery_creation(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [{"type": "not supported", "name": "name", "state": {}, "config": {}}],
 )
 @pytest.mark.usefixtures("config_entry_setup")

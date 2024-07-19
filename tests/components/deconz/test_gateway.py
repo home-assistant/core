@@ -118,7 +118,7 @@ async def test_gateway_device_configuration_url_when_addon(
 
 
 @pytest.mark.parametrize(
-    "sensor_0_payload",
+    "sensor_payload",
     [
         {
             "name": "presence",
