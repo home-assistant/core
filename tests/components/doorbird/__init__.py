@@ -31,9 +31,14 @@ def get_mock_doorbird_api(
     type(doorbirdapi_mock).info = AsyncMock(
         side_effect=info_side_effect, return_value=info
     )
-    type(doorbirdapi_mock).favorites = AsyncMock(return_value={})
+    type(doorbirdapi_mock).favorites = AsyncMock(
+        return_value={"http": {"x": {"value": "http://webhook"}}}
+    )
     type(doorbirdapi_mock).change_favorite = AsyncMock(return_value=True)
     type(doorbirdapi_mock).schedule = AsyncMock(return_value=schedule)
+    type(doorbirdapi_mock).energize_relay = AsyncMock(return_value=True)
+    type(doorbirdapi_mock).turn_light_on = AsyncMock(return_value=True)
+    type(doorbirdapi_mock).delete_favorite = AsyncMock(return_value=True)
     type(doorbirdapi_mock).doorbell_state = AsyncMock(
         side_effect=mock_unauthorized_exception()
     )
