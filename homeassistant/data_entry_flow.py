@@ -46,7 +46,7 @@ class FlowResultType(StrEnum):
     MENU = "menu"
 
 
-# RESULT_TYPE_* is deprecated, to be removed in 2022.9
+# RESULT_TYPE_* is deprecated, to be removed in 2025.1
 _DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
 _DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
     FlowResultType.CREATE_ENTRY, "2025.1"
@@ -112,9 +112,7 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-# ignore misc is required as vol.Invalid is not typed
-# mypy error: Class cannot subclass "Invalid" (has type "Any")
-class InvalidData(vol.Invalid):  # type: ignore[misc]
+class InvalidData(vol.Invalid):
     """Invalid data provided."""
 
     def __init__(
@@ -386,7 +384,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         ) is not None and user_input is not None:
             data_schema = cast(vol.Schema, data_schema)
             try:
-                user_input = data_schema(user_input)  # type: ignore[operator]
+                user_input = data_schema(user_input)
             except vol.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):
@@ -534,7 +532,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
             report(
                 (
                     "does not use FlowResultType enum for data entry flow result type. "
-                    "This is deprecated and will stop working in Home Assistant 2022.9"
+                    "This is deprecated and will stop working in Home Assistant 2025.1"
                 ),
                 error_if_core=False,
             )

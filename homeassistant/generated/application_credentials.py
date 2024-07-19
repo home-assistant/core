@@ -25,6 +25,7 @@ APPLICATION_CREDENTIALS = [
     "point",
     "senz",
     "spotify",
+    "tesla_fleet",
     "twitch",
     "withings",
     "xbox",

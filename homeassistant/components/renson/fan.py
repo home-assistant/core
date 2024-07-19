@@ -137,7 +137,7 @@ class RensonFan(RensonEntity, FanEntity):
             DataType.LEVEL,
         )
 
-        if level == Level.BREEZE:
+        if level == Level.BREEZE.value:
             level = self.api.parse_value(
                 self.api.get_field_value(
                     self.coordinator.data, BREEZE_LEVEL_FIELD.name

@@ -125,6 +125,11 @@
         "name": "[%key:component::lock::title%]"
       }
     },
+    "select": {
+      "mode": {
+        "name": "Mode"
+      }
+    },
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"

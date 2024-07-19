@@ -1,5 +1,7 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
 
+from unittest.mock import Mock
+
 from aiohue.v2.models.button import ButtonEvent
 from pytest_unordered import unordered
 
@@ -9,6 +11,7 @@ from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
 
@@ -16,7 +19,7 @@ from tests.common import async_capture_events, async_get_device_automations
 
 
 async def test_hue_event(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
     """Test hue button events."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -48,8 +51,8 @@ async def test_hue_event(
 async def test_get_triggers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_bridge_v2,
-    v2_resources_test_data,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected triggers from a hue remote."""

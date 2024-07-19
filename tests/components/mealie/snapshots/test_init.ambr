@@ -21,12 +21,13 @@
     }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'Mealie',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'v1.10.2',
     'via_device_id': None,
   })
 # ---
