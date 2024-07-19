@@ -6,9 +6,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
+import logging
 from typing import Final, cast
 
-from homeassistant.components import _LOGGER
+_LOGGER = logging.getLogger(__name__)
 
 _SAMPLE_RATE: Final = 16000  # Hz
 _SAMPLE_WIDTH: Final = 2  # bytes
