@@ -397,9 +397,6 @@
     }
   },
   "exceptions": {
-    "fan_must_be_on": {
-      "message": "The ventilation unit cannot be turned off remotely"
-    },
     "program_unknown": {
       "message": "Cannot translate preset {preset} into a valid ViCare program"
     },
