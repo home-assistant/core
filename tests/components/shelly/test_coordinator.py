@@ -545,6 +545,7 @@ async def test_rpc_update_entry_sleep_period(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC update entry sleep period."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 600)
     entry = await init_integration(hass, 2, sleep_period=600)
     register_entity(
@@ -578,6 +579,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
 ) -> None:
     """Test RPC sleeping device no periodic updates."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = await init_integration(hass, 2, sleep_period=1000)
     register_entity(
@@ -609,6 +611,7 @@ async def test_rpc_sleeping_device_firmware_unsupported(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test RPC sleeping device firmware not supported."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(mock_rpc_device, "firmware_supported", False)
     entry = await init_integration(hass, 2, sleep_period=3600)
 
@@ -912,6 +915,7 @@ async def test_rpc_sleeping_device_connection_error(
         hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
     )
     mock_restore_cache(hass, [State(entity_id, STATE_ON)])
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -939,3 +943,19 @@ async def test_rpc_sleeping_device_connection_error(
 
     assert "Sleeping device did not update" in caplog.text
     assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+
+
+async def test_rpc_already_connected(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test RPC ignore connect event if already connected."""
+    await init_integration(hass, 2)
+
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "already connected" in caplog.text
+    mock_rpc_device.initialize.assert_called_once()

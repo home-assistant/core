@@ -29,6 +29,7 @@ AUTHORITIES = [
     "Barking and Dagenham",
     "Bexley",
     "Brent",
+    "Bromley",
     "Camden",
     "City of London",
     "Croydon",
