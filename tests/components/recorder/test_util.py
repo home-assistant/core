@@ -729,10 +729,9 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
 async def test_issue_for_old_sqlite(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we create an issue for old sqlite versions."""
+    """Test we create and delete an issue for old sqlite versions."""
     instance_mock = MagicMock()
     instance_mock.hass = hass
     execute_args = []
