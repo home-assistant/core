@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT
 
 from homeassistant import config_entries
-from homeassistant.components.gpsd.config_flow import GPSDConfigFlow
 from homeassistant.components.gpsd.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -44,7 +43,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
-    with patch.object(GPSDConfigFlow, "test_connection", return_value=False):
+    with patch("socket.socket") as mock_socket:
+        mock_connect = mock_socket.return_value.connect
+        mock_connect.side_effect = OSError
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
