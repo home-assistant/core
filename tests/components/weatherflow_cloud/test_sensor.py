@@ -25,6 +25,5 @@ async def test_all_entities(
         "homeassistant.components.weatherflow_cloud.PLATFORMS", [Platform.SENSOR]
     ):
         await setup_integration(hass, mock_config_entry)
-        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

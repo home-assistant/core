@@ -1,4 +1,4 @@
-"""Tests for the WeatherFlow Cloud sensor platform."""
+"""Tests for the WeatherFlow Cloud weather platform."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -25,6 +25,5 @@ async def test_weather(
         "homeassistant.components.weatherflow_cloud.PLATFORMS", [Platform.WEATHER]
     ):
         await setup_integration(hass, mock_config_entry)
-        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
