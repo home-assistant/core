@@ -26,7 +26,6 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .helpers.frame import report
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
@@ -526,16 +525,6 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
             await self._async_setup_preview(flow)
-
-        if not isinstance(result["type"], FlowResultType):
-            result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
-            report(
-                (
-                    "does not use FlowResultType enum for data entry flow result type. "
-                    "This is deprecated and will stop working in Home Assistant 2022.9"
-                ),
-                error_if_core=False,
-            )
 
         if (
             result["type"] == FlowResultType.SHOW_PROGRESS
