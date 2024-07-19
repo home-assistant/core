@@ -128,7 +128,7 @@ async def async_attach_trigger(
             (prev_value, prev_value_raw, from_value),
             (curr_value, curr_value_raw, to_value),
         ):
-            if match not in {MATCH_ALL, value_to_eval, raw_value_to_eval} and not (
+            if match not in (MATCH_ALL, value_to_eval, raw_value_to_eval) and not (
                 isinstance(match, list)
                 and (value_to_eval in match or raw_value_to_eval in match)
             ):
