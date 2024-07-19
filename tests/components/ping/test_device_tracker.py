@@ -1,12 +1,12 @@
 """Test the binary sensor platform of ping."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from icmplib import Host
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

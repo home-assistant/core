@@ -13,6 +13,7 @@ from typing import Any, Self
 
 from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
+from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.config import (
@@ -29,14 +30,13 @@ from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
 
 from . import repairs
-from .core.const import (
+from .const import (
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DEFAULT_DATABASE_NAME,
     EZSP_OVERWRITE_EUI64,
-    RadioType,
 )
-from .core.helpers import get_zha_data
+from .helpers import get_zha_data
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has

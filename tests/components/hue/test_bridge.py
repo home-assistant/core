@@ -1,7 +1,7 @@
 """Test Hue bridge."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp import client_exceptions
 from aiohue.errors import Unauthorized
@@ -21,7 +21,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from tests.common import MockConfigEntry
 
 
-async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1) -> None:
+async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1: Mock) -> None:
     """Test a successful setup for V1 bridge."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -45,7 +45,7 @@ async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1) -> None:
     assert forward_entries == {"light", "binary_sensor", "sensor"}
 
 
-async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2) -> None:
+async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2: Mock) -> None:
     """Test a successful setup for V2 bridge."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -113,7 +113,9 @@ async def test_bridge_setup_timeout(hass: HomeAssistant) -> None:
         await hue_bridge.async_initialize_bridge()
 
 
-async def test_reset_unloads_entry_if_setup(hass: HomeAssistant, mock_api_v1) -> None:
+async def test_reset_unloads_entry_if_setup(
+    hass: HomeAssistant, mock_api_v1: Mock
+) -> None:
     """Test calling reset while the entry has been setup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -143,7 +145,7 @@ async def test_reset_unloads_entry_if_setup(hass: HomeAssistant, mock_api_v1) ->
     assert len(hass.services.async_services()) == 0
 
 
-async def test_handle_unauthorized(hass: HomeAssistant, mock_api_v1) -> None:
+async def test_handle_unauthorized(hass: HomeAssistant, mock_api_v1: Mock) -> None:
     """Test handling an unauthorized error on update."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

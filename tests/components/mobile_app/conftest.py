@@ -67,7 +67,7 @@ async def webhook_client(
 
 
 @pytest.fixture(autouse=True)
-async def setup_ws(hass):
+async def setup_ws(hass: HomeAssistant) -> None:
     """Configure the websocket_api component."""
     assert await async_setup_component(hass, "repairs", {})
     assert await async_setup_component(hass, "websocket_api", {})

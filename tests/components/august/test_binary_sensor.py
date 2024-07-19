@@ -1,7 +1,6 @@
 """The binary_sensor tests for the august platform."""
 
 import datetime
-import time
 from unittest.mock import Mock, patch
 
 from yalexs.pubnub_async import AugustPubNub
@@ -25,13 +24,10 @@ from .mocks import (
     _mock_doorbell_from_fixture,
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
+    _timetoken,
 )
 
 from tests.common import async_fire_time_changed
-
-
-def _timetoken():
-    return str(time.time_ns())[:-2]
 
 
 async def test_doorsense(hass: HomeAssistant) -> None:
@@ -153,7 +149,7 @@ async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
     native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
     with patch(
-        "homeassistant.components.august.binary_sensor._native_datetime",
+        "homeassistant.components.august.util._native_datetime",
         return_value=native_time,
     ):
         async_fire_time_changed(hass, new_time)
@@ -252,7 +248,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
     native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
     with patch(
-        "homeassistant.components.august.binary_sensor._native_datetime",
+        "homeassistant.components.august.util._native_datetime",
         return_value=native_time,
     ):
         async_fire_time_changed(hass, new_time)
@@ -282,7 +278,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
     native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
     with patch(
-        "homeassistant.components.august.binary_sensor._native_datetime",
+        "homeassistant.components.august.util._native_datetime",
         return_value=native_time,
     ):
         async_fire_time_changed(hass, new_time)

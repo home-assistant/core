@@ -1,10 +1,10 @@
 """Test fixtures for the Home Assistant Yellow integration."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture(autouse=True)

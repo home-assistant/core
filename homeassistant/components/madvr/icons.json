@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hdr_flag": {
+        "default": "mdi:hdr",
+        "state": {
+          "off": "mdi:hdr-off"
+        }
+      },
+      "outgoing_hdr_flag": {
+        "default": "mdi:hdr",
+        "state": {
+          "off": "mdi:hdr-off"
+        }
+      },
+      "power_state": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
+      },
+      "signal_state": {
+        "default": "mdi:signal",
+        "state": {
+          "off": "mdi:signal-off"
+        }
+      }
+    }
+  }
+}

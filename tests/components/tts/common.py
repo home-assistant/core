@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import media_source

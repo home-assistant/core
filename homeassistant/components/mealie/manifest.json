@@ -1,10 +1,10 @@
 {
   "domain": "mealie",
   "name": "Mealie",
-  "codeowners": ["@joostlek"],
+  "codeowners": ["@joostlek", "@andrew-codechimp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mealie",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "requirements": ["aiomealie==0.5.0"]
+  "requirements": ["aiomealie==0.6.0"]
 }

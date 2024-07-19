@@ -185,6 +185,7 @@ DEFAULT_FORECAST = [
         "temperature": 10,
         "windSpeedAvg": 10,
         "windBearing": 180,
+        "shortForecast": "A short forecast.",
         "detailedForecast": "A detailed forecast.",
         "timestamp": "2019-08-12T23:53:00+00:00",
         "iconTime": "night",

@@ -1,6 +1,8 @@
 """deCONZ cover platform tests."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+
+import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -17,6 +19,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_CLOSED,
@@ -25,29 +28,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .conftest import WebsocketDataType
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_covers(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no cover entities are created."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_cover(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Test that all supported cover entities are created."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "name": "Window covering device",
                 "type": "Window covering device",
@@ -62,10 +51,15 @@ async def test_cover(
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+async def test_cover(
+    hass: HomeAssistant,
+    config_entry_setup: ConfigEntry,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Test that all supported cover entities are created."""
     assert len(hass.states.async_all()) == 2
     cover = hass.states.get("cover.window_covering_device")
     assert cover.state == STATE_CLOSED
@@ -75,13 +69,11 @@ async def test_cover(
     # Event signals cover is open
 
     event_changed_light = {
-        "t": "event",
-        "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"lift": 0, "open": True},
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     cover = hass.states.get("cover.window_covering_device")
@@ -90,7 +82,7 @@ async def test_cover(
 
     # Verify service calls for cover
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/1/state")
 
     # Service open cover
 
@@ -132,24 +124,22 @@ async def test_cover(
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
     states = hass.states.async_all()
     assert len(states) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_tilt_cover(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that tilting a cover works."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "0": {
                 "etag": "87269755b9b3a046485fdae8d96b252c",
                 "lastannounced": None,
@@ -170,10 +160,13 @@ async def test_tilt_cover(
                 "uniqueid": "00:24:46:00:00:12:34:56-01",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_tilt_cover(
+    hass: HomeAssistant, mock_put_request: Callable[[str, str], AiohttpClientMocker]
+) -> None:
+    """Test that tilting a cover works."""
     assert len(hass.states.async_all()) == 1
     covering_device = hass.states.get("cover.covering_device")
     assert covering_device.state == STATE_OPEN
@@ -181,7 +174,7 @@ async def test_tilt_cover(
 
     # Verify service calls for tilting cover
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service set tilt cover
 
@@ -224,12 +217,10 @@ async def test_tilt_cover(
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
 
-async def test_level_controllable_output_cover(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that tilting a cover works."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "0": {
                 "etag": "4cefc909134c8e99086b55273c2bde67",
                 "hascolor": False,
@@ -250,10 +241,13 @@ async def test_level_controllable_output_cover(
                 "uniqueid": "00:22:a3:00:00:00:00:00-01",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_level_controllable_output_cover(
+    hass: HomeAssistant, mock_put_request: Callable[[str, str], AiohttpClientMocker]
+) -> None:
+    """Test that tilting a cover works."""
     assert len(hass.states.async_all()) == 1
     covering_device = hass.states.get("cover.vent")
     assert covering_device.state == STATE_OPEN
@@ -261,7 +255,7 @@ async def test_level_controllable_output_cover(
 
     # Verify service calls for tilting cover
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service open cover
 

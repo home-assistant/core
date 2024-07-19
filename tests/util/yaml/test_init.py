@@ -1,5 +1,6 @@
 """Test Home Assistant yaml loader."""
 
+from collections.abc import Generator
 import importlib
 import io
 import os
@@ -9,7 +10,6 @@ import unittest
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 import yaml as pyyaml
 

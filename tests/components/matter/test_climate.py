@@ -315,13 +315,18 @@ async def test_room_airconditioner(
     state = hass.states.get("climate.room_airconditioner_thermostat")
     assert state
     assert state.attributes["current_temperature"] == 20
-    assert state.attributes["min_temp"] == 16
-    assert state.attributes["max_temp"] == 32
+    # room airconditioner has mains power on OnOff cluster with value set to False
+    assert state.state == HVACMode.OFF
 
     # test supported features correctly parsed
     # WITHOUT temperature_range support
     mask = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
     assert state.attributes["supported_features"] & mask == mask
+
+    # set mains power to ON (OnOff cluster)
+    set_node_attribute(room_airconditioner, 1, 6, 0, True)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.room_airconditioner_thermostat")
 
     # test supported HVAC modes include fan and dry modes
     assert state.attributes["hvac_modes"] == [

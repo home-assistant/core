@@ -29,6 +29,7 @@ from tests.typing import WebSocketGenerator
     [
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
+        ("button", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         (
             "event",
@@ -135,6 +136,7 @@ async def test_config_flow(
     ("group_type", "extra_input"),
     [
         ("binary_sensor", {"all": False}),
+        ("button", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -212,6 +214,7 @@ def get_suggested(schema, key):
     ("group_type", "member_state", "extra_options", "options_options"),
     [
         ("binary_sensor", "on", {"all": False}, {}),
+        ("button", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
@@ -396,6 +399,7 @@ async def test_all_options(
     ("group_type", "extra_input"),
     [
         ("binary_sensor", {"all": False}),
+        ("button", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -491,6 +495,7 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
     ("domain", "extra_user_input", "input_states", "group_state", "extra_attributes"),
     [
         ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
+        ("button", {}, ["", ""], "unknown", [{}, {}]),
         ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
@@ -600,6 +605,7 @@ async def test_config_flow_preview(
     ),
     [
         ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
+        ("button", {}, {}, ["", ""], "unknown", [{}, {}]),
         ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),

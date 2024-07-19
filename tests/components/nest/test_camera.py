@@ -4,6 +4,7 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
+from collections.abc import Generator
 import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
@@ -12,7 +13,6 @@ import aiohttp
 from freezegun import freeze_time
 from google_nest_sdm.event import EventMessage
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType

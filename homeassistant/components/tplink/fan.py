@@ -59,7 +59,12 @@ class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
     """Representation of a fan for a TPLink Fan device."""
 
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -69,10 +74,11 @@ class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the fan."""
-        super().__init__(device, coordinator, parent=parent)
         self.fan_module = fan_module
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
+
+        super().__init__(device, coordinator, parent=parent)
 
     @async_refresh_after
     async def async_turn_on(

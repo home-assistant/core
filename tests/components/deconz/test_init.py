@@ -10,10 +10,12 @@ from homeassistant.components.deconz import (
 )
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .conftest import ConfigEntryFactoryType
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ENTRY1_HOST = "1.2.3.4"
@@ -39,28 +41,30 @@ async def setup_entry(hass, entry):
 
 
 async def test_setup_entry_successful(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test setup entry is successful."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     assert hass.data[DECONZ_DOMAIN]
-    assert config_entry.entry_id in hass.data[DECONZ_DOMAIN]
-    assert hass.data[DECONZ_DOMAIN][config_entry.entry_id].master
+    assert config_entry_setup.entry_id in hass.data[DECONZ_DOMAIN]
+    assert hass.data[DECONZ_DOMAIN][config_entry_setup.entry_id].master
 
 
-async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> None:
+async def test_setup_entry_fails_config_entry_not_ready(
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
+) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
         "homeassistant.components.deconz.get_deconz_api",
         side_effect=CannotConnect,
     ):
-        await setup_deconz_integration(hass)
+        await config_entry_factory()
 
     assert hass.data[DECONZ_DOMAIN] == {}
 
 
-async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> None:
+async def test_setup_entry_fails_trigger_reauth_flow(
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
+) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with (
         patch(
@@ -69,27 +73,25 @@ async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> Non
         ),
         patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
     ):
-        await setup_deconz_integration(hass)
+        await config_entry_factory()
         mock_flow_init.assert_called_once()
 
     assert hass.data[DECONZ_DOMAIN] == {}
 
 
 async def test_setup_entry_multiple_gateways(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Test setup entry is successful with multiple gateways."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    aioclient_mock.clear_requests()
+    config_entry = await config_entry_factory()
 
-    data = {"config": {"bridgeid": "01234E56789B"}}
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry2 = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            entry_id="2",
-            unique_id="01234E56789B",
-        )
+    entry2 = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        entry_id="2",
+        unique_id="01234E56789B",
+        data=config_entry.data | {"host": "2.3.4.5"},
+    )
+    config_entry2 = await config_entry_factory(entry2)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
     assert hass.data[DECONZ_DOMAIN][config_entry.entry_id].master
@@ -97,31 +99,30 @@ async def test_setup_entry_multiple_gateways(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test being able to unload an entry."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
     assert hass.data[DECONZ_DOMAIN]
 
-    assert await async_unload_entry(hass, config_entry)
+    assert await async_unload_entry(hass, config_entry_setup)
     assert not hass.data[DECONZ_DOMAIN]
 
 
 async def test_unload_entry_multiple_gateways(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory,
 ) -> None:
     """Test being able to unload an entry and master gateway gets moved."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    aioclient_mock.clear_requests()
+    config_entry = await config_entry_factory()
 
-    data = {"config": {"bridgeid": "01234E56789B"}}
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry2 = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            entry_id="2",
-            unique_id="01234E56789B",
-        )
+    entry2 = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        entry_id="2",
+        unique_id="01234E56789B",
+        data=config_entry.data | {"host": "2.3.4.5"},
+    )
+    config_entry2 = await config_entry_factory(entry2)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 
@@ -132,20 +133,18 @@ async def test_unload_entry_multiple_gateways(
 
 
 async def test_unload_entry_multiple_gateways_parallel(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_factory
 ) -> None:
     """Test race condition when unloading multiple config entries in parallel."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    aioclient_mock.clear_requests()
+    config_entry = await config_entry_factory()
 
-    data = {"config": {"bridgeid": "01234E56789B"}}
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry2 = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            entry_id="2",
-            unique_id="01234E56789B",
-        )
+    entry2 = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        entry_id="2",
+        unique_id="01234E56789B",
+        data=config_entry.data | {"host": "2.3.4.5"},
+    )
+    config_entry2 = await config_entry_factory(entry2)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 

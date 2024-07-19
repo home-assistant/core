@@ -9,9 +9,9 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 
-async def test_setup_entry(setup_config_entry: ConfigEntry) -> None:
+async def test_setup_entry(config_entry_setup: ConfigEntry) -> None:
     """Test successful setup of entry."""
-    assert setup_config_entry.state is ConfigEntryState.LOADED
+    assert config_entry_setup.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_fails(
@@ -30,13 +30,13 @@ async def test_setup_entry_fails(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test successful unload of entry."""
-    assert setup_config_entry.state is ConfigEntryState.LOADED
+    assert config_entry_setup.state is ConfigEntryState.LOADED
 
-    assert await hass.config_entries.async_unload(setup_config_entry.entry_id)
-    assert setup_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await hass.config_entries.async_unload(config_entry_setup.entry_id)
+    assert config_entry_setup.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize("config_entry_version", [1])

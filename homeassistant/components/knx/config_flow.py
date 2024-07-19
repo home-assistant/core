@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 from typing import Any, Final
 
-from typing_extensions import AsyncGenerator
 import voluptuous as vol
 from xknx import XKNX
 from xknx.exceptions.exception import (

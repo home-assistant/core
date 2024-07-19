@@ -24,13 +24,13 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
 
-async def test_fan_basic(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_basic(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
     """Test fan with char state."""
     entity_id = "fan.demo"
 
@@ -108,7 +108,9 @@ async def test_fan_basic(hass: HomeAssistant, hk_driver, events) -> None:
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_fan_direction(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_direction(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test fan with direction."""
     entity_id = "fan.demo"
 
@@ -186,7 +188,9 @@ async def test_fan_direction(hass: HomeAssistant, hk_driver, events) -> None:
     assert events[-1].data[ATTR_VALUE] == DIRECTION_REVERSE
 
 
-async def test_fan_oscillate(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_oscillate(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test fan with oscillate."""
     entity_id = "fan.demo"
 
@@ -259,7 +263,7 @@ async def test_fan_oscillate(hass: HomeAssistant, hk_driver, events) -> None:
     assert events[-1].data[ATTR_VALUE] is True
 
 
-async def test_fan_speed(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_speed(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
     """Test fan with speed."""
     entity_id = "fan.demo"
 
@@ -361,7 +365,9 @@ async def test_fan_speed(hass: HomeAssistant, hk_driver, events) -> None:
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
 
 
-async def test_fan_set_all_one_shot(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_set_all_one_shot(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test fan with speed."""
     entity_id = "fan.demo"
 
@@ -555,7 +561,7 @@ async def test_fan_set_all_one_shot(hass: HomeAssistant, hk_driver, events) -> N
 
 
 async def test_fan_restore(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver
 ) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.set_state(CoreState.not_running)
@@ -597,7 +603,7 @@ async def test_fan_restore(
 
 
 async def test_fan_multiple_preset_modes(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test fan with multiple preset modes."""
     entity_id = "fan.demo"
@@ -678,7 +684,9 @@ async def test_fan_multiple_preset_modes(
     assert len(events) == 2
 
 
-async def test_fan_single_preset_mode(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_single_preset_mode(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test fan with a single preset mode."""
     entity_id = "fan.demo"
 

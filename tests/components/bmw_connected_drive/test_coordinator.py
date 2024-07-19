@@ -27,10 +27,7 @@ async def test_update_success(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        hass.data[config_entry.domain][config_entry.entry_id].last_update_success
-        is True
-    )
+    assert config_entry.runtime_data.coordinator.last_update_success is True
 
 
 @pytest.mark.usefixtures("bmw_fixture")
@@ -45,7 +42,7 @@ async def test_update_failed(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = hass.data[config_entry.domain][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     assert coordinator.last_update_success is True
 
@@ -74,7 +71,7 @@ async def test_update_reauth(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = hass.data[config_entry.domain][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     assert coordinator.last_update_success is True
 
