@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bond_async import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, DeviceType
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -17,7 +17,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BondConfigEntry
 from .entity import BondEntity
-from .utils import BondDevice, BondHub
+from .models import BondData
+from .utils import BondDevice
 
 
 def _bond_to_hass_position(bond_position: int) -> int:
@@ -37,12 +38,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bond cover devices."""
     data = entry.runtime_data
-    hub = data.hub
-    bpup_subs = data.bpup_subs
-
     async_add_entities(
-        BondCover(hub, device, bpup_subs)
-        for device in hub.devices
+        BondCover(data, device)
+        for device in data.hub.devices
         if device.type == DeviceType.MOTORIZED_SHADES
     )
 
@@ -52,11 +50,9 @@ class BondCover(BondEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHADE
 
-    def __init__(
-        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
-    ) -> None:
+    def __init__(self, data: BondData, device: BondDevice) -> None:
         """Create HA entity representing Bond cover."""
-        super().__init__(hub, device, bpup_subs)
+        super().__init__(data, device)
         supported_features = CoverEntityFeature(0)
         if self._device.supports_set_position():
             supported_features |= CoverEntityFeature.SET_POSITION
@@ -84,31 +80,31 @@ class BondCover(BondEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
-        await self._hub.bond.action(
-            self._device.device_id,
+        await self._bond.action(
+            self._device_id,
             Action.set_position(_hass_to_bond_position(kwargs[ATTR_POSITION])),
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._hub.bond.action(self._device.device_id, Action.open())
+        await self._bond.action(self._device_id, Action.open())
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._hub.bond.action(self._device.device_id, Action.close())
+        await self._bond.action(self._device_id, Action.close())
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Hold cover."""
-        await self._hub.bond.action(self._device.device_id, Action.hold())
+        await self._bond.action(self._device_id, Action.hold())
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self._hub.bond.action(self._device.device_id, Action.tilt_open())
+        await self._bond.action(self._device_id, Action.tilt_open())
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self._hub.bond.action(self._device.device_id, Action.tilt_close())
+        await self._bond.action(self._device_id, Action.tilt_close())
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._hub.bond.action(self._device.device_id, Action.hold())
+        await self._bond.action(self._device_id, Action.hold())

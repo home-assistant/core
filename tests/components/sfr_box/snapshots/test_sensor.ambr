@@ -22,6 +22,7 @@
       }),
       'manufacturer': None,
       'model': 'NB6VAC-FXC-r0',
+      'model_id': None,
       'name': 'SFR Box',
       'name_by_user': None,
       'primary_config_entry': <ANY>,

@@ -267,10 +267,6 @@
         'temp-set': 45,
         'temp-unit': 0,
       }),
-      'new-systems': list([
-      ]),
-      'new-zones': list([
-      ]),
       'num-systems': 3,
       'num-zones': 7,
       'systems': dict({

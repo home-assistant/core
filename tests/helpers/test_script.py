@@ -3906,10 +3906,10 @@ async def test_parallel_error(
     assert len(events) == 0
 
     expected_trace = {
-        "0": [{"error": "Service epic.failure not found"}],
+        "0": [{"error": "Action epic.failure not found"}],
         "0/parallel/0/sequence/0": [
             {
-                "error": "Service epic.failure not found",
+                "error": "Action epic.failure not found",
                 "result": {
                     "params": {
                         "domain": "epic",
@@ -3958,7 +3958,7 @@ async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
     expected_trace = {
         "0": [
             {
-                "error": "Service test.script not found",
+                "error": "Action test.script not found",
                 "result": {
                     "params": {
                         "domain": "test",
@@ -5799,7 +5799,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
         {
             "0": [
                 {
-                    "error": "Service service.not_found not found",
+                    "error": "Action service.not_found not found",
                     "result": {
                         "params": {
                             "domain": "service",

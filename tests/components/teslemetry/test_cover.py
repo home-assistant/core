@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
@@ -9,6 +10,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,6 +26,7 @@ from . import assert_entities, setup_platform
 from .const import COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cover(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -35,19 +38,21 @@ async def test_cover(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cover_alt(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data,
 ) -> None:
-    """Tests that the cover entities are correct without scopes."""
+    """Tests that the cover entities are correct with alternate values."""
 
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     entry = await setup_platform(hass, [Platform.COVER])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cover_noscope(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -73,6 +78,7 @@ async def test_cover_offline(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cover_services(
     hass: HomeAssistant,
 ) -> None:
@@ -167,6 +173,47 @@ async def test_cover_services(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        call.assert_called_once()
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state is STATE_OPEN
+
+        call.reset_mock()
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        call.assert_called_once()
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state is STATE_CLOSED
+
+    # Sunroof
+    entity_id = "cover.test_sunroof"
+    with patch(
+        "homeassistant.components.teslemetry.VehicleSpecific.sun_roof_control",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        call.assert_called_once()
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state is STATE_OPEN
+
+        call.reset_mock()
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
