@@ -51,39 +51,37 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "0": {
-                "config": {
-                    "battery": 59,
-                    "displayflipped": None,
-                    "heatsetpoint": 2100,
-                    "locked": True,
-                    "mountingmode": None,
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "6130553ac247174809bae47144ee23f8",
-                "lastseen": "2020-11-29T19:31Z",
-                "manufacturername": "Danfoss",
-                "modelid": "eTRV0100",
-                "name": "thermostat",
-                "state": {
-                    "errorcode": None,
-                    "lastupdated": "2020-11-29T19:28:40.665",
-                    "mountingmodeactive": False,
-                    "on": True,
-                    "temperature": 2102,
-                    "valve": 24,
-                    "windowopen": "Closed",
-                },
-                "swversion": "01.02.0008 01.02",
-                "type": "ZHAThermostat",
-                "uniqueid": "14:b4:57:ff:fe:d5:4e:77-01-0201",
-            }
+            "config": {
+                "battery": 59,
+                "displayflipped": None,
+                "heatsetpoint": 2100,
+                "locked": True,
+                "mountingmode": None,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "6130553ac247174809bae47144ee23f8",
+            "lastseen": "2020-11-29T19:31Z",
+            "manufacturername": "Danfoss",
+            "modelid": "eTRV0100",
+            "name": "thermostat",
+            "state": {
+                "errorcode": None,
+                "lastupdated": "2020-11-29T19:28:40.665",
+                "mountingmodeactive": False,
+                "on": True,
+                "temperature": 2102,
+                "valve": 24,
+                "windowopen": "Closed",
+            },
+            "swversion": "01.02.0008 01.02",
+            "type": "ZHAThermostat",
+            "uniqueid": "14:b4:57:ff:fe:d5:4e:77-01-0201",
         }
     ],
 )
@@ -176,22 +174,20 @@ async def test_simple_climate_device(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "1": {
-                "name": "Thermostat",
-                "type": "ZHAThermostat",
-                "state": {"on": True, "temperature": 2260, "valve": 30},
-                "config": {
-                    "battery": 100,
-                    "heatsetpoint": 2200,
-                    "mode": "auto",
-                    "offset": 10,
-                    "reachable": True,
-                },
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "name": "Thermostat",
+            "type": "ZHAThermostat",
+            "state": {"on": True, "temperature": 2260, "valve": 30},
+            "config": {
+                "battery": 100,
+                "heatsetpoint": 2200,
+                "mode": "auto",
+                "offset": 10,
+                "reachable": True,
+            },
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -225,7 +221,6 @@ async def test_climate_device_without_cooling_support(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "config": {"mode": "off"},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -241,7 +236,6 @@ async def test_climate_device_without_cooling_support(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "config": {"mode": "other"},
         "state": {"on": True},
     }
@@ -258,7 +252,6 @@ async def test_climate_device_without_cooling_support(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"on": False},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -272,7 +265,7 @@ async def test_climate_device_without_cooling_support(
 
     # Verify service calls
 
-    aioclient_mock = mock_put_request("/sensors/1/config")
+    aioclient_mock = mock_put_request("/sensors/0/config")
 
     # Service set HVAC mode to auto
 
@@ -351,34 +344,32 @@ async def test_climate_device_without_cooling_support(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "0": {
-                "config": {
-                    "battery": 25,
-                    "coolsetpoint": 1111,
-                    "fanmode": None,
-                    "heatsetpoint": 2222,
-                    "mode": "heat",
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "074549903686a77a12ef0f06c499b1ef",
-                "lastseen": "2020-11-27T13:45Z",
-                "manufacturername": "Zen Within",
-                "modelid": "Zen-01",
-                "name": "Zen-01",
-                "state": {
-                    "lastupdated": "2020-11-27T13:42:40.863",
-                    "on": False,
-                    "temperature": 2320,
-                },
-                "type": "ZHAThermostat",
-                "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
-            }
+            "config": {
+                "battery": 25,
+                "coolsetpoint": 1111,
+                "fanmode": None,
+                "heatsetpoint": 2222,
+                "mode": "heat",
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "074549903686a77a12ef0f06c499b1ef",
+            "lastseen": "2020-11-27T13:45Z",
+            "manufacturername": "Zen Within",
+            "modelid": "Zen-01",
+            "name": "Zen-01",
+            "state": {
+                "lastupdated": "2020-11-27T13:42:40.863",
+                "on": False,
+                "temperature": 2320,
+            },
+            "type": "ZHAThermostat",
+            "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
         }
     ],
 )
@@ -452,34 +443,32 @@ async def test_climate_device_with_cooling_support(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "0": {
-                "config": {
-                    "battery": 25,
-                    "coolsetpoint": None,
-                    "fanmode": "auto",
-                    "heatsetpoint": 2222,
-                    "mode": "heat",
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "074549903686a77a12ef0f06c499b1ef",
-                "lastseen": "2020-11-27T13:45Z",
-                "manufacturername": "Zen Within",
-                "modelid": "Zen-01",
-                "name": "Zen-01",
-                "state": {
-                    "lastupdated": "2020-11-27T13:42:40.863",
-                    "on": False,
-                    "temperature": 2320,
-                },
-                "type": "ZHAThermostat",
-                "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
-            }
+            "config": {
+                "battery": 25,
+                "coolsetpoint": None,
+                "fanmode": "auto",
+                "heatsetpoint": 2222,
+                "mode": "heat",
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "074549903686a77a12ef0f06c499b1ef",
+            "lastseen": "2020-11-27T13:45Z",
+            "manufacturername": "Zen Within",
+            "modelid": "Zen-01",
+            "name": "Zen-01",
+            "state": {
+                "lastupdated": "2020-11-27T13:42:40.863",
+                "on": False,
+                "temperature": 2320,
+            },
+            "type": "ZHAThermostat",
+            "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
         }
     ],
 )
@@ -588,35 +577,33 @@ async def test_climate_device_with_fan_support(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "0": {
-                "config": {
-                    "battery": 25,
-                    "coolsetpoint": None,
-                    "fanmode": None,
-                    "heatsetpoint": 2222,
-                    "mode": "heat",
-                    "preset": "auto",
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "074549903686a77a12ef0f06c499b1ef",
-                "lastseen": "2020-11-27T13:45Z",
-                "manufacturername": "Zen Within",
-                "modelid": "Zen-01",
-                "name": "Zen-01",
-                "state": {
-                    "lastupdated": "2020-11-27T13:42:40.863",
-                    "on": False,
-                    "temperature": 2320,
-                },
-                "type": "ZHAThermostat",
-                "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
-            }
+            "config": {
+                "battery": 25,
+                "coolsetpoint": None,
+                "fanmode": None,
+                "heatsetpoint": 2222,
+                "mode": "heat",
+                "preset": "auto",
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "074549903686a77a12ef0f06c499b1ef",
+            "lastseen": "2020-11-27T13:45Z",
+            "manufacturername": "Zen Within",
+            "modelid": "Zen-01",
+            "name": "Zen-01",
+            "state": {
+                "lastupdated": "2020-11-27T13:42:40.863",
+                "on": False,
+                "temperature": 2320,
+            },
+            "type": "ZHAThermostat",
+            "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
         }
     ],
 )
@@ -772,22 +759,20 @@ async def test_clip_climate_device(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "1": {
-                "name": "Thermostat",
-                "type": "ZHAThermostat",
-                "state": {"on": True, "temperature": 2260, "valve": 30},
-                "config": {
-                    "battery": 100,
-                    "heatsetpoint": 2200,
-                    "mode": "auto",
-                    "offset": 10,
-                    "reachable": True,
-                },
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "name": "Thermostat",
+            "type": "ZHAThermostat",
+            "state": {"on": True, "temperature": 2260, "valve": 30},
+            "config": {
+                "battery": 100,
+                "heatsetpoint": 2200,
+                "mode": "auto",
+                "offset": 10,
+                "reachable": True,
+            },
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -803,11 +788,7 @@ async def test_verify_state_update(
         == HVACAction.HEATING
     )
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"on": False},
-    }
+    event_changed_sensor = {"r": "sensors", "state": {"on": False}}
     await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
@@ -827,7 +808,6 @@ async def test_add_new_climate_device(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": {
             "id": "Thermostat id",
             "name": "Thermostat",
@@ -859,17 +839,15 @@ async def test_add_new_climate_device(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "1": {
-                "name": "CLIP thermostat sensor",
-                "type": "CLIPThermostat",
-                "state": {},
-                "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            },
-        }
+            "name": "CLIP thermostat sensor",
+            "type": "CLIPThermostat",
+            "state": {},
+            "config": {},
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
+        },
     ],
 )
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: False}])
@@ -880,29 +858,27 @@ async def test_not_allow_clip_thermostat(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "0": {
-                "config": {
-                    "battery": 25,
-                    "heatsetpoint": 2222,
-                    "mode": None,
-                    "preset": "auto",
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "074549903686a77a12ef0f06c499b1ef",
-                "lastseen": "2020-11-27T13:45Z",
-                "manufacturername": "Zen Within",
-                "modelid": "Zen-01",
-                "name": "Zen-01",
-                "state": {"lastupdated": "none", "on": None, "temperature": 2290},
-                "type": "ZHAThermostat",
-                "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
-            }
+            "config": {
+                "battery": 25,
+                "heatsetpoint": 2222,
+                "mode": None,
+                "preset": "auto",
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "074549903686a77a12ef0f06c499b1ef",
+            "lastseen": "2020-11-27T13:45Z",
+            "manufacturername": "Zen Within",
+            "modelid": "Zen-01",
+            "name": "Zen-01",
+            "state": {"lastupdated": "none", "on": None, "temperature": 2290},
+            "type": "ZHAThermostat",
+            "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
         }
     ],
 )
@@ -919,41 +895,39 @@ async def test_no_mode_no_state(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "0": {
-                "config": {
-                    "battery": 58,
-                    "heatsetpoint": 2200,
-                    "locked": False,
-                    "mode": "heat",
-                    "offset": -200,
-                    "on": True,
-                    "preset": "manual",
-                    "reachable": True,
-                    "schedule": {},
-                    "schedule_on": False,
-                    "setvalve": False,
-                    "windowopen_set": False,
-                },
-                "ep": 1,
-                "etag": "404c15db68c318ebe7832ce5aa3d1e30",
-                "lastannounced": "2022-08-31T03:00:59Z",
-                "lastseen": "2022-09-19T11:58Z",
-                "manufacturername": "_TZE200_b6wax7g0",
-                "modelid": "TS0601",
-                "name": "Thermostat",
-                "state": {
-                    "lastupdated": "2022-09-19T11:58:24.204",
-                    "lowbattery": False,
-                    "on": False,
-                    "temperature": 2200,
-                    "valve": 0,
-                },
-                "type": "ZHAThermostat",
-                "uniqueid": "84:fd:27:ff:fe:8a:eb:89-01-0201",
-            }
+            "config": {
+                "battery": 58,
+                "heatsetpoint": 2200,
+                "locked": False,
+                "mode": "heat",
+                "offset": -200,
+                "on": True,
+                "preset": "manual",
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+                "setvalve": False,
+                "windowopen_set": False,
+            },
+            "ep": 1,
+            "etag": "404c15db68c318ebe7832ce5aa3d1e30",
+            "lastannounced": "2022-08-31T03:00:59Z",
+            "lastseen": "2022-09-19T11:58Z",
+            "manufacturername": "_TZE200_b6wax7g0",
+            "modelid": "TS0601",
+            "name": "Thermostat",
+            "state": {
+                "lastupdated": "2022-09-19T11:58:24.204",
+                "lowbattery": False,
+                "on": False,
+                "temperature": 2200,
+                "valve": 0,
+            },
+            "type": "ZHAThermostat",
+            "uniqueid": "84:fd:27:ff:fe:8a:eb:89-01-0201",
         }
     ],
 )
