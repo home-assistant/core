@@ -77,8 +77,7 @@ class RachioCalendarEntity(
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        event = self._handle_upcoming_event()
-        if not event:
+        if not (event := self._handle_upcoming_event()):
             return None
         start_time = dt_util.parse_datetime(event[KEY_START_TIME], raise_on_error=True)
         valves = ", ".join(
@@ -171,9 +170,7 @@ class RachioCalendarEntity(
         recurrence_range: str | None = None,
     ) -> None:
         """Skip an upcoming event on the calendar."""
-        event = uid.split("/")
-        program = event[0]
-        timestamp = event[1]
+        program, timestamp = uid.split("/")
         await self.hass.async_add_executor_job(
             self.base_station.create_skip, program, timestamp
         )

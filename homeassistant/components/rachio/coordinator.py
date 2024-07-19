@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from operator import itemgetter
 from typing import Any
 
 from rachiopy import Rachio
@@ -116,5 +117,4 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
         # Flatten and sort dates
         for event in schedule[1][KEY_DAY_VIEWS]:
             events.extend(event[KEY_PROGRAM_RUN_SUMMARIES])
-        events.sort(key=lambda event: event[KEY_START_TIME])
-        return events
+        return sorted(events, key=itemgetter(KEY_START_TIME))
