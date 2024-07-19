@@ -19,7 +19,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WLEDConfigEntry
-from .const import ATTR_COLOR_PRIMARY, ATTR_ON, ATTR_SEGMENT_ID
+from .const import (
+    ATTR_COLOR_PRIMARY,
+    ATTR_ON,
+    ATTR_SEGMENT_ID,
+    LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
+)
 from .coordinator import WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
@@ -112,8 +117,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     ) -> None:
         """Initialize WLED segment light."""
         super().__init__(coordinator=coordinator)
-        self._rgbw = coordinator.data.info.leds.rgbw
-        self._wv = coordinator.data.info.leds.wv
         self._segment = segment
 
         # Segment 0 uses a simpler name, which is more natural for when using
@@ -127,18 +130,24 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
-        self._attr_color_mode = ColorMode.RGB
-        self._attr_supported_color_modes = {ColorMode.RGB}
-        if self._rgbw and self._wv:
-            self._attr_color_mode = ColorMode.RGBW
-            self._attr_supported_color_modes = {ColorMode.RGBW}
+        if (
+            coordinator.data.info.leds.segment_light_capabilities is not None
+            and (
+                color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(
+                    coordinator.data.info.leds.segment_light_capabilities[segment]
+                )
+            )
+            is not None
+        ):
+            self._attr_color_mode = color_modes[0]
+            self._attr_supported_color_modes = set(color_modes)
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         try:
             self.coordinator.data.state.segments[self._segment]
-        except IndexError:
+        except KeyError:
             return False
 
         return super().available
@@ -146,20 +155,23 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
-        return self.coordinator.data.state.segments[self._segment].color_primary[:3]
+        if not (color := self.coordinator.data.state.segments[self._segment].color):
+            return None
+        return color.primary[:3]
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the color value."""
-        return cast(
-            tuple[int, int, int, int],
-            self.coordinator.data.state.segments[self._segment].color_primary,
-        )
+        if not (color := self.coordinator.data.state.segments[self._segment].color):
+            return None
+        return cast(tuple[int, int, int, int], color.primary)
 
     @property
     def effect(self) -> str | None:
         """Return the current effect of the light."""
-        return self.coordinator.data.state.segments[self._segment].effect.name
+        return self.coordinator.data.effects[
+            int(self.coordinator.data.state.segments[self._segment].effect_id)
+        ].name
 
     @property
     def brightness(self) -> int | None:
@@ -178,7 +190,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
-        return [effect.name for effect in self.coordinator.data.effects]
+        return [effect.name for effect in self.coordinator.data.effects.values()]
 
     @property
     def is_on(self) -> bool:
@@ -258,7 +270,11 @@ def async_update_segments(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {light.segment_id for light in coordinator.data.state.segments}
+    segment_ids = {
+        light.segment_id
+        for light in coordinator.data.state.segments.values()
+        if light.segment_id is not None
+    }
     new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
 
     # More than 1 segment now? No main? Add main controls

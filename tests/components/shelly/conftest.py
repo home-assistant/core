@@ -353,6 +353,7 @@ def _mock_rpc_device(version: str | None = None):
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
+        connected=True,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

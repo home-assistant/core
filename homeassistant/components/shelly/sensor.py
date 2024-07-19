@@ -1032,6 +1032,13 @@ RPC_SENSORS: Final = {
         if config["meta"]["ui"]["unit"]
         else None,
     ),
+    "enum": RpcSensorDescription(
+        key="enum",
+        sub_key="value",
+        has_entity_name=True,
+        options_fn=lambda config: config["options"],
+        device_class=SensorDeviceClass.ENUM,
+    ),
 }
 
 
@@ -1060,7 +1067,7 @@ async def async_setup_entry(
 
             # the user can remove virtual components from the device configuration, so
             # we need to remove orphaned entities
-            for component in ("text", "number"):
+            for component in ("enum", "number", "text"):
                 virtual_component_ids = get_virtual_component_ids(
                     coordinator.device.config, SENSOR_PLATFORM
                 )
@@ -1134,10 +1141,29 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
 
     entity_description: RpcSensorDescription
 
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize select."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if self.option_map:
+            self._attr_options = list(self.option_map.values())
+
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.attribute_value
+        if not self.option_map:
+            return self.attribute_value
+
+        if not isinstance(self.attribute_value, str):
+            return None
+
+        return self.option_map[self.attribute_value]
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):

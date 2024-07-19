@@ -66,6 +66,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     _speeds: EnumTypeData | None = None
     _switch: DPCode | None = None
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -116,6 +117,10 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+        if self._switch is not None:
+            self._attr_supported_features |= (
+                FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+            )
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""

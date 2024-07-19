@@ -69,7 +69,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-bridge"
+    assert result2["title"] == "127.0.0.1"
     assert result2["data"] == FIXTURE_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -441,7 +441,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "1.1.1.1"
+    assert result2["title"] == "127.0.0.1"
     assert result2["data"] == FIXTURE_ZEROCONF_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
