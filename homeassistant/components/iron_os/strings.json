@@ -64,7 +64,8 @@
           "soldering": "Soldering",
           "sleeping": "Sleeping",
           "settings": "Settings",
-          "debug": "Debug"
+          "debug": "Debug",
+          "boost": "Boost"
         }
       },
       "estimated_power": {
