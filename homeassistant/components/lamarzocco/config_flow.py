@@ -290,7 +290,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
+        """Perform reconfiguration of the config entry."""
         self.reconfigure_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
