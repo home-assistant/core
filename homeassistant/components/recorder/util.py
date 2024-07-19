@@ -29,7 +29,6 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.issue_registry import delete_issue
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -409,7 +408,7 @@ def _fail_unsupported_version(
 
 def _delete_issue_deprecated_version(hass: HomeAssistant, dialect_name: str) -> None:
     """Delete the issue about upcoming unsupported database version."""
-    delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
+    ir.delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
 
 
 def _create_issue_deprecated_version(
