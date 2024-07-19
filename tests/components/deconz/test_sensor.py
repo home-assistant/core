@@ -971,17 +971,15 @@ async def test_sensors(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "1": {
-                "name": "CLIP temperature sensor",
-                "type": "CLIPTemperature",
-                "state": {"temperature": 2600},
-                "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
-        }
+            "name": "CLIP temperature sensor",
+            "type": "CLIPTemperature",
+            "state": {"temperature": 2600},
+            "config": {},
+            "uniqueid": "00:00:00:00:00:00:00:02-00",
+        },
     ],
 )
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: False}])
@@ -1065,7 +1063,6 @@ async def test_add_new_sensor(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": {
             "id": "Light sensor id",
             "name": "Light level sensor",
@@ -1102,14 +1099,12 @@ async def test_dont_add_sensor_if_state_is_none(
     sensor_property: str,
 ) -> None:
     """Test sensor with scaled data is not created if state is None."""
-    sensor_payload |= {
-        "1": {
-            "name": "Sensor 1",
-            "type": sensor_type,
-            "state": {sensor_property: None},
-            "config": {},
-            "uniqueid": "00:00:00:00:00:00:00:00-00",
-        }
+    sensor_payload["0"] = {
+        "name": "Sensor 1",
+        "type": sensor_type,
+        "state": {sensor_property: None},
+        "config": {},
+        "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
     await config_entry_factory()
 
@@ -1117,28 +1112,26 @@ async def test_dont_add_sensor_if_state_is_none(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
+    "sensor_0_payload",
     [
         {
-            "1": {
-                "config": {
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 2,
-                "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
-                "lastseen": "2020-11-20T22:48Z",
-                "manufacturername": "BOSCH",
-                "modelid": "AIR",
-                "name": "BOSCH Air quality sensor",
-                "state": {
-                    "airquality": "poor",
-                    "lastupdated": "2020-11-20T22:48:00.209",
-                },
-                "swversion": "20200402",
-                "type": "ZHAAirQuality",
-                "uniqueid": "00:00:00:00:00:00:00:00-02-fdef",
-            }
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 2,
+            "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
+            "lastseen": "2020-11-20T22:48Z",
+            "manufacturername": "BOSCH",
+            "modelid": "AIR",
+            "name": "BOSCH Air quality sensor",
+            "state": {
+                "airquality": "poor",
+                "lastupdated": "2020-11-20T22:48:00.209",
+            },
+            "swversion": "20200402",
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:00-02-fdef",
         }
     ],
 )
@@ -1349,8 +1342,8 @@ async def test_special_danfoss_battery_creation(
 
 
 @pytest.mark.parametrize(
-    "sensor_payload",
-    [{"0": {"type": "not supported", "name": "name", "state": {}, "config": {}}}],
+    "sensor_0_payload",
+    [{"type": "not supported", "name": "name", "state": {}, "config": {}}],
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_unsupported_sensor(hass: HomeAssistant) -> None:
