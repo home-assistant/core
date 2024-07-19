@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import secrets
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -43,6 +43,17 @@ from .entity import (
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
+
+if TYPE_CHECKING:
+    from .hub import UnifiHub
+
+
+@callback
+def async_port_power_cycle_available_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if port allows power cycle action."""
+    if not async_device_available_fn(hub, obj_id):
+        return False
+    return bool(hub.api.ports[obj_id].poe_enable)
 
 
 async def async_restart_device_control_fn(
@@ -96,7 +107,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
         api_handler_fn=lambda api: api.ports,
-        available_fn=async_device_available_fn,
+        available_fn=async_port_power_cycle_available_fn,
         control_fn=async_power_cycle_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda port: f"{port.name} Power Cycle",

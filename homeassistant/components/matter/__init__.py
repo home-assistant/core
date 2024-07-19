@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from functools import cache
 
 from matter_server.client import MatterClient
@@ -226,6 +225,19 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
 
 
+def _remove_via_devices(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> None:
+    """Remove all via devices associated with a device."""
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    for device in devices:
+        if device.via_device_id == device_entry.id:
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=config_entry.entry_id
+            )
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
@@ -233,23 +245,25 @@ async def async_remove_config_entry_device(
     node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:
+        # In case this was a bridge
+        _remove_via_devices(hass, config_entry, device_entry)
+        # Always allow users to remove orphan devices
         return True
 
-    if node.is_bridge_device:
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(
-            device_registry, config_entry.entry_id
-        )
-        for device in devices:
-            if device.via_device_id == device_entry.id:
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=config_entry.entry_id
-                )
+    if device_entry.via_device_id:
+        # Do not allow to delete devices that exposed via bridge.
+        return False
 
     matter = get_matter(hass)
-    with suppress(NodeNotExists):
-        # ignore if the server has already removed the node.
+    try:
         await matter.matter_client.remove_node(node.node_id)
+    except NodeNotExists:
+        # Ignore if the server has already removed the node.
+        LOGGER.debug("Node %s didn't exist on the Matter server", node.node_id)
+    finally:
+        # Make sure potentially orphan devices of a bridge are removed too.
+        if node.is_bridge_device:
+            _remove_via_devices(hass, config_entry, device_entry)
 
     return True
 
