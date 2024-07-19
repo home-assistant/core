@@ -11,8 +11,10 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     CREATE_ENTRY_DATA_LEGACY,
-    CREDENTIALS_HASH_AUTH,
-    DEVICE_CONFIG_AUTH,
+    CREDENTIALS_HASH_AES,
+    CREDENTIALS_HASH_KLAP,
+    DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_KLAP,
     IP_ADDRESS,
     IP_ADDRESS2,
     MAC_ADDRESS,
@@ -32,14 +34,14 @@ def mock_discovery():
         discover_single=DEFAULT,
     ) as mock_discovery:
         device = _mocked_device(
-            device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-            credentials_hash=CREDENTIALS_HASH_AUTH,
+            device_config=copy.deepcopy(DEVICE_CONFIG_KLAP),
+            credentials_hash=CREDENTIALS_HASH_KLAP,
             alias=None,
         )
         devices = {
             "127.0.0.1": _mocked_device(
-                device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+                device_config=copy.deepcopy(DEVICE_CONFIG_KLAP),
+                credentials_hash=CREDENTIALS_HASH_KLAP,
                 alias=None,
             )
         }
@@ -55,12 +57,15 @@ def mock_connect():
     with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
         devices = {
             IP_ADDRESS: _mocked_device(
-                device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
+                device_config=DEVICE_CONFIG_KLAP,
+                credentials_hash=CREDENTIALS_HASH_KLAP,
+                ip_address=IP_ADDRESS,
             ),
             IP_ADDRESS2: _mocked_device(
-                device_config=DEVICE_CONFIG_AUTH,
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+                device_config=DEVICE_CONFIG_AES,
+                credentials_hash=CREDENTIALS_HASH_AES,
                 mac=MAC_ADDRESS2,
+                ip_address=IP_ADDRESS2,
             ),
         }
 

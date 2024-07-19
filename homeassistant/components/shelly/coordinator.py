@@ -61,6 +61,7 @@ from .utils import (
     async_create_issue_unsupported_firmware,
     get_block_device_sleep_period,
     get_device_entry_gen,
+    get_host,
     get_http_port,
     get_rpc_device_wakeup_period,
     update_device_fw_info,
@@ -147,7 +148,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             model=MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.entry)} ({self.model})",
-            configuration_url=f"http://{self.entry.data[CONF_HOST]}:{get_http_port(self.entry.data)}",
+            configuration_url=f"http://{get_host(self.entry.data[CONF_HOST])}:{get_http_port(self.entry.data)}",
         )
         self.device_id = device_entry.id
 
@@ -667,6 +668,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is RpcUpdateType.ONLINE:
+            if self.device.connected:
+                LOGGER.debug("Device %s already connected", self.name)
+                return
             self.entry.async_create_background_task(
                 self.hass,
                 self._async_device_connect_task(),

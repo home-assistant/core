@@ -51,7 +51,7 @@ PyFlume==0.6.5
 PyFronius==0.7.3
 
 # homeassistant.components.pyload
-PyLoadAPI==1.2.0
+PyLoadAPI==1.3.2
 
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.48.0
+PySwitchbot==0.48.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -255,7 +255,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.2
+aiolifx==1.0.5
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -317,7 +317,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.6.0
+aioraven==0.7.0
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -892,7 +892,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.52
+holidays==0.53
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240710.0
@@ -933,7 +933,7 @@ ical==8.1.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.6.1
+idasen-ha==2.6.2
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -981,7 +981,7 @@ justnimbus==0.7.4
 kegtron-ble==0.4.0
 
 # homeassistant.components.knocki
-knocki==0.2.0
+knocki==0.3.1
 
 # homeassistant.components.knx
 knx-frontend==2024.1.20.105944
@@ -1207,10 +1207,10 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.4
+openwebifpy==4.2.5
 
 # homeassistant.components.opower
-opower==0.4.7
+opower==0.5.2
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1742,7 +1742,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.17
+pytedee-async==0.2.20
 
 # homeassistant.components.motionmount
 python-MotionMount==2.0.0
@@ -1775,7 +1775,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.3
+python-kasa[speedups]==0.7.0.5
 
 # homeassistant.components.matter
 python-matter-server==6.2.2
@@ -2081,7 +2081,7 @@ stringcase==1.2.0
 subarulink==0.7.11
 
 # homeassistant.components.sunweg
-sunweg==3.0.1
+sunweg==3.0.2
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -2181,7 +2181,7 @@ unifi-discovery==1.2.0
 universal-silabs-flasher==0.0.20
 
 # homeassistant.components.upb
-upb-lib==0.5.7
+upb-lib==0.5.8
 
 # homeassistant.components.upcloud
 upcloud-api==2.5.1
@@ -2307,7 +2307,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.07.01
+yt-dlp==2024.07.16
 
 # homeassistant.components.zamg
 zamg==0.3.6

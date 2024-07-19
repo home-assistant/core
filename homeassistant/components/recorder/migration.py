@@ -313,11 +313,9 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        (
-            "Adding index `%s` to table `%s`. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
-            "be patient!"
-        ),
+        "Adding index `%s` to table `%s`. Note: this can take several "
+        "minutes on large databases and slow computers. Please "
+        "be patient!",
         index_name,
         table_name,
     )
@@ -331,7 +329,7 @@ def _create_index(
                 "Index %s already exists on %s, continuing", index_name, table_name
             )
 
-    _LOGGER.debug("Finished creating %s", index_name)
+    _LOGGER.warning("Finished adding index `%s` to table `%s`", index_name, table_name)
 
 
 def _execute_or_collect_error(
@@ -364,11 +362,9 @@ def _drop_index(
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
     _LOGGER.warning(
-        (
-            "Dropping index `%s` from table `%s`. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
-            "be patient!"
-        ),
+        "Dropping index `%s` from table `%s`. Note: this can take several "
+        "minutes on large databases and slow computers. Please "
+        "be patient!",
         index_name,
         table_name,
     )
@@ -377,8 +373,8 @@ def _drop_index(
         index_to_drop = get_index_by_name(session, table_name, index_name)
 
     if index_to_drop is None:
-        _LOGGER.debug(
-            "The index %s on table %s no longer exists", index_name, table_name
+        _LOGGER.warning(
+            "The index `%s` on table `%s` no longer exists", index_name, table_name
         )
         return
 
@@ -395,18 +391,16 @@ def _drop_index(
         f"DROP INDEX {index_to_drop}",
     ):
         if _execute_or_collect_error(session_maker, query, errors):
-            _LOGGER.debug(
-                "Finished dropping index %s from table %s", index_name, table_name
+            _LOGGER.warning(
+                "Finished dropping index `%s` from table `%s`", index_name, table_name
             )
             return
 
     if not quiet:
         _LOGGER.warning(
-            (
-                "Failed to drop index `%s` from table `%s`. Schema "
-                "Migration will continue; this is not a "
-                "critical operation: %s"
-            ),
+            "Failed to drop index `%s` from table `%s`. Schema "
+            "Migration will continue; this is not a "
+            "critical operation: %s",
             index_name,
             table_name,
             errors,
