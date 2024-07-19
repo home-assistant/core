@@ -1345,7 +1345,7 @@
       "iot_class": "local_push"
     },
     "dsmr": {
-      "name": "DSMR Slimme Meter",
+      "name": "DSMR Smart Meter",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -1839,12 +1839,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "filter": {
-      "name": "Filter",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "fints": {
       "name": "FinTS",
@@ -2862,6 +2856,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "iotty": {
+      "name": "iotty",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "iperf3": {
       "name": "Iperf3",
@@ -6127,6 +6127,12 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Tesla Wall Connector"
+        },
+        "tesla_fleet": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Tesla Fleet"
         }
       }
     },
@@ -6870,7 +6876,7 @@
     "worldclock": {
       "name": "Worldclock",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "worldtidesinfo": {
@@ -7170,6 +7176,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "filter": {
+      "name": "Filter",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_push"
     },
     "generic_hygrostat": {
       "integration_type": "helper",

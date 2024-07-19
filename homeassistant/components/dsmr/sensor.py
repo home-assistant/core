@@ -46,12 +46,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
+from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
-    DATA_TASK,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
@@ -514,7 +514,7 @@ def create_mbus_entities(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: DsmrConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
@@ -566,6 +566,8 @@ async def async_setup_entry(
         # Make all device entities aware of new telegram
         for entity in entities:
             entity.update_data(telegram)
+
+        entry.runtime_data.telegram = telegram
 
         if not initialized and telegram:
             initialized = True
@@ -695,7 +697,7 @@ async def async_setup_entry(
     )
 
     # Save the task to be able to cancel it when unloading
-    hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
+    entry.runtime_data.task = task
 
 
 class DSMREntity(SensorEntity):

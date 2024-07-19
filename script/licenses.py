@@ -193,9 +193,6 @@ TODO = {
         "1.2.3"
     ),  # No License https://github.com/jafar-atili/pyElectra/issues/3
     "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
-    "refoss_ha": AwesomeVersion(
-        "1.2.1"
-    ),  # No License https://github.com/ashionky/refoss_ha/issues/4
     "uvcclient": AwesomeVersion(
         "0.11.0"
     ),  # No License https://github.com/kk7ds/uvcclient/issues/7
