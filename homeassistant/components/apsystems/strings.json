@@ -5,6 +5,9 @@
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "port": "Port field is optional and only required if custom port is used"
         }
       }
     },
