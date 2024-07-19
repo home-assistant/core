@@ -1,7 +1,7 @@
 """Common fixtures for Hunter Douglas Powerview tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiopvapi.resources.shade import ShadePosition
 import pytest
@@ -29,7 +29,7 @@ def mock_hunterdouglas_hub(
     rooms_json: str,
     scenes_json: str,
     shades_json: str,
-) -> Generator[MagicMock]:
+) -> Generator[None]:
     """Return a mocked Powerview Hub with all data populated."""
     with (
         patch(
