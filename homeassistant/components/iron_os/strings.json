@@ -22,18 +22,18 @@
         "name": "Tip temperature"
       },
       "voltage": {
-        "name": "DC Input Voltage"
+        "name": "DC input voltage"
       },
       "handle_temperature": {
-        "name": "Handle Temperature"
+        "name": "Handle temperature"
       },
       "power_pwm_level": {
-        "name": "Power Level"
+        "name": "Power level"
       },
       "power_source": {
-        "name": "Power Source",
+        "name": "Power source",
         "state": {
-          "dc": "DC Input",
+          "dc": "DC input",
           "qc": "USB Quick Charge",
           "pd_vbus": "USB PD VBUS",
           "pd": "USB Power Delivery"
@@ -46,21 +46,21 @@
         "name": "Uptime"
       },
       "movement_time": {
-        "name": "Last Movement Time"
+        "name": "Last movement time"
       },
       "max_tip_temp_ability": {
-        "name": "Max Tip Temperature"
+        "name": "Max tip temperature"
       },
       "tip_voltage": {
-        "name": "Raw Tip Voltage"
+        "name": "Raw tip voltage"
       },
       "hall_sensor": {
-        "name": "Hall Effect Strength"
+        "name": "Hall effect strength"
       },
       "operating_mode": {
-        "name": "Operating Mode",
+        "name": "Operating mode",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "soldering": "Soldering",
           "sleeping": "Sleeping",
           "settings": "Settings",
@@ -68,7 +68,7 @@
         }
       },
       "estimated_power": {
-        "name": "Estimated Power"
+        "name": "Estimated power"
       }
     }
   },
