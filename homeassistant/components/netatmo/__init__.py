@@ -43,6 +43,7 @@ from .const import (
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
+    PERSONS_DEVICE_IDENTIFIER_SUFFIX,
     PLATFORMS,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
@@ -253,6 +254,10 @@ async def async_remove_config_entry_device(
     data = hass.data[DOMAIN][config_entry.entry_id][DATA_HANDLER]
     modules = [m for h in data.account.homes.values() for m in h.modules]
     rooms = [r for h in data.account.homes.values() for r in h.rooms]
+    persons = [
+        f"{h.entity_id}-{PERSONS_DEVICE_IDENTIFIER_SUFFIX}"
+        for h in data.account.homes.values()
+    ]
 
     return not any(
         identifier
@@ -260,4 +265,5 @@ async def async_remove_config_entry_device(
         if identifier[0] == DOMAIN
         and identifier[1] in modules
         or identifier[1] in rooms
+        or identifier[1] in persons
     )

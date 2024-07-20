@@ -46,3 +46,147 @@
     'state': 'on',
   })
 # ---
+# name: test_entity[switch.myhome_persons_john_doe-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.myhome_persons_john_doe',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'John Doe',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '91827374-7e04-5298-83ad-a0cb8372dff1-presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[switch.myhome_persons_john_doe-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'switch',
+      'friendly_name': 'MYHOME Persons John Doe',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.myhome_persons_john_doe',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity[switch.myhome_persons_jane_doe-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.myhome_persons_jane_doe',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Jane Doe',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '91827375-7e04-5298-83ae-a0cb8372dff2-presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[switch.myhome_persons_jane_doe-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'switch',
+      'friendly_name': 'MYHOME Persons Jane Doe',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.myhome_persons_jane_doe',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity[switch.myhome_persons_richard_doe-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.myhome_persons_richard_doe',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Richard Doe',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '91827376-7e04-5298-83af-a0cb8372dff3-presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[switch.myhome_persons_richard_doe-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'switch',
+      'friendly_name': 'MYHOME Persons Richard Doe',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.myhome_persons_richard_doe',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

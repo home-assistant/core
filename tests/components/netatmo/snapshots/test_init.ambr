@@ -1247,3 +1247,35 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[netatmo-91763b24c43d3e344f424e8b-persons]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://home.netatmo.com/security',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '91763b24c43d3e344f424e8b-persons',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Netatmo',
+    'model': 'Smart Indoor Camera',
+    'model_id': None,
+    'name': 'MYHOME Persons',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
