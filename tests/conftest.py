@@ -1577,6 +1577,7 @@ async def async_setup_recorder_instance(
                     hass,
                     config,
                     expected_setup_result=expected_setup_result,
+                    wait_recorder=wait_recorder,
                 )
             )
 
