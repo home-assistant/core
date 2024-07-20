@@ -61,7 +61,7 @@ class RateCalculator:
         self.history: list[int] = []
         self.start = time.time()
         self.min_wait = min_wait
-        self.max_wait = max_wait if max_wait is not None else period / limit
+        self.max_wait = max_wait if max_wait is not None else period
 
     def constrain(self, value: float) -> float:
         """Constrain a value between min and max."""
@@ -86,10 +86,9 @@ class RateCalculator:
         remaining = self.limit - count
 
         if remaining <= 0:
-            # The wait until a request is available
             return self.constrain(self.history[abs(remaining)] + self.period - now)
 
-        return self.constrain(self.period / remaining / 2)
+        return self.constrain(self.period / remaining / 6)
 
 
 class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
