@@ -365,7 +365,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
             ATTR_MEDIA_CONTENT_ID: media_id,
             ATTR_MEDIA_CONTENT_TYPE: media_type,
         }
-        data.update(kwargs)
+        if kwargs:
+            data.update(kwargs)
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
