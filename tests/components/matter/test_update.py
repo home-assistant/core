@@ -52,6 +52,7 @@ async def updateable_node_fixture(
 async def test_update_entity(
     hass: HomeAssistant,
     matter_client: MagicMock,
+    check_node_update: AsyncMock,
     updateable_node: MatterNode,
 ) -> None:
     """Test update entity exists and update check got made."""
