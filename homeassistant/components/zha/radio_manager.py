@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 import contextlib
 from contextlib import suppress
 import copy
@@ -157,7 +158,7 @@ class ZhaRadioManager:
         return mgr
 
     @contextlib.asynccontextmanager
-    async def connect_zigpy_app(self) -> ControllerApplication:
+    async def connect_zigpy_app(self) -> AsyncIterator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
