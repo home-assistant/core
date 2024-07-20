@@ -60,6 +60,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ALARM_ARMED_AWAY,
@@ -75,12 +76,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    EVENT_CALL_SERVICE,
-    HomeAssistant,
-    State,
-)
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 

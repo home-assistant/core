@@ -13,7 +13,8 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import core, migration, statistics
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import EVENT_STATE_CHANGED, Event, EventOrigin, State
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import Event, EventOrigin, State
 import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done

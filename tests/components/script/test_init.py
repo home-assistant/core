@@ -29,8 +29,8 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import device_registry as dr, entity_registry as er, template
+from homeassistant.exceptions import ServiceNotFound, TemplateError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -1197,7 +1197,7 @@ async def test_script_variables(
     assert mock_calls[2].data["value"] == "from_service"
 
     assert "Error rendering variables" not in caplog.text
-    with pytest.raises(template.TemplateError):
+    with pytest.raises(TemplateError):
         await hass.services.async_call("script", "script3", blocking=True)
     assert "Error rendering variables" in caplog.text
     assert len(mock_calls) == 3
