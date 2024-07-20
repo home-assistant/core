@@ -9,13 +9,14 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_PORT, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Optional(CONF_PORT): int,
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
     }
 )
 
