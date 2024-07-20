@@ -33,9 +33,10 @@
     "step": {
       "init": {
         "title": "TotalConnect Options",
-        "description": "Automatically bypass zones the moment they report a low battery.",
+        "description": "Options for this TotalConnect location",
         "data": {
-          "auto_bypass_low_battery": "Auto bypass low battery"
+          "auto_bypass_low_battery": "Auto bypass low battery",
+          "code_required": "Require user to enter code for alarm actions"
         }
       }
     }
