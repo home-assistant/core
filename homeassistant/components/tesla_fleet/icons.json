@@ -36,6 +36,7 @@
           "off": "mdi:tire",
           "on": "mdi:car-tire-alert"
         }
+      }
     },
     "device_tracker": {
       "location": {
