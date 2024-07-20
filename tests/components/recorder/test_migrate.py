@@ -200,14 +200,8 @@ async def test_database_migration_encounters_corruption(
     assert move_away.called
 
 
-@pytest.mark.parametrize(
-    ("live_migration", "expected_setup_result"), [(True, True), (False, False)]
-)
 async def test_database_migration_encounters_corruption_not_sqlite(
-    hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
-    live_migration: bool,
-    expected_setup_result: bool,
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
 ) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -232,14 +226,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(
             "homeassistant.components.persistent_notification.dismiss",
             side_effect=pn.dismiss,
         ) as mock_dismiss,
-        patch(
-            "homeassistant.components.recorder.core.migration.live_migration",
-            return_value=live_migration,
-        ),
     ):
-        await async_setup_recorder_instance(
-            hass, wait_recorder=False, expected_setup_result=expected_setup_result
-        )
+        await async_setup_recorder_instance(hass, wait_recorder=False)
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
