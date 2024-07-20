@@ -27,6 +27,14 @@
     }
   },
   "entity": {
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      },
+      "route": {
+        "name": "Route"
+      }
+    },
     "sensor": {
       "battery_power": {
         "name": "Battery power"
