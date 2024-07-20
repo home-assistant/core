@@ -276,9 +276,6 @@
       "doorbell_button_sound": {
         "default": "mdi:volume-high"
       },
-      "hdr": {
-        "default": "mdi:hdr"
-      },
       "pir_enabled": {
         "default": "mdi:motion-sensor"
       },

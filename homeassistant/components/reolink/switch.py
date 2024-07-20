@@ -174,16 +174,6 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_volume(ch, doorbell_button_sound=value),
     ),
     ReolinkSwitchEntityDescription(
-        key="hdr",
-        cmd_key="GetIsp",
-        translation_key="hdr",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        supported=lambda api, ch: api.supported(ch, "HDR"),
-        value=lambda api, ch: api.HDR_on(ch) is True,
-        method=lambda api, ch, value: api.set_HDR(ch, value),
-    ),
-    ReolinkSwitchEntityDescription(
         key="pir_enabled",
         cmd_key="GetPirInfo",
         translation_key="pir_enabled",
