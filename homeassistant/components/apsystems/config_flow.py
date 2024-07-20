@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -35,7 +35,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass, False)
             api = APsystemsEZ1M(
                 ip_address=user_input[CONF_IP_ADDRESS],
-                port=user_input.get("CONF_PORT", 8050),
+                port=user_input.get("CONF_PORT", DEFAULT_PORT),
                 session=session,
             )
             try:

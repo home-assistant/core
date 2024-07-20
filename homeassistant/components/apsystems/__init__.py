@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
+from .const import DEFAULT_PORT
 from .coordinator import ApSystemsDataCoordinator
 
 PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) ->
     """Set up this integration using UI."""
     api = APsystemsEZ1M(
         ip_address=entry.data[CONF_IP_ADDRESS],
-        port=entry.data.get("CONF_PORT", 8050),
+        port=entry.data.get("CONF_PORT", DEFAULT_PORT),
         timeout=8,
     )
     coordinator = ApSystemsDataCoordinator(hass, api)
