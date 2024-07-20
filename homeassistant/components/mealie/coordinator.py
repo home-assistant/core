@@ -13,6 +13,7 @@ from aiomealie import (
     MealplanEntryType,
     ShoppingItem,
     ShoppingList,
+    Statistics,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,6 +34,7 @@ class MealieData:
     client: MealieClient
     mealplan_coordinator: MealieMealplanCoordinator
     shoppinglist_coordinator: MealieShoppingListCoordinator
+    statistics_coordinator: MealieStatisticsCoordinator
 
 
 type MealieConfigEntry = ConfigEntry[MealieData]
@@ -139,3 +141,26 @@ class MealieShoppingListCoordinator(
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
         return shopping_list_items
+
+
+class MealieStatisticsCoordinator(MealieDataUpdateCoordinator[Statistics]):
+    """Class to manage fetching Mealie Statistics data."""
+
+    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            name="MealieStatistics",
+            client=client,
+            update_interval=timedelta(minutes=15),
+        )
+
+    async def _async_update_data(
+        self,
+    ) -> Statistics:
+        try:
+            return await self.client.get_statistics()
+        except MealieAuthenticationError as error:
+            raise ConfigEntryAuthFailed from error
+        except MealieConnectionError as error:
+            raise UpdateFailed(error) from error
