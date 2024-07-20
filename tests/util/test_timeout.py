@@ -25,7 +25,7 @@ async def test_simple_global_timeout_with_executor_job(hass: HomeAssistant) -> N
 
     with pytest.raises(TimeoutError):
         async with timeout.async_timeout(0.1):
-            await hass.async_add_executor_job(lambda: time.sleep(0.2))
+            await hass.async_add_executor_job(time.sleep, 0.2)
 
 
 async def test_simple_global_timeout_freeze() -> None:
@@ -133,7 +133,7 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_sec
         async with timeout.async_timeout(0.1):
             async with timeout.async_timeout(0.2, zone_name="recorder"):
                 await hass.async_add_executor_job(_some_sync_work)
-            await hass.async_add_executor_job(lambda: time.sleep(0.2))
+            await hass.async_add_executor_job(time.sleep, 0.2)
 
 
 async def test_simple_global_timeout_freeze_with_executor_job(
@@ -143,7 +143,7 @@ async def test_simple_global_timeout_freeze_with_executor_job(
     timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.2), timeout.async_freeze():
-        await hass.async_add_executor_job(lambda: time.sleep(0.3))
+        await hass.async_add_executor_job(time.sleep, 0.3)
 
 
 async def test_simple_global_timeout_freeze_reset() -> None:

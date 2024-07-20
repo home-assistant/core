@@ -1,6 +1,7 @@
 """Common test tools."""
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from dsmr_parser.clients.protocol import DSMRProtocol
@@ -15,7 +16,6 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

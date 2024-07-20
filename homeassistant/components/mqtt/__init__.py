@@ -155,7 +155,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# Service call validation schema
+# The use of a topic_template and payload_template in an mqtt publish action call
+# have been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
+
+# Publish action call validation schema
 MQTT_PUBLISH_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -296,10 +299,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
         if msg_topic_template is not None:
+            # The use of a topic_template in an mqtt publish action call
+            # has been deprecated with HA Core 2024.8.0
+            # and will be removed with HA Core 2025.2.0
             rendered_topic: Any = MqttCommandTemplate(
                 template.Template(msg_topic_template),
                 hass=hass,
             ).async_render()
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"topic_template_deprecation_{rendered_topic}",
+                breaks_in_ha_version="2025.2.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="topic_template_deprecation",
+                translation_placeholders={
+                    "topic_template": msg_topic_template,
+                    "topic": rendered_topic,
+                },
+            )
             try:
                 msg_topic = valid_publish_topic(rendered_topic)
             except vol.Invalid as err:
@@ -315,6 +334,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ) from err
 
         if payload_template is not None:
+            # The use of a payload_template in an mqtt publish action call
+            # has been deprecated with HA Core 2024.8.0
+            # and will be removed with HA Core 2025.2.0
+            if TYPE_CHECKING:
+                assert msg_topic is not None
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"payload_template_deprecation_{msg_topic}",
+                breaks_in_ha_version="2025.2.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="payload_template_deprecation",
+                translation_placeholders={
+                    "topic": msg_topic,
+                    "payload_template": payload_template,
+                },
+            )
             payload = MqttCommandTemplate(
                 template.Template(payload_template), hass=hass
             ).async_render()

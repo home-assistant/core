@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -29,8 +29,8 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import device_registry as dr, entity_registry as er, template
+from homeassistant.exceptions import ServiceNotFound, TemplateError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -47,11 +47,13 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
+    MockUser,
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
+from tests.components.repairs import get_repairs
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "script.test"
@@ -252,13 +254,14 @@ async def test_bad_config_validation_critical(
 
 
 @pytest.mark.parametrize(
-    ("object_id", "broken_config", "problem", "details"),
+    ("object_id", "broken_config", "problem", "details", "issue"),
     [
         (
             "bad_script",
             {},
             "could not be validated",
             "required key not provided @ data['sequence']",
+            "validation_failed_schema",
         ),
         (
             "bad_script",
@@ -270,18 +273,22 @@ async def test_bad_config_validation_critical(
                     "state": "blah",
                 },
             },
-            "failed to setup actions",
+            "failed to setup sequence",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "validation_failed_sequence",
         ),
     ],
 )
 async def test_bad_config_validation(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
+    hass_admin_user: MockUser,
     object_id,
     broken_config,
     problem,
     details,
+    issue,
 ) -> None:
     """Test bad script configuration which can be detected during validation."""
     assert await async_setup_component(
@@ -301,11 +308,22 @@ async def test_bad_config_validation(
         },
     )
 
-    # Check we get the expected error message
+    # Check we get the expected error message and issue
     assert (
         f"Script with alias 'bad_script' {problem} and has been disabled: {details}"
         in caplog.text
     )
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    assert issues[0]["issue_id"] == f"script.bad_script_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/script/edit/bad_script",
+        "entity_id": "script.bad_script",
+        "error": ANY,
+        "name": "bad_script",
+    }
+    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both scripts are setup
     assert set(hass.states.async_entity_ids("script")) == {
@@ -314,6 +332,31 @@ async def test_bad_config_validation(
     }
     # The script failing validation should be unavailable
     assert hass.states.get("script.bad_script").state == STATE_UNAVAILABLE
+
+    # Reloading the automation with fixed config should clear the issue
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            script.DOMAIN: {
+                object_id: {
+                    "alias": "bad_script",
+                    "sequence": {
+                        "service": "test.automation",
+                        "entity_id": "hello.world",
+                    },
+                },
+            }
+        },
+    ):
+        await hass.services.async_call(
+            script.DOMAIN,
+            SERVICE_RELOAD,
+            context=Context(user_id=hass_admin_user.id),
+            blocking=True,
+        )
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 0
 
 
 @pytest.mark.parametrize("running", ["no", "same", "different"])
@@ -1154,7 +1197,7 @@ async def test_script_variables(
     assert mock_calls[2].data["value"] == "from_service"
 
     assert "Error rendering variables" not in caplog.text
-    with pytest.raises(template.TemplateError):
+    with pytest.raises(TemplateError):
         await hass.services.async_call("script", "script3", blocking=True)
     assert "Error rendering variables" in caplog.text
     assert len(mock_calls) == 3
@@ -1563,9 +1606,7 @@ async def test_script_service_changed_entity_id(
     assert calls[1].data["entity_id"] == "script.custom_entity_id_2"
 
 
-async def test_blueprint_automation(
-    hass: HomeAssistant, calls: list[ServiceCall]
-) -> None:
+async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test blueprint script."""
     assert await async_setup_component(
         hass,
@@ -1623,6 +1664,7 @@ async def test_blueprint_automation(
 )
 async def test_blueprint_script_bad_config(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     blueprint_inputs,
     problem,
@@ -1646,9 +1688,24 @@ async def test_blueprint_script_bad_config(
     assert problem in caplog.text
     assert details in caplog.text
 
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    issue = "validation_failed_blueprint"
+    assert issues[0]["issue_id"] == f"script.test_script_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/script/edit/test_script",
+        "entity_id": "script.test_script",
+        "error": ANY,
+        "name": "test_script",
+    }
+    assert issues[0]["translation_placeholders"]["error"].startswith(details)
+
 
 async def test_blueprint_script_fails_substitution(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blueprint script with bad inputs."""
     with patch(
@@ -1676,6 +1733,18 @@ async def test_blueprint_script_fails_substitution(
         "{'service_to_call': 'test.automation'}: No substitution found for input blah"
         in caplog.text
     )
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    issue = "validation_failed_blueprint"
+    assert issues[0]["issue_id"] == f"script.test_script_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/script/edit/test_script",
+        "entity_id": "script.test_script",
+        "error": "No substitution found for input blah",
+        "name": "test_script",
+    }
 
 
 @pytest.mark.parametrize("response", [{"value": 5}, '{"value": 5}'])

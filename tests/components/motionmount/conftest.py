@@ -1,9 +1,9 @@
 """Fixtures for Vogel's MotionMount integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.motionmount.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT

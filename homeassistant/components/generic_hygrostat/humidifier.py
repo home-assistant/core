@@ -12,7 +12,7 @@ from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     MODE_AWAY,
     MODE_NORMAL,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as HUMIDIFIER_PLATFORM_SCHEMA,
     HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
@@ -41,6 +41,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -72,7 +73,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_SAVED_HUMIDITY = "saved_humidity"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
+PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -139,6 +140,7 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericHygrostat(
+                hass,
                 name,
                 switch_entity_id,
                 sensor_entity_id,
@@ -167,6 +169,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         name: str,
         switch_entity_id: str,
         sensor_entity_id: str,
@@ -188,6 +191,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._sensor_entity_id = sensor_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            switch_entity_id,
+        )
         self._device_class = device_class or HumidifierDeviceClass.HUMIDIFIER
         self._min_cycle_duration = min_cycle_duration
         self._dry_tolerance = dry_tolerance

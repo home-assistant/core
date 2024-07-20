@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import TYPE_CHECKING
-
-from typing_extensions import Generator
 
 from homeassistant.exceptions import HomeAssistantError
 

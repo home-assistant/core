@@ -1,10 +1,10 @@
 """Test the Opower config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from opower import CannotConnect, InvalidAuth
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.opower.const import DOMAIN

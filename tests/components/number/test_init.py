@@ -1,10 +1,10 @@
 """The tests for the Number component."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -646,7 +646,7 @@ async def test_restore_number_restore_state(
     assert entity0.native_min_value == native_min_value
     assert entity0.native_step == native_step
     assert entity0.native_value == native_value
-    assert type(entity0.native_value) == native_value_type
+    assert type(entity0.native_value) is native_value_type
     assert entity0.native_unit_of_measurement == uom
 
 

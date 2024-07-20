@@ -7,7 +7,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY, Client
 
@@ -39,12 +38,6 @@ def _get_test_client_generator(
         )
 
     return auth_client
-
-
-@pytest.fixture(autouse=True)
-async def setup_diag(hass):
-    """Set up diagnostics platform."""
-    assert await async_setup_component(hass, "diagnostics", {})
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")

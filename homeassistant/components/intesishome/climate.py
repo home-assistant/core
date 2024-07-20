@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -44,7 +44,7 @@ IH_DEVICE_INTESISHOME = "IntesisHome"
 IH_DEVICE_AIRCONWITHME = "airconwithme"
 IH_DEVICE_ANYWAIR = "anywair"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,

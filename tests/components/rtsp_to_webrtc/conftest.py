@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 import rtsp_to_webrtc
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components import camera
 from homeassistant.components.rtsp_to_webrtc import DOMAIN

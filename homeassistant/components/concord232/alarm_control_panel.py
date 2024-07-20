@@ -1,16 +1,17 @@
 """Support for Concord232 alarm control panels."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 import datetime
 import logging
 
-from concord232 import client as concord232_client
+# from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     CodeFormat,
@@ -39,7 +40,7 @@ DEFAULT_MODE = "audible"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

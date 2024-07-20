@@ -285,8 +285,6 @@ BAD_MESSAGE = {"_type": "unsupported", "tst": 1}
 BAD_JSON_PREFIX = "--$this is bad json#--"
 BAD_JSON_SUFFIX = "** and it ends here ^^"
 
-# pylint: disable=len-as-condition
-
 
 @pytest.fixture
 def setup_comp(

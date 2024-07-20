@@ -3,7 +3,7 @@
 import datetime
 from datetime import timedelta
 from statistics import fmean
-import threading
+import sys
 from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
@@ -37,9 +37,18 @@ from .common import (
     do_adhoc_statistics,
     statistics_during_period,
 )
+from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
+
 
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
@@ -810,7 +819,7 @@ async def test_statistic_during_period_partial_overlap(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    frozen_time: datetime,
+    frozen_time: datetime.datetime,
 ) -> None:
     """Test statistic_during_period."""
     client = await hass_ws_client()
@@ -2493,70 +2502,58 @@ async def test_recorder_info_no_instance(
 
 
 async def test_recorder_info_migration_queue_exhausted(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
+    instrument_migration: InstrumentedMigration,
 ) -> None:
     """Test getting recorder status when recorder queue is exhausted."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    migration_done = threading.Event()
-
-    real_migration = recorder.migration._apply_update
-
-    def stalled_migration(*args):
-        """Make migration stall."""
-        nonlocal migration_done
-        migration_done.wait()
-        return real_migration(*args)
-
     with (
-        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
-        patch("homeassistant.components.recorder.Recorder.async_periodic_statistics"),
         patch(
             "homeassistant.components.recorder.core.create_engine",
             new=create_engine_test,
         ),
         patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
-        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
-        patch(
-            "homeassistant.components.recorder.migration._apply_update",
-            wraps=stalled_migration,
+        patch.object(
+            recorder.core, "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG", sys.maxsize
         ),
     ):
-        recorder_helper.async_initialize_recorder(hass)
-        hass.create_task(
-            async_setup_component(
-                hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+        async with async_test_recorder(hass, wait_recorder=False):
+            await hass.async_add_executor_job(
+                instrument_migration.migration_started.wait
             )
-        )
-        await recorder_helper.async_wait_recorder(hass)
-        hass.states.async_set("my.entity", "on", {})
-        await hass.async_block_till_done()
+            assert recorder.util.async_migration_in_progress(hass) is True
+            await recorder_helper.async_wait_recorder(hass)
+            hass.states.async_set("my.entity", "on", {})
+            await hass.async_block_till_done()
 
-        # Detect queue full
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2))
-        await hass.async_block_till_done()
+            # Detect queue full
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2))
+            await hass.async_block_till_done()
 
-        client = await hass_ws_client()
+            client = await hass_ws_client()
 
-        # Check the status
-        await client.send_json_auto_id({"type": "recorder/info"})
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"]["migration_in_progress"] is True
-        assert response["result"]["recording"] is False
-        assert response["result"]["thread_running"] is True
+            # Check the status
+            await client.send_json_auto_id({"type": "recorder/info"})
+            response = await client.receive_json()
+            assert response["success"]
+            assert response["result"]["migration_in_progress"] is True
+            assert response["result"]["recording"] is False
+            assert response["result"]["thread_running"] is True
 
-    # Let migration finish
-    migration_done.set()
-    await async_wait_recording_done(hass)
+            # Let migration finish
+            instrument_migration.migration_stall.set()
+            await async_wait_recording_done(hass)
 
-    # Check the status after migration finished
-    await client.send_json_auto_id({"type": "recorder/info"})
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"]["migration_in_progress"] is False
-    assert response["result"]["recording"] is True
-    assert response["result"]["thread_running"] is True
+            # Check the status after migration finished
+            await client.send_json_auto_id({"type": "recorder/info"})
+            response = await client.receive_json()
+            assert response["success"]
+            assert response["result"]["migration_in_progress"] is False
+            assert response["result"]["recording"] is True
+            assert response["result"]["thread_running"] is True
 
 
 async def test_backup_start_no_recorder(

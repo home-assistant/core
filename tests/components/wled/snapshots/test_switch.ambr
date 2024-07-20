@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'duration': 60,
-      'fade': True,
       'friendly_name': 'WLED RGB Light Nightlight',
       'target_brightness': 0,
     }),
@@ -61,7 +60,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -73,12 +72,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---
@@ -141,7 +142,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -153,12 +154,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---
@@ -222,7 +225,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -234,12 +237,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---
@@ -303,7 +308,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -315,12 +320,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---

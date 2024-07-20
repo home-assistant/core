@@ -1,6 +1,6 @@
 """Fixtures for cloud tests."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
@@ -15,7 +15,6 @@ from hass_nabucasa.remote import RemoteUI
 from hass_nabucasa.voice import Voice
 import jwt
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import DATA_CLOUD
@@ -199,21 +198,21 @@ def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_user_data():
+def mock_user_data() -> Generator[MagicMock]:
     """Mock os module."""
     with patch("hass_nabucasa.Cloud._write_user_info") as writer:
         yield writer
 
 
 @pytest.fixture
-def mock_cloud_fixture(hass):
+def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
     """Fixture for cloud component."""
     hass.loop.run_until_complete(mock_cloud(hass))
     return mock_cloud_prefs(hass, {})
 
 
 @pytest.fixture
-async def cloud_prefs(hass):
+async def cloud_prefs(hass: HomeAssistant) -> CloudPreferences:
     """Fixture for cloud preferences."""
     cloud_prefs = CloudPreferences(hass)
     await cloud_prefs.async_initialize()
@@ -221,13 +220,13 @@ async def cloud_prefs(hass):
 
 
 @pytest.fixture
-async def mock_cloud_setup(hass):
+async def mock_cloud_setup(hass: HomeAssistant) -> None:
     """Set up the cloud."""
     await mock_cloud(hass)
 
 
 @pytest.fixture
-def mock_cloud_login(hass, mock_cloud_setup):
+def mock_cloud_login(hass: HomeAssistant, mock_cloud_setup: None) -> Generator[None]:
     """Mock cloud is logged in."""
     hass.data[DATA_CLOUD].id_token = jwt.encode(
         {
@@ -242,7 +241,7 @@ def mock_cloud_login(hass, mock_cloud_setup):
 
 
 @pytest.fixture(name="mock_auth")
-def mock_auth_fixture():
+def mock_auth_fixture() -> Generator[None]:
     """Mock check token."""
     with (
         patch("hass_nabucasa.auth.CognitoAuth.async_check_token"),
@@ -252,7 +251,7 @@ def mock_auth_fixture():
 
 
 @pytest.fixture
-def mock_expired_cloud_login(hass, mock_cloud_setup):
+def mock_expired_cloud_login(hass: HomeAssistant, mock_cloud_setup: None) -> None:
     """Mock cloud is logged in."""
     hass.data[DATA_CLOUD].id_token = jwt.encode(
         {

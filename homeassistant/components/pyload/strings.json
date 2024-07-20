@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -12,9 +11,29 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "name": "The name to use for your pyLoad instance in Home Assistant",
           "host": "The hostname or IP address of the device running your pyLoad instance.",
           "port": "pyLoad uses port 8000 by default."
+        }
+      },
+      "reconfigure_confirm": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device running your pyLoad instance.",
+          "port": "pyLoad uses port 8000 by default."
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -24,7 +43,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
@@ -53,11 +74,36 @@
         "name": "Downloads in queue"
       },
       "total": {
-        "name": "Total downlods"
+        "name": "Finished downloads"
       },
       "free_space": {
         "name": "Free space"
       }
+    },
+    "switch": {
+      "download": {
+        "name": "Pause/Resume queue"
+      },
+      "reconnect": {
+        "name": "Auto-Reconnect"
+      }
+    }
+  },
+  "exceptions": {
+    "setup_request_exception": {
+      "message": "Unable to connect and retrieve data from pyLoad API, try again later"
+    },
+    "setup_parse_exception": {
+      "message": "Unable to parse data from pyLoad API, try again later"
+    },
+    "setup_authentication_exception": {
+      "message": "Authentication failed for {username}, verify your login credentials"
+    },
+    "service_call_exception": {
+      "message": "Unable to send command to pyLoad due to a connection error, try again later"
+    },
+    "service_call_auth_exception": {
+      "message": "Unable to send command to pyLoad due to an authentication error, try again later"
     }
   },
   "issues": {

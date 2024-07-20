@@ -24,11 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -36,10 +31,12 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
 DOMAIN = "light"
-SCAN_INTERVAL = timedelta(seconds=30)
-DATA_PROFILES = "light_profiles"
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
+
+DATA_PROFILES = "light_profiles"
 
 
 class LightEntityFeature(IntFlag):
@@ -302,7 +299,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 def preprocess_turn_on_alternatives(
-    hass: HomeAssistant, params: dict[str, Any]
+    hass: HomeAssistant, params: dict[str, Any] | VolDictType
 ) -> None:
     """Process extra data for turn light on request.
 
@@ -406,9 +403,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # of the light base platform.
     hass.async_create_task(profiles.async_initialize(), eager_start=True)
 
-    def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
+    def preprocess_data(data: VolDictType) -> VolDictType:
         """Preprocess the service data."""
-        base: dict[str | vol.Optional, Any] = {
+        base: VolDictType = {
             entity_field: data.pop(entity_field)
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
@@ -867,6 +864,16 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ATTR_MAX_MIREDS,
             ATTR_MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN,
+            ATTR_BRIGHTNESS,
+            ATTR_COLOR_MODE,
+            ATTR_COLOR_TEMP,
+            ATTR_COLOR_TEMP_KELVIN,
+            ATTR_EFFECT,
+            ATTR_HS_COLOR,
+            ATTR_RGB_COLOR,
+            ATTR_RGBW_COLOR,
+            ATTR_RGBWW_COLOR,
+            ATTR_XY_COLOR,
         }
     )
 

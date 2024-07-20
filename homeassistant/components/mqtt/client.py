@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
 from functools import lru_cache, partial
@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 import uuid
 
 import certifi
-from typing_extensions import AsyncGenerator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -1141,8 +1140,8 @@ class MQTT:
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reason codes are not used in Home Assistant
         future = self._async_get_mid_future(mid)
-        if future.done() and future.exception():
-            # Timed out
+        if future.done() and (future.cancelled() or future.exception()):
+            # Timed out or cancelled
             return
         future.set_result(None)
 

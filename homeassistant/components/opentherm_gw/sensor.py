@@ -45,6 +45,7 @@ class OpenThermSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_entity_registry_enabled_default = False
+    _attr_available = False
 
     def __init__(
         self,
@@ -94,14 +95,10 @@ class OpenThermSensor(SensorEntity):
         _LOGGER.debug("Removing OpenTherm Gateway sensor %s", self._attr_name)
         self._unsub_updates()
 
-    @property
-    def available(self):
-        """Return availability of the sensor."""
-        return self._attr_native_value is not None
-
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
+        self._attr_available = self._gateway.connected
         value = status[self._source].get(self._var)
         self._attr_native_value = value
         self.async_write_ha_state()

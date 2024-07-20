@@ -21,7 +21,7 @@ LANG_TO_BROADCAST_COMMAND = {
     ),
     "es": ("Anuncia {0}", "Anuncia en {1} {0}"),
     "fr": ("Diffuse {0}", "Diffuse dans {1} {0}"),
-    "it": ("Trasmetti {0}", "Trasmetti in {1} {0}"),
+    "it": ("Trasmetti a tutti {0}", "Trasmetti in {1} {0}"),
     "ja": ("{0}とブロードキャストして", "{0}と{1}にブロードキャストして"),
     "ko": ("{0} 라고 방송해 줘", "{0} 라고 {1}에 방송해 줘"),
     "pt": ("Transmitir {0}", "Transmitir {0} para {1}"),
