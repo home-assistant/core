@@ -348,7 +348,13 @@ async def test_notify_entity_group(
     )
 
     assert entity.send_message_mock_calls.call_count == 1
+    assert entity.send_message_mock_calls.call_args == call(
+        "Hello", title="Test notification"
+    )
     assert entity2.send_message_mock_calls.call_count == 1
+    assert entity2.send_message_mock_calls.call_args == call(
+        "Hello", title="Test notification"
+    )
 
 
 async def test_state_reporting(hass: HomeAssistant) -> None:
