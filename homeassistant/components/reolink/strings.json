@@ -486,7 +486,7 @@
           "on": "[%key:common::state::on%]",
           "auto": "Auto"
         }
-      },
+      }
     },
     "sensor": {
       "wifi_signal": {
