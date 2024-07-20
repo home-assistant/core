@@ -479,6 +479,14 @@
           "alwayson": "Always on"
         }
       }
+      "hdr": {
+        "name": "HDR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "Auto"
+        }
+      },
     },
     "sensor": {
       "wifi_signal": {
