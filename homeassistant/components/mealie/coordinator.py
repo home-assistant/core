@@ -17,7 +17,7 @@ from aiomealie import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -82,7 +82,7 @@ class MealieMealplanCoordinator(
                 await self.client.get_mealplans(dt_util.now().date(), next_week.date())
             ).items
         except MealieAuthenticationError as error:
-            raise ConfigEntryError("Authentication failed") from error
+            raise ConfigEntryAuthFailed from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
         res: dict[MealplanEntryType, list[Mealplan]] = {
@@ -96,8 +96,16 @@ class MealieMealplanCoordinator(
         return res
 
 
+@dataclass
+class ShoppingListData:
+    """Data class for shopping list data."""
+
+    shopping_list: ShoppingList
+    items: list[ShoppingItem]
+
+
 class MealieShoppingListCoordinator(
-    MealieDataUpdateCoordinator[dict[str, list[ShoppingItem]]]
+    MealieDataUpdateCoordinator[dict[str, ShoppingListData]]
 ):
     """Class to manage fetching Mealie Shopping list data."""
 
@@ -109,36 +117,25 @@ class MealieShoppingListCoordinator(
             client=client,
             update_interval=timedelta(minutes=5),
         )
-        self.shopping_lists: list[ShoppingList]
-
-    async def async_get_shopping_lists(self) -> list[ShoppingList]:
-        """Return shopping lists."""
-        try:
-            self.shopping_lists = (await self.client.get_shopping_lists()).items
-        except MealieAuthenticationError as error:
-            raise ConfigEntryError("Authentication failed") from error
-        except MealieConnectionError as error:
-            raise UpdateFailed(error) from error
-        return self.shopping_lists
 
     async def _async_update_data(
         self,
-    ) -> dict[str, list[ShoppingItem]]:
-        shopping_list_items: dict[str, list[ShoppingItem]] = {}
-
+    ) -> dict[str, ShoppingListData]:
+        shopping_list_items = {}
         try:
-            for shopping_list in self.shopping_lists:
+            shopping_lists = (await self.client.get_shopping_lists()).items
+            for shopping_list in shopping_lists:
                 shopping_list_id = shopping_list.list_id
 
                 shopping_items = (
                     await self.client.get_shopping_items(shopping_list_id)
                 ).items
 
-                shopping_list_items[shopping_list_id] = shopping_items
-
+                shopping_list_items[shopping_list_id] = ShoppingListData(
+                    shopping_list=shopping_list, items=shopping_items
+                )
         except MealieAuthenticationError as error:
-            raise ConfigEntryError("Authentication failed") from error
+            raise ConfigEntryAuthFailed from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
-
         return shopping_list_items

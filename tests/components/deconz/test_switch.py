@@ -25,29 +25,29 @@ from tests.test_util.aiohttp import AiohttpClientMocker
     "light_payload",
     [
         {
-            "1": {
+            "0": {
                 "name": "On off switch",
                 "type": "On/Off plug-in unit",
                 "state": {"on": True, "reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
-            "2": {
+            "1": {
                 "name": "Smart plug",
                 "type": "Smart plug",
                 "state": {"on": False, "reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
-            "3": {
+            "2": {
                 "name": "Unsupported switch",
                 "type": "Not a switch",
                 "state": {"reachable": True},
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
-            "4": {
+            "3": {
                 "name": "On off relay",
                 "state": {"on": True, "reachable": True},
                 "type": "On/Off light",
-                "uniqueid": "00:00:00:00:00:00:00:04-00",
+                "uniqueid": "00:00:00:00:00:00:00:03-00",
             },
         }
     ],
@@ -65,19 +65,14 @@ async def test_power_plugs(
     assert hass.states.get("switch.on_off_relay").state == STATE_ON
     assert hass.states.get("switch.unsupported_switch") is None
 
-    event_changed_light = {
-        "r": "lights",
-        "id": "1",
-        "state": {"on": False},
-    }
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"on": False}})
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.on_off_switch").state == STATE_OFF
 
     # Verify service calls
 
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service turn on power plug
 
@@ -115,12 +110,10 @@ async def test_power_plugs(
     "light_payload",
     [
         {
-            "1": {
-                "name": "On Off output device",
-                "type": "On/Off output",
-                "state": {"on": True, "reachable": True},
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            },
+            "name": "On Off output device",
+            "type": "On/Off output",
+            "state": {"on": True, "reachable": True},
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )

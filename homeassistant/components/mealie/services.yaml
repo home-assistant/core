@@ -22,3 +22,17 @@ get_recipe:
       required: true
       selector:
         text:
+import_recipe:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    url:
+      required: true
+      selector:
+        text:
+    include_tags:
+      selector:
+        boolean:

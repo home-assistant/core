@@ -1,9 +1,10 @@
 """Common methods used across tests for Netatmo."""
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
 
@@ -109,7 +110,7 @@ async def simulate_webhook(hass: HomeAssistant, webhook_id: str, response) -> No
 
 
 @contextmanager
-def selected_platforms(platforms: list[Platform]) -> AsyncMock:
+def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
     """Restrict loaded platforms to list given."""
     with (
         patch("homeassistant.components.netatmo.data_handler.PLATFORMS", platforms),

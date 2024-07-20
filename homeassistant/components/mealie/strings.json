@@ -4,20 +4,39 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::url%]",
-          "api_token": "[%key:common::config_flow::data::api_token%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The URL of your Mealie instance."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please reauthenticate with Mealie.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      },
+      "reconfigure_confirm": {
+        "description": "Please reconfigure with Mealie.",
+        "data": {
+          "host": "[%key:common::config_flow::data::url%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "You have to use the same account that was used to configure the integration."
     }
   },
   "entity": {
@@ -52,6 +71,9 @@
     "recipe_not_found": {
       "message": "Recipe with ID or slug `{recipe_id}` not found."
     },
+    "could_not_import_recipe": {
+      "message": "Mealie could not import the recipe from the URL."
+    },
     "add_item_error": {
       "message": "An error occurred adding an item to {shopping_list_name}."
     },
@@ -63,6 +85,9 @@
     },
     "item_not_found_error": {
       "message": "Item {shopping_list_item} not found."
+    },
+    "version_error": {
+      "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
     }
   },
   "services": {
@@ -95,6 +120,24 @@
         "recipe_id": {
           "name": "Recipe ID or slug",
           "description": "The recipe ID or the slug of the recipe to get."
+        }
+      }
+    },
+    "import_recipe": {
+      "name": "Import recipe",
+      "description": "Import recipe from an URL",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "url": {
+          "name": "URL to the recipe",
+          "description": "The URL to the recipe to import."
+        },
+        "include_tags": {
+          "name": "Include tags",
+          "description": "Include tags from the website to the recipe."
         }
       }
     }

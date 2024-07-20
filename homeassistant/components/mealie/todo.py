@@ -5,6 +5,7 @@ from __future__ import annotations
 from aiomealie import MealieError, MutateShoppingItem, ShoppingItem, ShoppingList
 
 from homeassistant.components.todo import (
+    DOMAIN as TODO_DOMAIN,
     TodoItem,
     TodoItemStatus,
     TodoListEntity,
@@ -12,6 +13,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -48,10 +50,36 @@ async def async_setup_entry(
     """Set up the todo platform for entity."""
     coordinator = entry.runtime_data.shoppinglist_coordinator
 
-    async_add_entities(
-        MealieShoppingListTodoListEntity(coordinator, shopping_list)
-        for shopping_list in coordinator.shopping_lists
-    )
+    added_lists: set[str] = set()
+
+    assert entry.unique_id is not None
+
+    def _async_delete_entities(lists: set[str]) -> None:
+        """Delete entities for removed shopping lists."""
+        entity_registry = er.async_get(hass)
+        for list_id in lists:
+            entity_id = entity_registry.async_get_entity_id(
+                TODO_DOMAIN, DOMAIN, f"{entry.unique_id}_{list_id}"
+            )
+            if entity_id:
+                entity_registry.async_remove(entity_id)
+
+    def _async_entity_listener() -> None:
+        """Handle additions/deletions of shopping lists."""
+        received_lists = set(coordinator.data)
+        new_lists = received_lists - added_lists
+        removed_lists = added_lists - received_lists
+        if new_lists:
+            async_add_entities(
+                MealieShoppingListTodoListEntity(coordinator, shopping_list_id)
+                for shopping_list_id in new_lists
+            )
+            added_lists.update(new_lists)
+        if removed_lists:
+            _async_delete_entities(removed_lists)
+
+    coordinator.async_add_listener(_async_entity_listener)
+    _async_entity_listener()
 
 
 class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
@@ -69,17 +97,22 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     coordinator: MealieShoppingListCoordinator
 
     def __init__(
-        self, coordinator: MealieShoppingListCoordinator, shopping_list: ShoppingList
+        self, coordinator: MealieShoppingListCoordinator, shopping_list_id: str
     ) -> None:
         """Create the todo entity."""
-        super().__init__(coordinator, shopping_list.list_id)
-        self._shopping_list = shopping_list
-        self._attr_name = shopping_list.name
+        super().__init__(coordinator, shopping_list_id)
+        self._shopping_list_id = shopping_list_id
+        self._attr_name = self.shopping_list.name
+
+    @property
+    def shopping_list(self) -> ShoppingList:
+        """Get the shopping list."""
+        return self.coordinator.data[self._shopping_list_id].shopping_list
 
     @property
     def shopping_items(self) -> list[ShoppingItem]:
         """Get the shopping items for this list."""
-        return self.coordinator.data[self._shopping_list.list_id]
+        return self.coordinator.data[self._shopping_list_id].items
 
     @property
     def todo_items(self) -> list[TodoItem] | None:
@@ -93,7 +126,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             position = self.shopping_items[-1].position + 1
 
         new_shopping_item = MutateShoppingItem(
-            list_id=self._shopping_list.list_id,
+            list_id=self._shopping_list_id,
             note=item.summary.strip() if item.summary else item.summary,
             position=position,
         )
@@ -104,7 +137,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 translation_domain=DOMAIN,
                 translation_key="add_item_error",
                 translation_placeholders={
-                    "shopping_list_name": self._shopping_list.name
+                    "shopping_list_name": self.shopping_list.name
                 },
             ) from exception
         finally:
@@ -164,7 +197,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 translation_domain=DOMAIN,
                 translation_key="update_item_error",
                 translation_placeholders={
-                    "shopping_list_name": self._shopping_list.name
+                    "shopping_list_name": self.shopping_list.name
                 },
             ) from exception
         finally:
@@ -180,7 +213,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 translation_domain=DOMAIN,
                 translation_key="delete_item_error",
                 translation_placeholders={
-                    "shopping_list_name": self._shopping_list.name
+                    "shopping_list_name": self.shopping_list.name
                 },
             ) from exception
         finally:
@@ -238,6 +271,4 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     @property
     def available(self) -> bool:
         """Return False if shopping list no longer available."""
-        return (
-            super().available and self._shopping_list.list_id in self.coordinator.data
-        )
+        return super().available and self._shopping_list_id in self.coordinator.data
