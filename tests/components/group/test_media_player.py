@@ -602,9 +602,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.nested_group").state == STATE_OFF
 
 
-async def test_service_play_media_kwargs(
-    hass: HomeAssistant, mock_media_seek: Mock
-) -> None:
+async def test_service_play_media_kwargs(hass: HomeAssistant) -> None:
     """Test that kwargs get passed through on play_media service call."""
     await async_setup_component(
         hass,
