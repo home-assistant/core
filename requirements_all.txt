@@ -33,7 +33,7 @@ Mastodon.py==1.8.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.3.0
+Pillow==10.4.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.14
@@ -526,10 +526,10 @@ axis==62
 azure-eventhub==5.11.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-data[aio]==3.1.0
+azure-kusto-data[aio]==4.5.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-ingest==3.1.0
+azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
@@ -939,7 +939,7 @@ georss-generic-client==0.8
 georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
-georss-qld-bushfire-alert-client==0.7
+georss-qld-bushfire-alert-client==0.8
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
@@ -1093,7 +1093,7 @@ home-assistant-frontend==20240719.0
 home-assistant-intents==2024.7.10
 
 # homeassistant.components.home_connect
-homeconnect==0.7.2
+homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.1
@@ -1661,9 +1661,6 @@ py-synologydsm-api==2.4.4
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
 
-# homeassistant.components.seventeentrack
-py17track==2021.12.2
-
 # homeassistant.components.atome
 pyAtome==0.1.1
 
@@ -2161,6 +2158,9 @@ pyserial==3.5
 
 # homeassistant.components.sesame
 pysesame2==1.0.1
+
+# homeassistant.components.seventeentrack
+pyseventeentrack==1.0.0
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1

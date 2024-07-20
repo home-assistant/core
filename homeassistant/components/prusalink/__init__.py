@@ -23,13 +23,19 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .config_flow import ConfigFlow
 from .const import DOMAIN
 from .coordinator import (
+    InfoUpdateCoordinator,
     JobUpdateCoordinator,
     LegacyStatusCoordinator,
     PrusaLinkUpdateCoordinator,
     StatusCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -48,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "legacy_status": LegacyStatusCoordinator(hass, api),
         "status": StatusCoordinator(hass, api),
         "job": JobUpdateCoordinator(hass, api),
+        "info": InfoUpdateCoordinator(hass, api),
     }
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
