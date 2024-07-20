@@ -43,7 +43,7 @@ types-chardet==0.1.5
 types-decorator==5.1.8.20240310
 types-paho-mqtt==1.6.0.20240321
 types-pillow==10.2.0.20240520
-types-protobuf==4.25.0.20240517
+types-protobuf==4.25.0.20240417
 types-psutil==6.0.0.20240621
 types-python-dateutil==2.9.0.20240316
 types-python-slugify==8.0.2.20240310
