@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from APsystemsEZ1 import APsystemsEZ1M
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_PORT
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) ->
     """Set up this integration using UI."""
     api = APsystemsEZ1M(
         ip_address=entry.data[CONF_IP_ADDRESS],
-        port=entry.data.get("CONF_PORT", DEFAULT_PORT),
+        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
         timeout=8,
     )
     coordinator = ApSystemsDataCoordinator(hass, api)

@@ -35,7 +35,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass, False)
             api = APsystemsEZ1M(
                 ip_address=user_input[CONF_IP_ADDRESS],
-                port=user_input.get("CONF_PORT", DEFAULT_PORT),
+                port=user_input.get(CONF_PORT, DEFAULT_PORT),
                 session=session,
             )
             try:
