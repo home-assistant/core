@@ -38,6 +38,14 @@
         }
       }
     },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:map-marker"
+      },
+      "route": {
+        "default": "mdi:routes"
+      }
+    },
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
