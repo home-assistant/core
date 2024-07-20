@@ -274,6 +274,15 @@ async def test_removing_disconnected_cams(
             False,
         ),
         (
+            f"{TEST_UID}_hdr",
+            None,
+            f"{TEST_UID}",
+            f"{TEST_UID}",
+            Platform.SWITCH,
+            True,
+            False,
+        ),
+        (
             f"{TEST_MAC}_0_record_audio",
             f"{TEST_UID}_0_record_audio",
             f"{TEST_MAC}_ch0",
@@ -373,7 +382,8 @@ async def test_migrate_entity_ids(
     assert (
         entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id) is None
     )
-    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
+    if new_id is not None:
+        assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
 
     if new_dev_id != original_dev_id:
         assert (
