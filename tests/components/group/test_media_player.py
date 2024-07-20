@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TRACK,
@@ -642,16 +643,19 @@ async def test_service_play_media_kwargs(
             ATTR_MEDIA_CONTENT_TYPE: "some_type",
             ATTR_MEDIA_CONTENT_ID: "some_id",
             ATTR_MEDIA_ANNOUNCE: "true",
+            ATTR_MEDIA_EXTRA: {
+                "volume": 20,
+            },
         },
     )
     await hass.async_block_till_done()
 
     assert mp_bedroom.play_media.call_count == 1
     mp_bedroom.play_media.assert_called_with(
-        "some_type", "some_id", announce=True, extra={}
+        "some_type", "some_id", announce=True, extra={"volume": 20}
     )
 
     assert mp_living_room.play_media.call_count == 1
     mp_living_room.play_media.assert_called_with(
-        "some_type", "some_id", announce=True, extra={}
+        "some_type", "some_id", announce=True, extra={"volume": 20}
     )
