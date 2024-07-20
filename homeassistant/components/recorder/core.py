@@ -773,7 +773,6 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self._async_startup_failed)
                 return
 
         if not database_was_ready:
