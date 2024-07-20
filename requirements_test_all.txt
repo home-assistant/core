@@ -30,7 +30,7 @@ HATasmota==0.9.2
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.3.0
+Pillow==10.4.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.14
