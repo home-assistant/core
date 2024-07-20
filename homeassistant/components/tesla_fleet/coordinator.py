@@ -113,7 +113,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = datetime.now()
-        self.rate = RateCalculator(200, 86400, VEHICLE_INTERVAL_SECONDS)
+        self.rate = RateCalculator(200, 86400, VEHICLE_INTERVAL_SECONDS, 3600)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
