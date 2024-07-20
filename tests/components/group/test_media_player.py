@@ -616,7 +616,6 @@ async def test_service_play_media_kwargs(
                     "platform": DOMAIN,
                     "entities": [
                         "media_player.bedroom",
-                        "media_player.kitchen",
                         "media_player.living_room",
                     ],
                 },
