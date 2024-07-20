@@ -119,6 +119,8 @@ def fixture_get_request(
     data.setdefault("alarmsystems", alarm_system_payload)
     data.setdefault("config", config_payload)
     data.setdefault("groups", group_payload)
+    if "state" in light_payload:
+        light_payload = {"0": light_payload}
     data.setdefault("lights", light_payload)
     data.setdefault("sensors", sensor_payload)
 
@@ -172,16 +174,13 @@ def fixture_group_data() -> dict[str, Any]:
 
 
 @pytest.fixture(name="light_payload")
-def fixture_light_0_data(light_0_payload: dict[str, Any]) -> dict[str, Any]:
-    """Light data."""
-    if light_0_payload:
-        return {"0": light_0_payload}
-    return {}
-
-
-@pytest.fixture(name="light_0_payload")
 def fixture_light_data() -> dict[str, Any]:
-    """Light data."""
+    """Light data.
+
+    Should be
+    - one light data payload {"state": ...}
+    - multiple lights {"1": ..., "2": ...}
+    """
     return {}
 
 

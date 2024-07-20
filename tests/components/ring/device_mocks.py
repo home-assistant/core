@@ -142,6 +142,9 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
             DOORBOT_HISTORY if device_family != "other" else INTERCOM_HISTORY
         )
 
+    if has_capability(RingCapability.VIDEO):
+        mock_device.recording_url = MagicMock(return_value="http://dummy.url")
+
     if has_capability(RingCapability.MOTION_DETECTION):
         mock_device.configure_mock(
             motion_detection=device_dict["settings"].get("motion_detection_enabled"),
