@@ -30,12 +30,12 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
-    entity,
     entity_registry as er,
     floor_registry as fr,
     intent,
@@ -79,8 +79,8 @@ async def init_components(hass: HomeAssistant) -> None:
     [
         {"hidden_by": er.RegistryEntryHider.USER},
         {"hidden_by": er.RegistryEntryHider.INTEGRATION},
-        {"entity_category": entity.EntityCategory.CONFIG},
-        {"entity_category": entity.EntityCategory.DIAGNOSTIC},
+        {"entity_category": EntityCategory.CONFIG},
+        {"entity_category": EntityCategory.DIAGNOSTIC},
     ],
 )
 @pytest.mark.usefixtures("init_components")
