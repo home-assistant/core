@@ -1,9 +1,11 @@
 """UniFi Network button platform tests."""
 
+from copy import deepcopy
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
@@ -319,3 +321,33 @@ async def test_wlan_button_entities(
         request_data,
         call,
     )
+
+
+@pytest.mark.parametrize("device_payload", [DEVICE_POWER_CYCLE_POE])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_power_cycle_availability(
+    hass: HomeAssistant,
+    mock_websocket_message,
+    device_payload: dict[str, Any],
+) -> None:
+    """Verify that disabling PoE marks entity as unavailable."""
+    entity_id = "button.switch_port_1_power_cycle"
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # PoE disabled
+
+    device_1 = deepcopy(device_payload[0])
+    device_1["port_table"][0]["poe_enable"] = False
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # PoE enabled
+    device_1 = deepcopy(device_payload[0])
+    device_1["port_table"][0]["poe_enable"] = True
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

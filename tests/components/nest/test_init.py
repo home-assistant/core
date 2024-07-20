@@ -67,13 +67,15 @@ def warning_caplog(
 
 
 @pytest.fixture
-def subscriber_side_effect() -> None:
+def subscriber_side_effect() -> Any | None:
     """Fixture to inject failures into FakeSubscriber start."""
     return None
 
 
 @pytest.fixture
-def failing_subscriber(subscriber_side_effect: Any) -> YieldFixture[FakeSubscriber]:
+def failing_subscriber(
+    subscriber_side_effect: Any | None,
+) -> YieldFixture[FakeSubscriber]:
     """Fixture overriding default subscriber behavior to allow failure injection."""
     subscriber = FakeSubscriber()
     with patch(
