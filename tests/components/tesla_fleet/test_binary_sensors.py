@@ -1,11 +1,11 @@
-"""Test the Teslemetry binary sensor platform."""
+"""Test the Tesla Fleet binary sensor platform."""
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
