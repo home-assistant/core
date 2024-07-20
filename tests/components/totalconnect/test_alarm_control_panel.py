@@ -146,45 +146,6 @@ async def test_arm_home_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 3
 
 
-async def test_arm_home_code_required(hass: HomeAssistant) -> None:
-    """Test arm home method failure."""
-    responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
-    entry = await setup_platform(hass, ALARM_DOMAIN, code_required=True)
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
-        await async_update_entity(hass, ENTITY_ID)
-        await hass.async_block_till_done()
-        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
-        assert mock_request.call_count == 1
-
-        # runtime user entered code is bad
-        DATA_WITH_CODE = DATA.copy()
-        DATA_WITH_CODE["code"] = "666"
-        with pytest.raises(HomeAssistantError) as err:
-            await hass.services.async_call(
-                ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA_WITH_CODE, blocking=True
-            )
-        await hass.async_block_till_done()
-        assert f"{err.value}" == "User entered incorrect alarm code."
-        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
-        # code check means the call to total_connect never happens
-        assert mock_request.call_count == 1
-
-        # runtime user entered code that is in config
-        DATA_WITH_CODE["code"] = (
-            hass.data[DOMAIN][entry.entry_id].client.locations[LOCATION_ID].usercode
-        )
-        await hass.services.async_call(
-            ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA_WITH_CODE, blocking=True
-        )
-        await hass.async_block_till_done()
-        assert mock_request.call_count == 2
-
-        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
-        await hass.async_block_till_done()
-        assert mock_request.call_count == 3
-        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_HOME
-
-
 async def test_arm_home_instant_success(hass: HomeAssistant) -> None:
     """Test arm home instant method success."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
@@ -407,6 +368,45 @@ async def test_disarm_failure(hass: HomeAssistant) -> None:
         # should have started a re-auth flow
         assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
         assert mock_request.call_count == 3
+
+
+async def test_disarm_code_required(hass: HomeAssistant) -> None:
+    """Test disarm with code."""
+    responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_SUCCESS, RESPONSE_DISARMED]
+    entry = await setup_platform(hass, ALARM_DOMAIN, code_required=True)
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        await async_update_entity(hass, ENTITY_ID)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
+        assert mock_request.call_count == 1
+
+        # runtime user entered code is bad
+        DATA_WITH_CODE = DATA.copy()
+        DATA_WITH_CODE["code"] = "666"
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
+            )
+        await hass.async_block_till_done()
+        assert f"{err.value}" == "User entered incorrect alarm code."
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
+        # code check means the call to total_connect never happens
+        assert mock_request.call_count == 1
+
+        # runtime user entered code that is in config
+        DATA_WITH_CODE["code"] = (
+            hass.data[DOMAIN][entry.entry_id].client.locations[LOCATION_ID].usercode
+        )
+        await hass.services.async_call(
+            ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert mock_request.call_count == 2
+
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
+        await hass.async_block_till_done()
+        assert mock_request.call_count == 3
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
 
 async def test_arm_night_success(hass: HomeAssistant) -> None:
