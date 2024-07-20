@@ -29,15 +29,11 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_PACKAGES,
     __version__,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    ConfigSource,
-    HomeAssistant,
-    HomeAssistantError,
-)
-from homeassistant.exceptions import ConfigValidationError
+from homeassistant.core import DOMAIN as HA_DOMAIN, ConfigSource, HomeAssistant
+from homeassistant.exceptions import ConfigValidationError, HomeAssistantError
 from homeassistant.helpers import (
     check_config,
     config_validation as cv,
@@ -1070,11 +1066,7 @@ async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> No
     "hass_config",
     [
         {
-            HA_DOMAIN: {
-                config_util.CONF_PACKAGES: {
-                    "pack_dict": {"input_boolean": {"ib1": None}}
-                }
-            },
+            HA_DOMAIN: {CONF_PACKAGES: {"pack_dict": {"input_boolean": {"ib1": None}}}},
             "input_boolean": {"ib2": None},
             "light": {"platform": "test"},
         }
@@ -1088,7 +1080,7 @@ async def test_async_hass_config_yaml_merge(
     conf = await config_util.async_hass_config_yaml(hass)
 
     assert merge_log_err.call_count == 0
-    assert conf[HA_DOMAIN].get(config_util.CONF_PACKAGES) is not None
+    assert conf[HA_DOMAIN].get(CONF_PACKAGES) is not None
     assert len(conf) == 3
     assert len(conf["input_boolean"]) == 2
     assert len(conf["light"]) == 1
@@ -1116,7 +1108,7 @@ async def test_merge(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
         },
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "light": {"platform": "test"},
         "automation": [],
@@ -1143,7 +1135,7 @@ async def test_merge_try_falsy(merge_log_err: MagicMock, hass: HomeAssistant) ->
         "pack_list2": {"light": OrderedDict()},
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "automation": {"do": "something"},
         "light": {"some": "light"},
     }
@@ -1166,7 +1158,7 @@ async def test_merge_new(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
             "api": {},
         },
     }
-    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}}
+    config = {HA_DOMAIN: {CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
@@ -1186,7 +1178,7 @@ async def test_merge_type_mismatch(
         "pack_2": {"light": {"ib1": None}},  # light gets merged - ensure_list
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "input_select": [{"ib2": None}],
         "light": [{"platform": "two"}],
@@ -1204,13 +1196,13 @@ async def test_merge_once_only_keys(
 ) -> None:
     """Test if we have a merge for a comp that may occur only once. Keys."""
     packages = {"pack_2": {"api": None}}
-    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}, "api": None}
+    config = {HA_DOMAIN: {CONF_PACKAGES: packages}, "api": None}
     await config_util.merge_packages_config(hass, config, packages)
     assert config["api"] == OrderedDict()
 
     packages = {"pack_2": {"api": {"key_3": 3}}}
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"key_1": 1, "key_2": 2},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1219,7 +1211,7 @@ async def test_merge_once_only_keys(
     # Duplicate keys error
     packages = {"pack_2": {"api": {"key": 2}}}
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"key": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1234,7 +1226,7 @@ async def test_merge_once_only_lists(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"list_1": ["item_1"]},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1257,7 +1249,7 @@ async def test_merge_once_only_dictionaries(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"dict_1": {"key_1": 1, "dict_1.1": {"key_1.1": 1.1}}},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1293,7 +1285,7 @@ async def test_merge_duplicate_keys(
     """Test if keys in dicts are duplicates."""
     packages = {"pack_1": {"input_select": {"ib1": None}}}
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {CONF_PACKAGES: packages},
         "input_select": {"ib1": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1451,7 +1443,7 @@ async def test_merge_split_component_definition(hass: HomeAssistant) -> None:
         "pack_1": {"light one": {"l1": None}},
         "pack_2": {"light two": {"l2": None}, "light three": {"l3": None}},
     }
-    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}}
+    config = {HA_DOMAIN: {CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert len(config) == 4
@@ -2340,7 +2332,7 @@ async def test_packages_schema_validation_error(
     ]
     assert error_records == snapshot
 
-    assert len(config[HA_DOMAIN][config_util.CONF_PACKAGES]) == 0
+    assert len(config[HA_DOMAIN][CONF_PACKAGES]) == 0
 
 
 def test_extract_domain_configs() -> None:

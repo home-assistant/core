@@ -15,14 +15,17 @@ import pytest
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEBUG, SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import (
+    BASE_PLATFORMS,
+    CONF_DEBUG,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
+)
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
-from homeassistant.setup import BASE_PLATFORMS
 
 from .common import (
     MockConfigEntry,
