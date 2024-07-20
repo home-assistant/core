@@ -29,14 +29,14 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RENDER = "render"
+CONF_TRIGGER_ON_NEW_VALUE = "trigger_on_new_value"
 
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "template",
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOR): cv.positive_time_period_template,
-        vol.Optional(CONF_RENDER, default=False): cv.boolean,
+        vol.Optional(CONF_TRIGGER_ON_NEW_VALUE, default=False): cv.boolean,
     }
 )
 
@@ -53,7 +53,7 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     value_template: Template = config[CONF_VALUE_TEMPLATE]
     value_template.hass = hass
-    render = config[CONF_RENDER]
+    trigger_on_new_value = config[CONF_TRIGGER_ON_NEW_VALUE]
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
     delay_cancel = None
@@ -62,7 +62,7 @@ async def async_attach_trigger(
 
     # Arm at setup if the template is already false.
     try:
-        if render or not result_as_boolean(
+        if trigger_on_new_value or not result_as_boolean(
             value_template.async_render(trigger_info["variables"])
         ):
             armed = True
@@ -94,7 +94,7 @@ async def async_attach_trigger(
             delay_cancel()
             delay_cancel = None
 
-        if render:
+        if trigger_on_new_value:
             value = result
         else:
             if not (value := result_as_boolean(result)):

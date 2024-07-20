@@ -275,7 +275,7 @@ async def test_if_fires_on_change_bool(
                     "trigger": {
                         "platform": "template",
                         "value_template": '{{ states("test.entity") }}',
-                        "render": True,
+                        "trigger_on_new_value": True,
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -886,7 +886,7 @@ async def test_if_fires_on_time_change(
                     "trigger": {
                         "platform": "template",
                         "value_template": '{{ states("test.entity") }}',
-                        "render": True,
+                        "trigger_on_new_value": True,
                     },
                     "action": {
                         "service": "test.automation",
@@ -903,7 +903,7 @@ async def test_if_fires_on_time_change(
                     "trigger": {
                         "platform": "template",
                         "value_template": '{{ state_attr("test.entity", "value") }}',
-                        "render": True,
+                        "trigger_on_new_value": True,
                     },
                     "action": {
                         "service": "test.automation",
