@@ -9,7 +9,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
 from homeassistant.core import (
     CoreState,
     HomeAssistant,
@@ -26,12 +26,8 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.entity import (
-    DeviceInfo,
-    Entity,
-    EntityCategory,
-    async_generate_entity_id,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,

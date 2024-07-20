@@ -1,5 +1,42 @@
 {
   "entity": {
+    "binary_sensor": {
+      "climate_state_is_preconditioning": {
+        "state": {
+          "off": "mdi:hvac-off",
+          "on": "mdi:hvac"
+        }
+      },
+      "vehicle_state_is_user_present": {
+        "state": {
+          "off": "mdi:account-remove-outline",
+          "on": "mdi:account"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_fl": {
+        "state": {
+          "off": "mdi:tire",
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_fr": {
+        "state": {
+          "off": "mdi:tire",
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_rl": {
+        "state": {
+          "off": "mdi:tire",
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_rr": {
+        "state": {
+          "off": "mdi:tire",
+          "on": "mdi:car-tire-alert"
+        }
+    },
     "device_tracker": {
       "location": {
         "default": "mdi:map-marker"

@@ -1093,7 +1093,7 @@ home-assistant-frontend==20240719.0
 home-assistant-intents==2024.7.10
 
 # homeassistant.components.home_connect
-homeconnect==0.7.2
+homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.1
