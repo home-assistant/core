@@ -1394,8 +1394,6 @@ async def _async_init_recorder_component(
     hass: HomeAssistant,
     add_config: dict[str, Any] | None = None,
     db_url: str | None = None,
-    *,
-    expected_setup_result: bool,
 ) -> None:
     """Initialize the recorder asynchronously."""
     # pylint: disable-next=import-outside-toplevel
@@ -1410,13 +1408,10 @@ async def _async_init_recorder_component(
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
-        setup_task = asyncio.ensure_future(
-            async_setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
+        assert await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
-        # Wait for recorder integration to setup
-        setup_result = await setup_task
-        assert setup_result == expected_setup_result
-        assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
+        assert recorder.DOMAIN in hass.config.components
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
         config[recorder.CONF_DB_URL],
@@ -1532,16 +1527,10 @@ async def async_test_recorder(
             hass: HomeAssistant,
             config: ConfigType | None = None,
             *,
-            expected_setup_result: bool = True,
             wait_recorder: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Setup and return recorder instance."""  # noqa: D401
-            await _async_init_recorder_component(
-                hass,
-                config,
-                recorder_db_url,
-                expected_setup_result=expected_setup_result,
-            )
+            await _async_init_recorder_component(hass, config, recorder_db_url)
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
@@ -1568,18 +1557,12 @@ async def async_setup_recorder_instance(
             hass: HomeAssistant,
             config: ConfigType | None = None,
             *,
-            expected_setup_result: bool = True,
             wait_recorder: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Set up and return recorder instance."""
 
             return await stack.enter_async_context(
-                async_test_recorder(
-                    hass,
-                    config,
-                    expected_setup_result=expected_setup_result,
-                    wait_recorder=wait_recorder,
-                )
+                async_test_recorder(hass, config, wait_recorder=wait_recorder)
             )
 
         yield async_setup_recorder
