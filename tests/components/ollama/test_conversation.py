@@ -1,7 +1,7 @@
 """Tests for the Ollama integration."""
 
-from unittest.mock import AsyncMock, Mock, patch
 import logging
+from unittest.mock import AsyncMock, Mock, patch
 
 from ollama import Message, ResponseError
 import pytest
@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.components import conversation, ollama
 from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
-from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -26,6 +25,7 @@ from homeassistant.helpers import (
 from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @pytest.mark.parametrize("agent_id", [None, "conversation.mock_title"])
 async def test_chat(
@@ -131,6 +131,7 @@ async def test_chat(
     detail_event = trace_events[1]
     assert "The current time is" in detail_event["data"]["messages"][0]["content"]
 
+
 async def test_template_variables(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -205,17 +206,19 @@ async def test_function_call(
                         "content": "I have successfully called the function",
                     }
                 }
-        assert tools
+        assert tools == {}
         return {
             "message": {
                 "role": "assistant",
                 "content": "Calling tool",
-                "tool_calls": [{
-                    "function": {
-                        "name": "test_tool",
-                        "arguments": '{"param1": "test_value"}'
+                "tool_calls": [
+                    {
+                        "function": {
+                            "name": "test_tool",
+                            "arguments": '{"param1": "test_value"}',
+                        }
                     }
-                }]
+                ],
             }
         }
 
