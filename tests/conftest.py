@@ -37,6 +37,7 @@ import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import block_async_io
+from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching if dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -54,7 +55,7 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
-from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.const import BASE_PLATFORMS, HASSIO_USER_NAME
 from homeassistant.core import (
     Context,
     CoreState,
@@ -77,7 +78,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import BASE_PLATFORMS, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
@@ -1767,7 +1768,7 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
                 target,
                 return_response,
             )
-        except ha.ServiceNotFound:
+        except ServiceNotFound:
             _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)
         return None
 
