@@ -118,8 +118,6 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
 
-        self.update_interval = VEHICLE_INTERVAL
-
         try:
             # Check if the vehicle is awake using a non-rate limited API call
             state = (await self.api.vehicle())["response"]
