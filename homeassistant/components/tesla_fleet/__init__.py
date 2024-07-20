@@ -34,7 +34,7 @@ from .coordinator import (
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
-PLATFORMS: Final = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
 
