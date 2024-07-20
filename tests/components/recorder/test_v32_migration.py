@@ -95,9 +95,11 @@ async def test_migrate_times(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventsContextIDMigration, "migrate_data"),
+        patch.object(migration.StatesContextIDMigration, "migrate_data"),
+        patch.object(migration.EventTypeIDMigration, "migrate_data"),
+        patch.object(migration.EntityIDMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
