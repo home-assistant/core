@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -16,6 +17,7 @@ from .conftest import get_update_callback
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_setup_and_states(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

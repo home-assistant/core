@@ -79,6 +79,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda coordinator: get_temperature(coordinator, TEMP_GPU),
         translation_key=TEMP_GPU,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=TEMP_HDMI,
@@ -87,6 +88,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda coordinator: get_temperature(coordinator, TEMP_HDMI),
         translation_key=TEMP_HDMI,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=TEMP_CPU,
@@ -95,6 +97,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda coordinator: get_temperature(coordinator, TEMP_CPU),
         translation_key=TEMP_CPU,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=TEMP_MAINBOARD,
@@ -103,6 +106,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda coordinator: get_temperature(coordinator, TEMP_MAINBOARD),
         translation_key=TEMP_MAINBOARD,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=INCOMING_RES,
@@ -115,6 +119,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         translation_key=INCOMING_SIGNAL_TYPE,
         device_class=SensorDeviceClass.ENUM,
         options=["2D", "3D"],
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=INCOMING_FRAME_RATE,
@@ -155,6 +160,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         translation_key=INCOMING_ASPECT_RATIO,
         device_class=SensorDeviceClass.ENUM,
         options=["16:9", "4:3"],
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=OUTGOING_RES,
@@ -167,6 +173,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         translation_key=OUTGOING_SIGNAL_TYPE,
         device_class=SensorDeviceClass.ENUM,
         options=["2D", "3D"],
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=OUTGOING_FRAME_RATE,
@@ -205,6 +212,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         key=ASPECT_RES,
         value_fn=lambda coordinator: coordinator.data.get(ASPECT_RES),
         translation_key=ASPECT_RES,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=ASPECT_DEC,
@@ -215,16 +223,19 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         key=ASPECT_INT,
         value_fn=lambda coordinator: coordinator.data.get(ASPECT_INT),
         translation_key=ASPECT_INT,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=ASPECT_NAME,
         value_fn=lambda coordinator: coordinator.data.get(ASPECT_NAME),
         translation_key=ASPECT_NAME,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=MASKING_RES,
         value_fn=lambda coordinator: coordinator.data.get(MASKING_RES),
         translation_key=MASKING_RES,
+        entity_registry_enabled_default=False,
     ),
     MadvrSensorEntityDescription(
         key=MASKING_DEC,
@@ -235,6 +246,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         key=MASKING_INT,
         value_fn=lambda coordinator: coordinator.data.get(MASKING_INT),
         translation_key=MASKING_INT,
+        entity_registry_enabled_default=False,
     ),
 )
 
