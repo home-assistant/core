@@ -604,7 +604,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
 async def test_service_play_media_kwargs(
     hass: HomeAssistant, mock_media_seek: Mock
 ) -> None:
-    """Test service calls."""
+    """Test that kwargs get passed through on play_media service call."""
     await async_setup_component(
         hass,
         MEDIA_DOMAIN,
