@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -69,14 +69,21 @@ async def test_sensor_setup_and_states(
     # Test invalid temperature value
     update_callback({"temp_gpu": -1})
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.madvr_envy_gpu_temperature").state == "unknown"
+    assert hass.states.get("sensor.madvr_envy_gpu_temperature").state == STATE_UNKNOWN
 
     # Test sensor unknown
     update_callback({"incoming_res": None})
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.madvr_envy_incoming_resolution").state == "unknown"
+    assert (
+        hass.states.get("sensor.madvr_envy_incoming_resolution").state == STATE_UNKNOWN
+    )
 
     # Test sensor becomes known again
     update_callback({"incoming_res": "1920x1080"})
     await hass.async_block_till_done()
     assert hass.states.get("sensor.madvr_envy_incoming_resolution").state == "1920x1080"
+
+    # Test temperature sensor
+    update_callback({"temp_gpu": 41.2})
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.madvr_envy_gpu_temperature").state == "41.2"

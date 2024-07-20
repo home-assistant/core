@@ -1309,7 +1309,7 @@ py-dormakaba-dkey==1.0.5
 py-improv-ble-client==1.0.3
 
 # homeassistant.components.madvr
-py-madvr2==1.6.28
+py-madvr2==1.6.27
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4

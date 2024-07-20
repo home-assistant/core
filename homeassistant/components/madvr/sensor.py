@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import MadVRConfigEntry
 from .const import (
@@ -55,15 +56,19 @@ def is_valid_temperature(value: float | None) -> bool:
 
 def get_temperature(coordinator: MadVRCoordinator, key: str) -> float | None:
     """Get temperature value if valid, otherwise return None."""
-    temp = coordinator.data.get(key)
-    return float(str(temp)) if is_valid_temperature(temp) else None
+    try:
+        temp = float(coordinator.data.get(key, 0))
+    except ValueError:
+        return None
+    else:
+        return temp if is_valid_temperature(temp) else None
 
 
 @dataclass(frozen=True, kw_only=True)
 class MadvrSensorEntityDescription(SensorEntityDescription):
     """Describe madVR sensor entity."""
 
-    value_fn: Callable[[MadVRCoordinator], float | str | None]
+    value_fn: Callable[[MadVRCoordinator], StateType]
 
 
 SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
