@@ -127,6 +127,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
         if (
             self.entity_description.key is HabiticaTodoList.TODOS
+            and item.due is not None
         ):  # Only todos support a due date.
             date = item.due.isoformat()
         else:
@@ -149,14 +150,14 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             # Score up or down if item status changed
             if (
                 current_item.status is TodoItemStatus.NEEDS_ACTION
-                and item.status is TodoItemStatus.COMPLETED
+                and item.status == TodoItemStatus.COMPLETED
             ):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["up"].post()
                 )
             elif (
                 current_item.status is TodoItemStatus.COMPLETED
-                and item.status is TodoItemStatus.NEEDS_ACTION
+                and item.status == TodoItemStatus.NEEDS_ACTION
             ):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["down"].post()

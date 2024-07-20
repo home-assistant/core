@@ -89,6 +89,16 @@ BROADLINK_DEVICES = {
         57,
         5,
     ),
+    "Guest room": (
+        "192.168.0.66",
+        "34ea34b61d2e",
+        "HY02/HY03",
+        "Hysen",
+        "HYS",
+        0x4EAD,
+        10024,
+        5,
+    ),
 }
 
 

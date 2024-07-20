@@ -40,7 +40,7 @@ def mock_responses() -> list[AiohttpClientMockResponse]:
 
 
 @pytest.fixture(autouse=True)
-async def config_entry_data() -> None:
+async def config_entry_data() -> dict[str, Any] | None:
     """Fixture to disable config entry setup for exercising config flow."""
     return None
 

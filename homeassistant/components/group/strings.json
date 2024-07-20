@@ -7,6 +7,7 @@
         "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
         "menu_options": {
           "binary_sensor": "Binary sensor group",
+          "button": "Button group",
           "cover": "Cover group",
           "event": "Event group",
           "fan": "Fan group",
@@ -24,6 +25,14 @@
           "all": "All entities",
           "entities": "Members",
           "hide_members": "Hide members",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "button": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
@@ -105,6 +114,12 @@
         "description": "[%key:component::group::config::step::binary_sensor::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
+      "button": {
+        "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }

@@ -1,4 +1,194 @@
 # serializer version: 1
+# name: test_service_import_recipe
+  dict({
+    'recipe': dict({
+      'date_added': datetime.date(2024, 6, 29),
+      'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
+      'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
+      'image': 'SuPW',
+      'ingredients': list([
+        dict({
+          'is_food': True,
+          'note': '130g dark couverture chocolate (min. 55% cocoa content)',
+          'quantity': 1.0,
+          'reference_id': 'a3adfe78-d157-44d8-98be-9c133e45bb4e',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '1 Vanilla Pod',
+          'quantity': 1.0,
+          'reference_id': '41d234d7-c040-48f9-91e6-f4636aebb77b',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '150g softened butter',
+          'quantity': 1.0,
+          'reference_id': 'f6ce06bf-8b02-43e6-8316-0dc3fb0da0fc',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '100g Icing sugar',
+          'quantity': 1.0,
+          'reference_id': 'f7fcd86e-b04b-4e07-b69c-513925811491',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '6 Eggs',
+          'quantity': 1.0,
+          'reference_id': 'a831fbc3-e2f5-452e-a745-450be8b4a130',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '100g Castor sugar',
+          'quantity': 1.0,
+          'reference_id': 'b5ee4bdc-0047-4de7-968b-f3360bbcb31e',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '140g Plain wheat flour',
+          'quantity': 1.0,
+          'reference_id': 'a67db09d-429c-4e77-919d-cfed3da675ad',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '200g apricot jam',
+          'quantity': 1.0,
+          'reference_id': '55479752-c062-4b25-aae3-2b210999d7b9',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '200g castor sugar',
+          'quantity': 1.0,
+          'reference_id': 'ff9cd404-24ec-4d38-b0aa-0120ce1df679',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': '150g dark couverture chocolate (min. 55% cocoa content)',
+          'quantity': 1.0,
+          'reference_id': 'c7fca92e-971e-4728-a227-8b04783583ed',
+          'unit': None,
+        }),
+        dict({
+          'is_food': True,
+          'note': 'Unsweetend whipped cream to garnish',
+          'quantity': 1.0,
+          'reference_id': 'ef023f23-7816-4871-87f6-4d29f9a283f7',
+          'unit': None,
+        }),
+      ]),
+      'instructions': list([
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': '2d558dbf-5361-4ef2-9d86-4161f5eb6146',
+          'text': 'Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.',
+          'title': None,
+        }),
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': 'dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a',
+          'text': 'Slit vanilla pod lengthwise and scrape out seeds. Using a hand mixer with whisks, beat the softened butter with the icing sugar and vanilla seeds until bubbles appear.',
+          'title': None,
+        }),
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': '2265bd14-a691-40b1-9fe6-7b5dfeac8401',
+          'text': 'Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites.',
+          'title': None,
+        }),
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': '0aade447-dfac-4aae-8e67-ac250ad13ae2',
+          'text': "Transfer the mixture to the springform, smooth the top, and bake in the oven (middle rack) for 10–15 minutes, leaving the oven door a finger's width ajar. Then close the oven and bake for approximately 50 minutes. (The cake is done when it yields slightly to the touch.)",
+          'title': None,
+        }),
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': '5fdcb703-7103-468d-a65d-a92460b92eb3',
+          'text': 'Remove the cake from the oven and loosen the sides of the springform. Carefully tip the cake onto a cake rack lined with baking paper and let cool for approximately 20 minutes. Then pull off the baking paper, turn the cake over, and leave on rack to cool completely.',
+          'title': None,
+        }),
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': '81474afc-b44e-49b3-bb67-5d7dab8f832a',
+          'text': 'Cut the cake in half horizontally. Warm the jam and stir until smooth. Brush the top of both cake halves with the jam and place one on top of the other. Brush the sides with the jam as well.',
+          'title': None,
+        }),
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': '8fac8aee-0d3c-4f78-9ff8-56d20472e5f1',
+          'text': 'To make the glaze, put the castor sugar into a saucepan with 125 ml water and boil over high heat for approximately 5 minutes. Take the sugar syrup off the stove and leave to cool a little. Coarsely chop the couverture, gradually adding it to the syrup, and stir until it forms a thick liquid (see tip below).',
+          'title': None,
+        }),
+        dict({
+          'ingredient_references': list([
+          ]),
+          'instruction_id': '7162e099-d651-4656-902a-a09a9b40c4e1',
+          'text': 'Pour all the lukewarm glaze liquid at once over the top of the cake and quickly spread using a palette knife. Leave the glaze to set for a few hours. Serve garnished with whipped cream.',
+          'title': None,
+        }),
+      ]),
+      'name': 'Original Sacher-Torte (2)',
+      'original_url': 'https://www.sacher.com/en/original-sacher-torte/recipe/',
+      'recipe_id': 'fada9582-709b-46aa-b384-d5952123ad93',
+      'recipe_yield': '4 servings',
+      'slug': 'original-sacher-torte-2',
+      'tags': list([
+        dict({
+          'name': 'Sacher',
+          'slug': 'sacher',
+          'tag_id': '1b5789b9-3af6-412e-8c77-8a01caa0aac9',
+        }),
+        dict({
+          'name': 'Cake',
+          'slug': 'cake',
+          'tag_id': '1cf17f96-58b5-4bd3-b1e8-1606a64b413d',
+        }),
+        dict({
+          'name': 'Torte',
+          'slug': 'torte',
+          'tag_id': '3f5f0a3d-728f-440d-a6c7-5a68612e8c67',
+        }),
+        dict({
+          'name': 'Sachertorte',
+          'slug': 'sachertorte',
+          'tag_id': '525f388d-6ee0-4ebe-91fc-dd320a7583f0',
+        }),
+        dict({
+          'name': 'Sacher Torte Cake',
+          'slug': 'sacher-torte-cake',
+          'tag_id': '544a6e08-a899-4f63-9c72-bb2924df70cb',
+        }),
+        dict({
+          'name': 'Sacher Torte',
+          'slug': 'sacher-torte',
+          'tag_id': '576c0a82-84ee-4e50-a14e-aa7a675b6352',
+        }),
+        dict({
+          'name': 'Original Sachertorte',
+          'slug': 'original-sachertorte',
+          'tag_id': 'd530b8e4-275a-4093-804b-6d0de154c206',
+        }),
+      ]),
+      'user_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0',
+    }),
+  })
+# ---
 # name: test_service_mealplan
   dict({
     'mealplan': list([

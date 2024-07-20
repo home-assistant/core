@@ -21,5 +21,21 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hdr_flag": {
+        "name": "HDR flag"
+      },
+      "outgoing_hdr_flag": {
+        "name": "Outgoing HDR flag"
+      },
+      "power_state": {
+        "name": "Power state"
+      },
+      "signal_state": {
+        "name": "Signal state"
+      }
+    }
   }
 }

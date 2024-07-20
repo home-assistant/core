@@ -25,18 +25,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
     "light_payload",
     [
         {
-            "1": {
-                "name": "Warning device",
-                "type": "Warning device",
-                "state": {"alert": "lselect", "reachable": True},
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            },
-            "2": {
-                "name": "Unsupported siren",
-                "type": "Not a siren",
-                "state": {"reachable": True},
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            },
+            "name": "Warning device",
+            "type": "Warning device",
+            "state": {"alert": "lselect", "reachable": True},
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -47,23 +39,17 @@ async def test_sirens(
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
     """Test that siren entities are created."""
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
     assert hass.states.get("siren.warning_device").state == STATE_ON
-    assert not hass.states.get("siren.unsupported_siren")
 
-    event_changed_light = {
-        "r": "lights",
-        "id": "1",
-        "state": {"alert": None},
-    }
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"alert": None}})
     await hass.async_block_till_done()
 
     assert hass.states.get("siren.warning_device").state == STATE_OFF
 
     # Verify service calls
 
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service turn on siren
 
@@ -98,7 +84,7 @@ async def test_sirens(
     await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 2
+    assert len(states) == 1
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

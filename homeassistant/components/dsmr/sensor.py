@@ -16,7 +16,7 @@ from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
     create_rfxtrx_tcp_dsmr_reader,
 )
-from dsmr_parser.objects import DSMRObject
+from dsmr_parser.objects import DSMRObject, Telegram
 import serial
 
 from homeassistant.components.sensor import (
@@ -46,12 +46,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
+from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
-    DATA_TASK,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
@@ -380,7 +380,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 
 
 def create_mbus_entity(
-    mbus: int, mtype: int, telegram: dict[str, DSMRObject]
+    mbus: int, mtype: int, telegram: Telegram
 ) -> DSMRSensorEntityDescription | None:
     """Create a new MBUS Entity."""
     if (
@@ -478,7 +478,7 @@ def rename_old_gas_to_mbus(
 
 
 def create_mbus_entities(
-    hass: HomeAssistant, telegram: dict[str, DSMRObject], entry: ConfigEntry
+    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry
 ) -> list[DSMREntity]:
     """Create MBUS Entities."""
     entities = []
@@ -514,7 +514,7 @@ def create_mbus_entities(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: DsmrConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
@@ -523,7 +523,7 @@ async def async_setup_entry(
     add_entities_handler: Callable[..., None] | None
 
     @callback
-    def init_async_add_entities(telegram: dict[str, DSMRObject]) -> None:
+    def init_async_add_entities(telegram: Telegram) -> None:
         """Add the sensor entities after the first telegram was received."""
         nonlocal add_entities_handler
         assert add_entities_handler is not None
@@ -560,12 +560,14 @@ async def async_setup_entry(
     )
 
     @Throttle(min_time_between_updates)
-    def update_entities_telegram(telegram: dict[str, DSMRObject] | None) -> None:
+    def update_entities_telegram(telegram: Telegram | None) -> None:
         """Update entities with latest telegram and trigger state update."""
         nonlocal initialized
         # Make all device entities aware of new telegram
         for entity in entities:
             entity.update_data(telegram)
+
+        entry.runtime_data.telegram = telegram
 
         if not initialized and telegram:
             initialized = True
@@ -695,7 +697,7 @@ async def async_setup_entry(
     )
 
     # Save the task to be able to cancel it when unloading
-    hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
+    entry.runtime_data.task = task
 
 
 class DSMREntity(SensorEntity):
@@ -709,7 +711,7 @@ class DSMREntity(SensorEntity):
         self,
         entity_description: DSMRSensorEntityDescription,
         entry: ConfigEntry,
-        telegram: dict[str, DSMRObject],
+        telegram: Telegram,
         device_class: SensorDeviceClass,
         native_unit_of_measurement: str | None,
         serial_id: str = "",
@@ -720,7 +722,7 @@ class DSMREntity(SensorEntity):
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._entry = entry
-        self.telegram: dict[str, DSMRObject] | None = telegram
+        self.telegram: Telegram | None = telegram
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
@@ -750,7 +752,7 @@ class DSMREntity(SensorEntity):
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
     @callback
-    def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:
+    def update_data(self, telegram: Telegram | None) -> None:
         """Update data."""
         self.telegram = telegram
         if self.hass and (
