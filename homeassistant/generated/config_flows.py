@@ -651,6 +651,7 @@ FLOWS = {
         "xiaomi_aqara",
         "xiaomi_ble",
         "xiaomi_miio",
+        "yale",
         "yale_smart_alarm",
         "yalexs_ble",
         "yamaha_musiccast",
