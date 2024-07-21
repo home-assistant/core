@@ -25,7 +25,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "motion": "Motion"
+              "motion": "[%key:component::event::entity_component::motion::name%]"
             }
           }
         }
