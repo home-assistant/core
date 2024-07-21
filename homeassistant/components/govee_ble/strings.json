@@ -21,7 +21,6 @@
   "entity": {
     "event": {
       "motion": {
-        "name": "Motion sensor",
         "state_attributes": {
           "event_type": {
             "state": {
