@@ -2294,7 +2294,6 @@ xknx==2.12.2
 # homeassistant.components.knx
 xknxproject==3.7.1
 
-# homeassistant.components.bluesound
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
