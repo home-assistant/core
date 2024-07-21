@@ -101,6 +101,21 @@ LOCATION_BINARY_SENSORS: tuple[TotalConnectAlarmBinarySensorEntityDescription, .
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda location: location.is_ac_loss(),
     ),
+    TotalConnectAlarmBinarySensorEntityDescription(
+        key="smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
+        is_on_fn=lambda location: location.arming_state.is_triggered_fire(),
+    ),
+    TotalConnectAlarmBinarySensorEntityDescription(
+        key="carbon_monoxide",
+        device_class=BinarySensorDeviceClass.CO,
+        is_on_fn=lambda location: location.arming_state.is_triggered_gas(),
+    ),
+    TotalConnectAlarmBinarySensorEntityDescription(
+        key="police",
+        translation_key="police",
+        is_on_fn=lambda location: location.arming_state.is_triggered_police(),
+    ),
 )
 
 

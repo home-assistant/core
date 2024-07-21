@@ -93,6 +93,16 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+                {
+                    vol.Required(CONF_ADDRESS): vol.In(
+                        {
+                            address: f"{device.get_device_name(None) or discovery_info.name} ({address})"
+                            for address, (
+                                device,
+                                discovery_info,
+                            ) in self._discovered_devices.items()
+                        }
+                    )
+                }
             ),
         )

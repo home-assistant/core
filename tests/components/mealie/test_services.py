@@ -3,11 +3,7 @@
 from datetime import date
 from unittest.mock import AsyncMock
 
-from aiomealie.exceptions import (
-    MealieConnectionError,
-    MealieNotFoundError,
-    MealieValidationError,
-)
+from aiomealie import MealieConnectionError, MealieNotFoundError, MealieValidationError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion

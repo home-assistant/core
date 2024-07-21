@@ -124,6 +124,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     """A template fan component."""
 
     _attr_should_poll = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -195,6 +196,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
         if self._direction_template:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
 
         self._attr_assumed_state = self._template is None
 
