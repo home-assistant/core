@@ -222,55 +222,21 @@ def async_client_wan_monitor_latency(
     wan: Literal["WAN", "WAN2"],
     monitor_target: str,
     hub: UnifiHub,
-    device: Device,
+    device: Device | None,
 ) -> int | None:
     """Retrieve the monitor target from WAN monitors."""
 
-    uptime_stats = device.uptime_stats
-
-    if uptime_stats is None:
-        return False
-
-    uptime_stats_wan = uptime_stats[wan]
-
-    item = next(
-        (
-            item
-            for item in uptime_stats_wan["monitors"]
-            if monitor_target in item["target"]
-        ),
-        None,
-    )
-
-    if item is None:
+    if device is None or device.uptime_stats is None:
         return None
 
-    return item.get("latency_average", 0)
+    uptime_stats = device.uptime_stats
 
+    if uptime_stats_wan := uptime_stats.get(wan):
+        for item in uptime_stats_wan["monitors"]:
+            if monitor_target in item["target"]:
+                return item.get("latency_average", 0)
 
-@callback
-def async_device_latency_supported_fn(
-    wan: Literal["WAN", "WAN2"], monitor_target: str, hub: UnifiHub, obj_id: str
-) -> bool:
-    """Determine if a device supports WAN latency monitoring."""
-
-    uptime_stats = hub.api.devices[obj_id].uptime_stats
-
-    if uptime_stats is None:
-        return False
-
-    uptime_stats_wan = uptime_stats[wan]
-
-    item = next(
-        (
-            item
-            for item in uptime_stats_wan["monitors"]
-            if monitor_target in item["target"]
-        ),
-        None,
-    )
-
-    return item is not None
+    return None
 
 
 def make_wan_latency_sensors(
@@ -291,7 +257,10 @@ def make_wan_latency_sensors(
             device_info_fn=async_device_device_info_fn,
             name_fn=lambda _: "Microsoft WAN latency",
             object_fn=lambda api, obj_id: api.devices[obj_id],
-            supported_fn=partial(async_device_latency_supported_fn, wan, "microsoft"),
+            supported_fn=lambda hub, obj_id: async_client_wan_monitor_latency(
+                wan, "microsoft", hub, hub.api.devices[obj_id]
+            )
+            is not None,
             unique_id_fn=lambda hub, obj_id: f"microsoft_wan_latency-{obj_id}",
             value_fn=partial(async_client_wan_monitor_latency, wan, "microsoft"),
         ),
@@ -307,7 +276,10 @@ def make_wan_latency_sensors(
             device_info_fn=async_device_device_info_fn,
             name_fn=lambda _: "Google WAN latency",
             object_fn=lambda api, obj_id: api.devices[obj_id],
-            supported_fn=partial(async_device_latency_supported_fn, wan, "google"),
+            supported_fn=lambda hub, obj_id: async_client_wan_monitor_latency(
+                wan, "google", hub, hub.api.devices[obj_id]
+            )
+            is not None,
             unique_id_fn=lambda hub, obj_id: f"google_wan_latency-{obj_id}",
             value_fn=partial(async_client_wan_monitor_latency, wan, "google"),
         ),
@@ -323,7 +295,10 @@ def make_wan_latency_sensors(
             device_info_fn=async_device_device_info_fn,
             name_fn=lambda _: "Cloudflare WAN latency",
             object_fn=lambda api, obj_id: api.devices[obj_id],
-            supported_fn=partial(async_device_latency_supported_fn, wan, "1.1.1.1"),
+            supported_fn=lambda hub, obj_id: async_client_wan_monitor_latency(
+                wan, "1.1.1.1", hub, hub.api.devices[obj_id]
+            )
+            is not None,
             unique_id_fn=lambda hub, obj_id: f"cloudflare_wan_latency-{obj_id}",
             value_fn=partial(async_client_wan_monitor_latency, wan, "1.1.1.1"),
         ),
