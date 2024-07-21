@@ -13,7 +13,8 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import core, migration, statistics
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import EVENT_STATE_CHANGED, Event, EventOrigin, State
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import Event, EventOrigin, State
 import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done
@@ -95,9 +96,11 @@ async def test_migrate_times(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventsContextIDMigration, "migrate_data"),
+        patch.object(migration.StatesContextIDMigration, "migrate_data"),
+        patch.object(migration.EventTypeIDMigration, "migrate_data"),
+        patch.object(migration.EntityIDMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),

@@ -1,6 +1,6 @@
 """Test configuration for DoorBird tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
@@ -15,6 +15,8 @@ from homeassistant.core import HomeAssistant
 from . import VALID_CONFIG, get_mock_doorbird_api
 
 from tests.common import MockConfigEntry, load_json_value_fixture
+
+type DoorbirdMockerType = Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]]
 
 
 @dataclass
@@ -42,7 +44,7 @@ def doorbird_schedule() -> list[DoorBirdScheduleEntry]:
 @pytest.fixture
 def doorbird_api(
     doorbird_info: dict[str, Any], doorbird_schedule: dict[str, Any]
-) -> Generator[Any, Any, DoorBird]:
+) -> Generator[DoorBird]:
     """Mock the DoorBirdAPI."""
     api = get_mock_doorbird_api(info=doorbird_info, schedule=doorbird_schedule)
     with patch_doorbird_api_entry_points(api):
@@ -50,7 +52,7 @@ def doorbird_api(
 
 
 @contextmanager
-def patch_doorbird_api_entry_points(api: MagicMock) -> Generator[Any, Any, DoorBird]:
+def patch_doorbird_api_entry_points(api: MagicMock) -> Generator[DoorBird]:
     """Mock the DoorBirdAPI."""
     with (
         patch(
@@ -70,7 +72,7 @@ async def doorbird_mocker(
     hass: HomeAssistant,
     doorbird_info: dict[str, Any],
     doorbird_schedule: dict[str, Any],
-) -> MockDoorbirdEntry:
+) -> DoorbirdMockerType:
     """Create a MockDoorbirdEntry."""
 
     async def _async_mock(
@@ -79,7 +81,7 @@ async def doorbird_mocker(
         info: dict[str, Any] | None = None,
         info_side_effect: Exception | None = None,
         schedule: list[DoorBirdScheduleEntry] | None = None,
-    ) -> None:
+    ) -> MockDoorbirdEntry:
         """Create a MockDoorbirdEntry from defaults or specific values."""
         entry = entry or MockConfigEntry(
             domain=DOMAIN,
