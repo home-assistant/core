@@ -266,16 +266,15 @@ def make_wan_latency_entity_description(
     )
 
 
-def make_wan_latency_sensors(
-    wan: Literal["WAN", "WAN2"],
-) -> tuple[UnifiSensorEntityDescription, ...]:
+def __make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
     """Create WAN latency sensors from WAN monitor data."""
 
-    return (
-        make_wan_latency_entity_description(wan, "Microsoft", "microsoft"),
-        make_wan_latency_entity_description(wan, "Google", "google"),
-        make_wan_latency_entity_description(wan, "Cloudflare", "1.1.1.1"),
-    )
+    for wan in Literal["WAN", "WAN2"]:
+        return (
+            make_wan_latency_entity_description(wan, "Microsoft", "microsoft"),
+            make_wan_latency_entity_description(wan, "Google", "google"),
+            make_wan_latency_entity_description(wan, "Cloudflare", "1.1.1.1"),
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -542,8 +541,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
 )
 
-ENTITY_DESCRIPTIONS += make_wan_latency_sensors(wan="WAN")
-ENTITY_DESCRIPTIONS += make_wan_latency_sensors(wan="WAN2")
+ENTITY_DESCRIPTIONS += __make_wan_latency_sensors()
 
 
 async def async_setup_entry(
