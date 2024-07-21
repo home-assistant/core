@@ -24,7 +24,30 @@ from ..const import (
     ColorTempModes,
 )
 from ..validation import sync_state_validator
-from .const import CONF_DATA, CONF_DEVICE_INFO, CONF_ENTITY, CONF_GA_SWITCH
+from .const import (
+    CONF_COLOR_TEMP_MAX,
+    CONF_COLOR_TEMP_MIN,
+    CONF_DATA,
+    CONF_DEVICE_INFO,
+    CONF_ENTITY,
+    CONF_GA_BLUE_BRIGHTNESS,
+    CONF_GA_BLUE_SWITCH,
+    CONF_GA_BRIGHTNESS,
+    CONF_GA_COLOR,
+    CONF_GA_COLOR_TEMP,
+    CONF_GA_GREEN_BRIGHTNESS,
+    CONF_GA_GREEN_SWITCH,
+    CONF_GA_HUE,
+    CONF_GA_PASSIVE,
+    CONF_GA_RED_BRIGHTNESS,
+    CONF_GA_RED_SWITCH,
+    CONF_GA_SATURATION,
+    CONF_GA_STATE,
+    CONF_GA_SWITCH,
+    CONF_GA_WHITE_BRIGHTNESS,
+    CONF_GA_WHITE_SWITCH,
+    CONF_GA_WRITE,
+)
 from .knx_selector import GASelector
 
 BASE_ENTITY_SCHEMA = vol.All(
@@ -62,9 +85,9 @@ def optional_ga_schema(key: str, ga_selector: GASelector) -> VolDictType:
         vol.Optional(key): ga_selector,
         vol.Remove(key): vol.Schema(
             {
-                vol.Optional("write"): None,
-                vol.Optional("state"): None,
-                vol.Optional("passive"): vol.IsFalse(),  # None or empty list
+                vol.Optional(CONF_GA_WRITE): None,
+                vol.Optional(CONF_GA_STATE): None,
+                vol.Optional(CONF_GA_PASSIVE): vol.IsFalse(),  # None or empty list
             },
             extra=vol.ALLOW_EXTRA,
         ),
@@ -102,16 +125,18 @@ class LightColorModeSchema(StrEnum):
     HSV = "hsv"
 
 
+_LIGHT_COLOR_MODE_SCHEMA = "_light_color_mode_schema"
+
 _COMMON_LIGHT_SCHEMA = vol.Schema(
     {
-        vol.Optional("sync_state", default=True): sync_state_validator,
+        vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
         **optional_ga_schema(
-            "ga_color_temp", GASelector(write_required=True, dpt=ColorTempModes)
+            CONF_GA_COLOR_TEMP, GASelector(write_required=True, dpt=ColorTempModes)
         ),
-        vol.Optional("color_temp_min", default=2700): vol.All(
+        vol.Optional(CONF_COLOR_TEMP_MIN, default=2700): vol.All(
             vol.Coerce(int), vol.Range(min=1)
         ),
-        vol.Optional("color_temp_max", default=6000): vol.All(
+        vol.Optional(CONF_COLOR_TEMP_MAX, default=6000): vol.All(
             vol.Coerce(int), vol.Range(min=1)
         ),
     },
@@ -120,11 +145,11 @@ _COMMON_LIGHT_SCHEMA = vol.Schema(
 
 _DEFAULT_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
     {
-        vol.Required("_light_color_mode_schema"): LightColorModeSchema.DEFAULT.value,
-        vol.Required("ga_switch"): GASelector(write_required=True),
-        **optional_ga_schema("ga_brightness", GASelector(write_required=True)),
+        vol.Required(_LIGHT_COLOR_MODE_SCHEMA): LightColorModeSchema.DEFAULT.value,
+        vol.Required(CONF_GA_SWITCH): GASelector(write_required=True),
+        **optional_ga_schema(CONF_GA_BRIGHTNESS, GASelector(write_required=True)),
         **optional_ga_schema(
-            "ga_color",
+            CONF_GA_COLOR,
             GASelector(write_required=True, dpt=LightColorMode),
         ),
     }
@@ -132,33 +157,33 @@ _DEFAULT_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
 
 _INDIVIDUAL_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
     {
-        vol.Required("_light_color_mode_schema"): LightColorModeSchema.INDIVIDUAL.value,
-        **optional_ga_schema("ga_switch", GASelector(write_required=True)),
-        **optional_ga_schema("ga_brightness", GASelector(write_required=True)),
-        vol.Required("ga_red_brightness"): GASelector(write_required=True),
-        **optional_ga_schema("ga_red_switch", GASelector(write_required=False)),
-        vol.Required("ga_green_brightness"): GASelector(write_required=True),
-        **optional_ga_schema("ga_green_switch", GASelector(write_required=False)),
-        vol.Required("ga_blue_brightness"): GASelector(write_required=True),
-        **optional_ga_schema("ga_blue_switch", GASelector(write_required=False)),
-        **optional_ga_schema("ga_white_brightness", GASelector(write_required=True)),
-        **optional_ga_schema("ga_white_switch", GASelector(write_required=False)),
+        vol.Required(_LIGHT_COLOR_MODE_SCHEMA): LightColorModeSchema.INDIVIDUAL.value,
+        **optional_ga_schema(CONF_GA_SWITCH, GASelector(write_required=True)),
+        **optional_ga_schema(CONF_GA_BRIGHTNESS, GASelector(write_required=True)),
+        vol.Required(CONF_GA_RED_BRIGHTNESS): GASelector(write_required=True),
+        **optional_ga_schema(CONF_GA_RED_SWITCH, GASelector(write_required=False)),
+        vol.Required(CONF_GA_GREEN_BRIGHTNESS): GASelector(write_required=True),
+        **optional_ga_schema(CONF_GA_GREEN_SWITCH, GASelector(write_required=False)),
+        vol.Required(CONF_GA_BLUE_BRIGHTNESS): GASelector(write_required=True),
+        **optional_ga_schema(CONF_GA_BLUE_SWITCH, GASelector(write_required=False)),
+        **optional_ga_schema(CONF_GA_WHITE_BRIGHTNESS, GASelector(write_required=True)),
+        **optional_ga_schema(CONF_GA_WHITE_SWITCH, GASelector(write_required=False)),
     }
 )
 
 _HSV_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
     {
-        vol.Required("_light_color_mode_schema"): LightColorModeSchema.HSV.value,
-        vol.Required("ga_switch"): GASelector(write_required=True),
-        vol.Required("ga_brightness"): GASelector(write_required=True),
-        vol.Required("ga_hue"): GASelector(write_required=True),
-        vol.Required("ga_saturation"): GASelector(write_required=True),
+        vol.Required(_LIGHT_COLOR_MODE_SCHEMA): LightColorModeSchema.HSV.value,
+        vol.Required(CONF_GA_SWITCH): GASelector(write_required=True),
+        vol.Required(CONF_GA_BRIGHTNESS): GASelector(write_required=True),
+        vol.Required(CONF_GA_HUE): GASelector(write_required=True),
+        vol.Required(CONF_GA_SATURATION): GASelector(write_required=True),
     }
 )
 
 
 LIGHT_KNX_SCHEMA = cv.key_value_schemas(
-    "_light_color_mode_schema",
+    _LIGHT_COLOR_MODE_SCHEMA,
     default_schema=_DEFAULT_LIGHT_SCHEMA,
     value_schemas={
         LightColorModeSchema.DEFAULT: _DEFAULT_LIGHT_SCHEMA,
@@ -169,8 +194,8 @@ LIGHT_KNX_SCHEMA = cv.key_value_schemas(
 
 LIGHT_SCHEMA = vol.Schema(
     {
-        vol.Required("entity"): BASE_ENTITY_SCHEMA,
-        vol.Required("knx"): LIGHT_KNX_SCHEMA,
+        vol.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
+        vol.Required(DOMAIN): LIGHT_KNX_SCHEMA,
     }
 )
 
