@@ -1,0 +1,1289 @@
+# serializer version: 1
+# name: test_button_setup_and_states[button.madvr_envy_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Back',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_BACK',
+    'unique_id': '00:11:22:33:44:55_BUTTON_BACK',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_blue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_blue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blue',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_BLUE',
+    'unique_id': '00:11:22:33:44:55_BUTTON_BLUE',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_blue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Blue',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_blue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_cyan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_cyan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cyan',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_CYAN',
+    'unique_id': '00:11:22:33:44:55_BUTTON_CYAN',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_cyan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Cyan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_cyan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Down',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_DOWN',
+    'unique_id': '00:11:22:33:44:55_BUTTON_DOWN',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_force_1080p60_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_force_1080p60_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Force 1080p60 Output',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'FORCE1080P60OUTPUT',
+    'unique_id': '00:11:22:33:44:55_FORCE1080P60OUTPUT',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_force_1080p60_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Force 1080p60 Output',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_force_1080p60_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_green-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_green',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Green',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_GREEN',
+    'unique_id': '00:11:22:33:44:55_BUTTON_GREEN',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_green-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Green',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_green',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Left',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_LEFT',
+    'unique_id': '00:11:22:33:44:55_BUTTON_LEFT',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_magenta-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_magenta',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Magenta',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_MAGENTA',
+    'unique_id': '00:11:22:33:44:55_BUTTON_MAGENTA',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_magenta-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Magenta',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_magenta',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_ok-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_ok',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'OK',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_OK',
+    'unique_id': '00:11:22:33:44:55_BUTTON_OK',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_ok-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy OK',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_ok',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_configuration_menu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_open_configuration_menu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Open Configuration Menu',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'OPENMENU_CONFIGURATION',
+    'unique_id': '00:11:22:33:44:55_OPENMENU_CONFIGURATION',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_configuration_menu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Open Configuration Menu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_open_configuration_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_info_menu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_open_info_menu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Open Info Menu',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'OPENMENU_INFO',
+    'unique_id': '00:11:22:33:44:55_OPENMENU_INFO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_info_menu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Open Info Menu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_open_info_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_profiles_menu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_open_profiles_menu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Open Profiles Menu',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'OPENMENU_PROFILES',
+    'unique_id': '00:11:22:33:44:55_OPENMENU_PROFILES',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_profiles_menu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Open Profiles Menu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_open_profiles_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_settings_menu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_open_settings_menu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Open Settings Menu',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'OPENMENU_SETTINGS',
+    'unique_id': '00:11:22:33:44:55_OPENMENU_SETTINGS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_settings_menu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Open Settings Menu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_open_settings_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_test_patterns_menu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_open_test_patterns_menu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Open Test Patterns Menu',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'OPENMENU_TESTPATTERNS',
+    'unique_id': '00:11:22:33:44:55_OPENMENU_TESTPATTERNS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_open_test_patterns_menu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Open Test Patterns Menu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_open_test_patterns_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_red-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_red',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Red',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_RED',
+    'unique_id': '00:11:22:33:44:55_BUTTON_RED',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_red-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Red',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_red',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_refresh_license_info-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_refresh_license_info',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Refresh License Info',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'REFRESH_LICENSEINFO',
+    'unique_id': '00:11:22:33:44:55_REFRESH_LICENSEINFO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_refresh_license_info-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Refresh License Info',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_refresh_license_info',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_reset_temporary-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_reset_temporary',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset Temporary',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'RESET_TEMPORARY',
+    'unique_id': '00:11:22:33:44:55_RESET_TEMPORARY',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_reset_temporary-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Reset Temporary',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_reset_temporary',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Right',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_RIGHT',
+    'unique_id': '00:11:22:33:44:55_BUTTON_RIGHT',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_3d_lut-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_3d_lut',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle 3D LUT',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_3DLUT',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_3DLUT',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_3d_lut-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle 3D LUT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_3d_lut',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_contrast_recovery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_contrast_recovery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle Contrast Recovery',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_CONTRASTRECOVERY',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_CONTRASTRECOVERY',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_contrast_recovery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle Contrast Recovery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_contrast_recovery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_debug_osd-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_debug_osd',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle Debug OSD',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_DEBUGOSD',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_DEBUGOSD',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_debug_osd-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle Debug OSD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_debug_osd',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_highlight_recovery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_highlight_recovery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle Highlight Recovery',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_HIGHLIGHTRECOVERY',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_HIGHLIGHTRECOVERY',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_highlight_recovery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle Highlight Recovery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_highlight_recovery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_histogram-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_histogram',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle Histogram',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_HISTOGRAM',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_HISTOGRAM',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_histogram-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle Histogram',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_histogram',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_screen_boundaries-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_screen_boundaries',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle Screen Boundaries',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_SCREENBOUNDARIES',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_SCREENBOUNDARIES',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_screen_boundaries-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle Screen Boundaries',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_screen_boundaries',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_shadow_recovery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_shadow_recovery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle Shadow Recovery',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_SHADOWRECOVERY',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_SHADOWRECOVERY',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_shadow_recovery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle Shadow Recovery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_shadow_recovery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_tone_map-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_toggle_tone_map',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle Tone Map',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'TOGGLE_TONEMAP',
+    'unique_id': '00:11:22:33:44:55_TOGGLE_TONEMAP',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_toggle_tone_map-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Toggle Tone Map',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_toggle_tone_map',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Up',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_UP',
+    'unique_id': '00:11:22:33:44:55_BUTTON_UP',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_yellow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_yellow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Yellow',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'BUTTON_YELLOW',
+    'unique_id': '00:11:22:33:44:55_BUTTON_YELLOW',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_yellow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Yellow',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_yellow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

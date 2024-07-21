@@ -1,5 +1,8 @@
 """Constants for the madvr-envy integration."""
 
+from collections.abc import Iterable
+from enum import Enum
+
 DOMAIN = "madvr"
 
 DEFAULT_NAME = "envy"
@@ -32,3 +35,46 @@ ASPECT_NAME = "aspect_name"
 MASKING_RES = "masking_res"
 MASKING_DEC = "masking_dec"
 MASKING_INT = "masking_int"
+
+
+# Button Commands
+class ButtonCommands(Enum):
+    """Enum for madvr button commands and names."""
+
+    reset_temporary = ["ResetTemporary"]
+    openmenu_info = ["OpenMenu", "Info"]
+    openmenu_settings = ["OpenMenu", "Settings"]
+    openmenu_configuration = ["OpenMenu", "Configuration"]
+    openmenu_profiles = ["OpenMenu", "Profiles"]
+    openmenu_testpatterns = ["OpenMenu", "TestPatterns"]
+    toggle_tonemap = ["Toggle", "ToneMap"]
+    toggle_highlightrecovery = ["Toggle", "HighlightRecovery"]
+    toggle_contrastrecovery = ["Toggle", "ContrastRecovery"]
+    toggle_shadowrecovery = ["Toggle", "ShadowRecovery"]
+    toggle_3dlut = ["Toggle", "_3DLUT"]
+    toggle_screenboundaries = ["Toggle", "ScreenBoundaries"]
+    toggle_histogram = ["Toggle", "Histogram"]
+    toggle_debugosd = ["Toggle", "DebugOSD"]
+    refresh_licenseinfo = ["RefreshLicenseInfo"]
+    force1080p60output = ["Force1080p60Output"]
+    button_left = ["KeyPress", "LEFT"]
+    button_right = ["KeyPress", "RIGHT"]
+    button_up = ["KeyPress", "UP"]
+    button_down = ["KeyPress", "DOWN"]
+    button_ok = ["KeyPress", "OK"]
+    button_back = ["KeyPress", "BACK"]
+    button_red = ["KeyPress", "RED"]
+    button_green = ["KeyPress", "GREEN"]
+    button_blue = ["KeyPress", "BLUE"]
+    button_yellow = ["KeyPress", "YELLOW"]
+    button_magenta = ["KeyPress", "MAGENTA"]
+    button_cyan = ["KeyPress", "CYAN"]
+
+    def __init__(self, value: list[str]) -> None:
+        """Initialize the command enum."""
+        self._value_ = value
+
+    @property
+    def value(self) -> Iterable[str]:
+        """Return the command value."""
+        return self._value_

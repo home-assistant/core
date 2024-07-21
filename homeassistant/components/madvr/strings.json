@@ -116,6 +116,92 @@
       "masking_int": {
         "name": "Masking integer"
       }
+    },
+    "button": {
+      "reset_temporary": {
+        "name": "Reset Temporary"
+      },
+      "openmenu_info": {
+        "name": "Open Info Menu"
+      },
+      "openmenu_settings": {
+        "name": "Open Settings Menu"
+      },
+      "openmenu_configuration": {
+        "name": "Open Configuration Menu"
+      },
+      "openmenu_profiles": {
+        "name": "Open Profiles Menu"
+      },
+      "openmenu_testpatterns": {
+        "name": "Open Test Patterns Menu"
+      },
+      "toggle_tonemap": {
+        "name": "Toggle Tone Map"
+      },
+      "toggle_highlightrecovery": {
+        "name": "Toggle Highlight Recovery"
+      },
+      "toggle_contrastrecovery": {
+        "name": "Toggle Contrast Recovery"
+      },
+      "toggle_shadowrecovery": {
+        "name": "Toggle Shadow Recovery"
+      },
+      "toggle_3dlut": {
+        "name": "Toggle 3D LUT"
+      },
+      "toggle_screenboundaries": {
+        "name": "Toggle Screen Boundaries"
+      },
+      "toggle_histogram": {
+        "name": "Toggle Histogram"
+      },
+      "toggle_debugosd": {
+        "name": "Toggle Debug OSD"
+      },
+      "refresh_licenseinfo": {
+        "name": "Refresh License Info"
+      },
+      "force1080p60output": {
+        "name": "Force 1080p60 Output"
+      },
+      "button_left": {
+        "name": "Left"
+      },
+      "button_right": {
+        "name": "Right"
+      },
+      "button_up": {
+        "name": "Up"
+      },
+      "button_down": {
+        "name": "Down"
+      },
+      "button_ok": {
+        "name": "OK"
+      },
+      "button_back": {
+        "name": "Back"
+      },
+      "button_red": {
+        "name": "Red"
+      },
+      "button_green": {
+        "name": "Green"
+      },
+      "button_blue": {
+        "name": "Blue"
+      },
+      "button_yellow": {
+        "name": "Yellow"
+      },
+      "button_magenta": {
+        "name": "Magenta"
+      },
+      "button_cyan": {
+        "name": "Cyan"
+      }
     }
   }
 }

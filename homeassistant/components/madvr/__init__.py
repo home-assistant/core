@@ -12,7 +12,12 @@ from homeassistant.core import Event, HomeAssistant, callback
 
 from .coordinator import MadVRCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.REMOTE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.REMOTE,
+    Platform.SENSOR,
+]
 
 
 type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
