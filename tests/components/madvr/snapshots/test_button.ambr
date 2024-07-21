@@ -27,8 +27,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_BACK',
-    'unique_id': '00:11:22:33:44:55_BUTTON_BACK',
+    'translation_key': 'button_back',
+    'unique_id': '00:11:22:33:44:55_button_back',
     'unit_of_measurement': None,
   })
 # ---
@@ -73,8 +73,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_BLUE',
-    'unique_id': '00:11:22:33:44:55_BUTTON_BLUE',
+    'translation_key': 'button_blue',
+    'unique_id': '00:11:22:33:44:55_button_blue',
     'unit_of_measurement': None,
   })
 # ---
@@ -119,8 +119,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_CYAN',
-    'unique_id': '00:11:22:33:44:55_BUTTON_CYAN',
+    'translation_key': 'button_cyan',
+    'unique_id': '00:11:22:33:44:55_button_cyan',
     'unit_of_measurement': None,
   })
 # ---
@@ -165,8 +165,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_DOWN',
-    'unique_id': '00:11:22:33:44:55_BUTTON_DOWN',
+    'translation_key': 'button_down',
+    'unique_id': '00:11:22:33:44:55_button_down',
     'unit_of_measurement': None,
   })
 # ---
@@ -207,19 +207,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Force 1080p60 Output',
+    'original_name': 'Force 1080p60 output',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'FORCE1080P60OUTPUT',
-    'unique_id': '00:11:22:33:44:55_FORCE1080P60OUTPUT',
+    'translation_key': 'force1080p60output',
+    'unique_id': '00:11:22:33:44:55_force1080p60output',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_force_1080p60_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Force 1080p60 Output',
+      'friendly_name': 'madVR Envy Force 1080p60 output',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_force_1080p60_output',
@@ -257,8 +257,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_GREEN',
-    'unique_id': '00:11:22:33:44:55_BUTTON_GREEN',
+    'translation_key': 'button_green',
+    'unique_id': '00:11:22:33:44:55_button_green',
     'unit_of_measurement': None,
   })
 # ---
@@ -303,8 +303,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_LEFT',
-    'unique_id': '00:11:22:33:44:55_BUTTON_LEFT',
+    'translation_key': 'button_left',
+    'unique_id': '00:11:22:33:44:55_button_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -349,8 +349,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_MAGENTA',
-    'unique_id': '00:11:22:33:44:55_BUTTON_MAGENTA',
+    'translation_key': 'button_magenta',
+    'unique_id': '00:11:22:33:44:55_button_magenta',
     'unit_of_measurement': None,
   })
 # ---
@@ -395,8 +395,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_OK',
-    'unique_id': '00:11:22:33:44:55_BUTTON_OK',
+    'translation_key': 'button_ok',
+    'unique_id': '00:11:22:33:44:55_button_ok',
     'unit_of_measurement': None,
   })
 # ---
@@ -437,19 +437,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Open Configuration Menu',
+    'original_name': 'Open configuration menu',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'OPENMENU_CONFIGURATION',
-    'unique_id': '00:11:22:33:44:55_OPENMENU_CONFIGURATION',
+    'translation_key': 'openmenu_configuration',
+    'unique_id': '00:11:22:33:44:55_openmenu_configuration',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_open_configuration_menu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Open Configuration Menu',
+      'friendly_name': 'madVR Envy Open configuration menu',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_open_configuration_menu',
@@ -483,19 +483,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Open Info Menu',
+    'original_name': 'Open info menu',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'OPENMENU_INFO',
-    'unique_id': '00:11:22:33:44:55_OPENMENU_INFO',
+    'translation_key': 'openmenu_info',
+    'unique_id': '00:11:22:33:44:55_openmenu_info',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_open_info_menu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Open Info Menu',
+      'friendly_name': 'madVR Envy Open info menu',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_open_info_menu',
@@ -529,19 +529,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Open Profiles Menu',
+    'original_name': 'Open profiles menu',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'OPENMENU_PROFILES',
-    'unique_id': '00:11:22:33:44:55_OPENMENU_PROFILES',
+    'translation_key': 'openmenu_profiles',
+    'unique_id': '00:11:22:33:44:55_openmenu_profiles',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_open_profiles_menu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Open Profiles Menu',
+      'friendly_name': 'madVR Envy Open profiles menu',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_open_profiles_menu',
@@ -575,19 +575,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Open Settings Menu',
+    'original_name': 'Open settings menu',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'OPENMENU_SETTINGS',
-    'unique_id': '00:11:22:33:44:55_OPENMENU_SETTINGS',
+    'translation_key': 'openmenu_settings',
+    'unique_id': '00:11:22:33:44:55_openmenu_settings',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_open_settings_menu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Open Settings Menu',
+      'friendly_name': 'madVR Envy Open settings menu',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_open_settings_menu',
@@ -621,19 +621,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Open Test Patterns Menu',
+    'original_name': 'Open test patterns menu',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'OPENMENU_TESTPATTERNS',
-    'unique_id': '00:11:22:33:44:55_OPENMENU_TESTPATTERNS',
+    'translation_key': 'openmenu_testpatterns',
+    'unique_id': '00:11:22:33:44:55_openmenu_testpatterns',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_open_test_patterns_menu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Open Test Patterns Menu',
+      'friendly_name': 'madVR Envy Open test patterns menu',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_open_test_patterns_menu',
@@ -671,8 +671,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_RED',
-    'unique_id': '00:11:22:33:44:55_BUTTON_RED',
+    'translation_key': 'button_red',
+    'unique_id': '00:11:22:33:44:55_button_red',
     'unit_of_measurement': None,
   })
 # ---
@@ -713,19 +713,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Refresh License Info',
+    'original_name': 'Refresh license info',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'REFRESH_LICENSEINFO',
-    'unique_id': '00:11:22:33:44:55_REFRESH_LICENSEINFO',
+    'translation_key': 'refresh_licenseinfo',
+    'unique_id': '00:11:22:33:44:55_refresh_licenseinfo',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_refresh_license_info-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Refresh License Info',
+      'friendly_name': 'madVR Envy Refresh license info',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_refresh_license_info',
@@ -759,19 +759,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset Temporary',
+    'original_name': 'Reset temporary',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'RESET_TEMPORARY',
-    'unique_id': '00:11:22:33:44:55_RESET_TEMPORARY',
+    'translation_key': 'reset_temporary',
+    'unique_id': '00:11:22:33:44:55_reset_temporary',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_reset_temporary-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Reset Temporary',
+      'friendly_name': 'madVR Envy Reset temporary',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_reset_temporary',
@@ -809,8 +809,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_RIGHT',
-    'unique_id': '00:11:22:33:44:55_BUTTON_RIGHT',
+    'translation_key': 'button_right',
+    'unique_id': '00:11:22:33:44:55_button_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -855,8 +855,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_3DLUT',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_3DLUT',
+    'translation_key': 'toggle_3dlut',
+    'unique_id': '00:11:22:33:44:55_toggle_3dlut',
     'unit_of_measurement': None,
   })
 # ---
@@ -897,19 +897,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Toggle Contrast Recovery',
+    'original_name': 'Toggle contrast recovery',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_CONTRASTRECOVERY',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_CONTRASTRECOVERY',
+    'translation_key': 'toggle_contrastrecovery',
+    'unique_id': '00:11:22:33:44:55_toggle_contrastrecovery',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_toggle_contrast_recovery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Toggle Contrast Recovery',
+      'friendly_name': 'madVR Envy Toggle contrast recovery',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_toggle_contrast_recovery',
@@ -943,19 +943,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Toggle Debug OSD',
+    'original_name': 'Toggle debug osd',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_DEBUGOSD',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_DEBUGOSD',
+    'translation_key': 'toggle_debugosd',
+    'unique_id': '00:11:22:33:44:55_toggle_debugosd',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_toggle_debug_osd-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Toggle Debug OSD',
+      'friendly_name': 'madVR Envy Toggle debug osd',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_toggle_debug_osd',
@@ -989,19 +989,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Toggle Highlight Recovery',
+    'original_name': 'Toggle highlight recovery',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_HIGHLIGHTRECOVERY',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_HIGHLIGHTRECOVERY',
+    'translation_key': 'toggle_highlightrecovery',
+    'unique_id': '00:11:22:33:44:55_toggle_highlightrecovery',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_toggle_highlight_recovery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Toggle Highlight Recovery',
+      'friendly_name': 'madVR Envy Toggle highlight recovery',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_toggle_highlight_recovery',
@@ -1035,19 +1035,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Toggle Histogram',
+    'original_name': 'Toggle histogram',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_HISTOGRAM',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_HISTOGRAM',
+    'translation_key': 'toggle_histogram',
+    'unique_id': '00:11:22:33:44:55_toggle_histogram',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_toggle_histogram-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Toggle Histogram',
+      'friendly_name': 'madVR Envy Toggle histogram',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_toggle_histogram',
@@ -1081,19 +1081,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Toggle Screen Boundaries',
+    'original_name': 'Toggle screen boundaries',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_SCREENBOUNDARIES',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_SCREENBOUNDARIES',
+    'translation_key': 'toggle_screenboundaries',
+    'unique_id': '00:11:22:33:44:55_toggle_screenboundaries',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_toggle_screen_boundaries-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Toggle Screen Boundaries',
+      'friendly_name': 'madVR Envy Toggle screen boundaries',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_toggle_screen_boundaries',
@@ -1127,19 +1127,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Toggle Shadow Recovery',
+    'original_name': 'Toggle shadow recovery',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_SHADOWRECOVERY',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_SHADOWRECOVERY',
+    'translation_key': 'toggle_shadowrecovery',
+    'unique_id': '00:11:22:33:44:55_toggle_shadowrecovery',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_toggle_shadow_recovery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Toggle Shadow Recovery',
+      'friendly_name': 'madVR Envy Toggle shadow recovery',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_toggle_shadow_recovery',
@@ -1173,19 +1173,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Toggle Tone Map',
+    'original_name': 'Toggle tone map',
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'TOGGLE_TONEMAP',
-    'unique_id': '00:11:22:33:44:55_TOGGLE_TONEMAP',
+    'translation_key': 'toggle_tonemap',
+    'unique_id': '00:11:22:33:44:55_toggle_tonemap',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button_setup_and_states[button.madvr_envy_toggle_tone_map-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Toggle Tone Map',
+      'friendly_name': 'madVR Envy Toggle tone map',
     }),
     'context': <ANY>,
     'entity_id': 'button.madvr_envy_toggle_tone_map',
@@ -1223,8 +1223,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_UP',
-    'unique_id': '00:11:22:33:44:55_BUTTON_UP',
+    'translation_key': 'button_up',
+    'unique_id': '00:11:22:33:44:55_button_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -1269,8 +1269,8 @@
     'platform': 'madvr',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'BUTTON_YELLOW',
-    'unique_id': '00:11:22:33:44:55_BUTTON_YELLOW',
+    'translation_key': 'button_yellow',
+    'unique_id': '00:11:22:33:44:55_button_yellow',
     'unit_of_measurement': None,
   })
 # ---

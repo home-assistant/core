@@ -42,5 +42,5 @@ async def test_button_setup_and_states(
     )
     # ensure that pressing a button adds it to the queue
     mock_madvr_client.add_command_to_queue.assert_called_once_with(
-        ButtonCommands.OPENMENU_PROFILES.value
+        ButtonCommands.openmenu_profiles.value
     )
