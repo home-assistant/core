@@ -11,6 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from ..const import (
     CONF_INVERT,
@@ -61,7 +62,7 @@ SWITCH_SCHEMA = vol.Schema(
 )
 
 
-ENTITY_STORE_DATA_SCHEMA = vol.All(
+ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_PLATFORM): vol.All(
@@ -82,7 +83,7 @@ ENTITY_STORE_DATA_SCHEMA = vol.All(
     ),
 )
 
-CREATE_ENTITY_BASE_SCHEMA = {
+CREATE_ENTITY_BASE_SCHEMA: VolDictType = {
     vol.Required(CONF_PLATFORM): str,
     vol.Required(CONF_DATA): dict,  # validated by ENTITY_STORE_DATA_SCHEMA for platform
 }
