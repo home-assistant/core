@@ -39,13 +39,13 @@ _LOGGER = logging.getLogger(__name__)
 def process_service_info(
     hass: HomeAssistant,
     entry: BTHomeConfigEntry,
-    data: BTHomeBluetoothDeviceData,
     device_registry: DeviceRegistry,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
-    update = data.update(service_info)
     coordinator = entry.runtime_data
+    data = coordinator.device_data
+    update = data.update(service_info)
     discovered_event_classes = coordinator.discovered_event_classes
     if entry.data.get(CONF_SLEEPY_DEVICE, False) != data.sleepy_device:
         hass.config_entries.async_update_entry(
@@ -133,14 +133,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bo
         _LOGGER,
         address=address,
         mode=BluetoothScanningMode.PASSIVE,
-        update_method=partial(process_service_info, hass, entry, data, device_registry),
+        update_method=partial(process_service_info, hass, entry, device_registry),
         device_data=data,
         discovered_event_classes=event_classes,
         connectable=False,
         entry=entry,
     )
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
