@@ -337,7 +337,7 @@ async def create_ui_entity(
         )
         res = await ws_client.receive_json()
         assert res["success"], res
-        assert res["result"]["success"] is True
+        assert res["result"]["success"] is True, res["result"]
         entity_id = res["result"]["entity_id"]
 
         entity = entity_registry.async_get(entity_id)
