@@ -24,7 +24,7 @@ class ListAddItemIntent(intent.IntentHandler):
     description = "Add item to a todo list"
     slot_schema = {
         vol.Required("item"): intent.non_empty_string,
-        vol.Required("name"): intent.non_empty_string
+        vol.Required("name"): intent.non_empty_string,
     }
     platforms = {DOMAIN}
 
