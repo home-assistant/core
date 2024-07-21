@@ -7,7 +7,7 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "port": "Port field is optional and only required if custom port is used"
+          "port": "The integration will default to 8050, if not set, which should be suitable for most installs"
         }
       }
     },
