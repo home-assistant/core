@@ -157,6 +157,34 @@
           "description": "Include tags from the website to the recipe."
         }
       }
+    },
+    "set_random_mealplan": {
+      "name": "Set random mealplan",
+      "description": "Set a random mealplan for a specific date",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "date": {
+          "name": "Date",
+          "description": "The date to set the mealplan for."
+        },
+        "entry_type": {
+          "name": "Entry type",
+          "description": "The type of dish to randomize."
+        }
+      }
+    }
+  },
+  "selector": {
+    "mealplan_entry_type": {
+      "options": {
+        "breakfast": "[%key:component::mealie::entity::calendar::breakfast::name%]",
+        "lunch": "[%key:component::mealie::entity::calendar::lunch::name%]",
+        "dinner": "[%key:component::mealie::entity::calendar::dinner::name%]",
+        "side": "[%key:component::mealie::entity::calendar::side::name%]"
+      }
     }
   }
 }
