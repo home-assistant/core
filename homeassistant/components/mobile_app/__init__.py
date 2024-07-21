@@ -1,9 +1,10 @@
 """Integrates Native Apps to Home Assistant."""
 
 from contextlib import suppress
+from functools import partial
 from typing import Any
 
-from homeassistant.components import cloud, notify as hass_notify
+from homeassistant.components import cloud, intent, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -46,7 +47,8 @@ from .const import (
 )
 from .helpers import savable_state
 from .http_api import RegistrationsView
-from .util import async_create_cloud_hook
+from .timers import async_handle_timer_event
+from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
@@ -132,6 +134,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if supports_push(hass, webhook_id):
+        entry.async_on_unload(
+            intent.async_register_timer_handler(
+                hass, device.id, partial(async_handle_timer_event, hass, entry)
+            )
+        )
 
     await hass_notify.async_reload(hass, DOMAIN)
 

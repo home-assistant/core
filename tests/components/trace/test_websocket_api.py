@@ -9,11 +9,11 @@ from unittest.mock import patch
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.setup import async_setup_component
 from homeassistant.util.uuid import random_uuid_hex
 
 from tests.common import load_fixture
@@ -207,7 +207,7 @@ async def test_get_trace(
     _assert_raw_config(domain, sun_config, trace)
     assert trace["blueprint_inputs"] is None
     assert trace["context"]
-    assert trace["error"] == "Service test.automation not found"
+    assert trace["error"] == "Action test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
@@ -899,7 +899,7 @@ async def test_list_traces(
     assert len(_find_traces(response["result"], domain, "sun")) == 1
     trace = _find_traces(response["result"], domain, "sun")[0]
     assert trace["last_step"] == last_step[0].format(prefix=prefix)
-    assert trace["error"] == "Service test.automation not found"
+    assert trace["error"] == "Action test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == script_execution[0]
     assert trace["timestamp"]
@@ -1639,7 +1639,7 @@ async def test_trace_blueprint_automation(
     assert trace["config"]["id"] == "sun"
     assert trace["blueprint_inputs"] == sun_config
     assert trace["context"]
-    assert trace["error"] == "Service test.automation not found"
+    assert trace["error"] == "Action test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"

@@ -294,6 +294,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     """Representation of a generic Xiaomi device."""
 
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -479,6 +480,9 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._preset_modes = PRESET_MODES_AIRPURIFIER
             self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
 
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
@@ -609,7 +613,11 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
 
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
         self._preset_modes = PRESET_MODES_AIRPURIFIER_3C
-        self._attr_supported_features = FanEntityFeature.PRESET_MODE
+        self._attr_supported_features = (
+            FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
+        )
 
         self._state = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
@@ -663,7 +671,10 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         self._speed_count = 4
         self._preset_modes = PRESET_MODES_AIRFRESH
         self._attr_supported_features = (
-            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
         )
 
         self._state = self.coordinator.data.is_on
@@ -756,7 +767,10 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         self._device_features = FEATURE_FLAGS_AIRFRESH_A1
         self._preset_modes = PRESET_MODES_AIRFRESH_A1
         self._attr_supported_features = (
-            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
         )
 
         self._state = self.coordinator.data.is_on
@@ -851,6 +865,8 @@ class XiaomiGenericFan(XiaomiGenericDevice):
             FanEntityFeature.SET_SPEED
             | FanEntityFeature.OSCILLATE
             | FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
         )
         if self._model != MODEL_FAN_1C:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
