@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from apyhiveapi import Hive
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -46,7 +47,10 @@ HIVE_TO_HASS_HVAC_ACTION = {
     True: HVACAction.HEATING,
 }
 
-TEMP_UNIT = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
+TEMP_UNIT = {
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
+}
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger()
@@ -97,11 +101,11 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     )
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, hive_session, hive_device):
+    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialize the Climate device."""
-        super().__init__(hive_session, hive_device)
+        super().__init__(hive, hive_device)
         self.thermostat_node_id = hive_device["device_id"]
-        self._attr_temperature_unit = TEMP_UNIT.get(hive_device["temperatureunit"])
+        self._attr_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
 
     @refresh_system
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -132,7 +136,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         await self.hive.heating.setBoostOn(self.device, time_period, temperature)
 
     @refresh_system
-    async def async_heating_boost_off(self):
+    async def async_heating_boost_off(self) -> None:
         """Handle boost heating service call."""
         await self.hive.heating.setBoostOff(self.device)
 
