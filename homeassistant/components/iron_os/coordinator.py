@@ -47,5 +47,3 @@ class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
         """Set up the coordinator."""
 
         self.device = await self.pinecil.get_device_info()
-
-        return await super()._async_setup()
