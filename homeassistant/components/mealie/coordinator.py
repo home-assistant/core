@@ -45,6 +45,8 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator."""
 
     config_entry: MealieConfigEntry
+    _name: str
+    _update_interval: timedelta
 
     def __init__(
         self,
@@ -57,8 +59,8 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass,
             LOGGER,
-            name=name,
-            update_interval=update_interval,
+            name=self._name,
+            update_interval=self._update_interval,
         )
         self.client = client
 
@@ -81,15 +83,8 @@ class MealieMealplanCoordinator(
 ):
     """Class to manage fetching Mealie data."""
 
-    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
-        """Initialize coordinator."""
-        super().__init__(
-            hass,
-            name="MealieMealplan",
-            client=client,
-            update_interval=timedelta(hours=1),
-        )
-        self.client = client
+    _name = "MealieMealplan"
+    _update_interval = timedelta(hours=1)
 
     async def _async_update_internal(self) -> dict[MealplanEntryType, list[Mealplan]]:
         next_week = dt_util.now() + WEEK
@@ -120,14 +115,8 @@ class MealieShoppingListCoordinator(
 ):
     """Class to manage fetching Mealie Shopping list data."""
 
-    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
-        """Initialize coordinator."""
-        super().__init__(
-            hass,
-            name="MealieShoppingLists",
-            client=client,
-            update_interval=timedelta(minutes=5),
-        )
+    _name = "MealieShoppingList"
+    _update_interval = timedelta(minutes=5)
 
     async def _async_update_internal(
         self,
@@ -150,14 +139,8 @@ class MealieShoppingListCoordinator(
 class MealieStatisticsCoordinator(MealieDataUpdateCoordinator[Statistics]):
     """Class to manage fetching Mealie Statistics data."""
 
-    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
-        """Initialize coordinator."""
-        super().__init__(
-            hass,
-            name="MealieStatistics",
-            client=client,
-            update_interval=timedelta(minutes=15),
-        )
+    _name = "MealieStatistics"
+    _update_interval = timedelta(minutes=15)
 
     async def _async_update_internal(
         self,
