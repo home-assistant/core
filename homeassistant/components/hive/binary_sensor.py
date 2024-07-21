@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,6 +45,28 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
 )
 
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="Heating_State",
+        icon="mdi:radiator",
+    ),
+    SensorEntityDescription(
+        key="Heating_Boost",
+        icon="mdi:radiator",
+    ),
+    SensorEntityDescription(
+        key="Hotwater_State",
+        icon="mdi:hand-water",
+    ),
+    SensorEntityDescription(
+        key="Hotwater_Boost",
+        icon="mdi:hand-water",
+    ),
+    SensorEntityDescription(
+        key="Availability",
+        icon="mdi:check-circle"
+    ),
+)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -51,6 +74,7 @@ async def async_setup_entry(
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
+
     devices = hive.session.deviceList.get("binary_sensor")
     if not devices:
         return
@@ -59,6 +83,19 @@ async def async_setup_entry(
             HiveBinarySensorEntity(hive, dev, description)
             for dev in devices
             for description in BINARY_SENSOR_TYPES
+            if dev["hiveType"] == description.key
+        ),
+        True,
+    )
+
+    devices = hive.session.deviceList.get("sensor")
+    if not devices:
+        return
+    async_add_entities(
+        (
+            HiveSensorEntity(hive, dev, description)
+            for dev in devices
+            for description in SENSOR_TYPES
             if dev["hiveType"] == description.key
         ),
         True,
@@ -83,3 +120,17 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
             self._attr_available = self.device["deviceData"].get("online")
         else:
             self._attr_available = True
+
+class HiveSensorEntity(HiveEntity, SensorEntity):
+    """Hive Sensor Entity."""
+
+    def __init__(self, hive, hive_device, entity_description):
+        """Initialise hive sensor."""
+        super().__init__(hive, hive_device)
+        self.entity_description = entity_description
+
+    async def async_update(self) -> None:
+        """Update all Node data from Hive."""
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.sensor.getSensor(self.device)
+        self._attr_native_value = self.device["status"]["state"]
