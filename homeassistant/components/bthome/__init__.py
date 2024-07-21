@@ -127,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bo
     data = BTHomeBluetoothDeviceData(**kwargs)
 
     device_registry = dr.async_get(hass)
-    event_classes = entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, set())
+    event_classes = set(entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, ()))
     coordinator = BTHomePassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
