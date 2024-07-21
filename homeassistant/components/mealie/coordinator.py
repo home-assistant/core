@@ -48,14 +48,8 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     _name: str
     _update_interval: timedelta
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        name: str,
-        client: MealieClient,
-        update_interval: timedelta,
-    ) -> None:
-        """Initialize the Withings data coordinator."""
+    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
+        """Initialize the Mealie data coordinator."""
         super().__init__(
             hass,
             LOGGER,
