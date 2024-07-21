@@ -181,8 +181,6 @@ async def async_setup_entry(
 class MadvrButtonEntity(MadVREntity, ButtonEntity):
     """Base class for madVR binary sensors."""
 
-    entity_description: MadvrButtonEntityDescription
-
     def __init__(
         self,
         coordinator: MadVRCoordinator,
@@ -190,7 +188,7 @@ class MadvrButtonEntity(MadVREntity, ButtonEntity):
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
+        self.entity_description: MadvrButtonEntityDescription = description
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
     async def async_press(self) -> None:
