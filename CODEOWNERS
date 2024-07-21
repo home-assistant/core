@@ -505,6 +505,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/generic_hygrostat/ @Shulyaka
 /tests/components/generic_hygrostat/ @Shulyaka
 /homeassistant/components/geniushub/ @manzanotti
+/tests/components/geniushub/ @manzanotti
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
 /homeassistant/components/geo_location/ @home-assistant/core

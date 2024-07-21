@@ -202,6 +202,7 @@ FLOWS = {
         "gardena_bluetooth",
         "gdacs",
         "generic",
+        "geniushub",
         "geo_json_events",
         "geocaching",
         "geofency",
