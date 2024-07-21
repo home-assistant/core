@@ -144,7 +144,14 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             attr["triggered_source"] = "Carbon Monoxide"
 
         self._attr_extra_state_attributes = attr
-
+        # DEPRECATION WARNING
+        # The following state attributes will be removed in 2025.1:
+        # - triggered_source:  instead use alarm panel Binary Sensors
+        #  'Police', 'Fire' and 'Carbon Monoxide'
+        # - ac_loss: instead use alarm panel Binary Sensor 'Power'
+        # - low_battery: instead use alarm panel Binary Sensor 'Battery'
+        # - cover_tampered: instead use alarm panel Binary Sensor 'Tamper'
+        # - triggered_zone: never provided information and will be removed
         return state
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
