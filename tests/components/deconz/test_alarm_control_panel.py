@@ -70,32 +70,30 @@ from tests.test_util.aiohttp import AiohttpClientMocker
     "sensor_payload",
     [
         {
-            "0": {
-                "config": {
-                    "battery": 95,
-                    "enrolled": 1,
-                    "on": True,
-                    "pending": [],
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
-                "lastseen": "2021-07-25T18:07Z",
-                "manufacturername": "lk",
-                "modelid": "ZB-KeypadGeneric-D0002",
-                "name": "Keypad",
-                "state": {
-                    "action": "armed_stay",
-                    "lastupdated": "2021-07-25T18:02:51.172",
-                    "lowbattery": False,
-                    "panel": "none",
-                    "seconds_remaining": 55,
-                    "tampered": False,
-                },
-                "swversion": "3.13",
-                "type": "ZHAAncillaryControl",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "config": {
+                "battery": 95,
+                "enrolled": 1,
+                "on": True,
+                "pending": [],
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
+            "lastseen": "2021-07-25T18:07Z",
+            "manufacturername": "lk",
+            "modelid": "ZB-KeypadGeneric-D0002",
+            "name": "Keypad",
+            "state": {
+                "action": "armed_stay",
+                "lastupdated": "2021-07-25T18:02:51.172",
+                "lowbattery": False,
+                "panel": "none",
+                "seconds_remaining": 55,
+                "tampered": False,
+            },
+            "swversion": "3.13",
+            "type": "ZHAAncillaryControl",
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
