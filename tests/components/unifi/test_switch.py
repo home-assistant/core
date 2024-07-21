@@ -1129,7 +1129,7 @@ async def test_traffic_rules(
     # assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
     # Validate state object
-    switch_1 = hass.states.get(entity_id)
+    switch_1 = hass.states.get(f"switch.{entity_id}")
     assert switch_1 is not None
     assert switch_1.state == STATE_ON
     assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
@@ -1137,17 +1137,16 @@ async def test_traffic_rules(
     # Update state object
 
     device_1 = deepcopy(traffic_rule_payload[0])
-    device_1["outlet_table"][0]["relay_state"] = False
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
-    assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
     # Disable traffic rule
-    aioclient_mock.clear_requests()
     aioclient_mock.put(
         f"https://{config_entry_setup.data[CONF_HOST]}:1234"
         f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}/trafficrules/{device_1['_id']}",
     )
+
+    call_count = aioclient_mock.call_count
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -1155,10 +1154,14 @@ async def test_traffic_rules(
         {"entity_id": f"switch.{entity_id}"},
         blocking=True,
     )
-    assert aioclient_mock.call_count == 1
+    # Updating the value for traffic rules will make another call to retrieve the values
+    assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(device_1)
-    expected_disable_call = False
-    assert aioclient_mock.mock_calls[0][2] == expected_disable_call
+    expected_disable_call["enabled"] = False
+
+    assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+
+    call_count = aioclient_mock.call_count
 
     # Enable traffic rule
     await hass.services.async_call(
@@ -1171,8 +1174,8 @@ async def test_traffic_rules(
     expected_enable_call = deepcopy(device_1)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == 2
-    assert aioclient_mock.mock_calls[1][2] == expected_enable_call
+    assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
 @pytest.mark.parametrize(

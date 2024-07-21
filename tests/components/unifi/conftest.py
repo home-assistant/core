@@ -170,10 +170,19 @@ def fixture_request(
     def __mock_requests(host: str = DEFAULT_HOST, site_id: str = DEFAULT_SITE) -> None:
         url = f"https://{host}:{DEFAULT_PORT}"
 
-        def mock_get_request(path: str, payload: list[dict[str, Any]]) -> None:
+        def mock_get_request(
+            path: str, payload: list[dict[str, Any]], append_json: bool = True
+        ) -> None:
+            # APIV2 request respoonses have `meta` and `data` automatically appended
+            json = {}
+            if append_json:
+                json = {"meta": {"rc": "OK"}, "data": payload}
+            else:
+                json = payload
+
             aioclient_mock.get(
                 f"{url}{path}",
-                json={"meta": {"rc": "OK"}, "data": payload},
+                json=json,
                 headers={"content-type": CONTENT_TYPE_JSON},
             )
 
@@ -193,7 +202,9 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
-        mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
+        mock_get_request(
+            f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload, False
+        )
 
     return __mock_requests
 
