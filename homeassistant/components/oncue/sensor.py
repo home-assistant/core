@@ -184,16 +184,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     coordinator = config_entry.runtime_data
-    entities: list[OncueSensorEntity] = []
     devices = coordinator.data
-    for device_id, device in devices.items():
-        entities.extend(
-            OncueSensorEntity(coordinator, device_id, device, sensor, SENSOR_MAP[key])
-            for key, sensor in device.sensors.items()
-            if key in SENSOR_MAP
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OncueSensorEntity(coordinator, device_id, device, sensor, SENSOR_MAP[key])
+        for device_id, device in devices.items()
+        for key, sensor in device.sensors.items()
+        if key in SENSOR_MAP
+    )
 
 
 class OncueSensorEntity(OncueEntity, SensorEntity):

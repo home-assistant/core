@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONNECTION_EXCEPTIONS
+from .const import CONNECTION_EXCEPTIONS, DOMAIN  # noqa: F401
 from .types import OncueConfigEntry
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]

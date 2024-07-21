@@ -30,20 +30,15 @@ async def async_setup_entry(
     config_entry: OncueConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensors."""
+    """Set up binary sensors."""
     coordinator = config_entry.runtime_data
-    entities: list[OncueBinarySensorEntity] = []
     devices = coordinator.data
-    for device_id, device in devices.items():
-        entities.extend(
-            OncueBinarySensorEntity(
-                coordinator, device_id, device, sensor, SENSOR_MAP[key]
-            )
-            for key, sensor in device.sensors.items()
-            if key in SENSOR_MAP
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OncueBinarySensorEntity(coordinator, device_id, device, sensor, SENSOR_MAP[key])
+        for device_id, device in devices.items()
+        for key, sensor in device.sensors.items()
+        if key in SENSOR_MAP
+    )
 
 
 class OncueBinarySensorEntity(OncueEntity, BinarySensorEntity):
