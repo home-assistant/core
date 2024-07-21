@@ -83,7 +83,7 @@ class MealieStatisticSensors(MealieEntity, SensorEntity):
         coordinator: MealieStatisticsCoordinator,
         description: MealieStatisticsSensorEntityDescription,
     ) -> None:
-        """Initialize airgradient sensor."""
+        """Initialize Mealie sensor."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
         self._attr_translation_key = description.key
