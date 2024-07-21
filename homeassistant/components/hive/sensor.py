@@ -45,6 +45,49 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    SensorEntityDescription(
+        key="Heating_Current_Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer",
+    ),
+    SensorEntityDescription(
+        key="Heating_Target_Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer",
+    ),
+    SensorEntityDescription(
+        key="Heating_State",
+        icon="mdi:radiator",
+    ),
+    SensorEntityDescription(
+        key="Heating_Mode",
+        icon="mdi:radiator",
+    ),
+    SensorEntityDescription(
+        key="Heating_Boost",
+        icon="mdi:radiator",
+    ),
+    SensorEntityDescription(
+        key="Hotwater_State",
+        icon="mdi:hand-water",
+    ),
+    SensorEntityDescription(
+        key="Hotwater_Mode",
+        icon="mdi:hand-water",
+    ),
+    SensorEntityDescription(
+        key="Hotwater_Boost",
+        icon="mdi:hand-water",
+    ),
+    SensorEntityDescription(
+        key="Availability",
+        icon="mdi:check-circle"
+    ),
+
 )
 
 
