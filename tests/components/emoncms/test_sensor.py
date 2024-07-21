@@ -3,14 +3,11 @@
 import copy
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.emoncms.const import (
-    CONF_ONLY_INCLUDE_FEEDID,
-    CONF_SENSOR_NAMES,
-    DOMAIN,
-    FEED_NAME,
-)
+from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
@@ -20,9 +17,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .conftest import FEEDS, FLOW_RESULT
+from .conftest import FEEDS2, FLOW_RESULT, SENSOR_NAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 YAML = {
     CONF_PLATFORM: "emoncms",
@@ -65,7 +62,7 @@ def config_no_feed() -> MockConfigEntry:
     """Mock emoncms config entry with no feed selected."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title=FLOW_RESULT_NO_FEED[CONF_ID],
+        title=SENSOR_NAME,
         data=FLOW_RESULT_NO_FEED,
     )
 
@@ -92,7 +89,7 @@ async def test_no_feed_broadcast(
     entity_registry: er.EntityRegistry,
     emoncms_client_no_feed: AsyncMock,
 ) -> None:
-    """Test with no feed selected."""
+    """Test with no feed broadcasted."""
     await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -102,35 +99,43 @@ async def test_no_feed_broadcast(
     assert entity_entries == []
 
 
-FLOW_RESULT_SENSOR_NAME = copy.deepcopy(FLOW_RESULT)
-FLOW_RESULT_SENSOR_NAME[CONF_SENSOR_NAMES] = {2: "energy_kitchen"}
-
-
-@pytest.fixture
-def config_sensor_name() -> MockConfigEntry:
-    """Mock emoncms config entry with no feed selected."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title=FLOW_RESULT_SENSOR_NAME[CONF_ID],
-        data=FLOW_RESULT_SENSOR_NAME,
-    )
-
-
-async def test_sensor_name(
+async def test_coordinator_update(
     hass: HomeAssistant,
-    config_sensor_name: MockConfigEntry,
+    config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     emoncms_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test with no sensor name provided."""
-    await setup_integration(hass, config_sensor_name)
+    """Test coordinator update."""
+    await setup_integration(hass, config_entry)
 
-    assert config_sensor_name.state is ConfigEntryState.LOADED
     entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_sensor_name.entry_id
+        entity_registry, config_entry.entry_id
     )
-    for nb, feed in enumerate(FEEDS):
-        if entity_entries[nb].unique_id.endswith("-2"):
-            assert entity_entries[nb].original_name == "energy_kitchen"
-        else:
-            assert entity_entries[nb].original_name == f"EmonCMS {feed[FEED_NAME]}"
+    for entity_entry in entity_entries:
+        state = hass.states.get(entity_entry.entity_id)
+        assert state == snapshot
+
+    async def skip_time() -> None:
+        freezer.tick(60)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    emoncms_client.async_request.return_value = {"success": True, "message": FEEDS2}
+
+    await skip_time()
+
+    for entity_entry in entity_entries:
+        state = hass.states.get(entity_entry.entity_id)
+        assert state == snapshot
+
+    emoncms_client.async_request.return_value = {
+        "success": False,
+        "message": "failure",
+    }
+
+    await skip_time()
+
+    assert f"Error fetching {DOMAIN}_coordinator data" in caplog.text

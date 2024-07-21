@@ -8,48 +8,51 @@ import pytest
 from homeassistant.components.emoncms.const import (
     CONF_EXCLUDE_FEEDID,
     CONF_ONLY_INCLUDE_FEEDID,
-    CONF_SENSOR_NAMES,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_URL,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_UNIT_OF_MEASUREMENT, CONF_URL
 
 from tests.common import MockConfigEntry
 
 UNITS = ["kWh", "Wh", "W", "V", "A", "VA", "°C", "°F", "K", "Hz", "hPa", ""]
 
+
+def get_feed(
+    number: int, unit: str = "W", value: int = 18.04, timestamp: int = 1665509570
+):
+    """Generate feed details."""
+    return {
+        "id": str(number + 1),
+        "userid": "1",
+        "name": f"parameter {number + 1}",
+        "tag": "tag",
+        "size": "35809224",
+        "unit": unit,
+        "time": timestamp,
+        "value": value,
+    }
+
+
 FEEDS = []
 for i, unit in enumerate(UNITS):
-    FEEDS.append(
-        {
-            "id": str(i + 1),
-            "userid": "1",
-            "name": f"parameter {i + 1}",
-            "tag": "tag",
-            "size": "35809224",
-            "unit": unit,
-            "time": 1665509570,
-            "value": 18.040000915527,
-        }
-    )
+    FEEDS.append(get_feed(i, unit=unit))
 
-FAILURE_MESSAGE = "failure"
+
+FEEDS2 = []
+for i, unit in enumerate(UNITS):
+    FEEDS2.append(get_feed(i, unit=unit, value=24.04, timestamp=1665509670))
+
+FAILURE_MESSAGE = "client error"
 
 FLOW_RESULT = {
     CONF_API_KEY: "my_api_key",
-    CONF_ID: 1,
     CONF_ONLY_INCLUDE_FEEDID: [str(i + 1) for i in range(len(UNITS))],
     CONF_URL: "http://1.1.1.1",
-    CONF_VALUE_TEMPLATE: "{{ value | float + 1500 }}",
     CONF_EXCLUDE_FEEDID: None,
-    CONF_SENSOR_NAMES: None,
     CONF_UNIT_OF_MEASUREMENT: None,
 }
+
+SENSOR_NAME = "emoncms@1.1.1.1"
 
 
 @pytest.fixture
@@ -57,7 +60,7 @@ def config_entry() -> MockConfigEntry:
     """Mock emoncms config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title=FLOW_RESULT[CONF_ID],
+        title=SENSOR_NAME,
         data=FLOW_RESULT,
     )
 
@@ -84,7 +87,6 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}
-        client.async_list_feeds.return_value = FEEDS
         yield client
 
 
@@ -102,5 +104,4 @@ def emoncms_client_failure(emoncms_client):
 def emoncms_client_no_feed(emoncms_client):
     """Mock pyemoncms success response with no uuid."""
     emoncms_client.async_request.return_value = {"success": True, "message": []}
-    emoncms_client.async_list_feeds.return_value = None
     return emoncms_client

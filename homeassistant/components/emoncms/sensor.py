@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
-    STATE_UNKNOWN,
     UnitOfPower,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
@@ -31,12 +30,8 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_EXCLUDE_FEEDID,
-    CONF_ONLY_INCLUDE_FEEDID,
-    CONF_SENSOR_NAMES,
-    DOMAIN,
-)
+from .config_flow import sensor_name
+from .const import CONF_EXCLUDE_FEEDID, CONF_ONLY_INCLUDE_FEEDID, DOMAIN, FEED_NAME
 from .coordinator import EmoncmsCoordinator
 
 ATTR_FEEDID = "FeedId"
@@ -46,7 +41,7 @@ ATTR_LASTUPDATETIMESTR = "LastUpdatedStr"
 ATTR_SIZE = "Size"
 ATTR_TAG = "Tag"
 ATTR_USERID = "UserId"
-
+CONF_SENSOR_NAMES = "sensor_names"
 DECIMALS = 2
 DEFAULT_UNIT = UnitOfPower.WATT
 
@@ -109,25 +104,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the emoncms sensors."""
     config = entry.data
-    sensorid = config[CONF_ID]
-    value_template = None
-    if config.get(CONF_VALUE_TEMPLATE) is not None:
-        value_template = template.Template(config[CONF_VALUE_TEMPLATE])
+    name = sensor_name(config[CONF_URL])
     config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
-    sensor_names = config.get(CONF_SENSOR_NAMES)
 
     if exclude_feeds is None and include_only_feeds is None:
         return
 
-    if value_template is not None:
-        value_template.hass = hass
-
     coordinator = entry.runtime_data
     await coordinator.async_refresh()
     elems = coordinator.data
-    if elems is None:
+    if not elems:
         return
 
     sensors: list[EmonCmsSensor] = []
@@ -139,10 +127,6 @@ async def async_setup_entry(
         if include_only_feeds is not None and elem["id"] not in include_only_feeds:
             continue
 
-        name = None
-        if sensor_names is not None:
-            name = sensor_names.get(int(elem["id"]), None)
-
         if unit := elem.get("unit"):
             unit_of_measurement = unit
         else:
@@ -152,10 +136,8 @@ async def async_setup_entry(
             EmonCmsSensor(
                 coordinator,
                 entry.entry_id,
-                name,
-                value_template,
                 unit_of_measurement,
-                str(sensorid),
+                name,
                 idx,
             )
         )
@@ -169,10 +151,8 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         self,
         coordinator: EmoncmsCoordinator,
         entry_id: str,
-        name: str | None,
-        value_template: template.Template | None,
         unit_of_measurement: str | None,
-        sensorid: str,
+        name: str,
         idx: int,
     ) -> None:
         """Initialize the sensor."""
@@ -181,19 +161,8 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         elem = {}
         if self.coordinator.data:
             elem = self.coordinator.data[self.idx]
-        if name is None:
-            # Suppress ID in sensor name if it's 1, since most people won't
-            # have more than one EmonCMS source and it's redundant to show the
-            # ID if there's only one.
-            id_for_name = "" if str(sensorid) == "1" else sensorid
-            # Use the feed name assigned in EmonCMS or fall back to the feed ID
-            feed_name = elem.get("name", f"Feed {elem.get('id')}")
-            self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
-        else:
-            self._attr_name = name
-        self._value_template = value_template
+        self._attr_name = f"{name} {elem[FEED_NAME]}"
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._sensorid = sensorid
         self._attr_unique_id = f"{entry_id}-{elem['id']}"
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
@@ -237,13 +206,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             )
 
         self._attr_native_value = None
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.async_render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
-            )
-        elif elem["value"] is not None:
+        if elem["value"] is not None:
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
     @callback

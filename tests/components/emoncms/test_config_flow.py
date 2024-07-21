@@ -18,14 +18,12 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
-    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import template
 
 from . import setup_integration
-from .conftest import FAILURE_MESSAGE, FLOW_RESULT
+from .conftest import FAILURE_MESSAGE, FLOW_RESULT, SENSOR_NAME
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +32,6 @@ YAML = {
     CONF_API_KEY: "my_api_key",
     CONF_ID: 1,
     CONF_URL: "http://1.1.1.1",
-    CONF_VALUE_TEMPLATE: template.Template("{{ value | float + 1500 }}"),
 }
 
 
@@ -54,7 +51,7 @@ async def test_flow_import_all_feeds(
     """YAML import of all feeds - success test."""
     result = await flow_import(hass, YAML)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == FLOW_RESULT[CONF_ID]
+    assert result["title"] == SENSOR_NAME
     assert result["data"] == FLOW_RESULT
 
 
@@ -73,7 +70,7 @@ async def test_flow_import_include_feeds(
     """YAML import with included feed - success test."""
     result = await flow_import(hass, YAML_INCL_FEED)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == FLOW_RESULT_INCL_FEED[CONF_ID]
+    assert result["title"] == SENSOR_NAME
     assert result["data"] == FLOW_RESULT_INCL_FEED
 
 
@@ -92,7 +89,7 @@ async def test_flow_import_exclude_feed(
     """YAML import with excluded feed - success test."""
     result = await flow_import(hass, YAML_EXCL_FEED)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == FLOW_RESULT_EXCL_FEED[CONF_ID]
+    assert result["title"] == SENSOR_NAME
     assert result["data"] == FLOW_RESULT_EXCL_FEED
 
 
@@ -132,10 +129,8 @@ USER_INPUT = {
 
 CONFIG_ENTRY = {
     CONF_API_KEY: "my_api_key",
-    CONF_ID: 1,
     CONF_ONLY_INCLUDE_FEEDID: ["1"],
     CONF_URL: "http://1.1.1.1",
-    CONF_VALUE_TEMPLATE: "{{ value | float + 1500 }}",
     CONF_EXCLUDE_FEEDID: None,
     CONF_UNIT_OF_MEASUREMENT: None,
 }
@@ -155,7 +150,7 @@ def config_entry_excl_feed() -> MockConfigEntry:
     """Mock emoncms config entry with excluded fields."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title=FLOW_RESULT_EXCL_FEED[CONF_ID],
+        title=SENSOR_NAME,
         data=FLOW_RESULT_EXCL_FEED,
     )
 
