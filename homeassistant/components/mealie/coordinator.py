@@ -61,6 +61,19 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
         self.client = client
 
+    async def _async_update_data(self) -> _DataT:
+        """Fetch data from Mealie."""
+        try:
+            return await self._async_update_internal()
+        except MealieAuthenticationError as error:
+            raise ConfigEntryAuthFailed from error
+        except MealieConnectionError as error:
+            raise UpdateFailed(error) from error
+
+    async def _async_update_internal(self) -> _DataT:
+        """Fetch data from Mealie."""
+        raise NotImplementedError
+
 
 class MealieMealplanCoordinator(
     MealieDataUpdateCoordinator[dict[MealplanEntryType, list[Mealplan]]]
@@ -77,16 +90,11 @@ class MealieMealplanCoordinator(
         )
         self.client = client
 
-    async def _async_update_data(self) -> dict[MealplanEntryType, list[Mealplan]]:
+    async def _async_update_internal(self) -> dict[MealplanEntryType, list[Mealplan]]:
         next_week = dt_util.now() + WEEK
-        try:
-            data = (
-                await self.client.get_mealplans(dt_util.now().date(), next_week.date())
-            ).items
-        except MealieAuthenticationError as error:
-            raise ConfigEntryAuthFailed from error
-        except MealieConnectionError as error:
-            raise UpdateFailed(error) from error
+        data = (
+            await self.client.get_mealplans(dt_util.now().date(), next_week.date())
+        ).items
         res: dict[MealplanEntryType, list[Mealplan]] = {
             MealplanEntryType.BREAKFAST: [],
             MealplanEntryType.LUNCH: [],
@@ -120,26 +128,21 @@ class MealieShoppingListCoordinator(
             update_interval=timedelta(minutes=5),
         )
 
-    async def _async_update_data(
+    async def _async_update_internal(
         self,
     ) -> dict[str, ShoppingListData]:
         shopping_list_items = {}
-        try:
-            shopping_lists = (await self.client.get_shopping_lists()).items
-            for shopping_list in shopping_lists:
-                shopping_list_id = shopping_list.list_id
+        shopping_lists = (await self.client.get_shopping_lists()).items
+        for shopping_list in shopping_lists:
+            shopping_list_id = shopping_list.list_id
 
-                shopping_items = (
-                    await self.client.get_shopping_items(shopping_list_id)
-                ).items
+            shopping_items = (
+                await self.client.get_shopping_items(shopping_list_id)
+            ).items
 
-                shopping_list_items[shopping_list_id] = ShoppingListData(
-                    shopping_list=shopping_list, items=shopping_items
-                )
-        except MealieAuthenticationError as error:
-            raise ConfigEntryAuthFailed from error
-        except MealieConnectionError as error:
-            raise UpdateFailed(error) from error
+            shopping_list_items[shopping_list_id] = ShoppingListData(
+                shopping_list=shopping_list, items=shopping_items
+            )
         return shopping_list_items
 
 
@@ -155,12 +158,7 @@ class MealieStatisticsCoordinator(MealieDataUpdateCoordinator[Statistics]):
             update_interval=timedelta(minutes=15),
         )
 
-    async def _async_update_data(
+    async def _async_update_internal(
         self,
     ) -> Statistics:
-        try:
-            return await self.client.get_statistics()
-        except MealieAuthenticationError as error:
-            raise ConfigEntryAuthFailed from error
-        except MealieConnectionError as error:
-            raise UpdateFailed(error) from error
+        return await self.client.get_statistics()
