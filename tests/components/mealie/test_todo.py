@@ -3,8 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiomealie import ShoppingListsResponse
-from aiomealie.exceptions import MealieError
+from aiomealie import MealieError, ShoppingListsResponse
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
