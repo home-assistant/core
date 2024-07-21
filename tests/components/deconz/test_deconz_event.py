@@ -243,32 +243,30 @@ async def test_deconz_events(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "battery": 95,
-                    "enrolled": 1,
-                    "on": True,
-                    "pending": [],
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
-                "lastseen": "2021-07-25T18:07Z",
-                "manufacturername": "lk",
-                "modelid": "ZB-KeypadGeneric-D0002",
-                "name": "Keypad",
-                "state": {
-                    "action": "invalid_code",
-                    "lastupdated": "2021-07-25T18:02:51.172",
-                    "lowbattery": False,
-                    "panel": "exit_delay",
-                    "seconds_remaining": 55,
-                    "tampered": False,
-                },
-                "swversion": "3.13",
-                "type": "ZHAAncillaryControl",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "config": {
+                "battery": 95,
+                "enrolled": 1,
+                "on": True,
+                "pending": [],
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
+            "lastseen": "2021-07-25T18:07Z",
+            "manufacturername": "lk",
+            "modelid": "ZB-KeypadGeneric-D0002",
+            "name": "Keypad",
+            "state": {
+                "action": "invalid_code",
+                "lastupdated": "2021-07-25T18:02:51.172",
+                "lowbattery": False,
+                "panel": "exit_delay",
+                "seconds_remaining": 55,
+                "tampered": False,
+            },
+            "swversion": "3.13",
+            "type": "ZHAAncillaryControl",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -296,7 +294,6 @@ async def test_deconz_alarm_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"action": AncillaryControlAction.EMERGENCY},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -318,7 +315,6 @@ async def test_deconz_alarm_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"action": AncillaryControlAction.FIRE},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -340,7 +336,6 @@ async def test_deconz_alarm_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"action": AncillaryControlAction.INVALID_CODE},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -362,7 +357,6 @@ async def test_deconz_alarm_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"action": AncillaryControlAction.PANIC},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -384,7 +378,6 @@ async def test_deconz_alarm_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"action": AncillaryControlAction.ARMED_AWAY},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -396,7 +389,6 @@ async def test_deconz_alarm_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -420,29 +412,27 @@ async def test_deconz_alarm_events(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "devicemode": "undirected",
-                    "on": True,
-                    "reachable": True,
-                    "sensitivity": 3,
-                    "triggerdistance": "medium",
-                },
-                "etag": "13ff209f9401b317987d42506dd4cd79",
-                "lastannounced": None,
-                "lastseen": "2022-06-28T23:13Z",
-                "manufacturername": "aqara",
-                "modelid": "lumi.motion.ac01",
-                "name": "Aqara FP1",
-                "state": {
-                    "lastupdated": "2022-06-28T23:13:38.577",
-                    "presence": True,
-                    "presenceevent": "leave",
-                },
-                "swversion": "20210121",
-                "type": "ZHAPresence",
-                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
-            }
+            "config": {
+                "devicemode": "undirected",
+                "on": True,
+                "reachable": True,
+                "sensitivity": 3,
+                "triggerdistance": "medium",
+            },
+            "etag": "13ff209f9401b317987d42506dd4cd79",
+            "lastannounced": None,
+            "lastseen": "2022-06-28T23:13Z",
+            "manufacturername": "aqara",
+            "modelid": "lumi.motion.ac01",
+            "name": "Aqara FP1",
+            "state": {
+                "lastupdated": "2022-06-28T23:13:38.577",
+                "presence": True,
+                "presenceevent": "leave",
+            },
+            "swversion": "20210121",
+            "type": "ZHAPresence",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         }
     ],
 )
@@ -481,7 +471,6 @@ async def test_deconz_presence_events(
     ):
         event_changed_sensor = {
             "r": "sensors",
-            "id": "1",
             "state": {"presenceevent": presence_event},
         }
         await mock_websocket_data(event_changed_sensor)
@@ -500,7 +489,6 @@ async def test_deconz_presence_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"presenceevent": PresenceStatePresenceEvent.NINE},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -524,28 +512,26 @@ async def test_deconz_presence_events(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "battery": 100,
-                    "on": True,
-                    "reachable": True,
-                },
-                "etag": "463728970bdb7d04048fc4373654f45a",
-                "lastannounced": "2022-07-03T13:57:59Z",
-                "lastseen": "2022-07-03T14:02Z",
-                "manufacturername": "Signify Netherlands B.V.",
-                "modelid": "RDM002",
-                "name": "RDM002 44",
-                "state": {
-                    "expectedeventduration": 400,
-                    "expectedrotation": 75,
-                    "lastupdated": "2022-07-03T11:37:49.586",
-                    "rotaryevent": 2,
-                },
-                "swversion": "2.59.19",
-                "type": "ZHARelativeRotary",
-                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-14-fc00",
-            }
+            "config": {
+                "battery": 100,
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "463728970bdb7d04048fc4373654f45a",
+            "lastannounced": "2022-07-03T13:57:59Z",
+            "lastseen": "2022-07-03T14:02Z",
+            "manufacturername": "Signify Netherlands B.V.",
+            "modelid": "RDM002",
+            "name": "RDM002 44",
+            "state": {
+                "expectedeventduration": 400,
+                "expectedrotation": 75,
+                "lastupdated": "2022-07-03T11:37:49.586",
+                "rotaryevent": 2,
+            },
+            "swversion": "2.59.19",
+            "type": "ZHARelativeRotary",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-14-fc00",
         }
     ],
 )
@@ -575,7 +561,6 @@ async def test_deconz_relative_rotary_events(
     for rotary_event, duration, rotation in ((1, 100, 50), (2, 200, -50)):
         event_changed_sensor = {
             "r": "sensors",
-            "id": "1",
             "state": {
                 "rotaryevent": rotary_event,
                 "expectedeventduration": duration,
@@ -600,7 +585,6 @@ async def test_deconz_relative_rotary_events(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "name": "123",
     }
     await mock_websocket_data(event_changed_sensor)

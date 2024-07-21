@@ -23,18 +23,16 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 TEST_DATA = [
     (  # Presence sensor - delay configuration
         {
-            "0": {
-                "name": "Presence sensor",
-                "type": "ZHAPresence",
-                "state": {"dark": False, "presence": False},
-                "config": {
-                    "delay": 0,
-                    "on": True,
-                    "reachable": True,
-                    "temperature": 10,
-                },
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "name": "Presence sensor",
+            "type": "ZHAPresence",
+            "state": {"dark": False, "presence": False},
+            "config": {
+                "delay": 0,
+                "on": True,
+                "reachable": True,
+                "temperature": 10,
+            },
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         },
         {
             "entity_count": 3,
@@ -61,18 +59,16 @@ TEST_DATA = [
     ),
     (  # Presence sensor - duration configuration
         {
-            "0": {
-                "name": "Presence sensor",
-                "type": "ZHAPresence",
-                "state": {"dark": False, "presence": False},
-                "config": {
-                    "duration": 0,
-                    "on": True,
-                    "reachable": True,
-                    "temperature": 10,
-                },
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "name": "Presence sensor",
+            "type": "ZHAPresence",
+            "state": {"dark": False, "presence": False},
+            "config": {
+                "duration": 0,
+                "on": True,
+                "reachable": True,
+                "temperature": 10,
+            },
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         },
         {
             "entity_count": 3,
