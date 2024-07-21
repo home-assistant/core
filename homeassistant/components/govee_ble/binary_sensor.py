@@ -68,7 +68,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the govee-ble BLE sensors."""
     coordinator = entry.runtime_data
-    coordinator = entry.runtime_data
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
