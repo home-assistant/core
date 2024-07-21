@@ -158,7 +158,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
 
     @callback
     def async_update_group_state(self) -> None:
-        """Query all members and determine the button group state."""
+        """Query all members and determine the notify group state."""
         # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(
             state.state != STATE_UNAVAILABLE
