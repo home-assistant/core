@@ -1740,6 +1740,9 @@ pybbox==0.0.5-alpha
 # homeassistant.components.blackbird
 pyblackbird==0.6
 
+# homeassistant.components.bluesound
+pyblu==0.4.0
+
 # homeassistant.components.neato
 pybotvac==0.0.25
 
@@ -2920,7 +2923,6 @@ xknx==2.12.2
 # homeassistant.components.knx
 xknxproject==3.7.1
 
-# homeassistant.components.bluesound
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
