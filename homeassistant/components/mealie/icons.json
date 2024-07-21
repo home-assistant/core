@@ -4,6 +4,23 @@
       "shopping_list": {
         "default": "mdi:basket"
       }
+    },
+    "sensor": {
+      "recipes": {
+        "default": "mdi:food"
+      },
+      "users": {
+        "default": "mdi:account-multiple"
+      },
+      "categories": {
+        "default": "mdi:shape"
+      },
+      "tags": {
+        "default": "mdi:tag-multiple"
+      },
+      "tools": {
+        "default": "mdi:tools"
+      }
     }
   },
   "services": {
