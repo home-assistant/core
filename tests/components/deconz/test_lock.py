@@ -27,19 +27,17 @@ from tests.test_util.aiohttp import AiohttpClientMocker
     "light_payload",
     [
         {
-            "1": {
-                "etag": "5c2ec06cde4bd654aef3a555fcd8ad12",
-                "hascolor": False,
-                "lastannounced": None,
-                "lastseen": "2020-08-22T15:29:03Z",
-                "manufacturername": "Danalock",
-                "modelid": "V3-BTZB",
-                "name": "Door lock",
-                "state": {"alert": "none", "on": False, "reachable": True},
-                "swversion": "19042019",
-                "type": "Door Lock",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "etag": "5c2ec06cde4bd654aef3a555fcd8ad12",
+            "hascolor": False,
+            "lastannounced": None,
+            "lastseen": "2020-08-22T15:29:03Z",
+            "manufacturername": "Danalock",
+            "modelid": "V3-BTZB",
+            "name": "Door lock",
+            "state": {"alert": "none", "on": False, "reachable": True},
+            "swversion": "19042019",
+            "type": "Door Lock",
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -53,19 +51,14 @@ async def test_lock_from_light(
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
-    event_changed_light = {
-        "r": "lights",
-        "id": "1",
-        "state": {"on": True},
-    }
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"on": True}})
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
 
     # Verify service calls
 
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service lock door
 
@@ -103,27 +96,25 @@ async def test_lock_from_light(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "battery": 100,
-                    "lock": False,
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 11,
-                "etag": "a43862f76b7fa48b0fbb9107df123b0e",
-                "lastseen": "2021-03-06T22:25Z",
-                "manufacturername": "Onesti Products AS",
-                "modelid": "easyCodeTouch_v1",
-                "name": "Door lock",
-                "state": {
-                    "lastupdated": "2021-03-06T21:25:45.624",
-                    "lockstate": "unlocked",
-                },
-                "swversion": "20201211",
-                "type": "ZHADoorLock",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "config": {
+                "battery": 100,
+                "lock": False,
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 11,
+            "etag": "a43862f76b7fa48b0fbb9107df123b0e",
+            "lastseen": "2021-03-06T22:25Z",
+            "manufacturername": "Onesti Products AS",
+            "modelid": "easyCodeTouch_v1",
+            "name": "Door lock",
+            "state": {
+                "lastupdated": "2021-03-06T21:25:45.624",
+                "lockstate": "unlocked",
+            },
+            "swversion": "20201211",
+            "type": "ZHADoorLock",
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -137,19 +128,18 @@ async def test_lock_from_sensor(
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
-    event_changed_light = {
+    event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"lockstate": "locked"},
     }
-    await mock_websocket_data(event_changed_light)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
 
     # Verify service calls
 
-    aioclient_mock = mock_put_request("/sensors/1/config")
+    aioclient_mock = mock_put_request("/sensors/0/config")
 
     # Service lock door
 

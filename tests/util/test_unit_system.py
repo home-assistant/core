@@ -15,6 +15,7 @@ from homeassistant.const import (
     WIND_SPEED,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -42,7 +43,7 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -55,7 +56,7 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=INVALID_UNIT,
             mass=UnitOfMass.GRAMS,
@@ -68,7 +69,7 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -81,7 +82,7 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -94,7 +95,7 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=INVALID_UNIT,
@@ -107,7 +108,7 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,

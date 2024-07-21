@@ -55,12 +55,10 @@ async def test_configure_service_with_field(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Test",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Test",
+            "state": {"reachable": True},
+            "type": "Light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -74,7 +72,7 @@ async def test_configure_service_with_entity(
         SERVICE_ENTITY: "light.test",
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
-    aioclient_mock = mock_put_request("/lights/1")
+    aioclient_mock = mock_put_request("/lights/0")
 
     await hass.services.async_call(
         DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
@@ -86,12 +84,10 @@ async def test_configure_service_with_entity(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Test",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Test",
+            "state": {"reachable": True},
+            "type": "Light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -106,7 +102,7 @@ async def test_configure_service_with_entity_and_field(
         SERVICE_FIELD: "/state",
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
         DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
@@ -243,13 +239,11 @@ async def test_service_refresh_devices(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -288,7 +282,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
             }
         },
         "sensors": {
-            "1": {
+            "0": {
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -312,12 +306,10 @@ async def test_service_refresh_devices_trigger_no_state_update(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Light 1 name",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Light 0 name",
+            "state": {"reachable": True},
+            "type": "Light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -325,13 +317,11 @@ async def test_service_refresh_devices_trigger_no_state_update(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000, "gesture": 1},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000, "gesture": 1},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:03-00",
         }
     ],
 )

@@ -32,7 +32,6 @@ BUTTON_DESCRIPTIONS = [
 ]
 MOTION_DESCRIPTION = EventEntityDescription(
     key="motion",
-    translation_key="motion",
     event_types=["motion"],
     device_class=EventDeviceClass.MOTION,
 )

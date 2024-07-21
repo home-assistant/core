@@ -819,7 +819,7 @@ async def test_statistic_during_period_partial_overlap(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    frozen_time: datetime,
+    frozen_time: datetime.datetime,
 ) -> None:
     """Test statistic_during_period."""
     client = await hass_ws_client()

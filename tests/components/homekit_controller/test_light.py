@@ -1,9 +1,11 @@
 """Basic checks for HomeKitSwitch."""
 
 from collections.abc import Callable
+from unittest import mock
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from aiohomekit.testing import FakeController
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.components.light import (
@@ -372,7 +374,12 @@ async def test_light_becomes_unavailable_but_recovers(
 
     # Test device goes offline
     helper.pairing.available = False
-    state = await helper.poll_and_get_state()
+    with mock.patch.object(
+        FakeController,
+        "async_reachable",
+        return_value=False,
+    ):
+        state = await helper.poll_and_get_state()
     assert state.state == "unavailable"
 
     # Simulate that someone switched on the device in the real world not via HA

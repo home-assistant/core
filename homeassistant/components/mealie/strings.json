@@ -53,6 +53,23 @@
       "side": {
         "name": "Side"
       }
+    },
+    "sensor": {
+      "recipes": {
+        "name": "Recipes"
+      },
+      "users": {
+        "name": "Users"
+      },
+      "categories": {
+        "name": "Categories"
+      },
+      "tags": {
+        "name": "Tags"
+      },
+      "tools": {
+        "name": "Tools"
+      }
     }
   },
   "exceptions": {

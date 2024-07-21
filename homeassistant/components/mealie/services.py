@@ -4,11 +4,7 @@ from dataclasses import asdict
 from datetime import date
 from typing import cast
 
-from aiomealie.exceptions import (
-    MealieConnectionError,
-    MealieNotFoundError,
-    MealieValidationError,
-)
+from aiomealie import MealieConnectionError, MealieNotFoundError, MealieValidationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState

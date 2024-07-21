@@ -488,7 +488,7 @@ class Recorder(threading.Thread):
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
-    def _async_startup_failed(self) -> None:
+    def _async_startup_done(self, startup_failed: bool) -> None:
         """Report startup failure."""
         # If a live migration failed, we were able to connect (async_db_connected
         # marked True), the database was marked ready (async_db_ready marked
@@ -499,11 +499,12 @@ class Recorder(threading.Thread):
             self.async_db_connected.set_result(False)
         if not self.async_db_ready.done():
             self.async_db_ready.set_result(False)
-        persistent_notification.async_create(
-            self.hass,
-            "The recorder could not start, check [the logs](/config/logs)",
-            "Recorder",
-        )
+        if startup_failed:
+            persistent_notification.async_create(
+                self.hass,
+                "The recorder could not start, check [the logs](/config/logs)",
+                "Recorder",
+            )
         self._async_stop_listeners()
 
     @callback
@@ -1484,16 +1485,15 @@ class Recorder(threading.Thread):
     def _shutdown(self) -> None:
         """Save end time for current run."""
         _LOGGER.debug("Shutting down recorder")
-        if not self.schema_version or self.schema_version != SCHEMA_VERSION:
-            # If the schema version is not set, we never had a working
-            # connection to the database or the schema never reached a
-            # good state.
-            #
-            # In either case, we want to mark startup as failed.
-            #
-            self.hass.add_job(self._async_startup_failed)
-        else:
-            self.hass.add_job(self._async_stop_listeners)
+
+        # If the schema version is not set, we never had a working
+        # connection to the database or the schema never reached a
+        # good state.
+        # In either case, we want to mark startup as failed.
+        startup_failed = (
+            not self.schema_version or self.schema_version != SCHEMA_VERSION
+        )
+        self.hass.add_job(self._async_startup_done, startup_failed)
 
         try:
             self._end_session()
