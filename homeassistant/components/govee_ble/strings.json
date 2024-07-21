@@ -75,7 +75,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "press": "Press"
+              "press": "[%key:component::govee_ble::entity::event::button_0::state_attributes::event_type::state::press%]"
             }
           }
         }
