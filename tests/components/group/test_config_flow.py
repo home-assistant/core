@@ -481,7 +481,6 @@ async def test_options_flow_hides_members(
 
 COVER_ATTRS = [{"supported_features": 0}, {}]
 EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
-NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 FAN_ATTRS = [{"supported_features": 0}, {}]
 LIGHT_ATTRS = [
     {
@@ -492,6 +491,7 @@ LIGHT_ATTRS = [
     {"color_mode": "unknown"},
 ]
 LOCK_ATTRS = [{"supported_features": 1}, {}]
+NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
 
