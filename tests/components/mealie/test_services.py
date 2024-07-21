@@ -280,6 +280,47 @@ async def test_service_set_random_mealplan(
         date(2023, 10, 21), MealplanEntryType.LUNCH
     )
 
+    mock_mealie_client.random_mealplan.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_RANDOM_MEALPLAN,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_DATE: "2023-10-21",
+            ATTR_ENTRY_TYPE: "lunch",
+        },
+        blocking=True,
+        return_response=False,
+    )
+    mock_mealie_client.random_mealplan.assert_called_with(
+        date(2023, 10, 21), MealplanEntryType.LUNCH
+    )
+
+
+async def test_service_set_random_mealplan_exceptions(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the exceptions of the set_random_mealplan service."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.random_mealplan.side_effect = MealieConnectionError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_RANDOM_MEALPLAN,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_DATE: "2023-10-21",
+                ATTR_ENTRY_TYPE: "lunch",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
 
 async def test_service_mealplan_connection_error(
     hass: HomeAssistant,
