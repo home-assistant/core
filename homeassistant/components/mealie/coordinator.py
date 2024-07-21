@@ -82,16 +82,13 @@ class MealieMealplanCoordinator(
 
     async def _async_update_internal(self) -> dict[MealplanEntryType, list[Mealplan]]:
         next_week = dt_util.now() + WEEK
-        data = (
-            await self.client.get_mealplans(dt_util.now().date(), next_week.date())
-        ).items
+        current_date = dt_util.now().date()
+        next_week_date = next_week.date()
+        response = await self.client.get_mealplans(current_date, next_week_date)
         res: dict[MealplanEntryType, list[Mealplan]] = {
-            MealplanEntryType.BREAKFAST: [],
-            MealplanEntryType.LUNCH: [],
-            MealplanEntryType.DINNER: [],
-            MealplanEntryType.SIDE: [],
+            type_: [] for type_ in MealplanEntryType
         }
-        for meal in data:
+        for meal in response.items:
             res[meal.entry_type].append(meal)
         return res
 
