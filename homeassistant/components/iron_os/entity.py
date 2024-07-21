@@ -1,4 +1,4 @@
-"""Base entity for Pinecil integration."""
+"""Base entity for IronOS integration."""
 
 from __future__ import annotations
 
@@ -9,17 +9,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER, MODEL
-from .coordinator import PinecilCoordinator
+from .coordinator import IronOSCoordinator
 
 
-class PinecilBaseEntity(CoordinatorEntity[PinecilCoordinator]):
-    """Base Pinecil entity."""
+class IronOSBaseEntity(CoordinatorEntity[IronOSCoordinator]):
+    """Base IronOS entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: PinecilCoordinator,
+        coordinator: IronOSCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -36,6 +36,6 @@ class PinecilBaseEntity(CoordinatorEntity[PinecilCoordinator]):
             manufacturer=MANUFACTURER,
             model=MODEL,
             name="Pinecil",
-            sw_version=coordinator.device.build,
-            serial_number=f"{coordinator.device.device_sn} (ID:{coordinator.device.device_id})",
+            sw_version=coordinator.device_info.build,
+            serial_number=f"{coordinator.device_info.device_sn} (ID:{coordinator.device_info.device_id})",
         )

@@ -1,4 +1,4 @@
-"""Constants for the Pinecil integration."""
+"""Constants for the IronOS integration."""
 
 DOMAIN = "iron_os"
 

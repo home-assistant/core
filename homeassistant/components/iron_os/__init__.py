@@ -1,4 +1,4 @@
-"""The Pinecil integration."""
+"""The IronOS integration."""
 
 from __future__ import annotations
 
@@ -14,17 +14,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
-from .coordinator import PinecilCoordinator
+from .coordinator import IronOSCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type PinecilConfigEntry = ConfigEntry[PinecilCoordinator]
+type IronOSConfigEntry = ConfigEntry[IronOSCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PinecilConfigEntry) -> bool:
-    """Set up Pinecil from a config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
+    """Set up IronOS from a config entry."""
     if TYPE_CHECKING:
         assert entry.unique_id
     ble_device = bluetooth.async_ble_device_from_address(
@@ -37,9 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PinecilConfigEntry) -> b
             translation_placeholders={CONF_NAME: entry.title},
         )
 
-    pinecil = Pynecil(ble_device)
+    device = Pynecil(ble_device)
 
-    coordinator = PinecilCoordinator(hass, pinecil)
+    coordinator = IronOSCoordinator(hass, device)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -48,6 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PinecilConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PinecilConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

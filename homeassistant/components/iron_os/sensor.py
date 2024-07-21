@@ -1,4 +1,4 @@
-"""Sensor platform for Pinecil integration."""
+"""Sensor platform for IronOS integration."""
 
 from __future__ import annotations
 
@@ -26,9 +26,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import PinecilConfigEntry
+from . import IronOSConfigEntry
 from .const import OHM
-from .entity import PinecilBaseEntity
+from .entity import IronOSBaseEntity
 
 
 class PinecilSensor(StrEnum):
@@ -51,14 +51,14 @@ class PinecilSensor(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class PinecilSensorEntityDescription(SensorEntityDescription):
-    """Pinecil sensor entity descriptions."""
+class IronOSSensorEntityDescription(SensorEntityDescription):
+    """IronOS sensor entity descriptions."""
 
     value_fn: Callable[[LiveDataResponse], StateType]
 
 
-SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
-    PinecilSensorEntityDescription(
+PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
+    IronOSSensorEntityDescription(
         key=PinecilSensor.LIVE_TEMP,
         translation_key=PinecilSensor.LIVE_TEMP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -66,7 +66,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.live_temp,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.DC_VOLTAGE,
         translation_key=PinecilSensor.DC_VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -75,7 +75,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.dc_voltage,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.HANDLETEMP,
         translation_key=PinecilSensor.HANDLETEMP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -83,7 +83,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.handle_temp,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.PWMLEVEL,
         translation_key=PinecilSensor.PWMLEVEL,
         native_unit_of_measurement=PERCENTAGE,
@@ -93,7 +93,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.pwm_level,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.POWER_SRC,
         translation_key=PinecilSensor.POWER_SRC,
         device_class=SensorDeviceClass.ENUM,
@@ -101,14 +101,14 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.power_src.name.lower() if data.power_src else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.TIP_RESISTANCE,
         translation_key=PinecilSensor.TIP_RESISTANCE,
         native_unit_of_measurement=OHM,
         value_fn=lambda data: data.tip_resistance,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.UPTIME,
         translation_key=PinecilSensor.UPTIME,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -117,7 +117,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.uptime,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.MOVEMENT_TIME,
         translation_key=PinecilSensor.MOVEMENT_TIME,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -126,7 +126,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.movement_time,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.MAX_TIP_TEMP_ABILITY,
         translation_key=PinecilSensor.MAX_TIP_TEMP_ABILITY,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -134,7 +134,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.max_tip_temp_ability,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.TIP_VOLTAGE,
         translation_key=PinecilSensor.TIP_VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
@@ -144,7 +144,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.tip_voltage,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.HALL_SENSOR,
         translation_key=PinecilSensor.HALL_SENSOR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -152,7 +152,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         value_fn=lambda data: data.hall_sensor,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.OPERATING_MODE,
         translation_key=PinecilSensor.OPERATING_MODE,
         device_class=SensorDeviceClass.ENUM,
@@ -163,7 +163,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
             else None
         ),
     ),
-    PinecilSensorEntityDescription(
+    IronOSSensorEntityDescription(
         key=PinecilSensor.ESTIMATED_POWER,
         translation_key=PinecilSensor.ESTIMATED_POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -176,22 +176,22 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PinecilConfigEntry,
+    entry: IronOSConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
     coordinator = entry.runtime_data
 
     async_add_entities(
-        PinecilSensorEntity(coordinator, description)
-        for description in SENSOR_DESCRIPTIONS
+        IronOSSensorEntity(coordinator, description)
+        for description in PINECIL_SENSOR_DESCRIPTIONS
     )
 
 
-class PinecilSensorEntity(PinecilBaseEntity, SensorEntity):
-    """Representation of a Pinecil sensor entity."""
+class IronOSSensorEntity(IronOSBaseEntity, SensorEntity):
+    """Representation of a IronOS sensor entity."""
 
-    entity_description: PinecilSensorEntityDescription
+    entity_description: IronOSSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:

@@ -1,4 +1,4 @@
-"""Update coordinator for Pinecil Integration."""
+"""Update coordinator for IronOS Integration."""
 
 from __future__ import annotations
 
@@ -18,27 +18,27 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
-    """Pinecil coordinator."""
+class IronOSCoordinator(DataUpdateCoordinator[LiveDataResponse]):
+    """IronOS coordinator."""
 
-    device: DeviceInfoResponse
+    device_info: DeviceInfoResponse
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, pinecil: Pynecil) -> None:
-        """Initialize Pinecil coordinator."""
+    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
+        """Initialize IronOS coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self.pinecil = pinecil
+        self.device = device
 
     async def _async_update_data(self) -> LiveDataResponse:
-        """Fetch data from Pinecil."""
+        """Fetch data from Device."""
 
         try:
-            return await self.pinecil.get_live_data()
+            return await self.device.get_live_data()
 
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
@@ -46,4 +46,4 @@ class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
-        self.device = await self.pinecil.get_device_info()
+        self.device_info = await self.device.get_device_info()

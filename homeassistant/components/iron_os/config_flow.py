@@ -1,4 +1,4 @@
-"""Config flow for Pinecil integration."""
+"""Config flow for IronOS integration."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ from homeassistant.const import CONF_ADDRESS
 from .const import DISCOVERY_SVC_UUID, DOMAIN
 
 
-class PinecilConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Pinecil."""
+class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for IronOS."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""
