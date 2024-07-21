@@ -175,6 +175,36 @@
           "description": "The type of dish to randomize."
         }
       }
+    },
+    "set_mealplan": {
+      "name": "Set a mealplan",
+      "description": "Set a mealplan for a specific date",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "date": {
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::date::name%]",
+          "description": "[%key:component::mealie::services::set_random_mealplan::fields::date::description%]"
+        },
+        "entry_type": {
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::entry_type::name%]",
+          "description": "The type of dish to set the recipe to."
+        },
+        "recipe_id": {
+          "name": "[%key:component::mealie::services::get_recipe::fields::recipe_id::name%]",
+          "description": "[%key:component::mealie::services::get_recipe::fields::recipe_id::description%]"
+        },
+        "note_title": {
+          "name": "Note title",
+          "description": "The title of the note to add to the mealplan entry."
+        },
+        "note_text": {
+          "name": "Note text",
+          "description": "The text of the note to add to the mealplan entry."
+        }
+      }
     }
   },
   "selector": {
