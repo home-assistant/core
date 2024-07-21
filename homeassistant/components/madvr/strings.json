@@ -119,52 +119,52 @@
     },
     "button": {
       "reset_temporary": {
-        "name": "Reset Temporary"
+        "name": "Reset temporary"
       },
       "openmenu_info": {
-        "name": "Open Info Menu"
+        "name": "Open info menu"
       },
       "openmenu_settings": {
-        "name": "Open Settings Menu"
+        "name": "Open settings menu"
       },
       "openmenu_configuration": {
-        "name": "Open Configuration Menu"
+        "name": "Open configuration menu"
       },
       "openmenu_profiles": {
-        "name": "Open Profiles Menu"
+        "name": "Open profiles menu"
       },
       "openmenu_testpatterns": {
-        "name": "Open Test Patterns Menu"
+        "name": "Open test patterns menu"
       },
       "toggle_tonemap": {
-        "name": "Toggle Tone Map"
+        "name": "Toggle tone map"
       },
       "toggle_highlightrecovery": {
-        "name": "Toggle Highlight Recovery"
+        "name": "Toggle highlight recovery"
       },
       "toggle_contrastrecovery": {
-        "name": "Toggle Contrast Recovery"
+        "name": "Toggle contrast recovery"
       },
       "toggle_shadowrecovery": {
-        "name": "Toggle Shadow Recovery"
+        "name": "Toggle shadow recovery"
       },
       "toggle_3dlut": {
         "name": "Toggle 3D LUT"
       },
       "toggle_screenboundaries": {
-        "name": "Toggle Screen Boundaries"
+        "name": "Toggle screen boundaries"
       },
       "toggle_histogram": {
-        "name": "Toggle Histogram"
+        "name": "Toggle histogram"
       },
       "toggle_debugosd": {
-        "name": "Toggle Debug OSD"
+        "name": "Toggle debug osd"
       },
       "refresh_licenseinfo": {
-        "name": "Refresh License Info"
+        "name": "Refresh license info"
       },
       "force1080p60output": {
-        "name": "Force 1080p60 Output"
+        "name": "Force 1080p60 output"
       },
       "button_left": {
         "name": "Left"

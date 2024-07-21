@@ -41,12 +41,15 @@ MASKING_INT = "masking_int"
 class ButtonCommands(Enum):
     """Enum for madvr button commands and names."""
 
+    # these use an enum to make grabbing the value and name one operation
     reset_temporary = ["ResetTemporary"]
+    # menu commands
     openmenu_info = ["OpenMenu", "Info"]
     openmenu_settings = ["OpenMenu", "Settings"]
     openmenu_configuration = ["OpenMenu", "Configuration"]
     openmenu_profiles = ["OpenMenu", "Profiles"]
     openmenu_testpatterns = ["OpenMenu", "TestPatterns"]
+    # internal toggles
     toggle_tonemap = ["Toggle", "ToneMap"]
     toggle_highlightrecovery = ["Toggle", "HighlightRecovery"]
     toggle_contrastrecovery = ["Toggle", "ContrastRecovery"]
@@ -55,14 +58,17 @@ class ButtonCommands(Enum):
     toggle_screenboundaries = ["Toggle", "ScreenBoundaries"]
     toggle_histogram = ["Toggle", "Histogram"]
     toggle_debugosd = ["Toggle", "DebugOSD"]
+    # debug commands
     refresh_licenseinfo = ["RefreshLicenseInfo"]
     force1080p60output = ["Force1080p60Output"]
+    # navigation commands
     button_left = ["KeyPress", "LEFT"]
     button_right = ["KeyPress", "RIGHT"]
     button_up = ["KeyPress", "UP"]
     button_down = ["KeyPress", "DOWN"]
     button_ok = ["KeyPress", "OK"]
     button_back = ["KeyPress", "BACK"]
+    # multifunction commands
     button_red = ["KeyPress", "RED"]
     button_green = ["KeyPress", "GREEN"]
     button_blue = ["KeyPress", "BLUE"]
