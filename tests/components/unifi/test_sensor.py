@@ -1490,7 +1490,6 @@ async def test_device_uptime(
 async def test_wan_monitor_latency(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
     mock_websocket_message,
     config_entry_factory: Callable[[], ConfigEntry],
     device_payload: list[dict[str, Any]],
