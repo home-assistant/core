@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_API_KEY, CONF_CURRENCY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL, CONF_CURRENCY, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,8 +44,6 @@ ICONS = {
     "USD": "mdi:currency-usd",
 }
 
-SCAN_INTERVAL = timedelta(minutes=5)
-
 SYMBOL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SYMBOL): cv.string,
@@ -65,6 +63,7 @@ CURRENCY_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_FOREIGN_EXCHANGE): vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
         vol.Optional(CONF_SYMBOLS): vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
     }
@@ -79,8 +78,12 @@ def setup_platform(
 ) -> None:
     """Set up the Alpha Vantage sensor."""
     api_key: str = config[CONF_API_KEY]
+    scan_interval: str = config[CONF_SCAN_INTERVAL]
     symbols: list[dict[str, str]] = config.get(CONF_SYMBOLS, [])
     conversions: list[dict[str, str]] = config.get(CONF_FOREIGN_EXCHANGE, [])
+
+    _LOGGER.debug("Scan interval = %s", scan_interval)
+    self.SCAN_INTERVAL = timedelta(minutes=scan_interval)
 
     if not symbols and not conversions:
         msg = "No symbols or currencies configured."
