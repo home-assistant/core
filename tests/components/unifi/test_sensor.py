@@ -1487,47 +1487,40 @@ async def test_device_uptime(
         ]
     ],
 )
+@pytest.mark.parametrize(
+    ("entity_id", "state", "updated_state", "index_to_update"),
+    [
+        # Microsoft
+        ("microsoft_wan", "56", "20", 0),
+        # Google
+        ("google_wan", "53", "90", 1),
+        # Cloudflare
+        ("cloudflare_wan", "30", "80", 2),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_wan_monitor_latency(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_websocket_message,
-    config_entry_factory: Callable[[], ConfigEntry],
     device_payload: list[dict[str, Any]],
+    entity_id,
+    state,
+    updated_state,
+    index_to_update,
 ) -> None:
     """Verify that monitor latency sensors are working as expected."""
-
-    await config_entry_factory()
 
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
-    microsoft_latency_entry = entity_registry.async_get(
-        "sensor.mock_name_microsoft_wan_latency"
-    )
-    assert microsoft_latency_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
-    assert microsoft_latency_entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    google_latency_entry = entity_registry.async_get(
-        "sensor.mock_name_google_wan_latency"
-    )
-    assert google_latency_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
-    assert google_latency_entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    cloudflare_latency_entry = entity_registry.async_get(
-        "sensor.mock_name_cloudflare_wan_latency"
-    )
-    assert cloudflare_latency_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
-    assert cloudflare_latency_entry.entity_category is EntityCategory.DIAGNOSTIC
+    latency_entry = entity_registry.async_get(f"sensor.mock_name_{entity_id}_latency")
+    assert latency_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert latency_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     # Enable entity
     entity_registry.async_update_entity(
-        entity_id="sensor.mock_name_microsoft_wan_latency", disabled_by=None
-    )
-    entity_registry.async_update_entity(
-        entity_id="sensor.mock_name_google_wan_latency", disabled_by=None
-    )
-    entity_registry.async_update_entity(
-        entity_id="sensor.mock_name_cloudflare_wan_latency", disabled_by=None
+        entity_id=f"sensor.mock_name_{entity_id}_latency", disabled_by=None
     )
 
     await hass.async_block_till_done()
@@ -1538,49 +1531,25 @@ async def test_wan_monitor_latency(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 9
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
+    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
     # Verify sensor attributes and state
-    microsoft_latency = hass.states.get("sensor.mock_name_microsoft_wan_latency")
+    latency_entry = hass.states.get(f"sensor.mock_name_{entity_id}_latency")
+    assert latency_entry.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
     assert (
-        microsoft_latency.attributes.get(ATTR_DEVICE_CLASS)
-        == SensorDeviceClass.DURATION
+        latency_entry.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     )
-    assert (
-        microsoft_latency.attributes.get(ATTR_STATE_CLASS)
-        == SensorStateClass.MEASUREMENT
-    )
-    assert microsoft_latency.state == "56"
-
-    google_latency = hass.states.get("sensor.mock_name_google_wan_latency")
-    assert (
-        google_latency.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
-    )
-    assert (
-        google_latency.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    )
-    assert google_latency.state == "53"
-
-    cloudflare_latency = hass.states.get("sensor.mock_name_cloudflare_wan_latency")
-    assert (
-        cloudflare_latency.attributes.get(ATTR_DEVICE_CLASS)
-        == SensorDeviceClass.DURATION
-    )
-    assert (
-        cloudflare_latency.attributes.get(ATTR_STATE_CLASS)
-        == SensorStateClass.MEASUREMENT
-    )
-    assert cloudflare_latency.state == "30"
+    assert latency_entry.state == state
 
     # Verify state update
     device = device_payload[0]
-    device["uptime_stats"]["WAN"]["monitors"][0]["latency_average"] = 20
-    device["uptime_stats"]["WAN"]["monitors"][1]["latency_average"] = 90
-    device["uptime_stats"]["WAN"]["monitors"][2]["latency_average"] = 80
+    device["uptime_stats"]["WAN"]["monitors"][index_to_update]["latency_average"] = (
+        updated_state
+    )
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
-    assert hass.states.get("sensor.mock_name_microsoft_wan_latency").state == "20"
-    assert hass.states.get("sensor.mock_name_google_wan_latency").state == "90"
-    assert hass.states.get("sensor.mock_name_cloudflare_wan_latency").state == "80"
+    assert (
+        hass.states.get(f"sensor.mock_name_{entity_id}_latency").state == updated_state
+    )
