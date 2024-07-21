@@ -1,6 +1,9 @@
 """Support for the Hive binary sensors."""
 
 from datetime import timedelta
+from typing import Any
+
+from apyhiveapi import Hive
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -68,7 +71,12 @@ async def async_setup_entry(
 class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     """Representation of a Hive binary sensor."""
 
-    def __init__(self, hive, hive_device, entity_description):
+    def __init__(
+        self,
+        hive: Hive,
+        hive_device: dict[str, Any],
+        entity_description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialise hive binary sensor."""
         super().__init__(hive, hive_device)
         self.entity_description = entity_description
