@@ -383,7 +383,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.6
+aiotractive==0.6.0
 
 # homeassistant.components.unifi
 aiounifi==79
