@@ -1,6 +1,5 @@
 """Constants for the madvr-envy integration."""
 
-from collections.abc import Iterable
 from enum import Enum
 
 DOMAIN = "madvr"
@@ -75,12 +74,3 @@ class ButtonCommands(Enum):
     button_yellow = ["KeyPress", "YELLOW"]
     button_magenta = ["KeyPress", "MAGENTA"]
     button_cyan = ["KeyPress", "CYAN"]
-
-    def __init__(self, value: list[str]) -> None:
-        """Initialize the command enum."""
-        self._value_ = value
-
-    @property
-    def value(self) -> Iterable[str]:
-        """Return the command value."""
-        return self._value_
