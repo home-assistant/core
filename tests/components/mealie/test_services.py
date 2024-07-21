@@ -308,7 +308,7 @@ async def test_service_set_random_mealplan_exceptions(
 
     mock_mealie_client.random_mealplan.side_effect = MealieConnectionError
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Error connecting to Mealie instance"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_RANDOM_MEALPLAN,
