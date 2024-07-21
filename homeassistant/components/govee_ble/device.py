@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from qingping_ble import DeviceKey
+from govee_ble import DeviceKey
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothEntityKey,
