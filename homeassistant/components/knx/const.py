@@ -127,12 +127,13 @@ class KNXConfigEntryData(TypedDict, total=False):
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    ABSOLUTE = "DPT-7.600"
-    ABSOLUTE_FLOAT = "DPT-9"
-    RELATIVE = "DPT-5.001"
+    # YAML uses Enum.name (with vol.Upper), UI uses Enum.value for lookup
+    ABSOLUTE = "7.600"
+    ABSOLUTE_FLOAT = "9"
+    RELATIVE = "5.001"
 
 
-SUPPORTED_PLATFORMS: Final = [
+SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
@@ -150,7 +151,9 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.TEXT,
     Platform.TIME,
     Platform.WEATHER,
-]
+}
+
+SUPPORTED_PLATFORMS_UI: Final = {Platform.SWITCH}
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {
