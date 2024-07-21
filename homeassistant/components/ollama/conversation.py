@@ -256,16 +256,18 @@ class OllamaConversationEntity(
             message_history.messages.append(message_convert(response_message))
 
             if not tool_calls or not llm_api:
-                _LOGGER.debug("tool_calls=%s", tool_calls)
-                _LOGGER.debug("llm_api=%s", llm_api)
                 break
 
-            _LOGGER.debug("Response: %s", response_message.get("content"))
-            _LOGGER.debug("Tools calls: %s", tool_calls)
             for tool_call in tool_calls:
+                tool_args = tool_call["function"]["arguments"] or {}
+                tool_args = {
+                    k: v
+                    for k, v in tool_args.items()
+                    if v  # Don't pass empty args
+                }
                 tool_input = llm.ToolInput(
                     tool_name=tool_call["function"]["name"],
-                    tool_args=tool_call["function"]["arguments"],
+                    tool_args=tool_args,
                 )
                 _LOGGER.debug(
                     "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
