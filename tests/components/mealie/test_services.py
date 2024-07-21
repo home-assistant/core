@@ -3,7 +3,12 @@
 from datetime import date
 from unittest.mock import AsyncMock
 
-from aiomealie import MealieConnectionError, MealieNotFoundError, MealieValidationError
+from aiomealie import (
+    MealieConnectionError,
+    MealieNotFoundError,
+    MealieValidationError,
+    MealplanEntryType,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -11,6 +16,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.mealie.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_END_DATE,
+    ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
     ATTR_RECIPE_ID,
     ATTR_START_DATE,
@@ -21,7 +27,9 @@ from homeassistant.components.mealie.services import (
     SERVICE_GET_MEALPLAN,
     SERVICE_GET_RECIPE,
     SERVICE_IMPORT_RECIPE,
+    SERVICE_SET_RANDOM_MEALPLAN,
 )
+from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -244,6 +252,33 @@ async def test_service_import_recipe_exceptions(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_service_set_random_mealplan(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the set_random_mealplan service."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_RANDOM_MEALPLAN,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_DATE: "2023-10-21",
+            ATTR_ENTRY_TYPE: "lunch",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+    mock_mealie_client.random_mealplan.assert_called_with(
+        date(2023, 10, 21), MealplanEntryType.LUNCH
+    )
 
 
 async def test_service_mealplan_connection_error(
