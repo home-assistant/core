@@ -1,5 +1,6 @@
 """Tests for the category registry."""
 
+from functools import partial
 import re
 from typing import Any
 
@@ -339,7 +340,7 @@ async def test_load_categories(
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_categories_from_storage(
-    hass: HomeAssistant, hass_storage: Any
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored categories on start."""
     hass_storage[cr.STORAGE_KEY] = {
@@ -394,3 +395,55 @@ async def test_loading_categories_from_storage(
     assert category3.category_id == "uuid3"
     assert category3.name == "Grocery stores"
     assert category3.icon == "mdi:store"
+
+
+async def test_async_create_thread_safety(
+    hass: HomeAssistant, category_registry: cr.CategoryRegistry
+) -> None:
+    """Test async_create raises when called from wrong thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls category_registry.async_create from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(category_registry.async_create, name="any", scope="any")
+        )
+
+
+async def test_async_delete_thread_safety(
+    hass: HomeAssistant, category_registry: cr.CategoryRegistry
+) -> None:
+    """Test async_delete raises when called from wrong thread."""
+    any_category = category_registry.async_create(name="any", scope="any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls category_registry.async_delete from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                category_registry.async_delete,
+                scope="any",
+                category_id=any_category.category_id,
+            )
+        )
+
+
+async def test_async_update_thread_safety(
+    hass: HomeAssistant, category_registry: cr.CategoryRegistry
+) -> None:
+    """Test async_update raises when called from wrong thread."""
+    any_category = category_registry.async_create(name="any", scope="any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls category_registry.async_update from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                category_registry.async_update,
+                scope="any",
+                category_id=any_category.category_id,
+                name="new name",
+            )
+        )

@@ -191,13 +191,13 @@ class HyperionVisiblePrioritySensor(HyperionSensor):
             if priority[KEY_COMPONENTID] == "COLOR":
                 state_value = priority[KEY_VALUE][KEY_RGB]
             else:
-                state_value = priority[KEY_OWNER]
+                state_value = priority.get(KEY_OWNER)
 
             attrs = {
                 "component_id": priority[KEY_COMPONENTID],
                 "origin": priority[KEY_ORIGIN],
                 "priority": priority[KEY_PRIORITY],
-                "owner": priority[KEY_OWNER],
+                "owner": priority.get(KEY_OWNER),
             }
 
             if priority[KEY_COMPONENTID] == "COLOR":

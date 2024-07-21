@@ -199,7 +199,7 @@
         'active_voltage_v': None,
         'any_power_fail_count': 4,
         'external_devices': dict({
-          'G001': dict({
+          'gas_meter_G001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.GAS_METER: 3>',
@@ -209,7 +209,7 @@
             'unit': 'm3',
             'value': 111.111,
           }),
-          'H001': dict({
+          'heat_meter_H001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.HEAT_METER: 4>',
@@ -219,7 +219,7 @@
             'unit': 'GJ',
             'value': 444.444,
           }),
-          'IH001': dict({
+          'inlet_heat_meter_IH001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.INLET_HEAT_METER: 12>',
@@ -229,17 +229,7 @@
             'unit': 'm3',
             'value': 555.555,
           }),
-          'W001': dict({
-            'meter_type': dict({
-              '__type': "<enum 'DeviceType'>",
-              'repr': '<DeviceType.WATER_METER: 7>',
-            }),
-            'timestamp': '2023-01-25T22:09:57',
-            'unique_id': '**REDACTED**',
-            'unit': 'm3',
-            'value': 222.222,
-          }),
-          'WW001': dict({
+          'warm_water_meter_WW001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.WARM_WATER_METER: 6>',
@@ -248,6 +238,16 @@
             'unique_id': '**REDACTED**',
             'unit': 'm3',
             'value': 333.333,
+          }),
+          'water_meter_W001': dict({
+            'meter_type': dict({
+              '__type': "<enum 'DeviceType'>",
+              'repr': '<DeviceType.WATER_METER: 7>',
+            }),
+            'timestamp': '2023-01-25T22:09:57',
+            'unique_id': '**REDACTED**',
+            'unit': 'm3',
+            'value': 222.222,
           }),
         }),
         'gas_timestamp': '2021-03-14T11:22:33',

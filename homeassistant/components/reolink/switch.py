@@ -147,6 +147,15 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_recording(ch, value),
     ),
     ReolinkSwitchEntityDescription(
+        key="manual_record",
+        cmd_key="GetManualRec",
+        translation_key="manual_record",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "manual_record"),
+        value=lambda api, ch: api.manual_record_enabled(ch),
+        method=lambda api, ch, value: api.set_manual_record(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="buzzer",
         cmd_key="GetBuzzerAlarmV20",
         translation_key="buzzer",
@@ -173,6 +182,26 @@ SWITCH_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "HDR"),
         value=lambda api, ch: api.HDR_on(ch) is True,
         method=lambda api, ch, value: api.set_HDR(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="pir_enabled",
+        cmd_key="GetPirInfo",
+        translation_key="pir_enabled",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_enabled(ch) is True,
+        method=lambda api, ch, value: api.set_pir(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="pir_reduce_alarm",
+        cmd_key="GetPirInfo",
+        translation_key="pir_reduce_alarm",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
+        method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
     ),
 )
 
@@ -300,8 +329,6 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         """Initialize Reolink switch entity."""
         self.entity_description = entity_description
         super().__init__(reolink_data)
-
-        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool:

@@ -23,6 +23,100 @@
       "thermostat": {
         "name": "Thermostat"
       }
+    },
+    "humidifier": {
+      "humidifier": {
+        "name": "[%key:component::humidifier::title%]"
+      },
+      "dehumidifier": {
+        "name": "[%key:component::humidifier::entity_component::dehumidifier::name%]"
+      }
+    },
+    "select": {
+      "air_cleaning_event": {
+        "name": "Air cleaning event",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "event_clean": "Event clean (3 hour)",
+          "allergies": "Allergies (24 hour)"
+        }
+      },
+      "air_cleaning_mode": {
+        "name": "Air cleaning mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "constant_clean": "Constant clean",
+          "automatic": "Automatic"
+        }
+      },
+      "fresh_air_event": {
+        "name": "Fresh air event",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "3hour": "3 hour event",
+          "24hour": "24 hour event"
+        }
+      },
+      "fresh_air_mode": {
+        "name": "Fresh air mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "automatic": "[%key:component::aprilaire::entity::select::air_cleaning_mode::state::automatic%]"
+        }
+      }
+    },
+    "sensor": {
+      "indoor_humidity_controlling_sensor": {
+        "name": "Indoor humidity controlling sensor"
+      },
+      "outdoor_humidity_controlling_sensor": {
+        "name": "Outdoor humidity controlling sensor"
+      },
+      "indoor_temperature_controlling_sensor": {
+        "name": "Indoor temperature controlling sensor"
+      },
+      "outdoor_temperature_controlling_sensor": {
+        "name": "Outdoor temperature controlling sensor"
+      },
+      "dehumidification_status": {
+        "name": "Dehumidification status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "humidification_status": {
+        "name": "Humidification status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "ventilation_status": {
+        "name": "Ventilation status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "air_cleaning_status": {
+        "name": "Air cleaning status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "fan_status": {
+        "name": "Fan status",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
     }
   }
 }

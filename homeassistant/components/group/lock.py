@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.lock import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
 )
@@ -25,6 +25,8 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKING,
@@ -41,7 +43,7 @@ DEFAULT_NAME = "Lock Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -175,12 +177,16 @@ class LockGroup(GroupEntity, LockEntity):
             # Set as unknown if any member is unknown or unavailable
             self._attr_is_jammed = None
             self._attr_is_locking = None
+            self._attr_is_opening = None
+            self._attr_is_open = None
             self._attr_is_unlocking = None
             self._attr_is_locked = None
         else:
             # Set attributes based on member states and let the lock entity sort out the correct state
             self._attr_is_jammed = STATE_JAMMED in states
             self._attr_is_locking = STATE_LOCKING in states
+            self._attr_is_opening = STATE_OPENING in states
+            self._attr_is_open = STATE_OPEN in states
             self._attr_is_unlocking = STATE_UNLOCKING in states
             self._attr_is_locked = all(state == STATE_LOCKED for state in states)
 

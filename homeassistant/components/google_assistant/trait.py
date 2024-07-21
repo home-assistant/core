@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -242,10 +242,8 @@ COVER_VALVE_DOMAINS = {cover.DOMAIN, valve.DOMAIN}
 
 FRIENDLY_DOMAIN = {cover.DOMAIN: "Cover", valve.DOMAIN: "Valve"}
 
-_TraitT = TypeVar("_TraitT", bound="_Trait")
 
-
-def register_trait(trait: type[_TraitT]) -> type[_TraitT]:
+def register_trait[_TraitT: _Trait](trait: type[_TraitT]) -> type[_TraitT]:
     """Decorate a class to register a trait."""
     TRAITS.append(trait)
     return trait
@@ -259,7 +257,7 @@ def _google_temp_unit(units):
 
 
 def _next_selected(items: list[str], selected: str | None) -> str | None:
-    """Return the next item in a item list starting at given value.
+    """Return the next item in an item list starting at given value.
 
     If selected is missing in items, None is returned
     """
@@ -1555,19 +1553,20 @@ class ArmDisArmTrait(_Trait):
 
     state_to_service = {
         STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
-        STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
         STATE_ALARM_ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
+        STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
         STATE_ALARM_ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         STATE_ALARM_TRIGGERED: SERVICE_ALARM_TRIGGER,
     }
 
     state_to_support = {
         STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-        STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
         STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+        STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
         STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
         STATE_ALARM_TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
+    """The list of states to support in increasing security state."""
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1588,6 +1587,17 @@ class ArmDisArmTrait(_Trait):
             if features & required_feature != 0
         ]
 
+    def _default_arm_state(self):
+        states = self._supported_states()
+
+        if STATE_ALARM_TRIGGERED in states:
+            states.remove(STATE_ALARM_TRIGGERED)
+
+        if not states:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
+
+        return states[0]
+
     def sync_attributes(self):
         """Return ArmDisarm attributes for a sync request."""
         response = {}
@@ -1605,32 +1615,27 @@ class ArmDisArmTrait(_Trait):
             }
             levels.append(level)
 
-        response["availableArmLevels"] = {"levels": levels, "ordered": False}
+        response["availableArmLevels"] = {"levels": levels, "ordered": True}
         return response
 
     def query_attributes(self):
         """Return ArmDisarm query attributes."""
         armed_state = self.state.attributes.get("next_state", self.state.state)
-        response = {"isArmed": armed_state in self.state_to_service}
-        if response["isArmed"]:
-            response.update({"currentArmLevel": armed_state})
-        return response
+
+        if armed_state in self.state_to_service:
+            return {"isArmed": True, "currentArmLevel": armed_state}
+        return {
+            "isArmed": False,
+            "currentArmLevel": self._default_arm_state(),
+        }
 
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
         if params["arm"] and not params.get("cancel"):
-            # If no arm level given, we can only arm it if there is
-            # only one supported arm type. We never default to triggered.
+            # If no arm level given, we we arm the first supported
+            # level in state_to_support.
             if not (arm_level := params.get("armLevel")):
-                states = self._supported_states()
-
-                if STATE_ALARM_TRIGGERED in states:
-                    states.remove(STATE_ALARM_TRIGGERED)
-
-                if len(states) != 1:
-                    raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
-
-                arm_level = states[0]
+                arm_level = self._default_arm_state()
 
             if self.state.state == arm_level:
                 raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")

@@ -1,5 +1,7 @@
 """Define common test values."""
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.drop_connect.const import (
     CONF_COMMAND_TOPIC,
     CONF_DATA_TOPIC,
@@ -12,6 +14,9 @@ from homeassistant.components.drop_connect.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -216,3 +221,27 @@ def config_entry_ro_filter() -> ConfigEntry:
         },
         version=1,
     )
+
+
+def help_assert_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    config_entry: ConfigEntry,
+    step: str,
+    assert_unknown: bool = False,
+) -> None:
+    """Assert platform entities and state."""
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries
+    if assert_unknown:
+        for entity_entry in entity_entries:
+            assert hass.states.get(entity_entry.entity_id).state == STATE_UNKNOWN
+        return
+
+    for entity_entry in entity_entries:
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-{step}"
+        )

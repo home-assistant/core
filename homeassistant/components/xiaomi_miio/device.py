@@ -4,7 +4,7 @@ import datetime
 from enum import Enum
 from functools import partial
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from construct.core import ChecksumError
 from miio import Device, DeviceException
@@ -21,8 +21,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
-
-_T = TypeVar("_T", bound=DataUpdateCoordinator[Any])
 
 
 class ConnectXiaomiDevice:
@@ -109,7 +107,9 @@ class XiaomiMiioEntity(Entity):
         return device_info
 
 
-class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
+class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
+    CoordinatorEntity[_T]
+):
     """Representation of a base a coordinated Xiaomi Miio Entity."""
 
     _attr_has_entity_name = True

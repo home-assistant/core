@@ -2,34 +2,26 @@
 
 from __future__ import annotations
 
-from russound_rio import Russound
-import voluptuous as vol
+import logging
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=9621): cv.port,
-    }
-)
+from . import RussoundConfigEntry
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -40,22 +32,69 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Russound RIO platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result["type"] is FlowResultType.CREATE_ENTRY
+        or result["reason"] == "single_instance_allowed"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2025.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Russound RIO",
+            },
+        )
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_import_issue_{result['reason']}",
+        breaks_in_ha_version="2025.2.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Russound RIO",
+        },
+    )
 
-    russ = Russound(hass.loop, host, port)
 
-    await russ.connect()
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: RussoundConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Russound RIO platform."""
+    russ = entry.runtime_data
 
     # Discover sources and zones
     sources = await russ.enumerate_sources()
     valid_zones = await russ.enumerate_zones()
 
-    devices = []
+    entities = []
     for zone_id, name in valid_zones:
+        if zone_id.controller > 6:
+            _LOGGER.debug(
+                "Zone ID %s exceeds RIO controller maximum, skipping",
+                zone_id.device_str(),
+            )
+            continue
         await russ.watch_zone(zone_id)
-        dev = RussoundZoneDevice(russ, zone_id, name, sources)
-        devices.append(dev)
+        zone = RussoundZoneDevice(russ, zone_id, name, sources)
+        entities.append(zone)
 
     @callback
     def on_stop(event):
@@ -64,7 +103,7 @@ async def async_setup_platform(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class RussoundZoneDevice(MediaPlayerEntity):
@@ -80,7 +119,7 @@ class RussoundZoneDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, russ, zone_id, name, sources):
+    def __init__(self, russ, zone_id, name, sources) -> None:
         """Initialize the zone device."""
         super().__init__()
         self._name = name

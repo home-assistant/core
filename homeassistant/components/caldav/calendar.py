@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
     CalendarEvent,
     is_offset_reached,
@@ -48,7 +48,7 @@ CONFIG_ENTRY_DEFAULT_DAYS = 7
 # Only allow VCALENDARs that support this component type
 SUPPORTED_COMPONENT = "VEVENT"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): vol.Url(),
         vol.Optional(CONF_CALENDARS, default=[]): vol.All(cv.ensure_list, [cv.string]),

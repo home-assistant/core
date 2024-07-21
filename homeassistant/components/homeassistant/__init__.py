@@ -32,6 +32,7 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
+from homeassistant.helpers.signal import KEY_HA_STOP
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
@@ -386,7 +387,7 @@ async def _async_stop(hass: ha.HomeAssistant, restart: bool) -> None:
     """Stop home assistant."""
     exit_code = RESTART_EXIT_CODE if restart else 0
     # Track trask in hass.data. No need to cleanup, we're stopping.
-    hass.data["homeassistant_stop"] = asyncio.create_task(hass.async_stop(exit_code))
+    hass.data[KEY_HA_STOP] = asyncio.create_task(hass.async_stop(exit_code))
 
 
 @ha.callback

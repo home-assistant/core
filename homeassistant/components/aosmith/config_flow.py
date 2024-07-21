@@ -36,7 +36,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.get_devices()
         except AOSmithInvalidCredentialsException:
             return "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
 

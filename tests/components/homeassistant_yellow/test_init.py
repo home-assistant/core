@@ -44,7 +44,7 @@ async def test_setup_entry(
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_get_os_info.mock_calls) == 1
 
@@ -90,7 +90,7 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(mock_get_os_info.mock_calls) == 1
 
     # Finish setting up ZHA
@@ -144,7 +144,7 @@ async def test_setup_zha_multipan(
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(mock_get_os_info.mock_calls) == 1
 
     # Finish setting up ZHA
@@ -198,7 +198,7 @@ async def test_setup_zha_multipan_other_device(
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(mock_get_os_info.mock_calls) == 1
 
     # Finish setting up ZHA

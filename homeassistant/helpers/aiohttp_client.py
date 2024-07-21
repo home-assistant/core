@@ -20,6 +20,7 @@ from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __v
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
 from .backports.aiohttp_resolver import AsyncResolver
@@ -30,8 +31,12 @@ if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
 
 
-DATA_CONNECTOR = "aiohttp_connector"
-DATA_CLIENTSESSION = "aiohttp_clientsession"
+DATA_CONNECTOR: HassKey[dict[tuple[bool, int], aiohttp.BaseConnector]] = HassKey(
+    "aiohttp_connector"
+)
+DATA_CLIENTSESSION: HassKey[dict[tuple[bool, int], aiohttp.ClientSession]] = HassKey(
+    "aiohttp_clientsession"
+)
 
 SERVER_SOFTWARE = (
     f"{APPLICATION_NAME}/{__version__} "
@@ -84,11 +89,7 @@ def async_get_clientsession(
     This method must be run in the event loop.
     """
     session_key = _make_key(verify_ssl, family)
-    if DATA_CLIENTSESSION not in hass.data:
-        sessions: dict[tuple[bool, int], aiohttp.ClientSession] = {}
-        hass.data[DATA_CLIENTSESSION] = sessions
-    else:
-        sessions = hass.data[DATA_CLIENTSESSION]
+    sessions = hass.data.setdefault(DATA_CLIENTSESSION, {})
 
     if session_key not in sessions:
         session = _async_create_clientsession(
@@ -155,8 +156,7 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
-    # pylint: disable-next=protected-access
-    clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]
+    clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]  # noqa: SLF001
         {USER_AGENT: SERVER_SOFTWARE},
     )
 
@@ -289,11 +289,7 @@ def _async_get_connector(
     This method must be run in the event loop.
     """
     connector_key = _make_key(verify_ssl, family)
-    if DATA_CONNECTOR not in hass.data:
-        connectors: dict[tuple[bool, int], aiohttp.BaseConnector] = {}
-        hass.data[DATA_CONNECTOR] = connectors
-    else:
-        connectors = hass.data[DATA_CONNECTOR]
+    connectors = hass.data.setdefault(DATA_CONNECTOR, {})
 
     if connector_key in connectors:
         return connectors[connector_key]

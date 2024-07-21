@@ -35,7 +35,8 @@ async def test_show_form(hass: HomeAssistant) -> None:
 async def test_invalid_station_id(hass: HomeAssistant) -> None:
     """Test that errors are shown when measuring station ID is invalid."""
     with patch(
-        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+        "homeassistant.components.gios.coordinator.Gios._get_stations",
+        return_value=STATIONS,
     ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
@@ -52,14 +53,15 @@ async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
     """Test that errors are shown when sensor data is invalid."""
     with (
         patch(
-            "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+            "homeassistant.components.gios.coordinator.Gios._get_stations",
+            return_value=STATIONS,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_station",
+            "homeassistant.components.gios.coordinator.Gios._get_station",
             return_value=json.loads(load_fixture("gios/station.json")),
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_sensor",
+            "homeassistant.components.gios.coordinator.Gios._get_sensor",
             return_value={},
         ),
     ):
@@ -75,7 +77,8 @@ async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
 async def test_cannot_connect(hass: HomeAssistant) -> None:
     """Test that errors are shown when cannot connect to GIOS server."""
     with patch(
-        "homeassistant.components.gios.Gios._async_get", side_effect=ApiError("error")
+        "homeassistant.components.gios.coordinator.Gios._async_get",
+        side_effect=ApiError("error"),
     ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
@@ -90,19 +93,19 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     with (
         patch(
-            "homeassistant.components.gios.Gios._get_stations",
+            "homeassistant.components.gios.coordinator.Gios._get_stations",
             return_value=STATIONS,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_station",
+            "homeassistant.components.gios.coordinator.Gios._get_station",
             return_value=json.loads(load_fixture("gios/station.json")),
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_all_sensors",
+            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
             return_value=json.loads(load_fixture("gios/sensors.json")),
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_indexes",
+            "homeassistant.components.gios.coordinator.Gios._get_indexes",
             return_value=json.loads(load_fixture("gios/indexes.json")),
         ),
     ):

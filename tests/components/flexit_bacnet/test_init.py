@@ -7,8 +7,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry
-from tests.components.flexit_bacnet import setup_with_selected_platforms
 
 
 async def test_loading_and_unloading_config_entry(

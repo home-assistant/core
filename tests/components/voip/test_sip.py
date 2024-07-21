@@ -9,7 +9,8 @@ from homeassistant.components import voip
 from homeassistant.core import HomeAssistant
 
 
-async def test_create_sip_server(hass: HomeAssistant, socket_enabled) -> None:
+@pytest.mark.usefixtures("socket_enabled")
+async def test_create_sip_server(hass: HomeAssistant) -> None:
     """Tests starting/stopping SIP server."""
     result = await hass.config_entries.flow.async_init(
         voip.DOMAIN, context={"source": config_entries.SOURCE_USER}

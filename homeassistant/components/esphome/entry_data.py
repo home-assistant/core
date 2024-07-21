@@ -20,9 +20,12 @@ from aioesphomeapi import (
     ClimateInfo,
     CoverInfo,
     DateInfo,
+    DateTimeInfo,
     DeviceInfo,
     EntityInfo,
     EntityState,
+    Event,
+    EventInfo,
     FanInfo,
     LightInfo,
     LockInfo,
@@ -35,7 +38,9 @@ from aioesphomeapi import (
     TextInfo,
     TextSensorInfo,
     TimeInfo,
+    UpdateInfo,
     UserService,
+    ValveInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -45,12 +50,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
-from homeassistant.util.signal_type import SignalType
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
+
+type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
+
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
 
@@ -67,6 +73,8 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
     DateInfo: Platform.DATE,
+    DateTimeInfo: Platform.DATETIME,
+    EventInfo: Platform.EVENT,
     FanInfo: Platform.FAN,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
@@ -78,6 +86,8 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    UpdateInfo: Platform.UPDATE,
+    ValveInfo: Platform.VALVE,
 }
 
 
@@ -119,6 +129,9 @@ class RuntimeEntryData:
         default_factory=dict
     )
     device_update_subscriptions: set[CALLBACK_TYPE] = field(default_factory=set)
+    static_info_update_subscriptions: set[Callable[[list[EntityInfo]], None]] = field(
+        default_factory=set
+    )
     loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: StoreData | None = None
@@ -146,11 +159,6 @@ class RuntimeEntryData:
         return (device_info and device_info.friendly_name) or self.name.title().replace(
             "_", " "
         )
-
-    @property
-    def signal_static_info_updated(self) -> SignalType[list[EntityInfo]]:
-        """Return the signal to listen to for updates on static info."""
-        return SignalType(f"esphome_{self.entry_id}_on_list")
 
     @callback
     def async_register_static_info_callback(
@@ -241,7 +249,10 @@ class RuntimeEntryData:
                 callback_(static_info)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
+        self,
+        hass: HomeAssistant,
+        entry: ESPHomeConfigEntry,
+        platforms: set[Platform],
     ) -> None:
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
@@ -249,7 +260,11 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo], mac: str
+        self,
+        hass: HomeAssistant,
+        entry: ESPHomeConfigEntry,
+        infos: list[EntityInfo],
+        mac: str,
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -296,8 +311,9 @@ class RuntimeEntryData:
                 for callback_ in callbacks_:
                     callback_(entity_infos)
 
-        # Then send dispatcher event
-        async_dispatcher_send(hass, self.signal_static_info_updated, infos)
+        # Finally update static info subscriptions
+        for callback_ in self.static_info_update_subscriptions:
+            callback_(infos)
 
     @callback
     def async_subscribe_device_updated(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
@@ -309,6 +325,21 @@ class RuntimeEntryData:
     def _async_unsubscribe_device_update(self, callback_: CALLBACK_TYPE) -> None:
         """Unsubscribe to device updates."""
         self.device_update_subscriptions.remove(callback_)
+
+    @callback
+    def async_subscribe_static_info_updated(
+        self, callback_: Callable[[list[EntityInfo]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to static info updates."""
+        self.static_info_update_subscriptions.add(callback_)
+        return partial(self._async_unsubscribe_static_info_updated, callback_)
+
+    @callback
+    def _async_unsubscribe_static_info_updated(
+        self, callback_: Callable[[list[EntityInfo]], None]
+    ) -> None:
+        """Unsubscribe to static info updates."""
+        self.static_info_update_subscriptions.remove(callback_)
 
     @callback
     def async_subscribe_state_update(
@@ -341,7 +372,7 @@ class RuntimeEntryData:
         if (
             current_state == state
             and subscription_key not in stale_state
-            and state_type is not CameraState
+            and state_type not in (CameraState, Event)
             and not (
                 state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))
@@ -355,7 +386,7 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.
@@ -424,7 +455,7 @@ class RuntimeEntryData:
             await self.store.async_save(self._pending_storage())
 
     async def async_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
+        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
     ) -> None:
         """Handle options update."""
         if self.original_options == entry.options:

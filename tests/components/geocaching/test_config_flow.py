@@ -40,11 +40,11 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
@@ -90,11 +90,11 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_existing_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -136,11 +136,11 @@ async def test_existing_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_oauth_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
@@ -183,11 +183,11 @@ async def test_oauth_error(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,

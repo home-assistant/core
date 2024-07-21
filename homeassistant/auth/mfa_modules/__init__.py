@@ -16,6 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util.decorator import Registry
+from homeassistant.util.hass_dict import HassKey
 
 MULTI_FACTOR_AUTH_MODULES: Registry[str, type[MultiFactorAuthModule]] = Registry()
 
@@ -29,7 +30,7 @@ MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DATA_REQS = "mfa_auth_module_reqs_processed"
+DATA_REQS: HassKey[set[str]] = HassKey("mfa_auth_module_reqs_processed")
 
 _LOGGER = logging.getLogger(__name__)
 

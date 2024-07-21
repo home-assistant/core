@@ -87,7 +87,7 @@ async def validate_input(
             when = datetime.combine(
                 departure_day,
                 _time,
-                dt_util.get_time_zone(hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
 
     try:
@@ -114,7 +114,7 @@ async def validate_input(
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception as error:  # pylint: disable=broad-exception-caught
+    except Exception as error:  # noqa: BLE001
         _LOGGER.error("Unknown exception occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
 

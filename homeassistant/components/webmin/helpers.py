@@ -43,5 +43,7 @@ def get_instance_from_options(
 def get_sorted_mac_addresses(data: dict[str, Any]) -> list[str]:
     """Return a sorted list of mac addresses."""
     return sorted(
-        [iface["ether"] for iface in data["active_interfaces"] if "ether" in iface]
+        iface["ether"]
+        for iface in data["active_interfaces"]
+        if "ether" in iface and iface["name"].startswith(("en", "eth", "wl"))
     )

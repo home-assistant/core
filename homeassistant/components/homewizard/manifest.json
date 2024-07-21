@@ -7,6 +7,6 @@
   "iot_class": "local_polling",
   "loggers": ["homewizard_energy"],
   "quality_scale": "platinum",
-  "requirements": ["python-homewizard-energy==v5.0.0"],
+  "requirements": ["python-homewizard-energy==v6.0.0"],
   "zeroconf": ["_hwenergy._tcp.local."]
 }

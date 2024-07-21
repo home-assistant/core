@@ -227,10 +227,9 @@ class NestEventMediaStore(EventMediaStore):
         filename = self.get_media_filename(media_key)
 
         def remove_media(filename: str) -> None:
-            if not os.path.exists(filename):
-                return None
-            _LOGGER.debug("Removing event media from disk store: %s", filename)
-            os.remove(filename)
+            if os.path.exists(filename):
+                _LOGGER.debug("Removing event media from disk store: %s", filename)
+                os.remove(filename)
 
         try:
             await self._hass.async_add_executor_job(remove_media, filename)
@@ -322,7 +321,7 @@ class NestMediaSource(MediaSource):
         devices = async_get_media_source_devices(self.hass)
         if not (device := devices.get(media_id.device_id)):
             raise Unresolvable(
-                "Unable to find device with identifier: %s" % item.identifier
+                f"Unable to find device with identifier: {item.identifier}"
             )
         if not media_id.event_token:
             # The device resolves to the most recent event if available
@@ -330,7 +329,7 @@ class NestMediaSource(MediaSource):
                 last_event_id := await _async_get_recent_event_id(media_id, device)
             ):
                 raise Unresolvable(
-                    "Unable to resolve recent event for device: %s" % item.identifier
+                    f"Unable to resolve recent event for device: {item.identifier}"
                 )
             media_id = last_event_id
 
@@ -377,7 +376,7 @@ class NestMediaSource(MediaSource):
         # Browse either a device or events within a device
         if not (device := devices.get(media_id.device_id)):
             raise BrowseError(
-                "Unable to find device with identiifer: %s" % item.identifier
+                f"Unable to find device with identiifer: {item.identifier}"
             )
         # Clip previews are a session with multiple possible event types (e.g.
         # person, motion, etc) and a single mp4
@@ -399,7 +398,7 @@ class NestMediaSource(MediaSource):
             # Browse a specific event
             if not (single_clip := clips.get(media_id.event_token)):
                 raise BrowseError(
-                    "Unable to find event with identiifer: %s" % item.identifier
+                    f"Unable to find event with identiifer: {item.identifier}"
                 )
             return _browse_clip_preview(media_id, device, single_clip)
 
@@ -419,7 +418,7 @@ class NestMediaSource(MediaSource):
         # Browse a specific event
         if not (single_image := images.get(media_id.event_token)):
             raise BrowseError(
-                "Unable to find event with identiifer: %s" % item.identifier
+                f"Unable to find event with identiifer: {item.identifier}"
             )
         return _browse_image_event(media_id, device, single_image)
 

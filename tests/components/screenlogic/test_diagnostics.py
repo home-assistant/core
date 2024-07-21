@@ -23,13 +23,12 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
     mock_config_entry.add_to_hass(hass)
-
-    device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,

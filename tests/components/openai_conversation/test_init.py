@@ -14,7 +14,7 @@ from openai.types.images_response import ImagesResponse
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -160,6 +160,28 @@ async def test_generate_image_service_error(
         )
 
 
+async def test_invalid_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Assert exception when invalid config entry is provided."""
+    service_data = {
+        "prompt": "Picture of a dog",
+        "config_entry": "invalid_entry",
+    }
+    with pytest.raises(
+        ServiceValidationError, match="Invalid config entry provided. Got invalid_entry"
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            "generate_image",
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -179,7 +201,11 @@ async def test_generate_image_service_error(
     ],
 )
 async def test_init_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, caplog, side_effect, error
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    side_effect,
+    error,
 ) -> None:
     """Test initialization errors."""
     with patch(

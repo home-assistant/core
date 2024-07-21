@@ -11,7 +11,6 @@ from types import ModuleType
 from typing import Any, Generic
 
 from typing_extensions import TypeVar
-import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -36,7 +35,7 @@ from homeassistant.setup import async_prepare_setup_platform
 
 from . import config_validation as cv, discovery, entity, service
 from .entity_platform import EntityPlatform
-from .typing import ConfigType, DiscoveryInfoType
+from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
@@ -146,7 +145,7 @@ class EntityComponent(Generic[_EntityT]):
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in conf_util.config_per_platform(config, self.domain):
             if p_type is not None:
-                self.hass.async_create_task(
+                self.hass.async_create_task_internal(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
                     eager_start=True,
@@ -182,7 +181,10 @@ class EntityComponent(Generic[_EntityT]):
         key = config_entry.entry_id
 
         if key in self._platforms:
-            raise ValueError("Config entry has already been setup!")
+            raise ValueError(
+                f"Config entry {config_entry.title} ({key}) for "
+                f"{platform_type}.{self.domain} has already been setup!"
+            )
 
         self._platforms[key] = self._async_init_entity_platform(
             platform_type,
@@ -219,7 +221,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_legacy_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
@@ -256,7 +258,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,

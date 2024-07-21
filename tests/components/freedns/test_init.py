@@ -16,7 +16,7 @@ UPDATE_URL = freedns.UPDATE_URL
 
 
 @pytest.fixture
-def setup_freedns(hass, aioclient_mock):
+def setup_freedns(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture that sets up FreeDNS."""
     params = {}
     params[ACCESS_TOKEN] = ""

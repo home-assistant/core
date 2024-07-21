@@ -29,18 +29,19 @@ The following cases will never be passed to your function:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Protocol
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.util.hass_dict import HassKey
 
 from .integration_platform import async_process_integration_platforms
 
 PLATFORM = "significant_change"
-DATA_FUNCTIONS = "significant_change"
-CheckTypeFunc = Callable[
+DATA_FUNCTIONS: HassKey[dict[str, CheckTypeFunc]] = HassKey("significant_change")
+type CheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
@@ -51,7 +52,7 @@ CheckTypeFunc = Callable[
     bool | None,
 ]
 
-ExtraCheckTypeFunc = Callable[
+type ExtraCheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
@@ -63,6 +64,20 @@ ExtraCheckTypeFunc = Callable[
     ],
     bool | None,
 ]
+
+
+class SignificantChangeProtocol(Protocol):
+    """Define the format of significant_change platforms."""
+
+    def async_check_significant_change(
+        self,
+        hass: HomeAssistant,
+        old_state: str,
+        old_attrs: Mapping[str, Any],
+        new_state: str,
+        new_attrs: Mapping[str, Any],
+    ) -> bool | None:
+        """Test if state significantly changed."""
 
 
 async def create_checker(
@@ -85,7 +100,9 @@ async def _initialize(hass: HomeAssistant) -> None:
 
     @callback
     def process_platform(
-        hass: HomeAssistant, component_name: str, platform: Any
+        hass: HomeAssistant,
+        component_name: str,
+        platform: SignificantChangeProtocol,
     ) -> None:
         """Process a significant change platform."""
         functions[component_name] = platform.async_check_significant_change
@@ -206,7 +223,7 @@ class SignificantlyChangedChecker:
             self.last_approved_entities[new_state.entity_id] = (new_state, extra_arg)
             return True
 
-        functions: dict[str, CheckTypeFunc] | None = self.hass.data.get(DATA_FUNCTIONS)
+        functions = self.hass.data.get(DATA_FUNCTIONS)
 
         if functions is None:
             raise RuntimeError("Significant Change not initialized")

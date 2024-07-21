@@ -21,13 +21,13 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(recorder_mock, hass):
+async def setup_integration(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Set up the integration."""
     assert await async_setup_component(hass, "energy", {})
 
 
 @pytest.fixture
-def mock_energy_platform(hass):
+def mock_energy_platform(hass: HomeAssistant) -> None:
     """Mock an energy platform."""
     hass.config.components.add("some_domain")
     mock_platform(

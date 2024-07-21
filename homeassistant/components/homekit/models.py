@@ -1,5 +1,7 @@
 """Models for the HomeKit component."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -11,6 +13,6 @@ if TYPE_CHECKING:
 class HomeKitEntryData:
     """Class to hold HomeKit data."""
 
-    homekit: "HomeKit"
+    homekit: HomeKit
     pairing_qr: bytes | None = None
     pairing_qr_secret: str | None = None

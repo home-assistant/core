@@ -1,6 +1,9 @@
 """Support for the Hive sensors."""
 
 from datetime import timedelta
+from typing import Any
+
+from apyhiveapi import Hive
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -70,7 +73,12 @@ async def async_setup_entry(
 class HiveSensorEntity(HiveEntity, SensorEntity):
     """Hive Sensor Entity."""
 
-    def __init__(self, hive, hive_device, entity_description):
+    def __init__(
+        self,
+        hive: Hive,
+        hive_device: dict[str, Any],
+        entity_description: SensorEntityDescription,
+    ) -> None:
         """Initialise hive sensor."""
         super().__init__(hive, hive_device)
         self.entity_description = entity_description

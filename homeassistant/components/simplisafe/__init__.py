@@ -503,7 +503,7 @@ class SimpliSafe:
             raise
         except WebsocketError as err:
             LOGGER.error("Failed to connect to websocket: %s", err)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
         LOGGER.info("Reconnecting to websocket")

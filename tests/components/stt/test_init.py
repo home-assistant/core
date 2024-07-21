@@ -131,7 +131,7 @@ def config_flow_test_domain_fixture() -> str:
 @pytest.fixture(autouse=True)
 def config_flow_fixture(
     hass: HomeAssistant, config_flow_test_domain: str
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{config_flow_test_domain}.config_flow")
 
@@ -187,7 +187,7 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     async def async_unload_entry_init(

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydeconz.gateway import DeconzSession
 from pydeconz.interfaces.sensors import SensorResources
@@ -25,18 +25,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub
 
-T = TypeVar("T", Presence, PydeconzSensorBase)
-
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzNumberDescription(Generic[T], NumberEntityDescription):
+class DeconzNumberDescription[_T: (Presence, PydeconzSensorBase)](
+    NumberEntityDescription
+):
     """Class describing deCONZ number entities."""
 
-    instance_check: type[T]
+    instance_check: type[_T]
     name_suffix: str
     set_fn: Callable[[DeconzSession, str, int], Coroutine[Any, Any, dict[str, Any]]]
     update_key: str
-    value_fn: Callable[[T], float | None]
+    value_fn: Callable[[_T], float | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (

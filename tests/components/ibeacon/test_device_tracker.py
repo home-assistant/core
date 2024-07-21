@@ -11,7 +11,9 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_last_service_info,
 )
-from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
+from homeassistant.components.bluetooth.const import (  # pylint: disable=hass-component-root-import
+    UNAVAILABLE_TRACK_SECONDS,
+)
 from homeassistant.components.ibeacon.const import (
     DOMAIN,
     UNAVAILABLE_TIMEOUT,
@@ -42,7 +44,7 @@ from tests.components.bluetooth import (
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
@@ -235,6 +237,7 @@ async def test_device_tracker_random_address_infrequent_changes(
             connectable=False,
             device=device,
             advertisement=previous_service_info.advertisement,
+            tx_power=-127,
         ),
     )
     device = async_ble_device_from_address(hass, "AA:BB:CC:DD:EE:14", False)

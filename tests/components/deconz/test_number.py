@@ -1,6 +1,7 @@
 """deCONZ number platform tests."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -9,27 +10,15 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .conftest import WebsocketDataType
 
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_no_number_entities(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no sensors in deconz results in no number entities."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
 
 TEST_DATA = [
     (  # Presence sensor - delay configuration
@@ -107,21 +96,17 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 async def test_number_entities(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mock_deconz_websocket,
-    sensor_data,
-    expected,
+    config_entry_setup: ConfigEntry,
+    mock_websocket_data: WebsocketDataType,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    expected: dict[str, Any],
 ) -> None:
     """Test successful creation of number entities."""
-
-    with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"0": sensor_data}}):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     assert len(hass.states.async_all()) == expected["entity_count"]
 
     # Verify state data
@@ -139,25 +124,24 @@ async def test_number_entities(
     # Verify device registry data
 
     assert (
-        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
         == expected["device_count"]
     )
 
     # Change state
 
-    event_changed_sensor = {
-        "t": "event",
-        "e": "changed",
-        "r": "sensors",
-        "id": "0",
-    } | expected["websocket_event"]
-    await mock_deconz_websocket(data=event_changed_sensor)
+    event_changed_sensor = {"r": "sensors"} | expected["websocket_event"]
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Verify service calls
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
+    aioclient_mock = mock_put_request("/sensors/0/config")
 
     # Service set supported value
 
@@ -200,11 +184,11 @@ async def test_number_entities(
 
     # Unload entry
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
 
     # Remove entry
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0

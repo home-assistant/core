@@ -7,15 +7,23 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
+from sqlalchemy import (
+    create_engine,
+    event as sqlalchemy_event,
+    exc,
+    inspect,
+    select,
+    update,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -52,23 +60,21 @@ from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
     DOMAIN,
-    ESTIMATED_QUEUE_ITEM_SIZE,
     KEEPALIVE_TIME,
     LAST_REPORTED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
+    MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
-    QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY,
     SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
     STATISTICS_ROWS_SCHEMA_VERSION,
     SupportedDialect,
 )
 from .db_schema import (
-    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
     LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -107,7 +113,6 @@ from .tasks import (
     CommitTask,
     CompileMissingStatisticsTask,
     DatabaseLockTask,
-    EntityIDPostMigrationTask,
     EventIdMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
@@ -138,8 +143,6 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T")
-
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 
 # Controls how often we clean up
@@ -156,6 +159,7 @@ ADJUST_LRU_SIZE_TASK = AdjustLRUSizeTask()
 DB_LOCK_TIMEOUT = 30
 DB_LOCK_QUEUE_CHECK_TIMEOUT = 10  # check every 10 seconds
 
+QUEUE_CHECK_INTERVAL = timedelta(minutes=5)
 
 INVALIDATED_ERR = "Database connection invalidated"
 CONNECTIVITY_ERR = "Error in database connectivity during commit"
@@ -179,7 +183,7 @@ class Recorder(threading.Thread):
         uri: str,
         db_max_retries: int,
         db_retry_wait: int,
-        entity_filter: Callable[[str], bool],
+        entity_filter: Callable[[str], bool] | None,
         exclude_event_types: set[EventType[Any] | str],
     ) -> None:
         """Initialize the recorder."""
@@ -187,6 +191,7 @@ class Recorder(threading.Thread):
 
         self.hass = hass
         self.thread_id: int | None = None
+        self.recorder_and_worker_thread_ids: set[int] = set()
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
@@ -259,7 +264,7 @@ class Recorder(threading.Thread):
         """Return the number of items in the recorder backlog."""
         return self._queue.qsize()
 
-    @property
+    @cached_property
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
         return self._dialect_name
@@ -294,6 +299,7 @@ class Recorder(threading.Thread):
     def async_start_executor(self) -> None:
         """Start the executor."""
         self._db_executor = DBInterruptibleThreadPoolExecutor(
+            self.recorder_and_worker_thread_ids,
             thread_name_prefix=DB_WORKER_PREFIX,
             max_workers=MAX_DB_EXECUTOR_WORKERS,
             shutdown_hook=self._shutdown_pool,
@@ -317,7 +323,9 @@ class Recorder(threading.Thread):
             if event.event_type in exclude_event_types:
                 return
 
-            if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
+            if entity_filter is None or not (
+                entity_id := event.data.get(ATTR_ENTITY_ID)
+            ):
                 queue_put(event)
                 return
 
@@ -343,7 +351,7 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass,
             self._async_check_queue,
-            timedelta(minutes=10),
+            QUEUE_CHECK_INTERVAL,
             name="Recorder queue watcher",
         )
 
@@ -364,9 +372,9 @@ class Recorder(threading.Thread):
             self.queue_task(COMMIT_TASK)
 
     @callback
-    def async_add_executor_job(
-        self, target: Callable[..., T], *args: Any
-    ) -> asyncio.Future[T]:
+    def async_add_executor_job[_T](
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
@@ -383,9 +391,8 @@ class Recorder(threading.Thread):
 
         The queue grows during migration or if something really goes wrong.
         """
-        size = self.backlog
-        _LOGGER.debug("Recorder queue size is: %s", size)
-        if not self._reached_max_backlog_percentage(100):
+        _LOGGER.debug("Recorder queue size is: %s", self.backlog)
+        if not self._reached_max_backlog():
             return
         _LOGGER.error(
             (
@@ -404,22 +411,15 @@ class Recorder(threading.Thread):
             self._psutil = ha_psutil.PsutilWrapper()
         return cast(int, self._psutil.psutil.virtual_memory().available)
 
-    def _reached_max_backlog_percentage(self, percentage: int) -> bool:
-        """Check if the system has reached the max queue backlog and return the maximum if it has."""
-        percentage_modifier = percentage / 100
-        current_backlog = self.backlog
+    def _reached_max_backlog(self) -> bool:
+        """Check if the system has reached the max queue backlog and return True if it has."""
         # First check the minimum value since its cheap
-        if current_backlog < (MAX_QUEUE_BACKLOG_MIN_VALUE * percentage_modifier):
+        if self.backlog < MAX_QUEUE_BACKLOG_MIN_VALUE:
             return False
         # If they have more RAM available, keep filling the backlog
         # since we do not want to stop recording events or give the
         # user a bad backup when they have plenty of RAM available.
-        max_queue_backlog = int(
-            QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY
-            * (self._available_memory() / ESTIMATED_QUEUE_ITEM_SIZE)
-        )
-        self.max_backlog = max(max_queue_backlog, MAX_QUEUE_BACKLOG_MIN_VALUE)
-        return current_backlog >= (max_queue_backlog * percentage_modifier)
+        return self._available_memory() < MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG
 
     @callback
     def _async_stop_queue_watcher_and_event_listener(self) -> None:
@@ -488,7 +488,7 @@ class Recorder(threading.Thread):
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
-    def _async_startup_failed(self) -> None:
+    def _async_startup_done(self, startup_failed: bool) -> None:
         """Report startup failure."""
         # If a live migration failed, we were able to connect (async_db_connected
         # marked True), the database was marked ready (async_db_ready marked
@@ -499,11 +499,12 @@ class Recorder(threading.Thread):
             self.async_db_connected.set_result(False)
         if not self.async_db_ready.done():
             self.async_db_ready.set_result(False)
-        persistent_notification.async_create(
-            self.hass,
-            "The recorder could not start, check [the logs](/config/logs)",
-            "Recorder",
-        )
+        if startup_failed:
+            persistent_notification.async_create(
+                self.hass,
+                "The recorder could not start, check [the logs](/config/logs)",
+                "Recorder",
+            )
         self._async_stop_listeners()
 
     @callback
@@ -700,7 +701,7 @@ class Recorder(threading.Thread):
         self.is_running = True
         try:
             self._run()
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:
             _LOGGER.exception(
                 "Recorder._run threw unexpected exception, recorder shutting down"
             )
@@ -717,7 +718,10 @@ class Recorder(threading.Thread):
 
     def _run(self) -> None:
         """Start processing events to save."""
-        self.thread_id = threading.get_ident()
+        thread_id = threading.get_ident()
+        self.thread_id = thread_id
+        self.recorder_and_worker_thread_ids.add(thread_id)
+
         setup_result = self._setup_recorder()
 
         if not setup_result:
@@ -798,43 +802,25 @@ class Recorder(threading.Thread):
                 for row in execute_stmt_lambda_element(session, get_migration_changes())
             }
 
-            for migrator_cls in (StatesContextIDMigration, EventsContextIDMigration):
-                migrator = migrator_cls(session, schema_version, migration_changes)
-                if migrator.needs_migrate():
-                    self.queue_task(migrator.task())
-
-            migrator = EventTypeIDMigration(session, schema_version, migration_changes)
-            if migrator.needs_migrate():
-                self.queue_task(migrator.task())
-            else:
-                _LOGGER.debug("Activating event_types manager as all data is migrated")
-                self.event_type_manager.active = True
-
-            migrator = EntityIDMigration(session, schema_version, migration_changes)
-            if migrator.needs_migrate():
-                self.queue_task(migrator.task())
-            else:
-                _LOGGER.debug("Activating states_meta manager as all data is migrated")
-                self.states_meta_manager.active = True
-                with contextlib.suppress(SQLAlchemyError):
-                    # If ix_states_entity_id_last_updated_ts still exists
-                    # on the states table it means the entity id migration
-                    # finished by the EntityIDPostMigrationTask did not
-                    # because they restarted in the middle of it. We need
-                    # to pick back up where we left off.
-                    if get_index_by_name(
-                        session,
-                        TABLE_STATES,
-                        LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
-                    ):
-                        self.queue_task(EntityIDPostMigrationTask())
+            for migrator_cls in (
+                StatesContextIDMigration,
+                EventsContextIDMigration,
+                EventTypeIDMigration,
+                EntityIDMigration,
+            ):
+                migrator = migrator_cls(schema_version, migration_changes)
+                migrator.do_migrate(self, session)
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
                 with contextlib.suppress(SQLAlchemyError):
                     # If the index of event_ids on the states table is still present
-                    # we need to queue a task to remove it.
-                    if get_index_by_name(
-                        session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                    # or the event_id foreign key still exists we need to queue a
+                    # task to remove it.
+                    if (
+                        get_index_by_name(
+                            session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                        )
+                        or self._legacy_event_id_foreign_key_exists()
                     ):
                         self.queue_task(EventIdMigrationTask())
                         self.use_legacy_events_index = True
@@ -900,7 +886,7 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Processing task: %s", task)
         try:
             self._process_one_task_or_event_or_recover(task)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error while processing event %s", task)
 
     def _process_one_task_or_event_or_recover(self, task: RecorderTask | Event) -> None:
@@ -919,13 +905,15 @@ class Recorder(threading.Thread):
                 assert isinstance(task, RecorderTask)
             if task.commit_before:
                 self._commit_event_session_or_retry()
-            return task.run(self)
+            task.run(self)
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return
             _LOGGER.exception("Unhandled database error while processing task %s", task)
         except SQLAlchemyError:
             _LOGGER.exception("SQLAlchemyError error processing task %s", task)
+        else:
+            return
 
         # Reset the session if an SQLAlchemyError (including DatabaseError)
         # happens to rollback and recover
@@ -941,13 +929,16 @@ class Recorder(threading.Thread):
                 return migration.initialize_database(self.get_session)
             except UnsupportedDialect:
                 break
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Error during connection setup: (retrying in %s seconds)",
                     self.db_retry_wait,
                 )
             tries += 1
-            time.sleep(self.db_retry_wait)
+
+            if tries <= self.db_max_retries:
+                self._close_connection()
+                time.sleep(self.db_retry_wait)
 
         return False
 
@@ -985,7 +976,7 @@ class Recorder(threading.Thread):
                 return True
             _LOGGER.exception("Database error during schema migration")
             return False
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error during schema migration")
             return False
         else:
@@ -1006,13 +997,12 @@ class Recorder(threading.Thread):
             # Notify that lock is being held, wait until database can be used again.
             hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
-                if self._reached_max_backlog_percentage(90):
+                if self._reached_max_backlog():
                     _LOGGER.warning(
-                        "Database queue backlog reached more than %s (%s events) of maximum queue "
-                        "length while waiting for backup to finish; recorder will now "
+                        "Database queue backlog reached more than %s events "
+                        "while waiting for backup to finish; recorder will now "
                         "resume writing to database. The backup cannot be trusted and "
                         "must be restarted",
-                        "90%",
                         self.backlog,
                     )
                     task.queue_overflow = True
@@ -1167,7 +1157,15 @@ class Recorder(threading.Thread):
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
-        if isinstance(err.__cause__, sqlite3.DatabaseError):
+        if (
+            (cause := err.__cause__)
+            and isinstance(cause, sqlite3.DatabaseError)
+            and (cause_str := str(cause))
+            # Make sure we do not move away a database when its only locked
+            # externally by another process. sqlite does not give us a named
+            # exception for this so we have to check the error message.
+            and ("malformed" in cause_str or "not a database" in cause_str)
+        ):
             _LOGGER.exception(
                 "Unrecoverable sqlite3 database corruption detected: %s", err
             )
@@ -1281,21 +1279,20 @@ class Recorder(threading.Thread):
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
 
-    def _migrate_states_context_ids(self) -> bool:
-        """Migrate states context ids if needed."""
-        return migration.migrate_states_context_ids(self)
-
-    def _migrate_events_context_ids(self) -> bool:
-        """Migrate events context ids if needed."""
-        return migration.migrate_events_context_ids(self)
-
-    def _migrate_event_type_ids(self) -> bool:
-        """Migrate event type ids if needed."""
-        return migration.migrate_event_type_ids(self)
-
-    def _migrate_entity_ids(self) -> bool:
-        """Migrate entity_ids if needed."""
-        return migration.migrate_entity_ids(self)
+    def _legacy_event_id_foreign_key_exists(self) -> bool:
+        """Check if the legacy event_id foreign key exists."""
+        engine = self.engine
+        assert engine is not None
+        return bool(
+            next(
+                (
+                    fk
+                    for fk in inspect(engine).get_foreign_keys(TABLE_STATES)
+                    if fk["constrained_columns"] == ["event_id"]
+                ),
+                None,
+            )
+        )
 
     def _post_migrate_entity_ids(self) -> bool:
         """Post migrate entity_ids if needed."""
@@ -1411,6 +1408,9 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+            kwargs["recorder_and_worker_thread_ids"] = (
+                self.recorder_and_worker_thread_ids
+            )
         elif self.db_url.startswith(
             (
                 MARIADB_URL_PREFIX,
@@ -1436,10 +1436,13 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
+        assert not self.engine
         self.engine = create_engine(self.db_url, **kwargs, future=True)
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
+        self.__dict__.pop("dialect_name", None)
         sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)
 
+        migration.pre_migrate_schema(self.engine)
         Base.metadata.create_all(self.engine)
         self._get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")
@@ -1473,7 +1476,7 @@ class Recorder(threading.Thread):
             self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error saving the event session during shutdown")
 
         self.event_session.close()
@@ -1482,16 +1485,15 @@ class Recorder(threading.Thread):
     def _shutdown(self) -> None:
         """Save end time for current run."""
         _LOGGER.debug("Shutting down recorder")
-        if not self.schema_version or self.schema_version != SCHEMA_VERSION:
-            # If the schema version is not set, we never had a working
-            # connection to the database or the schema never reached a
-            # good state.
-            #
-            # In either case, we want to mark startup as failed.
-            #
-            self.hass.add_job(self._async_startup_failed)
-        else:
-            self.hass.add_job(self._async_stop_listeners)
+
+        # If the schema version is not set, we never had a working
+        # connection to the database or the schema never reached a
+        # good state.
+        # In either case, we want to mark startup as failed.
+        startup_failed = (
+            not self.schema_version or self.schema_version != SCHEMA_VERSION
+        )
+        self.hass.add_job(self._async_startup_done, startup_failed)
 
         try:
             self._end_session()

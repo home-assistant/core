@@ -1,4 +1,4 @@
-"""Support for interfacing to the Logitech SqueezeBox API."""
+"""Support for interfacing to the SqueezeBox API."""
 
 from __future__ import annotations
 
@@ -28,7 +28,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -44,6 +43,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
 from .browse_media import (
@@ -92,7 +92,7 @@ SQUEEZEBOX_MODE = {
 }
 
 
-async def start_server_discovery(hass):
+async def start_server_discovery(hass: HomeAssistant) -> None:
     """Start a server discovery task."""
 
     def _discovered_server(server):
@@ -110,8 +110,9 @@ async def start_server_discovery(hass):
     hass.data.setdefault(DOMAIN, {})
     if DISCOVERY_TASK not in hass.data[DOMAIN]:
         _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
-            async_discover(_discovered_server)
+        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_background_task(
+            async_discover(_discovered_server),
+            name="squeezebox server discovery",
         )
 
 
@@ -207,12 +208,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
-    if hass.is_running:
-        hass.async_create_task(start_server_discovery(hass))
-    else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
-        )
+    config_entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):

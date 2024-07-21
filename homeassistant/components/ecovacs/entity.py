@@ -18,11 +18,10 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import DOMAIN
 
 CapabilityEntity = TypeVar("CapabilityEntity")
-CapabilityDevice = TypeVar("CapabilityDevice", bound=Capabilities)
 EventT = TypeVar("EventT", bound=Event)
 
 
-class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
+class EcovacsEntity(Entity, Generic[CapabilityEntity]):
     """Ecovacs entity."""
 
     _attr_should_poll = False
@@ -31,7 +30,7 @@ class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
 
     def __init__(
         self,
-        device: Device[CapabilityDevice],
+        device: Device,
         capability: CapabilityEntity,
         **kwargs: Any,
     ) -> None:
@@ -97,12 +96,12 @@ class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
             self._device.events.request_refresh(event_type)
 
 
-class EcovacsDescriptionEntity(EcovacsEntity[CapabilityDevice, CapabilityEntity]):
+class EcovacsDescriptionEntity(EcovacsEntity[CapabilityEntity]):
     """Ecovacs entity."""
 
     def __init__(
         self,
-        device: Device[CapabilityDevice],
+        device: Device,
         capability: CapabilityEntity,
         entity_description: EntityDescription,
         **kwargs: Any,
@@ -115,9 +114,8 @@ class EcovacsDescriptionEntity(EcovacsEntity[CapabilityDevice, CapabilityEntity]
 @dataclass(kw_only=True, frozen=True)
 class EcovacsCapabilityEntityDescription(
     EntityDescription,
-    Generic[CapabilityDevice, CapabilityEntity],
+    Generic[CapabilityEntity],
 ):
     """Ecovacs entity description."""
 
-    device_capabilities: type[CapabilityDevice]
-    capability_fn: Callable[[CapabilityDevice], CapabilityEntity | None]
+    capability_fn: Callable[[Capabilities], CapabilityEntity | None]
