@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iron_os.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -50,7 +50,6 @@ async def test_sensors(
 async def test_sensors_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_pynecil: AsyncMock,
     ble_device: MagicMock,
@@ -67,4 +66,8 @@ async def test_sensors_unavailable(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    for entity_entry in entity_entries:
+        assert hass.states.get(entity_entry.entity_id).state == STATE_UNAVAILABLE
