@@ -14,5 +14,6 @@ ATTR_END_DATE = "end_date"
 ATTR_RECIPE_ID = "recipe_id"
 ATTR_URL = "url"
 ATTR_INCLUDE_TAGS = "include_tags"
+ATTR_ENTRY_TYPE = "entry_type"
 
 MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v1.0.0")

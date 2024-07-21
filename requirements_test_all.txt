@@ -773,6 +773,9 @@ gassist-text==0.0.11
 # homeassistant.components.google
 gcal-sync==6.1.4
 
+# homeassistant.components.geniushub
+geniushub-client==0.7.1
+
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
 
@@ -1932,7 +1935,7 @@ refoss-ha==1.2.4
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.4
+renault-api==0.2.5
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
