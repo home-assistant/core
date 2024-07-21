@@ -39,7 +39,7 @@ async def test_motion_sensor(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info(hass, GV5121_MOTION_SERVICE_INFO_2)
     await hass.async_block_till_done()
 
-    motion_sensor = hass.states.get("event.h5121_motion_sensor")
+    motion_sensor = hass.states.get("event.h5121_motion")
     assert motion_sensor.state != first_time
     assert motion_sensor.state != STATE_UNKNOWN
     assert await hass.config_entries.async_unload(entry.entry_id)
