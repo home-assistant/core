@@ -1,0 +1,442 @@
+# serializer version: 1
+# name: test_entities[sensor.mastodon_followers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_followers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Followers',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'followers_count',
+    'unique_id': 'client_id_followers_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.mastodon_followers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon Followers',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_followers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '821',
+  })
+# ---
+# name: test_entities[sensor.mastodon_following-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_following',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Following',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'following_count',
+    'unique_id': 'client_id_following_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.mastodon_following-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon Following',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_following',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '178',
+  })
+# ---
+# name: test_entities[sensor.mastodon_statuses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_statuses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Statuses',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'statuses_count',
+    'unique_id': 'client_id_statuses_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.mastodon_statuses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon Statuses',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_statuses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33120',
+  })
+# ---
+# name: test_entities[sensor.mealie_followers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_followers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Followers',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'followers_count',
+    'unique_id': 'O32Xkdx8iBVn-R-qBpcbwz_tUlaSnlxGgieO74knfQw_followers_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.mealie_followers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Followers',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_followers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '821',
+  })
+# ---
+# name: test_entities[sensor.mealie_following-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_following',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Following',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'following_count',
+    'unique_id': 'O32Xkdx8iBVn-R-qBpcbwz_tUlaSnlxGgieO74knfQw_following_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.mealie_following-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Following',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_following',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '178',
+  })
+# ---
+# name: test_entities[sensor.mealie_statuses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_statuses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Statuses',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'statuses_count',
+    'unique_id': 'O32Xkdx8iBVn-R-qBpcbwz_tUlaSnlxGgieO74knfQw_statuses_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.mealie_statuses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Statuses',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_statuses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33120',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_followers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_followers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Followers',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'followers_count',
+    'unique_id': 'client_id_followers_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mastodon_followers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon Followers',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_followers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '821',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_following-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_following',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Following',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'following_count',
+    'unique_id': 'client_id_following_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mastodon_following-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon Following',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_following',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '178',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_statuses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_statuses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Statuses',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'statuses_count',
+    'unique_id': 'client_id_statuses_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mastodon_statuses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon Statuses',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_statuses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33120',
+  })
+# ---
