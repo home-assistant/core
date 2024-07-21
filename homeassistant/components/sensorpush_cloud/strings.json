@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "configure": {
+        "description": "Select devices to configure. Note: Devices are not available until activated with the SensorPush app on iOS or Android."
+      },
+      "user": {
+        "description": "Note: To activate API access, log in to the [Gateway Cloud Dashboard](https://dashboard.sensorpush.com/) and agree to the terms of service.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_devices_selected": "No devices selected"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "altitude": {
+        "name": "Altitude"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "dewpoint": {
+        "name": "Dew point"
+      },
+      "vapor_pressure": {
+        "name": "Vapor pressure"
+      }
+    }
+  }
+}
