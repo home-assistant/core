@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -70,9 +71,9 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
 
+    @abstractmethod
     async def _async_update_internal(self) -> _DataT:
         """Fetch data from Mealie."""
-        raise NotImplementedError
 
 
 class MealieMealplanCoordinator(
