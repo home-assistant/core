@@ -1,7 +1,7 @@
 """Configuration for Sonos tests."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -271,7 +271,7 @@ def soco_fixture(soco_factory):
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with (
         patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),

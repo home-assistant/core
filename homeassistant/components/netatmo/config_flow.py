@@ -197,7 +197,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                 vol.Required(
                     CONF_PUBLIC_MODE,
                     default=orig_options.get(CONF_PUBLIC_MODE, "avg"),
-                ): vol.In(["avg", "max"]),
+                ): vol.In(["avg", "max", "min"]),
                 vol.Required(
                     CONF_SHOW_ON_MAP,
                     default=orig_options.get(CONF_SHOW_ON_MAP, False),

@@ -57,6 +57,7 @@ class MatterFan(MatterEntity, FanEntity):
     """Representation of a Matter fan."""
 
     _last_known_preset_mode: str | None = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_turn_on(
         self,
@@ -294,6 +295,10 @@ class MatterFan(MatterEntity, FanEntity):
         if feature_map & FanControlFeature.kAirflowDirection:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
 
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
+
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
@@ -313,6 +318,7 @@ DISCOVERY_SCHEMAS = [
             clusters.FanControl.Attributes.RockSetting,
             clusters.FanControl.Attributes.WindSetting,
             clusters.FanControl.Attributes.AirflowDirection,
+            clusters.OnOff.Attributes.OnOff,
         ),
     ),
 ]

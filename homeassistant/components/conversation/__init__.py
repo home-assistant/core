@@ -118,7 +118,8 @@ def async_unset_agent(
     get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
 
-async def async_get_conversation_languages(
+@callback
+def async_get_conversation_languages(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> set[str] | Literal["*"]:
     """Return languages supported by conversation agents.
@@ -188,6 +189,18 @@ def async_get_agent_info(
             return agent_info
 
     return None
+
+
+async def async_prepare_agent(
+    hass: HomeAssistant, agent_id: str | None, language: str
+) -> None:
+    """Prepare given agent."""
+    agent = async_get_agent(hass, agent_id)
+
+    if agent is None:
+        raise ValueError("Invalid agent specified")
+
+    await agent.async_prepare(language)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

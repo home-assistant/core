@@ -42,13 +42,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import Event, HomeAssistant, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 
 
-async def test_outlet_set_state(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_outlet_set_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if Outlet accessory and HA are updated accordingly."""
     entity_id = "switch.outlet_test"
 
@@ -101,7 +103,7 @@ async def test_outlet_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     ],
 )
 async def test_switch_set_state(
-    hass: HomeAssistant, hk_driver, entity_id, attrs, events
+    hass: HomeAssistant, hk_driver, entity_id, attrs, events: list[Event]
 ) -> None:
     """Test if accessory and HA are updated accordingly."""
     domain = split_entity_id(entity_id)[0]
@@ -145,7 +147,9 @@ async def test_switch_set_state(
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_valve_switch_set_state(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_valve_switch_set_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if Valve accessory and HA are updated accordingly."""
     entity_id = "switch.valve_test"
 
@@ -214,7 +218,9 @@ async def test_valve_switch_set_state(hass: HomeAssistant, hk_driver, events) ->
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_valve_set_state(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_valve_set_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if Valve accessory and HA are updated accordingly."""
     entity_id = "valve.valve_test"
 
@@ -264,7 +270,7 @@ async def test_valve_set_state(hass: HomeAssistant, hk_driver, events) -> None:
 
 
 async def test_vacuum_set_state_with_returnhome_and_start_support(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test if Vacuum accessory and HA are updated accordingly."""
     entity_id = "vacuum.roomba"
@@ -333,7 +339,7 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
 
 
 async def test_vacuum_set_state_without_returnhome_and_start_support(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test if Vacuum accessory and HA are updated accordingly."""
     entity_id = "vacuum.roomba"
@@ -378,7 +384,9 @@ async def test_vacuum_set_state_without_returnhome_and_start_support(
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_reset_switch(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_reset_switch(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if switch accessory is reset correctly."""
     domain = "scene"
     entity_id = "scene.test"
@@ -422,7 +430,9 @@ async def test_reset_switch(hass: HomeAssistant, hk_driver, events) -> None:
     assert len(events) == 1
 
 
-async def test_script_switch(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_script_switch(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if script switch accessory is reset correctly."""
     domain = "script"
     entity_id = "script.test"
@@ -471,7 +481,7 @@ async def test_script_switch(hass: HomeAssistant, hk_driver, events) -> None:
     ["input_select", "select"],
 )
 async def test_input_select_switch(
-    hass: HomeAssistant, hk_driver, events, domain
+    hass: HomeAssistant, hk_driver, events: list[Event], domain
 ) -> None:
     """Test if select switch accessory is handled correctly."""
     entity_id = f"{domain}.test"
@@ -526,7 +536,9 @@ async def test_input_select_switch(
     "domain",
     ["button", "input_button"],
 )
-async def test_button_switch(hass: HomeAssistant, hk_driver, events, domain) -> None:
+async def test_button_switch(
+    hass: HomeAssistant, hk_driver, events: list[Event], domain
+) -> None:
     """Test switch accessory from a (input) button entity."""
     entity_id = f"{domain}.test"
 

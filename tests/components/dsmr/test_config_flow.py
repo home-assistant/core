@@ -10,7 +10,8 @@ import serial
 import serial.tools.list_ports
 
 from homeassistant import config_entries
-from homeassistant.components.dsmr import DOMAIN, config_flow
+from homeassistant.components.dsmr import config_flow
+from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

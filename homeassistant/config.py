@@ -815,7 +815,9 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     This method is a coroutine.
     """
-    config = CORE_CONFIG_SCHEMA(config)
+    # CORE_CONFIG_SCHEMA is not async safe since it uses vol.IsDir
+    # so we need to run it in an executor job.
+    config = await hass.async_add_executor_job(CORE_CONFIG_SCHEMA, config)
 
     # Only load auth during startup.
     if not hasattr(hass, "auth"):
@@ -1529,9 +1531,15 @@ async def async_process_component_config(
             return IntegrationConfigInfo(None, config_exceptions)
 
     # No custom config validator, proceed with schema validation
-    if hasattr(component, "CONFIG_SCHEMA"):
+    if config_schema := getattr(component, "CONFIG_SCHEMA", None):
         try:
-            return IntegrationConfigInfo(component.CONFIG_SCHEMA(config), [])
+            if domain in config:
+                # cv.isdir, cv.isfile, cv.isdevice are not async
+                # friendly so we need to run this in executor
+                schema = await hass.async_add_executor_job(config_schema, config)
+            else:
+                schema = config_schema(config)
+            return IntegrationConfigInfo(schema, [])
         except vol.Invalid as exc:
             exc_info = ConfigExceptionInfo(
                 exc,

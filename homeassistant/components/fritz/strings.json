@@ -165,10 +165,10 @@
   },
   "exceptions": {
     "config_entry_not_found": {
-      "message": "Failed to call service \"{service}\". Config entry for target not found"
+      "message": "Failed to perform action \"{service}\". Config entry for target not found"
     },
-    "service_parameter_unknown": { "message": "Service or parameter unknown" },
-    "service_not_supported": { "message": "Service not supported" },
+    "service_parameter_unknown": { "message": "Action or parameter unknown" },
+    "service_not_supported": { "message": "Action not supported" },
     "error_refresh_hosts_info": {
       "message": "Error refreshing hosts info"
     },

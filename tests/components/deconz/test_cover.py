@@ -28,6 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import WebsocketDataType
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -35,14 +37,14 @@ from tests.test_util.aiohttp import AiohttpClientMocker
     "light_payload",
     [
         {
-            "1": {
+            "0": {
                 "name": "Window covering device",
                 "type": "Window covering device",
                 "state": {"lift": 100, "open": False, "reachable": True},
                 "modelid": "lumi.curtain",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
-            "2": {
+            "1": {
                 "name": "Unsupported cover",
                 "type": "Not a cover",
                 "state": {"reachable": True},
@@ -55,7 +57,7 @@ async def test_cover(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that all supported cover entities are created."""
     assert len(hass.states.async_all()) == 2
@@ -66,14 +68,7 @@ async def test_cover(
 
     # Event signals cover is open
 
-    event_changed_light = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "1",
-        "state": {"lift": 0, "open": True},
-    }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data({"r": "lights", "state": {"lift": 0, "open": True}})
     await hass.async_block_till_done()
 
     cover = hass.states.get("cover.window_covering_device")
@@ -82,7 +77,7 @@ async def test_cover(
 
     # Verify service calls for cover
 
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service open cover
 
@@ -140,25 +135,23 @@ async def test_cover(
     "light_payload",
     [
         {
-            "0": {
-                "etag": "87269755b9b3a046485fdae8d96b252c",
-                "lastannounced": None,
-                "lastseen": "2020-08-01T16:22:05Z",
-                "manufacturername": "AXIS",
-                "modelid": "Gear",
-                "name": "Covering device",
-                "state": {
-                    "bri": 0,
-                    "lift": 0,
-                    "on": False,
-                    "open": True,
-                    "reachable": True,
-                    "tilt": 0,
-                },
-                "swversion": "100-5.3.5.1122",
-                "type": "Window covering device",
-                "uniqueid": "00:24:46:00:00:12:34:56-01",
-            }
+            "etag": "87269755b9b3a046485fdae8d96b252c",
+            "lastannounced": None,
+            "lastseen": "2020-08-01T16:22:05Z",
+            "manufacturername": "AXIS",
+            "modelid": "Gear",
+            "name": "Covering device",
+            "state": {
+                "bri": 0,
+                "lift": 0,
+                "on": False,
+                "open": True,
+                "reachable": True,
+                "tilt": 0,
+            },
+            "swversion": "100-5.3.5.1122",
+            "type": "Window covering device",
+            "uniqueid": "00:24:46:00:00:12:34:56-01",
         }
     ],
 )
@@ -221,25 +214,23 @@ async def test_tilt_cover(
     "light_payload",
     [
         {
-            "0": {
-                "etag": "4cefc909134c8e99086b55273c2bde67",
-                "hascolor": False,
-                "lastannounced": "2022-08-08T12:06:18Z",
-                "lastseen": "2022-08-14T14:22Z",
-                "manufacturername": "Keen Home Inc",
-                "modelid": "SV01-410-MP-1.0",
-                "name": "Vent",
-                "state": {
-                    "alert": "none",
-                    "bri": 242,
-                    "on": False,
-                    "reachable": True,
-                    "sat": 10,
-                },
-                "swversion": "0x00000012",
-                "type": "Level controllable output",
-                "uniqueid": "00:22:a3:00:00:00:00:00-01",
-            }
+            "etag": "4cefc909134c8e99086b55273c2bde67",
+            "hascolor": False,
+            "lastannounced": "2022-08-08T12:06:18Z",
+            "lastseen": "2022-08-14T14:22Z",
+            "manufacturername": "Keen Home Inc",
+            "modelid": "SV01-410-MP-1.0",
+            "name": "Vent",
+            "state": {
+                "alert": "none",
+                "bri": 242,
+                "on": False,
+                "reachable": True,
+                "sat": 10,
+            },
+            "swversion": "0x00000012",
+            "type": "Level controllable output",
+            "uniqueid": "00:22:a3:00:00:00:00:00-01",
         }
     ],
 )

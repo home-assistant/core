@@ -11,6 +11,8 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import WebsocketDataType
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_DATA = [
@@ -117,19 +119,18 @@ async def test_scenes(
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_only_new_scenes_are_created(
-    hass: HomeAssistant, mock_deconz_websocket
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that scenes works."""
     assert len(hass.states.async_all()) == 2
 
     event_changed_group = {
-        "t": "event",
-        "e": "changed",
         "r": "groups",
         "id": "1",
         "scenes": [{"id": "1", "name": "Scene"}],
     }
-    await mock_deconz_websocket(data=event_changed_group)
+    await mock_websocket_data(event_changed_group)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2

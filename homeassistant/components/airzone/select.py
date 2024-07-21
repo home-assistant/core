@@ -83,21 +83,34 @@ async def async_setup_entry(
     entry: AirzoneConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
+    """Add Airzone select from a config_entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        AirzoneZoneSelect(
-            coordinator,
-            description,
-            entry,
-            system_zone_id,
-            zone_data,
-        )
-        for description in ZONE_SELECT_TYPES
-        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
-        if description.key in zone_data
-    )
+    added_zones: set[str] = set()
+
+    def _async_entity_listener() -> None:
+        """Handle additions of select."""
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            async_add_entities(
+                AirzoneZoneSelect(
+                    coordinator,
+                    description,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+                for description in ZONE_SELECT_TYPES
+                if description.key in zones_data.get(system_zone_id)
+            )
+            added_zones.update(new_zones)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneBaseSelect(AirzoneEntity, SelectEntity):

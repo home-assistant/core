@@ -263,8 +263,6 @@ class CalculatedState:
     attributes: dict[str, Any]
     # Capability attributes returned by the capability_attributes property
     capability_attributes: Mapping[str, Any] | None
-    # Attributes which may be overridden by the entity registry
-    shadowed_attributes: Mapping[str, Any]
 
 
 class CachedProperties(type):
@@ -1042,18 +1040,20 @@ class Entity(
     @callback
     def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
-        return CalculatedState(*self.__async_calculate_state())
+        state, attr, capabilities, _, _ = self.__async_calculate_state()
+        return CalculatedState(state, attr, capabilities)
 
     def __async_calculate_state(
         self,
-    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, Mapping[str, Any]]:
+    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, str | None, int | None]:
         """Calculate state string and attribute mapping.
 
-        Returns a tuple (state, attr, capability_attr, shadowed_attr).
+        Returns a tuple:
         state - the stringified state
         attr - the attribute dictionary
         capability_attr - a mapping with capability attributes
-        shadowed_attr - a mapping with attributes which may be overridden
+        original_device_class - the device class which may be overridden
+        supported_features - the supported features
 
         This method is called when writing the state to avoid the overhead of creating
         a dataclass object.
@@ -1062,7 +1062,6 @@ class Entity(
 
         capability_attr = self.capability_attributes
         attr = capability_attr.copy() if capability_attr else {}
-        shadowed_attr = {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
@@ -1081,30 +1080,27 @@ class Entity(
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
-        shadowed_attr[ATTR_DEVICE_CLASS] = self.device_class
+        original_device_class = self.device_class
         if (
-            device_class := (entry and entry.device_class)
-            or shadowed_attr[ATTR_DEVICE_CLASS]
+            device_class := (entry and entry.device_class) or original_device_class
         ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
 
-        shadowed_attr[ATTR_ICON] = self.icon
-        if (icon := (entry and entry.icon) or shadowed_attr[ATTR_ICON]) is not None:
+        if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        shadowed_attr[ATTR_FRIENDLY_NAME] = self._friendly_name_internal()
         if (
-            name := (entry and entry.name) or shadowed_attr[ATTR_FRIENDLY_NAME]
+            name := (entry and entry.name) or self._friendly_name_internal()
         ) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, attr, capability_attr, shadowed_attr)
+        return (state, attr, capability_attr, original_device_class, supported_features)
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -1130,14 +1126,15 @@ class Entity(
             return
 
         state_calculate_start = timer()
-        state, attr, capabilities, shadowed_attr = self.__async_calculate_state()
+        state, attr, capabilities, original_device_class, supported_features = (
+            self.__async_calculate_state()
+        )
         time_now = timer()
 
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
-            original_device_class: str | None = shadowed_attr[ATTR_DEVICE_CLASS]
-            supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
+            supported_features = supported_features or 0
             if (
                 capabilities != entry.capabilities
                 or original_device_class != entry.original_device_class
@@ -1188,11 +1185,18 @@ class Entity(
                 report_issue,
             )
 
-        # Overwrite properties that have been set in the config file.
-        if (customize := hass.data.get(DATA_CUSTOMIZE)) and (
-            custom := customize.get(entity_id)
-        ):
-            attr.update(custom)
+        try:
+            # Most of the time this will already be
+            # set and since try is near zero cost
+            # on py3.11+ its faster to assume it is
+            # set and catch the exception if it is not.
+            customize = hass.data[DATA_CUSTOMIZE]
+        except KeyError:
+            pass
+        else:
+            # Overwrite properties that have been set in the config file.
+            if custom := customize.get(entity_id):
+                attr.update(custom)
 
         if (
             self._context_set is not None

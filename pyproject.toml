@@ -34,7 +34,7 @@ dependencies    = [
     "attrs==23.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==24.6.0",
-    "bcrypt==4.1.2",
+    "bcrypt==4.1.3",
     "certifi>=2021.5.30",
     "ciso8601==2.3.1",
     "fnv-hash-fast==0.5.0",
@@ -51,7 +51,7 @@ dependencies    = [
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==42.0.8",
-    "Pillow==10.3.0",
+    "Pillow==10.4.0",
     "pyOpenSSL==24.1.0",
     "orjson==3.10.6",
     "packaging>=23.1",
@@ -62,7 +62,7 @@ dependencies    = [
     "requests==2.32.3",
     "SQLAlchemy==2.0.31",
     "typing-extensions>=4.12.2,<5.0",
-    "ulid-transform==0.9.0",
+    "ulid-transform==0.10.1",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
@@ -675,12 +675,35 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
 ]
 
+[tool.coverage.run]
+source = ["homeassistant"]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # TYPE_CHECKING and @overload blocks are never executed during pytest run
+    "if TYPE_CHECKING:",
+    "@overload",
+]
+
 [tool.ruff]
-required-version = ">=0.5.0"
+required-version = ">=0.5.3"
 
 [tool.ruff.lint]
 select = [
     "A001", # Variable {name} is shadowing a Python builtin
+    "ASYNC210", # Async functions should not call blocking HTTP methods
+    "ASYNC220", # Async functions should not create subprocesses with blocking methods
+    "ASYNC221", # Async functions should not run processes with blocking methods
+    "ASYNC222", # Async functions should not wait on processes with blocking methods
+    "ASYNC230", # Async functions should not open files with blocking methods like open
+    "ASYNC251", # Async functions should not call time.sleep
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
@@ -702,6 +725,7 @@ select = [
     "E", # pycodestyle
     "F", # pyflakes/autoflake
     "FLY", # flynt
+    "FURB", # refurb
     "G", # flake8-logging-format
     "I", # isort
     "INP", # flake8-no-pep420
@@ -723,6 +747,7 @@ select = [
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF010", # Use explicit conversion flag
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF017", # Avoid quadratic list summation
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up

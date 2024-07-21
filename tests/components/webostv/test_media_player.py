@@ -849,3 +849,7 @@ async def test_update_media_state(
     monkeypatch.setattr(client, "media_state", data)
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
+
+    monkeypatch.setattr(client, "is_on", False)
+    await client.mock_state_update()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF

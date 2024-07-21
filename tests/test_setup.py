@@ -10,13 +10,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries, loader, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import DOMAIN, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery, translation
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.issue_registry import IssueRegistry
 
 from .common import (
     MockConfigEntry,
@@ -236,9 +237,15 @@ async def test_validate_platform_config_4(hass: HomeAssistant) -> None:
     hass.config.components.remove("platform_conf")
 
 
-async def test_component_not_found(hass: HomeAssistant) -> None:
+async def test_component_not_found(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
     """setup_component should not crash if component doesn't exist."""
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, "integration_not_found.non_existing")
+    assert issue
+    assert issue.translation_key == "integration_not_found"
 
 
 async def test_component_not_double_initialized(hass: HomeAssistant) -> None:

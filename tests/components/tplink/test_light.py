@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock
 
+from freezegun.api import FrozenDateTimeFactory
 from kasa import (
     AuthenticationError,
     DeviceType,
@@ -36,7 +37,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -526,16 +533,16 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EFFECT_LIST] == ["Off", "Effect1", "Effect2"]
 
     # Ensure setting color temp when an effect
-    # is in progress calls set_hsv to clear the effect
+    # is in progress calls set_effect to clear the effect
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
-    light.set_hsv.assert_called_once_with(0, 0, None)
+    light_effect.set_effect.assert_called_once_with(LightEffect.LIGHT_EFFECTS_OFF)
     light.set_color_temp.assert_called_once_with(4000, brightness=None, transition=None)
-    light.set_hsv.reset_mock()
+    light_effect.set_effect.reset_mock()
     light.set_color_temp.reset_mock()
 
     await hass.services.async_call(
@@ -920,3 +927,82 @@ async def test_light_child(
         assert child_entity
         assert child_entity.unique_id == f"{DEVICE_ID}0{light_id}"
         assert child_entity.device_id == entity.device_id
+
+
+async def test_scene_effect_light(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test activating a scene works with effects.
+
+    i.e. doesn't try to set the effect to 'off'
+    """
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    device = _mocked_device(
+        modules=[Module.Light, Module.LightEffect], alias="my_light"
+    )
+    light_effect = device.modules[Module.LightEffect]
+    light_effect.effect = LightEffect.LIGHT_EFFECTS_OFF
+
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        assert await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        assert await async_setup_component(hass, "scene", {})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+    assert state.attributes["effect"] is EFFECT_OFF
+
+    await hass.services.async_call(
+        "scene",
+        "create",
+        {"scene_id": "effect_off_scene", "snapshot_entities": [entity_id]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    scene_state = hass.states.get("scene.effect_off_scene")
+    assert scene_state.state is STATE_UNKNOWN
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_OFF
+
+    await hass.services.async_call(
+        "scene",
+        "turn_on",
+        {
+            "entity_id": "scene.effect_off_scene",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    scene_state = hass.states.get("scene.effect_off_scene")
+    assert scene_state.state is not STATE_UNKNOWN
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+    assert state.attributes["effect"] is EFFECT_OFF

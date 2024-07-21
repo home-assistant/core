@@ -277,6 +277,8 @@ class AssistAPI(API):
         intent.INTENT_GET_STATE,
         intent.INTENT_NEVERMIND,
         intent.INTENT_TOGGLE,
+        intent.INTENT_GET_CURRENT_DATE,
+        intent.INTENT_GET_CURRENT_TIME,
     }
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -483,7 +485,7 @@ def _get_exposed_entities(
 
         if attributes := {
             attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal))
+            if isinstance(attr_value, (Enum, Decimal, int))
             else attr_value
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes

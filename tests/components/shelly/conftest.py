@@ -228,7 +228,9 @@ MOCK_STATUS_RPC = {
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {
         "id": 2,
-        "counts": {"total": 56174, "xtotal": 561.74, "freq": 208.00, "xfreq": 6.11},
+        "counts": {"total": 56174, "xtotal": 561.74},
+        "freq": 208.00,
+        "xfreq": 6.11,
     },
     "light:0": {"output": True, "brightness": 53.0},
     "light:1": {"output": True, "brightness": 53.0},
@@ -351,6 +353,7 @@ def _mock_rpc_device(version: str | None = None):
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
+        connected=True,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

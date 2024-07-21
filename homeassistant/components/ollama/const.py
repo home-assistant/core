@@ -72,6 +72,9 @@ An overview of the areas and the devices in this smart home:
 Answer the user's questions using the information about this smart home.
 Keep your answers brief and do not apologize."""
 
+CONF_KEEP_ALIVE = "keep_alive"
+DEFAULT_KEEP_ALIVE = -1  # seconds. -1 = indefinite, 0 = never
+
 KEEP_ALIVE_FOREVER = -1
 DEFAULT_TIMEOUT = 5.0  # seconds
 

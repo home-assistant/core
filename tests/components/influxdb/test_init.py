@@ -43,7 +43,7 @@ class FilterTest:
 
 
 @pytest.fixture(autouse=True)
-def mock_batch_timeout(hass, monkeypatch):
+def mock_batch_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock the event bus listener and the batch timeout for tests."""
     monkeypatch.setattr(
         f"{INFLUX_PATH}.InfluxThread.batch_timeout",

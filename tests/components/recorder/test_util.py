@@ -116,12 +116,18 @@ def test_validate_or_move_away_sqlite_database(
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_last_run_was_recently_clean(
-    async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+    async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
-    """Test we can check if the last recorder run was recently clean."""
+    """Test we can check if the last recorder run was recently clean.
+
+    This is only implemented for SQLite.
+    """
     config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
     async with async_test_home_assistant() as hass:
@@ -850,17 +856,22 @@ async def test_periodic_db_cleanups(
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_write_lock_db(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-    tmp_path: Path,
+    recorder_db_url: str,
 ) -> None:
-    """Test database write lock."""
+    """Test database write lock.
 
-    # Use file DB, in memory DB cannot do write locks.
-    config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
-    }
+    This is only supported for SQLite.
+
+    Use file DB, in memory DB cannot do write locks.
+    """
+
+    config = {recorder.CONF_DB_URL: recorder_db_url + "?timeout=0.1"}
     instance = await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
 

@@ -382,16 +382,21 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if ATTR_EFFECT in kwargs:
+        if (
+            (effect := kwargs.get(ATTR_EFFECT))
+            # Effect is unlikely to be LIGHT_EFFECTS_OFF but check for it anyway
+            and effect not in {LightEffect.LIGHT_EFFECTS_OFF, EFFECT_OFF}
+            and effect in self._effect_module.effect_list
+        ):
             await self._effect_module.set_effect(
                 kwargs[ATTR_EFFECT], brightness=brightness, transition=transition
             )
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if self.effect:
+            if self.effect and self.effect != EFFECT_OFF:
                 # If there is an effect in progress
                 # we have to clear the effect
                 # before we can set a color temp
-                await self._light_module.set_hsv(0, 0, brightness)
+                await self._effect_module.set_effect(LightEffect.LIGHT_EFFECTS_OFF)
             await self._async_set_color_temp(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], brightness, transition
             )

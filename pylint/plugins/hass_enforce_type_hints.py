@@ -146,6 +146,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_tts_get_cache_files": "MagicMock",
     "mock_tts_init_cache_dir": "MagicMock",
     "mock_zeroconf": "MagicMock",
+    "monkeypatch": "pytest.MonkeyPatch",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
