@@ -197,12 +197,12 @@
           "description": "[%key:component::mealie::services::get_recipe::fields::recipe_id::description%]"
         },
         "note_title": {
-          "name": "Note title",
-          "description": "The title of the note to add to the mealplan entry."
+          "name": "Meal note title",
+          "description": "Meal note title for when planning without recipe."
         },
         "note_text": {
           "name": "Note text",
-          "description": "The text of the note to add to the mealplan entry."
+          "description": "Meal note text for when planning without recipe."
         }
       }
     }
