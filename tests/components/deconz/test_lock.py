@@ -96,27 +96,25 @@ async def test_lock_from_light(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "battery": 100,
-                    "lock": False,
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 11,
-                "etag": "a43862f76b7fa48b0fbb9107df123b0e",
-                "lastseen": "2021-03-06T22:25Z",
-                "manufacturername": "Onesti Products AS",
-                "modelid": "easyCodeTouch_v1",
-                "name": "Door lock",
-                "state": {
-                    "lastupdated": "2021-03-06T21:25:45.624",
-                    "lockstate": "unlocked",
-                },
-                "swversion": "20201211",
-                "type": "ZHADoorLock",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "config": {
+                "battery": 100,
+                "lock": False,
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 11,
+            "etag": "a43862f76b7fa48b0fbb9107df123b0e",
+            "lastseen": "2021-03-06T22:25Z",
+            "manufacturername": "Onesti Products AS",
+            "modelid": "easyCodeTouch_v1",
+            "name": "Door lock",
+            "state": {
+                "lastupdated": "2021-03-06T21:25:45.624",
+                "lockstate": "unlocked",
+            },
+            "swversion": "20201211",
+            "type": "ZHADoorLock",
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -132,7 +130,6 @@ async def test_lock_from_sensor(
 
     event_changed_sensor = {
         "r": "sensors",
-        "id": "1",
         "state": {"lockstate": "locked"},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -142,7 +139,7 @@ async def test_lock_from_sensor(
 
     # Verify service calls
 
-    aioclient_mock = mock_put_request("/sensors/1/config")
+    aioclient_mock = mock_put_request("/sensors/0/config")
 
     # Service lock door
 
