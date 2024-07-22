@@ -85,6 +85,7 @@ NOTIFY_FOR_TRANSLATION_KEYS = [
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 300
+SLOW_SETUP_MAX_WAIT_RECORDER = 3600 * 96
 
 
 class EventComponentLoaded(TypedDict):
@@ -397,6 +398,11 @@ async def _async_setup_component(
 
         task: Awaitable[bool] | None = None
         result: Any | bool = True
+        max_wait = (
+            SLOW_SETUP_MAX_WAIT
+            if domain != "recorder"
+            else SLOW_SETUP_MAX_WAIT_RECORDER
+        )
         try:
             if hasattr(component, "async_setup"):
                 task = component.async_setup(hass, processed_config)
@@ -411,7 +417,7 @@ async def _async_setup_component(
                 return False
 
             if task:
-                async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
+                async with hass.timeout.async_timeout(max_wait, domain):
                     result = await task
         except TimeoutError:
             _LOGGER.error(
@@ -420,7 +426,7 @@ async def _async_setup_component(
                     " Startup will proceed without waiting any longer"
                 ),
                 domain,
-                SLOW_SETUP_MAX_WAIT,
+                max_wait,
             )
             return False
         # pylint: disable-next=broad-except
