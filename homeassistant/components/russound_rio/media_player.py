@@ -126,6 +126,8 @@ class RussoundZoneDevice(MediaPlayerEntity):
         self._controller = zone.controller
         self._zone = zone
         self._sources = sources
+        self._attr_name = zone.name
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._controller.mac_address}-{zone.device_str()}"
         self._attr_device_info = DeviceInfo(
             # Use MAC address of Russound device as identifier
@@ -135,6 +137,11 @@ class RussoundZoneDevice(MediaPlayerEntity):
             model=self._controller.controller_type,
             sw_version=self._controller.firmware_version,
         )
+        if self._controller.parent_controller:
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                self._controller.parent_controller.mac_address,
+            )
 
     def _callback_handler(self, device_str, *args):
         if (
@@ -149,11 +156,6 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     def _current_source(self) -> Source:
         return self._zone.fetch_current_source()
-
-    @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._zone.name
 
     @property
     def state(self) -> MediaPlayerState | None:
