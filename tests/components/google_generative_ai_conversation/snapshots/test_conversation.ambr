@@ -449,7 +449,6 @@
           description: "Test parameters"
           items {
             type_: STRING
-            format_: "lower"
           }
         }
       }
