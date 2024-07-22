@@ -19,7 +19,13 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
-from .const import TEST_CON_ERROR, TEST_FAILED_CMD, TEST_FAILED_MSG, TEST_IMP_ERROR
+from .const import (
+    TEST_CON_ERROR,
+    TEST_FAILED_CMD,
+    TEST_FAILED_OFF,
+    TEST_FAILED_ON,
+    TEST_IMP_ERROR,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -70,7 +76,7 @@ async def test_remote_power(
     await hass.services.async_call(
         REMOTE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert TEST_FAILED_MSG in caplog.text
+    assert TEST_FAILED_OFF in caplog.text
 
     # Test turning off with NotImplementedError
     caplog.clear()
@@ -78,7 +84,7 @@ async def test_remote_power(
     await hass.services.async_call(
         REMOTE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert TEST_FAILED_MSG in caplog.text
+    assert TEST_FAILED_OFF in caplog.text
 
     # Reset side_effect for power_off
     mock_madvr_client.power_off.side_effect = None
@@ -89,7 +95,7 @@ async def test_remote_power(
     await hass.services.async_call(
         REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert TEST_FAILED_MSG in caplog.text
+    assert TEST_FAILED_ON in caplog.text
 
     # Test turning on with NotImplementedError
     caplog.clear()
@@ -97,7 +103,7 @@ async def test_remote_power(
     await hass.services.async_call(
         REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert TEST_FAILED_MSG in caplog.text
+    assert TEST_FAILED_ON in caplog.text
 
 
 async def test_send_command(
