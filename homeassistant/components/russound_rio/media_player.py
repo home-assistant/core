@@ -86,7 +86,7 @@ async def async_setup_entry(
     controllers = await russ.enumerate_controllers()
 
     entities = []
-    for controller in controllers:
+    for controller in controllers.values():
         sources = controller.sources
         for source in sources.values():
             await source.watch()
