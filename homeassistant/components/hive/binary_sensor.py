@@ -81,24 +81,21 @@ async def async_setup_entry(
     devices = hive.session.deviceList.get("binary_sensor") + hive.session.deviceList.get("sensor")
     if not devices:
         return
-    async_add_entities(
-        (
-            HiveBinarySensorEntity(hive, dev, description)
+
+    sensors = []
+    sensors.extend(
+        HiveBinarySensorEntity(hive, dev, description)
             for dev in devices
             for description in BINARY_SENSOR_TYPES
             if dev["hiveType"] == description.key
-        ),
-        True,
-    )
-    async_add_entities(
-        (
-            HiveSensorEntity(hive, dev, description)
+        )
+    sensors.extend(
+        HiveSensorEntity(hive, dev, description)
             for dev in devices
             for description in SENSOR_TYPES
             if dev["hiveType"] == description.key
-        ),
-        True,
-    )
+        )
+    async_add_entities(sensors, True)
 
 
 class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
