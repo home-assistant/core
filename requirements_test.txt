@@ -29,7 +29,7 @@ pytest-timeout==2.3.1
 pytest-unordered==0.6.1
 pytest-picked==0.5.0
 pytest-xdist==3.6.1
-pytest==8.2.2
+pytest==8.3.1
 requests-mock==1.12.1
 respx==0.21.1
 syrupy==4.6.1
