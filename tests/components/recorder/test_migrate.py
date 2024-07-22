@@ -184,7 +184,7 @@ async def test_database_migration_encounters_corruption(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
+            "homeassistant.components.recorder.migration.migrate_schema_non_live",
             side_effect=sqlite3_exception,
         ),
         patch(
@@ -201,13 +201,26 @@ async def test_database_migration_encounters_corruption(
 
 
 @pytest.mark.parametrize(
-    ("live_migration", "expected_setup_result"), [(True, True), (False, False)]
+    (
+        "live_migration",
+        "func_to_patch",
+        "expected_setup_result",
+        "expected_pn_create",
+        "expected_pn_dismiss",
+    ),
+    [
+        (True, "migrate_schema_live", True, 2, 1),
+        (False, "migrate_schema_non_live", False, 1, 0),
+    ],
 )
 async def test_database_migration_encounters_corruption_not_sqlite(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     live_migration: bool,
+    func_to_patch: str,
     expected_setup_result: bool,
+    expected_pn_create: int,
+    expected_pn_dismiss: int,
 ) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -218,7 +231,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
+            f"homeassistant.components.recorder.migration.{func_to_patch}",
             side_effect=DatabaseError("statement", {}, []),
         ),
         patch(
@@ -248,8 +261,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(
 
     assert recorder.util.async_migration_in_progress(hass) is False
     assert not move_away.called
-    assert len(mock_create.mock_calls) == 2
-    assert len(mock_dismiss.mock_calls) == 1
+    assert len(mock_create.mock_calls) == expected_pn_create
+    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
 
 
 async def test_events_during_migration_are_queued(
