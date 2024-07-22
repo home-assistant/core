@@ -78,10 +78,10 @@ class TOTPSensor(SensorEntity):
     _attr_native_value: StateType = None
     _next_expiration: float | None = None
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, name: str, token: str, entry_id: str) -> None:
         """Initialize the sensor."""
-        self._attr_name = None
         self._attr_unique_id = entry_id
         self._otp = pyotp.TOTP(token)
 
