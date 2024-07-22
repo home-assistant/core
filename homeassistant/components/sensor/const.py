@@ -23,7 +23,10 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfForce,
     UnitOfFrequency,
+    UnitOfHeartRate,
+    UnitOfInclination,
     UnitOfInformation,
     UnitOfIrradiance,
     UnitOfLength,
@@ -31,6 +34,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRotationalSpeed,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -54,10 +58,14 @@ from homeassistant.util.unit_conversion import (
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
+    ForceConverter,
+    FrequencyConverter,
+    InclinationConverter,
     InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
+    RotationalSpeedConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -182,7 +190,7 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`, `kcal`, `Mcal`, `Gcal`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -192,6 +200,12 @@ class SensorDeviceClass(StrEnum):
     of electric energy currently stored in a battery or the capacity of a battery.
 
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    """
+
+    FORCE = "force"
+    """Force.
+
+    Unit of measurement: `N`, `kN`, `MN`
     """
 
     FREQUENCY = "frequency"
@@ -208,6 +222,12 @@ class SensorDeviceClass(StrEnum):
     - USCS / imperial: `ft³`, `CCF`
     """
 
+    HEART_RATE = "heart_rate"
+    """Heart rate.
+
+    Unit of measurement: `bpm`
+    """
+
     HUMIDITY = "humidity"
     """Relative humidity.
 
@@ -218,6 +238,12 @@ class SensorDeviceClass(StrEnum):
     """Illuminance.
 
     Unit of measurement: `lx`
+    """
+
+    INCLINATION = "inclination"
+    """Inclination.
+
+    Unit of measurement: `%`, `°`
     """
 
     IRRADIANCE = "irradiance"
@@ -332,6 +358,12 @@ class SensorDeviceClass(StrEnum):
     """Reactive power.
 
     Unit of measurement: `var`
+    """
+
+    ROTATIONAL_SPEED = "rotational_speed"
+    """Rotational speed.
+
+    Unit of measurement: `Hz`, `rpm`, `rad/s`, `°/s`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
@@ -501,12 +533,16 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.DURATION: DurationConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    SensorDeviceClass.FORCE: ForceConverter,
+    SensorDeviceClass.FREQUENCY: FrequencyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.INCLINATION: InclinationConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.ROTATIONAL_SPEED: RotationalSpeedConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: UnitlessRatioConverter,
@@ -540,14 +576,17 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.ENERGY: set(UnitOfEnergy),
     SensorDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
+    SensorDeviceClass.FORCE: set(UnitOfForce),
     SensorDeviceClass.FREQUENCY: set(UnitOfFrequency),
     SensorDeviceClass.GAS: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
     },
+    SensorDeviceClass.HEART_RATE: set(UnitOfHeartRate),
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
     SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
+    SensorDeviceClass.INCLINATION: set(UnitOfInclination),
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -564,6 +603,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    SensorDeviceClass.ROTATIONAL_SPEED: set(UnitOfRotationalSpeed),
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -614,10 +654,13 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     },
     SensorDeviceClass.ENERGY_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ENUM: set(),
+    SensorDeviceClass.FORCE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.FREQUENCY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.GAS: {SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING},
+    SensorDeviceClass.HEART_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.HUMIDITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ILLUMINANCE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.INCLINATION: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.IRRADIANCE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.MOISTURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.MONETARY: {SensorStateClass.TOTAL},
@@ -635,6 +678,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_POWER: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.ROTATIONAL_SPEED: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SIGNAL_STRENGTH: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SOUND_PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SPEED: {SensorStateClass.MEASUREMENT},

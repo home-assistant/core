@@ -674,6 +674,14 @@ _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
 POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 
+# Inclination units
+class UnitOfInclination(StrEnum):
+    """Inclination units."""
+
+    PERCENTAGE = "%"
+    DEGREE = "°"
+
+
 # Energy units
 class UnitOfEnergy(StrEnum):
     """Energy units."""
@@ -683,6 +691,9 @@ class UnitOfEnergy(StrEnum):
     MEGA_JOULE = "MJ"
     MEGA_WATT_HOUR = "MWh"
     WATT_HOUR = "Wh"
+    KILO_CALORIE = "kcal"
+    MEGA_CALORIE = "Mcal"
+    GIGA_CALORIE = "Gcal"
 
 
 _DEPRECATED_ENERGY_KILO_WATT_HOUR: Final = DeprecatedConstantEnum(
@@ -904,6 +915,13 @@ class UnitOfFrequency(StrEnum):
     GIGAHERTZ = "GHz"
 
 
+# Heart rate units
+class UnitOfHeartRate(StrEnum):
+    """Heart rate units."""
+
+    BEATS_PER_MINUTE = "bpm"
+
+
 _DEPRECATED_FREQUENCY_HERTZ: Final = DeprecatedConstantEnum(
     UnitOfFrequency.HERTZ,
     "2025.1",
@@ -924,6 +942,16 @@ _DEPRECATED_FREQUENCY_GIGAHERTZ: Final = DeprecatedConstantEnum(
     "2025.1",
 )
 """Deprecated: please use UnitOfFrequency.GIGAHERTZ"""
+
+
+# Rotational speed units
+class UnitOfRotationalSpeed(StrEnum):
+    """Rotational speed units."""
+
+    HERTZ = "Hz"
+    REVOLUTIONS_PER_MINUTE = "rpm"
+    RADIANS_PER_SECOND = "rad/s"
+    DEGREES_PER_SECOND = "°/s"
 
 
 # Pressure units
@@ -1485,6 +1513,15 @@ _DEPRECATED_DATA_RATE_GIBIBYTES_PER_SECOND: Final = DeprecatedConstantEnum(
     "2025.1",
 )
 """Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
+
+
+# Force units
+class UnitOfForce(StrEnum):
+    """Force units."""
+
+    NEWTONS = "N"
+    KILONEWTONS = "kN"
+    MEGANEWTONS = "MN"
 
 
 # States

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+import math
+from typing import Final
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -15,11 +17,15 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfForce,
+    UnitOfFrequency,
+    UnitOfInclination,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRotationalSpeed,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -46,6 +52,10 @@ _MIN_TO_SEC = 60  # 1 min = 60 seconds
 _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
+
+# Energy conversion constants
+_KWH_TO_JOULES: Final = 3.6e6  # 1 kWh = 3.6 MJ
+_KWH_TO_CALORIES: Final = _KWH_TO_JOULES / 4.184  # 1 cal = 4.184 J
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
@@ -143,6 +153,33 @@ class DataRateConverter(BaseUnitConverter):
     VALID_UNITS = set(UnitOfDataRate)
 
 
+class ForceConverter(BaseUnitConverter):
+    """Utility to convert force values."""
+
+    UNIT_CLASS = "force"
+    NORMALIZED_UNIT = UnitOfForce.NEWTONS
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfForce.NEWTONS: 1,
+        UnitOfForce.KILONEWTONS: 1e-3,
+        UnitOfForce.MEGANEWTONS: 1e-6,
+    }
+    VALID_UNITS = set(UnitOfForce)
+
+
+class FrequencyConverter(BaseUnitConverter):
+    """Utility to convert frequency values."""
+
+    UNIT_CLASS = "frequency"
+    NORMALIZED_UNIT = UnitOfFrequency.HERTZ
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfFrequency.HERTZ: 1,
+        UnitOfFrequency.KILOHERTZ: 1e-3,
+        UnitOfFrequency.MEGAHERTZ: 1e-6,
+        UnitOfFrequency.GIGAHERTZ: 1e-9,
+    }
+    VALID_UNITS = set(UnitOfFrequency)
+
+
 class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
@@ -216,11 +253,14 @@ class EnergyConverter(BaseUnitConverter):
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfEnergy.WATT_HOUR: 1 * 1000,
+        UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
-        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
-        UnitOfEnergy.MEGA_JOULE: 3.6,
-        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1e-3,
+        UnitOfEnergy.MEGA_JOULE: _KWH_TO_JOULES * 1e-6,
+        UnitOfEnergy.GIGA_JOULE: _KWH_TO_JOULES * 1e-9,
+        UnitOfEnergy.KILO_CALORIE: _KWH_TO_CALORIES * 1e-3,
+        UnitOfEnergy.MEGA_CALORIE: _KWH_TO_CALORIES * 1e-6,
+        UnitOfEnergy.GIGA_CALORIE: _KWH_TO_CALORIES * 1e-9,
     }
     VALID_UNITS = {
         UnitOfEnergy.WATT_HOUR,
@@ -228,6 +268,9 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.GIGA_JOULE,
+        UnitOfEnergy.KILO_CALORIE,
+        UnitOfEnergy.MEGA_CALORIE,
+        UnitOfEnergy.GIGA_CALORIE,
     }
 
 
@@ -332,6 +375,100 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
+
+
+class RotationalSpeedConverter(BaseUnitConverter):
+    """Utility to convert rotational speed values."""
+
+    UNIT_CLASS = "rotational_speed"
+    NORMALIZED_UNIT = UnitOfRotationalSpeed.HERTZ
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfRotationalSpeed.HERTZ: 1,
+        UnitOfRotationalSpeed.REVOLUTIONS_PER_MINUTE: 60,
+        UnitOfRotationalSpeed.DEGREES_PER_SECOND: 360,
+        UnitOfRotationalSpeed.RADIANS_PER_SECOND: math.pi * 2,
+    }
+    VALID_UNITS = set(UnitOfRotationalSpeed)
+
+
+class InclinationConverter(BaseUnitConverter):
+    """Utility to convert inclination values."""
+
+    UNIT_CLASS = "inclination"
+    NORMALIZED_UNIT = UnitOfInclination.PERCENTAGE
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfInclination.PERCENTAGE: 1,
+        UnitOfInclination.DEGREE: 1,
+    }
+    VALID_UNITS = set(UnitOfInclination)
+
+    @classmethod
+    @lru_cache
+    def converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Return a function to convert a inclination from one unit to another."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in converter_factory_allow_none.
+            return lambda value: value
+
+        return cls._converter_factory(from_unit, to_unit)
+
+    @classmethod
+    @lru_cache
+    def converter_factory_allow_none(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float | None], float | None]:
+        """Return a function to convert a inclination from one unit to another which allows None."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in this case.
+            return lambda value: value
+
+        convert = cls._converter_factory(from_unit, to_unit)
+        return lambda value: None if value is None else convert(value)
+
+    @classmethod
+    def _converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Convert a speed from one unit to another, eg. 14m/s will return 7Bft."""
+        # We cannot use the implementation from BaseUnitConverter here because the
+        # inclination convertion is math function, not simple factor.
+        if (
+            from_unit not in InclinationConverter.VALID_UNITS
+            or to_unit not in InclinationConverter.VALID_UNITS
+        ):
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            )
+
+        if from_unit == UnitOfInclination.DEGREE:
+            to_ratio = cls._UNIT_CONVERSION[to_unit]
+            return lambda val: cls._degrees_to_percents(val) * to_ratio
+
+        if to_unit == UnitOfInclination.DEGREE:
+            from_ratio = cls._UNIT_CONVERSION[from_unit]
+            return lambda val: cls._percents_to_degrees(val / from_ratio)
+
+        # never gets control because only two conversion units used
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return lambda val: (val / from_ratio) * to_ratio
+
+    @classmethod
+    def _percents_to_degrees(cls, percent: float) -> float:
+        """Convert a inclination in percents to degrees."""
+        # assert 0 <= percent <= 100
+        return math.degrees(math.atan(percent / 100))
+
+    @classmethod
+    def _degrees_to_percents(cls, degree: float) -> float:
+        """Convert a inclination in degrees to percents."""
+        # assert 0 <= degree <= 45
+        return math.tan(math.radians(degree)) * 100
 
 
 class SpeedConverter(BaseUnitConverter):
