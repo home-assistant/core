@@ -797,8 +797,9 @@ class Recorder(threading.Thread):
                 return
 
         # Schema migration and repair is now completed
-        self.migration_in_progress = False
-        self._dismiss_migration_in_progress()
+        if self.migration_in_progress:
+            self.migration_in_progress = False
+            self._dismiss_migration_in_progress()
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
