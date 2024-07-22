@@ -3,7 +3,7 @@
 from datetime import timedelta
 import importlib
 import sys
-from unittest.mock import DEFAULT, patch
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy import create_engine, inspect
@@ -107,10 +107,9 @@ async def test_migrate_times(
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch.multiple(
-            "homeassistant.components.recorder.Recorder",
-            _post_migrate_entity_ids=DEFAULT,
-            _cleanup_legacy_states_event_ids=DEFAULT,
+        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
+        patch(
+            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
         ),
     ):
         async with (
@@ -259,10 +258,9 @@ async def test_migrate_can_resume_entity_id_post_migration(
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch.multiple(
-            "homeassistant.components.recorder.Recorder",
-            _post_migrate_entity_ids=DEFAULT,
-            _cleanup_legacy_states_event_ids=DEFAULT,
+        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
+        patch(
+            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
         ),
     ):
         async with (
@@ -314,6 +312,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_ix_states_event_id_removed(
@@ -381,10 +380,9 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch.multiple(
-            "homeassistant.components.recorder.Recorder",
-            _post_migrate_entity_ids=DEFAULT,
-            _cleanup_legacy_states_event_ids=DEFAULT,
+        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
+        patch(
+            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
         ),
     ):
         async with (
@@ -440,6 +438,7 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
 
         states_indexes = await instance.async_add_executor_job(_get_states_index_names)
         states_index_names = {index["name"] for index in states_indexes}
+        assert instance.use_legacy_events_index is False
         assert "ix_states_entity_id_last_updated_ts" not in states_index_names
         assert "ix_states_event_id" not in states_index_names
         assert await instance.async_add_executor_job(_get_event_id_foreign_keys) is None
