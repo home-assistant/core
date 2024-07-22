@@ -78,7 +78,7 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
 
-    devices = hive.session.deviceList.get("binary_sensor")
+    devices = hive.session.deviceList.get("binary_sensor") + hive.session.deviceList.get("sensor")
     if not devices:
         return
     async_add_entities(
@@ -90,10 +90,6 @@ async def async_setup_entry(
         ),
         True,
     )
-
-    devices = hive.session.deviceList.get("sensor")
-    if not devices:
-        return
     async_add_entities(
         (
             HiveSensorEntity(hive, dev, description)
