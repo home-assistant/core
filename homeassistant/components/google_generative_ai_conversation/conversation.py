@@ -89,9 +89,9 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
             key = "type_"
             val = val.upper()
         elif key == "format":
-            if schema.get("type") == "string" and val != "enum":
-                continue
-            if schema.get("type") not in ("number", "integer", "string"):
+            if (schema.get("type") == "string" and val != "enum") or (
+                schema.get("type") not in ("number", "integer", "string")
+            ):
                 continue
             key = "format_"
         elif key == "items":
