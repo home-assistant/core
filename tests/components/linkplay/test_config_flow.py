@@ -149,25 +149,26 @@ async def test_zeroconf_flow_re_entry(
     assert result["reason"] == "already_configured"
 
 
-# async def test_flow_errors(
-#     hass: HomeAssistant,
-#     mock_linkplay_factory_bridge_empty: AsyncMock,
-#     mock_setup_entry: AsyncMock,
-# ) -> None:
-#     """Test flow errors."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_USER},
-#     )
-#     await hass.async_block_till_done()
-#     assert result["type"] is FlowResultType.FORM
-#     assert result["step_id"] == "user"
+async def test_flow_errors(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge_empty: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-#     result = await hass.config_entries.flow.async_configure(
-#         result["flow_id"],
-#         {CONF_HOST: HOST},
-#     )
-#     await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST},
+    )
+    await hass.async_block_till_done()
 
-#     assert result["type"] is FlowResultType.FORM
-#     assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}

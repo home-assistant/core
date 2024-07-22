@@ -16,16 +16,17 @@ NAME = "Smart Zone 1_54B9"
 def mock_linkplay_factory_bridge() -> Generator[AsyncMock]:
     """Mock for linkplay_factory_bridge."""
 
-    bridge = AsyncMock(spec=LinkPlayBridge)
-    bridge.endpoint = "192.168.0.150"
-    bridge.device = AsyncMock(spec=LinkPlayDevice)
-    bridge.device.uuid = UUID
-    bridge.device.name = NAME
-
-    with patch(
-        "linkplay.discovery.linkplay_factory_bridge",
-        return_value=bridge,
-    ) as factory:
+    with (
+        patch(
+            "homeassistant.components.linkplay.config_flow.linkplay_factory_bridge"
+        ) as factory,
+    ):
+        bridge = AsyncMock(spec=LinkPlayBridge)
+        bridge.endpoint = "192.168.0.150"
+        bridge.device = AsyncMock(spec=LinkPlayDevice)
+        bridge.device.uuid = UUID
+        bridge.device.name = NAME
+        factory.return_value = bridge
         yield factory
 
 
@@ -33,10 +34,13 @@ def mock_linkplay_factory_bridge() -> Generator[AsyncMock]:
 def mock_linkplay_factory_bridge_empty() -> Generator[AsyncMock]:
     """Mock for linkplay_factory_bridge."""
 
-    with patch(
-        "linkplay.discovery.linkplay_factory_bridge",
-        return_value=None,
-    ) as factory:
+    with (
+        patch(
+            "homeassistant.components.linkplay.config_flow.linkplay_factory_bridge"
+        ) as factory,
+    ):
+        bridge = None
+        factory.return_value = bridge
         yield factory
 
 
