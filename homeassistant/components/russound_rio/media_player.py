@@ -224,8 +224,8 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 # Use MAC address of Russound device as identifier
                 (DOMAIN, self._controller.mac_address)
             },
-            name=self.name,
             manufacturer="Russound",
+            name=self._controller.controller_type,
             model=self._controller.controller_type,
             sw_version=self._controller.firmware_version,
         )
