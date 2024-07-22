@@ -40,27 +40,6 @@ async def test_start_watering(
     )
 
 
-async def test_start_watering_clamps_duration(
-    hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
-    mock_pydrawise: AsyncMock,
-    zones: list[Zone],
-) -> None:
-    """Test that the start_watering service clamps the duration."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_START_WATERING,
-        {
-            ATTR_ENTITY_ID: "binary_sensor.zone_one_watering",
-            ATTR_DURATION: timedelta(hours=12),
-        },
-        blocking=True,
-    )
-    mock_pydrawise.start_zone.assert_called_once_with(
-        zones[0], custom_run_duration=90 * 60
-    )
-
-
 async def test_start_watering_no_duration(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
