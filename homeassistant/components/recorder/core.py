@@ -716,6 +716,15 @@ class Recorder(threading.Thread):
         self._event_session_has_pending_writes = True
         session.add(obj)
 
+    def _notify_migration_failed(self) -> None:
+        """Notify the user schema migration failed."""
+        persistent_notification.create(
+            self.hass,
+            "The database migration failed, check [the logs](/config/logs).",
+            "Database Migration Failed",
+            "recorder_database_migration",
+        )
+
     def _run(self) -> None:
         """Start processing events to save."""
         thread_id = threading.get_ident()
@@ -741,26 +750,36 @@ class Recorder(threading.Thread):
             self.migration_is_live = migration.live_migration(schema_status)
 
         self.hass.add_job(self.async_connection_success)
-        database_was_ready = self.migration_is_live or schema_status.valid
 
-        if database_was_ready:
-            # If the migrate is live or the schema is valid, we need to
-            # wait for startup to complete. If its not live, we need to continue
-            # on.
-            self._activate_and_set_db_ready()
-
-            # We wait to start a live migration until startup has finished
-            # since it can be cpu intensive and we do not want it to compete
-            # with startup which is also cpu intensive
-            if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
-                # Shutdown happened before Home Assistant finished starting
-                self.migration_in_progress = False
-                # Make sure we cleanly close the run if
-                # we restart before startup finishes
-                return
-
+        # First do non-live migration steps, if needed
         if not schema_status.valid:
-            if self._migrate_schema_and_setup_run(schema_status):
+            result, schema_status = self._migrate_schema_offline(schema_status)
+            if not result:
+                self._notify_migration_failed()
+                self.migration_in_progress = False
+                return
+            self.schema_version = schema_status.current_version
+            # Non-live migration is now completed, remaining steps are live
+            self.migration_is_live = True
+
+        # After non-live migration, activate the recorder
+        self._activate_and_set_db_ready(schema_status)
+        # We wait to start a live migration until startup has finished
+        # since it can be cpu intensive and we do not want it to compete
+        # with startup which is also cpu intensive
+        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+            # Shutdown happened before Home Assistant finished starting
+            self.migration_in_progress = False
+            # Make sure we cleanly close the run if
+            # we restart before startup finishes
+            return
+
+        # Do live migration steps, if needed
+        if not schema_status.valid:
+            result, schema_status = self._migrate_schema_live_and_setup_run(
+                schema_status
+            )
+            if result:
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
                     # If the schema migration takes so long that the end
@@ -768,16 +787,8 @@ class Recorder(threading.Thread):
                     # was True, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
             else:
-                persistent_notification.create(
-                    self.hass,
-                    "The database migration failed, check [the logs](/config/logs).",
-                    "Database Migration Failed",
-                    "recorder_database_migration",
-                )
+                self._notify_migration_failed()
                 return
-
-        if not database_was_ready:
-            self._activate_and_set_db_ready()
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
@@ -786,7 +797,9 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
 
-    def _activate_and_set_db_ready(self) -> None:
+    def _activate_and_set_db_ready(
+        self, schema_status: migration.SchemaValidationStatus
+    ) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
         with session_scope(session=self.get_session()) as session:
             # Prime the statistics meta manager as soon as possible
@@ -808,7 +821,7 @@ class Recorder(threading.Thread):
                 EventTypeIDMigration,
                 EntityIDMigration,
             ):
-                migrator = migrator_cls(schema_version, migration_changes)
+                migrator = migrator_cls(schema_status.start_version, migration_changes)
                 migrator.do_migrate(self, session)
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
@@ -947,9 +960,15 @@ class Recorder(threading.Thread):
         """Set the migration started event."""
         self.async_migration_event.set()
 
-    def _migrate_schema_and_setup_run(
+    def _migrate_schema_offline(
         self, schema_status: migration.SchemaValidationStatus
-    ) -> bool:
+    ) -> tuple[bool, migration.SchemaValidationStatus]:
+        """Migrate schema to the latest version."""
+        return self._migrate_schema(schema_status, False)
+
+    def _migrate_schema_live_and_setup_run(
+        self, schema_status: migration.SchemaValidationStatus
+    ) -> tuple[bool, migration.SchemaValidationStatus]:
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
@@ -965,26 +984,40 @@ class Recorder(threading.Thread):
             "recorder_database_migration",
         )
         self.hass.add_job(self._async_migration_started)
-
         try:
-            assert self.engine is not None
-            migration.migrate_schema(
+            migration_result, schema_status = self._migrate_schema(schema_status, True)
+            if migration_result:
+                self._setup_run()
+            return migration_result, schema_status
+        finally:
+            self.migration_in_progress = False
+            persistent_notification.dismiss(self.hass, "recorder_database_migration")
+
+    def _migrate_schema(
+        self,
+        schema_status: migration.SchemaValidationStatus,
+        live: bool,
+    ) -> tuple[bool, migration.SchemaValidationStatus]:
+        """Migrate schema to the latest version."""
+        assert self.engine is not None
+        try:
+            if live:
+                migrator = migration.migrate_schema_live
+            else:
+                migrator = migration.migrate_schema_non_live
+            new_schema_status = migrator(
                 self, self.hass, self.engine, self.get_session, schema_status
             )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
-                return True
+                return (True, schema_status)
             _LOGGER.exception("Database error during schema migration")
-            return False
+            return (False, schema_status)
         except Exception:
             _LOGGER.exception("Error during schema migration")
-            return False
+            return (False, schema_status)
         else:
-            self._setup_run()
-            return True
-        finally:
-            self.migration_in_progress = False
-            persistent_notification.dismiss(self.hass, "recorder_database_migration")
+            return (True, new_schema_status)
 
     def _lock_database(self, task: DatabaseLockTask) -> None:
         @callback
