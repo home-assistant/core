@@ -7,7 +7,7 @@ import json
 import logging
 from typing import Any
 
-from pysqueezebox import Server, async_discover
+from pysqueezebox import async_discover
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -22,21 +22,20 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
-from homeassistant.const import (
-    ATTR_COMMAND,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
     entity_platform,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+
+#from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -53,7 +52,6 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
-    CONF_HTTPS,
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
@@ -118,29 +116,14 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up an LMS Server from a config entry."""
-    config = config_entry.data
-    _LOGGER.debug("Reached async_setup_entry for host=%s", config[CONF_HOST])
-
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    https = config.get(CONF_HTTPS, False)
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
-
+    """Set up an player discovery from a config entry."""
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
+    lms = hass.data[DOMAIN][entry.entry_id]["server"]
 
-    session = async_get_clientsession(hass)
-    _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(session, host, port, username, password, https=https)
-
-    async def _discovery(now=None):
+    async def _player_discovery(now=None):
         """Discover squeezebox players by polling server."""
 
         async def _discovered_player(player):
@@ -161,7 +144,7 @@ async def async_setup_entry(
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player)
+                entity = SqueezeBoxEntity(player,lms)
                 known_players.append(entity)
                 async_add_entities([entity])
 
@@ -169,13 +152,13 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.data[DOMAIN][config_entry.entry_id][PLAYER_DISCOVERY_UNSUB] = (
-            async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        hass.data[DOMAIN][entry.entry_id][PLAYER_DISCOVERY_UNSUB] = (
+            async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
         )
 
-    _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    config_entry.async_create_background_task(
-        hass, _discovery(), "squeezebox.media_player.discovery"
+    _LOGGER.debug("Adding player discovery job for LMS server: %s", entry.data[CONF_HOST])
+    entry.async_create_background_task(
+        hass, _player_discovery(), "squeezebox.media_player.player_discovery"
     )
 
     # Register entity services
@@ -208,7 +191,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
-    config_entry.async_on_unload(async_at_start(hass, start_server_discovery))
+    entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
@@ -241,14 +224,18 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     _last_update: datetime | None = None
     _attr_available = True
 
-    def __init__(self, player):
+    def __init__(self, player, server):
         """Initialize the SqueezeBox device."""
         self._player = player
+        self._server = server
         self._query_result = {}
         self._remove_dispatcher = None
         self._attr_unique_id = format_mac(player.player_id)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)}, name=player.name
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=player.name,
+            via_device=(DOMAIN, server.uuid),
+            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)}
         )
 
     @property
@@ -286,7 +273,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
-                _LOGGER.info("Player %s is not available", self.name)
+                _LOGGER.info("Player %s is not available on %s", self.name,self._server.name)
                 self._attr_available = False
 
                 # start listening for restored players
