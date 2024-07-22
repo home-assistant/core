@@ -19,7 +19,7 @@
     },
     "sqlite_too_old": {
       "title": "Update SQLite to {min_version} or later to continue using the recorder",
-      "description": "Support for version {server_version} of SQLite is ending; the minimum supported version is {min_version}. Starting with Home Assistant 2025.1 this will prevent the recorder from starting. Please upgrade your database software."
+      "description": "Support for version {server_version} of SQLite is ending; the minimum supported version is {min_version}. Starting with Home Assistant {ha_version} this will prevent the recorder from starting. Please upgrade your database software."
     }
   },
   "services": {
