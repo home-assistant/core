@@ -3,7 +3,6 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-fast-zlib==0.1.1
 aiohttp==3.10.0b1
 aiohttp_cors==0.7.0
