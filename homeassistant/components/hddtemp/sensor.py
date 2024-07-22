@@ -10,7 +10,7 @@ from telnetlib import Telnet  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -38,7 +38,7 @@ DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DISKS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,

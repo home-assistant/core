@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+from pathlib import Path
 import re
 from tempfile import TemporaryDirectory
 import threading
@@ -920,6 +921,14 @@ def test_event_repr() -> None:
     )
 
 
+def test_event_origin_idx() -> None:
+    """Test the EventOrigin idx."""
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+    assert ha.EventOrigin.local.idx == 0
+    assert ha.EventOrigin.remote.idx == 1
+
+
 def test_event_as_dict() -> None:
     """Test an Event as dictionary."""
     event_type = "some_type"
@@ -1620,7 +1629,7 @@ async def test_serviceregistry_call_non_existing_with_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test non-existing with blocking."""
-    with pytest.raises(ha.ServiceNotFound):
+    with pytest.raises(ServiceNotFound):
         await hass.services.async_call("test_domain", "i_do_not_exist", blocking=True)
 
 
@@ -1706,7 +1715,7 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     assert exc.value.domain == "test_do_not"
     assert exc.value.service == "exist"
 
-    assert str(exc.value) == "Service test_do_not.exist not found"
+    assert str(exc.value) == "Action test_do_not.exist not found"
 
 
 async def test_serviceregistry_async_service_raise_exception(
@@ -1797,7 +1806,7 @@ async def test_services_call_return_response_requires_blocking(
             return_response=True,
         )
     assert str(exc.value) == (
-        "A non blocking service call with argument blocking=False "
+        "A non blocking action call with argument blocking=False "
         "can't be used together with argument return_response=True"
     )
 
@@ -1843,7 +1852,7 @@ async def test_serviceregistry_return_response_invalid(
     ("supports_response", "return_response", "expected_error"),
     [
         (SupportsResponse.NONE, True, "does not return responses"),
-        (SupportsResponse.ONLY, False, "call requires responses"),
+        (SupportsResponse.ONLY, False, "action requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
@@ -2001,8 +2010,9 @@ async def test_config_is_allowed_path() -> None:
         config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
         test_file = os.path.join(tmp_dir, "test.jpg")
-        with open(test_file, "w", encoding="utf8") as tmp_file:
-            tmp_file.write("test")
+        await asyncio.get_running_loop().run_in_executor(
+            None, Path(test_file).write_text, "test"
+        )
 
         valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
         for path in valid:
@@ -2519,14 +2529,14 @@ async def test_reserving_states(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bedroom", "on")
     assert hass.states.async_available("light.bedroom") is False
 
-    with pytest.raises(ha.HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         hass.states.async_reserve("light.bedroom")
 
     hass.states.async_remove("light.bedroom")
     assert hass.states.async_available("light.bedroom") is True
     hass.states.async_set("light.bedroom", "on")
 
-    with pytest.raises(ha.HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         hass.states.async_reserve("light.bedroom")
 
     assert hass.states.async_available("light.bedroom") is False
@@ -2830,7 +2840,7 @@ async def test_state_change_events_context_id_match_state_time(
     hass: HomeAssistant,
 ) -> None:
     """Test last_updated, timed_fired, and the ulid all have the same time."""
-    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
     hass.states.async_set("light.bedroom", "on")
     await hass.async_block_till_done()
     state: State = hass.states.get("light.bedroom")
@@ -2849,7 +2859,7 @@ async def test_state_change_events_match_time_with_limits_of_precision(
     a bit better than the precision of datetime.now() which is used for last_updated
     on some platforms.
     """
-    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
     hass.states.async_set("light.bedroom", "on")
     await hass.async_block_till_done()
     state: State = hass.states.get("light.bedroom")
@@ -3094,14 +3104,14 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
-def test_is_callback_check_partial():
+def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert ha.is_callback(callback_func)
@@ -3130,14 +3140,14 @@ def test_is_callback_check_partial():
     )
 
 
-def test_hassjob_passing_job_type():
+def test_hassjob_passing_job_type() -> None:
     """Test passing the job type to HassJob when we already know it."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert (
@@ -3221,7 +3231,7 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     evt = threading.Event()
     loop = asyncio.get_running_loop()
 
-    def executor_func() -> None:
+    def executor_func() -> threading.Event:
         evt.set()
         return evt
 
@@ -3237,7 +3247,7 @@ async def test_async_run_job_deprecated(
 ) -> None:
     """Test async_run_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_run_job(_test)
@@ -3254,7 +3264,7 @@ async def test_async_add_job_deprecated(
 ) -> None:
     """Test async_add_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_job(_test)
@@ -3271,7 +3281,7 @@ async def test_async_add_hass_job_deprecated(
 ) -> None:
     """Test async_add_hass_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_hass_job(HassJob(_test))
@@ -3385,24 +3395,24 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(state_changed_events) == 1
-    assert len(state_reported_events) == 2
+    assert len(state_reported_events) == 1
 
     hass.states.async_set("light.bowl", "off")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 2
-    assert len(state_reported_events) == 3
+    assert len(state_reported_events) == 1
 
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
     unsub()
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 4
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
 
 async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:

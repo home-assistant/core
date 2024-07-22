@@ -275,7 +275,7 @@
         "name": "Indicator light mode",
         "state": {
           "none": "[%key:common::state::off%]",
-          "pos": "Indicate switch location",
+          "pos": "Indicate inverted switch state",
           "relay": "Indicate switch on/off state"
         }
       },
@@ -517,6 +517,9 @@
       "total_energy": {
         "name": "Total energy"
       },
+      "total_production": {
+        "name": "Total production"
+      },
       "phase_a_current": {
         "name": "Phase A current"
       },
@@ -637,6 +640,9 @@
       },
       "filter_reset": {
         "name": "Filter reset"
+      },
+      "pump": {
+        "name": "Pump"
       },
       "water_pump_reset": {
         "name": "Water pump reset"

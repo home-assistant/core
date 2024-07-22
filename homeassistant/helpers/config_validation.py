@@ -108,6 +108,7 @@ from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
 from .frame import get_integration_logger
+from .typing import VolDictType, VolSchemaType
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -980,8 +981,8 @@ def removed(
 
 def key_value_schemas(
     key: str,
-    value_schemas: dict[Hashable, vol.Schema],
-    default_schema: vol.Schema | None = None,
+    value_schemas: dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]],
+    default_schema: VolSchemaType | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
@@ -1015,12 +1016,12 @@ def key_value_schemas(
 # Validator helpers
 
 
-def key_dependency(
+def key_dependency[_KT: Hashable, _VT](
     key: Hashable, dependency: Hashable
-) -> Callable[[dict[Hashable, Any]], dict[Hashable, Any]]:
+) -> Callable[[dict[_KT, _VT]], dict[_KT, _VT]]:
     """Validate that all dependencies exist for key."""
 
-    def validator(value: dict[Hashable, Any]) -> dict[Hashable, Any]:
+    def validator(value: dict[_KT, _VT]) -> dict[_KT, _VT]:
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid("key dependencies require a dict")
@@ -1037,6 +1038,7 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from .. import data_entry_flow  # pylint: disable=import-outside-toplevel
     from . import selector  # pylint: disable=import-outside-toplevel
 
     if schema is positive_time_period_dict:
@@ -1047,6 +1049,15 @@ def custom_serializer(schema: Any) -> Any:
 
     if schema is boolean:
         return {"type": "boolean"}
+
+    if isinstance(schema, data_entry_flow.section):
+        return {
+            "type": "expandable",
+            "schema": voluptuous_serialize.convert(
+                schema.schema, custom_serializer=custom_serializer
+            ),
+            "expanded": not schema.options["collapsed"],
+        }
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
@@ -1193,7 +1204,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_FIELDS = {
+ENTITY_SERVICE_FIELDS: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
     # of static and dynamic templates. While this could be solved with a single
     # complex template, handling it like this, keeps config validation useful.
@@ -1299,7 +1310,7 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {
+SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
@@ -1345,7 +1356,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
-CONDITION_BASE_SCHEMA = {
+CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
@@ -1394,13 +1405,13 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:
+def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")
 
     if CONF_ATTRIBUTE in value:
-        validated: dict = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
+        validated: dict[str, Any] = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
     else:
         validated = STATE_CONDITION_STATE_SCHEMA(value)
 

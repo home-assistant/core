@@ -79,6 +79,9 @@ class ReolinkHost:
         )
         self.firmware_ch_list: list[int | None] = []
 
+        self.starting: bool = True
+        self.credential_errors: int = 0
+
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
         self._onvif_long_poll_supported: bool = True
@@ -191,7 +194,10 @@ class ReolinkHost:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "enable_port")
 
-        self._unique_id = format_mac(self._api.mac_address)
+        if self._api.supported(None, "UID"):
+            self._unique_id = self._api.uid
+        else:
+            self._unique_id = format_mac(self._api.mac_address)
 
         if self._onvif_push_supported:
             try:
@@ -237,25 +243,35 @@ class ReolinkHost:
                     self._async_check_onvif_long_poll,
                 )
 
-        if self._api.sw_version_update_required:
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "firmware_update",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="firmware_update",
-                translation_placeholders={
-                    "required_firmware": self._api.sw_version_required.version_string,
-                    "current_firmware": self._api.sw_version,
-                    "model": self._api.model,
-                    "hw_version": self._api.hardware_version,
-                    "name": self._api.nvr_name,
-                    "download_link": "https://reolink.com/download-center/",
-                },
-            )
-        else:
-            ir.async_delete_issue(self._hass, DOMAIN, "firmware_update")
+        ch_list: list[int | None] = [None]
+        if self._api.is_nvr:
+            ch_list.extend(self._api.channels)
+        for ch in ch_list:
+            if not self._api.supported(ch, "firmware"):
+                continue
+
+            key = ch if ch is not None else "host"
+            if self._api.camera_sw_version_update_required(ch):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"firmware_update_{key}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="firmware_update",
+                    translation_placeholders={
+                        "required_firmware": self._api.camera_sw_version_required(
+                            ch
+                        ).version_string,
+                        "current_firmware": self._api.camera_sw_version(ch),
+                        "model": self._api.camera_model(ch),
+                        "hw_version": self._api.camera_hardware_version(ch),
+                        "name": self._api.camera_name(ch),
+                        "download_link": "https://reolink.com/download-center/",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, f"firmware_update_{key}")
 
     async def _async_check_onvif(self, *_) -> None:
         """Check the ONVIF subscription."""

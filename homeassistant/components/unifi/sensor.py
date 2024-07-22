@@ -139,7 +139,7 @@ def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | No
 
 
 @callback
-def async_device_uptime_value_changed_fn(
+def async_uptime_value_changed_fn(
     old: StateType | date | datetime | Decimal, new: datetime | float | str | None
 ) -> bool:
     """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
@@ -310,6 +310,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda hub, _: hub.config.option_allow_uptime_sensors,
         unique_id_fn=lambda hub, obj_id: f"uptime-{obj_id}",
         value_fn=async_client_uptime_value_fn,
+        value_changed_fn=async_uptime_value_changed_fn,
     ),
     UnifiSensorEntityDescription[Wlans, Wlan](
         key="WLAN clients",
@@ -341,6 +342,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="Outlet power metering",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         api_handler_fn=lambda api: api.outlets,
         available_fn=async_device_available_fn,
@@ -356,6 +358,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="SmartPower AC power budget",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
         api_handler_fn=lambda api: api.devices,
@@ -371,6 +374,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="SmartPower AC power consumption",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
         api_handler_fn=lambda api: api.devices,
@@ -393,7 +397,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.devices[obj_id],
         unique_id_fn=lambda hub, obj_id: f"device_uptime-{obj_id}",
         value_fn=async_device_uptime_value_fn,
-        value_changed_fn=async_device_uptime_value_changed_fn,
+        value_changed_fn=async_uptime_value_changed_fn,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device temperature",

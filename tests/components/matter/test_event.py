@@ -40,11 +40,10 @@ async def test_generic_switch_node(
     generic_switch_node: MatterNode,
 ) -> None:
     """Test event entity for a GenericSwitch node."""
-    state = hass.states.get("event.mock_generic_switch")
+    state = hass.states.get("event.mock_generic_switch_button")
     assert state
     assert state.state == "unknown"
-    # the switch endpoint has no label so the entity name should be the device itself
-    assert state.name == "Mock Generic Switch"
+    assert state.name == "Mock Generic Switch Button"
     # check event_types from featuremap 30
     assert state.attributes[ATTR_EVENT_TYPES] == [
         "initial_press",
@@ -71,7 +70,7 @@ async def test_generic_switch_node(
             data=None,
         ),
     )
-    state = hass.states.get("event.mock_generic_switch")
+    state = hass.states.get("event.mock_generic_switch_button")
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
     # trigger firing a multi press event
     await trigger_subscription_callback(
@@ -90,7 +89,7 @@ async def test_generic_switch_node(
             data={"NewPosition": 3},
         ),
     )
-    state = hass.states.get("event.mock_generic_switch")
+    state = hass.states.get("event.mock_generic_switch_button")
     assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_ongoing"
     assert state.attributes["NewPosition"] == 3
 
@@ -106,8 +105,8 @@ async def test_generic_switch_multi_node(
     state_button_1 = hass.states.get("event.mock_generic_switch_button_1")
     assert state_button_1
     assert state_button_1.state == "unknown"
-    # name should be 'DeviceName Button 1' due to the label set to just '1'
-    assert state_button_1.name == "Mock Generic Switch Button 1"
+    # name should be 'DeviceName Button (1)' due to the label set to just '1'
+    assert state_button_1.name == "Mock Generic Switch Button (1)"
     # check event_types from featuremap 14
     assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
         "initial_press",

@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 import contextlib
-from enum import Enum
 from pathlib import Path
 import socket
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from aiohttp import CookieJar
-from typing_extensions import Generator
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
@@ -41,21 +39,6 @@ from .const import (
 
 if TYPE_CHECKING:
     from .data import UFPConfigEntry
-
-_SENTINEL = object()
-
-
-def get_nested_attr(obj: Any, attrs: tuple[str, ...]) -> Any:
-    """Fetch a nested attribute."""
-    if len(attrs) == 1:
-        value = getattr(obj, attrs[0], None)
-    else:
-        value = obj
-        for key in attrs:
-            if (value := getattr(value, key, _SENTINEL)) is _SENTINEL:
-                return None
-
-    return value.value if isinstance(value, Enum) else value
 
 
 @callback

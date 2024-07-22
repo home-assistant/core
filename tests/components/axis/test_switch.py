@@ -30,7 +30,7 @@ root.IOPort.I1.Output.Active=open
 
 
 @pytest.mark.parametrize("param_ports_payload", [PORT_DATA])
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_switches_with_port_cgi(
     hass: HomeAssistant,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
@@ -115,7 +115,7 @@ PORT_MANAGEMENT_RESPONSE = {
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_PORT_MANAGEMENT])
 @pytest.mark.parametrize("port_management_payload", [PORT_MANAGEMENT_RESPONSE])
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_switches_with_port_management(
     hass: HomeAssistant,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],

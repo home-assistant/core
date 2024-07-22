@@ -45,8 +45,30 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "water_freeze": {
+        "name": "Water freeze"
+      },
+      "rain": {
+        "name": "Rain"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "[%key:component::cover::title%]"
+      }
+    },
     "event": {
-      "push": {
+      "button": {
+        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -64,6 +86,7 @@
     },
     "fan": {
       "fan": {
+        "name": "[%key:component::fan::title%]",
         "state_attributes": {
           "preset_mode": {
             "state": {
@@ -76,6 +99,35 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "on_level": {
+        "name": "On level"
+      },
+      "on_transition_time": {
+        "name": "On transition time"
+      },
+      "off_transition_time": {
+        "name": "Off transition time"
+      },
+      "on_off_transition_time": {
+        "name": "On/Off transition time"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode"
       }
     },
     "sensor": {
@@ -100,6 +152,24 @@
       "hepa_filter_condition": {
         "name": "Hepa filter condition"
       }
+    },
+    "switch": {
+      "switch": {
+        "name": "[%key:component::switch::title%]"
+      },
+      "power": {
+        "name": "Power"
+      }
+    }
+  },
+  "issues": {
+    "server_version_version_too_old": {
+      "description": "The version of the Matter Server you are currently running is too old for this version of Home Assistant. Please update the Matter Server to the latest version to fix this issue.",
+      "title": "Newer version of Matter Server needed"
+    },
+    "server_version_version_too_new": {
+      "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
+      "title": "Older version of Matter Server needed"
     }
   },
   "services": {

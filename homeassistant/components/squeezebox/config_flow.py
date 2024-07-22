@@ -1,4 +1,4 @@
-"""Config flow for Logitech Squeezebox integration."""
+"""Config flow for Squeezebox integration."""
 
 import asyncio
 from http import HTTPStatus
@@ -64,7 +64,7 @@ def _base_schema(discovery_info=None):
 
 
 class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Logitech Squeezebox."""
+    """Handle a config flow for Squeezebox."""
 
     VERSION = 1
 

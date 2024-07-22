@@ -81,7 +81,7 @@ async def test_device_registry_single_node_device_alt(
     assert entry is not None
 
     # test name is derived from productName (because nodeLabel is absent)
-    assert entry.name == "Mock OnOffPluginUnit (powerplug/switch)"
+    assert entry.name == "Mock OnOffPluginUnit"
 
     # test serial id NOT present as additional identifier
     assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
@@ -163,13 +163,13 @@ async def test_node_added_subscription(
         )
     )
 
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert not entity_state
 
     node_added_callback(EventType.NODE_ADDED, node)
     await hass.async_block_till_done()
 
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
 
 
@@ -185,6 +185,24 @@ async def test_device_registry_single_node_composed_device(
     )
     dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
+
+
+async def test_multi_endpoint_name(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "multi-endpoint-light",
+        matter_client,
+    )
+    entity_state = hass.states.get("light.inovelli_light_1")
+    assert entity_state
+    assert entity_state.name == "Inovelli Light (1)"
+    entity_state = hass.states.get("light.inovelli_light_6")
+    assert entity_state
+    assert entity_state.name == "Inovelli Light (6)"
 
 
 async def test_get_clean_name_() -> None:

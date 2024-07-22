@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -28,9 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, POWERWALL_COORDINATOR
+from .const import POWERWALL_COORDINATOR
 from .entity import BatteryEntity, PowerWallEntity
-from .models import BatteryResponse, PowerwallRuntimeData
+from .models import BatteryResponse, PowerwallConfigEntry, PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
@@ -219,11 +218,11 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PowerwallConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the powerwall sensors."""
-    powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
+    powerwall_data = entry.runtime_data
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
     assert coordinator is not None
     data = coordinator.data

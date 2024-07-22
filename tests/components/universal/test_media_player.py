@@ -325,10 +325,10 @@ async def test_config_bad_children(hass: HomeAssistant) -> None:
     config_bad_children = {"name": "test", "children": {}, "platform": "universal"}
 
     config_no_children = validate_config(config_no_children)
-    assert [] == config_no_children["children"]
+    assert config_no_children["children"] == []
 
     config_bad_children = validate_config(config_bad_children)
-    assert [] == config_bad_children["children"]
+    assert config_bad_children["children"] == []
 
 
 async def test_config_bad_commands(hass: HomeAssistant) -> None:
@@ -336,7 +336,7 @@ async def test_config_bad_commands(hass: HomeAssistant) -> None:
     config = {"name": "test", "platform": "universal"}
 
     config = validate_config(config)
-    assert {} == config["commands"]
+    assert config["commands"] == {}
 
 
 async def test_config_bad_attributes(hass: HomeAssistant) -> None:
@@ -344,7 +344,7 @@ async def test_config_bad_attributes(hass: HomeAssistant) -> None:
     config = {"name": "test", "platform": "universal"}
 
     config = validate_config(config)
-    assert {} == config["attributes"]
+    assert config["attributes"] == {}
 
 
 async def test_config_bad_key(hass: HomeAssistant) -> None:

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import codecs
+from collections.abc import Callable
 from typing import Any, Literal
 
-from google.api_core.exceptions import GoogleAPICallError
+from google.api_core.exceptions import GoogleAPIError
 import google.generativeai as genai
 from google.generativeai import protos
 import google.generativeai.types as genai_types
@@ -89,10 +90,17 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _format_tool(tool: llm.Tool) -> dict[str, Any]:
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> dict[str, Any]:
     """Format tool specification."""
 
-    parameters = _format_schema(convert(tool.parameters))
+    if tool.parameters.schema:
+        parameters = _format_schema(
+            convert(tool.parameters, custom_serializer=custom_serializer)
+        )
+    else:
+        parameters = None
 
     return protos.Tool(
         {
@@ -161,10 +169,14 @@ class GoogleGenerativeAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        intent_response = intent.IntentResponse(language=user_input.language)
-        llm_api: llm.APIInstance | None = None
-        tools: list[dict[str, Any]] | None = None
-        user_name: str | None = None
+        result = conversation.ConversationResult(
+            response=intent.IntentResponse(language=user_input.language),
+            conversation_id=user_input.conversation_id
+            if user_input.conversation_id in self.history
+            else ulid.ulid_now(),
+        )
+        assert result.conversation_id
+
         llm_context = llm.LLMContext(
             platform=DOMAIN,
             context=user_input.context,
@@ -173,7 +185,8 @@ class GoogleGenerativeAIConversationEntity(
             assistant=conversation.DOMAIN,
             device_id=user_input.device_id,
         )
-
+        llm_api: llm.APIInstance | None = None
+        tools: list[dict[str, Any]] | None = None
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
@@ -183,17 +196,35 @@ class GoogleGenerativeAIConversationEntity(
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
-                intent_response.async_set_error(
+                result.response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Error preparing LLM API: {err}",
                 )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=user_input.conversation_id
-                )
-            tools = [_format_tool(tool) for tool in llm_api.tools]
+                return result
+            tools = [
+                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+            ]
+
+        try:
+            prompt = await self._async_render_prompt(user_input, llm_api, llm_context)
+        except TemplateError as err:
+            LOGGER.error("Error rendering prompt: %s", err)
+            result.response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                f"Sorry, I had a problem with my template: {err}",
+            )
+            return result
+
+        model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        # Gemini 1.0 doesn't support system_instruction while 1.5 does.
+        # Assume future versions will support it (if not, the request fails with a
+        # clear message at which point we can fix).
+        supports_system_instruction = (
+            "gemini-1.0" not in model_name and "gemini-pro" not in model_name
+        )
 
         model = genai.GenerativeModel(
-            model_name=self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model_name=model_name,
             generation_config={
                 "temperature": self.entry.options.get(
                     CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
@@ -219,69 +250,25 @@ class GoogleGenerativeAIConversationEntity(
                 ),
             },
             tools=tools or None,
+            system_instruction=prompt if supports_system_instruction else None,
         )
 
-        if user_input.conversation_id in self.history:
-            conversation_id = user_input.conversation_id
-            messages = self.history[conversation_id]
-        else:
-            conversation_id = ulid.ulid_now()
-            messages = [{}, {"role": "model", "parts": "Ok"}]
-
-        if (
-            user_input.context
-            and user_input.context.user_id
-            and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
-            )
-        ):
-            user_name = user.name
-
-        try:
-            if llm_api:
-                api_prompt = llm_api.api_prompt
-            else:
-                api_prompt = llm.async_render_no_api_prompt(self.hass)
-
-            prompt = "\n".join(
-                (
-                    template.Template(
-                        llm.BASE_PROMPT
-                        + self.entry.options.get(
-                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                        ),
-                        self.hass,
-                    ).async_render(
-                        {
-                            "ha_name": self.hass.config.location_name,
-                            "user_name": user_name,
-                            "llm_context": llm_context,
-                        },
-                        parse_result=False,
-                    ),
-                    api_prompt,
-                )
-            )
-
-        except TemplateError as err:
-            LOGGER.error("Error rendering prompt: %s", err)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem with my template: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
-
-        # Make a copy, because we attach it to the trace event.
-        messages = [
-            {"role": "user", "parts": prompt},
-            *messages[1:],
-        ]
+        messages = self.history.get(result.conversation_id, [])
+        if not supports_system_instruction:
+            if not messages:
+                messages = [{}, {"role": "model", "parts": "Ok"}]
+            messages[0] = {"role": "user", "parts": prompt}
 
         LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
         trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {
+                # Make a copy to attach it to the trace event.
+                "messages": messages[:]
+                if supports_system_instruction
+                else messages[2:],
+                "prompt": prompt,
+            },
         )
 
         chat = model.start_chat(history=messages)
@@ -291,7 +278,7 @@ class GoogleGenerativeAIConversationEntity(
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
-                GoogleAPICallError,
+                GoogleAPIError,
                 ValueError,
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
@@ -307,24 +294,20 @@ class GoogleGenerativeAIConversationEntity(
                         f"Sorry, I had a problem talking to Google Generative AI: {err}"
                     )
 
-                intent_response.async_set_error(
+                result.response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     error,
                 )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
+                return result
 
             LOGGER.debug("Response: %s", chat_response.parts)
             if not chat_response.parts:
-                intent_response.async_set_error(
+                result.response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     "Sorry, I had a problem getting a response from Google Generative AI.",
                 )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
-            self.history[conversation_id] = chat.history
+                return result
+            self.history[result.conversation_id] = chat.history
             function_calls = [
                 part.function_call for part in chat_response.parts if part.function_call
             ]
@@ -355,9 +338,43 @@ class GoogleGenerativeAIConversationEntity(
                 )
             chat_request = protos.Content(parts=tool_responses)
 
-        intent_response.async_set_speech(
+        result.response.async_set_speech(
             " ".join([part.text.strip() for part in chat_response.parts if part.text])
         )
-        return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
-        )
+        return result
+
+    async def _async_render_prompt(
+        self,
+        user_input: conversation.ConversationInput,
+        llm_api: llm.APIInstance | None,
+        llm_context: llm.LLMContext,
+    ) -> str:
+        user_name: str | None = None
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
+
+        parts = [
+            template.Template(
+                llm.BASE_PROMPT
+                + self.entry.options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                self.hass,
+            ).async_render(
+                {
+                    "ha_name": self.hass.config.location_name,
+                    "user_name": user_name,
+                    "llm_context": llm_context,
+                },
+                parse_result=False,
+            )
+        ]
+
+        if llm_api:
+            parts.append(llm_api.api_prompt)
+
+        return "\n".join(parts)

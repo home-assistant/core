@@ -270,3 +270,44 @@ async def test_remove_clients_no_call_on_empty_list(
     aioclient_mock.clear_requests()
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "first_seen": 100,
+                "last_seen": 500,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+async def test_services_handle_unloaded_config_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: ConfigEntry,
+    clients_all_payload,
+) -> None:
+    """Verify no call is made if config entry is unloaded."""
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
+    await hass.async_block_till_done()
+
+    aioclient_mock.clear_requests()
+
+    await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    assert aioclient_mock.call_count == 0
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_setup.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, clients_all_payload[0]["mac"])},
+    )
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: device_entry.id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 0

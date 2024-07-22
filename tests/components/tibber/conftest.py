@@ -27,7 +27,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 async def mock_tibber_setup(
     config_entry: MockConfigEntry, hass: HomeAssistant
-) -> AsyncGenerator[None, MagicMock]:
+) -> AsyncGenerator[MagicMock]:
     """Mock tibber entry setup."""
     unique_user_id = "unique_user_id"
     title = "title"

@@ -9,7 +9,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
 from homeassistant.core import (
     CoreState,
     HomeAssistant,
@@ -26,12 +26,8 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.entity import (
-    DeviceInfo,
-    Entity,
-    EntityCategory,
-    async_generate_entity_id,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -228,7 +224,7 @@ async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
-    platform = MockPlatform(platform_setup)
+    platform = MockPlatform(setup_platform=platform_setup)
     platform.SCAN_INTERVAL = timedelta(seconds=30)
 
     mock_platform(hass, "platform.test_domain", platform)
@@ -1187,11 +1183,11 @@ async def test_device_info_called(
     assert device.manufacturer == "test-manuf"
     assert device.model == "test-model"
     assert device.name == "test-name"
+    assert device.primary_config_entry == config_entry.entry_id
     assert device.suggested_area == "Heliport"
     assert device.sw_version == "test-sw"
     assert device.hw_version == "test-hw"
     assert device.via_device_id == via.id
-    assert device.primary_integration == config_entry.domain
 
 
 async def test_device_info_not_overrides(

@@ -4,7 +4,6 @@ To update, run python3 -m script.hassfest
 """
 
 APPLICATION_CREDENTIALS = [
-    "aladdin_connect",
     "electric_kiwi",
     "fitbit",
     "geocaching",
@@ -15,6 +14,7 @@ APPLICATION_CREDENTIALS = [
     "google_tasks",
     "home_connect",
     "husqvarna_automower",
+    "iotty",
     "lametric",
     "lyric",
     "microbees",
@@ -25,6 +25,7 @@ APPLICATION_CREDENTIALS = [
     "netatmo",
     "senz",
     "spotify",
+    "tesla_fleet",
     "twitch",
     "withings",
     "xbox",

@@ -1,0 +1,21 @@
+override_schedule:
+  target:
+    entity:
+      integration: "husqvarna_automower"
+      domain: "lawn_mower"
+  fields:
+    duration:
+      required: true
+      example: "{'days': 1, 'hours': 12, 'minutes': 30}"
+      selector:
+        duration:
+          enable_day: true
+    override_mode:
+      required: true
+      example: "mow"
+      selector:
+        select:
+          translation_key: override_modes
+          options:
+            - "mow"
+            - "park"

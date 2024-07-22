@@ -6,11 +6,11 @@ from homeassistant.components import plant
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CONDUCTIVITY,
     LIGHT_LUX,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
+    UnitOfConductivity,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -79,7 +79,9 @@ async def test_low_battery(hass: HomeAssistant) -> None:
 
 async def test_initial_states(hass: HomeAssistant) -> None:
     """Test plant initialises attributes if sensor already exists."""
-    hass.states.async_set(MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY})
+    hass.states.async_set(
+        MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS}
+    )
     plant_name = "some_plant"
     assert await async_setup_component(
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
@@ -98,7 +100,9 @@ async def test_update_states(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
     )
-    hass.states.async_set(MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY})
+    hass.states.async_set(
+        MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS}
+    )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
     assert state.state == STATE_PROBLEM
@@ -115,7 +119,9 @@ async def test_unavailable_state(hass: HomeAssistant) -> None:
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
     )
     hass.states.async_set(
-        MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY}
+        MOISTURE_ENTITY,
+        STATE_UNAVAILABLE,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS},
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
@@ -132,13 +138,17 @@ async def test_state_problem_if_unavailable(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
     )
-    hass.states.async_set(MOISTURE_ENTITY, 42, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY})
+    hass.states.async_set(
+        MOISTURE_ENTITY, 42, {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS}
+    )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
     assert state.state == STATE_OK
     assert state.attributes[plant.READING_MOISTURE] == 42
     hass.states.async_set(
-        MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY}
+        MOISTURE_ENTITY,
+        STATE_UNAVAILABLE,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS},
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")

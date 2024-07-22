@@ -38,6 +38,7 @@ from aioesphomeapi import (
     TextInfo,
     TextSensorInfo,
     TimeInfo,
+    UpdateInfo,
     UserService,
     ValveInfo,
     build_unique_id,
@@ -53,6 +54,9 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
+
+type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
+
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
 
@@ -82,6 +86,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
 }
 
@@ -246,7 +251,7 @@ class RuntimeEntryData:
     async def _ensure_platforms_loaded(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: ESPHomeConfigEntry,
         platforms: set[Platform],
     ) -> None:
         async with self.platform_load_lock:
@@ -257,7 +262,7 @@ class RuntimeEntryData:
     async def async_update_static_infos(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: ESPHomeConfigEntry,
         infos: list[EntityInfo],
         mac: str,
     ) -> None:
@@ -450,7 +455,7 @@ class RuntimeEntryData:
             await self.store.async_save(self._pending_storage())
 
     async def async_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
+        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
     ) -> None:
         """Handle options update."""
         if self.original_options == entry.options:

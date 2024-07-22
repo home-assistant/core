@@ -123,7 +123,10 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_user()
-        return self.async_show_form(step_id="reauth_confirm")
+        placeholders = {"name": self.context["title_placeholders"]["name"]}
+        return self.async_show_form(
+            step_id="reauth_confirm", description_placeholders=placeholders
+        )
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -228,8 +231,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT] = host.api.port
                 user_input[CONF_USE_HTTPS] = host.api.use_https
 
+                mac_address = format_mac(host.api.mac_address)
                 existing_entry = await self.async_set_unique_id(
-                    host.unique_id, raise_on_progress=False
+                    mac_address, raise_on_progress=False
                 )
                 if existing_entry and self._reauth:
                     if self.hass.config_entries.async_update_entry(

@@ -36,9 +36,9 @@ env:
   CACHE_VERSION: 9
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
-  HA_SHORT_VERSION: "2024.7"
-  DEFAULT_PYTHON: "3.12.3"
-  ALL_PYTHON_VERSIONS: "['3.12.3']"
+  HA_SHORT_VERSION: "2024.8"
+  DEFAULT_PYTHON: "3.12"
+  ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -86,7 +86,7 @@ jobs:
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -218,7 +218,7 @@ jobs:
 
   pre-commit:
     name: Prepare pre-commit base
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -229,7 +229,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -266,7 +266,7 @@ jobs:
 
   lint-ruff-format:
     name: Check ruff-format
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pre-commit
@@ -274,7 +274,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -306,7 +306,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pre-commit
@@ -314,7 +314,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -345,7 +345,7 @@ jobs:
           RUFF_OUTPUT_FORMAT: github
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pre-commit
@@ -353,7 +353,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -437,7 +437,7 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: info
     timeout-minutes: 60
     strategy:
@@ -448,7 +448,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -488,6 +488,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \
@@ -513,7 +514,7 @@ jobs:
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -521,11 +522,17 @@ jobs:
       - info
       - base
     steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get -y install \
+            libturbojpeg
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -545,7 +552,7 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -557,7 +564,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -575,9 +582,49 @@ jobs:
           . venv/bin/activate
           python -m script.gen_requirements_all validate
 
+  audit-licenses:
+    name: Audit licenses
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - base
+    if: |
+      needs.info.outputs.requirements == 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.7
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Run pip-licenses
+        run: |
+          . venv/bin/activate
+          pip-licenses --format=json --output-file=licenses.json
+      - name: Upload licenses
+        uses: actions/upload-artifact@v4.3.4
+        with:
+          name: licenses
+          path: licenses.json
+      - name: Process licenses
+        run: |
+          . venv/bin/activate
+          python -m script.licenses
+
   pylint:
     name: Check pylint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
@@ -590,7 +637,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -620,9 +667,54 @@ jobs:
           python --version
           pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
+  pylint-tests:
+    name: Check pylint on tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    if: |
+      (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
+      && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
+    needs:
+      - info
+      - base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.7
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Register pylint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pylint.json"
+      - name: Run pylint (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint --ignore-missing-annotations=y tests
+      - name: Run pylint (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.tests_glob }}
+
   mypy:
     name: Check mypy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
       || github.event.inputs.mypy-only == 'true'
@@ -634,7 +726,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -683,7 +775,7 @@ jobs:
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   prepare-pytest-full:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -702,12 +794,13 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -725,14 +818,14 @@ jobs:
           . venv/bin/activate
           python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
           overwrite: true
 
   pytest-full:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -764,12 +857,13 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -788,7 +882,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
           name: pytest_buckets
       - name: Compile English translations
@@ -823,14 +917,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -842,7 +936,7 @@ jobs:
           ./script/check_dirty
 
   pytest-mariadb:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -881,12 +975,13 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -947,7 +1042,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -955,7 +1050,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1005,12 +1100,13 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1072,7 +1168,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1080,7 +1176,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1093,7 +1189,7 @@ jobs:
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pytest-full
@@ -1104,7 +1200,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
@@ -1114,9 +1210,10 @@ jobs:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
+          version: v0.6.0
 
   pytest-partial:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -1148,12 +1245,13 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1211,14 +1309,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -1230,7 +1328,7 @@ jobs:
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pytest-partial
@@ -1239,7 +1337,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
@@ -1248,3 +1346,4 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          version: v0.6.0

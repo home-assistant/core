@@ -13,7 +13,7 @@ from .coordinator import AquacellCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
+type AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> bool:

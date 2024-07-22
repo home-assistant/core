@@ -28,12 +28,17 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
     selector,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DELETE_DATA,
@@ -102,7 +107,15 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.All(
     )
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Transmission component."""
+    setup_hass_services(hass)
+    return True
 
 
 async def async_setup_entry(
@@ -143,9 +156,63 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload Transmission Entry from config_entry."""
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version == 1:
+        # Version 1.2 adds ssl and path
+        if config_entry.minor_version < 2:
+            new = {**config_entry.data}
+
+            new[CONF_PATH] = DEFAULT_PATH
+            new[CONF_SSL] = DEFAULT_SSL
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, version=1, minor_version=2
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True
+
+
+def _get_coordinator_from_service_data(
+    hass: HomeAssistant, entry_id: str
+) -> TransmissionDataUpdateCoordinator:
+    """Return coordinator for entry id."""
+    entry: TransmissionConfigEntry | None = hass.config_entries.async_get_entry(
+        entry_id
+    )
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        raise HomeAssistantError(f"Config entry {entry_id} is not found or not loaded")
+    return entry.runtime_data
+
+
+def setup_hass_services(hass: HomeAssistant) -> None:
+    """Home Assistant services."""
+
     async def add_torrent(service: ServiceCall) -> None:
         """Add new torrent to download."""
-        torrent = service.data[ATTR_TORRENT]
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
+        torrent: str = service.data[ATTR_TORRENT]
         if torrent.startswith(
             ("http", "ftp:", "magnet:")
         ) or hass.config.is_allowed_path(torrent):
@@ -156,18 +223,24 @@ async def async_setup_entry(
 
     async def start_torrent(service: ServiceCall) -> None:
         """Start torrent."""
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent_id = service.data[CONF_ID]
         await hass.async_add_executor_job(coordinator.api.start_torrent, torrent_id)
         await coordinator.async_request_refresh()
 
     async def stop_torrent(service: ServiceCall) -> None:
         """Stop torrent."""
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent_id = service.data[CONF_ID]
         await hass.async_add_executor_job(coordinator.api.stop_torrent, torrent_id)
         await coordinator.async_request_refresh()
 
     async def remove_torrent(service: ServiceCall) -> None:
         """Remove torrent."""
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent_id = service.data[CONF_ID]
         delete_data = service.data[ATTR_DELETE_DATA]
         await hass.async_add_executor_job(
@@ -199,56 +272,6 @@ async def async_setup_entry(
         stop_torrent,
         schema=SERVICE_STOP_TORRENT_SCHEMA,
     )
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Unload Transmission Entry from config_entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        loaded_entries = [
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state == ConfigEntryState.LOADED
-        ]
-        if len(loaded_entries) == 1:
-            hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
-            hass.services.async_remove(DOMAIN, SERVICE_REMOVE_TORRENT)
-            hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
-            hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
-
-    return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate an old config entry."""
-    _LOGGER.debug(
-        "Migrating from version %s.%s",
-        config_entry.version,
-        config_entry.minor_version,
-    )
-
-    if config_entry.version == 1:
-        # Version 1.2 adds ssl and path
-        if config_entry.minor_version < 2:
-            new = {**config_entry.data}
-
-            new[CONF_PATH] = DEFAULT_PATH
-            new[CONF_SSL] = DEFAULT_SSL
-
-        hass.config_entries.async_update_entry(
-            config_entry, data=new, version=1, minor_version=2
-        )
-
-    _LOGGER.debug(
-        "Migration to version %s.%s successful",
-        config_entry.version,
-        config_entry.minor_version,
-    )
-
-    return True
 
 
 async def get_api(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -38,6 +39,7 @@ class MatterLock(MatterEntity, LockEntity):
     """Representation of a Matter lock."""
 
     features: int | None = None
+    _optimistic_timer: asyncio.TimerHandle | None = None
 
     @property
     def code_format(self) -> str | None:
@@ -90,6 +92,15 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
+        if not self._attr_is_locked:
+            # optimistically signal locking to state machine
+            self._attr_is_locking = True
+            self.async_write_ha_state()
+            # the lock should acknowledge the command with an attribute update
+            # but bad things may happen, so guard against it with a timer.
+            self._optimistic_timer = self.hass.loop.call_later(
+                30, self._reset_optimistic_state
+            )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
@@ -98,6 +109,15 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
+        if self._attr_is_locked:
+            # optimistically signal unlocking to state machine
+            self._attr_is_unlocking = True
+            self.async_write_ha_state()
+            # the lock should acknowledge the command with an attribute update
+            # but bad things may happen, so guard against it with a timer.
+            self._optimistic_timer = self.hass.loop.call_later(
+                30, self._reset_optimistic_state
+            )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         if self.supports_unbolt:
@@ -114,6 +134,14 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
+        # optimistically signal opening to state machine
+        self._attr_is_opening = True
+        self.async_write_ha_state()
+        # the lock should acknowledge the command with an attribute update
+        # but bad things may happen, so guard against it with a timer.
+        self._optimistic_timer = self.hass.loop.call_later(
+            30 if self._attr_is_locked else 5, self._reset_optimistic_state
+        )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
@@ -135,48 +163,47 @@ class MatterLock(MatterEntity, LockEntity):
             clusters.DoorLock.Attributes.LockState
         )
 
+        # always reset the optimisically (un)locking state on state update
+        self._reset_optimistic_state(write_state=False)
+
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
+        if lock_state is clusters.DoorLock.Enums.DlLockState.kUnlatched:
+            self._attr_is_locked = False
+            self._attr_is_open = True
         if lock_state is clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-        elif lock_state is clusters.DoorLock.Enums.DlLockState.kUnlocked:
+            self._attr_is_open = False
+        elif lock_state in (
+            clusters.DoorLock.Enums.DlLockState.kUnlocked,
+            clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
+        ):
             self._attr_is_locked = False
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-        elif lock_state is clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            if self.is_locked is True:
-                self._attr_is_unlocking = True
-            elif self.is_locked is False:
-                self._attr_is_locking = True
+            self._attr_is_open = False
         else:
-            # According to the matter docs a null state can happen during device startup.
+            # Treat any other state as unknown.
+            # NOTE: A null state can happen during device startup.
             self._attr_is_locked = None
-            self._attr_is_locking = None
-            self._attr_is_unlocking = None
+            self._attr_is_open = None
 
-        if self.supports_door_position_sensor:
-            door_state = self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.DoorState
-            )
-
-            assert door_state is not None
-
-            LOGGER.debug("Door state: %s for %s", door_state, self.entity_id)
-
-            self._attr_is_jammed = (
-                door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed
-            )
-            self._attr_is_open = (
-                door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorOpen
-            )
+    @callback
+    def _reset_optimistic_state(self, write_state: bool = True) -> None:
+        if self._optimistic_timer and not self._optimistic_timer.cancelled():
+            self._optimistic_timer.cancel()
+        self._optimistic_timer = None
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
+        self._attr_is_opening = False
+        if write_state:
+            self.async_write_ha_state()
 
 
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
-        entity_description=LockEntityDescription(key="MatterLock", name=None),
+        entity_description=LockEntityDescription(
+            key="MatterLock", translation_key="lock"
+        ),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
         optional_attributes=(clusters.DoorLock.Attributes.DoorState,),

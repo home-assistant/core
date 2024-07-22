@@ -37,7 +37,7 @@ class AdbDeviceTcpAsyncFake:
         """Try to connect to a device."""
         raise NotImplementedError
 
-    async def shell(self, cmd, *args, **kwargs):
+    async def shell(self, cmd, *args, **kwargs) -> bytes | str | None:
         """Send an ADB shell command."""
         return None
 

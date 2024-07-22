@@ -1,7 +1,8 @@
 """Tests for the Logi Circle integration."""
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
@@ -14,14 +15,14 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="disable_platforms")
-async def disable_platforms_fixture(hass):
+def disable_platforms_fixture() -> Generator[None]:
     """Disable logi_circle platforms."""
     with patch("homeassistant.components.logi_circle.PLATFORMS", []):
         yield
 
 
 @pytest.fixture
-def mock_logi_circle():
+def mock_logi_circle() -> Generator[MagicMock]:
     """Mock logi_circle."""
 
     auth_provider_mock = Mock()
@@ -37,11 +38,10 @@ def mock_logi_circle():
         yield LogiCircle
 
 
+@pytest.mark.usefixtures("disable_platforms", "mock_logi_circle")
 async def test_repair_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    disable_platforms,
-    mock_logi_circle,
 ) -> None:
     """Test the LogiCircle configuration entry loading/unloading handles the repair."""
     config_entry = MockConfigEntry(

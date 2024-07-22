@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from geocachingapi import GeocachingStatus
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.geocaching.const import DOMAIN
 

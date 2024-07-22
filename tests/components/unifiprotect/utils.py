@@ -20,6 +20,7 @@ from uiprotect.data import (
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.test_util.anonymize import random_hex
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
@@ -38,6 +39,7 @@ class MockUFPFixture:
     entry: MockConfigEntry
     api: ProtectApiClient
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
+    ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> Any:
         """Emit WS message for testing."""

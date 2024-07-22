@@ -1,4 +1,4 @@
-"""The Logitech Squeezebox integration."""
+"""The Squeezebox integration."""
 
 import logging
 
@@ -14,7 +14,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Logitech Squeezebox from a config entry."""
+    """Set up Squeezebox from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

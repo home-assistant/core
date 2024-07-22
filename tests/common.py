@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import (
+    AsyncGenerator,
+    Callable,
+    Coroutine,
+    Generator,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -17,13 +26,13 @@ import pathlib
 import threading
 import time
 from types import FrameType, ModuleType
-from typing import Any, NoReturn
+from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
-from typing_extensions import AsyncGenerator, Generator
+from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -70,7 +79,6 @@ from homeassistant.helpers import (
     intent,
     issue_registry as ir,
     label_registry as lr,
-    recorder as recorder_helper,
     restore_state as rs,
     storage,
     translation,
@@ -83,9 +91,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import (
     JsonArrayType,
     JsonObjectType,
@@ -102,6 +110,8 @@ import homeassistant.util.yaml.loader as yaml_loader
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -381,7 +391,7 @@ def async_mock_service(
     calls = []
 
     @callback
-    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
+    def mock_service_log(call):
         """Mock service call."""
         calls.append(call)
         if raise_exception is not None:
@@ -693,7 +703,7 @@ def mock_device_registry(
 class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
-    def __init__(self, id=None, name="Mock Group"):
+    def __init__(self, id: str | None = None, name: str | None = "Mock Group") -> None:
         """Mock a group."""
         kwargs = {"name": name, "policy": system_policies.ADMIN_POLICY}
         if id is not None:
@@ -701,11 +711,11 @@ class MockGroup(auth_models.Group):
 
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockGroup:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockGroup:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._groups[self.id] = self
@@ -717,13 +727,13 @@ class MockUser(auth_models.User):
 
     def __init__(
         self,
-        id=None,
-        is_owner=False,
-        is_active=True,
-        name="Mock User",
-        system_generated=False,
-        groups=None,
-    ):
+        id: str | None = None,
+        is_owner: bool = False,
+        is_active: bool = True,
+        name: str | None = "Mock User",
+        system_generated: bool = False,
+        groups: list[auth_models.Group] | None = None,
+    ) -> None:
         """Initialize mock user."""
         kwargs = {
             "is_owner": is_owner,
@@ -737,17 +747,17 @@ class MockUser(auth_models.User):
             kwargs["id"] = id
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockUser:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockUser:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
 
-    def mock_policy(self, policy):
+    def mock_policy(self, policy: auth_permissions.PolicyType) -> None:
         """Mock a policy for a user."""
         self.permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
@@ -771,7 +781,7 @@ async def register_auth_provider(
 
 
 @callback
-def ensure_auth_manager_loaded(auth_mgr):
+def ensure_auth_manager_loaded(auth_mgr: auth.AuthManager) -> None:
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:
@@ -783,21 +793,38 @@ class MockModule:
 
     def __init__(
         self,
-        domain=None,
-        dependencies=None,
-        setup=None,
-        requirements=None,
-        config_schema=None,
-        platform_schema=None,
-        platform_schema_base=None,
-        async_setup=None,
-        async_setup_entry=None,
-        async_unload_entry=None,
-        async_migrate_entry=None,
-        async_remove_entry=None,
-        partial_manifest=None,
-        async_remove_config_entry_device=None,
-    ):
+        domain: str | None = None,
+        *,
+        dependencies: list[str] | None = None,
+        setup: Callable[[HomeAssistant, ConfigType], bool] | None = None,
+        requirements: list[str] | None = None,
+        config_schema: vol.Schema | None = None,
+        platform_schema: vol.Schema | None = None,
+        platform_schema_base: vol.Schema | None = None,
+        async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
+        | None = None,
+        async_setup_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_unload_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_migrate_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_remove_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
+        ]
+        | None = None,
+        partial_manifest: dict[str, Any] | None = None,
+        async_remove_config_entry_device: Callable[
+            [HomeAssistant, ConfigEntry, dr.DeviceEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+    ) -> None:
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
         self.__file__ = f"homeassistant/components/{domain}"
@@ -858,13 +885,25 @@ class MockPlatform:
 
     def __init__(
         self,
-        setup_platform=None,
-        dependencies=None,
-        platform_schema=None,
-        async_setup_platform=None,
-        async_setup_entry=None,
-        scan_interval=None,
-    ):
+        *,
+        setup_platform: Callable[
+            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
+            None,
+        ]
+        | None = None,
+        dependencies: list[str] | None = None,
+        platform_schema: vol.Schema | None = None,
+        async_setup_platform: Callable[
+            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
+            Coroutine[Any, Any, None],
+        ]
+        | None = None,
+        async_setup_entry: Callable[
+            [HomeAssistant, ConfigEntry, AddEntitiesCallback], Coroutine[Any, Any, None]
+        ]
+        | None = None,
+        scan_interval: timedelta | None = None,
+    ) -> None:
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
@@ -930,41 +969,41 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
 class MockToggleEntity(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
-    def __init__(self, name, state, unique_id=None):
+    def __init__(self, name: str | None, state: Literal["on", "off"] | None) -> None:
         """Initialize the mock entity."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
-        self.calls = []
+        self.calls: list[tuple[str, dict[str, Any]]] = []
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity if any."""
         self.calls.append(("name", {}))
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state of the entity if any."""
         self.calls.append(("state", {}))
         return self._state
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if entity is on."""
         self.calls.append(("is_on", {}))
         return self._state == STATE_ON
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.calls.append(("turn_on", kwargs))
         self._state = STATE_ON
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.calls.append(("turn_off", kwargs))
         self._state = STATE_OFF
 
-    def last_call(self, method=None):
+    def last_call(self, method: str | None = None) -> tuple[str, dict[str, Any]]:
         """Return the last call."""
         if not self.calls:
             return None
@@ -1131,30 +1170,6 @@ def assert_setup_component(count, domain=None):
     assert (
         res_len == count
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
-
-
-def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
-    """Initialize the recorder."""
-    # Local import to avoid processing recorder and SQLite modules when running a
-    # testcase which does not use the recorder.
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
-
-    config = dict(add_config) if add_config else {}
-    if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = db_url
-        if recorder.CONF_COMMIT_INTERVAL not in config:
-            config[recorder.CONF_COMMIT_INTERVAL] = 0
-
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
-        if recorder.DOMAIN not in hass.data:
-            recorder_helper.async_initialize_recorder(hass)
-        assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
-        assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info(
-        "Test recorder successfully started, database location: %s",
-        config[recorder.CONF_DB_URL],
-    )
 
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
@@ -1425,7 +1440,7 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 
 
 @contextmanager
-def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
+def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> Iterator[None]:
     """Mock a config flow handler."""
     original_handler = config_entries.HANDLERS.get(domain)
     config_entries.HANDLERS[domain] = config_flow
@@ -1493,12 +1508,14 @@ def mock_platform(
     module_cache[platform_path] = module or Mock()
 
 
-def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
+def async_capture_events(
+    hass: HomeAssistant, event_name: EventType[_DataT] | str
+) -> list[Event[_DataT]]:
     """Create a helper that captures events."""
-    events = []
+    events: list[Event[_DataT]] = []
 
     @callback
-    def capture_events(event: Event) -> None:
+    def capture_events(event: Event[_DataT]) -> None:
         events.append(event)
 
     hass.bus.async_listen(event_name, capture_events)
@@ -1507,14 +1524,14 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
 
 
 @callback
-def async_mock_signal(
-    hass: HomeAssistant, signal: SignalType[Any] | str
-) -> list[tuple[Any]]:
+def async_mock_signal[*_Ts](
+    hass: HomeAssistant, signal: SignalType[*_Ts] | str
+) -> list[tuple[*_Ts]]:
     """Catch all dispatches to a signal."""
-    calls = []
+    calls: list[tuple[*_Ts]] = []
 
     @callback
-    def mock_signal_handler(*args: Any) -> None:
+    def mock_signal_handler(*args: *_Ts) -> None:
         """Mock service call."""
         calls.append(args)
 
@@ -1714,7 +1731,7 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
 def setup_test_component_platform(
     hass: HomeAssistant,
     domain: str,
-    entities: Sequence[Entity],
+    entities: Iterable[Entity],
     from_config_entry: bool = False,
     built_in: bool = True,
 ) -> MockPlatform:

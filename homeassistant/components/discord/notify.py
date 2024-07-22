@@ -123,7 +123,7 @@ class DiscordNotificationService(BaseNotificationService):
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
-            return None
+            return
 
         data = kwargs.get(ATTR_DATA) or {}
 

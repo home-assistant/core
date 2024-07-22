@@ -16,11 +16,11 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup_config_entry: ConfigEntry,
+    config_entry_setup: ConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
     assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, setup_config_entry)
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry_setup)
         == snapshot
     )

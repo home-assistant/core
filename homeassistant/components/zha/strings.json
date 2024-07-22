@@ -249,6 +249,13 @@
       "face_4": "With face 4 activated",
       "face_5": "With face 5 activated",
       "face_6": "With face 6 activated"
+    },
+    "extra_fields": {
+      "color": "Color hue",
+      "duration": "Duration in seconds",
+      "effect_type": "Effect type",
+      "led_number": "LED number",
+      "level": "Brightness (%)"
     }
   },
   "services": {
@@ -406,7 +413,7 @@
     },
     "warning_device_squawk": {
       "name": "Warning device squawk",
-      "description": "This service uses the WD capabilities to emit a quick audible/visible pulse called a \"squawk\". The squawk command has no effect if the WD is currently active (warning in progress).",
+      "description": "This action uses the WD capabilities to emit a quick audible/visible pulse called a \"squawk\". The squawk command has no effect if the WD is currently active (warning in progress).",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
@@ -428,7 +435,7 @@
     },
     "warning_device_warn": {
       "name": "Warning device starts alert",
-      "description": "This service starts the operation of the warning device. The warning device alerts the surrounding area by audible (siren) and visual (strobe) signals.",
+      "description": "This action starts the operation of the warning device. The warning device alerts the surrounding area by audible (siren) and visual (strobe) signals.",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",

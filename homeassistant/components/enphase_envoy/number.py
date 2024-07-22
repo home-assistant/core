@@ -89,6 +89,7 @@ async def async_setup_entry(
         envoy_data.tariff
         and envoy_data.tariff.storage_settings
         and coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE
+        and coordinator.envoy.supported_features & SupportedFeatures.ENPOWER
     ):
         entities.append(
             EnvoyStorageSettingsNumberEntity(coordinator, STORAGE_RESERVE_SOC_ENTITY)

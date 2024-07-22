@@ -21,6 +21,8 @@ INSTALLING = "installing"
 WIFI_WAIT = "downloading_wifi_wait"
 SCHEDULED = "scheduled"
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

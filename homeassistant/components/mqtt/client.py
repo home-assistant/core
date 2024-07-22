@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
 from functools import lru_cache, partial
@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 import uuid
 
 import certifi
-from typing_extensions import AsyncGenerator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -45,7 +44,6 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import SetupPhases, async_pause_setup
-from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
 
@@ -85,7 +83,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .util import get_file_path, mqtt_config_entry_enabled
+from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -358,103 +356,6 @@ class MqttClientSetup:
         return self._client
 
 
-class EnsureJobAfterCooldown:
-    """Ensure a cool down period before executing a job.
-
-    When a new execute request arrives we cancel the current request
-    and start a new one.
-    """
-
-    def __init__(
-        self, timeout: float, callback_job: Callable[[], Coroutine[Any, None, None]]
-    ) -> None:
-        """Initialize the timer."""
-        self._loop = asyncio.get_running_loop()
-        self._timeout = timeout
-        self._callback = callback_job
-        self._task: asyncio.Task | None = None
-        self._timer: asyncio.TimerHandle | None = None
-        self._next_execute_time = 0.0
-
-    def set_timeout(self, timeout: float) -> None:
-        """Set a new timeout period."""
-        self._timeout = timeout
-
-    async def _async_job(self) -> None:
-        """Execute after a cooldown period."""
-        try:
-            await self._callback()
-        except HomeAssistantError as ha_error:
-            _LOGGER.error("%s", ha_error)
-
-    @callback
-    def _async_task_done(self, task: asyncio.Task) -> None:
-        """Handle task done."""
-        self._task = None
-
-    @callback
-    def async_execute(self) -> asyncio.Task:
-        """Execute the job."""
-        if self._task:
-            # Task already running,
-            # so we schedule another run
-            self.async_schedule()
-            return self._task
-
-        self._async_cancel_timer()
-        self._task = create_eager_task(self._async_job())
-        self._task.add_done_callback(self._async_task_done)
-        return self._task
-
-    @callback
-    def _async_cancel_timer(self) -> None:
-        """Cancel any pending task."""
-        if self._timer:
-            self._timer.cancel()
-            self._timer = None
-
-    @callback
-    def async_schedule(self) -> None:
-        """Ensure we execute after a cooldown period."""
-        # We want to reschedule the timer in the future
-        # every time this is called.
-        next_when = self._loop.time() + self._timeout
-        if not self._timer:
-            self._timer = self._loop.call_at(next_when, self._async_timer_reached)
-            return
-
-        if self._timer.when() < next_when:
-            # Timer already running, set the next execute time
-            # if it fires too early, it will get rescheduled
-            self._next_execute_time = next_when
-
-    @callback
-    def _async_timer_reached(self) -> None:
-        """Handle timer fire."""
-        self._timer = None
-        if self._loop.time() >= self._next_execute_time:
-            self.async_execute()
-            return
-        # Timer fired too early because there were multiple
-        # calls async_schedule. Reschedule the timer.
-        self._timer = self._loop.call_at(
-            self._next_execute_time, self._async_timer_reached
-        )
-
-    async def async_cleanup(self) -> None:
-        """Cleanup any pending task."""
-        self._async_cancel_timer()
-        if not self._task:
-            return
-        self._task.cancel()
-        try:
-            await self._task
-        except asyncio.CancelledError:
-            pass
-        except Exception:
-            _LOGGER.exception("Error cleaning up task")
-
-
 class MQTT:
     """Home Assistant MQTT client."""
 
@@ -526,12 +427,12 @@ class MQTT:
         await self.async_init_client()
 
     @property
-    def subscriptions(self) -> list[Subscription]:
+    def subscriptions(self) -> set[Subscription]:
         """Return the tracked subscriptions."""
-        return [
+        return {
             *chain.from_iterable(self._simple_subscriptions.values()),
             *self._wildcard_subscriptions,
-        ]
+        }
 
     def cleanup(self) -> None:
         """Clean up listeners."""
@@ -803,8 +704,12 @@ class MQTT:
 
             await asyncio.sleep(RECONNECT_INTERVAL_SECONDS)
 
-    async def async_disconnect(self) -> None:
-        """Stop the MQTT client."""
+    async def async_disconnect(self, disconnect_paho_client: bool = False) -> None:
+        """Stop the MQTT client.
+
+        We only disconnect grafully if disconnect_paho_client is set, but not
+        when Home Assistant is shut down.
+        """
 
         # stop waiting for any pending subscriptions
         await self._subscribe_debouncer.async_cleanup()
@@ -824,11 +729,13 @@ class MQTT:
             self._should_reconnect = False
             self._async_cancel_reconnect()
             # We do not gracefully disconnect to ensure
-            # the broker publishes the will message
+            # the broker publishes the will message unless the entry is reloaded
+            if disconnect_paho_client:
+                self._mqttc.disconnect()
 
     @callback
     def async_restore_tracked_subscriptions(
-        self, subscriptions: list[Subscription]
+        self, subscriptions: set[Subscription]
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
@@ -893,7 +800,7 @@ class MQTT:
         """Return a string with the exception message."""
         # if msg_callback is a partial we return the name of the first argument
         if isinstance(msg_callback, partial):
-            call_back_name = getattr(msg_callback.args[0], "__name__")  # type: ignore[unreachable]
+            call_back_name = getattr(msg_callback.args[0], "__name__")
         else:
             call_back_name = getattr(msg_callback, "__name__")
         return (
@@ -1029,7 +936,8 @@ class MQTT:
         self, birth_message: PublishMessage
     ) -> None:
         """Resubscribe to all topics and publish birth message."""
-        await self._async_perform_subscriptions()
+        self._async_queue_resubscribe()
+        self._subscribe_debouncer.async_schedule()
         await self._ha_started.wait()  # Wait for Home Assistant to start
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
@@ -1085,7 +993,6 @@ class MQTT:
             result_code,
         )
 
-        self._async_queue_resubscribe()
         birth: dict[str, Any]
         if birth := self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH):
             birth_message = PublishMessage(**birth)
@@ -1096,13 +1003,8 @@ class MQTT:
             )
         else:
             # Update subscribe cooldown period to a shorter time
-            self.config_entry.async_create_background_task(
-                self.hass,
-                self._async_perform_subscriptions(),
-                name="mqtt re-subscribe",
-            )
-            self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
-            _LOGGER.info("MQTT client initialized")
+            self._async_queue_resubscribe()
+            self._subscribe_debouncer.async_schedule()
 
         self._async_connection_result(True)
 
@@ -1238,8 +1140,8 @@ class MQTT:
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reason codes are not used in Home Assistant
         future = self._async_get_mid_future(mid)
-        if future.done() and future.exception():
-            # Timed out
+        if future.done() and (future.cancelled() or future.exception()):
+            # Timed out or cancelled
             return
         future.set_result(None)
 
@@ -1274,7 +1176,8 @@ class MQTT:
         self._async_connection_result(False)
         self.connected = False
         async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, False)
-        _LOGGER.warning(
+        _LOGGER.log(
+            logging.INFO if result_code == 0 else logging.DEBUG,
             "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
