@@ -180,6 +180,8 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             raise HomeAssistantError("No software version specified")
 
         self._attr_in_progress = True
+        # Immediately update the progress state change to make frontend feel responsive.
+        # Progress updates from the device usually take few seconds to come in.
         self.async_write_ha_state()
         try:
             await self.matter_client.update_node(
