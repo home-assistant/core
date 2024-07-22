@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, Concatenate
 
@@ -104,13 +104,13 @@ async def async_setup_entry(
 
 
 def exception_wrap[_LinkPlayEntityT: LinkPlayMediaPlayerEntity, **_P, _R](
-    func: Callable[Concatenate[_LinkPlayEntityT, _P], _R],
-) -> Callable[Concatenate[_LinkPlayEntityT, _P], _R]:
+    func: Callable[Concatenate[_LinkPlayEntityT, _P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[_LinkPlayEntityT, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
 
-    def _wrap(self: _LinkPlayEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+    async def _wrap(self: _LinkPlayEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
-            return func(self, *args, **kwargs)
+            return await func(self, *args, **kwargs)
         except LinkPlayRequestException as err:
             raise HomeAssistantError(
                 f"Exception occurred when communicating with API {func}: {err}"
@@ -162,15 +162,15 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             sw_version=self._bridge.device.properties["firmware"],
         )
 
+    @exception_wrap
     async def async_update(self) -> None:
         """Update the state of the media player."""
         try:
             await self._bridge.player.update_status()
             self._update_properties()
-        except LinkPlayException as e:
-            _LOGGER.error("Error updating LinkPlay: %s", e)
+        except LinkPlayException:
             self._attr_available = False
-            raise HomeAssistantError from e
+            raise
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:
