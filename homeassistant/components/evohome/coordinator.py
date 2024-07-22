@@ -44,7 +44,7 @@ class EvoBroker:
         self._sess = sess
         self.hass = sess.hass
 
-        assert isinstance(sess.client_v2, evo.EvohomeClient)  # mypy
+        assert sess.client_v2 is not None  # mypy
 
         self.client = sess.client_v2
         self.client_v1 = sess.client_v1
