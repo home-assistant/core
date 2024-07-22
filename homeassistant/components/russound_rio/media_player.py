@@ -7,6 +7,7 @@ import logging
 from aiorussound import Source, Zone
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -109,6 +110,7 @@ async def async_setup_entry(
 class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
     _attr_supported_features = (
