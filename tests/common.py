@@ -13,7 +13,7 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, suppress
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 import functools as ft
@@ -91,7 +91,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.async_ import (
+    _SHUTDOWN_RUN_CALLBACK_THREADSAFE,
+    run_callback_threadsafe,
+)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.event_type import EventType
 from homeassistant.util.json import (
@@ -376,6 +379,9 @@ async def async_test_home_assistant(
     finally:
         # Restore timezone, it is set when creating the hass object
         dt_util.set_default_time_zone(orig_tz)
+        # Remove loop shutdown indicator to not interfere with additional hass objects
+        with suppress(AttributeError):
+            delattr(hass.loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE)
 
 
 def async_mock_service(
