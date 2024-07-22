@@ -121,11 +121,7 @@ async def test_simple_climate_device(
 
     # Event signals thermostat state on
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": True},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "state": {"on": True}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.thermostat").state == HVACMode.HEAT
@@ -215,11 +211,7 @@ async def test_climate_device_without_cooling_support(
 
     # Event signals thermostat configured off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"mode": "off"},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "config": {"mode": "off"}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.thermostat").state == STATE_OFF
@@ -246,11 +238,7 @@ async def test_climate_device_without_cooling_support(
 
     # Event signals thermostat state off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": False},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "state": {"on": False}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.thermostat").state == STATE_OFF
@@ -394,11 +382,7 @@ async def test_climate_device_with_cooling_support(
 
     # Event signals thermostat mode cool
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"mode": "cool"},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "config": {"mode": "cool"}})
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -410,11 +394,7 @@ async def test_climate_device_with_cooling_support(
 
     # Event signals thermostat state on
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": True},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "state": {"on": True}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.zen_01").state == HVACMode.COOL
@@ -494,11 +474,7 @@ async def test_climate_device_with_fan_support(
 
     # Event signals fan mode defaults to off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"fanmode": "unsupported"},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "config": {"fanmode": "unsupported"}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_OFF
@@ -524,11 +500,7 @@ async def test_climate_device_with_fan_support(
 
     # Event signals unsupported fan mode
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"fanmode": "unsupported"},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "config": {"fanmode": "unsupported"}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
@@ -632,11 +604,7 @@ async def test_climate_device_with_preset(
 
     # Event signals deCONZ preset
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"preset": "manual"},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "config": {"preset": "manual"}})
     await hass.async_block_till_done()
 
     assert (
@@ -646,11 +614,7 @@ async def test_climate_device_with_preset(
 
     # Event signals unknown preset
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"preset": "unsupported"},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "config": {"preset": "unsupported"}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.zen_01").attributes["preset_mode"] is None
@@ -784,8 +748,7 @@ async def test_verify_state_update(
         == HVACAction.HEATING
     )
 
-    event_changed_sensor = {"r": "sensors", "state": {"on": False}}
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "state": {"on": False}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
