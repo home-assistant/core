@@ -7,6 +7,12 @@ start_watering:
   fields:
     duration:
       required: false
+      selector:
+        number:
+          min: 0
+          max: 90
+          unit_of_measurement: min
+          mode: box
 suspend:
   target:
     entity:

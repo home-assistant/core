@@ -20,14 +20,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    DOMAIN,
-    LOGGER,
-    MAX_WATERING_TIME,
-    SERVICE_RESUME,
-    SERVICE_START_WATERING,
-    SERVICE_SUSPEND,
-)
+from .const import DOMAIN, SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
@@ -75,7 +68,7 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
 )
 
 SCHEMA_START_WATERING: VolDictType = {
-    vol.Optional("duration"): cv.positive_time_period,
+    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
 }
 SCHEMA_SUSPEND: VolDictType = {
     vol.Required("until"): cv.datetime,
@@ -146,15 +139,11 @@ class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
 
     zone: Zone
 
-    async def start_watering(self, duration: timedelta | None = None) -> None:
+    async def start_watering(self, duration: int | None = None) -> None:
         """Start watering in the irrigation zone."""
-        if duration is None:
-            duration = timedelta(minutes=0)
-        if duration > MAX_WATERING_TIME:
-            LOGGER.warning("Clamping watering time to %s", MAX_WATERING_TIME)
-            duration = MAX_WATERING_TIME
+        duration_secs = timedelta(minutes=duration or 0).total_seconds()
         await self.coordinator.api.start_zone(
-            self.zone, custom_run_duration=int(duration.total_seconds())
+            self.zone, custom_run_duration=int(duration_secs)
         )
 
     async def suspend(self, until: datetime) -> None:

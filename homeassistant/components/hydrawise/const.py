@@ -7,10 +7,6 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = timedelta(minutes=15)
-# The API allows specifying a watering time larger than 90 minutes, but doing
-# so does not behave as expected. Likewise, the Hydrawise app has a maximum
-# allowed value of 90 minutes. So we stick with that.
-MAX_WATERING_TIME = timedelta(minutes=90)
 
 MANUFACTURER = "Hydrawise"
 
