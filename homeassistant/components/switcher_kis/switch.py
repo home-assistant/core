@@ -141,7 +141,6 @@ class SwitcherBaseSwitchEntity(
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,
-                self.coordinator.token,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (TimeoutError, OSError, RuntimeError) as err:
