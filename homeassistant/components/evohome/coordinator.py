@@ -56,7 +56,7 @@ class EvoBroker:
 
         self.loc_idx = loc_idx
 
-        assert isinstance(self.client.installation_info, list)  # mypy
+        assert self.client.installation_info is not None  # mypy
 
         try:
             loc_config = self.client.installation_info[loc_idx]
