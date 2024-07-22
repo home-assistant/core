@@ -1339,6 +1339,9 @@ async def test_bootstrap_dependency_not_found(
         hass,
         MockModule("good_integration", dependencies=[]),
     )
+    # Simulate an integration with missing dependencies. While a core integration
+    # can't have missing dependencies thanks to checks by hassfest, there's no such
+    # guarantee for custom integrations.
     mock_integration(
         hass,
         MockModule("bad_integration", dependencies=["hahaha_crash_and_burn"]),
