@@ -22,9 +22,9 @@ def get_feed(
 ):
     """Generate feed details."""
     return {
-        "id": str(number + 1),
+        "id": str(number),
         "userid": "1",
-        "name": f"parameter {number + 1}",
+        "name": f"parameter {number}",
         "tag": "tag",
         "size": "35809224",
         "unit": unit,
@@ -35,14 +35,10 @@ def get_feed(
 
 FEEDS = []
 for i, unit in enumerate(UNITS):
-    FEEDS.append(get_feed(i, unit=unit))
+    FEEDS.append(get_feed(i + 1, unit=unit))
 
 
-FEEDS2 = []
-for i, unit in enumerate(UNITS):
-    FEEDS2.append(get_feed(i, unit=unit, value=24.04, timestamp=1665509670))
-
-FAILURE_MESSAGE = "client error"
+EMONCMS_FAILURE = {"success": False, "message": "failure"}
 
 FLOW_RESULT = {
     CONF_API_KEY: "my_api_key",
@@ -88,20 +84,3 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}
         yield client
-
-
-@pytest.fixture
-def emoncms_client_failure(emoncms_client):
-    """Mock pyemoncms failure."""
-    emoncms_client.async_request.return_value = {
-        "success": False,
-        "message": FAILURE_MESSAGE,
-    }
-    return emoncms_client
-
-
-@pytest.fixture
-def emoncms_client_no_feed(emoncms_client):
-    """Mock pyemoncms success response with no uuid."""
-    emoncms_client.async_request.return_value = {"success": True, "message": []}
-    return emoncms_client

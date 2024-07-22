@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .conftest import FEEDS2, FLOW_RESULT, SENSOR_NAME
+from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME, get_feed
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -87,9 +87,10 @@ async def test_no_feed_broadcast(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    emoncms_client_no_feed: AsyncMock,
+    emoncms_client: AsyncMock,
 ) -> None:
     """Test with no feed broadcasted."""
+    emoncms_client.async_request.return_value = {"success": True, "message": []}
     await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -99,9 +100,21 @@ async def test_no_feed_broadcast(
     assert entity_entries == []
 
 
+FLOW_RESULT_SINGLE_FEED = copy.deepcopy(FLOW_RESULT)
+FLOW_RESULT_SINGLE_FEED[CONF_ONLY_INCLUDE_FEEDID] = ["1"]
+
+
+@pytest.fixture
+def config_single_feed() -> MockConfigEntry:
+    """Mock emoncms config entry with a single feed exposed."""
+    return MockConfigEntry(
+        domain=DOMAIN, title=SENSOR_NAME, data=FLOW_RESULT_SINGLE_FEED
+    )
+
+
 async def test_coordinator_update(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_single_feed: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     emoncms_client: AsyncMock,
@@ -109,10 +122,14 @@ async def test_coordinator_update(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator update."""
-    await setup_integration(hass, config_entry)
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [get_feed(1, unit="°C")],
+    }
+    await setup_integration(hass, config_single_feed)
 
     entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
+        entity_registry, config_single_feed.entry_id
     )
     for entity_entry in entity_entries:
         state = hass.states.get(entity_entry.entity_id)
@@ -123,7 +140,10 @@ async def test_coordinator_update(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    emoncms_client.async_request.return_value = {"success": True, "message": FEEDS2}
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [get_feed(1, unit="°C", value=24.04, timestamp=1665509670)],
+    }
 
     await skip_time()
 
@@ -131,10 +151,7 @@ async def test_coordinator_update(
         state = hass.states.get(entity_entry.entity_id)
         assert state == snapshot
 
-    emoncms_client.async_request.return_value = {
-        "success": False,
-        "message": "failure",
-    }
+    emoncms_client.async_request.return_value = EMONCMS_FAILURE
 
     await skip_time()
 

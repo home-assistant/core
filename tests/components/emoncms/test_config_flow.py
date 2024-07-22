@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import FAILURE_MESSAGE, FLOW_RESULT, SENSOR_NAME
+from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME
 
 from tests.common import MockConfigEntry
 
@@ -95,9 +95,10 @@ async def test_flow_import_exclude_feed(
 
 async def test_flow_import_failure(
     hass: HomeAssistant,
-    emoncms_client_failure: AsyncMock,
+    emoncms_client: AsyncMock,
 ) -> None:
     """YAML import - failure test."""
+    emoncms_client.async_request.return_value = EMONCMS_FAILURE
     result = await flow_import(hass, YAML)
     assert result["type"] == FlowResultType.ABORT
 
@@ -170,13 +171,14 @@ async def test_options_flow(
 async def test_options_flow_failure(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    emoncms_client_failure: AsyncMock,
+    emoncms_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Options flow - test failure."""
+    emoncms_client.async_request.return_value = EMONCMS_FAILURE
     await setup_integration(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert result["errors"]["base"] == FAILURE_MESSAGE
+    assert result["errors"]["base"] == "failure"
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
