@@ -677,6 +677,15 @@ class ScriptTool(Tool):
 
                 self.parameters = vol.Schema(schema)
 
+                aliases = entity_entry.aliases
+                if aliases:
+                    if self.description:
+                        self.description = (
+                            self.description + ". Aliases: " + str(list(aliases))
+                        )
+                    else:
+                        self.description = "Aliases: " + str(list(aliases))
+
                 parameters_cache[entity_entry.unique_id] = (
                     self.description,
                     self.parameters,
