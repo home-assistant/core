@@ -1,5 +1,6 @@
 """The tests for the Recorder component."""
 
+from collections.abc import Callable
 import datetime
 import importlib
 import sqlite3
@@ -8,6 +9,7 @@ from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import (
     DatabaseError,
     InternalError,
@@ -201,16 +203,43 @@ async def test_database_migration_encounters_corruption(
 
 
 @pytest.mark.parametrize(
-    ("live_migration", "expected_setup_result"), [(True, True), (False, False)]
+    (
+        "live_migration",
+        "expected_setup_result",
+        "expected_pn_create",
+        "expected_pn_dismiss",
+    ),
+    [
+        (True, True, 2, 1),
+        (False, False, 1, 0),
+    ],
 )
 async def test_database_migration_encounters_corruption_not_sqlite(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     live_migration: bool,
     expected_setup_result: bool,
+    expected_pn_create: int,
+    expected_pn_dismiss: int,
 ) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
+
+    real_migrate_schema = migration.migrate_schema
+
+    def mock_migrate_schema(
+        instance: recorder.Recorder,
+        hass: HomeAssistant,
+        engine: Engine,
+        session_maker: Callable[[], Session],
+        schema_status: migration.SchemaValidationStatus,
+        live: bool,
+    ) -> None:
+        if live == live_migration:
+            raise DatabaseError("statement", {}, [])
+        return real_migrate_schema(
+            instance, hass, engine, session_maker, schema_status, live
+        )
 
     with (
         patch(
@@ -219,7 +248,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(
         ),
         patch(
             "homeassistant.components.recorder.migration.migrate_schema",
-            side_effect=DatabaseError("statement", {}, []),
+            side_effect=mock_migrate_schema,
         ),
         patch(
             "homeassistant.components.recorder.core.move_away_broken_database"
@@ -248,8 +277,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(
 
     assert recorder.util.async_migration_in_progress(hass) is False
     assert not move_away.called
-    assert len(mock_create.mock_calls) == 2
-    assert len(mock_dismiss.mock_calls) == 1
+    assert len(mock_create.mock_calls) == expected_pn_create
+    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
 
 
 async def test_events_during_migration_are_queued(

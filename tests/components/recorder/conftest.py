@@ -77,7 +77,7 @@ async def instrument_migration(
         instrumented_migration.migration_started.set()
 
         try:
-            real_migrate_schema(*args)
+            migration_result = real_migrate_schema(*args)
         except Exception:
             instrumented_migration.migration_done.set()
             raise
@@ -92,6 +92,7 @@ async def instrument_migration(
             )
             instrumented_migration.migration_version = res.schema_version
         instrumented_migration.migration_done.set()
+        return migration_result
 
     def _instrument_apply_update(*args):
         """Control migration progress."""

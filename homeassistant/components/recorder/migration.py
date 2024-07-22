@@ -188,12 +188,13 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
         return None
 
 
-@dataclass
+@dataclass(frozen=True)
 class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
     schema_errors: set[str]
+    start_version: int
     valid: bool
 
 
@@ -224,7 +225,9 @@ def validate_db_schema(
 
     valid = is_current and not schema_errors
 
-    return SchemaValidationStatus(current_version, schema_errors, valid)
+    return SchemaValidationStatus(
+        current_version, schema_errors, current_version, valid
+    )
 
 
 def _find_schema_errors(
@@ -266,29 +269,25 @@ def migrate_schema(
     engine: Engine,
     session_maker: Callable[[], Session],
     schema_status: SchemaValidationStatus,
-) -> None:
+    live: bool,
+) -> SchemaValidationStatus:
     """Check if the schema needs to be upgraded."""
     current_version = schema_status.current_version
-    if current_version != SCHEMA_VERSION:
+    end_version = SCHEMA_VERSION if live else LIVE_MIGRATION_MIN_SCHEMA_VERSION - 1
+    start_version = schema_status.start_version
+
+    if current_version < end_version:
         _LOGGER.warning(
             "Database is about to upgrade from schema version: %s to: %s",
             current_version,
-            SCHEMA_VERSION,
+            end_version,
         )
-    db_ready = False
-    for version in range(current_version, SCHEMA_VERSION):
-        if (
-            live_migration(dataclass_replace(schema_status, current_version=version))
-            and not db_ready
-        ):
-            db_ready = True
-            instance.migration_is_live = True
-            hass.add_job(instance.async_set_db_ready)
+        schema_status = dataclass_replace(schema_status, current_version=end_version)
+
+    for version in range(current_version, end_version):
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-        _apply_update(
-            instance, hass, engine, session_maker, new_version, current_version
-        )
+        _apply_update(instance, hass, engine, session_maker, new_version, start_version)
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
 
@@ -296,7 +295,8 @@ def migrate_schema(
         # so its clear that the upgrade is done
         _LOGGER.warning("Upgrade to version %s done", new_version)
 
-    if schema_errors := schema_status.schema_errors:
+    # Repairs are currently done during the live migration
+    if (schema_errors := schema_status.schema_errors) and live:
         _LOGGER.warning(
             "Database is about to correct DB schema errors: %s",
             ", ".join(sorted(schema_errors)),
@@ -305,11 +305,13 @@ def migrate_schema(
         states_correct_db_schema(instance, schema_errors)
         events_correct_db_schema(instance, schema_errors)
 
-    if current_version != SCHEMA_VERSION:
-        instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
+    if start_version != SCHEMA_VERSION and live:
+        instance.queue_task(PostSchemaMigrationTask(start_version, SCHEMA_VERSION))
         # Make sure the post schema migration task is committed in case
         # the next task does not have commit_before = True
         instance.queue_task(CommitTask())
+
+    return schema_status
 
 
 def _create_index(
