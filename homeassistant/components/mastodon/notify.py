@@ -57,7 +57,6 @@ class MastodonNotificationService(BaseNotificationService):
         discovery_info: dict[str, Any],
     ) -> None:
         """Initialize the service."""
-        self.hass = hass
         self.client: Mastodon = discovery_info["client"]
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:

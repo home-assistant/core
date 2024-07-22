@@ -35,8 +35,6 @@ from .const import (
 )
 from .utils import create_mastodon_instance
 
-PLATFORMS: list[Platform] = [Platform.NOTIFY]
-
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
@@ -124,13 +122,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_HASS_CONFIG],
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
-
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

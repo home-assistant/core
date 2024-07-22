@@ -30,6 +30,28 @@ from homeassistant.util import slugify
 from .const import CONF_BASE_URL, DEFAULT_NAME, DEFAULT_URL, DOMAIN, LOGGER
 from .utils import create_mastodon_instance
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_NAME,
+            default=DEFAULT_NAME,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
+        vol.Required(
+            CONF_BASE_URL,
+            default=DEFAULT_URL,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
+        vol.Required(
+            CONF_CLIENT_ID,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+        vol.Required(
+            CONF_CLIENT_SECRET,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+        vol.Required(
+            CONF_ACCESS_TOKEN,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+    }
+)
+
 
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -77,27 +99,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME,
-                        default=user_input.get(CONF_NAME, DEFAULT_NAME),
-                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
-                    vol.Required(
-                        CONF_BASE_URL,
-                        default=user_input.get(CONF_BASE_URL, DEFAULT_URL),
-                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-                    vol.Required(
-                        CONF_CLIENT_ID, default=user_input.get(CONF_CLIENT_ID, "")
-                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-                    vol.Required(
-                        CONF_CLIENT_SECRET,
-                        default=user_input.get(CONF_CLIENT_SECRET, ""),
-                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-                    vol.Required(
-                        CONF_ACCESS_TOKEN, default=user_input.get(CONF_ACCESS_TOKEN, "")
-                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
             ),
             description_placeholders=description_placeholders,
             errors=errors,
