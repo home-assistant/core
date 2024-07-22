@@ -1,5 +1,8 @@
 """Test device_registry API."""
 
+from datetime import datetime
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 
@@ -7,6 +10,7 @@ from homeassistant.components.config import device_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
@@ -26,6 +30,7 @@ async def client_fixture(
     return await hass_ws_client(hass)
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_list_devices(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
@@ -61,6 +66,7 @@ async def test_list_devices(
             "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "created_at": utcnow().timestamp(),
             "disabled_by": None,
             "entry_type": None,
             "hw_version": None,
@@ -69,6 +75,7 @@ async def test_list_devices(
             "manufacturer": "manufacturer",
             "model": "model",
             "model_id": None,
+            "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
             "primary_config_entry": entry.entry_id,
@@ -81,6 +88,7 @@ async def test_list_devices(
             "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [],
+            "created_at": utcnow().timestamp(),
             "disabled_by": None,
             "entry_type": dr.DeviceEntryType.SERVICE,
             "hw_version": None,
@@ -89,6 +97,7 @@ async def test_list_devices(
             "manufacturer": "manufacturer",
             "model": "model",
             "model_id": None,
+            "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
             "primary_config_entry": entry.entry_id,
@@ -113,6 +122,7 @@ async def test_list_devices(
             "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "created_at": utcnow().timestamp(),
             "disabled_by": None,
             "entry_type": None,
             "hw_version": None,
@@ -122,6 +132,7 @@ async def test_list_devices(
             "manufacturer": "manufacturer",
             "model": "model",
             "model_id": None,
+            "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
             "primary_config_entry": entry.entry_id,
@@ -151,12 +162,15 @@ async def test_update_device(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
     payload_key: str,
     payload_value: str | dr.DeviceEntryDisabler | None,
 ) -> None:
     """Test update entry."""
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
+    created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
+    freezer.move_to(created_at)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
@@ -166,6 +180,9 @@ async def test_update_device(
     )
 
     assert not getattr(device, payload_key)
+
+    modified_at = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
+    freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
         {
@@ -186,6 +203,12 @@ async def test_update_device(
 
     assert msg["result"][payload_key] == payload_value
     assert getattr(device, payload_key) == payload_value
+    for key, value in (
+        ("created_at", created_at),
+        ("modified_at", modified_at if payload_value is not None else created_at),
+    ):
+        assert msg["result"][key] == value.timestamp()
+        assert getattr(device, key) == value
 
     assert isinstance(device.disabled_by, (dr.DeviceEntryDisabler, type(None)))
 
@@ -194,10 +217,13 @@ async def test_update_device_labels(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entry labels."""
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
+    created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
+    freezer.move_to(created_at)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
@@ -207,6 +233,8 @@ async def test_update_device_labels(
     )
 
     assert not device.labels
+    modified_at = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
+    freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
         {
@@ -227,6 +255,12 @@ async def test_update_device_labels(
 
     assert msg["result"]["labels"] == unordered(["label1", "label2"])
     assert device.labels == {"label1", "label2"}
+    for key, value in (
+        ("created_at", created_at),
+        ("modified_at", modified_at),
+    ):
+        assert msg["result"][key] == value.timestamp()
+        assert getattr(device, key) == value
 
 
 async def test_remove_config_entry_from_device(
