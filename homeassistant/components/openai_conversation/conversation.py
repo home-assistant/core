@@ -37,12 +37,14 @@ from .const import (
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_BASE_URL,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_BASE_URL
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -231,6 +233,7 @@ class OpenAIConversationEntity(
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
+        openai.base_url = options.get(CONF_BASE_URL, RECOMMENDED_BASE_URL)
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
                 result = await client.chat.completions.create(

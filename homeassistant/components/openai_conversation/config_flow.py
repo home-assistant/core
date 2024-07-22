@@ -39,6 +39,8 @@ from .const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    CONF_BASE_URL,
+    RECOMMENDED_BASE_URL
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -210,6 +212,11 @@ def openai_config_option_schema(
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+            vol.Optional(
+                CONF_BASE_URL,
+                description={"suggested_value": options.get(CONF_BASE_URL)},
+                default=RECOMMENDED_BASE_URL,
+            ): str,
         }
     )
     return schema

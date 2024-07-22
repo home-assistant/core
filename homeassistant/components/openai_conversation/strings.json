@@ -23,7 +23,8 @@
           "temperature": "Temperature",
           "top_p": "Top P",
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-          "recommended": "Recommended model settings"
+          "recommended": "Recommended model settings",
+          "base_url": "Base URL of OpenAI compatible API"
         },
         "data_description": {
           "prompt": "Instruct how the LLM should respond. This can be a template."
