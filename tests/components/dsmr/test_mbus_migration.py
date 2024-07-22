@@ -68,7 +68,7 @@ async def test_migrate_gas_to_mbus(
     telegram = Telegram()
     telegram.add(
         BELGIUM_MBUS1_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "003", "unit": ""}]),
+        CosemObject((0, 1), [{"value": "003", "unit": ""}]),
         "BELGIUM_MBUS1_DEVICE_TYPE",
     )
     telegram.add(
