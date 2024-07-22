@@ -7,6 +7,7 @@ import logging
 from aiorussound import Source, Zone
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -16,6 +17,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -108,8 +110,10 @@ async def async_setup_entry(
 class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_has_entity_name = True
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -120,9 +124,25 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     def __init__(self, zone: Zone, sources: dict[int, Source]) -> None:
         """Initialize the zone device."""
-        super().__init__()
+        self._controller = zone.controller
         self._zone = zone
         self._sources = sources
+        self._attr_name = zone.name
+        self._attr_unique_id = f"{self._controller.mac_address}-{zone.device_str()}"
+        self._attr_device_info = DeviceInfo(
+            # Use MAC address of Russound device as identifier
+            identifiers={(DOMAIN, self._controller.mac_address)},
+            connections={(CONNECTION_NETWORK_MAC, self._controller.mac_address)},
+            manufacturer="Russound",
+            name=self._controller.controller_type,
+            model=self._controller.controller_type,
+            sw_version=self._controller.firmware_version,
+        )
+        if self._controller.parent_controller:
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                self._controller.parent_controller.mac_address,
+            )
 
     def _callback_handler(self, device_str, *args):
         if (
@@ -137,11 +157,6 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     def _current_source(self) -> Source:
         return self._zone.fetch_current_source()
-
-    @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._zone.name
 
     @property
     def state(self) -> MediaPlayerState | None:

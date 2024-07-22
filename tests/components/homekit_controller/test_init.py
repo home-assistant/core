@@ -293,6 +293,8 @@ async def test_snapshots(
         device_dict = asdict(device)
         device_dict.pop("id", None)
         device_dict.pop("via_device_id", None)
+        device_dict.pop("created_at", None)
+        device_dict.pop("modified_at", None)
         devices.append({"device": device_dict, "entities": entities})
 
     assert snapshot == devices
