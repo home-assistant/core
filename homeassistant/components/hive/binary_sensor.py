@@ -66,6 +66,7 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -78,18 +79,18 @@ async def async_setup_entry(
     devices = hive.session.deviceList.get("binary_sensor")
     sensors.extend(
         HiveBinarySensorEntity(hive, dev, description)
-            for dev in devices
-            for description in BINARY_SENSOR_TYPES
-            if dev["hiveType"] == description.key
-        )
+        for dev in devices
+        for description in BINARY_SENSOR_TYPES
+        if dev["hiveType"] == description.key
+    )
 
     devices = hive.session.deviceList.get("sensor")
     sensors.extend(
         HiveSensorEntity(hive, dev, description)
-            for dev in devices
-            for description in SENSOR_TYPES
-            if dev["hiveType"] == description.key
-        )
+        for dev in devices
+        for description in SENSOR_TYPES
+        if dev["hiveType"] == description.key
+    )
 
     async_add_entities(sensors, True)
 
@@ -117,6 +118,7 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
             self._attr_available = self.device["deviceData"].get("online")
         else:
             self._attr_available = True
+
 
 class HiveSensorEntity(HiveEntity, BinarySensorEntity):
     """Hive Sensor Entity."""
