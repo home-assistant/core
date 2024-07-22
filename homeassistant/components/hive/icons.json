@@ -1,20 +1,20 @@
 {
+  "entity": {
+    "binary_sensor": {
+      "heating": {
+        "default": "mdi:radiator"
+      },
+      "hot_water": {
+        "default": "mdi:hand-water"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      }
+    }
+  },
   "services": {
     "boost_heating_on": "mdi:radiator",
     "boost_heating_off": "mdi:radiator-off",
     "boost_hot_water": "mdi:water-boiler"
-  },
-  "entity": {
-    "binary_sensor": {
-      "heating_icon": {
-        "default": "mdi:radiator"
-      },
-      "hot_water_icon": {
-        "default": "mdi:hand-water"
-      },
-      "temperature_icon": {
-        "default": "mdi:thermometer"
-      }
-    }
   }
 }

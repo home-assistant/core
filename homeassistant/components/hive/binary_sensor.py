@@ -50,19 +50,19 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="Heating_State",
-        translation_key="heating_icon",
+        translation_key="heating",
     ),
     BinarySensorEntityDescription(
         key="Heating_Boost",
-        translation_key="heating_icon",
+        translation_key="heating",
     ),
     BinarySensorEntityDescription(
         key="Hotwater_State",
-        translation_key="hot_water_icon",
+        translation_key="hot_water",
     ),
     BinarySensorEntityDescription(
         key="Hotwater_Boost",
-        translation_key="hot_water_icon",
+        translation_key="hot_water",
     ),
 )
 
