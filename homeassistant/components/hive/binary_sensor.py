@@ -74,7 +74,7 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
+    sensors: list[BinarySensorEntity] = []
 
     devices = hive.session.deviceList.get("binary_sensor")
     sensors.extend(
