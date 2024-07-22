@@ -223,8 +223,10 @@ CRITICAL_INTEGRATIONS = {
 SETUP_ORDER = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
-    # Setup frontend and recorder
-    ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
+    # Setup frontend
+    ("frontend", FRONTEND_INTEGRATIONS),
+    # Setup recorder
+    ("recorder", RECORDER_INTEGRATIONS),
     # Start up debuggers. Start these first in case they want to wait.
     ("debugger", DEBUGGER_INTEGRATIONS),
 )
