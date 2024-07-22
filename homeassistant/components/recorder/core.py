@@ -759,6 +759,7 @@ class Recorder(threading.Thread):
                 self.migration_in_progress = False
                 return
             self.schema_version = schema_status.current_version
+            # Non-live migration is now completed, remaining steps are live
             self.migration_is_live = True
 
         # After non-live migration, activate the recorder
