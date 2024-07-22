@@ -432,6 +432,7 @@ def _async_create_issue_deprecated_version(
         translation_placeholders={
             "server_version": str(server_version),
             "min_version": str(min_version),
+            "ha_version": "2025.2",
         },
     )
 
