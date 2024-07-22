@@ -743,7 +743,7 @@ class Recorder(threading.Thread):
             return
         self.schema_version = schema_status.current_version
 
-        if schema_status.valid:
+        if not schema_status.migration_needed and not schema_status.schema_errors:
             self._setup_run()
         else:
             self.migration_in_progress = True
@@ -752,7 +752,7 @@ class Recorder(threading.Thread):
         self.hass.add_job(self.async_connection_success)
 
         # First do non-live migration steps, if needed
-        if not schema_status.valid:
+        if schema_status.migration_needed:
             result, schema_status = self._migrate_schema_offline(schema_status)
             if not result:
                 self._notify_migration_failed()
@@ -774,8 +774,8 @@ class Recorder(threading.Thread):
             # we restart before startup finishes
             return
 
-        # Do live migration steps, if needed
-        if not schema_status.valid:
+        # Do live migration steps and repairs, if needed
+        if schema_status.migration_needed or schema_status.schema_errors:
             result, schema_status = self._migrate_schema_live_and_setup_run(
                 schema_status
             )
