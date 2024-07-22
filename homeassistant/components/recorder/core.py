@@ -998,11 +998,16 @@ class Recorder(threading.Thread):
         live: bool,
     ) -> tuple[bool, migration.SchemaValidationStatus]:
         """Migrate schema to the latest version."""
+        assert self.engine is not None
         try:
-            assert self.engine is not None
-            schema_status = migration.migrate_schema(
-                self, self.hass, self.engine, self.get_session, schema_status, live
-            )
+            if live:
+                schema_status = migration.migrate_schema_live(
+                    self, self.hass, self.engine, self.get_session, schema_status
+                )
+            else:
+                schema_status = migration.migrate_schema_non_live(
+                    self, self.hass, self.engine, self.get_session, schema_status
+                )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return (True, schema_status)

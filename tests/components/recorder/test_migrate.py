@@ -186,7 +186,7 @@ async def test_database_migration_encounters_corruption(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
+            "homeassistant.components.recorder.migration.migrate_schema_non_live",
             side_effect=sqlite3_exception,
         ),
         patch(
@@ -205,19 +205,21 @@ async def test_database_migration_encounters_corruption(
 @pytest.mark.parametrize(
     (
         "live_migration",
+        "func_to_patch",
         "expected_setup_result",
         "expected_pn_create",
         "expected_pn_dismiss",
     ),
     [
-        (True, True, 2, 1),
-        (False, False, 1, 0),
+        (True, "migrate_schema_live", True, 2, 1),
+        (False, "migrate_schema_non_live", False, 1, 0),
     ],
 )
 async def test_database_migration_encounters_corruption_not_sqlite(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     live_migration: bool,
+    func_to_patch: str,
     expected_setup_result: bool,
     expected_pn_create: int,
     expected_pn_dismiss: int,
@@ -225,30 +227,14 @@ async def test_database_migration_encounters_corruption_not_sqlite(
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    real_migrate_schema = migration.migrate_schema
-
-    def mock_migrate_schema(
-        instance: recorder.Recorder,
-        hass: HomeAssistant,
-        engine: Engine,
-        session_maker: Callable[[], Session],
-        schema_status: migration.SchemaValidationStatus,
-        live: bool,
-    ) -> None:
-        if live == live_migration:
-            raise DatabaseError("statement", {}, [])
-        return real_migrate_schema(
-            instance, hass, engine, session_maker, schema_status, live
-        )
-
     with (
         patch(
             "homeassistant.components.recorder.migration._schema_is_current",
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
-            side_effect=mock_migrate_schema,
+            f"homeassistant.components.recorder.migration.{func_to_patch}",
+            side_effect=DatabaseError("statement", {}, []),
         ),
         patch(
             "homeassistant.components.recorder.core.move_away_broken_database"
