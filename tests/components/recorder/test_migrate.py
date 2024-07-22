@@ -1,6 +1,5 @@
 """The tests for the Recorder component."""
 
-from collections.abc import Callable
 import datetime
 import importlib
 import sqlite3
@@ -9,7 +8,6 @@ from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine
 from sqlalchemy.exc import (
     DatabaseError,
     InternalError,
