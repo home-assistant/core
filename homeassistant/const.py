@@ -922,6 +922,13 @@ class UnitOfHeartRate(StrEnum):
     BEATS_PER_MINUTE = "bpm"
 
 
+# Metabolic equivalent units
+class UnitOfMetabolicEquivalent(StrEnum):
+    """Metabolic equivalent units."""
+
+    MET = "MET"
+
+
 _DEPRECATED_FREQUENCY_HERTZ: Final = DeprecatedConstantEnum(
     UnitOfFrequency.HERTZ,
     "2025.1",

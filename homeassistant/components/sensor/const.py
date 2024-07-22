@@ -31,6 +31,7 @@ from homeassistant.const import (
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfMass,
+    UnitOfMetabolicEquivalent,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -252,6 +253,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement:
     - SI / metric: `W/m²`
     - USCS / imperial: `BTU/(h⋅ft²)`
+    """
+
+    METABOLIC_EQUIVALENT = "metabolic_equivalent"
+    """Metabolic equivalent of task.
+
+    Unit of measurement: `MET`
     """
 
     MOISTURE = "moisture"
@@ -588,6 +595,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     SensorDeviceClass.INCLINATION: set(UnitOfInclination),
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
+    SensorDeviceClass.METABOLIC_EQUIVALENT: set(UnitOfMetabolicEquivalent),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -662,6 +670,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.ILLUMINANCE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.INCLINATION: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.IRRADIANCE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.METABOLIC_EQUIVALENT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.MOISTURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.MONETARY: {SensorStateClass.TOTAL},
     SensorDeviceClass.NITROGEN_DIOXIDE: {SensorStateClass.MEASUREMENT},
