@@ -763,6 +763,7 @@ async def test_issue_for_old_sqlite(
     assert issue.translation_placeholders == {
         "min_version": str(UPCOMING_MIN_VERSION_SQLITE),
         "server_version": min_version,
+        "ha_version": "2025.2",
     }
 
     min_version = str(UPCOMING_MIN_VERSION_SQLITE)
