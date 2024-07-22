@@ -219,7 +219,6 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    hass: HomeAssistant,
     config_entry_factory: Callable[[], Coroutine[Any, Any, MockConfigEntry]],
 ) -> MockConfigEntry:
     """Fixture providing a set up instance of deCONZ integration."""
