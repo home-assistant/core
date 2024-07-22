@@ -36,10 +36,6 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
             "homeassistant.components.mastodon.utils.Mastodon",
             autospec=True,
         ) as mock_client,
-        # patch(
-        #     "homeassistant.components.mastodon.config_flow.Mastodon",
-        #     new=mock_client,
-        # ),
     ):
         client = mock_client.return_value
         client.instance.return_value = ORJSONDecoder(dict).decode(
