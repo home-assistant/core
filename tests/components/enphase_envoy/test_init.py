@@ -1,4 +1,4 @@
-"""Test Enphase Envoy coordinator."""
+"""Test Enphase Envoy runtime."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -29,7 +29,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_with_pre_v7_firmware(
+async def test_with_pre_v7_firmware(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
@@ -48,7 +48,7 @@ async def test_coordinator_with_pre_v7_firmware(
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
-async def test_coordinator_token_in_config_file(
+async def test_token_in_config_file(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
 ) -> None:
@@ -82,7 +82,7 @@ async def test_coordinator_token_in_config_file(
 
 @respx.mock
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
-async def test_coordinator_expired_token_in_config(
+async def test_expired_token_in_config(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
 ) -> None:
