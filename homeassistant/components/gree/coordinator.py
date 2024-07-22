@@ -6,25 +6,16 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from greeclimate.device import Device, DeviceInfo
-from greeclimate.discovery import Discovery, Listener
+from greeclimate.device import Device
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 from greeclimate.network import Response
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    COORDINATORS,
-    DISCOVERY_TIMEOUT,
-    DISPATCH_DEVICE_DISCOVERED,
-    DOMAIN,
-    MAX_ERRORS,
-    UPDATE_INTERVAL,
-)
+from .const import DOMAIN, MAX_ERRORS, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,47 +103,3 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.name,
                 self.device.device_info,
             )
-
-
-class DiscoveryService(Listener):
-    """Discovery event handler for gree devices."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize discovery service."""
-        super().__init__()
-        self.hass = hass
-
-        self.discovery = Discovery(DISCOVERY_TIMEOUT)
-        self.discovery.add_listener(self)
-
-        hass.data[DOMAIN].setdefault(COORDINATORS, [])
-
-    async def device_found(self, device_info: DeviceInfo) -> None:
-        """Handle new device found on the network."""
-
-        device = Device(device_info)
-        try:
-            await device.bind()
-        except DeviceNotBoundError:
-            _LOGGER.error("Unable to bind to gree device: %s", device_info)
-        except DeviceTimeoutError:
-            _LOGGER.error("Timeout trying to bind to gree device: %s", device_info)
-
-        _LOGGER.info(
-            "Adding Gree device %s at %s:%i",
-            device.device_info.name,
-            device.device_info.ip,
-            device.device_info.port,
-        )
-        coordo = DeviceDataUpdateCoordinator(self.hass, device)
-        self.hass.data[DOMAIN][COORDINATORS].append(coordo)
-        await coordo.async_refresh()
-
-        async_dispatcher_send(self.hass, DISPATCH_DEVICE_DISCOVERED, coordo)
-
-    async def device_update(self, device_info: DeviceInfo) -> None:
-        """Handle updates in device information, update if ip has changed."""
-        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
-            if coordinator.device.device_info.mac == device_info.mac:
-                coordinator.device.device_info.ip = device_info.ip
-                await coordinator.async_refresh()
