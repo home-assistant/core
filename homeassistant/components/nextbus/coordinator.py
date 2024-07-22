@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from py_nextbus import NextBusClient
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
@@ -57,17 +57,16 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
             self.logger.debug("Updating data from API (executor)")
             predictions: dict[RouteStop, dict[str, Any]] = {}
             for route_stop in self._route_stops:
+                prediction_results: list[dict[str, Any]] = []
                 try:
                     prediction_results = self.client.predictions_for_stop(
                         route_stop.stop_id, route_stop.route_id
                     )
-                    if prediction_results:
-                        predictions[route_stop] = cast(
-                            dict[str, Any], prediction_results[0]
-                        )
                 except (NextBusHTTPError, NextBusFormatError) as ex:
                     raise UpdateFailed("Failed updating nextbus data", ex) from ex
 
+                if prediction_results:
+                    predictions[route_stop] = prediction_results[0]
             self._predictions = predictions
 
             return predictions
