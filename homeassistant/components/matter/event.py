@@ -70,8 +70,8 @@ class MatterEventEntity(MatterEntity, EventEntity):
                 clusters.Switch.Attributes.MultiPressMax
             )
             max_presses_supported = min(max_presses_supported or 1, 8)
-            for i in range(1, max_presses_supported):
-                event_types.append(f"multi_press_{i}")  # noqa: PERF401
+            for i in range(max_presses_supported):
+                event_types.append(f"multi_press_{i + 1}")  # noqa: PERF401
         elif feature_map & SwitchFeature.kMomentarySwitch:
             # momentary switch without multi press support
             event_types.append("initial_press")
