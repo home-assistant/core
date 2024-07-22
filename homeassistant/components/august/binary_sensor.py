@@ -81,6 +81,7 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
 SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] = (
     AugustDoorbellBinarySensorEntityDescription(
         key="ding",
+        translation_key="ding",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         value_fn=retrieve_ding_activity,
         is_time_based=True,

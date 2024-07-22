@@ -267,7 +267,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.6.0
+aiomealie==0.8.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -329,7 +329,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==1.1.2
+aiorussound==2.0.6
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -362,7 +362,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.6
+aiotractive==0.6.0
 
 # homeassistant.components.unifi
 aiounifi==79
@@ -389,7 +389,7 @@ aiowithings==3.0.2
 aioymaps==1.2.4
 
 # homeassistant.components.airgradient
-airgradient==0.6.1
+airgradient==0.7.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -772,6 +772,9 @@ gassist-text==0.0.11
 
 # homeassistant.components.google
 gcal-sync==6.1.4
+
+# homeassistant.components.geniushub
+geniushub-client==0.7.1
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -1324,7 +1327,7 @@ py-dormakaba-dkey==1.0.5
 py-improv-ble-client==1.0.3
 
 # homeassistant.components.madvr
-py-madvr2==1.6.27
+py-madvr2==1.6.29
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
@@ -1780,7 +1783,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.0.0
+python-homewizard-energy==v6.1.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1869,7 +1872,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.13
 
 # homeassistant.components.vesync
-pyvesync==2.1.10
+pyvesync==2.1.12
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -1932,13 +1935,13 @@ refoss-ha==1.2.4
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.4
+renault-api==0.2.5
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.4
+reolink-aio==0.9.5
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2181,13 +2184,13 @@ twentemilieu==2.0.1
 twilio==6.32.0
 
 # homeassistant.components.twitch
-twitchAPI==4.0.0
+twitchAPI==4.2.1
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==5.3.0
+uiprotect==5.4.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2294,7 +2297,6 @@ xknx==2.12.2
 # homeassistant.components.knx
 xknxproject==3.7.1
 
-# homeassistant.components.bluesound
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca

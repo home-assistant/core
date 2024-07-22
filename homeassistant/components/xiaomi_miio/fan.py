@@ -98,8 +98,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = "fan.xiaomi_miio"
 
-ATTR_MODE_NATURE = "Nature"
-ATTR_MODE_NORMAL = "Normal"
+ATTR_MODE_NATURE = "nature"
+ATTR_MODE_NORMAL = "normal"
 
 # Air Purifier
 ATTR_BRIGHTNESS = "brightness"
@@ -844,6 +844,8 @@ class XiaomiAirFreshT2017(XiaomiAirFreshA1):
 
 class XiaomiGenericFan(XiaomiGenericDevice):
     """Representation of a generic Xiaomi Fan."""
+
+    _attr_translation_key = "generic_fan"
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the fan."""
