@@ -252,15 +252,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ):
         return False
 
-    hass.data[DOMAIN] = {"broker": broker}
-
-    hass.data[DOMAIN]["coordinator"] = coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         update_method=broker.async_update,
     )
+
+    hass.data[DOMAIN] = {"broker": broker, "coordinator": coordinator}
 
     # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
     coordinator.async_add_listener(lambda: None)
