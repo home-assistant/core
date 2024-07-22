@@ -91,7 +91,6 @@ async def test_schema_update_calls(
     )
     migrate_schema.assert_has_calls(
         [
-            call(instance, hass, engine, session_maker, ANY, 42),
             call(instance, hass, engine, session_maker, ANY, db_schema.SCHEMA_VERSION),
         ]
     )
