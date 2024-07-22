@@ -12,9 +12,6 @@
       "hot_water_icon": {
         "default": "mdi:hand-water"
       },
-      "connectivity_icon": {
-        "default": "mdi:check-circle"
-      },
       "temperature_icon": {
         "default": "mdi:thermometer"
       }

@@ -64,11 +64,6 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key="Hotwater_Boost",
         translation_key="hot_water_icon",
     ),
-    BinarySensorEntityDescription(
-        key="Availability",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        translation_key="connectivity_icon",
-    ),
 )
 
 async def async_setup_entry(
@@ -140,9 +135,5 @@ class HiveSensorEntity(HiveEntity, BinarySensorEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
-        if self.device["hiveType"] != "Availability":
-            self._attr_is_on = self.device["status"]["state"] == "ON"
-            self._attr_available = self.device["deviceData"].get("online")
-        else:
-            self._attr_is_on = self.device["status"]["state"] == "Online"
-            self._attr_available = True
+        self._attr_is_on = self.device["status"]["state"] == "ON"
+        self._attr_available = self.device["deviceData"].get("online")
