@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN
@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
@@ -71,7 +71,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
         return [device["mac"] for device in station_info.associated_stations]
 
-    async def async_get_device_name(self, device):
+    async def async_get_device_name(self, device: str) -> str | None:
         """Return None.
 
         The repeater doesn't provide the name of the associated device.

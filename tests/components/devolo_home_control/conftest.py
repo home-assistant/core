@@ -1,9 +1,9 @@
 """Fixtures for tests."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

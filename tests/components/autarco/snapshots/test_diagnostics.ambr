@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'sites_data': list([
+      dict({
+        'health': 'OK',
+        'id': 1,
+        'inverters': list([
+          dict({
+            'grid_turned_off': False,
+            'health': 'OK',
+            'out_ac_energy_total': 10379,
+            'out_ac_power': 200,
+            'serial_number': 'test-serial-1',
+          }),
+          dict({
+            'grid_turned_off': False,
+            'health': 'OK',
+            'out_ac_energy_total': 10379,
+            'out_ac_power': 500,
+            'serial_number': 'test-serial-2',
+          }),
+        ]),
+        'name': 'test-system',
+        'solar': dict({
+          'energy_production_month': 58,
+          'energy_production_today': 4,
+          'energy_production_total': 10379,
+          'power_production': 200,
+        }),
+      }),
+    ]),
+  })
+# ---

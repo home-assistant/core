@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
 import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
@@ -25,7 +25,6 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback

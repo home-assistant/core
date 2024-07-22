@@ -22,14 +22,14 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConnector
+from . import TadoConfigEntry, TadoConnector
 from .const import (
     CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
@@ -41,7 +41,6 @@ from .const import (
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_OPTIONS,
-    DATA,
     DOMAIN,
     HA_TERMINATION_DURATION,
     HA_TERMINATION_TYPE,
@@ -72,7 +71,7 @@ from .const import (
     TYPE_HEATING,
 )
 from .entity import TadoZoneEntity
-from .helper import decide_duration, decide_overlay_mode
+from .helper import decide_duration, decide_overlay_mode, generate_supported_fanmodes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ SERVICE_CLIMATE_TIMER = "set_climate_timer"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_REQUESTED_OVERLAY = "requested_overlay"
 
-CLIMATE_TIMER_SCHEMA = {
+CLIMATE_TIMER_SCHEMA: VolDictType = {
     vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
     vol.Exclusive(ATTR_TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
@@ -93,17 +92,17 @@ CLIMATE_TIMER_SCHEMA = {
 SERVICE_TEMP_OFFSET = "set_climate_temperature_offset"
 ATTR_OFFSET = "offset"
 
-CLIMATE_TEMP_OFFSET_SCHEMA = {
+CLIMATE_TEMP_OFFSET_SCHEMA: VolDictType = {
     vol.Required(ATTR_OFFSET, default=0): vol.Coerce(float),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tado climate platform."""
 
-    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado: TadoConnector = entry.runtime_data.tadoconnector
     entities = await hass.async_add_executor_job(_generate_entities, tado)
 
     platform = entity_platform.async_get_current_platform()
@@ -199,15 +198,14 @@ def create_climate_entity(
                 continue
 
             if capabilities[mode].get("fanSpeeds"):
-                supported_fan_modes = [
-                    TADO_TO_HA_FAN_MODE_MAP_LEGACY[speed]
-                    for speed in capabilities[mode]["fanSpeeds"]
-                ]
+                supported_fan_modes = generate_supported_fanmodes(
+                    TADO_TO_HA_FAN_MODE_MAP_LEGACY, capabilities[mode]["fanSpeeds"]
+                )
+
             else:
-                supported_fan_modes = [
-                    TADO_TO_HA_FAN_MODE_MAP[level]
-                    for level in capabilities[mode]["fanLevel"]
-                ]
+                supported_fan_modes = generate_supported_fanmodes(
+                    TADO_TO_HA_FAN_MODE_MAP, capabilities[mode]["fanLevel"]
+                )
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
     else:

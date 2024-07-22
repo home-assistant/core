@@ -57,6 +57,11 @@ TRANSITION_BLOCKLIST = (
     (4999, 25057, "1.0", "27.0"),
     (4448, 36866, "V1", "V1.0.0.5"),
     (5009, 514, "1.0", "1.0.0"),
+    (4107, 8475, "v1.0", "v1.0"),
+    (4107, 8550, "v1.0", "v1.0"),
+    (4107, 8551, "v1.0", "v1.0"),
+    (4107, 8656, "v1.0", "v1.0"),
+    (4107, 8571, "v1.0", "v1.0"),
 )
 
 
@@ -352,6 +357,16 @@ class MatterLight(MatterEntity, LightEntity):
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
+                    min_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_min_mireds = min_mireds
+                    max_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_max_mireds = max_mireds
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
@@ -441,6 +456,8 @@ DISCOVERY_SCHEMAS = [
             device_types.DimmablePlugInUnit,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
+            device_types.DimmerSwitch,
+            device_types.ColorDimmerSwitch,
         ),
     ),
     # Additional schema to match (HS Color) lights with incorrect/missing device type

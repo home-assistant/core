@@ -9,12 +9,10 @@ from homeassistant.components.assist_pipeline.select import (
     VadSensitivitySelect,
 )
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .domain_data import DomainData
 from .entity import (
     EsphomeAssistEntity,
     EsphomeEntity,
@@ -22,12 +20,12 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-from .entry_data import RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ESPHomeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up esphome selects based on a config entry."""
@@ -40,7 +38,7 @@ async def async_setup_entry(
         state_type=SelectState,
     )
 
-    entry_data = DomainData.get(hass).get_entry_data(entry)
+    entry_data = entry.runtime_data
     assert entry_data.device_info is not None
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version

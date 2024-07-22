@@ -92,6 +92,12 @@ async def test_fan_base(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.attributes["preset_mode"] == "sleep_wind"
+    # set mains power to OFF (OnOff cluster)
+    set_node_attribute(air_purifier, 1, 6, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["preset_mode"] is None
+    assert state.attributes["percentage"] == 0
 
 
 async def test_fan_turn_on_with_percentage(

@@ -13,7 +13,7 @@
     'identifiers': set({
       tuple(
         'mealie',
-        '01J0BC4QM2YBRP6H5G933CETT7',
+        'bf1c62fe-4941-4332-9886-e54e88dbdba0',
       ),
     }),
     'is_new': False,
@@ -21,11 +21,13 @@
     }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'Mealie',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'v1.10.2',
     'via_device_id': None,
   })
 # ---

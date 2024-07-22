@@ -58,7 +58,7 @@ def _async_config_entries_for_ids(
         dev_reg = dr.async_get(hass)
         for device_id in device_ids:
             if (device := dev_reg.async_get(device_id)) and device.config_entries:
-                config_entry_ids.update(device.config_entries)
+                config_entry_ids |= device.config_entries
     return config_entry_ids
 
 

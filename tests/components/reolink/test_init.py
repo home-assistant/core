@@ -1,5 +1,6 @@
 """Test the Reolink init."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -7,11 +8,16 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
-from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL, const
+from homeassistant.components.reolink import (
+    DEVICE_UPDATE_INTERVAL,
+    FIRMWARE_UPDATE_INTERVAL,
+    NUM_CRED_ERRORS,
+    const,
+)
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -30,8 +36,14 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
+
+
+async def test_wait(*args, **key_args):
+    """Ensure a mocked function takes a bit of time to be able to timeout in test."""
+    await asyncio.sleep(0)
 
 
 @pytest.mark.parametrize(
@@ -58,7 +70,7 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
             ConfigEntryState.SETUP_RETRY,
         ),
         (
-            "get_states",
+            "get_host_data",
             AsyncMock(side_effect=CredentialsInvalidError("Test error")),
             ConfigEntryState.SETUP_ERROR,
         ),
@@ -113,6 +125,33 @@ async def test_firmware_error_twice(
     assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
 
+async def test_credential_error_three(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test when the update gives credential error 3 times."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    reolink_connect.get_states = AsyncMock(
+        side_effect=CredentialsInvalidError("Test error")
+    )
+
+    issue_id = f"config_entry_reauth_{const.DOMAIN}_{config_entry.entry_id}"
+    for _ in range(NUM_CRED_ERRORS):
+        assert (HA_DOMAIN, issue_id) not in issue_registry.issues
+        async_fire_time_changed(
+            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
+        )
+        await hass.async_block_till_done()
+
+    assert (HA_DOMAIN, issue_id) in issue_registry.issues
+
+
 async def test_entry_reloading(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -141,16 +180,27 @@ async def test_entry_reloading(
             None,
             [TEST_HOST_MODEL, TEST_CAM_MODEL],
         ),
+        (
+            "is_nvr",
+            False,
+            [TEST_HOST_MODEL, TEST_CAM_MODEL],
+        ),
         ("channels", [], [TEST_HOST_MODEL]),
         (
-            "camera_model",
-            Mock(return_value="RLC-567"),
-            [TEST_HOST_MODEL, "RLC-567"],
+            "camera_online",
+            Mock(return_value=False),
+            [TEST_HOST_MODEL],
+        ),
+        (
+            "channel_for_uid",
+            Mock(return_value=-1),
+            [TEST_HOST_MODEL],
         ),
     ],
 )
-async def test_cleanup_disconnected_cams(
+async def test_removing_disconnected_cams(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     device_registry: dr.DeviceRegistry,
@@ -159,8 +209,10 @@ async def test_cleanup_disconnected_cams(
     value: Any,
     expected_models: list[str],
 ) -> None:
-    """Test device and entity registry are cleaned up when camera is disconnected from NVR."""
+    """Test device and entity registry are cleaned up when camera is removed."""
     reolink_connect.channels = [0]
+    assert await async_setup_component(hass, "config", {})
+    client = await hass_ws_client(hass)
     # setup CH 0 and NVR switch entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -177,6 +229,13 @@ async def test_cleanup_disconnected_cams(
         setattr(reolink_connect, attr, value)
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    expected_success = TEST_CAM_MODEL not in expected_models
+    for device in device_entries:
+        if device.model == TEST_CAM_MODEL:
+            response = await client.remove_device(device.id, config_entry.entry_id)
+            assert response["success"] == expected_success
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
@@ -345,9 +404,13 @@ async def test_no_repair_issue(
 
 
 async def test_https_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when https local url is used."""
+    reolink_connect.get_states = test_wait
     await async_process_ha_core_config(
         hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
     )
@@ -368,9 +431,13 @@ async def test_https_repair_issue(
 
 
 async def test_ssl_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when global ssl certificate is used."""
+    reolink_connect.get_states = test_wait
     assert await async_setup_component(hass, "webhook", {})
     hass.config.api.use_ssl = True
 
@@ -414,9 +481,13 @@ async def test_port_repair_issue(
 
 
 async def test_webhook_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when the webhook url is unreachable."""
+    reolink_connect.get_states = test_wait
     with (
         patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
         patch(
@@ -439,7 +510,7 @@ async def test_firmware_repair_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test firmware issue is raised when too old firmware is used."""
-    reolink_connect.sw_version_update_required = True
+    reolink_connect.camera_sw_version_update_required.return_value = True
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

@@ -63,7 +63,7 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -179,10 +179,19 @@ _FIELD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Required("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 _SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Optional("fields"): vol.Schema(
+            {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -1100,7 +1109,7 @@ def async_register_admin_service(
     domain: str,
     service: str,
     service_func: Callable[[ServiceCall], Awaitable[None] | None],
-    schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(

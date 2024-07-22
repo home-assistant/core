@@ -1,7 +1,7 @@
 """deCONZ sensor platform tests."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from typing import Any
 
 import pytest
 
@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -24,19 +24,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_no_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no sensors in deconz results in no sensor entities."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
 
 TEST_DATA = [
     (  # Air quality sensor
@@ -909,23 +899,17 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
 async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    mock_deconz_websocket,
-    sensor_data,
-    expected,
+    config_entry_setup: ConfigEntry,
+    mock_websocket_data: WebsocketDataType,
+    expected: dict[str, Any],
 ) -> None:
     """Test successful creation of sensor entities."""
-
-    with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
-        config_entry = await setup_deconz_integration(
-            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
-        )
-
     # Enable in entity registry
     if expected.get("enable_entity"):
         entity_registry.async_update_entity(
@@ -958,60 +942,57 @@ async def test_sensors(
 
     # Verify device registry
     assert (
-        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
         == expected["device_count"]
     )
 
     # Change state
 
-    event_changed_sensor = {"t": "event", "e": "changed", "r": "sensors", "id": "1"}
+    event_changed_sensor = {"r": "sensors"}
     event_changed_sensor |= expected["websocket_event"]
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Unload entry
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
 
     # Remove entry
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_not_allow_clip_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
+            "name": "CLIP temperature sensor",
+            "type": "CLIPTemperature",
+            "state": {"temperature": 2600},
+            "config": {},
+            "uniqueid": "00:00:00:00:00:00:00:02-00",
+        },
+    ],
+)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: False}])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_not_allow_clip_sensor(hass: HomeAssistant) -> None:
     """Test that CLIP sensors are not allowed."""
-    data = {
-        "sensors": {
-            "1": {
-                "name": "CLIP temperature sensor",
-                "type": "CLIPTemperature",
-                "state": {"temperature": 2600},
-                "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
-        }
-    }
-
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(
-            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: False}
-        )
-
     assert len(hass.states.async_all()) == 0
 
 
-async def test_allow_clip_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that CLIP sensors can be allowed."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "name": "Light level sensor",
                 "type": "ZHALightLevel",
@@ -1039,14 +1020,13 @@ async def test_allow_clip_sensors(
                 "uniqueid": "/sensors/3",
             },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            options={CONF_ALLOW_CLIP_SENSOR: True},
-        )
-
+    ],
+)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
+async def test_allow_clip_sensors(
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
+) -> None:
+    """Test that CLIP sensors can be allowed."""
     assert len(hass.states.async_all()) == 4
     assert hass.states.get("sensor.clip_light_level_sensor").state == "999.8"
     assert hass.states.get("sensor.clip_flur").state == "0"
@@ -1054,7 +1034,7 @@ async def test_allow_clip_sensors(
     # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry_setup, options={CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
@@ -1065,7 +1045,7 @@ async def test_allow_clip_sensors(
     # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry_setup, options={CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 
@@ -1074,15 +1054,15 @@ async def test_allow_clip_sensors(
     assert hass.states.get("sensor.clip_flur").state == "0"
 
 
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_add_new_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": {
             "id": "Light sensor id",
             "name": "Light level sensor",
@@ -1093,11 +1073,9 @@ async def test_add_new_sensor(
         },
     }
 
-    await setup_deconz_integration(hass, aioclient_mock)
-
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
@@ -1115,71 +1093,58 @@ BAD_SENSOR_DATA = [
 @pytest.mark.parametrize(("sensor_type", "sensor_property"), BAD_SENSOR_DATA)
 async def test_dont_add_sensor_if_state_is_none(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    sensor_type,
-    sensor_property,
+    config_entry_factory: ConfigEntryFactoryType,
+    sensor_payload: dict[str, Any],
+    sensor_type: str,
+    sensor_property: str,
 ) -> None:
     """Test sensor with scaled data is not created if state is None."""
-    data = {
-        "sensors": {
-            "1": {
-                "name": "Sensor 1",
-                "type": sensor_type,
-                "state": {sensor_property: None},
-                "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
-        }
+    sensor_payload["0"] = {
+        "name": "Sensor 1",
+        "type": sensor_type,
+        "state": {sensor_property: None},
+        "config": {},
+        "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
+    await config_entry_factory()
 
     assert len(hass.states.async_all()) == 0
 
 
-async def test_air_quality_sensor_without_ppb(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test sensor with scaled data is not created if state is None."""
-    data = {
-        "sensors": {
-            "1": {
-                "config": {
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 2,
-                "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
-                "lastseen": "2020-11-20T22:48Z",
-                "manufacturername": "BOSCH",
-                "modelid": "AIR",
-                "name": "BOSCH Air quality sensor",
-                "state": {
-                    "airquality": "poor",
-                    "lastupdated": "2020-11-20T22:48:00.209",
-                },
-                "swversion": "20200402",
-                "type": "ZHAAirQuality",
-                "uniqueid": "00:00:00:00:00:00:00:00-02-fdef",
-            }
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 2,
+            "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
+            "lastseen": "2020-11-20T22:48Z",
+            "manufacturername": "BOSCH",
+            "modelid": "AIR",
+            "name": "BOSCH Air quality sensor",
+            "state": {
+                "airquality": "poor",
+                "lastupdated": "2020-11-20T22:48:00.209",
+            },
+            "swversion": "20200402",
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:00-02-fdef",
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_air_quality_sensor_without_ppb(hass: HomeAssistant) -> None:
+    """Test sensor with scaled data is not created if state is None."""
     assert len(hass.states.async_all()) == 1
 
 
-async def test_add_battery_later(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Test that a battery sensor can be created later on.
-
-    Without an initial battery state a battery sensor
-    can be created once a value is reported.
-    """
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "name": "Switch 1",
                 "type": "ZHASwitch",
@@ -1195,32 +1160,38 @@ async def test_add_battery_later(
                 "uniqueid": "00:00:00:00:00:00:00:00-00-0001",
             },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_add_battery_later(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
+    """Test that a battery sensor can be created later on.
 
+    Without an initial battery state a battery sensor
+    can be created once a value is reported.
+    """
     assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "2",
         "config": {"battery": 50},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
         "config": {"battery": 50},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
@@ -1230,155 +1201,151 @@ async def test_add_battery_later(
 
 @pytest.mark.parametrize("model_id", ["0x8030", "0x8031", "0x8034", "0x8035"])
 async def test_special_danfoss_battery_creation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, model_id
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    sensor_payload: dict[str, Any],
+    model_id: str,
 ) -> None:
     """Test the special Danfoss battery creation works.
 
     Normally there should only be one battery sensor per device from deCONZ.
     With specific Danfoss devices each endpoint can report its own battery state.
     """
-    data = {
-        "sensors": {
-            "1": {
-                "config": {
-                    "battery": 70,
-                    "heatsetpoint": 2300,
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                    "schedule": {},
-                    "schedule_on": False,
-                },
-                "ep": 1,
-                "etag": "982d9acc38bee5b251e24a9be26558e4",
-                "lastseen": "2021-02-15T12:23Z",
-                "manufacturername": "Danfoss",
-                "modelid": model_id,
-                "name": "0x8030",
-                "state": {
-                    "lastupdated": "2021-02-15T12:23:07.994",
-                    "on": False,
-                    "temperature": 2307,
-                },
-                "swversion": "YYYYMMDD",
-                "type": "ZHAThermostat",
-                "uniqueid": "58:8e:81:ff:fe:00:11:22-01-0201",
+    sensor_payload |= {
+        "1": {
+            "config": {
+                "battery": 70,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
             },
-            "2": {
-                "config": {
-                    "battery": 86,
-                    "heatsetpoint": 2300,
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                    "schedule": {},
-                    "schedule_on": False,
-                },
-                "ep": 2,
-                "etag": "62f12749f9f51c950086aff37dd02b61",
-                "lastseen": "2021-02-15T12:23Z",
-                "manufacturername": "Danfoss",
-                "modelid": model_id,
-                "name": "0x8030",
-                "state": {
-                    "lastupdated": "2021-02-15T12:23:22.399",
-                    "on": False,
-                    "temperature": 2316,
-                },
-                "swversion": "YYYYMMDD",
-                "type": "ZHAThermostat",
-                "uniqueid": "58:8e:81:ff:fe:00:11:22-02-0201",
+            "ep": 1,
+            "etag": "982d9acc38bee5b251e24a9be26558e4",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": model_id,
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:07.994",
+                "on": False,
+                "temperature": 2307,
             },
-            "3": {
-                "config": {
-                    "battery": 86,
-                    "heatsetpoint": 2350,
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                    "schedule": {},
-                    "schedule_on": False,
-                },
-                "ep": 3,
-                "etag": "f50061174bb7f18a3d95789bab8b646d",
-                "lastseen": "2021-02-15T12:23Z",
-                "manufacturername": "Danfoss",
-                "modelid": model_id,
-                "name": "0x8030",
-                "state": {
-                    "lastupdated": "2021-02-15T12:23:25.466",
-                    "on": False,
-                    "temperature": 2337,
-                },
-                "swversion": "YYYYMMDD",
-                "type": "ZHAThermostat",
-                "uniqueid": "58:8e:81:ff:fe:00:11:22-03-0201",
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-01-0201",
+        },
+        "2": {
+            "config": {
+                "battery": 86,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
             },
-            "4": {
-                "config": {
-                    "battery": 85,
-                    "heatsetpoint": 2300,
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                    "schedule": {},
-                    "schedule_on": False,
-                },
-                "ep": 4,
-                "etag": "eea97adf8ce1b971b8b6a3a31793f96b",
-                "lastseen": "2021-02-15T12:23Z",
-                "manufacturername": "Danfoss",
-                "modelid": model_id,
-                "name": "0x8030",
-                "state": {
-                    "lastupdated": "2021-02-15T12:23:41.939",
-                    "on": False,
-                    "temperature": 2333,
-                },
-                "swversion": "YYYYMMDD",
-                "type": "ZHAThermostat",
-                "uniqueid": "58:8e:81:ff:fe:00:11:22-04-0201",
+            "ep": 2,
+            "etag": "62f12749f9f51c950086aff37dd02b61",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": model_id,
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:22.399",
+                "on": False,
+                "temperature": 2316,
             },
-            "5": {
-                "config": {
-                    "battery": 83,
-                    "heatsetpoint": 2300,
-                    "offset": 0,
-                    "on": True,
-                    "reachable": True,
-                    "schedule": {},
-                    "schedule_on": False,
-                },
-                "ep": 5,
-                "etag": "1f7cd1a5d66dc27ac5eb44b8c47362fb",
-                "lastseen": "2021-02-15T12:23Z",
-                "manufacturername": "Danfoss",
-                "modelid": model_id,
-                "name": "0x8030",
-                "state": {"lastupdated": "none", "on": False, "temperature": 2325},
-                "swversion": "YYYYMMDD",
-                "type": "ZHAThermostat",
-                "uniqueid": "58:8e:81:ff:fe:00:11:22-05-0201",
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-02-0201",
+        },
+        "3": {
+            "config": {
+                "battery": 86,
+                "heatsetpoint": 2350,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
             },
-        }
+            "ep": 3,
+            "etag": "f50061174bb7f18a3d95789bab8b646d",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": model_id,
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:25.466",
+                "on": False,
+                "temperature": 2337,
+            },
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-03-0201",
+        },
+        "4": {
+            "config": {
+                "battery": 85,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+            },
+            "ep": 4,
+            "etag": "eea97adf8ce1b971b8b6a3a31793f96b",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": model_id,
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:41.939",
+                "on": False,
+                "temperature": 2333,
+            },
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-04-0201",
+        },
+        "5": {
+            "config": {
+                "battery": 83,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+            },
+            "ep": 5,
+            "etag": "1f7cd1a5d66dc27ac5eb44b8c47362fb",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": model_id,
+            "name": "0x8030",
+            "state": {"lastupdated": "none", "on": False, "temperature": 2325},
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-05-0201",
+        },
     }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
+
+    await config_entry_factory()
 
     assert len(hass.states.async_all()) == 10
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
 
 
-async def test_unsupported_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [{"type": "not supported", "name": "name", "state": {}, "config": {}}],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_unsupported_sensor(hass: HomeAssistant) -> None:
     """Test that unsupported sensors doesn't break anything."""
-    data = {
-        "sensors": {
-            "0": {"type": "not supported", "name": "name", "state": {}, "config": {}}
-        }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
     assert len(hass.states.async_all()) == 0

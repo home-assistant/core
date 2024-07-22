@@ -1,9 +1,9 @@
 """Fixturs for Alarm Control Panel tests."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,

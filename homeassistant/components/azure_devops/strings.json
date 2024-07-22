@@ -62,5 +62,10 @@
         "name": "{definition_name} latest build url"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Could not authorize with Azure DevOps for {title}. You will need to update your personal access token."
+    }
   }
 }

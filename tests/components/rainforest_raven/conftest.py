@@ -1,9 +1,9 @@
 """Fixtures for the Rainforest RAVEn tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 

@@ -17,12 +17,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .const import DOMAIN
 from .coordinator import PyLoadCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
 type PyLoadConfigEntry = ConfigEntry[PyLoadCoordinator]
 
@@ -51,13 +52,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
         await pyloadapi.login()
     except CannotConnect as e:
         raise ConfigEntryNotReady(
-            "Unable to connect and retrieve data from pyLoad API"
+            translation_domain=DOMAIN,
+            translation_key="setup_request_exception",
         ) from e
     except ParserError as e:
-        raise ConfigEntryNotReady("Unable to parse data from pyLoad API") from e
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_parse_exception",
+        ) from e
     except InvalidAuth as e:
-        raise ConfigEntryError(
-            f"Authentication failed for {entry.data[CONF_USERNAME]}, check your login credentials"
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="setup_authentication_exception",
+            translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
         ) from e
     coordinator = PyLoadCoordinator(hass, pyloadapi)
 

@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.tts import (
     CONF_LANG,
     DOMAIN as TTS_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
     TtsAudioType,
@@ -184,7 +184,7 @@ class MockTTSEntity(BaseProvider, TextToSpeechEntity):
 class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
-    PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
         {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
     )
 

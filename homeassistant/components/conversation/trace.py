@@ -94,7 +94,7 @@ def async_conversation_trace_append(
 
 
 @contextmanager
-def async_conversation_trace() -> Generator[ConversationTrace, None]:
+def async_conversation_trace() -> Generator[ConversationTrace]:
     """Create a new active ConversationTrace."""
     trace = ConversationTrace()
     token = _current_trace.set(trace)
