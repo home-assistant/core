@@ -74,9 +74,9 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_statistics.return_value = Statistics.from_json(
             load_fixture("statistics.json", DOMAIN)
         )
-        client.random_mealplan.return_value = Mealplan.from_json(
-            load_fixture("mealplan.json", DOMAIN)
-        )
+        mealplan = Mealplan.from_json(load_fixture("mealplan.json", DOMAIN))
+        client.random_mealplan.return_value = mealplan
+        client.set_mealplan.return_value = mealplan
         yield client
 
 

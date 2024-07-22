@@ -906,7 +906,13 @@ async def _async_resolve_domains_to_setup(
             await asyncio.gather(*resolve_dependencies_tasks)
 
         for itg in integrations_to_process:
-            for dep in itg.all_dependencies:
+            try:
+                all_deps = itg.all_dependencies
+            except RuntimeError:
+                # Integration.all_dependencies raises RuntimeError if
+                # dependencies could not be resolved
+                continue
+            for dep in all_deps:
                 if dep in domains_to_setup:
                     continue
                 domains_to_setup.add(dep)

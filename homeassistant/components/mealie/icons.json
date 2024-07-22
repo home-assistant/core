@@ -27,6 +27,7 @@
     "get_mealplan": "mdi:food",
     "get_recipe": "mdi:map",
     "import_recipe": "mdi:map-search",
-    "set_random_mealplan": "mdi:dice-multiple"
+    "set_random_mealplan": "mdi:dice-multiple",
+    "set_mealplan": "mdi:food"
   }
 }
