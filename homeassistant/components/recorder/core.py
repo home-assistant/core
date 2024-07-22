@@ -725,6 +725,10 @@ class Recorder(threading.Thread):
             "recorder_database_migration",
         )
 
+    def _dismiss_migration_in_progress(self) -> None:
+        """Dismiss notification about migration in progress."""
+        persistent_notification.dismiss(self.hass, "recorder_database_migration")
+
     def _run(self) -> None:
         """Start processing events to save."""
         thread_id = threading.get_ident()
@@ -787,8 +791,14 @@ class Recorder(threading.Thread):
                     # was True, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
             else:
+                self.migration_in_progress = False
+                self._dismiss_migration_in_progress()
                 self._notify_migration_failed()
                 return
+
+        # Schema migration and repair is now completed
+        self.migration_in_progress = False
+        self._dismiss_migration_in_progress()
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
@@ -984,14 +994,10 @@ class Recorder(threading.Thread):
             "recorder_database_migration",
         )
         self.hass.add_job(self._async_migration_started)
-        try:
-            migration_result, schema_status = self._migrate_schema(schema_status, True)
-            if migration_result:
-                self._setup_run()
-            return migration_result, schema_status
-        finally:
-            self.migration_in_progress = False
-            persistent_notification.dismiss(self.hass, "recorder_database_migration")
+        migration_result, schema_status = self._migrate_schema(schema_status, True)
+        if migration_result:
+            self._setup_run()
+        return migration_result, schema_status
 
     def _migrate_schema(
         self,
@@ -1010,7 +1016,15 @@ class Recorder(threading.Thread):
             )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
-                return (True, schema_status)
+                # If _handle_database_error returns True, we have a new database
+                # which does not need migration or repair.
+                new_schema_status = migration.SchemaValidationStatus(
+                    current_version=SCHEMA_VERSION,
+                    migration_needed=False,
+                    schema_errors=set(),
+                    start_version=SCHEMA_VERSION,
+                )
+                return (True, new_schema_status)
             _LOGGER.exception("Database error during schema migration")
             return (False, schema_status)
         except Exception:
