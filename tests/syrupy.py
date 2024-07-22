@@ -149,6 +149,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             | {
                 "config_entries": ANY,
                 "id": ANY,
+                "created_at": ANY,
+                "modified_at": ANY,
             }
         )
         if serialized["via_device_id"] is not None:
