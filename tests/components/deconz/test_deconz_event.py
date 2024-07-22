@@ -98,11 +98,7 @@ async def test_deconz_events(
 
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"buttonevent": 2000},
-    }
+    event_changed_sensor = {"r": "sensors", "id": "1", "state": {"buttonevent": 2000}}
     await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
@@ -583,11 +579,7 @@ async def test_deconz_relative_rotary_events(
 
     # Unsupported relative rotary event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "name": "123",
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "name": "123"})
     await hass.async_block_till_done()
 
     assert len(captured_events) == 0
