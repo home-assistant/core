@@ -780,9 +780,7 @@ class Recorder(threading.Thread):
 
         # Do live migration steps and repairs, if needed
         if schema_status.migration_needed or schema_status.schema_errors:
-            result, schema_status = self._migrate_schema_live_and_setup_run(
-                schema_status
-            )
+            result, schema_status = self._migrate_schema_live(schema_status)
             if result:
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
@@ -800,6 +798,7 @@ class Recorder(threading.Thread):
         if self.migration_in_progress:
             self.migration_in_progress = False
             self._dismiss_migration_in_progress()
+            self._setup_run()
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
@@ -931,7 +930,7 @@ class Recorder(threading.Thread):
                 self._commit_event_session_or_retry()
             task.run(self)
         except exc.DatabaseError as err:
-            if self._handle_database_error(err):
+            if self._handle_database_error(err, setup_run=True):
                 return
             _LOGGER.exception("Unhandled database error while processing task %s", task)
         except SQLAlchemyError:
@@ -977,7 +976,7 @@ class Recorder(threading.Thread):
         """Migrate schema to the latest version."""
         return self._migrate_schema(schema_status, False)
 
-    def _migrate_schema_live_and_setup_run(
+    def _migrate_schema_live(
         self, schema_status: migration.SchemaValidationStatus
     ) -> tuple[bool, migration.SchemaValidationStatus]:
         """Migrate schema to the latest version."""
@@ -995,10 +994,7 @@ class Recorder(threading.Thread):
             "recorder_database_migration",
         )
         self.hass.add_job(self._async_migration_started)
-        migration_result, schema_status = self._migrate_schema(schema_status, True)
-        if migration_result:
-            self._setup_run()
-        return migration_result, schema_status
+        return self._migrate_schema(schema_status, True)
 
     def _migrate_schema(
         self,
@@ -1016,7 +1012,7 @@ class Recorder(threading.Thread):
                 self, self.hass, self.engine, self.get_session, schema_status
             )
         except exc.DatabaseError as err:
-            if self._handle_database_error(err):
+            if self._handle_database_error(err, setup_run=False):
                 # If _handle_database_error returns True, we have a new database
                 # which does not need migration or repair.
                 new_schema_status = migration.SchemaValidationStatus(
@@ -1203,7 +1199,7 @@ class Recorder(threading.Thread):
 
         self._add_to_session(session, dbstate)
 
-    def _handle_database_error(self, err: Exception) -> bool:
+    def _handle_database_error(self, err: Exception, *, setup_run: bool) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
         if (
             (cause := err.__cause__)
@@ -1217,7 +1213,7 @@ class Recorder(threading.Thread):
             _LOGGER.exception(
                 "Unrecoverable sqlite3 database corruption detected: %s", err
             )
-            self._handle_sqlite_corruption()
+            self._handle_sqlite_corruption(setup_run)
             return True
         return False
 
@@ -1284,7 +1280,7 @@ class Recorder(threading.Thread):
             self._commits_without_expire = 0
             session.expire_all()
 
-    def _handle_sqlite_corruption(self) -> None:
+    def _handle_sqlite_corruption(self, setup_run: bool) -> None:
         """Handle the sqlite3 database being corrupt."""
         try:
             self._close_event_session()
@@ -1293,7 +1289,8 @@ class Recorder(threading.Thread):
         move_away_broken_database(dburl_to_path(self.db_url))
         self.recorder_runs_manager.reset()
         self._setup_recorder()
-        self._setup_run()
+        if setup_run:
+            self._setup_run()
 
     def _close_event_session(self) -> None:
         """Close the event session."""
