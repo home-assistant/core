@@ -950,7 +950,8 @@ class Recorder(threading.Thread):
         self, schema_status: migration.SchemaValidationStatus
     ) -> tuple[bool, migration.SchemaValidationStatus]:
         """Migrate schema to the latest version."""
-        return self._migrate_schema(schema_status, False)
+        with self.hass.timeout.freeze(DOMAIN):
+            return self._migrate_schema(schema_status, False)
 
     def _migrate_schema_live(
         self, schema_status: migration.SchemaValidationStatus
