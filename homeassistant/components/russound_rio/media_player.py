@@ -123,11 +123,20 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     def __init__(self, zone: Zone, sources: dict[int, Source]) -> None:
         """Initialize the zone device."""
-        super().__init__()
         self._controller = zone.controller
         self._zone = zone
         self._sources = sources
         self._attr_unique_id = str(self._zone)
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                # Use MAC address of Russound device as identifier
+                (DOMAIN, self._controller.mac_address)
+            },
+            manufacturer="Russound",
+            name=self._controller.controller_type,
+            model=self._controller.controller_type,
+            sw_version=self._controller.firmware_version,
+        )
 
     def _callback_handler(self, device_str, *args):
         if (
@@ -217,17 +226,3 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 continue
             await self._zone.send_event("SelectSource", source_id)
             break
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                # Use MAC address of Russound device as identifier
-                (DOMAIN, self._controller.mac_address)
-            },
-            manufacturer="Russound",
-            name=self._controller.controller_type,
-            model=self._controller.controller_type,
-            sw_version=self._controller.firmware_version,
-        )
