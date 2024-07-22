@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
+from aiohttp.resolver import AsyncResolver
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 
 from homeassistant import config_entries
@@ -23,7 +25,6 @@ from homeassistant.util import ssl as ssl_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
-from .backports.aiohttp_resolver import AsyncResolver
 from .frame import warn_use
 from .json import json_dumps
 
@@ -300,7 +301,7 @@ def _async_get_connector(
         ssl_context = ssl_util.get_default_no_verify_context()
 
     connector = aiohttp.TCPConnector(
-        family=family,
+        family=socket.AddressFamily(family),
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
