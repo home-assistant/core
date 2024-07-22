@@ -80,7 +80,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -172,7 +172,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
