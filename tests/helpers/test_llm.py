@@ -780,14 +780,9 @@ async def test_script_tool(
     }
 
 
-async def test_script_tool_name_slugify(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    floor_registry: fr.FloorRegistry,
-) -> None:
-    """Test that script tool name is slugified correctly."""
+async def test_script_tool_name(hass: HomeAssistant) -> None:
+    """Test that script tool name is not started with a digit."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
     context = Context()
     llm_context = llm.LLMContext(
         platform="test_platform",
