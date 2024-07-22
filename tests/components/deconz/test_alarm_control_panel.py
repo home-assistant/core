@@ -176,11 +176,7 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.ENTRY_DELAY,
         AncillaryControlPanel.EXIT_DELAY,
     ):
-        event_changed_sensor = {
-            "r": "sensors",
-            "state": {"panel": pending_event},
-        }
-        await mock_websocket_data(event_changed_sensor)
+        await mock_websocket_data({"r": "sensors", "state": {"panel": pending_event}})
         await hass.async_block_till_done()
 
         assert (
