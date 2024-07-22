@@ -33,7 +33,7 @@ Mastodon.py==1.8.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.3.0
+Pillow==10.4.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.14
@@ -288,7 +288,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.6.0
+aiomealie==0.8.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -350,7 +350,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==1.1.2
+aiorussound==2.0.6
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -383,7 +383,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.6
+aiotractive==0.6.0
 
 # homeassistant.components.unifi
 aiounifi==79
@@ -410,7 +410,7 @@ aiowithings==3.0.2
 aioymaps==1.2.4
 
 # homeassistant.components.airgradient
-airgradient==0.6.1
+airgradient==0.7.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -526,10 +526,10 @@ axis==62
 azure-eventhub==5.11.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-data[aio]==3.1.0
+azure-kusto-data[aio]==4.5.1
 
 # homeassistant.components.azure_data_explorer
-azure-kusto-ingest==3.1.0
+azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
@@ -939,7 +939,7 @@ georss-generic-client==0.8
 georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
-georss-qld-bushfire-alert-client==0.7
+georss-qld-bushfire-alert-client==0.8
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
@@ -1093,7 +1093,7 @@ home-assistant-frontend==20240719.0
 home-assistant-intents==2024.7.10
 
 # homeassistant.components.home_connect
-homeconnect==0.7.2
+homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.1
@@ -1638,7 +1638,7 @@ py-dormakaba-dkey==1.0.5
 py-improv-ble-client==1.0.3
 
 # homeassistant.components.madvr
-py-madvr2==1.6.27
+py-madvr2==1.6.29
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
@@ -1660,9 +1660,6 @@ py-synologydsm-api==2.4.4
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
-
-# homeassistant.components.seventeentrack
-py17track==2021.12.2
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -1742,6 +1739,9 @@ pybbox==0.0.5-alpha
 
 # homeassistant.components.blackbird
 pyblackbird==0.6
+
+# homeassistant.components.bluesound
+pyblu==0.4.0
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -2162,6 +2162,9 @@ pyserial==3.5
 # homeassistant.components.sesame
 pysesame2==1.0.1
 
+# homeassistant.components.seventeentrack
+pyseventeentrack==1.0.0
+
 # homeassistant.components.sia
 pysiaalarm==3.1.1
 
@@ -2265,7 +2268,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.0.0
+python-homewizard-energy==v6.1.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2384,7 +2387,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.10
+pyvesync==2.1.12
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2462,13 +2465,13 @@ refoss-ha==1.2.4
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.4
+renault-api==0.2.5
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.4
+reolink-aio==0.9.5
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2792,13 +2795,13 @@ twentemilieu==2.0.1
 twilio==6.32.0
 
 # homeassistant.components.twitch
-twitchAPI==4.0.0
+twitchAPI==4.2.1
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==5.3.0
+uiprotect==5.4.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2923,7 +2926,6 @@ xknx==2.12.2
 # homeassistant.components.knx
 xknxproject==3.7.1
 
-# homeassistant.components.bluesound
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca

@@ -9,7 +9,8 @@ import pytest
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.http.static import CachingStaticResource, _get_file_path
-from homeassistant.core import EVENT_HOMEASSISTANT_START, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
 from homeassistant.setup import async_setup_component
 

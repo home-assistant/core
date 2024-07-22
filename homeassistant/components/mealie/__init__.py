@@ -22,11 +22,12 @@ from .coordinator import (
     MealieData,
     MealieMealplanCoordinator,
     MealieShoppingListCoordinator,
+    MealieStatisticsCoordinator,
 )
 from .services import setup_services
 from .utils import create_version
 
-PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.TODO]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -75,12 +76,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
 
     mealplan_coordinator = MealieMealplanCoordinator(hass, client)
     shoppinglist_coordinator = MealieShoppingListCoordinator(hass, client)
+    statistics_coordinator = MealieStatisticsCoordinator(hass, client)
 
     await mealplan_coordinator.async_config_entry_first_refresh()
     await shoppinglist_coordinator.async_config_entry_first_refresh()
+    await statistics_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = MealieData(
-        client, mealplan_coordinator, shoppinglist_coordinator
+        client, mealplan_coordinator, shoppinglist_coordinator, statistics_coordinator
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
