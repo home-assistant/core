@@ -8,16 +8,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.util.uuid import random_uuid_hex
 
+from . import JellyfinConfigEntry
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, SUPPORTED_AUDIO_CODECS
 
@@ -56,7 +52,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Jellyfin config flow."""
         self.client_device_id: str | None = None
-        self.entry: ConfigEntry | None = None
+        self.entry: JellyfinConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -146,7 +142,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: JellyfinConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler(config_entry)
 
@@ -154,7 +150,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for jellyfin."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: JellyfinConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
