@@ -1001,13 +1001,12 @@ class Recorder(threading.Thread):
         assert self.engine is not None
         try:
             if live:
-                schema_status = migration.migrate_schema_live(
-                    self, self.hass, self.engine, self.get_session, schema_status
-                )
+                migrator = migration.migrate_schema_live
             else:
-                schema_status = migration.migrate_schema_non_live(
-                    self, self.hass, self.engine, self.get_session, schema_status
-                )
+                migrator = migration.migrate_schema_non_live
+            new_schema_status = migrator(
+                self, self.hass, self.engine, self.get_session, schema_status
+            )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return (True, schema_status)
@@ -1017,7 +1016,7 @@ class Recorder(threading.Thread):
             _LOGGER.exception("Error during schema migration")
             return (False, schema_status)
         else:
-            return (True, schema_status)
+            return (True, new_schema_status)
 
     def _lock_database(self, task: DatabaseLockTask) -> None:
         @callback
