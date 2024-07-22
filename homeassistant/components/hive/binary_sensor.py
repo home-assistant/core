@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,25 +47,26 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
         key="Heating_State",
         icon="mdi:radiator",
     ),
-    SensorEntityDescription(
+    BinarySensorEntityDescription(
         key="Heating_Boost",
         icon="mdi:radiator",
     ),
-    SensorEntityDescription(
+    BinarySensorEntityDescription(
         key="Hotwater_State",
         icon="mdi:hand-water",
     ),
-    SensorEntityDescription(
+    BinarySensorEntityDescription(
         key="Hotwater_Boost",
         icon="mdi:hand-water",
     ),
-    SensorEntityDescription(
+    BinarySensorEntityDescription(
         key="Availability",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         icon="mdi:check-circle"
     ),
 )
@@ -129,10 +129,15 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
         else:
             self._attr_available = True
 
-class HiveSensorEntity(HiveEntity, SensorEntity):
+class HiveSensorEntity(HiveEntity, BinarySensorEntity):
     """Hive Sensor Entity."""
 
-    def __init__(self, hive, hive_device, entity_description):
+    def __init__(
+        self,
+        hive: Hive,
+        hive_device: dict[str, Any],
+        entity_description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialise hive sensor."""
         super().__init__(hive, hive_device)
         self.entity_description = entity_description
@@ -141,4 +146,9 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
-        self._attr_native_value = self.device["status"]["state"]
+        if self.device["hiveType"] != "Availability":
+            self._attr_is_on = self.device["status"]["state"] == "ON"
+            self._attr_available = self.device["deviceData"].get("online")
+        else:
+            self._attr_is_on = self.device["status"]["state"] == "Online"
+            self._attr_available = True
