@@ -43,8 +43,6 @@ async def test_sirens(
     assert hass.states.get("siren.warning_device").state == STATE_ON
 
     await light_ws_data({"state": {"alert": None}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("siren.warning_device").state == STATE_OFF
 
     # Verify service calls

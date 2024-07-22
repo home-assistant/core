@@ -66,7 +66,6 @@ async def test_power_plugs(
     assert hass.states.get("switch.unsupported_switch") is None
 
     await light_ws_data({"state": {"on": False}})
-
     assert hass.states.get("switch.on_off_switch").state == STATE_OFF
 
     # Verify service calls

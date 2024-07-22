@@ -477,8 +477,6 @@ async def test_light_state_change(
     assert hass.states.get("light.hue_go").state == STATE_ON
 
     await light_ws_data({"state": {"on": False}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("light.hue_go").state == STATE_OFF
 
 
@@ -1314,8 +1312,6 @@ async def test_non_color_light_reports_color(
         "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
     }
     await light_ws_data(event_changed_light)
-    await hass.async_block_till_done()
-
     group = hass.states.get("light.group")
     assert group.attributes[ATTR_COLOR_MODE] == ColorMode.XY
     assert group.attributes[ATTR_HS_COLOR] == (40.571, 41.176)

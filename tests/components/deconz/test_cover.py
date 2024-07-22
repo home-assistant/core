@@ -69,8 +69,6 @@ async def test_cover(
     # Event signals cover is open
 
     await light_ws_data({"state": {"lift": 0, "open": True}})
-    await hass.async_block_till_done()
-
     cover = hass.states.get("cover.window_covering_device")
     assert cover.state == STATE_OPEN
     assert cover.attributes[ATTR_CURRENT_POSITION] == 100

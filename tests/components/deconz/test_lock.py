@@ -52,8 +52,6 @@ async def test_lock_from_light(
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
     await light_ws_data({"state": {"on": True}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
 
     # Verify service calls
@@ -129,8 +127,6 @@ async def test_lock_from_sensor(
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
     await sensor_ws_data({"state": {"lockstate": "locked"}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
 
     # Verify service calls

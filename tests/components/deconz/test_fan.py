@@ -57,32 +57,22 @@ async def test_fans(
     # Test states
 
     await light_ws_data({"state": {"speed": 1}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 25
 
     await light_ws_data({"state": {"speed": 2}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 50
 
     await light_ws_data({"state": {"speed": 3}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
 
     await light_ws_data({"state": {"speed": 4}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
 
     await light_ws_data({"state": {"speed": 0}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 0
 
@@ -173,8 +163,6 @@ async def test_fans(
     # Events with an unsupported speed does not get converted
 
     await light_ws_data({"state": {"speed": 5}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert not hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE]
 

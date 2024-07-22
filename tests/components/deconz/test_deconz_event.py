@@ -99,7 +99,6 @@ async def test_deconz_events(
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
     await sensor_ws_data({"id": "1", "state": {"buttonevent": 2000}})
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -114,7 +113,6 @@ async def test_deconz_events(
     }
 
     await sensor_ws_data({"id": "3", "state": {"buttonevent": 2000}})
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:03")}
@@ -130,7 +128,6 @@ async def test_deconz_events(
     }
 
     await sensor_ws_data({"id": "4", "state": {"gesture": 0}})
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:04")}
@@ -150,7 +147,6 @@ async def test_deconz_events(
         "state": {"buttonevent": 6002, "angle": 110, "xy": [0.5982, 0.3897]},
     }
     await sensor_ws_data(event_changed_sensor)
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:05")}
@@ -169,8 +165,6 @@ async def test_deconz_events(
     # Unsupported event
 
     await sensor_ws_data({"id": "1", "name": "other name"})
-    await hass.async_block_till_done()
-
     assert len(captured_events) == 4
 
     await hass.config_entries.async_unload(config_entry_setup.entry_id)
@@ -272,7 +266,6 @@ async def test_deconz_alarm_events(
     # Emergency event
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.EMERGENCY}})
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -289,7 +282,6 @@ async def test_deconz_alarm_events(
     # Fire event
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.FIRE}})
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -306,7 +298,6 @@ async def test_deconz_alarm_events(
     # Invalid code event
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.INVALID_CODE}})
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -323,7 +314,6 @@ async def test_deconz_alarm_events(
     # Panic event
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.PANIC}})
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -340,15 +330,11 @@ async def test_deconz_alarm_events(
     # Only care for changes to specific action events
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.ARMED_AWAY}})
-    await hass.async_block_till_done()
-
     assert len(captured_events) == 4
 
     # Only care for action events
 
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
-    await hass.async_block_till_done()
-
     assert len(captured_events) == 4
 
     await hass.config_entries.async_unload(config_entry_setup.entry_id)
@@ -425,7 +411,6 @@ async def test_deconz_presence_events(
         PresenceStatePresenceEvent.RIGHT_LEAVE,
     ):
         await sensor_ws_data({"state": {"presenceevent": presence_event}})
-        await hass.async_block_till_done()
 
         assert len(captured_events) == 1
         assert captured_events[0].data == {
@@ -439,8 +424,6 @@ async def test_deconz_presence_events(
     # Unsupported presence event
 
     await sensor_ws_data({"state": {"presenceevent": PresenceStatePresenceEvent.NINE}})
-    await hass.async_block_till_done()
-
     assert len(captured_events) == 0
 
     await hass.config_entries.async_unload(config_entry_setup.entry_id)
@@ -514,7 +497,6 @@ async def test_deconz_relative_rotary_events(
             }
         }
         await sensor_ws_data(event_changed_sensor)
-        await hass.async_block_till_done()
 
         assert len(captured_events) == 1
         assert captured_events[0].data == {
@@ -530,8 +512,6 @@ async def test_deconz_relative_rotary_events(
     # Unsupported relative rotary event
 
     await sensor_ws_data({"name": "123"})
-    await hass.async_block_till_done()
-
     assert len(captured_events) == 0
 
     await hass.config_entries.async_unload(config_entry_setup.entry_id)
