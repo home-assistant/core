@@ -961,6 +961,18 @@ class UnitOfRotationalSpeed(StrEnum):
     DEGREES_PER_SECOND = "°/s"
 
 
+# Pace units
+class UnitOfPace(StrEnum):
+    """Pace units."""
+
+    SECONDS_PER_KILOMETER = "s/km"
+    SECONDS_PER_MILE = "s/mi"
+    SECONDS_PER_500M = "s/500m"
+    MINUTES_PER_KILOMETER = "min/km"
+    MINUTES_PER_MILE = "min/mi"
+    MINUTES_PER_500M = "min/500m"
+
+
 # Pressure units
 class UnitOfPressure(StrEnum):
     """Pressure units."""

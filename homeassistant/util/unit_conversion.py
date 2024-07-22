@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPace,
     UnitOfPower,
     UnitOfPressure,
     UnitOfRotationalSpeed,
@@ -329,6 +330,22 @@ class MassConverter(BaseUnitConverter):
         UnitOfMass.POUNDS,
         UnitOfMass.STONES,
     }
+
+
+class PaceConverter(BaseUnitConverter):
+    """Utility to convert pace values."""
+
+    UNIT_CLASS = "pace"
+    NORMALIZED_UNIT = UnitOfPace.SECONDS_PER_KILOMETER
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfPace.SECONDS_PER_KILOMETER: 1,
+        UnitOfPace.SECONDS_PER_MILE: _KM_TO_M / _MILE_TO_M,
+        UnitOfPace.SECONDS_PER_500M: 0.5,
+        UnitOfPace.MINUTES_PER_KILOMETER: 1 / _MIN_TO_SEC,
+        UnitOfPace.MINUTES_PER_MILE: _KM_TO_M / _MILE_TO_M / _MIN_TO_SEC,
+        UnitOfPace.MINUTES_PER_500M: 0.5 / _MIN_TO_SEC,
+    }
+    VALID_UNITS = set(UnitOfPace)
 
 
 class PowerConverter(BaseUnitConverter):

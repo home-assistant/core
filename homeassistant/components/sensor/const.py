@@ -32,6 +32,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfMetabolicEquivalent,
+    UnitOfPace,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -64,6 +65,7 @@ from homeassistant.util.unit_conversion import (
     InclinationConverter,
     InformationConverter,
     MassConverter,
+    PaceConverter,
     PowerConverter,
     PressureConverter,
     RotationalSpeedConverter,
@@ -297,6 +299,12 @@ class SensorDeviceClass(StrEnum):
     """Amount of O3.
 
     Unit of measurement: `µg/m³`
+    """
+
+    PACE = "pace"
+    """Pace.
+
+    Unit of measurement: `s/km`, `s/mi`, `s/500m`, `min/km`, `min/mi`, `min/500m`
     """
 
     PH = "ph"
@@ -544,6 +552,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.FREQUENCY: FrequencyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.INCLINATION: InclinationConverter,
+    SensorDeviceClass.PACE: PaceConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
@@ -601,6 +610,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.PACE: set(UnitOfPace),
     SensorDeviceClass.PH: {None},
     SensorDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -677,6 +687,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.NITROGEN_MONOXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.NITROUS_OXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.OZONE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PACE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PH: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM1: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM10: {SensorStateClass.MEASUREMENT},
