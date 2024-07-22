@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -121,8 +122,10 @@ class RussoundZoneDevice(MediaPlayerEntity):
     def __init__(self, zone: Zone, sources: dict[int, Source]) -> None:
         """Initialize the zone device."""
         super().__init__()
+        self._controller = zone.controller
         self._zone = zone
         self._sources = sources
+        self._attr_unique_id = str(self._zone)
 
     def _callback_handler(self, device_str, *args):
         if (
@@ -212,3 +215,17 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 continue
             await self._zone.send_event("SelectSource", source_id)
             break
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={
+                # Use MAC address of Russound device as identifier
+                (DOMAIN, self._controller.mac_address)
+            },
+            name=self.name,
+            manufacturer="Russound",
+            model=self._controller.controller_type,
+            sw_version=self._controller.firmware_version,
+        )
