@@ -1329,6 +1329,34 @@ async def test_bootstrap_dependencies(
     )
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_dependency_not_found(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup when an integration has missing dependencies."""
+    mock_integration(
+        hass,
+        MockModule("good_integration", dependencies=[]),
+    )
+    # Simulate an integration with missing dependencies. While a core integration
+    # can't have missing dependencies thanks to checks by hassfest, there's no such
+    # guarantee for custom integrations.
+    mock_integration(
+        hass,
+        MockModule("bad_integration", dependencies=["hahaha_crash_and_burn"]),
+    )
+
+    assert await bootstrap.async_from_config_dict(
+        {"good_integration": {}, "bad_integration": {}}, hass
+    )
+
+    assert "good_integration" in hass.config.components
+    assert "bad_integration" not in hass.config.components
+
+    assert "Unable to resolve dependencies for bad_integration" in caplog.text
+
+
 async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
     """Test pre-imported and do not have any requirements."""
     pre_imports = [
