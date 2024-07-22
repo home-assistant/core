@@ -3,7 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]"
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "port": "The integration will default to 8050, if not set, which should be suitable for most installs"
         }
       }
     },
