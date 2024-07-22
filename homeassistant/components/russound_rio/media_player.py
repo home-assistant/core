@@ -17,7 +17,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -126,12 +126,10 @@ class RussoundZoneDevice(MediaPlayerEntity):
         self._controller = zone.controller
         self._zone = zone
         self._sources = sources
-        self._attr_unique_id = str(self._zone)
+        self._attr_unique_id = f"{self._controller.mac_address}-{zone.device_str()}"
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                # Use MAC address of Russound device as identifier
-                (DOMAIN, self._controller.mac_address)
-            },
+            # Use MAC address of Russound device as identifier
+            connections={(CONNECTION_NETWORK_MAC, self._controller.mac_address)},
             manufacturer="Russound",
             name=self._controller.controller_type,
             model=self._controller.controller_type,
