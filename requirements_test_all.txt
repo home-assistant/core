@@ -353,7 +353,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.4.3
+aioswitcher==3.5.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1

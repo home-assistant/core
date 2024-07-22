@@ -137,9 +137,11 @@ class SwitcherThermostatButtonEntity(
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,
+                self.coordinator.token,
             ) as swapi:
                 response = await self.entity_description.press_fn(swapi, self._remote)
         except (TimeoutError, OSError, RuntimeError) as err:

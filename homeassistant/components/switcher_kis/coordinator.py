@@ -34,6 +34,7 @@ class SwitcherDataUpdateCoordinator(
         )
         self.entry = entry
         self.data = device
+        self.token = ""  ## Temp until make part of config
 
     async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""

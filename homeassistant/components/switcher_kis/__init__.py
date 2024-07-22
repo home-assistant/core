@@ -45,12 +45,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 
         # New device - create device
         _LOGGER.info(
-            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s)",
+            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s), is_token_needed: %s",
             device.device_id,
             device.device_key,
             device.name,
             device.device_type.value,
             device.device_type.hex_rep,
+            device.token_needed,
         )
 
         coordinator = SwitcherDataUpdateCoordinator(hass, entry, device)
