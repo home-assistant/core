@@ -50,24 +50,24 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="Heating_State",
-        icon="mdi:radiator",
+        translation_key="heating_icon",
     ),
     BinarySensorEntityDescription(
         key="Heating_Boost",
-        icon="mdi:radiator",
+        translation_key="heating_icon",
     ),
     BinarySensorEntityDescription(
         key="Hotwater_State",
-        icon="mdi:hand-water",
+        translation_key="hot_water_icon",
     ),
     BinarySensorEntityDescription(
         key="Hotwater_Boost",
-        icon="mdi:hand-water",
+        translation_key="hot_water_icon",
     ),
     BinarySensorEntityDescription(
         key="Availability",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        icon="mdi:check-circle"
+        translation_key="connectivity_icon",
     ),
 )
 
