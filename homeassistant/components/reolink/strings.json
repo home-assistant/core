@@ -72,7 +72,7 @@
     },
     "hdr_switch_depricated": {
       "title": "Reolink HDR switch depricated",
-      "description": "The Reolink HDR switch entity has been replaced by a HDR select entity offering options "on", "off" and "auto", please disable the HDR switch entity and adjust automations accordingly"
+      "description": "The Reolink HDR switch entity will be depricated in HA 2025.2.0 and has been replaced by a HDR select entity offering options "on", "off" and "auto", please disable the HDR switch entity and adjust automations accordingly"
     }
   },
   "services": {
