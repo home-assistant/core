@@ -487,7 +487,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.39.0
+async-upnp-client==0.40.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
