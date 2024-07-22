@@ -8,3 +8,6 @@ MOCK_CONFIG = {
 }
 
 MOCK_MAC = "00:11:22:33:44:55"
+
+TEST_CON_ERROR = ConnectionError("Connection failed")
+TEST_IMP_ERROR = NotImplementedError("Not implemented")
