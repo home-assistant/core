@@ -343,11 +343,7 @@ async def test_functional_device_trigger(
 
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"buttonevent": 1002},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "state": {"buttonevent": 1002}})
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
