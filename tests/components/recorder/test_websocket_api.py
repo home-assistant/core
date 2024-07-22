@@ -2466,7 +2466,7 @@ async def test_recorder_info_bad_recorder_config(
 
     client = await hass_ws_client()
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch("homeassistant.components.recorder.migration._migrate_schema"):
         recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
