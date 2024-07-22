@@ -87,8 +87,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
-                    "created_at": self.created_at.isoformat(),
-                    "modified_at": self.modified_at.isoformat(),
+                    "created_at": self.created_at.timestamp(),
+                    "modified_at": self.modified_at.timestamp(),
                 }
             )
         )
