@@ -64,10 +64,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="Heating_Mode",
+        device_class=SensorDeviceClass.ENUM,
+        options={"ON", "OFF", "SCHEDULE"},
         icon="mdi:radiator",
     ),
     SensorEntityDescription(
         key="Hotwater_Mode",
+        device_class=SensorDeviceClass.ENUM,
+        options={"ON", "OFF", "SCHEDULE"},
         icon="mdi:hand-water",
     ),
 )
