@@ -707,6 +707,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_entry_id: str,
         configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         connections: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
+        created_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         default_manufacturer: str | None | UndefinedType = UNDEFINED,
         default_model: str | None | UndefinedType = UNDEFINED,
         default_name: str | None | UndefinedType = UNDEFINED,
@@ -718,6 +719,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         model_id: str | None | UndefinedType = UNDEFINED,
+        modified_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         name: str | None | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
