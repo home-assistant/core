@@ -131,6 +131,7 @@ class RussoundZoneDevice(MediaPlayerEntity):
         self._attr_unique_id = f"{self._controller.mac_address}-{zone.device_str()}"
         self._attr_device_info = DeviceInfo(
             # Use MAC address of Russound device as identifier
+            identifiers={(DOMAIN, self._controller.mac_address)},
             connections={(CONNECTION_NETWORK_MAC, self._controller.mac_address)},
             manufacturer="Russound",
             name=self._controller.controller_type,
