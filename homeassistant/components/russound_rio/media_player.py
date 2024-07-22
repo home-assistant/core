@@ -113,6 +113,7 @@ class RussoundZoneDevice(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_has_entity_name = True
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -127,7 +128,6 @@ class RussoundZoneDevice(MediaPlayerEntity):
         self._zone = zone
         self._sources = sources
         self._attr_name = zone.name
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._controller.mac_address}-{zone.device_str()}"
         self._attr_device_info = DeviceInfo(
             # Use MAC address of Russound device as identifier
