@@ -40,10 +40,10 @@
         }
       },
       "user_confirm_still": {
-        "title": "Preview",
-        "description": "![Camera Still Image Preview]({preview_url})",
+        "title": "Confirmation",
+        "description": "Please wait for previews to load...",
         "data": {
-          "confirmed_ok": "This image looks good."
+          "confirmed_ok": "Everything looks good."
         }
       }
     }

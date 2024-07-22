@@ -3,7 +3,7 @@
   "name": "Generic Camera",
   "codeowners": ["@davet2001"],
   "config_flow": true,
-  "dependencies": ["http"],
+  "dependencies": ["http", "stream"],
   "documentation": "https://www.home-assistant.io/integrations/generic",
   "integration_type": "device",
   "iot_class": "local_push",
