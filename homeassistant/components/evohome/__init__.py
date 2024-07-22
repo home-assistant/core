@@ -252,8 +252,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ):
         return False
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]["broker"] = broker
+    hass.data[DOMAIN] = {"broker": broker}
 
     hass.data[DOMAIN]["coordinator"] = coordinator = DataUpdateCoordinator(
         hass,
