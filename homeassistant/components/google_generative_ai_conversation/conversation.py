@@ -81,6 +81,8 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
             key = "type_"
             val = val.upper()
         elif key == "format":
+            if schema.get("type") == "string" and val != "enum":
+                continue
             key = "format_"
         elif key == "items":
             val = _format_schema(val)

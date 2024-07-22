@@ -239,13 +239,11 @@ async def test_service_refresh_devices(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -284,7 +282,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
             }
         },
         "sensors": {
-            "1": {
+            "0": {
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -319,13 +317,11 @@ async def test_service_refresh_devices_trigger_no_state_update(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000, "gesture": 1},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000, "gesture": 1},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:03-00",
         }
     ],
 )

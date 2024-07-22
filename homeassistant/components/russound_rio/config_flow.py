@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from aiorussound import Russound
+from aiorussound import Controller, Russound
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,13 +31,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def find_primary_controller_metadata(
-    controllers: list[tuple[int, str, str]],
+    controllers: dict[int, Controller],
 ) -> tuple[str, str]:
     """Find the mac address of the primary Russound controller."""
-    for controller_id, mac_address, controller_type in controllers:
-        # The integration only cares about the primary controller linked by IP and not any downstream controllers
-        if controller_id == 1:
-            return (mac_address, controller_type)
+    if 1 in controllers:
+        c = controllers[1]
+        return c.mac_address, c.controller_type
     raise NoPrimaryControllerException
 
 

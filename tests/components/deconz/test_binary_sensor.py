@@ -454,7 +454,7 @@ TEST_DATA = [
 
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
-@pytest.mark.parametrize(("sensor_1_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 async def test_binary_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -492,11 +492,7 @@ async def test_binary_sensors(
 
     # Change state
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": expected["websocket_event"],
-    }
+    event_changed_sensor = {"r": "sensors", "state": expected["websocket_event"]}
     await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
@@ -514,7 +510,7 @@ async def test_binary_sensors(
 
 
 @pytest.mark.parametrize(
-    "sensor_1_payload",
+    "sensor_payload",
     [
         {
             "name": "CLIP presence sensor",
@@ -607,7 +603,6 @@ async def test_add_new_binary_sensor(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": {
             "id": "Presence sensor id",
             "name": "Presence sensor",
@@ -646,7 +641,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": sensor,
     }
 
@@ -667,7 +661,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
         == 0
     )
 
-    deconz_payload["sensors"] = {"1": sensor}
+    deconz_payload["sensors"]["0"] = sensor
     mock_requests()
 
     await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
@@ -699,7 +693,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     event_added_sensor = {
         "e": "added",
         "r": "sensors",
-        "id": "1",
         "sensor": sensor,
     }
 
@@ -720,7 +713,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
         == 0
     )
 
-    deconz_payload["sensors"] = {"1": sensor}
+    deconz_payload["sensors"]["0"] = sensor
     mock_requests()
 
     hass.config_entries.async_update_entry(
