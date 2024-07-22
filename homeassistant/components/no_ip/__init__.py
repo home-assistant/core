@@ -101,7 +101,7 @@ async def _update_no_ip(
 
     try:
         async with asyncio.timeout(timeout):
-            resp = await session.get(url, params=params, headers=headers)
+            resp = await session.get(url, params=params, headers=headers)  # type: ignore[arg-type]
             body = await resp.text()
 
             if body.startswith(("good", "nochg")):

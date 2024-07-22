@@ -49,7 +49,7 @@ async def async_setup_platform(
     try:
         httpsession = async_get_clientsession(hass)
         async with asyncio.timeout(timeout):
-            scenes_resp = await httpsession.get(url, headers=headers)
+            scenes_resp = await httpsession.get(url, headers=headers)  # type: ignore[arg-type]
 
     except (TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", url)
