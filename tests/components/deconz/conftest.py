@@ -269,6 +269,19 @@ def fixture_websocket_data(_mock_websocket: _WebsocketMock) -> WebsocketDataType
     return change_websocket_data
 
 
+@pytest.fixture(name="light_ws_data")
+def fixture_light_websocket_data(
+    mock_websocket_data: WebsocketDataType,
+) -> WebsocketDataType:
+    """Fixture to send light data over websocket."""
+
+    async def send_light_data(data: dict[str, Any]) -> None:
+        """Send light data on the websocket."""
+        await mock_websocket_data({"r": "lights"} | data)
+
+    return send_light_data
+
+
 @pytest.fixture(name="sensor_ws_data")
 def fixture_sensor_websocket_data(
     mock_websocket_data: WebsocketDataType,

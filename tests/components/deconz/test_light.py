@@ -471,12 +471,12 @@ async def test_lights(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_light_state_change(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Verify light can change state on websocket event."""
     assert hass.states.get("light.hue_go").state == STATE_ON
 
-    await mock_websocket_data({"r": "lights", "state": {"on": False}})
+    await light_ws_data({"state": {"on": False}})
     await hass.async_block_till_done()
 
     assert hass.states.get("light.hue_go").state == STATE_OFF
@@ -1280,7 +1280,7 @@ async def test_disable_light_groups(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_non_color_light_reports_color(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Verify hs_color does not crash when a group gets updated with a bad color value.
 
@@ -1303,7 +1303,6 @@ async def test_non_color_light_reports_color(
     # for a non-color light causing an exception in hs_color
     event_changed_light = {
         "id": "1",
-        "r": "lights",
         "state": {
             "alert": None,
             "bri": 216,
@@ -1314,7 +1313,7 @@ async def test_non_color_light_reports_color(
         },
         "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
     }
-    await mock_websocket_data(event_changed_light)
+    await light_ws_data(event_changed_light)
     await hass.async_block_till_done()
 
     group = hass.states.get("light.group")
