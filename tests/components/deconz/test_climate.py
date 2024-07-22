@@ -110,11 +110,7 @@ async def test_simple_climate_device(
 
     # Event signals thermostat configured off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": False},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "state": {"on": False}})
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.thermostat").state == STATE_OFF

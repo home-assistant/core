@@ -492,8 +492,7 @@ async def test_binary_sensors(
 
     # Change state
 
-    event_changed_sensor = {"r": "sensors", "state": expected["websocket_event"]}
-    await mock_websocket_data(event_changed_sensor)
+    await mock_websocket_data({"r": "sensors", "state": expected["websocket_event"]})
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
