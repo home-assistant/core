@@ -122,9 +122,7 @@ def exception_wrap[_LinkPlayEntityT: LinkPlayMediaPlayerEntity, **_P, _R](
 class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LinkPlay media player."""
 
-    _bridge: LinkPlayBridge
     _attr_sound_mode_list = list(EQUALIZER_MAP.values())
-    _attr_should_poll = True
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_media_content_type = MediaType.MUSIC
     _attr_has_entity_name = True
@@ -134,32 +132,22 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         """Initialize the LinkPlay media player."""
 
         self._bridge = bridge
-        self._attr_unique_id = self._bridge.device.uuid
+        self._attr_unique_id = bridge.device.uuid
 
         self._attr_source_list = [
-            SOURCE_MAP[playing_mode]
-            for playing_mode in self._bridge.device.playmode_support
+            SOURCE_MAP[playing_mode] for playing_mode in bridge.device.playmode_support
         ]
 
-    @property
-    def device_info(self) -> dr.DeviceInfo:
-        """Return the device info."""
-        manufacturer, model = get_info_from_project(
-            self._bridge.device.properties["project"]
-        )
-        return dr.DeviceInfo(
-            configuration_url=self._bridge.endpoint,
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, self._bridge.device.properties["MAC"])
-            },
-            entry_type=None,
-            hw_version=self._bridge.device.properties["hardware"],
-            identifiers={(DOMAIN, self._bridge.device.uuid)},
+        manufacturer, model = get_info_from_project(bridge.device.properties["project"])
+        self._attr_device_info = dr.DeviceInfo(
+            configuration_url=bridge.endpoint,
+            connections={(dr.CONNECTION_NETWORK_MAC, bridge.device.properties["MAC"])},
+            hw_version=bridge.device.properties["hardware"],
+            identifiers={(DOMAIN, bridge.device.uuid)},
             manufacturer=manufacturer,
             model=model,
-            name=self._bridge.device.name,
-            suggested_area=None,
-            sw_version=self._bridge.device.properties["firmware"],
+            name=bridge.device.name,
+            sw_version=bridge.device.properties["firmware"],
         )
 
     @exception_wrap

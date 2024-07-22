@@ -1,8 +1,5 @@
 """Support for LinkPlay devices."""
 
-from dataclasses import dataclass
-import logging
-
 from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_bridge
 
@@ -12,16 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS
-
-__all__ = [
-    "DOMAIN",
-    "async_setup_entry",
-    "async_unload_entry",
-]
+from .const import PLATFORMS
 
 
-@dataclass
 class LinkPlayData:
     """Data for LinkPlay."""
 
@@ -29,8 +19,6 @@ class LinkPlayData:
 
 
 type LinkPlayConfigEntry = ConfigEntry[LinkPlayData]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
@@ -40,12 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
     if (
         bridge := await linkplay_factory_bridge(entry.data[CONF_HOST], session)
     ) is None:
-        _LOGGER.error(
-            "Failed to connect to LinkPlay device at %s", entry.data[CONF_HOST]
+        raise ConfigEntryNotReady(
+            f"Failed to connect to LinkPlay device at {entry.data[CONF_HOST]}"
         )
-        raise ConfigEntryNotReady
 
-    entry.runtime_data = LinkPlayData(bridge=bridge)
+    entry.runtime_data = LinkPlayData()
+    entry.runtime_data.bridge = bridge
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
