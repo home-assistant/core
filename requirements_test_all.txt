@@ -1783,7 +1783,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.1.0
+python-homewizard-energy==v6.1.1
 
 # homeassistant.components.izone
 python-izone==1.2.9

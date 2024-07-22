@@ -68,7 +68,7 @@
         'product': dict({
           'description': 'Measure solar panels, car chargers and more.',
           'model': 'HWE-KWH1',
-          'name': 'Wi-Fi kWh meter 1-phase',
+          'name': 'Wi-Fi kWh Meter 1-phase',
           'url': 'https://www.homewizard.com/kwh-meter/',
         }),
         'product_name': 'kWh meter',
@@ -157,7 +157,7 @@
         'product': dict({
           'description': 'Measure solar panels, car chargers and more.',
           'model': 'HWE-KWH3',
-          'name': 'Wi-Fi kWh meter 3-phase',
+          'name': 'Wi-Fi kWh Meter 3-phase',
           'url': 'https://www.homewizard.com/kwh-meter/',
         }),
         'product_name': 'KWh meter 3-phase',
@@ -386,7 +386,7 @@
         'product': dict({
           'description': 'Measure and switch every device.',
           'model': 'HWE-SKT',
-          'name': 'Energy Socket',
+          'name': 'Wi-Fi Energy Socket',
           'url': 'https://www.homewizard.com/energy-socket/',
         }),
         'product_name': 'Energy Socket',
@@ -479,7 +479,7 @@
         'product': dict({
           'description': 'Measure and switch every device.',
           'model': 'HWE-SKT',
-          'name': 'Energy Socket',
+          'name': 'Wi-Fi Energy Socket',
           'url': 'https://www.homewizard.com/energy-socket/',
         }),
         'product_name': 'Energy Socket',
@@ -661,7 +661,7 @@
         'product': dict({
           'description': 'Measure solar panels, car chargers and more.',
           'model': 'SDM230-wifi',
-          'name': 'Wi-Fi kWh meter 1-phase',
+          'name': 'Wi-Fi kWh Meter 1-phase',
           'url': 'https://www.homewizard.com/kwh-meter/',
         }),
         'product_name': 'kWh meter',
@@ -750,7 +750,7 @@
         'product': dict({
           'description': 'Measure solar panels, car chargers and more.',
           'model': 'SDM630-wifi',
-          'name': 'Wi-Fi kWh meter 3-phase',
+          'name': 'Wi-Fi kWh Meter 3-phase',
           'url': 'https://www.homewizard.com/kwh-meter/',
         }),
         'product_name': 'KWh meter 3-phase',
