@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
@@ -30,13 +29,22 @@ from homeassistant.components.knx.const import (
     DOMAIN as KNX_DOMAIN,
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
+from homeassistant.components.knx.storage.config_store import (
+    STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from . import KnxEntityGenerator
 
-FIXTURE_PROJECT_DATA = json.loads(load_fixture("project.json", KNX_DOMAIN))
+from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.typing import WebSocketGenerator
+
+FIXTURE_PROJECT_DATA = load_json_object_fixture("project.json", KNX_DOMAIN)
+FIXTURE_CONFIG_STORAGE_DATA = load_json_object_fixture("config_store.json", KNX_DOMAIN)
 
 
 class KNXTestKit:
@@ -166,9 +174,16 @@ class KNXTestKit:
                 telegram.payload.value.value == payload  # type: ignore[attr-defined]
             ), f"Payload mismatch in {telegram} - Expected: {payload}"
 
-    async def assert_read(self, group_address: str) -> None:
-        """Assert outgoing GroupValueRead telegram. One by one in timely order."""
+    async def assert_read(
+        self, group_address: str, response: int | tuple[int, ...] | None = None
+    ) -> None:
+        """Assert outgoing GroupValueRead telegram. One by one in timely order.
+
+        Optionally inject incoming GroupValueResponse telegram after reception.
+        """
         await self.assert_telegram(group_address, None, GroupValueRead)
+        if response is not None:
+            await self.receive_response(group_address, response)
 
     async def assert_response(
         self, group_address: str, payload: int | tuple[int, ...]
@@ -280,3 +295,53 @@ def load_knxproj(hass_storage: dict[str, Any]) -> None:
         "version": 1,
         "data": FIXTURE_PROJECT_DATA,
     }
+
+
+@pytest.fixture
+def load_config_store(hass_storage: dict[str, Any]) -> None:
+    """Mock KNX config store data."""
+    hass_storage[KNX_CONFIG_STORAGE_KEY] = FIXTURE_CONFIG_STORAGE_DATA
+
+
+@pytest.fixture
+async def create_ui_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> KnxEntityGenerator:
+    """Return a helper to create a KNX entities via WS.
+
+    The KNX integration must be set up before using the helper.
+    """
+    ws_client = await hass_ws_client(hass)
+
+    async def _create_ui_entity(
+        platform: Platform,
+        knx_data: dict[str, Any],
+        entity_data: dict[str, Any] | None = None,
+    ) -> er.RegistryEntry:
+        """Create a KNX entity from WS with given configuration."""
+        if entity_data is None:
+            entity_data = {"name": "Test"}
+
+        await ws_client.send_json_auto_id(
+            {
+                "type": "knx/create_entity",
+                "platform": platform,
+                "data": {
+                    "entity": entity_data,
+                    "knx": knx_data,
+                },
+            }
+        )
+        res = await ws_client.receive_json()
+        assert res["success"], res
+        assert res["result"]["success"] is True, res["result"]
+        entity_id = res["result"]["entity_id"]
+
+        entity = entity_registry.async_get(entity_id)
+        assert entity
+        return entity
+
+    return _create_ui_entity

@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up event entities for feedreader."""
-    coordinator: FeedReaderCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities([FeedReaderEvent(coordinator)])
 
@@ -76,8 +76,6 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
         if content := feed_data.get("content"):
             if isinstance(content, list) and isinstance(content[0], dict):
                 content = content[0].get("value")
-        else:
-            content = feed_data.get("summary")
 
         self._trigger_event(
             EVENT_FEEDREADER,

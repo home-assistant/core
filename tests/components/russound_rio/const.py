@@ -1,5 +1,7 @@
 """Constants for russound_rio tests."""
 
+from collections import namedtuple
+
 HOST = "127.0.0.1"
 PORT = 9621
 MODEL = "MCA-C5"
@@ -9,3 +11,6 @@ MOCK_CONFIG = {
     "host": HOST,
     "port": PORT,
 }
+
+_CONTROLLER = namedtuple("Controller", ["mac_address", "controller_type"])
+MOCK_CONTROLLERS = {1: _CONTROLLER(mac_address=HARDWARE_MAC, controller_type=MODEL)}
