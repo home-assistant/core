@@ -156,10 +156,11 @@ class MatterUpdate(MatterEntity, UpdateEntity):
 
     @property
     def entity_picture(self) -> str | None:
-        """Return the entity picture to use in the frontend."""
+        """Return the entity picture to use in the frontend.
 
-        # The Matter brand picture is not appropriate as this is the update
-        # entity for the device.
+        This overrides UpdateEntity.entity_picture because the Matter brand picture
+        is not appropriate for a matter device which has its own brand.
+        """
         return None
 
     async def async_install(
