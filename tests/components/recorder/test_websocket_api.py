@@ -2491,7 +2491,7 @@ async def test_recorder_info_no_instance(
     client = await hass_ws_client()
 
     with patch(
-        "homeassistant.components.recorder.websocket_api.get_instance",
+        "homeassistant.components.recorder.basic_websocket_api.get_instance",
         return_value=None,
     ):
         await client.send_json_auto_id({"type": "recorder/info"})

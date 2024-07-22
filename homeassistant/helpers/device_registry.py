@@ -498,16 +498,16 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             if old_minor_version < 5:
                 # Introduced in 2024.3
                 for device in old_data["devices"]:
-                    device["labels"] = device.get("labels", [])
+                    device["labels"] = []
             if old_minor_version < 6:
                 # Introduced in 2024.7
                 for device in old_data["devices"]:
-                    device.setdefault("primary_config_entry", None)
+                    device["primary_config_entry"] = None
             if old_minor_version < 7:
                 # Introduced in 2024.8
                 created_at = utc_from_timestamp(0).isoformat()
                 for device in old_data["devices"]:
-                    device.setdefault("model_id", None)
+                    device["model_id"] = None
                     device["created_at"] = device["modified_at"] = created_at
                 for device in old_data["deleted_devices"]:
                     device["created_at"] = device["modified_at"] = created_at
