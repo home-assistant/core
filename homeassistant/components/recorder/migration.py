@@ -193,9 +193,9 @@ class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
+    migration_needed: bool
     schema_errors: set[str]
     start_version: int
-    valid: bool
 
 
 def _schema_is_current(current_version: int) -> bool:
@@ -223,10 +223,8 @@ def validate_db_schema(
         # columns may otherwise not exist etc.
         schema_errors = _find_schema_errors(hass, instance, session_maker)
 
-    valid = is_current and not schema_errors
-
     return SchemaValidationStatus(
-        current_version, schema_errors, current_version, valid
+        current_version, not is_current, schema_errors, current_version
     )
 
 
