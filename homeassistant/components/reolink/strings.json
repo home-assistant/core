@@ -69,6 +69,10 @@
     "firmware_update": {
       "title": "Reolink firmware update required",
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
+    },
+    "hdr_switch_depricated": {
+      "title": "Reolink HDR switch depricated",
+      "description": "The Reolink HDR switch entity has been replaced by a HDR select entity offering options "on", "off" and "auto", please disable the HDR switch entity and adjust automations accordingly"
     }
   },
   "services": {

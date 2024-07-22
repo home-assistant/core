@@ -289,6 +289,14 @@ async def async_setup_entry(
                 entities.append(
                     ReolinkNVRSwitchEntity(reolink_data, DEPRICATED_HDR)
                 )
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "hdr_switch_depricated",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="hdr_switch_depricated",
+                )
             break
 
     async_add_entities(entities)
