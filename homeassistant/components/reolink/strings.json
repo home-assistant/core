@@ -561,6 +561,9 @@
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
       },
+      "hdr": {
+        "name": "HDR"
+      },
       "pir_enabled": {
         "name": "PIR enabled"
       },

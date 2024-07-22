@@ -286,11 +286,6 @@ def migrate_entity_ids(
             )
             continue
 
-        # Can be removed in HA 2025.2.0
-        if entity.domain == "switch" and entity.unique_id.endswith("_hdr"):
-            entity_reg.async_remove(entity.entity_id)
-            continue
-
         if host.api.supported(None, "UID") and not entity.unique_id.startswith(
             host.unique_id
         ):
