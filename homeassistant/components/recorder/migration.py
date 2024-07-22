@@ -304,7 +304,7 @@ def migrate_schema_non_live(
     schema_status: SchemaValidationStatus,
 ) -> SchemaValidationStatus:
     """Check if the schema needs to be upgraded."""
-    end_version = LIVE_MIGRATION_MIN_SCHEMA_VERSION - 1
+    end_version = LIVE_MIGRATION_MIN_SCHEMA_VERSION
     return _migrate_schema(
         instance, hass, engine, session_maker, schema_status, end_version
     )
