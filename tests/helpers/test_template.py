@@ -6247,7 +6247,7 @@ async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
     ],
 )
 def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
-    """Test contains."""
+    """Test zip."""
     assert (
         template.Template("{{ zip(cola, colb) | list }}", hass).async_render(
             {"cola": cola, "colb": colb}
@@ -6270,7 +6270,7 @@ def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
     ],
 )
 def test_unzip(hass: HomeAssistant, col, expected) -> None:
-    """Test contayins."""
+    """Test unzipping using zip."""
     assert (
         template.Template("{{ zip(*col) | list }}", hass).async_render({"col": col})
         == expected
