@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
@@ -300,7 +301,7 @@ def _async_get_connector(
         ssl_context = ssl_util.get_default_no_verify_context()
 
     connector = aiohttp.TCPConnector(
-        family=family,
+        family=socket.AddressFamily(family),
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
