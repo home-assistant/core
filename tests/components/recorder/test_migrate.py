@@ -71,6 +71,10 @@ async def test_schema_update_calls(
             "homeassistant.components.recorder.migration._apply_update",
             wraps=migration._apply_update,
         ) as update,
+        patch(
+            "homeassistant.components.recorder.migration._migrate_schema",
+            wraps=migration._migrate_schema,
+        ) as migrate_schema,
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
@@ -83,6 +87,11 @@ async def test_schema_update_calls(
         [
             call(instance, hass, engine, session_maker, version + 1, 0)
             for version in range(db_schema.SCHEMA_VERSION)
+        ]
+    )
+    migrate_schema.assert_has_calls(
+        [
+            call(instance, hass, engine, session_maker, ANY, db_schema.SCHEMA_VERSION),
         ]
     )
 
@@ -160,7 +169,7 @@ async def test_database_migration_failed(
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
-async def test_database_migration_encounters_corruption(
+async def test_live_database_migration_encounters_corruption(
     hass: HomeAssistant,
     recorder_db_url: str,
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -184,12 +193,17 @@ async def test_database_migration_encounters_corruption(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema_non_live",
+            "homeassistant.components.recorder.migration.migrate_schema_live",
             side_effect=sqlite3_exception,
         ),
         patch(
             "homeassistant.components.recorder.core.move_away_broken_database"
         ) as move_away,
+        patch(
+            "homeassistant.components.recorder.core.Recorder._setup_run",
+            autospec=True,
+            wraps=recorder.Recorder._setup_run,
+        ) as setup_run,
     ):
         await async_setup_recorder_instance(hass)
         hass.states.async_set("my.entity", "on", {})
@@ -197,7 +211,60 @@ async def test_database_migration_encounters_corruption(
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    assert move_away.called
+    move_away.assert_called_once()
+    setup_run.assert_called_once()
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_non_live_database_migration_encounters_corruption(
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test we move away the database if its corrupt.
+
+    This test is specific for SQLite, wiping the database on error only happens
+    with SQLite.
+    """
+
+    assert recorder.util.async_migration_in_progress(hass) is False
+
+    sqlite3_exception = DatabaseError("statement", {}, [])
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
+
+    with (
+        patch(
+            "homeassistant.components.recorder.migration._schema_is_current",
+            side_effect=[False],
+        ),
+        patch(
+            "homeassistant.components.recorder.migration.migrate_schema_live",
+        ) as migrate_schema_live,
+        patch(
+            "homeassistant.components.recorder.migration.migrate_schema_non_live",
+            side_effect=sqlite3_exception,
+        ),
+        patch(
+            "homeassistant.components.recorder.core.move_away_broken_database"
+        ) as move_away,
+        patch(
+            "homeassistant.components.recorder.core.Recorder._setup_run",
+            autospec=True,
+            wraps=recorder.Recorder._setup_run,
+        ) as setup_run,
+    ):
+        await async_setup_recorder_instance(hass)
+        hass.states.async_set("my.entity", "on", {})
+        hass.states.async_set("my.entity", "off", {})
+        await async_wait_recording_done(hass)
+
+    assert recorder.util.async_migration_in_progress(hass) is False
+    move_away.assert_called_once()
+    migrate_schema_live.assert_not_called()
+    setup_run.assert_called_once()
 
 
 @pytest.mark.parametrize(
