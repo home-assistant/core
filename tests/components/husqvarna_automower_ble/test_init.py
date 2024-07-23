@@ -39,7 +39,7 @@ async def test_setup(
     )
     assert device == snapshot
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
     await coordinator.async_shutdown()
 
 
@@ -108,7 +108,7 @@ async def test_setup_disconnect_one(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     def _is_connected(self, *args, **kwargs) -> bool:
         """Mock BleakClient.is_connected."""
@@ -151,7 +151,7 @@ async def test_setup_disconnect_two(
     mock_client.connect = _connect
     mock_client.is_connected = _is_connected
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     try:
         await coordinator._async_update_data()
@@ -191,7 +191,7 @@ async def test_setup_disconnect_three(
     mock_client.connect = _connect
     mock_client.is_connected = _is_connected
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     try:
         await coordinator._async_update_data()
@@ -226,7 +226,7 @@ async def test_setup_disconnect_five(
 
     mock_client.is_connected = _is_connected
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
@@ -264,7 +264,7 @@ async def test_setup_invalid_mower_activity(
     og_mower_activity = mock_client.mower_activity
     mock_client.mower_activity = _mower_activity
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
@@ -304,7 +304,7 @@ async def test_setup_invalid_mower_state(
     og_mower_state = mock_client.mower_state
     mock_client.mower_state = _mower_state
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
@@ -344,7 +344,7 @@ async def test_setup_invalid_battery(
     og_battery_level = mock_client.battery_level
     mock_client.battery_level = _battery_level
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
@@ -384,7 +384,7 @@ async def test_setup_exception_battery(
     og_battery_level = mock_client.battery_level
     mock_client.battery_level = _battery_level
 
-    coordinator = mock_entry.runtime_data.coordinator
+    coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()

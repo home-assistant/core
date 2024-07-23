@@ -8,10 +8,10 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntity,
     LawnMowerEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HusqvarnaAutomowerBleConfigEntry
 from .const import LOGGER
 from .coordinator import HusqvarnaCoordinator
 from .entity import HusqvarnaAutomowerBleEntity
@@ -19,11 +19,11 @@ from .entity import HusqvarnaAutomowerBleEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: HusqvarnaAutomowerBleConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AutomowerLawnMower integration from a config entry."""
-    coordinator: HusqvarnaCoordinator = config_entry.runtime_data.coordinator
+    coordinator: HusqvarnaCoordinator = config_entry.runtime_data
     address = coordinator.address
 
     async_add_entities(

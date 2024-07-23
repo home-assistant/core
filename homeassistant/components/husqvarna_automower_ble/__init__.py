@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from automower_ble.mower import Mower
 from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address, get_device
@@ -22,19 +20,7 @@ PLATFORMS = [
 ]
 
 
-@dataclass
-class HusqvarnaAutomowerBleData:
-    """Data for AccuWeather integration."""
-
-    coordinator: HusqvarnaCoordinator
-
-
-type HusqvarnaAutomowerBleConfigEntry = ConfigEntry[HusqvarnaAutomowerBleData]
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: HusqvarnaAutomowerBleConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Husqvarna Autoconnect Bluetooth from a config entry."""
     address = entry.data[CONF_ADDRESS]
     channel_id = entry.data[CONF_CLIENT_ID]
@@ -62,18 +48,16 @@ async def async_setup_entry(
     coordinator = HusqvarnaCoordinator(hass, mower, address, channel_id, model)
 
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = HusqvarnaAutomowerBleData(coordinator)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: HusqvarnaAutomowerBleConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: HusqvarnaCoordinator = entry.runtime_data.coordinator
+        coordinator: HusqvarnaCoordinator = entry.runtime_data
         await coordinator.async_shutdown()
 
     return unload_ok
