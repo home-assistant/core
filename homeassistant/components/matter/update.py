@@ -70,6 +70,9 @@ async def async_setup_entry(
 class MatterUpdate(MatterEntity, UpdateEntity):
     """Representation of a Matter node capable of updating."""
 
+    # Matter attribute changes are generally not polled, but the update check
+    # itself is. The update check is not done by the device itself, but by the
+    # Matter server.
     _attr_should_poll = True
     _software_update: MatterSoftwareVersion | None = None
     _cancel_update: CALLBACK_TYPE | None = None
