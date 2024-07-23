@@ -1,8 +1,10 @@
 """deCONZ fan platform tests."""
 
 from collections.abc import Callable
+from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -12,11 +14,19 @@ from homeassistant.components.fan import (
     SERVICE_TURN_ON,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import WebsocketDataType
 
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -44,15 +54,18 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 )
 async def test_fans(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_factory: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:
     """Test that all supported fan entities are created."""
-    assert len(hass.states.async_all()) == 2  # Light and fan
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.FAN]):
+        config_entry = await config_entry_factory()
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Test states
 
@@ -117,13 +130,13 @@ async def test_fans(
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert not hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE]
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 2
+    assert len(states) == 1
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
+    await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
