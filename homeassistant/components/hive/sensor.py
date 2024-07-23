@@ -30,11 +30,13 @@ from .const import DOMAIN
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
+
 @dataclass(frozen=True)
 class HiveSensorEntityDescription(SensorEntityDescription):
     """Describes Hive sensor entity."""
 
     fn: Callable[[StateType], StateType] = lambda x: x
+
 
 SENSOR_TYPES: tuple[HiveSensorEntityDescription, ...] = (
     HiveSensorEntityDescription(
@@ -122,4 +124,6 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
-        self._attr_native_value = self.entity_description.fn(self.device["status"]["state"])
+        self._attr_native_value = self.entity_description.fn(
+            self.device["status"]["state"]
+        )
