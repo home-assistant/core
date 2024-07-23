@@ -121,11 +121,8 @@ class APICoreStateView(HomeAssistantView):
         hass: HomeAssistant = request.app[KEY_HASS]
         migration = recorder.async_migration_in_progress(hass)
         live_migration = recorder.async_migration_is_live(hass)
-        if migration and not live_migration:
-            state = "MIGRATING"
-        else:
-            state = hass.state.value
-        return self.json({"state": state})
+        recorder_state = {"offline_migration": migration and not live_migration}
+        return self.json({"state": hass.state.value, "recorder_state": recorder_state})
 
 
 class APIEventStream(HomeAssistantView):
