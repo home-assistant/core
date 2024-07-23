@@ -110,6 +110,8 @@ async def async_setup_entry(
 class HiveSensorEntity(HiveEntity, SensorEntity):
     """Hive Sensor Entity."""
 
+    entity_description: HiveSensorEntityDescription
+
     def __init__(
         self,
         hive: Hive,
