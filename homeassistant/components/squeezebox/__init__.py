@@ -1,7 +1,6 @@
 """The Squeezebox integration."""
 
 from asyncio import timeout
-from dataclasses import dataclass
 import logging
 
 from pysqueezebox import Server
@@ -32,17 +31,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-@dataclass
-class SqueezeboxData:
-    """SqueezeboxData data class."""
-
-    server: Server
+type SqueezeboxConfigEntry = ConfigEntry[Server]
 
 
-type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
     """Set up an LMS Server from a config entry."""
     config = entry.data
     session = async_get_clientsession(hass)
@@ -81,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
-    entry.runtime_data = SqueezeboxData(server=lms)
+    entry.runtime_data = lms
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -92,7 +84,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Stop player discovery task for this config entry.
     _LOGGER.debug(
         "Reached async_unload_entry for LMS=%s(%s)",
-        entry.runtime_data.server.name or "Unkown",
+        entry.runtime_data.name or "Unkown",
         entry.entry_id,
     )
 

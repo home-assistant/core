@@ -4,7 +4,6 @@ CONF_HTTPS = "https"
 DISCOVERY_TASK = "discovery_task"
 DOMAIN = "squeezebox"
 DEFAULT_PORT = 9000
-DATA_SERVER = "server"
 KNOWN_PLAYERS = "known_players"
 SENSOR_UPDATE_INTERVAL = 60
 STATUS_API_TIMEOUT = 10
