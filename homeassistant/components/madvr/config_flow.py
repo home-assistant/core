@@ -19,13 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(
-            CONF_HOST,
-        ): str,
-        vol.Required(
-            CONF_PORT,
-            default=DEFAULT_PORT,
-        ): int,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -39,71 +34,40 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.entry: ConfigEntry
+        self.entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
-
-            try:
-                # ensure we can connect and get the mac address from device
-                mac = await test_connection(self.hass, host, port)
-            except CannotConnect:
-                _LOGGER.error("CannotConnect error caught")
-                errors["base"] = "cannot_connect"
-            else:
-                if not mac:
-                    errors["base"] = "no_mac"
-            if not errors:
-                _LOGGER.debug("MAC address found: %s", mac)
-                # this will prevent the user from adding the same device twice and persist the mac address
-                await self.async_set_unique_id(mac)
-                self._abort_if_unique_id_configured()
-                # create the entry
-                return self.async_create_entry(
-                    title=DEFAULT_NAME,
-                    data=user_input,
-                )
-        # this will show the form or allow the user to retry if there was an error
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
-            errors=errors,
-        )
+        return await self._handle_config_step(user_input)
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the device."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        if TYPE_CHECKING:
-            assert entry is not None
-
-        self.entry = entry
-
-        return await self.async_step_reconfigure_confirm()
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reconfigure_confirm(user_input)
 
     async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
+        return await self._handle_config_step(user_input, reconfigure=True)
+
+    async def _handle_config_step(
+        self, user_input: dict[str, Any] | None = None, reconfigure: bool = False
+    ) -> ConfigFlowResult:
+        """Handle the configuration step for both initial setup and reconfiguration."""
         errors: dict[str, str] = {}
+        step_id = "reconfigure" if reconfigure else "user"
 
         if user_input is not None:
+            _LOGGER.debug("User input: %s", user_input)
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
             try:
-                # ensure we can connect and get the mac address from device
                 mac = await test_connection(self.hass, host, port)
             except CannotConnect:
                 _LOGGER.error("CannotConnect error caught")
@@ -111,21 +75,31 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if not mac:
                     errors["base"] = "no_mac"
-            if not errors:
-                _LOGGER.debug("MAC address found: %s", mac)
-                # update the unique ID
-                await self.async_set_unique_id(mac)
-                self._abort_if_unique_id_configured()
+                else:
+                    _LOGGER.debug("MAC address found: %s", mac)
+                    await self.async_set_unique_id(mac)
+                    self._abort_if_unique_id_configured()
 
-                # update the entry
-                self.hass.config_entries.async_update_entry(
-                    self.entry, data={**user_input, CONF_HOST: host, CONF_PORT: port}
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
+                    if reconfigure:
+                        _LOGGER.debug("Reconfiguring device")
+                        if TYPE_CHECKING:
+                            assert self.entry is not None
+                        self.hass.config_entries.async_update_entry(
+                            self.entry,
+                            data={**user_input, CONF_HOST: host, CONF_PORT: port},
+                        )
+                        await self.hass.config_entries.async_reload(self.entry.entry_id)
+                        _LOGGER.debug("Reconfiguration successful")
+                        return self.async_abort(reason="reconfigure_successful")
 
+                    _LOGGER.debug("Configuration successful")
+                    return self.async_create_entry(
+                        title=DEFAULT_NAME,
+                        data=user_input,
+                    )
+        _LOGGER.debug("Showing form with errors: %s", errors)
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
             ),
