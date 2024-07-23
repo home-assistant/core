@@ -114,7 +114,7 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
         self,
         hive: Hive,
         hive_device: dict[str, Any],
-        entity_description: SensorEntityDescription,
+        entity_description: HiveSensorEntityDescription,
     ) -> None:
         """Initialise hive sensor."""
         super().__init__(hive, hive_device)
