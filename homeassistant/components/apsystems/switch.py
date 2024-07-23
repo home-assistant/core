@@ -28,10 +28,7 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(
-        self,
-        data: ApSystemsData,
-    ) -> None:
+    def __init__(self, data: ApSystemsData) -> None:
         """Initialize the switch."""
         super().__init__(data)
         self._api = data.coordinator.api
