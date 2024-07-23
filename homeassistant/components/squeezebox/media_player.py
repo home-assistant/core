@@ -54,7 +54,6 @@ from .const import (
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
-    PLAYER_DISCOVERY_UNSUB,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
 
@@ -119,6 +118,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an player discovery from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
     lms = entry.runtime_data[DATA_SERVER]
 
@@ -151,11 +151,13 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        entry.runtime_data[PLAYER_DISCOVERY_UNSUB] = (
+        entry.async_on_unload(
             async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
         )
 
-    _LOGGER.debug("Adding player discovery job for LMS server: %s", entry.data[CONF_HOST])
+    _LOGGER.debug(
+        "Adding player discovery job for LMS server: %s", entry.data[CONF_HOST]
+    )
     entry.async_create_background_task(
         hass, _player_discovery(), "squeezebox.media_player.player_discovery"
     )
@@ -223,9 +225,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     _last_update: datetime | None = None
     _attr_available = True
 
-    def __init__(self,
-                 player: Player,
-                 ):
+    def __init__(self, player: Player) -> None:
         """Initialize the SqueezeBox device."""
         self._player = player
         self._query_result = {}
@@ -234,7 +234,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
-            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)}
+            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
         )
 
     @property
@@ -272,7 +272,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
-                _LOGGER.debug("Player %s is not available on %s", self.name,self._server.name)
+                _LOGGER.debug("Player %s is not available", self.name)
                 self._attr_available = False
 
                 # start listening for restored players
