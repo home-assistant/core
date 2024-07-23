@@ -120,4 +120,4 @@ MODEL_NAMES = [  # https://ollama.com/library
     "yi",
     "zephyr",
 ]
-DEFAULT_MODEL = "llama2:latest"
+DEFAULT_MODEL = "llama3-groq-tool-use:latest"
