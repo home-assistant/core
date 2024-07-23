@@ -1,6 +1,7 @@
 """The Squeezebox integration."""
 
 from asyncio import timeout
+from dataclasses import dataclass
 import logging
 
 from pysqueezebox import Server
@@ -19,7 +20,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_HTTPS,
-    DATA_SERVER,
     DISCOVERY_TASK,
     DOMAIN,
     STATUS_API_TIMEOUT,
@@ -30,6 +30,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
+
+
+@dataclass
+class SqueezeboxData:
+    """SqueezeboxData data class."""
+
+    server: Server
+
+
+type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an LMS Server from a config entry."""
@@ -44,8 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     https = config.get(CONF_HTTPS, False)
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-
-    entry.runtime_data = {}
 
     lms = Server(session, host, port, username, password, https=https)
     _LOGGER.debug("LMS object for %s", lms)
@@ -72,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
-    entry.runtime_data[DATA_SERVER] = lms
+    entry.runtime_data = SqueezeboxData(server=lms)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -83,7 +92,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Stop player discovery task for this config entry.
     _LOGGER.debug(
         "Reached async_unload_entry for LMS=%s(%s)",
-        entry.runtime_data[DATA_SERVER].name or "Unkown",
+        entry.runtime_data.server.name or "Unkown",
         entry.entry_id,
     )
 

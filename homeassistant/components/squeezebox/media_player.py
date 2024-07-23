@@ -49,13 +49,7 @@ from .browse_media import (
     library_payload,
     media_source_content_filter,
 )
-from .const import (
-    DATA_SERVER,
-    DISCOVERY_TASK,
-    DOMAIN,
-    KNOWN_PLAYERS,
-    SQUEEZEBOX_SOURCE_STRINGS,
-)
+from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, SQUEEZEBOX_SOURCE_STRINGS
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -120,7 +114,7 @@ async def async_setup_entry(
     """Set up an player discovery from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
-    lms = entry.runtime_data[DATA_SERVER]
+    lms = entry.runtime_data.server
 
     async def _player_discovery(now=None):
         """Discover squeezebox players by polling server."""
