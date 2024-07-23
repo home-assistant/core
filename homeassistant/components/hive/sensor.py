@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import HiveEntity
 from .const import DOMAIN
@@ -35,7 +34,7 @@ SCAN_INTERVAL = timedelta(seconds=15)
 class HiveSensorEntityDescription(SensorEntityDescription):
     """Describes Hive sensor entity."""
 
-    fn: Callable[[StateType], StateType] = lambda x: x
+    fn: Callable[[str], str] = lambda x: x
 
 
 SENSOR_TYPES: tuple[HiveSensorEntityDescription, ...] = (
