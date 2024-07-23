@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import aiohttp
 from madvr.madvr import HeartBeatError, Madvr
@@ -32,9 +32,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self.entry: ConfigEntry | None = None
+    entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,14 +51,13 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        return await self._handle_config_step(user_input, reconfigure=True)
+        return await self._handle_config_step(user_input, step_id="reconfigure")
 
     async def _handle_config_step(
-        self, user_input: dict[str, Any] | None = None, reconfigure: bool = False
+        self, user_input: dict[str, Any] | None = None, step_id: str = "user"
     ) -> ConfigFlowResult:
         """Handle the configuration step for both initial setup and reconfiguration."""
         errors: dict[str, str] = {}
-        step_id = "reconfigure" if reconfigure else "user"
 
         if user_input is not None:
             _LOGGER.debug("User input: %s", user_input)
@@ -80,17 +77,13 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                     # if mac does change, it should be updated
                     await self.async_set_unique_id(mac)
 
-                    if reconfigure:
-                        _LOGGER.debug("Reconfiguring device")
-                        if TYPE_CHECKING:
-                            assert self.entry is not None
-                        self.hass.config_entries.async_update_entry(
-                            self.entry,
+                    if step_id == "reconfigure" and self.entry:
+                        _LOGGER.debug("Reconfiguration done")
+                        return self.async_update_reload_and_abort(
+                            entry=self.entry,
                             data={**user_input, CONF_HOST: host, CONF_PORT: port},
+                            reason="reconfigure_successful",
                         )
-                        await self.hass.config_entries.async_reload(self.entry.entry_id)
-                        _LOGGER.debug("Reconfiguration successful")
-                        return self.async_abort(reason="reconfigure_successful")
 
                     # however dont abort if not unique because the IP could change but keep the same mac
                     self._abort_if_unique_id_configured()
