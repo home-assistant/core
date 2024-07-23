@@ -12,9 +12,8 @@ from homeassistant.components.climate import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, GeniusHeatingZone
+from . import GeniusHeatingZone, GeniusHubConfigEntry
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
 HA_HVAC_TO_GH = {HVACMode.OFF: "off", HVACMode.HEAT: "timer"}
@@ -26,24 +25,19 @@ GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
 GH_ZONES = ["radiator", "wet underfloor"]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: GeniusHubConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub climate entities."""
-    if discovery_info is None:
-        return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
     async_add_entities(
-        [
-            GeniusClimateZone(broker, z)
-            for z in broker.client.zone_objs
-            if z.data.get("type") in GH_ZONES
-        ]
+        GeniusClimateZone(broker, z)
+        for z in broker.client.zone_objs
+        if z.data.get("type") in GH_ZONES
     )
 
 

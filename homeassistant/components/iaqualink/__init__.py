@@ -36,6 +36,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
@@ -67,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
     switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
-    aqualink = AqualinkClient(username, password)
+    aqualink = AqualinkClient(username, password, httpx_client=get_async_client(hass))
     try:
         await aqualink.login()
     except AqualinkServiceException as login_exception:

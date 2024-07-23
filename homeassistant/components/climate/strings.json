@@ -69,13 +69,14 @@
         "hvac_action": {
           "name": "Current action",
           "state": {
-            "off": "[%key:common::state::off%]",
-            "preheating": "Preheating",
-            "heating": "Heating",
             "cooling": "Cooling",
+            "defrosting": "Defrosting",
             "drying": "Drying",
+            "fan": "Fan",
+            "heating": "Heating",
             "idle": "[%key:common::state::idle%]",
-            "fan": "Fan"
+            "off": "[%key:common::state::off%]",
+            "preheating": "Preheating"
           }
         },
         "hvac_modes": {

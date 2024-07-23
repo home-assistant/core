@@ -8,6 +8,7 @@ from functools import cached_property
 import logging
 
 from roborock import HomeDataRoom
+from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -179,14 +180,27 @@ class RoborockDataUpdateCoordinatorA01(
             model=product_info.model,
             sw_version=device.fv,
         )
-        self.request_protocols: list[RoborockDyadDataProtocol | RoborockZeoProtocol] = [
-            RoborockDyadDataProtocol.STATUS,
-            RoborockDyadDataProtocol.POWER,
-            RoborockDyadDataProtocol.MESH_LEFT,
-            RoborockDyadDataProtocol.BRUSH_LEFT,
-            RoborockDyadDataProtocol.ERROR,
-            RoborockDyadDataProtocol.TOTAL_RUN_TIME,
-        ]
+        self.request_protocols: list[
+            RoborockDyadDataProtocol | RoborockZeoProtocol
+        ] = []
+        if product_info.category == RoborockCategory.WET_DRY_VAC:
+            self.request_protocols = [
+                RoborockDyadDataProtocol.STATUS,
+                RoborockDyadDataProtocol.POWER,
+                RoborockDyadDataProtocol.MESH_LEFT,
+                RoborockDyadDataProtocol.BRUSH_LEFT,
+                RoborockDyadDataProtocol.ERROR,
+                RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+            ]
+        elif product_info.category == RoborockCategory.WASHING_MACHINE:
+            self.request_protocols = [
+                RoborockZeoProtocol.STATE,
+                RoborockZeoProtocol.COUNTDOWN,
+                RoborockZeoProtocol.WASHING_LEFT,
+                RoborockZeoProtocol.ERROR,
+            ]
+        else:
+            _LOGGER.warning("The device you added is not yet supported")
         self.roborock_device_info = RoborockA01HassDeviceInfo(device, product_info)
 
     async def _async_update_data(

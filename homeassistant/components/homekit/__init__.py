@@ -79,6 +79,7 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util.async_ import create_eager_task
 
 from . import (  # noqa: F401
     type_cameras,
@@ -511,7 +512,7 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
             )
 
         reload_tasks = [
-            hass.config_entries.async_reload(entry.entry_id)
+            create_eager_task(hass.config_entries.async_reload(entry.entry_id))
             for entry in current_entries
         ]
 

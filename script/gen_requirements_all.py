@@ -157,6 +157,9 @@ backoff>=2.0
 # v2 has breaking changes (#99218).
 pydantic==1.10.17
 
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
+
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
 pubnub!=6.4.0
@@ -205,8 +208,8 @@ dacite>=1.7.0
 # Musle wheels for pandas 2.2.0 cannot be build for any architecture.
 pandas==2.1.4
 
-# chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
-chacha20poly1305-reuseable>=0.12.1
+# chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
+chacha20poly1305-reuseable>=0.13.0
 
 # pycountry<23.12.11 imports setuptools at run time
 # https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39

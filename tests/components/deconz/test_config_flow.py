@@ -33,7 +33,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .test_gateway import API_KEY, BRIDGEID
+from .conftest import API_KEY, BRIDGEID
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
