@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .media_player import setup_services
+from .media_player import DATA_BLUESOUND, setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -37,3 +37,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    player = None
+    for player in hass.data[DATA_BLUESOUND]:
+        if player.unique_id == config_entry.unique_id:
+            break
+
+    if player is None:
+        return False
+
+    player.stop_polling()
+    hass.data[DATA_BLUESOUND].remove(player)
+
+    return await hass.config_entries.async_unload_platforms(config_entry, Platform.MEDIA_PLAYER)
