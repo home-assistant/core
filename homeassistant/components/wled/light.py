@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -20,14 +21,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WLEDConfigEntry
 from .const import (
+    ATTR_CCT,
     ATTR_COLOR_PRIMARY,
     ATTR_ON,
     ATTR_SEGMENT_ID,
+    COLOR_TEMP_K_MAX,
+    COLOR_TEMP_K_MIN,
     LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
 )
 from .coordinator import WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
-from .helpers import wled_exception_handler
+from .helpers import kelvinTo255, kelvinTo255Reverse, wled_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -167,6 +171,22 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return cast(tuple[int, int, int, int], color.primary)
 
     @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the CT color value in K."""
+        cct = self.coordinator.data.state.segments[self._segment].cct
+        return kelvinTo255Reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest K."""
+        return COLOR_TEMP_K_MIN
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest K."""
+        return COLOR_TEMP_K_MAX
+
+    @property
     def effect(self) -> str | None:
         """Return the current effect of the light."""
         return self.coordinator.data.effects[
@@ -234,6 +254,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         if ATTR_RGBW_COLOR in kwargs:
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
+
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            data[ATTR_CCT] = kelvinTo255(
+                kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
+            )
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
