@@ -25,7 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .test_gateway import BRIDGEID
+from .test_hub import BRIDGEID
 
 from tests.common import async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
