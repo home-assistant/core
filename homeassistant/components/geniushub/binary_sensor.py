@@ -6,7 +6,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GeniusDevice, GeniusHubConfigEntry
+from . import GeniusHubConfigEntry
+from .entity import GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
 GH_TYPE = "Receiver"
