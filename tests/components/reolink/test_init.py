@@ -373,8 +373,7 @@ async def test_migrate_entity_ids(
     assert (
         entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id) is None
     )
-    if new_id is not None:
-        assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
 
     if new_dev_id != original_dev_id:
         assert (
