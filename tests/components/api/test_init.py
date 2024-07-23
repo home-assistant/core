@@ -770,16 +770,19 @@ async def test_api_core_state(hass: HomeAssistant, mock_api_client: TestClient) 
     resp = await mock_api_client.get("/api/core/state")
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
-    assert json == {"state": "RUNNING", "recorder_state": {"offline_migration": False}}
+    assert json == {
+        "state": "RUNNING",
+        "recorder_state": {"migration_in_progress": False, "migration_is_live": False},
+    }
 
 
 @pytest.mark.parametrize(
-    ("migration_in_progress", "migration_is_live", "expected_recorder_state"),
+    ("migration_in_progress", "migration_is_live"),
     [
-        (False, False, {"offline_migration": False}),
-        (False, True, {"offline_migration": False}),
-        (True, False, {"offline_migration": True}),
-        (True, True, {"offline_migration": False}),
+        (False, False),
+        (False, True),
+        (True, False),
+        (True, True),
     ],
 )
 async def test_api_core_state_recorder_migrating(
@@ -787,7 +790,6 @@ async def test_api_core_state_recorder_migrating(
     mock_api_client: TestClient,
     migration_in_progress: bool,
     migration_is_live: bool,
-    expected_recorder_state: dict[str, bool],
 ) -> None:
     """Test getting core status."""
     with (
@@ -803,4 +805,8 @@ async def test_api_core_state_recorder_migrating(
         resp = await mock_api_client.get("/api/core/state")
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
+    expected_recorder_state = {
+        "migration_in_progress": migration_in_progress,
+        "migration_is_live": migration_is_live,
+    }
     assert json == {"state": "RUNNING", "recorder_state": expected_recorder_state}
