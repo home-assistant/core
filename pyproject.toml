@@ -478,8 +478,8 @@ filterwarnings = [
 
     # -- tracked upstream / open PRs
     # https://github.com/ronf/asyncssh/issues/674 - v2.15.0
-    "ignore:ARC4 has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.ARC4 and will be removed from this module in 48.0.0:DeprecationWarning:.*asyncssh.crypto.cipher",
-    "ignore:TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from this module in 48.0.0:DeprecationWarning:.*asyncssh.crypto.cipher",
+    "ignore:ARC4 has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.ARC4 and will be removed from this module in 48.0.0:UserWarning:asyncssh.crypto.cipher",
+    "ignore:TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from this module in 48.0.0:UserWarning:asyncssh.crypto.cipher",
     # https://github.com/certbot/certbot/issues/9828 - v2.10.0
     "ignore:X509Extension support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:acme.crypto_util",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
