@@ -1,7 +1,7 @@
 """Test the Home Assistant hardware firmware config flow."""
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Generator, Iterator
 import contextlib
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
@@ -151,7 +151,7 @@ def mock_addon_info(
         update_available=False,
         version=None,
     ),
-):
+) -> Iterator[tuple[Mock, Mock]]:
     """Mock the main addon states for the config flow."""
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
     mock_flasher_manager.addon_name = "Silicon Labs Flasher"
