@@ -1422,6 +1422,7 @@ async def test_entity_hidden_by_integration(
     assert entry_hidden.hidden_by is er.RegistryEntryHider.INTEGRATION
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_entity_info_added_to_entity_registry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -1450,11 +1451,13 @@ async def test_entity_info_added_to_entity_registry(
         "default",
         "test_domain",
         capabilities={"max": 100},
+        created_at=dt_util.utcnow(),
         device_class=None,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         icon=None,
         id=ANY,
+        modified_at=dt_util.utcnow(),
         name=None,
         original_device_class="mock-device-class",
         original_icon="nice:icon",
