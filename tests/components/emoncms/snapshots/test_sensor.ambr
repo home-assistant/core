@@ -68,26 +68,3 @@
     'state': '18.04',
   })
 # ---
-# name: test_sensor.1
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'FeedId': '2',
-      'FeedName': 'parameter 2',
-      'LastUpdated': 1665509570,
-      'LastUpdatedStr': '2022-10-11T10:32:50-07:00',
-      'Size': '35809224',
-      'Tag': 'tag',
-      'UserId': '1',
-      'device_class': 'energy',
-      'friendly_name': 'EmonCMS parameter 2',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.emoncms_parameter_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '18.04',
-  })
-# ---
