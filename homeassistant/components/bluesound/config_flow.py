@@ -6,12 +6,11 @@ from typing import Any
 from pyblu import Player
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DOMAIN
+from .utils import format_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
                 except TimeoutError:
                     return self.async_abort(reason="cannot_connect")
 
-            await self.async_set_unique_id(format_mac(sync_status.mac))
+            await self.async_set_unique_id(format_unique_id(user_input[CONF_HOST], user_input[CONF_PORT]))
 
             return self.async_create_entry(
                 title=sync_status.name,

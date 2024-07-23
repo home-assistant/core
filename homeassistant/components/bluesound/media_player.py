@@ -50,6 +50,7 @@ from .const import (
     SERVICE_SET_TIMER,
     SERVICE_UNJOIN,
 )
+from .utils import format_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -382,7 +383,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     def unique_id(self) -> str | None:
         """Return an unique ID."""
         assert self._sync_status is not None
-        return f"{format_mac(self._sync_status.mac)}-{self.port}"
+        return format_unique_id(self._sync_status.mac, self.port)
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
