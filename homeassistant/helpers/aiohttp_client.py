@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
+from aiohttp.resolver import AsyncResolver
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 
 from homeassistant import config_entries
@@ -24,7 +25,6 @@ from homeassistant.util import ssl as ssl_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
-from .backports.aiohttp_resolver import AsyncResolver
 from .frame import warn_use
 from .json import json_dumps
 
