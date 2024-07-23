@@ -124,7 +124,7 @@ async def test_binary_sensors(
 
 
 @pytest.mark.parametrize(
-    ("event"),
+    "event",
     [
         # Event with unsupported topic
         {
