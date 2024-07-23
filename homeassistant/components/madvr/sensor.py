@@ -185,14 +185,14 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         value_fn=lambda coordinator: coordinator.data.get(OUTGOING_COLOR_SPACE),
         translation_key=OUTGOING_COLOR_SPACE,
         device_class=SensorDeviceClass.ENUM,
-        options=["RGB", "444", "422", "420", "?"],
+        options=["RGB", "444", "422", "420"],
     ),
     MadvrSensorEntityDescription(
         key=OUTGOING_BIT_DEPTH,
         value_fn=lambda coordinator: coordinator.data.get(OUTGOING_BIT_DEPTH),
         translation_key=OUTGOING_BIT_DEPTH,
         device_class=SensorDeviceClass.ENUM,
-        options=["8bit", "10bit", "12bit", "0bit"],
+        options=["8bit", "10bit", "12bit"],
     ),
     MadvrSensorEntityDescription(
         key=OUTGOING_COLORIMETRY,
@@ -277,4 +277,15 @@ class MadvrSensor(MadVREntity, SensorEntity):
     @property
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator)
+        val = self.entity_description.value_fn(self.coordinator)
+        # check if sensor is enum
+        if self.entity_description.device_class == SensorDeviceClass.ENUM:
+            if (
+                self.entity_description.options
+                and val in self.entity_description.options
+            ):
+                return val
+            # return None for values that are not in the options
+            return None
+
+        return val
