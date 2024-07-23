@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import GeniusDevice, GeniusEntity, GeniusHubConfigEntry
+from . import GeniusHubConfigEntry
+from .entity import GeniusDevice, GeniusEntity
 
 GH_STATE_ATTR = "batteryLevel"
 
