@@ -1,0 +1,20 @@
+onkyo_select_hdmi_output:
+  target:
+    device:
+    entity:
+      integration: onkyo
+  fields:
+    hdmi_output:
+      required: true
+      selector:
+        select:
+          options:
+            - "no"
+            - "analog"
+            - "yes"
+            - "out"
+            - "out-sub"
+            - "sub"
+            - "hdbaset"
+            - "both"
+            - "up"

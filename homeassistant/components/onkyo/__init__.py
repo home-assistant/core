@@ -4,11 +4,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import receiver as rcver
+from .const import DOMAIN
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OnkyoConfigEntry = ConfigEntry[rcver.Receiver]
 
