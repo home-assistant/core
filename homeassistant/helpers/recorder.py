@@ -20,14 +20,22 @@ class RecorderData:
     db_connected: asyncio.Future[bool] = field(default_factory=asyncio.Future)
 
 
+@callback
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """Check to see if a recorder migration is in progress."""
-    if "recorder" not in hass.config.components:
-        return False
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
     return recorder.util.async_migration_in_progress(hass)
+
+
+@callback
+def async_migration_is_live(hass: HomeAssistant) -> bool:
+    """Check to see if a recorder migration is live."""
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components import recorder
+
+    return recorder.util.async_migration_is_live(hass)
 
 
 @callback
