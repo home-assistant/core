@@ -950,7 +950,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 old_db_schema.StatisticsShortTerm(
@@ -965,7 +965,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 db_schema.StatisticsShortTerm(
@@ -1107,7 +1107,7 @@ async def test_stats_timestamp_with_one_by_one(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1134,7 +1134,7 @@ async def test_stats_timestamp_with_one_by_one(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1333,7 +1333,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1360,7 +1360,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (

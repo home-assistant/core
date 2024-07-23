@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
+from datetime import datetime
 from enum import StrEnum
 from functools import cached_property, lru_cache, partial
 import logging
@@ -23,6 +24,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
@@ -94,6 +96,7 @@ class DeviceInfo(TypedDict, total=False):
 
     configuration_url: str | URL | None
     connections: set[tuple[str, str]]
+    created_at: str
     default_manufacturer: str
     default_model: str
     default_name: str
@@ -102,6 +105,7 @@ class DeviceInfo(TypedDict, total=False):
     manufacturer: str | None
     model: str | None
     model_id: str | None
+    modified_at: str
     name: str | None
     serial_number: str | None
     suggested_area: str | None
@@ -281,6 +285,7 @@ class DeviceEntry:
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     configuration_url: str | None = attr.ib(default=None)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    created_at: datetime = attr.ib(factory=utcnow)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
     hw_version: str | None = attr.ib(default=None)
@@ -290,6 +295,7 @@ class DeviceEntry:
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     model_id: str | None = attr.ib(default=None)
+    modified_at: datetime = attr.ib(factory=utcnow)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
     primary_config_entry: str | None = attr.ib(default=None)
@@ -316,6 +322,7 @@ class DeviceEntry:
             "configuration_url": self.configuration_url,
             "config_entries": list(self.config_entries),
             "connections": list(self.connections),
+            "created_at": self.created_at.timestamp(),
             "disabled_by": self.disabled_by,
             "entry_type": self.entry_type,
             "hw_version": self.hw_version,
@@ -325,6 +332,7 @@ class DeviceEntry:
             "manufacturer": self.manufacturer,
             "model": self.model,
             "model_id": self.model_id,
+            "modified_at": self.modified_at.timestamp(),
             "name_by_user": self.name_by_user,
             "name": self.name,
             "primary_config_entry": self.primary_config_entry,
@@ -359,6 +367,7 @@ class DeviceEntry:
                     "config_entries": list(self.config_entries),
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
+                    "created_at": self.created_at.isoformat(),
                     "disabled_by": self.disabled_by,
                     "entry_type": self.entry_type,
                     "hw_version": self.hw_version,
@@ -368,6 +377,7 @@ class DeviceEntry:
                     "manufacturer": self.manufacturer,
                     "model": self.model,
                     "model_id": self.model_id,
+                    "modified_at": self.modified_at.isoformat(),
                     "name_by_user": self.name_by_user,
                     "name": self.name,
                     "primary_config_entry": self.primary_config_entry,
@@ -388,6 +398,8 @@ class DeletedDeviceEntry:
     identifiers: set[tuple[str, str]] = attr.ib()
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
+    created_at: datetime = attr.ib(factory=utcnow)
+    modified_at: datetime = attr.ib(factory=utcnow)
 
     def to_device_entry(
         self,
@@ -400,6 +412,7 @@ class DeletedDeviceEntry:
             # type ignores: likely https://github.com/python/mypy/issues/8625
             config_entries={config_entry_id},  # type: ignore[arg-type]
             connections=self.connections & connections,  # type: ignore[arg-type]
+            created_at=self.created_at,
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
             is_new=True,
@@ -413,9 +426,11 @@ class DeletedDeviceEntry:
                 {
                     "config_entries": list(self.config_entries),
                     "connections": list(self.connections),
+                    "created_at": self.created_at.isoformat(),
                     "identifiers": list(self.identifiers),
                     "id": self.id,
                     "orphaned_timestamp": self.orphaned_timestamp,
+                    "modified_at": self.modified_at.isoformat(),
                 }
             )
         )
@@ -483,15 +498,19 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             if old_minor_version < 5:
                 # Introduced in 2024.3
                 for device in old_data["devices"]:
-                    device["labels"] = device.get("labels", [])
+                    device["labels"] = []
             if old_minor_version < 6:
                 # Introduced in 2024.7
                 for device in old_data["devices"]:
-                    device.setdefault("primary_config_entry", None)
+                    device["primary_config_entry"] = None
             if old_minor_version < 7:
                 # Introduced in 2024.8
+                created_at = utc_from_timestamp(0).isoformat()
                 for device in old_data["devices"]:
-                    device.setdefault("model_id", None)
+                    device["model_id"] = None
+                    device["created_at"] = device["modified_at"] = created_at
+                for device in old_data["deleted_devices"]:
+                    device["created_at"] = device["modified_at"] = created_at
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -688,6 +707,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_entry_id: str,
         configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         connections: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
+        created_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         default_manufacturer: str | None | UndefinedType = UNDEFINED,
         default_model: str | None | UndefinedType = UNDEFINED,
         default_name: str | None | UndefinedType = UNDEFINED,
@@ -699,6 +719,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         model_id: str | None | UndefinedType = UNDEFINED,
+        modified_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         name: str | None | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
@@ -1035,6 +1056,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values:
             return old
 
+        if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
+            # Change modified_at if we are changing something that we store
+            new_values["modified_at"] = utcnow()
+
         self.hass.verify_event_loop_thread("device_registry.async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
@@ -1114,6 +1139,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             config_entries=device.config_entries,
             connections=device.connections,
+            created_at=device.created_at,
             identifiers=device.identifiers,
             id=device.id,
             orphaned_timestamp=None,
@@ -1149,6 +1175,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         tuple(conn)  # type: ignore[misc]
                         for conn in device["connections"]
                     },
+                    created_at=datetime.fromisoformat(device["created_at"]),
                     disabled_by=(
                         DeviceEntryDisabler(device["disabled_by"])
                         if device["disabled_by"]
@@ -1169,6 +1196,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     model_id=device["model_id"],
+                    modified_at=datetime.fromisoformat(device["modified_at"]),
                     name_by_user=device["name_by_user"],
                     name=device["name"],
                     primary_config_entry=device["primary_config_entry"],
@@ -1181,8 +1209,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
                     connections={tuple(conn) for conn in device["connections"]},
+                    created_at=datetime.fromisoformat(device["created_at"]),
                     identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
+                    modified_at=datetime.fromisoformat(device["modified_at"]),
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
 
