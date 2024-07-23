@@ -265,7 +265,7 @@ class OllamaConversationEntity(
                         tool_response["error_text"] = str(e)
 
                 _LOGGER.debug("Tool response: %s", tool_response)
-                message_history.messages.append(
+                message_history.messages.append(  # noqa: typeddict-item
                     ollama.Message(
                         role=MessageRole.TOOL.value,
                         content=json.dumps(tool_response),
