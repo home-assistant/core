@@ -34,7 +34,6 @@ class TrestDataCoordinator(DataUpdateCoordinator[SolarHistory]):
 
     async def _async_update_data(self) -> SolarHistory:
         """Fetch data from Trest Cloud."""
-
         return await self.trest_solar_service.get_latest_solar_history_async()
 
 

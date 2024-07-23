@@ -35,11 +35,11 @@ class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 identity = TrestIdentityService(
-                    self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 await identity.authenticate_async()
 
-                if identity.check_token_is_expired():
+                if not identity.check_token_is_expired():
                     raise InvalidAuth
 
                 info = {"title": "Trest Solar Controller"}
