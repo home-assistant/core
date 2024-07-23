@@ -1,12 +1,12 @@
 """The tests for the nexbus sensor component."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import sensor
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN

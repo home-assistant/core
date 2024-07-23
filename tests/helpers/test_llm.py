@@ -408,7 +408,7 @@ async def test_assist_api_prompt(
     hass.states.async_set(
         entry1.entity_id,
         "on",
-        {"friendly_name": "Kitchen", "temperature": Decimal("0.9")},
+        {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
@@ -517,9 +517,7 @@ async def test_assist_api_prompt(
         entry1.entity_id: {
             "names": "Kitchen",
             "state": "on",
-            "attributes": {
-                "temperature": "0.9",
-            },
+            "attributes": {"temperature": "0.9", "humidity": "65"},
         },
         entry2.entity_id: {
             "areas": "Test Area, Alternative name",
@@ -578,7 +576,7 @@ async def test_assist_api_prompt(
         "(what comes before the dot in its entity id). "
         "When controlling an area, prefer passing just area name and domain."
     )
-    no_timer_prompt = "This device does not support timers."
+    no_timer_prompt = "This device is not able to start timers."
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
@@ -780,6 +778,46 @@ async def test_script_tool(
     assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
         "test_script": ("This is a new test script", vol.Schema(schema))
     }
+
+
+async def test_script_tool_name(hass: HomeAssistant) -> None:
+    """Test that script tool name is not started with a digit."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "123456": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers", "required": True},
+                    },
+                },
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.123456", True)
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    assert len(tools) == 1
+
+    tool = tools[0]
+    assert tool.name == "_123456"
 
 
 async def test_selector_serializer(

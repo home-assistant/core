@@ -35,9 +35,11 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_PROMPT,
+    DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
     DEFAULT_TIMEOUT,
@@ -261,6 +263,16 @@ def ollama_config_option_schema(
         ): NumberSelector(
             NumberSelectorConfig(
                 min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
+            )
+        ),
+        vol.Optional(
+            CONF_KEEP_ALIVE,
+            description={
+                "suggested_value": options.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
+            },
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
             )
         ),
     }

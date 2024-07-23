@@ -23,12 +23,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
 
 from .const import (
+    CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_PROMPT,
+    DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DOMAIN,
-    KEEP_ALIVE_FOREVER,
     MAX_HISTORY_SECONDS,
     TOOL_ARGS,
     TOOL_CALL,
@@ -239,10 +240,12 @@ class OllamaConversationEntity(
                     # Make a copy of the messages because we mutate the list later
                     messages=list(message_history.messages),
                     stream=False,
-                    keep_alive=KEEP_ALIVE_FOREVER,
+                    # keep_alive requires specifying unit. In this case, seconds
+                    keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
+                intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Sorry, I had a problem talking to the Ollama server: {err}",

@@ -19,6 +19,9 @@ Respond with TOOL_ARGS followed by the tool name without quotes to get the avail
 Available tools:"""
 )
 
+CONF_KEEP_ALIVE = "keep_alive"
+DEFAULT_KEEP_ALIVE = -1  # seconds. -1 = indefinite, 0 = never
+
 KEEP_ALIVE_FOREVER = -1
 DEFAULT_TIMEOUT = 5.0  # seconds
 

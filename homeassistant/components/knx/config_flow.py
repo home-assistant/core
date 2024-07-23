@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 from typing import Any, Final
 
-from typing_extensions import AsyncGenerator
 import voluptuous as vol
 from xknx import XKNX
 from xknx.exceptions.exception import (
@@ -62,7 +62,7 @@ from .const import (
     TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
 )
-from .helpers.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
+from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
 from .validation import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"

@@ -141,7 +141,7 @@ async def test_get_operation_modes(
     await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert [
+    assert state.attributes.get("operation_list") == [
         STATE_ECO,
         STATE_ELECTRIC,
         STATE_GAS,
@@ -149,14 +149,12 @@ async def test_get_operation_modes(
         STATE_HIGH_DEMAND,
         STATE_PERFORMANCE,
         STATE_OFF,
-    ] == state.attributes.get("operation_list")
+    ]
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_set_operation_mode_bad_attr_and_state(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting operation mode without required attribute."""
     await mqtt_mock_entry()
@@ -615,8 +613,7 @@ async def test_get_with_templates(
     ],
 )
 async def test_set_and_templates(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting various attributes with templates."""
     mqtt_mock = await mqtt_mock_entry()
@@ -834,11 +831,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        water_heater.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, water_heater.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -849,11 +842,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        water_heater.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, water_heater.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1020,11 +1009,7 @@ async def test_entity_id_update_subscriptions(
         }
     }
     await help_test_entity_id_update_subscriptions(
-        hass,
-        mqtt_mock_entry,
-        water_heater.DOMAIN,
-        config,
-        ["test-topic", "avty-topic"],
+        hass, mqtt_mock_entry, water_heater.DOMAIN, config, ["test-topic", "avty-topic"]
     )
 
 
@@ -1200,8 +1185,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = water_heater.DOMAIN

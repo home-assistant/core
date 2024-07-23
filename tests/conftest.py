@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
+from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
+import datetime
 import functools
 import gc
 import itertools
 import logging
 import os
 import reprlib
+from shutil import rmtree
 import sqlite3
 import ssl
 import threading
@@ -33,9 +35,9 @@ import pytest
 import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant import block_async_io
+from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching if dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -53,8 +55,9 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
-from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.const import BASE_PLATFORMS, HASSIO_USER_NAME
 from homeassistant.core import (
+    Context,
     CoreState,
     HassJob,
     HomeAssistant,
@@ -75,8 +78,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import BASE_PLATFORMS, async_setup_component
-from homeassistant.util import location
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util, location
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
@@ -384,6 +387,13 @@ def verify_cleanup(
         assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
             "waitpid-"
         )
+
+    try:
+        # Verify the default time zone has been restored
+        assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+    finally:
+        # Restore the default time zone to not break subsequent tests
+        dt_util.DEFAULT_TIME_ZONE = datetime.UTC
 
 
 @pytest.fixture(autouse=True)
@@ -884,7 +894,7 @@ def fail_on_log_exception(
         return
 
     def log_exception(format_err, *args):
-        raise  # pylint: disable=misplaced-bare-raise
+        raise  # noqa: PLE0704
 
     monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
 
@@ -1292,6 +1302,16 @@ def enable_migrate_entity_ids() -> bool:
 
 
 @pytest.fixture
+def enable_migrate_event_ids() -> bool:
+    """Fixture to control enabling of recorder's event id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_event_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def recorder_config() -> dict[str, Any] | None:
     """Fixture to override recorder config.
 
@@ -1302,15 +1322,35 @@ def recorder_config() -> dict[str, Any] | None:
 
 
 @pytest.fixture
+def persistent_database() -> bool:
+    """Fixture to control if database should persist when recorder is shut down in test.
+
+    When using sqlite, this uses on disk database instead of in memory database.
+    This does nothing when using mysql or postgresql.
+
+    Note that the database is always destroyed in between tests.
+
+    To use a persistent database, tests can be marked with:
+    @pytest.mark.parametrize("persistent_database", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def recorder_db_url(
     pytestconfig: pytest.Config,
     hass_fixture_setup: list[bool],
+    persistent_database: str,
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Generator[str]:
     """Prepare a default database for tests and return a connection URL."""
     assert not hass_fixture_setup
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
-    if db_url.startswith("mysql://"):
+    if db_url == "sqlite://" and persistent_database:
+        tmp_path = tmp_path_factory.mktemp("recorder")
+        db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    elif db_url.startswith("mysql://"):
         # pylint: disable-next=import-outside-toplevel
         import sqlalchemy_utils
 
@@ -1324,7 +1364,9 @@ def recorder_db_url(
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding="utf8")
     yield db_url
-    if db_url.startswith("mysql://"):
+    if db_url == "sqlite://" and persistent_database:
+        rmtree(tmp_path, ignore_errors=True)
+    elif db_url.startswith("mysql://"):
         # pylint: disable-next=import-outside-toplevel
         import sqlalchemy as sa
 
@@ -1352,6 +1394,8 @@ async def _async_init_recorder_component(
     hass: HomeAssistant,
     add_config: dict[str, Any] | None = None,
     db_url: str | None = None,
+    *,
+    expected_setup_result: bool,
 ) -> None:
     """Initialize the recorder asynchronously."""
     # pylint: disable-next=import-outside-toplevel
@@ -1366,10 +1410,13 @@ async def _async_init_recorder_component(
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
-        assert await async_setup_component(
-            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        setup_task = asyncio.ensure_future(
+            async_setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         )
-        assert recorder.DOMAIN in hass.config.components
+        # Wait for recorder integration to setup
+        setup_result = await setup_task
+        assert setup_result == expected_setup_result
+        assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
         config[recorder.CONF_DB_URL],
@@ -1377,7 +1424,7 @@ async def _async_init_recorder_component(
 
 
 @pytest.fixture
-async def async_setup_recorder_instance(
+async def async_test_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
@@ -1385,8 +1432,9 @@ async def async_setup_recorder_instance(
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
+    enable_migrate_event_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
-    """Yield callable to setup recorder instance."""
+    """Yield context manager to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
@@ -1409,22 +1457,27 @@ async def async_setup_recorder_instance(
         else None
     )
     migrate_states_context_ids = (
-        recorder.Recorder._migrate_states_context_ids
+        migration.StatesContextIDMigration.migrate_data
         if enable_migrate_context_ids
         else None
     )
     migrate_events_context_ids = (
-        recorder.Recorder._migrate_events_context_ids
+        migration.EventsContextIDMigration.migrate_data
         if enable_migrate_context_ids
         else None
     )
     migrate_event_type_ids = (
-        recorder.Recorder._migrate_event_type_ids
+        migration.EventTypeIDMigration.migrate_data
         if enable_migrate_event_type_ids
         else None
     )
     migrate_entity_ids = (
-        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
+        migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
+    )
+    legacy_event_id_foreign_key_exists = (
+        migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
+        if enable_migrate_event_ids
+        else lambda _: None
     )
     with (
         patch(
@@ -1443,23 +1496,28 @@ async def async_setup_recorder_instance(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+            "homeassistant.components.recorder.migration.EventsContextIDMigration.migrate_data",
             side_effect=migrate_events_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+            "homeassistant.components.recorder.migration.StatesContextIDMigration.migrate_data",
             side_effect=migrate_states_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+            "homeassistant.components.recorder.migration.EventTypeIDMigration.migrate_data",
             side_effect=migrate_event_type_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+            "homeassistant.components.recorder.migration.EntityIDMigration.migrate_data",
             side_effect=migrate_entity_ids,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.recorder.migration.EventIDPostMigration._legacy_event_id_foreign_key_exists",
+            side_effect=legacy_event_id_foreign_key_exists,
             autospec=True,
         ),
         patch(
@@ -1469,17 +1527,60 @@ async def async_setup_recorder_instance(
         ),
     ):
 
-        async def async_setup_recorder(
-            hass: HomeAssistant, config: ConfigType | None = None
-        ) -> recorder.Recorder:
+        @asynccontextmanager
+        async def async_test_recorder(
+            hass: HomeAssistant,
+            config: ConfigType | None = None,
+            *,
+            expected_setup_result: bool = True,
+            wait_recorder: bool = True,
+        ) -> AsyncGenerator[recorder.Recorder]:
             """Setup and return recorder instance."""  # noqa: D401
-            await _async_init_recorder_component(hass, config, recorder_db_url)
+            await _async_init_recorder_component(
+                hass,
+                config,
+                recorder_db_url,
+                expected_setup_result=expected_setup_result,
+            )
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
-            if hass.state is CoreState.running:
+            if hass.state is CoreState.running and wait_recorder:
                 await async_recorder_block_till_done(hass)
-            return instance
+            try:
+                yield instance
+            finally:
+                if instance.is_alive():
+                    await instance._async_shutdown(None)
+
+        yield async_test_recorder
+
+
+@pytest.fixture
+async def async_setup_recorder_instance(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> AsyncGenerator[RecorderInstanceGenerator]:
+    """Yield callable to setup recorder instance."""
+
+    async with AsyncExitStack() as stack:
+
+        async def async_setup_recorder(
+            hass: HomeAssistant,
+            config: ConfigType | None = None,
+            *,
+            expected_setup_result: bool = True,
+            wait_recorder: bool = True,
+        ) -> AsyncGenerator[recorder.Recorder]:
+            """Set up and return recorder instance."""
+
+            return await stack.enter_async_context(
+                async_test_recorder(
+                    hass,
+                    config,
+                    expected_setup_result=expected_setup_result,
+                    wait_recorder=wait_recorder,
+                )
+            )
 
         yield async_setup_recorder
 
@@ -1487,11 +1588,12 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(
     recorder_config: dict[str, Any] | None,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
     hass: HomeAssistant,
-) -> recorder.Recorder:
+) -> AsyncGenerator[recorder.Recorder]:
     """Fixture with in-memory recorder."""
-    return await async_setup_recorder_instance(hass, recorder_config)
+    async with async_test_recorder(hass, recorder_config) as instance:
+        yield instance
 
 
 @pytest.fixture
@@ -1654,7 +1756,7 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 
 
 @pytest.fixture
-def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall]]:
+def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
     """Track all service calls."""
     calls = []
 
@@ -1665,17 +1767,25 @@ def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall
         domain: str,
         service: str,
         service_data: dict[str, Any] | None = None,
-        **kwargs: Any,
+        blocking: bool = False,
+        context: Context | None = None,
+        target: dict[str, Any] | None = None,
+        return_response: bool = False,
     ) -> ServiceResponse:
-        calls.append(ServiceCall(domain, service, service_data))
+        calls.append(
+            ServiceCall(domain, service, service_data, context, return_response)
+        )
         try:
             return await _original_async_call(
                 domain,
                 service,
                 service_data,
-                **kwargs,
+                blocking,
+                context,
+                target,
+                return_response,
             )
-        except ha.ServiceNotFound:
+        except ServiceNotFound:
             _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)
         return None
 
@@ -1690,7 +1800,7 @@ def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 
 @pytest.fixture
-def disable_block_async_io() -> Generator[Any, Any, None]:
+def disable_block_async_io() -> Generator[None]:
     """Fixture to disable the loop protection from block_async_io."""
     yield
     calls = block_async_io._BLOCKED_CALLS.calls

@@ -1,6 +1,7 @@
 """Test ESPHome update entities."""
 
 from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aioesphomeapi import (
@@ -31,6 +32,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MockESPHomeDevice
+
+
+@pytest.fixture(autouse=True)
+def enable_entity(entity_registry_enabled_by_default: None) -> None:
+    """Enable update entity."""
 
 
 @pytest.fixture
@@ -84,7 +90,7 @@ async def test_update_entity(
     stub_reconnect,
     mock_config_entry,
     mock_device_info,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     devices_payload,
     expected_state,
     expected_attributes,
@@ -190,7 +196,7 @@ async def test_update_static_info(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockESPHomeDevice],
     ],
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity."""
     mock_dashboard["configured"] = [
@@ -236,7 +242,7 @@ async def test_update_device_state_for_availability(
     expected_disconnect: bool,
     expected_state: str,
     has_deep_sleep: bool,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -272,7 +278,7 @@ async def test_update_entity_dashboard_not_available_startup(
     stub_reconnect,
     mock_config_entry,
     mock_device_info,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity when dashboard is not available at startup."""
     with (
@@ -321,7 +327,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockESPHomeDevice],
     ],
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
     with patch(
@@ -386,7 +392,7 @@ async def test_update_becomes_available_at_runtime(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockESPHomeDevice],
     ],
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity when the dashboard has no device at startup but gets them later."""
     await mock_esphome_device(

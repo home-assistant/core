@@ -16,7 +16,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
-def config_entry(hass):
+def config_entry() -> MockConfigEntry:
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=FLO_DOMAIN,

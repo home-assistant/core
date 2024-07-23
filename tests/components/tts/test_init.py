@@ -47,15 +47,8 @@ ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 class DefaultEntity(tts.TextToSpeechEntity):
     """Test entity."""
 
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    @property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return DEFAULT_LANG
+    _attr_supported_languages = SUPPORT_LANGUAGES
+    _attr_default_language = DEFAULT_LANG
 
 
 async def test_default_entity_attributes() -> None:
@@ -523,10 +516,7 @@ class MockProviderWithDefaults(MockProvider):
 class MockEntityWithDefaults(MockTTSEntity):
     """Mock entity with default options."""
 
-    @property
-    def default_options(self):
-        """Return a mapping with the default options."""
-        return {"voice": "alex"}
+    _attr_default_options = {"voice": "alex"}
 
 
 @pytest.mark.parametrize(
@@ -1054,9 +1044,7 @@ async def test_setup_legacy_cache_dir(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     await hass.services.async_call(
@@ -1090,9 +1078,7 @@ async def test_setup_cache_dir(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     await hass.services.async_call(
@@ -1195,9 +1181,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     client = await hass_client()
@@ -1221,9 +1205,7 @@ async def test_load_cache_retrieve_without_mem_cache(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     client = await hass_client()
@@ -1766,3 +1748,93 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
     with pytest.raises(RuntimeError):
         # Simulate a bad WAV file
         await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")
+
+
+async def test_ttsentity_subclass_properties(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
+
+    class TestClass1(tts.TextToSpeechEntity):
+        _attr_default_language = DEFAULT_LANG
+        _attr_supported_languages = SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass1())
+
+    class TestClass2(tts.TextToSpeechEntity):
+        @property
+        def default_language(self) -> str:
+            return DEFAULT_LANG
+
+        @property
+        def supported_languages(self) -> list[str]:
+            return SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass2())
+
+    assert all(record.exc_info is None for record in caplog.records)
+
+    caplog.clear()
+
+    class TestClass3(tts.TextToSpeechEntity):
+        _attr_default_language = DEFAULT_LANG
+
+    await mock_config_entry_setup(hass, TestClass3())
+
+    assert (
+        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass4(tts.TextToSpeechEntity):
+        _attr_supported_languages = SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass4())
+
+    assert (
+        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass5(tts.TextToSpeechEntity):
+        @property
+        def default_language(self) -> str:
+            return DEFAULT_LANG
+
+    await mock_config_entry_setup(hass, TestClass5())
+
+    assert (
+        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass6(tts.TextToSpeechEntity):
+        @property
+        def supported_languages(self) -> list[str]:
+            return SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass6())
+
+    assert (
+        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )

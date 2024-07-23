@@ -1,10 +1,10 @@
 """Fixtures for Plex tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 import requests_mock
-from typing_extensions import Generator
 
 from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
 from homeassistant.const import CONF_URL

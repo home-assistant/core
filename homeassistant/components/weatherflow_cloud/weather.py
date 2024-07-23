@@ -17,11 +17,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER, STATE_MAP
+from .const import DOMAIN, STATE_MAP
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
+from .entity import WeatherFlowCloudEntity
 
 
 async def async_setup_entry(
@@ -43,12 +43,10 @@ async def async_setup_entry(
 
 
 class WeatherFlowWeather(
-    SingleCoordinatorWeatherEntity[WeatherFlowCloudDataUpdateCoordinator]
+    WeatherFlowCloudEntity,
+    SingleCoordinatorWeatherEntity[WeatherFlowCloudDataUpdateCoordinator],
 ):
     """Implementation of a WeatherFlow weather condition."""
-
-    _attr_attribution = ATTR_ATTRIBUTION
-    _attr_has_entity_name = True
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -65,18 +63,8 @@ class WeatherFlowWeather(
         station_id: int,
     ) -> None:
         """Initialise the platform with a data instance and station."""
-        super().__init__(coordinator)
-
-        self.station_id = station_id
+        super().__init__(coordinator, station_id)
         self._attr_unique_id = f"weatherflow_forecast_{station_id}"
-
-        self._attr_device_info = DeviceInfo(
-            name=self.local_data.station.name,
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{station_id}")},
-            manufacturer=MANUFACTURER,
-            configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
-        )
 
     @property
     def local_data(self) -> WeatherFlowDataREST:
@@ -98,7 +86,6 @@ class WeatherFlowWeather(
         """Return the Air Pressure @ Station."""
         return self.local_data.weather.current_conditions.station_pressure
 
-    #
     @property
     def humidity(self) -> float | None:
         """Return the humidity."""

@@ -1,9 +1,9 @@
 """The tests for the demo number component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.number import (

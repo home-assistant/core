@@ -226,7 +226,11 @@ async def test_invalid_service(
 ) -> None:
     """Test service setup with an invalid service object or platform."""
 
-    def get_service(hass, config, discovery_info=None):
+    def get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> notify.BaseNotificationService | None:
         """Return None for an invalid notify service."""
         return None
 

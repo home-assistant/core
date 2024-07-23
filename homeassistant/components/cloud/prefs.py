@@ -180,24 +180,28 @@ class CloudPreferences:
         """Update user preferences."""
         prefs = {**self._prefs}
 
-        for key, value in (
-            (PREF_ENABLE_GOOGLE, google_enabled),
-            (PREF_ENABLE_ALEXA, alexa_enabled),
-            (PREF_ENABLE_REMOTE, remote_enabled),
-            (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
-            (PREF_CLOUDHOOKS, cloudhooks),
-            (PREF_CLOUD_USER, cloud_user),
-            (PREF_ALEXA_REPORT_STATE, alexa_report_state),
-            (PREF_GOOGLE_REPORT_STATE, google_report_state),
-            (PREF_ALEXA_SETTINGS_VERSION, alexa_settings_version),
-            (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
-            (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
-            (PREF_REMOTE_DOMAIN, remote_domain),
-            (PREF_GOOGLE_CONNECTED, google_connected),
-            (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
-        ):
-            if value is not UNDEFINED:
-                prefs[key] = value
+        prefs.update(
+            {
+                key: value
+                for key, value in (
+                    (PREF_ENABLE_GOOGLE, google_enabled),
+                    (PREF_ENABLE_ALEXA, alexa_enabled),
+                    (PREF_ENABLE_REMOTE, remote_enabled),
+                    (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
+                    (PREF_CLOUDHOOKS, cloudhooks),
+                    (PREF_CLOUD_USER, cloud_user),
+                    (PREF_ALEXA_REPORT_STATE, alexa_report_state),
+                    (PREF_GOOGLE_REPORT_STATE, google_report_state),
+                    (PREF_ALEXA_SETTINGS_VERSION, alexa_settings_version),
+                    (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
+                    (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
+                    (PREF_REMOTE_DOMAIN, remote_domain),
+                    (PREF_GOOGLE_CONNECTED, google_connected),
+                    (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
+                )
+                if value is not UNDEFINED
+            }
+        )
 
         await self._save_prefs(prefs)
 

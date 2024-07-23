@@ -83,17 +83,16 @@ DEFAULT_CONFIG = {
 }
 
 
-async def async_turn_on(
-    hass: HomeAssistant,
-    entity_id=ENTITY_MATCH_ALL,
-) -> None:
+async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
     """Turn all or specified humidifier on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
-async def async_turn_off(hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL) -> None:
+async def async_turn_off(
+    hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Turn all or specified humidier off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
@@ -101,7 +100,7 @@ async def async_turn_off(hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL) -> Non
 
 
 async def async_set_mode(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, mode: str | None = None
+    hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL, mode: str | None = None
 ) -> None:
     """Set mode for all or specified humidifier."""
     data = {
@@ -114,7 +113,7 @@ async def async_set_mode(
 
 
 async def async_set_humidity(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, humidity: int | None = None
+    hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL, humidity: int | None = None
 ) -> None:
     """Set target humidity for all or specified humidifier."""
     data = {
@@ -129,10 +128,9 @@ async def async_set_humidity(
 @pytest.mark.parametrize(
     "hass_config", [{mqtt.DOMAIN: {humidifier.DOMAIN: {"name": "test"}}}]
 )
+@pytest.mark.usefixtures("hass")
 async def test_fail_setup_if_no_command_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if command fails with command topic."""
     assert await mqtt_mock_entry()
@@ -892,9 +890,7 @@ async def test_encoding_subscribable_topics(
     ],
 )
 async def test_attributes(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test attributes."""
     await mqtt_mock_entry()
@@ -1048,9 +1044,7 @@ async def test_attributes(
     ],
 )
 async def test_validity_configurations(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    valid: bool,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, valid: bool
 ) -> None:
     """Test validity of configurations."""
     await mqtt_mock_entry()
@@ -1252,11 +1246,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        humidifier.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1267,11 +1257,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        humidifier.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1499,8 +1485,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = humidifier.DOMAIN
@@ -1523,8 +1508,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_config_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = humidifier.DOMAIN
