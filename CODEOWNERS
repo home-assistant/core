@@ -1464,6 +1464,8 @@ build.json @home-assistant/supervisor
 /tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
+/homeassistant/components/tis_control/ @Mustafa744
+/tests/components/tis_control/ @Mustafa744
 /homeassistant/components/tmb/ @alemuro
 /homeassistant/components/todo/ @home-assistant/core
 /tests/components/todo/ @home-assistant/core

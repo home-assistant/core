@@ -1,0 +1,18 @@
+{
+  "domain": "tis_control",
+  "name": "TISControl",
+  "codeowners": [
+    "@Mustafa744"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/tis_control",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": [
+    "TISControlProtocol==0.1.4",
+    "pillow==10.3.0"
+  ],
+  "ssdp": [],
+  "zeroconf": []
+}
