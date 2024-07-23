@@ -31,7 +31,12 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import CONF_USE_HTTPS, DOMAIN
-from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin, PasswordIncompatible
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkSetupException,
+    ReolinkWebhookException,
+    UserNotAdmin,
+)
 
 DEFAULT_TIMEOUT = 30
 FIRST_ONVIF_TIMEOUT = 10
@@ -127,10 +132,9 @@ class ReolinkHost:
             raise PasswordIncompatible(
                 "Reolink password contains incompatible special character, "
                 "please change the password to only contain characters: "
-                "a-z, A-Z, 0-9 or %s",
-                ALLOWED_SPECIAL_CHARS
+                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
             )
-        
+
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
