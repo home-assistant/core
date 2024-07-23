@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import RtspEventMock
+from .conftest import ConfigEntryFactoryType, RtspEventMock
 
 from tests.common import snapshot_platform
 
@@ -111,7 +111,7 @@ async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    config_entry_factory,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_rtsp_event: RtspEventMock,
     event: dict[str, str],
 ) -> None:
