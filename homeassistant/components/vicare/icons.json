@@ -40,7 +40,7 @@
       "ess_state_of_charge": {
         "default": "mdi:home-battery"
       },
-      "pcc_power_exchange_current": {
+      "pcc_transfer_power_exchange": {
         "default": "mdi:transmission-tower"
       },
       "pcc_energy_consumption": {

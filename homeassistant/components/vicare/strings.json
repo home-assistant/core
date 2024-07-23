@@ -304,7 +304,7 @@
       "ess_discharge_total": {
         "name": "Battery discharge total"
       },
-      "pcc_power_exchange_current": {
+      "pcc_transfer_power_exchange": {
         "name": "Power exchange with grid"
       },
       "pcc_energy_consumption": {

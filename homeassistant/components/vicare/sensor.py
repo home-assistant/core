@@ -661,7 +661,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="pcc_transfer_power_exchange",
-        translation_key="pcc_power_exchange_current",
+        translation_key="pcc_transfer_power_exchange",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getPointOfCommonCouplingTransferPowerExchange(),
