@@ -22,7 +22,6 @@ from .const import (
     DATA_SERVER,
     DISCOVERY_TASK,
     DOMAIN,
-    PLAYER_DISCOVERY_UNSUB,
     STATUS_API_TIMEOUT,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_UUID,
@@ -36,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an LMS Server from a config entry."""
     config = entry.data
     session = async_get_clientsession(hass)
-    _LOGGER.debug("Reached async_setup_entry for host=%s(%s)", config[CONF_HOST],entry.entry_id)
+    _LOGGER.debug(
+        "Reached async_setup_entry for host=%s(%s)", config[CONF_HOST], entry.entry_id
+    )
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -44,24 +45,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    hass.data.setdefault(DOMAIN, {})
     entry.runtime_data = {}
 
     lms = Server(session, host, port, username, password, https=https)
     _LOGGER.debug("LMS object for %s", lms)
 
     try:
-       async with timeout(STATUS_API_TIMEOUT):
-          status = await lms.async_query("serverstatus","-","-","prefs:libraryname")
+        async with timeout(STATUS_API_TIMEOUT):
+            status = await lms.async_query(
+                "serverstatus", "-", "-", "prefs:libraryname"
+            )
     except Exception as err:
-       raise ConfigEntryNotReady(f"Error communicating config not read for {host}") from err
+        raise ConfigEntryNotReady(
+            f"Error communicating config not read for {host}"
+        ) from err
 
     if not status:
-       raise ConfigEntryNotReady(f"Error Config Not read for {host}")
+        raise ConfigEntryNotReady(f"Error Config Not read for {host}")
     _LOGGER.debug("LMS Status for setup  = %s", status)
 
     lms.uuid = status[STATUS_QUERY_UUID]
-    lms.name = (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME]) and status[STATUS_QUERY_LIBRARYNAME] or host
+    lms.name = (
+        (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME])
+        and status[STATUS_QUERY_LIBRARYNAME]
+        or host
+    )
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
     entry.runtime_data[DATA_SERVER] = lms
@@ -73,8 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
-    _LOGGER.debug("Reached async_unload_entry for LMS=%s(%s)", entry.runtime_data[DATA_SERVER].name or "Unkown" ,entry.entry_id)
-    entry.runtime_data[PLAYER_DISCOVERY_UNSUB]()
+    _LOGGER.debug(
+        "Reached async_unload_entry for LMS=%s(%s)",
+        entry.runtime_data[DATA_SERVER].name or "Unkown",
+        entry.entry_id,
+    )
 
     # Stop server discovery task if this is the last config entry.
     current_entries = hass.config_entries.async_entries(DOMAIN)
