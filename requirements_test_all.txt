@@ -1202,7 +1202,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ollama
-ollama-hass==0.1.7
+ollama==0.3.0
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
