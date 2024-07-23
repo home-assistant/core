@@ -77,9 +77,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             if self.data["state"] != TeslemetryState.ONLINE:
                 response = await self.api.vehicle()
-                self.data["state"] = response["response"].get(
-                    "state", self.data["state"]
-                )
+                self.data["state"] = response["response"]["state"]
 
             if self.data["state"] != TeslemetryState.ONLINE:
                 return self.data
