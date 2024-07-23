@@ -6,13 +6,14 @@ from typing import Any
 
 from APsystemsEZ1 import Status
 
-from homeassistant.components.switch import SwitchEntity, SwitchDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import ApSystemsConfigEntry, ApSystemsData
 from .entity import ApSystemsEntity
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -23,6 +24,7 @@ async def async_setup_entry(
     """Set up the switch platform."""
 
     add_entities([ApSystemsPowerSwitch(config_entry.runtime_data)])
+
 
 class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
     """Base switch to be used with description."""
@@ -39,6 +41,11 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
         self._attr_unique_id = f"{data.device_id}_power_switch"
         self._state = None
 
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        return self._state
+
     async def async_update(self) -> None:
         try:
             status = await self._api.get_device_power_status()
@@ -48,22 +55,9 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
             self._attr_available = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        try:
-            await self._api.set_device_power_status(0)
-            self._attr_available = True
-        except Exception:
-            self._attr_available = False
+        await self.hass.async_add_executor_job(self._api.set_device_power_status(0))
         await self.async_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        try:
-            await self._api.set_device_power_status(1)
-            self._attr_available = True
-        except Exception:
-            self._attr_available = False
+        await self.hass.async_add_executor_job(self._api.set_device_power_status(1))
         await self.async_update()
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
