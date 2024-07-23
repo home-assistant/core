@@ -94,10 +94,10 @@ async def webhook_setup(
     return WebhookSetupData(hass, client, webhook_url, event_listener)
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_webhook_fires_transaction_created(
     webhook_setup: WebhookSetupData,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
 ) -> None:
     """Test calling a webhook fires transaction_created event."""
 
@@ -117,9 +117,9 @@ async def test_webhook_fires_transaction_created(
     resp.close()
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_webhook_with_unexpected_type(
     webhook_setup: WebhookSetupData,
-    current_request_with_host: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test calling a webhook with an unexpected event type."""
