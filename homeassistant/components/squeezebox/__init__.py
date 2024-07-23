@@ -16,12 +16,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 
 from .const import (
     CONF_HTTPS,
@@ -48,7 +45,6 @@ class SqueezeboxData:
 
     coordinator: LMSStatusDataUpdateCoordinator
     server: Server
-    device: DeviceInfo
 
 
 type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
@@ -93,7 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
-    device = DeviceInfo(
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
         identifiers={(DOMAIN, lms.uuid)},
         name=lms.name,
         manufacturer=MANUFACTURER,
@@ -112,7 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     entry.runtime_data = SqueezeboxData(
         coordinator=coordinator,
-        device=device,
         server=lms,
     )
 

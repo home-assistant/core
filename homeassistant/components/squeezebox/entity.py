@@ -4,17 +4,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN, STATUS_QUERY_UUID
 from .coordinator import LMSStatusDataUpdateCoordinator
 
 
-class StatusSensorEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
+class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
     """Defines a base staus sensor entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        device: DeviceInfo,
         coordinator: LMSStatusDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
@@ -22,6 +22,9 @@ class StatusSensorEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
         super().__init__(coordinator, context=description.key)
         self.coordinator = coordinator
         self.entity_description = description
-        self._attr_device_info = device
         self._attr_name = description.key
-        self._attr_unique_id = device["serial_number"] + description.key
+        self._attr_unique_id = f"{coordinator.data[STATUS_QUERY_UUID]}{description.key}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.data[STATUS_QUERY_UUID])},
+        )
