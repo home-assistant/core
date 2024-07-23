@@ -37,6 +37,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
@@ -383,6 +384,18 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Return an unique ID."""
         assert self._sync_status is not None
         return format_unique_id(self._sync_status.mac, self.port)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return DeviceInfo."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer=self._sync_status.brand,
+            model=self._sync_status.model_name,
+            name=self.name,
+            hw_version=self._sync_status.model,
+            configuration_url=f"http://{self.host}",
+        )
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
