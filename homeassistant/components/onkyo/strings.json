@@ -4,20 +4,30 @@
     "step": {
       "user": {
         "menu_options": {
-          "pick_device": "Use Onkyo discovery",
+          "eiscp_discovery": "Use Onkyo discovery",
           "manual": "Manual entry"
         }
       },
       "manual": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "description": "Manual device entry."
+      },
+      "configure_receiver": {
+        "description": "Configure {name}",
+        "data": {
+          "max_volume": "Maximum volume limit (%)",
+          "volume_resolution": "The value of 'maximum volume' of the receiver",
+          "sources": "List of input sources this receiver supports"
+        },
+        "data_description": {
+          "max_volume": "Setting this will set Home Assistant's 100% volume to be this setting on the amp. i.e., if you set this to 50% when you set Home Assistant to be 100% then your receiver will be set to 50% of its maximum volume."
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_ip": "Not a valid IP address.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

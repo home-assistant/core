@@ -1,5 +1,6 @@
 """Management of connection with an Onkyo Receiver."""
 
+import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
@@ -8,7 +9,13 @@ from typing import Any, TypedDict
 import pyeiscp
 from pyeiscp import Connection as Receiver
 
-from .const import ZONES
+from .const import (
+    DEVICE_DISCOVERY_RETRIES,
+    DEVICE_DISCOVERY_RETRY_INTERVAL,
+    SINGLE_DEVICE_DISCOVER_RETRIES,
+    SINGLE_DEVICE_DISCOVER_RETRY_INTERVAL,
+    ZONES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,11 +43,17 @@ async def async_interview(host: str) -> ReceiverInfo | None:
         _LOGGER.debug("Receiver interviewed: %s (%s)", info.model_name, info.host)
         receiver_info = info
 
-    await pyeiscp.Connection.discover(
-        host=host,
-        discovery_callback=_callback,
-    )
+    await pyeiscp.Connection.discover(host=host, discovery_callback=_callback)
 
+    # info is obtained via UDP message and is delivered via above callback.
+    # Wait here for a bit while that arrives.
+    retry_time = SINGLE_DEVICE_DISCOVER_RETRIES
+    while not receiver_info and retry_time > 0:
+        _LOGGER.debug("Waiting for info on receiver with ip %s to arrive", host)
+        await asyncio.sleep(SINGLE_DEVICE_DISCOVER_RETRY_INTERVAL)
+        retry_time -= 1
+
+    _LOGGER.debug("Receiver interviewed")
     return receiver_info
 
 
@@ -57,6 +70,14 @@ async def async_discover() -> Iterable[ReceiverInfo]:
         receiver_infos.append(info)
 
     await pyeiscp.Connection.discover(discovery_callback=_callback)
+
+    # info is obtained via UDP message and is delivered via above callback.
+    # Wait here for a bit while that arrives.
+    wait_time = DEVICE_DISCOVERY_RETRIES
+    while wait_time > 0:
+        _LOGGER.debug("Waiting for discovery info on all receivers to arrive")
+        await asyncio.sleep(DEVICE_DISCOVERY_RETRY_INTERVAL)
+        wait_time -= 1
 
     return receiver_infos
 
