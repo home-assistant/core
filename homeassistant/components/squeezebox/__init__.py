@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         serial_number=lms.uuid,
         connections=STATUS_QUERY_MAC in status
         and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
-        or (),
+        or None,
     )
     _LOGGER.debug("LMS Device %s", device)
 
