@@ -12,11 +12,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SqueezeboxConfigEntry
 from .const import STATUS_SENSOR_NEEDSRESTART, STATUS_SENSOR_RESCAN
 from .coordinator import LMSStatusDataUpdateCoordinator
+from .entity import StatusSensorEntity
 
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -47,10 +47,8 @@ async def async_setup_entry(
     )
 
 
-class ServerStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class ServerStatusBinarySensor(StatusSensorEntity, BinarySensorEntity):
     """LMS Status based sensor from LMS via cooridnatior."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -59,13 +57,8 @@ class ServerStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, context=description.key)
-        self.coordinator = coordinator
-        self.entity_description = description
-        self._attr_device_info = device
-        self._attr_name = description.key
+        super().__init__(device, coordinator, description)
         self._attr_is_on = coordinator.data[description.key]
-        self._attr_unique_id = device["serial_number"]+description.key
 
     @callback
     def _handle_coordinator_update(self) -> None:
