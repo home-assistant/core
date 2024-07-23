@@ -312,7 +312,7 @@ async def test_functional_device_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test proper matching and attachment of device trigger automation."""
     device = device_registry.async_get_device(
@@ -343,11 +343,7 @@ async def test_functional_device_trigger(
 
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"buttonevent": 1002},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"buttonevent": 1002}})
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1

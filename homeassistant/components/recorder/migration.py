@@ -52,6 +52,7 @@ from .auto_repairs.statistics.schema import (
 from .const import (
     CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
+    LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     STATES_META_SCHEMA_VERSION,
     SupportedDialect,
 )
@@ -1949,6 +1950,7 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
             )
         _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
         instance.use_legacy_events_index = False
+        _mark_migration_done(session, EventIDPostMigration)
 
     return True
 
@@ -2018,6 +2020,14 @@ class CommitBeforeMigrationTask(MigrationTask):
     commit_before = True
 
 
+@dataclass(frozen=True, kw_only=True)
+class NeedsMigrateResult:
+    """Container for the return value of BaseRunTimeMigration.needs_migrate_impl."""
+
+    needs_migrate: bool
+    migration_done: bool
+
+
 class BaseRunTimeMigration(ABC):
     """Base class for run time migrations."""
 
@@ -2033,7 +2043,7 @@ class BaseRunTimeMigration(ABC):
 
     def do_migrate(self, instance: Recorder, session: Session) -> None:
         """Start migration if needed."""
-        if self.needs_migrate(session):
+        if self.needs_migrate(instance, session):
             instance.queue_task(self.task(self))
         else:
             self.migration_done(instance)
@@ -2047,10 +2057,12 @@ class BaseRunTimeMigration(ABC):
         """Will be called after migrate returns True or if migration is not needed."""
 
     @abstractmethod
-    def needs_migrate_query(self) -> StatementLambdaElement:
-        """Return the query to check if the migration needs to run."""
+    def needs_migrate_impl(
+        self, instance: Recorder, session: Session
+    ) -> NeedsMigrateResult:
+        """Return if the migration needs to run and if it is done."""
 
-    def needs_migrate(self, session: Session) -> bool:
+    def needs_migrate(self, instance: Recorder, session: Session) -> bool:
         """Return if the migration needs to run.
 
         If the migration needs to run, it will return True.
@@ -2068,13 +2080,30 @@ class BaseRunTimeMigration(ABC):
         # We do not know if the migration is done from the
         # migration changes table so we must check the data
         # This is the slow path
-        if not execute_stmt_lambda_element(session, self.needs_migrate_query()):
+        needs_migrate = self.needs_migrate_impl(instance, session)
+        if needs_migrate.migration_done:
             _mark_migration_done(session, self.__class__)
-            return False
-        return True
+        return needs_migrate.needs_migrate
 
 
-class StatesContextIDMigration(BaseRunTimeMigration):
+class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
+    """Base class for run time migrations."""
+
+    @abstractmethod
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+
+    def needs_migrate_impl(
+        self, instance: Recorder, session: Session
+    ) -> NeedsMigrateResult:
+        """Return if the migration needs to run."""
+        needs_migrate = execute_stmt_lambda_element(session, self.needs_migrate_query())
+        return NeedsMigrateResult(
+            needs_migrate=bool(needs_migrate), migration_done=not needs_migrate
+        )
+
+
+class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate states context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2123,7 +2152,7 @@ class StatesContextIDMigration(BaseRunTimeMigration):
         return has_states_context_ids_to_migrate()
 
 
-class EventsContextIDMigration(BaseRunTimeMigration):
+class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate events context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2172,7 +2201,7 @@ class EventsContextIDMigration(BaseRunTimeMigration):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseRunTimeMigration):
+class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
@@ -2255,7 +2284,7 @@ class EventTypeIDMigration(BaseRunTimeMigration):
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseRunTimeMigration):
+class EntityIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
@@ -2365,6 +2394,48 @@ class EntityIDMigration(BaseRunTimeMigration):
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
         return has_entity_ids_to_migrate()
+
+
+class EventIDPostMigration(BaseRunTimeMigration):
+    """Migration to remove old event_id index from states."""
+
+    migration_id = "event_id_post_migration"
+    task = MigrationTask
+
+    @staticmethod
+    def migrate_data(instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return cleanup_legacy_states_event_ids(instance)
+
+    @staticmethod
+    def _legacy_event_id_foreign_key_exists(instance: Recorder) -> bool:
+        """Check if the legacy event_id foreign key exists."""
+        engine = instance.engine
+        assert engine is not None
+        inspector = sqlalchemy.inspect(engine)
+        return bool(
+            next(
+                (
+                    fk
+                    for fk in inspector.get_foreign_keys(TABLE_STATES)
+                    if fk["constrained_columns"] == ["event_id"]
+                ),
+                None,
+            )
+        )
+
+    def needs_migrate_impl(
+        self, instance: Recorder, session: Session
+    ) -> NeedsMigrateResult:
+        """Return if the migration needs to run."""
+        if self.schema_version <= LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
+            return NeedsMigrateResult(needs_migrate=False, migration_done=False)
+        if get_index_by_name(
+            session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+        ) is not None or self._legacy_event_id_foreign_key_exists(instance):
+            instance.use_legacy_events_index = True
+            return NeedsMigrateResult(needs_migrate=True, migration_done=False)
+        return NeedsMigrateResult(needs_migrate=False, migration_done=True)
 
 
 def _mark_migration_done(
