@@ -11,6 +11,7 @@ class MessageRole(StrEnum):
 
     SYSTEM = "system"  # prompt
     USER = "user"
+    ASSISTANT = "assistant"
     TOOL = "tool"
 
 

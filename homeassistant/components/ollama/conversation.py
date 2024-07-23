@@ -239,7 +239,9 @@ class OllamaConversationEntity(
             response_message = response["message"]
             message_history.messages.append(
                 ollama.Message(
-                    role=response_message["role"], content=response_message["content"]
+                    role=response_message["role"],
+                    content=response_message.get("content"),
+                    tool_calls=response_message.get("tool_calls"),
                 )
             )
 

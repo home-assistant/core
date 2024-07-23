@@ -139,7 +139,7 @@ async def test_function_call(
 
     def completion_result(*args, messages, **kwargs):
         for message in messages:
-            if message["content"].startswith("TOOL_CALL"):
+            if message["role"] == "tool":
                 return {
                     "message": {
                         "role": "assistant",
@@ -147,19 +147,17 @@ async def test_function_call(
                     }
                 }
 
-        for message in messages:
-            if message["content"].startswith("TOOL_ARGS"):
-                return {
-                    "message": {
-                        "role": "assistant",
-                        "content": 'TOOL_CALL {"name": "test_tool", "parameters": {"param1": "test_value"}}',
-                    }
-                }
-
         return {
             "message": {
                 "role": "assistant",
-                "content": "TOOL_ARGS test_tool",
+                "tool_calls": [
+                    {
+                        "function": {
+                            "name": "test_tool",
+                            "arguments": {"param1": "test_value"},
+                        }
+                    }
+                ],
             }
         }
 
@@ -175,7 +173,7 @@ async def test_function_call(
             agent_id=agent_id,
         )
 
-    assert mock_chat.call_count == 3
+    assert mock_chat.call_count == 2
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
@@ -195,124 +193,6 @@ async def test_function_call(
             assistant="conversation",
             device_id=None,
         ),
-    )
-
-
-@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
-async def test_malformed_function_args(
-    mock_get_tools,
-    hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
-) -> None:
-    """Test getting function args for an unknown function."""
-    agent_id = mock_config_entry_with_assist.entry_id
-    context = Context()
-
-    mock_tool = AsyncMock()
-    mock_tool.name = "test_tool"
-    mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
-    )
-    mock_tool.async_call.return_value = "Test response"
-
-    mock_get_tools.return_value = [mock_tool]
-
-    def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            if message["content"].startswith("TOOL_ARGS"):
-                return {
-                    "message": {
-                        "role": "assistant",
-                        "content": "I was not able to call the function",
-                    }
-                }
-
-        return {
-            "message": {
-                "role": "assistant",
-                "content": "TOOL_ARGS unknown_tool",
-            }
-        }
-
-    with patch(
-        "ollama.AsyncClient.chat",
-        side_effect=completion_result,
-    ) as mock_chat:
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
-
-    assert mock_tool.async_call.call_count == 0
-    assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert (
-        result.response.speech["plain"]["speech"]
-        == "I was not able to call the function"
-    )
-
-
-@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
-async def test_malformed_function_call(
-    mock_get_tools,
-    hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
-) -> None:
-    """Test function call that was unrecognized."""
-    agent_id = mock_config_entry_with_assist.entry_id
-    context = Context()
-
-    mock_tool = AsyncMock()
-    mock_tool.name = "test_tool"
-    mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
-    )
-    mock_tool.async_call.return_value = "Test response"
-
-    mock_get_tools.return_value = [mock_tool]
-
-    def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            if message["content"].startswith("TOOL_CALL"):
-                return {
-                    "message": {
-                        "role": "assistant",
-                        "content": "I was not able to call the function",
-                    }
-                }
-
-        return {
-            "message": {
-                "role": "assistant",
-                "content": 'TOOL_CALL name="test_tool", param1="test_value"',
-            }
-        }
-
-    with patch(
-        "ollama.AsyncClient.chat",
-        side_effect=completion_result,
-    ) as mock_chat:
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
-
-    assert mock_tool.async_call.call_count == 0
-    assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert (
-        result.response.speech["plain"]["speech"]
-        == "I was not able to call the function"
     )
 
 
@@ -339,7 +219,7 @@ async def test_function_exception(
 
     def completion_result(*args, messages, **kwargs):
         for message in messages:
-            if message["content"].startswith("TOOL_CALL"):
+            if message["role"] == "tool":
                 return {
                     "message": {
                         "role": "assistant",
@@ -350,7 +230,14 @@ async def test_function_exception(
         return {
             "message": {
                 "role": "assistant",
-                "content": 'TOOL_CALL {"name": "test_tool", "parameters": {"param1": "test_value"}}',
+                "tool_calls": [
+                    {
+                        "function": {
+                            "name": "test_tool",
+                            "arguments": {"param1": "test_value"},
+                        }
+                    }
+                ],
             }
         }
 
