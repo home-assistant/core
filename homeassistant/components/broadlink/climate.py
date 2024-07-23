@@ -86,7 +86,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
-        if self.sensor_mode == SensorMode.OUTER_SENSOR_CONTROL:
+        if self.sensor_mode is SensorMode.OUTER_SENSOR_CONTROL:
             self._attr_current_temperature = data.get("external_temp")
         else:
             self._attr_current_temperature = data.get("room_temp")
