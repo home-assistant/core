@@ -298,11 +298,11 @@ async def async_setup_entry(
                 translation_key="hdr_switch_deprecated",
             )
             entities.extend(
-                [
+                
                     ReolinkSwitchEntity(reolink_data, channel, DEPRECATED_HDR)
                     for channel in reolink_data.host.api.channels
                     if DEPRECATED_HDR.supported(reolink_data.host.api, channel)
-                ]
+                
             )
             break
 
