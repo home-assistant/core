@@ -244,12 +244,6 @@ def fixture_port_forward_data() -> list[dict[str, Any]]:
     return []
 
 
-@pytest.fixture(name="traffic_rule_payload")
-def traffic_rule_payload_data() -> list[dict[str, Any]]:
-    """Traffic rule data."""
-    return []
-
-
 @pytest.fixture(name="site_payload")
 def fixture_site_data() -> list[dict[str, Any]]:
     """Site data."""
@@ -276,6 +270,12 @@ def fixture_system_information_data() -> list[dict[str, Any]]:
             "version": "7.4.162",
         }
     ]
+
+
+@pytest.fixture(name="traffic_rule_payload")
+def traffic_rule_payload_data() -> list[dict[str, Any]]:
+    """Traffic rule data."""
+    return []
 
 
 @pytest.fixture(name="wlan_payload")

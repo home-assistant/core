@@ -1103,12 +1103,7 @@ async def test_dpi_switches_add_second_app(
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    ("traffic_rule_payload"),
-    [
-        ([TRAFFIC_RULE]),
-    ],
-)
+@pytest.mark.parametrize(("traffic_rule_payload"), [([TRAFFIC_RULE])])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_traffic_rules(
     hass: HomeAssistant,
@@ -1123,15 +1118,10 @@ async def test_traffic_rules(
 
     # Validate state object
     switch_1 = hass.states.get("switch.unifi_network_test_traffic_rule")
-    assert switch_1 is not None
     assert switch_1.state == STATE_ON
     assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
 
-    # Update state object
-
     device_1 = deepcopy(traffic_rule_payload[0])
-    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
-    await hass.async_block_till_done()
 
     # Disable traffic rule
     aioclient_mock.put(
