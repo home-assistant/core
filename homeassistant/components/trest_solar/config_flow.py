@@ -28,7 +28,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate if the user input contains valid credentials."""
 
     identity = TrestIdentityService(hass, data[CONF_USERNAME], data[CONF_PASSWORD])
-    await identity.authenticate_async()
+    try:
+        await identity.authenticate_async()
+    except Exception:  # pylint: disable=broad-except
+        raise InvalidAuth  # noqa: B904
 
     if identity.check_token_is_expired():
         raise InvalidAuth
@@ -47,8 +50,6 @@ class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except

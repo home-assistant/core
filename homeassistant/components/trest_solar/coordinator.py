@@ -8,7 +8,7 @@ from trest_solar import CloudSolarTrestService, SolarHistory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import REFRESH_INTERVAL
+REFRESH_INTERVAL = 30
 
 _LOGGER = logging.getLogger(__name__)
 

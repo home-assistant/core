@@ -25,7 +25,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a Trest Solar Controller entry."""
-    coordinator: TrestDataCoordinator = hass.data[DOMAIN][entry.entry_id]
+    runtime_data = hass.data["runtime_data"].get(entry.entry_id)
+    if runtime_data is None:
+        return
+
+    coordinator: TrestDataCoordinator = runtime_data.coordinator
     descriptions = [
         SensorEntityDescription(
             key="battery_discharge",
