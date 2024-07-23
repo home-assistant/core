@@ -36,12 +36,12 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._api.get_device_power_status() is not None
+        return super().available and bool(self._api.get_device_power_status())
 
     @property
     def is_on(self) -> bool | None:
         """Return state of the switch."""
-        return self._api.get_device_power_status()
+        return bool(self._api.get_device_power_status())
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
