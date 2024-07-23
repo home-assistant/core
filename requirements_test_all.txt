@@ -448,7 +448,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.39.0
+async-upnp-client==0.40.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -2277,7 +2277,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wled
-wled==0.19.2
+wled==0.20.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9

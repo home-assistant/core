@@ -45,15 +45,13 @@ async def test_lock_from_light(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Test that all supported lock entities based on lights are created."""
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
-    await mock_websocket_data({"r": "lights", "state": {"on": True}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"on": True}})
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
 
     # Verify service calls
@@ -129,8 +127,6 @@ async def test_lock_from_sensor(
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
     await sensor_ws_data({"state": {"lockstate": "locked"}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
 
     # Verify service calls

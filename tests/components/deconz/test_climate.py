@@ -111,8 +111,6 @@ async def test_simple_climate_device(
     # Event signals thermostat configured off
 
     await sensor_ws_data({"state": {"on": False}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -122,8 +120,6 @@ async def test_simple_climate_device(
     # Event signals thermostat state on
 
     await sensor_ws_data({"state": {"on": True}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -212,8 +208,6 @@ async def test_climate_device_without_cooling_support(
     # Event signals thermostat configured off
 
     await sensor_ws_data({"config": {"mode": "off"}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -223,8 +217,6 @@ async def test_climate_device_without_cooling_support(
     # Event signals thermostat state on
 
     await sensor_ws_data({"config": {"mode": "other"}, "state": {"on": True}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -234,8 +226,6 @@ async def test_climate_device_without_cooling_support(
     # Event signals thermostat state off
 
     await sensor_ws_data({"state": {"on": False}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -378,9 +368,6 @@ async def test_climate_device_with_cooling_support(
     # Event signals thermostat mode cool
 
     await sensor_ws_data({"config": {"mode": "cool"}})
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.zen_01").state == HVACMode.COOL
     assert hass.states.get("climate.zen_01").attributes["temperature"] == 11.1
     assert (
@@ -390,8 +377,6 @@ async def test_climate_device_with_cooling_support(
     # Event signals thermostat state on
 
     await sensor_ws_data({"state": {"on": True}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.zen_01").state == HVACMode.COOL
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"]
@@ -470,8 +455,6 @@ async def test_climate_device_with_fan_support(
     # Event signals fan mode defaults to off
 
     await sensor_ws_data({"config": {"fanmode": "unsupported"}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_OFF
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
@@ -480,8 +463,6 @@ async def test_climate_device_with_fan_support(
     # Event signals unsupported fan mode
 
     await sensor_ws_data({"config": {"fanmode": "unsupported"}, "state": {"on": True}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"]
@@ -491,8 +472,6 @@ async def test_climate_device_with_fan_support(
     # Event signals unsupported fan mode
 
     await sensor_ws_data({"config": {"fanmode": "unsupported"}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"]
@@ -595,8 +574,6 @@ async def test_climate_device_with_preset(
     # Event signals deCONZ preset
 
     await sensor_ws_data({"config": {"preset": "manual"}})
-    await hass.async_block_till_done()
-
     assert (
         hass.states.get("climate.zen_01").attributes["preset_mode"]
         == DECONZ_PRESET_MANUAL
@@ -605,8 +582,6 @@ async def test_climate_device_with_preset(
     # Event signals unknown preset
 
     await sensor_ws_data({"config": {"preset": "unsupported"}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.zen_01").attributes["preset_mode"] is None
 
     # Verify service calls
@@ -739,8 +714,6 @@ async def test_verify_state_update(
     )
 
     await sensor_ws_data({"state": {"on": False}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -775,7 +748,6 @@ async def test_add_new_climate_device(
     assert len(hass.states.async_all()) == 0
 
     await sensor_ws_data(event_added_sensor)
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
@@ -898,7 +870,6 @@ async def test_boost_mode(
     # Event signals thermostat preset boost and valve 100 (real data)
 
     await sensor_ws_data({"config": {"preset": "boost"}, "state": {"valve": 100}})
-    await hass.async_block_till_done()
 
     climate_thermostat = hass.states.get("climate.thermostat")
     assert climate_thermostat.attributes["preset_mode"] is PRESET_BOOST

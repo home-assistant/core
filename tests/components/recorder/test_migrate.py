@@ -71,6 +71,10 @@ async def test_schema_update_calls(
             "homeassistant.components.recorder.migration._apply_update",
             wraps=migration._apply_update,
         ) as update,
+        patch(
+            "homeassistant.components.recorder.migration._migrate_schema",
+            wraps=migration._migrate_schema,
+        ) as migrate_schema,
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
@@ -79,12 +83,15 @@ async def test_schema_update_calls(
     instance = recorder.get_instance(hass)
     engine = instance.engine
     session_maker = instance.get_session
-    update.assert_has_calls(
-        [
-            call(instance, hass, engine, session_maker, version + 1, 0)
-            for version in range(db_schema.SCHEMA_VERSION)
-        ]
-    )
+    assert update.mock_calls == [
+        call(instance, hass, engine, session_maker, version + 1, 0)
+        for version in range(db_schema.SCHEMA_VERSION)
+    ]
+    status = migration.SchemaValidationStatus(0, True, set(), 0)
+    assert migrate_schema.mock_calls == [
+        call(instance, hass, engine, session_maker, status, 0),
+        call(instance, hass, engine, session_maker, status, db_schema.SCHEMA_VERSION),
+    ]
 
 
 async def test_migration_in_progress(
