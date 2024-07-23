@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util.dt import utcnow
 
 from .conftest import (
@@ -212,7 +212,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id=format_mac(TEST_MAC),
+        unique_id=dr.format_mac(TEST_MAC),
         data={
             CONF_HOST: TEST_HOST,
             CONF_USERNAME: TEST_USERNAME,
@@ -252,7 +252,7 @@ async def test_change_connection_settings(
     """Test changing connection settings by issuing a second user config flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id=format_mac(TEST_MAC),
+        unique_id=dr.format_mac(TEST_MAC),
         data={
             CONF_HOST: TEST_HOST,
             CONF_USERNAME: TEST_USERNAME,
@@ -295,7 +295,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Test a reauth flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id=format_mac(TEST_MAC),
+        unique_id=dr.format_mac(TEST_MAC),
         data={
             CONF_HOST: TEST_HOST,
             CONF_USERNAME: TEST_USERNAME,
@@ -319,7 +319,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": config_entry.entry_id,
             "title_placeholders": {"name": TEST_NVR_NAME},
-            "unique_id": format_mac(TEST_MAC),
+            "unique_id": dr.format_mac(TEST_MAC),
         },
         data=config_entry.data,
     )
@@ -426,6 +426,7 @@ async def test_dhcp_ip_update(
     hass: HomeAssistant,
     reolink_connect_class: MagicMock,
     reolink_connect: MagicMock,
+    device_registry: dr.DeviceRegistry,
     last_update_success: bool,
     attr: str,
     value: Any,
@@ -435,7 +436,7 @@ async def test_dhcp_ip_update(
     """Test dhcp discovery aborts if already configured where the IP is updated if appropriate."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id=format_mac(TEST_MAC),
+        unique_id=dr.format_mac(TEST_MAC),
         data={
             CONF_HOST: TEST_HOST,
             CONF_USERNAME: TEST_USERNAME,
@@ -495,3 +496,5 @@ async def test_dhcp_ip_update(
 
     await hass.async_block_till_done()
     assert config_entry.data[CONF_HOST] == expected
+
+    device_registry._data_to_save()
