@@ -1,6 +1,6 @@
 """Test Hydrawise services."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 from pydrawise.schema import Zone
@@ -31,7 +31,7 @@ async def test_start_watering(
         SERVICE_START_WATERING,
         {
             ATTR_ENTITY_ID: "binary_sensor.zone_one_watering",
-            ATTR_DURATION: timedelta(minutes=20),
+            ATTR_DURATION: 20,
         },
         blocking=True,
     )
