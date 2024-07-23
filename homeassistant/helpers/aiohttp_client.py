@@ -83,7 +83,9 @@ class HassClientResponse(aiohttp.ClientResponse):
 @callback
 @bind_hass
 def async_get_clientsession(
-    hass: HomeAssistant, verify_ssl: bool = True, family: int = 0
+    hass: HomeAssistant,
+    verify_ssl: bool = True,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
 ) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
@@ -112,7 +114,7 @@ def async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
-    family: int = 0,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies.
@@ -143,7 +145,7 @@ def _async_create_clientsession(
     verify_ssl: bool = True,
     auto_cleanup_method: Callable[[HomeAssistant, aiohttp.ClientSession], None]
     | None = None,
-    family: int = 0,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies."""
@@ -276,14 +278,18 @@ def _async_register_default_clientsession_shutdown(
 
 
 @callback
-def _make_key(verify_ssl: bool = True, family: int = 0) -> tuple[bool, int]:
+def _make_key(
+    verify_ssl: bool = True, family: socket.AddressFamily = socket.AF_UNSPEC
+) -> tuple[bool, socket.AddressFamily]:
     """Make a key for connector or session pool."""
     return (verify_ssl, family)
 
 
 @callback
 def _async_get_connector(
-    hass: HomeAssistant, verify_ssl: bool = True, family: int = 0
+    hass: HomeAssistant,
+    verify_ssl: bool = True,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
 ) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 
@@ -301,7 +307,7 @@ def _async_get_connector(
         ssl_context = ssl_util.get_default_no_verify_context()
 
     connector = aiohttp.TCPConnector(
-        family=socket.AddressFamily(family),
+        family=family,
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
