@@ -54,26 +54,26 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 
         _LOGGER.debug("Raw serverstatus %s=%s", self.my_api.name, data)
         # Sensor that need special handling
-        # 'lastscan': '1718431678', epoc -> ISO 8601 not allways present
+        # 'lastscan': '1718431678', epoc -> ISO 8601 not always present
         data[STATUS_SENSOR_LASTSCAN] = (
             STATUS_SENSOR_LASTSCAN in data
             and dt_util.utc_from_timestamp(int(data[STATUS_SENSOR_LASTSCAN]))
             or None
         )
-        # rescan # bool are we rescanning alter poll not allways present
+        # rescan # bool are we rescanning alter poll not always present
         data[STATUS_SENSOR_RESCAN] = STATUS_SENSOR_RESCAN in data and True or False
-        # needsrestart bool plugin updates... not allways present
+        # needsrestart bool plugin updates... not always present
         data[STATUS_SENSOR_NEEDSRESTART] = (
             STATUS_SENSOR_NEEDSRESTART in data and True or False
         )
-        # newversion str not aways present
+        # newversion str not always present
         # Sample text 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
         data[STATUS_SENSOR_NEWVERSION] = (
             STATUS_SENSOR_NEWVERSION in data
             and self.newversion_regex.sub("...", data[STATUS_SENSOR_NEWVERSION])
             or None
         )
-        # newplugins str not aways present
+        # newplugins str not always present
         data[STATUS_SENSOR_NEWPLUGINS] = (
             STATUS_SENSOR_NEWPLUGINS in data and data[STATUS_SENSOR_NEWPLUGINS] or None
         )

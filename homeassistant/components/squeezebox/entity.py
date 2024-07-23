@@ -9,7 +9,7 @@ from .coordinator import LMSStatusDataUpdateCoordinator
 
 
 class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
-    """Defines a base staus sensor entity."""
+    """Defines a base status sensor entity."""
 
     _attr_has_entity_name = True
 
