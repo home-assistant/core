@@ -3,18 +3,20 @@
 import logging
 from typing import Any
 
+from pyblu import Player
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BluesoundConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
     """Bluesound config flow."""
 
     VERSION = 1
@@ -25,8 +27,16 @@ class BluesoundConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is not None:
+            async with Player(user_input[CONF_HOST], user_input[CONF_PORT]) as player:
+                try:
+                    sync_status = await player.sync_status(timeout=1)
+                except TimeoutError:
+                    return self.async_abort(reason="cannot_connect")
+
+            await self.async_set_unique_id(format_mac(sync_status.mac))
+
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title=sync_status.name,
                 data=user_input,
             )
 
@@ -34,7 +44,6 @@ class BluesoundConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default="Bluesound"): str,
                     vol.Required(CONF_HOST, description="host"): str,
                     vol.Optional(CONF_PORT, default=11000): int,
                 }
