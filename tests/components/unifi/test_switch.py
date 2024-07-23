@@ -1104,9 +1104,9 @@ async def test_dpi_switches_add_second_app(
 
 
 @pytest.mark.parametrize(
-    ("traffic_rule_payload", "entity_id"),
+    ("traffic_rule_payload"),
     [
-        ([TRAFFIC_RULE], "unifi_network_test_traffic_rule"),
+        ([TRAFFIC_RULE]),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1116,20 +1116,13 @@ async def test_traffic_rules(
     mock_websocket_message,
     config_entry_setup: ConfigEntry,
     traffic_rule_payload: list[dict[str, Any]],
-    entity_id: str,
 ) -> None:
     """Test control of UniFi traffic rules."""
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    # ent_reg = er.async_get(hass)
-    # ent_reg_entry = ent_reg.async_get(entity_id)
-    # assert ent_reg_entry
-    # assert ent_reg_entry.unique_id == "traffic_rule-6452cd9b859d5b11aa002ea1"
-    # assert ent_reg_entry.entity_category is EntityCategory.CONFIG
-
     # Validate state object
-    switch_1 = hass.states.get(f"switch.{entity_id}")
+    switch_1 = hass.states.get("switch.unifi_network_test_traffic_rule")
     assert switch_1 is not None
     assert switch_1.state == STATE_ON
     assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
@@ -1151,7 +1144,7 @@ async def test_traffic_rules(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
-        {"entity_id": f"switch.{entity_id}"},
+        {"entity_id": "switch.unifi_network_test_traffic_rule"},
         blocking=True,
     )
     # Updating the value for traffic rules will make another call to retrieve the values
@@ -1167,7 +1160,7 @@ async def test_traffic_rules(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {"entity_id": f"switch.{entity_id}"},
+        {"entity_id": "switch.unifi_network_test_traffic_rule"},
         blocking=True,
     )
 

@@ -263,7 +263,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=lambda hub, traffic_rule: traffic_rule.enabled,
         name_fn=lambda traffic_rule: f"{traffic_rule.description}",
         object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
-        unique_id_fn=lambda hub, obj_id: f"trafficrule-{obj_id}",
+        unique_id_fn=lambda hub, obj_id: f"traffic_rule-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
