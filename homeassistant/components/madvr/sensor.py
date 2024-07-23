@@ -185,14 +185,14 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
         value_fn=lambda coordinator: coordinator.data.get(OUTGOING_COLOR_SPACE),
         translation_key=OUTGOING_COLOR_SPACE,
         device_class=SensorDeviceClass.ENUM,
-        options=["RGB", "444", "422", "420"],
+        options=["RGB", "444", "422", "420", "?"],
     ),
     MadvrSensorEntityDescription(
         key=OUTGOING_BIT_DEPTH,
         value_fn=lambda coordinator: coordinator.data.get(OUTGOING_BIT_DEPTH),
         translation_key=OUTGOING_BIT_DEPTH,
         device_class=SensorDeviceClass.ENUM,
-        options=["8bit", "10bit", "12bit"],
+        options=["8bit", "10bit", "12bit", "0bit"],
     ),
     MadvrSensorEntityDescription(
         key=OUTGOING_COLORIMETRY,
