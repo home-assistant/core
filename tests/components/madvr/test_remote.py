@@ -7,7 +7,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.remote import (
+    DOMAIN as REMOTE_DOMAIN,
+    SERVICE_SEND_COMMAND,
+)
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -21,7 +24,6 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .const import (
-    HA_CMD_SVC,
     TEST_COMMAND,
     TEST_CON_ERROR,
     TEST_FAILED_CMD,
@@ -125,7 +127,7 @@ async def test_send_command(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        HA_CMD_SVC,
+        SERVICE_SEND_COMMAND,
         {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
         blocking=True,
     )
@@ -136,7 +138,7 @@ async def test_send_command(
     mock_madvr_client.add_command_to_queue.side_effect = TEST_CON_ERROR
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        HA_CMD_SVC,
+        SERVICE_SEND_COMMAND,
         {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
         blocking=True,
     )
@@ -146,7 +148,7 @@ async def test_send_command(
     mock_madvr_client.add_command_to_queue.side_effect = TEST_IMP_ERROR
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        HA_CMD_SVC,
+        SERVICE_SEND_COMMAND,
         {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
         blocking=True,
     )
