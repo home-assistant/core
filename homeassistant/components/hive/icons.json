@@ -6,9 +6,6 @@
       },
       "hot_water": {
         "default": "mdi:hand-water"
-      },
-      "temperature": {
-        "default": "mdi:thermometer"
       }
     },
     "sensor": {
@@ -17,9 +14,6 @@
       },
       "hot_water": {
         "default": "mdi:hand-water"
-      },
-      "temperature": {
-        "default": "mdi:thermometer"
       }
     }
   },
