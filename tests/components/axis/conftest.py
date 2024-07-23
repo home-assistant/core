@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from copy import deepcopy
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Protocol
 from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
@@ -45,6 +45,29 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+
+type RtspStateType = Callable[[bool], None]
+
+
+class RtspEventMock(Protocol):
+    """Fixture to allow mocking received RTSP events."""
+
+    def __call__(
+        self,
+        topic: str,
+        data_type: str,
+        data_value: str,
+        operation: str = "Initialized",
+        source_name: str = "",
+        source_idx: str = "",
+    ) -> None:
+        """Send RTSP event."""
+
+
+class _RtspClientMock(Protocol):
+    async def __call__(
+        self, data: dict[str, Any] | None = None, state: str = ""
+    ) -> None: ...
 
 
 @pytest.fixture(name="mock_setup_entry")
@@ -278,8 +301,8 @@ async def fixture_config_entry_setup(
 # RTSP fixtures
 
 
-@pytest.fixture(autouse=True, name="mock_axis_rtspclient")
-def fixture_axis_rtspclient() -> Generator[Callable[[dict | None, str], None]]:
+@pytest.fixture(autouse=True, name="_mock_rtsp_client")
+def fixture_axis_rtsp_client() -> Generator[_RtspClientMock]:
     """No real RTSP communication allowed."""
     with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
         rtsp_client_mock.return_value.session.state = State.STOPPED
@@ -296,7 +319,7 @@ def fixture_axis_rtspclient() -> Generator[Callable[[dict | None, str], None]]:
 
         rtsp_client_mock.return_value.stop = stop_stream
 
-        def make_rtsp_call(data: dict | None = None, state: str = "") -> None:
+        def make_rtsp_call(data: dict[str, Any] | None = None, state: str = "") -> None:
             """Generate a RTSP call."""
             axis_streammanager_session_callback = rtsp_client_mock.call_args[0][4]
 
@@ -312,9 +335,7 @@ def fixture_axis_rtspclient() -> Generator[Callable[[dict | None, str], None]]:
 
 
 @pytest.fixture(autouse=True, name="mock_rtsp_event")
-def fixture_rtsp_event(
-    mock_axis_rtspclient: Callable[[dict | None, str], None],
-) -> Callable[[str, str, str, str, str, str], None]:
+def fixture_rtsp_event(_mock_rtsp_client: _RtspClientMock) -> RtspEventMock:
     """Fixture to allow mocking received RTSP events."""
 
     def send_event(
@@ -359,20 +380,18 @@ def fixture_rtsp_event(
 </tt:MetadataStream>
 """
 
-        mock_axis_rtspclient(data=event.encode("utf-8"))
+        _mock_rtsp_client(data=event.encode("utf-8"))
 
     return send_event
 
 
 @pytest.fixture(autouse=True, name="mock_rtsp_signal_state")
-def fixture_rtsp_signal_state(
-    mock_axis_rtspclient: Callable[[dict | None, str], None],
-) -> Callable[[bool], None]:
+def fixture_rtsp_signal_state(_mock_rtsp_client: _RtspClientMock) -> RtspStateType:
     """Fixture to allow mocking RTSP state signalling."""
 
     def send_signal(connected: bool) -> None:
         """Signal state change of RTSP connection."""
         signal = Signal.PLAYING if connected else Signal.FAILED
-        mock_axis_rtspclient(state=signal)
+        _mock_rtsp_client(state=signal)
 
     return send_signal

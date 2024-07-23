@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .conftest import RtspEventMock, RtspStateType
 from .const import (
     API_DISCOVERY_BASIC_DEVICE_INFO,
     API_DISCOVERY_MQTT,
@@ -152,8 +153,8 @@ async def test_update_address(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_device_unavailable(
     hass: HomeAssistant,
-    mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
-    mock_rtsp_signal_state: Callable[[bool], None],
+    mock_rtsp_event: RtspEventMock,
+    mock_rtsp_signal_state: RtspStateType,
 ) -> None:
     """Successful setup."""
     # Provide an entity that can be used to verify connection state on
