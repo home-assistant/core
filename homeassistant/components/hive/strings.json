@@ -100,5 +100,19 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "heating": {
+        "state": {
+          "schedule": "Schedule"
+        }
+      },
+      "hot_water": {
+        "state": {
+          "schedule": "Schedule"
+        }
+      }
+    }
   }
 }
