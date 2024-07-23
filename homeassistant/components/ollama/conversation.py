@@ -108,7 +108,7 @@ class OllamaConversationEntity(
         model = settings[CONF_MODEL]
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.APIInstance | None = None
-        tools: dict[str, dict[str, Any]] | None = None
+        tools: list[dict[str, Any]] | None = None
         user_name: str | None = None
         llm_context = llm.LLMContext(
             platform=DOMAIN,
@@ -135,10 +135,9 @@ class OllamaConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            tools = {
-                tool.name: _format_tool(tool, llm_api.custom_serializer)
-                for tool in llm_api.tools
-            }
+            tools = [
+                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+            ]
 
         if (
             user_input.context
