@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
@@ -224,7 +225,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Initialize the SqueezeBox device."""
         self._player = player
         self._query_result: bool | dict = {}
-        self._remove_dispatcher: None | callable = None
+        self._remove_dispatcher: Callable | None = None
         self._attr_unique_id = format_mac(player.player_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
