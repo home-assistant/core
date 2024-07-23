@@ -181,7 +181,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             }
         )
         serialized.pop("categories")
-        return serialized
+        return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
