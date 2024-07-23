@@ -1,4 +1,5 @@
 """Config flow for TrestSolarController integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -24,21 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate if the user input contains valid credentials."""
-
-    identity = TrestIdentityService(hass, data[CONF_USERNAME], data[CONF_PASSWORD])
-    try:
-        await identity.authenticate_async()
-    except Exception:  # pylint: disable=broad-except
-        raise InvalidAuth  # noqa: B904
-
-    if identity.check_token_is_expired():
-        raise InvalidAuth
-
-    return {"title": "Trest Solar Controller"}
-
-
 class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TrestSolarController."""
 
@@ -49,7 +34,15 @@ class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                identity = TrestIdentityService(
+                    self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+                await identity.authenticate_async()
+
+                if identity.check_token_is_expired():
+                    raise InvalidAuth
+
+                info = {"title": "Trest Solar Controller"}
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
