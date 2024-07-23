@@ -302,6 +302,12 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "bluesound",
+            "properties": {
+                "manufacturer": "bluesound",
+            },
+        },
+        {
             "domain": "samsungtv",
             "properties": {
                 "manufacturer": "samsung*",

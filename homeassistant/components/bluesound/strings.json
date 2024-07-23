@@ -4,9 +4,12 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "port": "[%key:common::config_flow::data::port%]"
         }
+      },
+      "confirm": {
+        "title": "Discover Bluesound player",
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     }
   },

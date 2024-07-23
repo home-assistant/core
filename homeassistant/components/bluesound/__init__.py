@@ -14,6 +14,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, INTEGRATION_TITLE
@@ -61,6 +62,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
         },
     )
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound."""
     setup_services(hass)
@@ -72,7 +74,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         hosts = platform_config_entry.get(CONF_HOSTS, [])
         for host in hosts:
-            import_data = {CONF_HOST: host[CONF_HOST], CONF_PORT: host.get(CONF_PORT, 11000)}
+            import_data = {
+                CONF_HOST: host[CONF_HOST],
+                CONF_PORT: host.get(CONF_PORT, 11000),
+            }
             hass.async_create_task(_async_import(hass, import_data))
 
     return True
@@ -83,7 +88,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     host = config_entry.data.get(CONF_HOST)
     port = config_entry.data.get(CONF_PORT)
     try:
-        async with Player(host, port) as player:
+        session = async_get_clientsession(hass)
+        async with Player(host, port, session=session) as player:
             await player.sync_status(timeout=1)
     except TimeoutError as ex:
         raise ConfigEntryNotReady(f"Timeout while connecting to {host}:{port}") from ex
@@ -108,4 +114,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     player.stop_polling()
     hass.data[DATA_BLUESOUND].remove(player)
 
-    return await hass.config_entries.async_unload_platforms(config_entry, Platform.MEDIA_PLAYER)
+    return await hass.config_entries.async_unload_platforms(
+        config_entry, Platform.MEDIA_PLAYER
+    )

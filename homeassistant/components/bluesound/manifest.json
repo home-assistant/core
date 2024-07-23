@@ -1,9 +1,18 @@
 {
   "domain": "bluesound",
   "name": "Bluesound",
+  "after_dependencies": ["zeroconf"],
   "codeowners": ["@thrawnarn", "@LouisChrist"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bluesound",
   "iot_class": "local_polling",
-  "requirements": ["pyblu==0.4.0"]
+  "requirements": ["pyblu==0.4.0"],
+  "zeroconf": [
+    {
+      "type": "_airplay._tcp.local.",
+      "properties": {
+        "manufacturer": "bluesound"
+      }
+    }
+  ]
 }

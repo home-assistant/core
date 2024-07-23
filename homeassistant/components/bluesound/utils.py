@@ -1,4 +1,4 @@
-"""Utilty functions for the Bluesound component."""
+"""Utility functions for the Bluesound component."""
 
 from homeassistant.helpers.device_registry import format_mac
 

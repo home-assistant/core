@@ -380,7 +380,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             raise
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return an unique ID."""
         assert self._sync_status is not None
         return format_unique_id(self._sync_status.mac, self.port)
@@ -388,6 +388,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return DeviceInfo."""
+        assert self._sync_status is not None
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer=self._sync_status.brand,
