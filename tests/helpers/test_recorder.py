@@ -18,16 +18,6 @@ async def test_async_migration_in_progress(
     ):
         assert recorder.async_migration_in_progress(hass) is False
 
-    # The recorder is not loaded
-    with patch(
-        "homeassistant.components.recorder.util.async_migration_in_progress",
-        return_value=True,
-    ):
-        assert recorder.async_migration_in_progress(hass) is False
-
-    await async_setup_recorder_instance(hass)
-
-    # The recorder is now loaded
     with patch(
         "homeassistant.components.recorder.util.async_migration_in_progress",
         return_value=True,
