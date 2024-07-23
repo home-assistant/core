@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import asyncio
 import logging
 from typing import Any
 
 import aiohttp
+from universal_silabs_flasher.const import ApplicationType
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
@@ -15,12 +17,21 @@ from homeassistant.components.hassio import (
     async_reboot_host,
     async_set_yellow_settings,
 )
-from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.components.homeassistant_hardware import (
+    firmware_config_flow,
+    silabs_multiprotocol_addon,
+)
+from homeassistant.config_entries import (
+    SOURCE_HARDWARE,
+    ConfigEntry,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
-from homeassistant.helpers import selector
+from homeassistant.helpers import discovery_flow, selector
 
-from .const import DOMAIN, ZHA_HW_DISCOVERY_DATA
+from .const import DOMAIN, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .hardware import BOARD_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,18 +44,32 @@ STEP_HW_SETTINGS_SCHEMA = vol.Schema(
 )
 
 
-class HomeAssistantYellowConfigFlow(ConfigFlow, domain=DOMAIN):
+class HomeAssistantYellowConfigFlow(
+    firmware_config_flow.BaseFirmwareConfigFlow, domain=DOMAIN
+):
     """Handle a config flow for Home Assistant Yellow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Instantiate config flow."""
+        super().__init__(*args, **kwargs)
+
+        self._device = RADIO_DEVICE
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> HomeAssistantYellowOptionsFlow:
+    ) -> OptionsFlow:
         """Return the options flow."""
-        return HomeAssistantYellowOptionsFlow(config_entry)
+        firmware_type = ApplicationType(config_entry.data["firmware"])
+
+        if firmware_type is ApplicationType.CPC:
+            return HomeAssistantYellowMultiPanOptionsFlowHandler(config_entry)
+
+        return HomeAssistantYellowOptionsFlowHandler(config_entry)
 
     async def async_step_system(
         self, data: dict[str, Any] | None = None
@@ -53,11 +78,40 @@ class HomeAssistantYellowConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        return self.async_create_entry(title="Home Assistant Yellow", data={})
+        await self._probe_firmware_type()
+
+        result = self.async_create_entry(
+            title=BOARD_NAME,
+            data={
+                "firmware": ApplicationType.EZSP.value,
+            },
+        )
+
+        # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
+        if self._probed_firmware_type == ApplicationType.EZSP:
+            discovery_flow.async_create_flow(
+                self.hass,
+                "zha",
+                context={"source": SOURCE_HARDWARE},
+                data=ZHA_HW_DISCOVERY_DATA,
+            )
+
+        return result
+
+    def _async_flow_finished(self) -> ConfigFlowResult:
+        """Create the config entry."""
+        assert self._probed_firmware_type is not None
+
+        return self.async_create_entry(
+            title=BOARD_NAME,
+            data={
+                "firmware": self._probed_firmware_type.value,
+            },
+        )
 
 
-class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
-    """Handle an option flow for Home Assistant Yellow."""
+class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
+    """Base Home Assistant Yellow options flow shared between firmware and multi-PAN."""
 
     _hw_settings: dict[str, bool] | None = None
 
@@ -67,15 +121,9 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
         """Handle logic when on Supervisor host."""
         return await self.async_step_main_menu()
 
+    @abstractmethod
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
-        return self.async_show_menu(
-            step_id="main_menu",
-            menu_options=[
-                "hardware_settings",
-                "multipan_settings",
-            ],
-        )
 
     async def async_step_hardware_settings(
         self, user_input: dict[str, Any] | None = None
@@ -133,6 +181,22 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
         """Reboot later."""
         return self.async_create_entry(data={})
 
+
+class HomeAssistantYellowMultiPanOptionsFlowHandler(
+    silabs_multiprotocol_addon.OptionsFlowHandler, BaseHomeAssistantYellowOptionsFlow
+):
+    """Handle a multi-PAN options flow for Home Assistant Yellow."""
+
+    async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
+        """Show the main menu."""
+        return self.async_show_menu(
+            step_id="main_menu",
+            menu_options=[
+                "hardware_settings",
+                "multipan_settings",
+            ],
+        )
+
     async def async_step_multipan_settings(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -144,7 +208,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
     ) -> silabs_multiprotocol_addon.SerialPortSettings:
         """Return the radio serial port settings."""
         return silabs_multiprotocol_addon.SerialPortSettings(
-            device="/dev/ttyAMA1",
+            device=RADIO_DEVICE,
             baudrate="115200",
             flow_control=True,
         )
@@ -163,4 +227,66 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
-        return "Home Assistant Yellow"
+        return BOARD_NAME
+
+    async def async_step_flashing_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Finish flashing and update the config entry."""
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            data={
+                **self.config_entry.data,
+                "firmware": ApplicationType.EZSP.value,
+            },
+            options=self.config_entry.options,
+        )
+
+        return await super().async_step_flashing_complete(user_input)
+
+
+class HomeAssistantYellowOptionsFlowHandler(
+    firmware_config_flow.BaseFirmwareOptionsFlow, BaseHomeAssistantYellowOptionsFlow
+):
+    """Handle a firmware options flow for Home Assistant Yellow."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Instantiate options flow."""
+        super().__init__(*args, **kwargs)
+
+        self._hardware_name = BOARD_NAME
+        self._device = RADIO_DEVICE
+
+        # Regenerate the translation placeholders
+        self._get_translation_placeholders()
+
+    async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
+        """Show the main menu."""
+        return self.async_show_menu(
+            step_id="main_menu",
+            menu_options=[
+                "hardware_settings",
+                "firmware_settings",
+            ],
+        )
+
+    async def async_step_firmware_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle firmware configuration settings."""
+        return await super().async_step_pick_firmware()
+
+    def _async_flow_finished(self) -> ConfigFlowResult:
+        """Create the config entry."""
+        assert self._probed_firmware_type is not None
+
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            data={
+                **self.config_entry.data,
+                "firmware": self._probed_firmware_type.value,
+            },
+            options=self.config_entry.options,
+        )
+
+        return self.async_create_entry(title="", data={})
