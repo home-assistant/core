@@ -70,6 +70,7 @@ async def async_setup_entry(
 class MatterUpdate(MatterEntity, UpdateEntity):
     """Representation of a Matter node capable of updating."""
 
+    _attr_should_poll = True
     _software_update: MatterSoftwareVersion | None = None
     _cancel_update: CALLBACK_TYPE | None = None
 
