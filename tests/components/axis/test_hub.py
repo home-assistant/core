@@ -53,7 +53,7 @@ async def test_device_registry_entry(
     assert device_entry.identifiers == {(AXIS_DOMAIN, FORMATTED_MAC)}
     assert device_entry.manufacturer == "Axis Communications AB"
     assert device_entry.model == "A1234 Network Camera"
-    assert device_entry.name == "name"
+    assert device_entry.name == "home"
     assert device_entry.sw_version == version
 
 

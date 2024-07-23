@@ -31,7 +31,7 @@
       'data': dict({
         'host': '1.2.3.4',
         'model': 'A1234',
-        'name': 'name',
+        'name': 'home',
         'password': '**REDACTED**',
         'port': 80,
         'username': '**REDACTED**',
