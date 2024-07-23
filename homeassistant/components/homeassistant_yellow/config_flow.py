@@ -78,12 +78,14 @@ class HomeAssistantYellowConfigFlow(
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
         await self._probe_firmware_type()
 
         result = self.async_create_entry(
             title=BOARD_NAME,
             data={
-                "firmware": ApplicationType.EZSP.value,
+                # Assume the firmware type is EZSP if we cannot probe it
+                "firmware": (self._probed_firmware_type or ApplicationType.EZSP).value,
             },
         )
 
