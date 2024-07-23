@@ -6,7 +6,7 @@ from typing import Any
 
 from APsystemsEZ1 import Status
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchDeviceClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -27,6 +27,8 @@ async def async_setup_entry(
 class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
     """Base switch to be used with description."""
 
+    _attr_device_class = SwitchDeviceClass.SWITCH
+
     def __init__(
         self,
         data: ApSystemsData,
@@ -37,7 +39,7 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
         self._attr_unique_id = f"{data.device_id}_power_switch"
         self._state = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         try:
             status = await self._api.get_device_power_status()
             self._state = status == Status.normal
@@ -45,7 +47,7 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
         except Exception:
             self._attr_available = False
 
-    async def async_turn_on(self, **kwargs: Any):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         try:
             await self._api.set_device_power_status(0)
             self._attr_available = True
@@ -53,7 +55,7 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
             self._attr_available = False
         await self.async_update()
 
-    async def async_turn_off(self, **kwargs: Any):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         try:
             await self._api.set_device_power_status(1)
             self._attr_available = True
