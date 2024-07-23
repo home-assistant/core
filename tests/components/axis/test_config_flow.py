@@ -110,7 +110,16 @@ async def test_manual_configuration_update_configuration(
     assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
 
 
-async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("exc", "error"),
+    [
+        (config_flow.AuthenticationRequired, "invalid_auth"),
+        (config_flow.CannotConnect, "cannot_connect"),
+    ],
+)
+async def test_flow_fails_on_api(
+    hass: HomeAssistant, exc: Exception, error: str
+) -> None:
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
@@ -121,7 +130,7 @@ async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.axis.config_flow.get_axis_api",
-        side_effect=config_flow.AuthenticationRequired,
+        side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -134,34 +143,7 @@ async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
-    """Test that config flow fails on cannot connect."""
-    result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with patch(
-        "homeassistant.components.axis.config_flow.get_axis_api",
-        side_effect=config_flow.CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_PROTOCOL: "http",
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "user",
-                CONF_PASSWORD: "pass",
-                CONF_PORT: 80,
-            },
-        )
-
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
 
 @pytest.mark.usefixtures("mock_default_requests")
@@ -523,7 +505,6 @@ async def test_discovery_flow_updated_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # assert mock_config_entry.data == {
     assert config_entry_setup.data == {
         CONF_HOST: "2.3.4.5",
         CONF_PORT: expected_port,
