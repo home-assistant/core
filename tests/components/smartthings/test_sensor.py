@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
 from homeassistant.components.sensor import (

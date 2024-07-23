@@ -1,9 +1,10 @@
 """The tests for Cover."""
+
 from enum import Enum
 
 import pytest
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -16,14 +17,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.common import (
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
+)
+from tests.components.cover.common import MockCover
 
 
-async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_services(
+    hass: HomeAssistant,
+    mock_cover_entities: list[MockCover],
+) -> None:
     """Test the provided services."""
-    platform = getattr(hass.components, "test.cover")
+    setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
 
-    platform.init()
     assert await async_setup_component(
         hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
     )
@@ -35,7 +43,7 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     # ent4 = cover with all tilt functions but no position
     # ent5 = cover with all functions
     # ent6 = cover with only open/close, but also reports opening/closing
-    ent1, ent2, ent3, ent4, ent5, ent6 = platform.ENTITIES
+    ent1, ent2, ent3, ent4, ent5, ent6 = mock_cover_entities
 
     # Test init all covers should be open
     assert is_open(hass, ent1)
@@ -100,6 +108,15 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     await call_service(hass, SERVICE_TOGGLE, ent6)
     assert is_opening(hass, ent6)
 
+    # After the unusual state transition: closing -> fully open, toggle should close
+    set_state(ent5, STATE_OPEN)
+    await call_service(hass, SERVICE_TOGGLE, ent5)  # Start closing
+    assert is_closing(hass, ent5)
+    set_state(ent5, STATE_OPEN)  # Unusual state transition from closing -> fully open
+    set_cover_position(ent5, 100)
+    await call_service(hass, SERVICE_TOGGLE, ent5)  # Should close, not open
+    assert is_closing(hass, ent5)
+
 
 def call_service(hass, service, ent):
     """Call any service on entity."""
@@ -139,10 +156,7 @@ def is_closing(hass, ent):
 
 
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in enum:
-        result.append((enum, constant_prefix))
-    return result
+    return [(enum_field, constant_prefix) for enum_field in enum]
 
 
 def test_all() -> None:

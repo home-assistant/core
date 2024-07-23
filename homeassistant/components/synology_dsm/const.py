@@ -1,4 +1,5 @@
 """Constants for Synology DSM."""
+
 from __future__ import annotations
 
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
@@ -39,7 +40,7 @@ DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
-DEFAULT_TIMEOUT = 10  # sec
+DEFAULT_TIMEOUT = 30  # sec
 DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"

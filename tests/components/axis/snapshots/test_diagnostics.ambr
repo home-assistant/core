@@ -19,7 +19,7 @@
       }),
     ]),
     'basic_device_info': dict({
-      '__type': "<class 'axis.vapix.models.basic_device_info.DeviceInformation'>",
+      '__type': "<class 'axis.models.basic_device_info.DeviceInformation'>",
       'repr': "DeviceInformation(id='0', architecture='str', brand='str', build_date='str', firmware_version='9.80.1', hardware_id='str', product_full_name='str', product_number='M1065-LW', product_short_name='str', product_type='Network Camera', product_variant='str', serial_number='00408C123456', soc='str', soc_serial_number='str', web_url='str')",
     }),
     'camera_sources': dict({

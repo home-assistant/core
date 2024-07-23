@@ -1,4 +1,5 @@
 """Text-to-speech constants."""
+
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
 ATTR_MESSAGE = "message"

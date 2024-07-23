@@ -1,4 +1,5 @@
 """Support for Huawei LTE routers."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -307,7 +308,7 @@ class Router:
             ResponseErrorNotSupportedException,
         ):
             pass  # Ok, normal, nothing to do
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.warning("Logout error", exc_info=True)
 
     def cleanup(self, *_: Any) -> None:
@@ -405,7 +406,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         wlan_settings = await hass.async_add_executor_job(
             router.client.wlan.multi_basic_settings
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         # Assume not supported, or authentication required but in unauthenticated mode
         wlan_settings = {}
     macs = get_device_macs(router_info or {}, wlan_settings)

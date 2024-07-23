@@ -1,4 +1,5 @@
 """Mapping registries for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import collections
@@ -107,12 +108,12 @@ DEVICE_CLASS = {
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
 CLUSTER_HANDLER_ONLY_CLUSTERS = SetRegistry()
-CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[
-    type[ClientClusterHandler]
-] = DictRegistry()
-ZIGBEE_CLUSTER_HANDLER_REGISTRY: NestedDictRegistry[
-    type[ClusterHandler]
-] = NestedDictRegistry()
+CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[type[ClientClusterHandler]] = (
+    DictRegistry()
+)
+ZIGBEE_CLUSTER_HANDLER_REGISTRY: NestedDictRegistry[type[ClusterHandler]] = (
+    NestedDictRegistry()
+)
 
 WEIGHT_ATTR = attrgetter("weight")
 
@@ -277,9 +278,9 @@ class ZHAEntityRegistry:
 
     def __init__(self) -> None:
         """Initialize Registry instance."""
-        self._strict_registry: dict[
-            Platform, dict[MatchRule, type[ZhaEntity]]
-        ] = collections.defaultdict(dict)
+        self._strict_registry: dict[Platform, dict[MatchRule, type[ZhaEntity]]] = (
+            collections.defaultdict(dict)
+        )
         self._multi_entity_registry: dict[
             Platform, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
@@ -291,9 +292,9 @@ class ZHAEntityRegistry:
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
         self._group_registry: dict[str, type[ZhaGroupEntity]] = {}
-        self.single_device_matches: dict[
-            Platform, dict[EUI64, list[str]]
-        ] = collections.defaultdict(lambda: collections.defaultdict(list))
+        self.single_device_matches: dict[Platform, dict[EUI64, list[str]]] = (
+            collections.defaultdict(lambda: collections.defaultdict(list))
+        )
 
     def get_entity(
         self,
@@ -323,9 +324,9 @@ class ZHAEntityRegistry:
         dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
     ]:
         """Match ZHA cluster handlers to potentially multiple ZHA Entity classes."""
-        result: dict[
-            Platform, list[EntityClassAndClusterHandlers]
-        ] = collections.defaultdict(list)
+        result: dict[Platform, list[EntityClassAndClusterHandlers]] = (
+            collections.defaultdict(list)
+        )
         all_claimed: set[ClusterHandler] = set()
         for component, stop_match_groups in self._multi_entity_registry.items():
             for stop_match_grp, matches in stop_match_groups.items():
@@ -356,9 +357,9 @@ class ZHAEntityRegistry:
         dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
     ]:
         """Match ZHA cluster handlers to potentially multiple ZHA Entity classes."""
-        result: dict[
-            Platform, list[EntityClassAndClusterHandlers]
-        ] = collections.defaultdict(list)
+        result: dict[Platform, list[EntityClassAndClusterHandlers]] = (
+            collections.defaultdict(list)
+        )
         all_claimed: set[ClusterHandler] = set()
         for (
             component,

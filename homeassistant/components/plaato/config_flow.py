@@ -1,4 +1,5 @@
 """Config flow for Plaato."""
+
 from __future__ import annotations
 
 from pyplaato.plaato import PlaatoDeviceType

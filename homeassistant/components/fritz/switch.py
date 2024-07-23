@@ -1,4 +1,5 @@
 """Switches for AVM Fritz!Box functions."""
+
 from __future__ import annotations
 
 import logging
@@ -288,7 +289,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
     @property
     def data(self) -> dict[str, Any]:
         """Return entity data from coordinator data."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def available(self) -> bool:
@@ -297,7 +298,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""

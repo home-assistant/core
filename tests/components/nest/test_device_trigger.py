@@ -1,9 +1,10 @@
 """The tests for Nest device triggers."""
+
 from google_nest_sdm.event import EventMessage
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,

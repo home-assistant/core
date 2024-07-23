@@ -1,4 +1,5 @@
 """Config flow for PoolSense integration."""
+
 import logging
 from typing import Any
 

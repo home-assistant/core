@@ -1,4 +1,5 @@
 """Test integration platform helpers."""
+
 from collections.abc import Callable
 from types import ModuleType
 from unittest.mock import Mock, patch
@@ -162,9 +163,10 @@ async def test_process_integration_platforms_import_fails_after_registered(
     assert processed[0][1] == loaded_platform
 
     event_integration = await loader.async_get_integration(hass, "event")
-    with patch.object(
-        event_integration, "async_get_platforms", side_effect=ImportError
-    ), patch.object(event_integration, "get_platform_cached", return_value=None):
+    with (
+        patch.object(event_integration, "async_get_platforms", side_effect=ImportError),
+        patch.object(event_integration, "get_platform_cached", return_value=None),
+    ):
         hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
         await hass.async_block_till_done()
 
@@ -189,7 +191,7 @@ async def _process_platform_coro(
 
 @pytest.mark.no_fail_on_log_exception
 @pytest.mark.parametrize(
-    "process_platform", (_process_platform_callback, _process_platform_coro)
+    "process_platform", [_process_platform_callback, _process_platform_coro]
 )
 async def test_process_integration_platforms_non_compliant(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, process_platform: Callable

@@ -1,9 +1,11 @@
 """Consume the august activity stream."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from functools import partial
 import logging
+from time import monotonic
 
 from aiohttp import ClientError
 from yalexs.activity import Activity, ActivityType
@@ -25,9 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 ACTIVITY_STREAM_FETCH_LIMIT = 10
 ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 
+INITIAL_LOCK_RESYNC_TIME = 60
+
 # If there is a storm of activity (ie lock, unlock, door open, door close, etc)
 # we want to debounce the updates so we don't hammer the activity api too much.
-ACTIVITY_DEBOUNCE_COOLDOWN = 3
+ACTIVITY_DEBOUNCE_COOLDOWN = 4
 
 
 @callback
@@ -61,6 +65,7 @@ class ActivityStream(AugustSubscriberMixin):
         self.pubnub = pubnub
         self._update_debounce: dict[str, Debouncer] = {}
         self._update_debounce_jobs: dict[str, HassJob] = {}
+        self._start_time: float | None = None
 
     @callback
     def _async_update_house_id_later(self, debouncer: Debouncer, _: datetime) -> None:
@@ -69,6 +74,7 @@ class ActivityStream(AugustSubscriberMixin):
 
     async def async_setup(self) -> None:
         """Token refresh check and catch up the activity stream."""
+        self._start_time = monotonic()
         update_debounce = self._update_debounce
         update_debounce_jobs = self._update_debounce_jobs
         for house_id in self._house_ids:
@@ -78,6 +84,7 @@ class ActivityStream(AugustSubscriberMixin):
                 cooldown=ACTIVITY_DEBOUNCE_COOLDOWN,
                 immediate=True,
                 function=partial(self._async_update_house_id, house_id),
+                background=True,
             )
             update_debounce[house_id] = debouncer
             update_debounce_jobs[house_id] = HassJob(
@@ -138,11 +145,25 @@ class ActivityStream(AugustSubscriberMixin):
 
         debouncer = self._update_debounce[house_id]
         debouncer.async_schedule_call()
+
         # Schedule two updates past the debounce time
         # to ensure we catch the case where the activity
         # api does not update right away and we need to poll
         # it again. Sometimes the lock operator or a doorbell
         # will not show up in the activity stream right away.
+        # Only do additional polls if we are past
+        # the initial lock resync time to avoid a storm
+        # of activity at setup.
+        if (
+            not self._start_time
+            or monotonic() - self._start_time < INITIAL_LOCK_RESYNC_TIME
+        ):
+            _LOGGER.debug(
+                "Skipping additional updates due to ongoing initial lock resync time"
+            )
+            return
+
+        _LOGGER.debug("Scheduling additional updates for house id %s", house_id)
         job = self._update_debounce_jobs[house_id]
         for step in (1, 2):
             future_updates.append(

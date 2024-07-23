@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
@@ -6,14 +7,18 @@ from ipaddress import ip_network
 import logging
 from pathlib import Path
 from unittest.mock import Mock, patch
+from urllib.parse import quote_plus
 
 import pytest
 
 from homeassistant.auth.providers.legacy_api_password import (
     LegacyApiPasswordAuthProvider,
 )
-import homeassistant.components.http as http
+from homeassistant.components import http
+from homeassistant.components.http.const import StrictConnectionMode
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
@@ -172,10 +177,13 @@ async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmp_path: Path) 
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -199,10 +207,13 @@ async def test_ssl_profile_change_intermediate(
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_intermediate",
-        side_effect=server_context_intermediate,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_intermediate",
+            side_effect=server_context_intermediate,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -230,10 +241,13 @@ async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) ->
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -260,12 +274,14 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "ssl.SSLContext.load_verify_locations"
-    ) as mock_load_verify_locations, patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch("ssl.SSLContext.load_verify_locations") as mock_load_verify_locations,
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -469,7 +485,7 @@ async def test_storing_config(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
 
-    restored = await hass.components.http.async_get_last_config()
+    restored = await http.async_get_last_config(hass)
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)
@@ -509,3 +525,78 @@ async def test_logging(
     response = await client.get("/api/states/logging.entity")
     assert response.status == HTTPStatus.OK
     assert "GET /api/states/logging.entity" not in caplog.text
+
+
+async def test_service_create_temporary_strict_connection_url_strict_connection_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test service create_temporary_strict_connection_url with strict_connection not enabled."""
+    assert await async_setup_component(hass, http.DOMAIN, {"http": {}})
+    with pytest.raises(
+        ServiceValidationError,
+        match="Strict connection is not enabled for non-cloud requests",
+    ):
+        await hass.services.async_call(
+            http.DOMAIN,
+            "create_temporary_strict_connection_url",
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("mode"),
+    [
+        StrictConnectionMode.DROP_CONNECTION,
+        StrictConnectionMode.GUARD_PAGE,
+    ],
+)
+async def test_service_create_temporary_strict_connection(
+    hass: HomeAssistant, mode: StrictConnectionMode
+) -> None:
+    """Test service create_temporary_strict_connection_url."""
+    assert await async_setup_component(
+        hass, http.DOMAIN, {"http": {"strict_connection": mode}}
+    )
+
+    # No external url set
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+    with pytest.raises(ServiceValidationError, match="No external URL available"):
+        await hass.services.async_call(
+            http.DOMAIN,
+            "create_temporary_strict_connection_url",
+            blocking=True,
+            return_response=True,
+        )
+
+    # Raise if only internal url is available
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
+    with pytest.raises(ServiceValidationError, match="No external URL available"):
+        await hass.services.async_call(
+            http.DOMAIN,
+            "create_temporary_strict_connection_url",
+            blocking=True,
+            return_response=True,
+        )
+
+    # Set external url too
+    external_url = "https://example.com"
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": external_url},
+    )
+    assert hass.config.external_url == external_url
+    response = await hass.services.async_call(
+        http.DOMAIN,
+        "create_temporary_strict_connection_url",
+        blocking=True,
+        return_response=True,
+    )
+    assert isinstance(response, dict)
+    direct_url_prefix = f"{external_url}/auth/strict_connection/temp_token?authSig="
+    assert response.pop("direct_url").startswith(direct_url_prefix)
+    assert response.pop("url").startswith(
+        f"https://login.home-assistant.io?u={quote_plus(direct_url_prefix)}"
+    )
+    assert response == {}  # No more keys in response

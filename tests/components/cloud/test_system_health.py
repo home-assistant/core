@@ -1,4 +1,5 @@
 """Test cloud system health."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any

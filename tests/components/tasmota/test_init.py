@@ -1,4 +1,5 @@
 """The tests for the Tasmota binary sensor platform."""
+
 import copy
 import json
 from unittest.mock import call
@@ -167,15 +168,9 @@ async def test_tasmota_ws_remove_discovered_device(
 
     client = await hass_ws_client(hass)
     tasmota_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await client.send_json(
-        {
-            "id": 5,
-            "config_entry_id": tasmota_config_entry.entry_id,
-            "type": "config/device_registry/remove_config_entry",
-            "device_id": device_entry.id,
-        }
+    response = await client.remove_device(
+        device_entry.id, tasmota_config_entry.entry_id
     )
-    response = await client.receive_json()
     assert response["success"]
 
     # Verify device entry is cleared

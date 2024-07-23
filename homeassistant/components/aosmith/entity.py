@@ -1,4 +1,5 @@
 """The base entity for the A. O. Smith integration."""
+
 from typing import TypeVar
 
 from py_aosmith import AOSmithAPIClient

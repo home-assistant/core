@@ -1,4 +1,5 @@
 """Support for ZoneMinder switches."""
+
 from __future__ import annotations
 
 import logging
@@ -39,16 +40,16 @@ def setup_platform(
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
-    switches = []
+    switches: list[ZMSwitchMonitors] = []
     zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
             raise PlatformNotReady(
                 "Switch could not fetch any monitors from ZoneMinder"
             )
-
-        for monitor in monitors:
-            switches.append(ZMSwitchMonitors(monitor, on_state, off_state))
+        switches.extend(
+            ZMSwitchMonitors(monitor, on_state, off_state) for monitor in monitors
+        )
     add_entities(switches)
 
 

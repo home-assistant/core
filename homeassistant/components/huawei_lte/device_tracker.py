@@ -1,4 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
+
 from __future__ import annotations
 
 import logging

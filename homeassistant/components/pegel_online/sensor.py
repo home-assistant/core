@@ -1,4 +1,5 @@
 """PEGELONLINE sensor entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,28 +12,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import PegelOnlineConfigEntry
 from .coordinator import PegelOnlineDataUpdateCoordinator
 from .entity import PegelOnlineEntity
 
 
-@dataclass(frozen=True)
-class PegelOnlineRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PegelOnlineSensorEntityDescription(SensorEntityDescription):
+    """PEGELONLINE sensor entity description."""
 
     measurement_key: str
-
-
-@dataclass(frozen=True)
-class PegelOnlineSensorEntityDescription(
-    SensorEntityDescription, PegelOnlineRequiredKeysMixin
-):
-    """PEGELONLINE sensor entity description."""
 
 
 SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
@@ -98,10 +91,12 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PegelOnlineConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the PEGELONLINE sensor."""
-    coordinator: PegelOnlineDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [

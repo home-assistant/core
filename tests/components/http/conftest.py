@@ -1,4 +1,5 @@
 """Test configuration for http."""
+
 import pytest
 
 

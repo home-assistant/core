@@ -1,4 +1,5 @@
 """Tests for pylint hass_enforce_sorted_platforms plugin."""
+
 from __future__ import annotations
 
 import astroid

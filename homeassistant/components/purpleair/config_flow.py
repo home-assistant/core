@@ -1,4 +1,5 @@
 """Config flow for PurpleAir integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,24 +25,20 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.helpers.typing import EventType
 
 from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
@@ -115,8 +112,9 @@ def async_get_remove_sensor_options(
     device_registry = dr.async_get(hass)
     return [
         SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.values()
-        if config_entry.entry_id in device_entry.config_entries
+        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
+            config_entry.entry_id
+        )
     ]
 
 
@@ -155,7 +153,7 @@ async def async_validate_api_key(hass: HomeAssistant, api_key: str) -> Validatio
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while checking API key: %s", err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception while checking API key: %s", err)
         errors["base"] = "unknown"
 
@@ -183,7 +181,7 @@ async def async_validate_coordinates(
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while getting nearby sensors: %s", err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception while getting nearby sensors: %s", err)
         errors["base"] = "unknown"
     else:
@@ -435,7 +433,7 @@ class PurpleAirOptionsFlowHandler(OptionsFlow):
 
         @callback
         def async_device_entity_state_changed(
-            _: EventType[EventStateChangedData],
+            _: Event[EventStateChangedData],
         ) -> None:
             """Listen and respond when all device entities are removed."""
             if all(

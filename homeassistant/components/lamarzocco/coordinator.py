@@ -1,24 +1,34 @@
 """Coordinator for La Marzocco API."""
+
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from typing import Any
 
+from bleak.backends.device import BLEDevice
 from lmcloud import LMCloud as LaMarzoccoClient
+from lmcloud.const import BT_MODEL_NAMES
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MACHINE, DOMAIN
+from .const import CONF_MACHINE, CONF_USE_BLUETOOTH, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+NAME_PREFIXES = tuple(BT_MODEL_NAMES)
 
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -35,6 +45,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.local_connection_configured = (
             self.config_entry.data.get(CONF_HOST) is not None
         )
+        self._use_bluetooth = False
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
@@ -79,6 +90,46 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 name="lm_websocket_task",
             )
 
+        # initialize Bluetooth
+        if self.config_entry.options.get(CONF_USE_BLUETOOTH, True):
+
+            def bluetooth_configured() -> bool:
+                return self.config_entry.data.get(
+                    CONF_MAC, ""
+                ) and self.config_entry.data.get(CONF_NAME, "")
+
+            if not bluetooth_configured():
+                machine = self.config_entry.data[CONF_MACHINE]
+                for discovery_info in async_discovered_service_info(self.hass):
+                    if (
+                        (name := discovery_info.name)
+                        and name.startswith(NAME_PREFIXES)
+                        and name.split("_")[1] == machine
+                    ):
+                        _LOGGER.debug(
+                            "Found Bluetooth device, configuring with Bluetooth"
+                        )
+                        # found a device, add MAC address to config entry
+                        self.hass.config_entries.async_update_entry(
+                            self.config_entry,
+                            data={
+                                **self.config_entry.data,
+                                CONF_MAC: discovery_info.address,
+                                CONF_NAME: discovery_info.name,
+                            },
+                        )
+                        break
+
+            if bluetooth_configured():
+                # config entry contains BT config
+                _LOGGER.debug("Initializing with known Bluetooth device")
+                await self.lm.init_bluetooth_with_known_device(
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data.get(CONF_MAC, ""),
+                    self.config_entry.data.get(CONF_NAME, ""),
+                )
+                self._use_bluetooth = True
+
         self.lm.initialized = True
 
     async def _async_handle_request(
@@ -96,4 +147,16 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(msg) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
+            raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex
+
+    def async_get_ble_device(self) -> BLEDevice | None:
+        """Get a Bleak Client for the machine."""
+        # according to HA best practices, we should not reuse the same client
+        # get a new BLE device from hass and init a new Bleak Client with it
+        if not self._use_bluetooth:
+            return None
+
+        return async_ble_device_from_address(
+            self.hass,
+            self.lm.lm_bluetooth.address,
+        )

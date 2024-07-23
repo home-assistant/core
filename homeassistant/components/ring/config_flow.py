@@ -1,9 +1,10 @@
 """Config flow for Ring integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-import ring_doorbell
+from ring_doorbell import Auth, AuthenticationError, Requires2FAError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -27,10 +28,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    auth = ring_doorbell.Auth(f"{APPLICATION_NAME}/{ha_version}")
+    auth = Auth(f"{APPLICATION_NAME}/{ha_version}")
 
     try:
         token = await hass.async_add_executor_job(
@@ -39,9 +40,9 @@ async def validate_input(hass: HomeAssistant, data):
             data[CONF_PASSWORD],
             data.get(CONF_2FA),
         )
-    except ring_doorbell.Requires2FAError as err:
+    except Requires2FAError as err:
         raise Require2FA from err
-    except ring_doorbell.AuthenticationError as err:
+    except AuthenticationError as err:
         raise InvalidAuth from err
 
     return token
@@ -55,9 +56,11 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     user_pass: dict[str, Any] = {}
     reauth_entry: ConfigEntry | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 token = await validate_input(self.hass, user_input)
@@ -67,7 +70,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -81,7 +84,9 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_2fa(self, user_input=None):
+    async def async_step_2fa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle 2fa step."""
         if user_input:
             if self.reauth_entry:
@@ -109,7 +114,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self.reauth_entry is not None
 
         if user_input:
@@ -121,7 +126,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

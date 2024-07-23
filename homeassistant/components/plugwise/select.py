@@ -1,4 +1,5 @@
 """Plugwise Select component for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -7,12 +8,12 @@ from dataclasses import dataclass
 from plugwise import Smile
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SelectOptionsType, SelectType
+from . import PlugwiseConfigEntry
+from .const import SelectOptionsType, SelectType
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -59,23 +60,18 @@ SELECT_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PlugwiseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile selector from a config entry."""
-    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = entry.runtime_data
 
-    entities: list[PlugwiseSelectEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        for description in SELECT_TYPES:
-            if description.options_key in device:
-                entities.append(
-                    PlugwiseSelectEntity(coordinator, device_id, description)
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        PlugwiseSelectEntity(coordinator, device_id, description)
+        for device_id, device in coordinator.data.devices.items()
+        for description in SELECT_TYPES
+        if description.options_key in device
+    )
 
 
 class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):

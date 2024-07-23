@@ -1,6 +1,5 @@
 """The tests for the persistent notification component."""
 
-
 import homeassistant.components.persistent_notification as pn
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant

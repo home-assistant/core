@@ -1,4 +1,5 @@
 """Support for Rabbit Air fan entity."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """Exposures to KNX bus."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,12 +18,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.event import (
+from homeassistant.core import (
+    Event,
     EventStateChangedData,
-    async_track_state_change_event,
+    HomeAssistant,
+    State,
+    callback,
 )
-from homeassistant.helpers.typing import ConfigType, EventType, StateType
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
@@ -148,9 +152,7 @@ class KNXExposeSensor:
             return str(value)[:14]
         return value
 
-    async def _async_entity_changed(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle entity change."""
         new_state = event.data["new_state"]
         if (new_value := self._get_expose_value(new_state)) is None:

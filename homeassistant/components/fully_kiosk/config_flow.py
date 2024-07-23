@@ -1,4 +1,5 @@
 """Config flow for Fully Kiosk Browser integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -63,7 +64,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             description_placeholders["error_detail"] = str(error.args)
             return None
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # noqa: BLE001
             LOGGER.exception("Unexpected exception: %s", error)
             errors["base"] = "unknown"
             description_placeholders["error_detail"] = str(error.args)

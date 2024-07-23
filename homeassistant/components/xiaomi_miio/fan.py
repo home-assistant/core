@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

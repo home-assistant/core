@@ -1,4 +1,5 @@
 """The tests for mqtt update component."""
+
 import json
 from unittest.mock import patch
 
@@ -6,13 +7,7 @@ import pytest
 
 from homeassistant.components import mqtt, update
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -55,13 +50,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def update_platform_only():
-    """Only setup the update platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.UPDATE]):
-        yield
 
 
 @pytest.mark.parametrize(

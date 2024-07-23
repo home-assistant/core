@@ -1,4 +1,5 @@
 """Test for the LCN cover platform."""
+
 from unittest.mock import patch
 
 from pypck.inputs import ModStatusOutput, ModStatusRelays

@@ -1,4 +1,5 @@
 """Support for DoorBird devices."""
+
 from __future__ import annotations
 
 import logging

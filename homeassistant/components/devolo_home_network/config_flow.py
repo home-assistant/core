@@ -1,4 +1,5 @@
 """Config flow for devolo Home Network integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -62,7 +63,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except DeviceNotFound:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -113,10 +114,11 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauthentication."""
-        self.context[CONF_HOST] = data[CONF_IP_ADDRESS]
-        self.context["title_placeholders"][PRODUCT] = self.hass.data[DOMAIN][
-            self.context["entry_id"]
-        ]["device"].product
+        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
+            self.context[CONF_HOST] = data[CONF_IP_ADDRESS]
+            self.context["title_placeholders"][PRODUCT] = (
+                entry.runtime_data.device.product
+            )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

@@ -1,4 +1,5 @@
 """Diagnostics support for IMAP."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -30,9 +31,7 @@ def _async_get_diagnostics(
     redacted_config = async_redact_data(entry.data, REDACT_CONFIG)
     coordinator: ImapDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    data = {
+    return {
         "config": redacted_config,
         "event": coordinator.diagnostics_data,
     }
-
-    return data

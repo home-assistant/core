@@ -1,4 +1,5 @@
 """AirTouch 4 component to control of AirTouch 4 Climate Devices."""
+
 from __future__ import annotations
 
 import logging

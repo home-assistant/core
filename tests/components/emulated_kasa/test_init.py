@@ -1,4 +1,5 @@
 """Tests for emulated_kasa library bindings."""
+
 import math
 from unittest.mock import AsyncMock, Mock, patch
 

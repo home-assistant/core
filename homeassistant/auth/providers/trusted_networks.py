@@ -3,6 +3,7 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

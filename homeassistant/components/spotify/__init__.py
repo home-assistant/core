@@ -1,4 +1,5 @@
 """The spotify integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -88,14 +89,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return devices.get("devices", [])
 
-    device_coordinator: DataUpdateCoordinator[
-        list[dict[str, Any]]
-    ] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{entry.title} Devices",
-        update_interval=timedelta(minutes=5),
-        update_method=_update_devices,
+    device_coordinator: DataUpdateCoordinator[list[dict[str, Any]]] = (
+        DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name=f"{entry.title} Devices",
+            update_interval=timedelta(minutes=5),
+            update_method=_update_devices,
+        )
     )
     await device_coordinator.async_config_entry_first_refresh()
 

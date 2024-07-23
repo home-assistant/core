@@ -1,4 +1,5 @@
 """Tests for the Bond cover device."""
+
 from datetime import timedelta
 
 from bond_async import Action, DeviceType
@@ -264,8 +265,9 @@ async def test_set_position_cover(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    with patch_bond_action() as mock_hold, patch_bond_device_state(
-        return_value={"position": 0, "open": 1}
+    with (
+        patch_bond_action() as mock_hold,
+        patch_bond_device_state(return_value={"position": 0, "open": 1}),
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -281,8 +283,9 @@ async def test_set_position_cover(hass: HomeAssistant) -> None:
     assert entity_state.state == STATE_OPEN
     assert entity_state.attributes[ATTR_CURRENT_POSITION] == 100
 
-    with patch_bond_action() as mock_hold, patch_bond_device_state(
-        return_value={"position": 100, "open": 0}
+    with (
+        patch_bond_action() as mock_hold,
+        patch_bond_device_state(return_value={"position": 100, "open": 0}),
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -298,8 +301,9 @@ async def test_set_position_cover(hass: HomeAssistant) -> None:
     assert entity_state.state == STATE_CLOSED
     assert entity_state.attributes[ATTR_CURRENT_POSITION] == 0
 
-    with patch_bond_action() as mock_hold, patch_bond_device_state(
-        return_value={"position": 40, "open": 1}
+    with (
+        patch_bond_action() as mock_hold,
+        patch_bond_device_state(return_value={"position": 40, "open": 1}),
     ):
         await hass.services.async_call(
             COVER_DOMAIN,

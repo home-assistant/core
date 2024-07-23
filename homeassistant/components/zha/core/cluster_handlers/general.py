@@ -1,4 +1,5 @@
 """General cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
@@ -551,6 +552,13 @@ class OtaClientClusterHandler(ClientClusterHandler):
     ZCL_INIT_ATTRS = {
         Ota.AttributeDefs.current_file_version.name: True,
     }
+
+    @callback
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
+        """Handle an attribute updated on this cluster."""
+        # We intentionally avoid the `ClientClusterHandler` attribute update handler:
+        # it emits a logbook event on every update, which pollutes the logbook
+        ClusterHandler.attribute_updated(self, attrid, value, timestamp)
 
     @property
     def current_file_version(self) -> int | None:

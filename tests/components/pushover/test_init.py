@@ -1,4 +1,5 @@
 """Test pushbullet integration."""
+
 from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
@@ -34,7 +35,7 @@ async def test_async_setup_entry_success(
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_unique_id_updated(hass: HomeAssistant, mock_pushover: MagicMock) -> None:
@@ -43,7 +44,7 @@ async def test_unique_id_updated(hass: HomeAssistant, mock_pushover: MagicMock) 
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id is None
 
 
@@ -59,7 +60,7 @@ async def test_async_setup_entry_failed_invalid_api_key(
     mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_async_setup_entry_failed_conn_error(
@@ -74,7 +75,7 @@ async def test_async_setup_entry_failed_conn_error(
     mock_pushover.side_effect = BadAPIRequestError
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_setup_entry_failed_json_error(
@@ -91,4 +92,4 @@ async def test_async_setup_entry_failed_json_error(
     )
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY

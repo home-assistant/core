@@ -1,11 +1,12 @@
 """Tests for the AVM Fritz!Box integration."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
 import pytest
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -79,6 +80,7 @@ async def test_update_unique_id(
     new_unique_id: str,
 ) -> None:
     """Test unique_id update of integration."""
+    fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
         data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
@@ -137,6 +139,7 @@ async def test_update_unique_id_no_change(
     unique_id: str,
 ) -> None:
     """Test unique_id is not updated of integration."""
+    fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
         data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
@@ -155,62 +158,6 @@ async def test_update_unique_id_no_change(
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == unique_id
-
-
-async def test_coordinator_update_after_reboot(
-    hass: HomeAssistant, fritz: Mock
-) -> None:
-    """Test coordinator after reboot."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = [HTTPError(), ""]
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_devices.call_count == 2
-    assert fritz().update_templates.call_count == 1
-    assert fritz().get_devices.call_count == 1
-    assert fritz().get_templates.call_count == 1
-    assert fritz().login.call_count == 2
-
-
-async def test_coordinator_update_after_password_change(
-    hass: HomeAssistant, fritz: Mock
-) -> None:
-    """Test coordinator after password change."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = HTTPError()
-    fritz().login.side_effect = ["", LoginError("some_user")]
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_devices.call_count == 1
-    assert fritz().get_devices.call_count == 0
-    assert fritz().get_templates.call_count == 0
-    assert fritz().login.call_count == 2
-
-
-async def test_coordinator_update_when_unreachable(
-    hass: HomeAssistant, fritz: Mock
-) -> None:
-    """Test coordinator after reboot."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = [ConnectionError(), ""]
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
@@ -286,30 +233,14 @@ async def test_remove_device(
 
     # try to delete good_device
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry.entry_id,
-            "device_id": good_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(good_device.id, entry.entry_id)
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     await hass.async_block_till_done()
 
     # try to delete orphan_device
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry.entry_id,
-            "device_id": orphan_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(orphan_device.id, entry.entry_id)
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -323,8 +254,8 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.fritzbox.Fritzhome.login",
-        side_effect=ConnectionError(),
+        "homeassistant.components.fritzbox.coordinator.Fritzhome.login",
+        side_effect=RequestConnectionError(),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -344,7 +275,7 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.fritzbox.Fritzhome.login",
+        "homeassistant.components.fritzbox.coordinator.Fritzhome.login",
         side_effect=LoginError("user"),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)

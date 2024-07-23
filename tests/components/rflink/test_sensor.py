@@ -4,6 +4,7 @@ Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.
 
 """
+
 from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,

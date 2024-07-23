@@ -1,4 +1,5 @@
 """Support for Subaru device tracker."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -35,11 +36,11 @@ async def async_setup_entry(
     entry: dict = hass.data[DOMAIN][config_entry.entry_id]
     coordinator: DataUpdateCoordinator = entry[ENTRY_COORDINATOR]
     vehicle_info: dict = entry[ENTRY_VEHICLES]
-    entities: list[SubaruDeviceTracker] = []
-    for vehicle in vehicle_info.values():
-        if vehicle[VEHICLE_HAS_REMOTE_SERVICE]:
-            entities.append(SubaruDeviceTracker(vehicle, coordinator))
-    async_add_entities(entities)
+    async_add_entities(
+        SubaruDeviceTracker(vehicle, coordinator)
+        for vehicle in vehicle_info.values()
+        if vehicle[VEHICLE_HAS_REMOTE_SERVICE]
+    )
 
 
 class SubaruDeviceTracker(

@@ -1,12 +1,13 @@
 """The tests for the time_pattern automation."""
+
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
-import homeassistant.components.automation as automation
-import homeassistant.components.homeassistant.triggers.time_pattern as time_pattern
+from homeassistant.components import automation
+from homeassistant.components.homeassistant.triggers import time_pattern
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

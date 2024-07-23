@@ -1,4 +1,5 @@
 """Support for FleetGO Platform."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """The tests for the Roku remote platform."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.remote import (

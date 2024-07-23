@@ -1,4 +1,5 @@
 """Support KNX devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -196,11 +197,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         [
             platform
             for platform in SUPPORTED_PLATFORMS
-            if platform in config and platform not in (Platform.SENSOR, Platform.NOTIFY)
+            if platform in config and platform is not Platform.SENSOR
         ],
     )
 
-    # set up notify platform, no entry support for notify component yet
+    # set up notify service for backwards compatibility - remove 2024.11
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
@@ -231,7 +232,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 platform
                 for platform in SUPPORTED_PLATFORMS
                 if platform in hass.data[DATA_KNX_CONFIG]
-                and platform not in (Platform.SENSOR, Platform.NOTIFY)
+                and platform is not Platform.SENSOR
             ],
         ],
     )

@@ -1,4 +1,5 @@
 """Constants for the lawn mower integration."""
+
 from enum import IntFlag, StrEnum
 
 

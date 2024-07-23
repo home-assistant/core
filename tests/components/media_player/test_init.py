@@ -1,4 +1,5 @@
 """Test the base functions of the media player."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -239,14 +240,14 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("input", "expected"),
-    (
+    [
         (True, MediaPlayerEnqueue.ADD),
         (False, MediaPlayerEnqueue.PLAY),
         ("play", MediaPlayerEnqueue.PLAY),
         ("next", MediaPlayerEnqueue.NEXT),
         ("add", MediaPlayerEnqueue.ADD),
         ("replace", MediaPlayerEnqueue.REPLACE),
-    ),
+    ],
 )
 async def test_enqueue_rewrite(hass: HomeAssistant, input, expected) -> None:
     """Test that group_members are still available when media_player is off."""

@@ -1,4 +1,5 @@
 """Test the Google Mail config flow."""
+
 from unittest.mock import patch
 
 from httplib2 import Response
@@ -7,6 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, SCOPES, TITLE
@@ -45,13 +47,16 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    with patch(
-        "homeassistant.components.google_mail.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "httplib2.Http.request",
-        return_value=(
-            Response({}),
-            bytes(load_fixture("google_mail/get_profile.json"), encoding="UTF-8"),
+    with (
+        patch(
+            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "httplib2.Http.request",
+            return_value=(
+                Response({}),
+                bytes(load_fixture("google_mail/get_profile.json"), encoding="UTF-8"),
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -59,7 +64,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
     assert "result" in result
     assert result.get("result").unique_id == TITLE
@@ -140,20 +145,23 @@ async def test_reauth(
         },
     )
 
-    with patch(
-        "homeassistant.components.google_mail.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "httplib2.Http.request",
-        return_value=(
-            Response({}),
-            bytes(load_fixture(f"google_mail/{fixture}.json"), encoding="UTF-8"),
+    with (
+        patch(
+            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "httplib2.Http.request",
+            return_value=(
+                Response({}),
+                bytes(load_fixture(f"google_mail/{fixture}.json"), encoding="UTF-8"),
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result["reason"] == abort_reason
     assert result["description_placeholders"] == placeholders
     assert len(mock_setup.mock_calls) == calls
@@ -205,5 +213,5 @@ async def test_already_configured(
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"

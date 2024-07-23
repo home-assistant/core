@@ -1,4 +1,5 @@
 """Test the Insteon All-Link Database APIs."""
+
 import json
 from unittest.mock import patch
 
@@ -25,7 +26,7 @@ from tests.common import load_fixture
 from tests.typing import WebSocketGenerator
 
 
-@pytest.fixture(name="aldb_data", scope="session")
+@pytest.fixture(name="aldb_data", scope="module")
 def aldb_data_fixture():
     """Load the controller state fixture data."""
     return json.loads(load_fixture("insteon/aldb_data.json"))

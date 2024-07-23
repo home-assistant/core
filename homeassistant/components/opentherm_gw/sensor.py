@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway sensors."""
+
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
@@ -22,29 +23,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the OpenTherm Gateway sensors."""
-    sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
-    for var, info in SENSOR_INFO.items():
-        device_class = info[0]
-        unit = info[1]
-        friendly_name_format = info[2]
-        suggested_display_precision = info[3]
-        status_sources = info[4]
 
-        for source in status_sources:
-            sensors.append(
-                OpenThermSensor(
-                    gw_dev,
-                    var,
-                    source,
-                    device_class,
-                    unit,
-                    friendly_name_format,
-                    suggested_display_precision,
-                )
-            )
-
-    async_add_entities(sensors)
+    async_add_entities(
+        OpenThermSensor(
+            gw_dev,
+            var,
+            source,
+            info[0],
+            info[1],
+            info[2],
+            info[3],
+        )
+        for var, info in SENSOR_INFO.items()
+        for source in info[4]
+    )
 
 
 class OpenThermSensor(SensorEntity):

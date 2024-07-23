@@ -1,4 +1,5 @@
 """Update entities for Ubiquiti network devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -17,17 +18,16 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import UnifiConfigEntry
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
 )
-from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,16 +54,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
     UnifiUpdateEntityDescription[Devices, Device](
         key="Upgrade device",
         device_class=UpdateDeviceClass.FIRMWARE,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         control_fn=async_device_control_fn,
         device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: None,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         state_fn=lambda api, device: device.state == 4,
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"device_update-{obj_id}",
     ),
 )
@@ -71,13 +67,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UnifiConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for UniFi Network integration."""
-    UnifiHub.register_platform(
-        hass,
-        config_entry,
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities,
         UnifiDeviceUpdateEntity,
         ENTITY_DESCRIPTIONS,

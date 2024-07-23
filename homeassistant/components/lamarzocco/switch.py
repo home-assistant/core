@@ -1,4 +1,5 @@
 """Switch platform for La Marzocco espresso machines."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -30,7 +31,9 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="main",
         translation_key="main",
         name=None,
-        control_fn=lambda coordinator, state: coordinator.lm.set_power(state),
+        control_fn=lambda coordinator, state: coordinator.lm.set_power(
+            state, coordinator.async_get_ble_device()
+        ),
         is_on_fn=lambda coordinator: coordinator.lm.current_status["power"],
     ),
     LaMarzoccoSwitchEntityDescription(
@@ -46,7 +49,9 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
-        control_fn=lambda coordinator, state: coordinator.lm.set_steam(state),
+        control_fn=lambda coordinator, state: coordinator.lm.set_steam(
+            state, coordinator.async_get_ble_device()
+        ),
         is_on_fn=lambda coordinator: coordinator.lm.current_status[
             "steam_boiler_enable"
         ],

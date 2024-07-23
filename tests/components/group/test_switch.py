@@ -1,4 +1,5 @@
 """The tests for the Group Switch platform."""
+
 import asyncio
 from unittest.mock import patch
 

@@ -53,3 +53,10 @@ stop_log_object_sources:
 lru_stats:
 log_thread_frames:
 log_event_loop_scheduled:
+set_asyncio_debug:
+  fields:
+    enabled:
+      default: true
+      selector:
+        boolean:
+log_current_tasks:

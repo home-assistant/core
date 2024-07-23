@@ -1,4 +1,5 @@
 """Test the RabbitAir config flow."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -44,8 +45,9 @@ def use_mocked_zeroconf(mock_async_zeroconf):
 @pytest.fixture
 def rabbitair_connect() -> Generator[None, None, None]:
     """Mock connection."""
-    with patch("rabbitair.UdpClient.get_info", return_value=get_mock_info()), patch(
-        "rabbitair.UdpClient.get_state", return_value=get_mock_state()
+    with (
+        patch("rabbitair.UdpClient.get_info", return_value=get_mock_info()),
+        patch("rabbitair.UdpClient.get_state", return_value=get_mock_state()),
     ):
         yield
 
@@ -82,7 +84,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -98,7 +100,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_TITLE
     assert result2["data"] == {
         CONF_HOST: TEST_HOST,
@@ -125,7 +127,7 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -140,7 +142,7 @@ async def test_form_cannot_connect(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": base_value}
 
 
@@ -149,7 +151,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -164,7 +166,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -175,7 +177,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_DATA
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -191,7 +193,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_TITLE
     assert result2["data"] == {
         CONF_HOST: TEST_NAME + ".local",
@@ -205,5 +207,5 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_DATA
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

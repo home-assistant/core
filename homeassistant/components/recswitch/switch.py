@@ -1,4 +1,5 @@
 """Support for Ankuoo RecSwitch MS6126 devices."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """The tests for SleepIQ binary sensor platform."""
+
 from homeassistant.components.button import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant

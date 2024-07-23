@@ -1,4 +1,5 @@
 """Support for MQTT locks."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -30,6 +31,8 @@ from .const import (
     CONF_PAYLOAD_RESET,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_STATE_OPEN,
+    CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
@@ -55,6 +58,7 @@ CONF_PAYLOAD_OPEN = "payload_open"
 
 CONF_STATE_LOCKED = "state_locked"
 CONF_STATE_LOCKING = "state_locking"
+
 CONF_STATE_UNLOCKED = "state_unlocked"
 CONF_STATE_UNLOCKING = "state_unlocking"
 CONF_STATE_JAMMED = "state_jammed"
@@ -66,6 +70,8 @@ DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_STATE_LOCKED = "LOCKED"
 DEFAULT_STATE_LOCKING = "LOCKING"
+DEFAULT_STATE_OPEN = "OPEN"
+DEFAULT_STATE_OPENING = "OPENING"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
 DEFAULT_STATE_UNLOCKING = "UNLOCKING"
 DEFAULT_STATE_JAMMED = "JAMMED"
@@ -89,6 +95,8 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED): cv.string,
         vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
         vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
+        vol.Optional(CONF_STATE_OPEN, default=DEFAULT_STATE_OPEN): cv.string,
+        vol.Optional(CONF_STATE_OPENING, default=DEFAULT_STATE_OPENING): cv.string,
         vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
         vol.Optional(CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -101,6 +109,8 @@ STATE_CONFIG_KEYS = [
     CONF_STATE_JAMMED,
     CONF_STATE_LOCKED,
     CONF_STATE_LOCKING,
+    CONF_STATE_OPEN,
+    CONF_STATE_OPENING,
     CONF_STATE_UNLOCKED,
     CONF_STATE_UNLOCKING,
 ]
@@ -188,6 +198,8 @@ class MqttLock(MqttEntity, LockEntity):
                 "_attr_is_jammed",
                 "_attr_is_locked",
                 "_attr_is_locking",
+                "_attr_is_open",
+                "_attr_is_opening",
                 "_attr_is_unlocking",
             },
         )
@@ -201,6 +213,8 @@ class MqttLock(MqttEntity, LockEntity):
             elif payload in self._valid_states:
                 self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
                 self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
+                self._attr_is_open = payload == self._config[CONF_STATE_OPEN]
+                self._attr_is_opening = payload == self._config[CONF_STATE_OPENING]
                 self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
                 self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
@@ -285,5 +299,5 @@ class MqttLock(MqttEntity, LockEntity):
         )
         if self._optimistic:
             # Optimistically assume that the lock unlocks when opened.
-            self._attr_is_locked = False
+            self._attr_is_open = True
             self.async_write_ha_state()

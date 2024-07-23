@@ -1,9 +1,11 @@
 """Tests for the system health component init."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 
 from homeassistant.components import system_health
+from homeassistant.components.system_health import async_register_info
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -73,7 +75,7 @@ async def test_info_endpoint_register_callback(
     async def mock_info(hass):
         return {"storage": "YAML"}
 
-    hass.components.system_health.async_register_info("lovelace", mock_info)
+    async_register_info(hass, "lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
@@ -93,7 +95,7 @@ async def test_info_endpoint_register_callback_timeout(
     async def mock_info(hass):
         raise TimeoutError
 
-    hass.components.system_health.async_register_info("lovelace", mock_info)
+    async_register_info(hass, "lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
@@ -110,7 +112,7 @@ async def test_info_endpoint_register_callback_exc(
     async def mock_info(hass):
         raise Exception("TEST ERROR")
 
-    hass.components.system_health.async_register_info("lovelace", mock_info)
+    async_register_info(hass, "lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})
     data = await gather_system_health_info(hass, hass_ws_client)
 

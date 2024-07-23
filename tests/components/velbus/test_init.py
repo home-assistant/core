@@ -1,4 +1,5 @@
 """Tests for the Velbus component initialisation."""
+
 from unittest.mock import patch
 
 import pytest
@@ -19,12 +20,12 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 

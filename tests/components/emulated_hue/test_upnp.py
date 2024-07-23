@@ -1,4 +1,5 @@
 """The tests for the emulated Hue component."""
+
 from http import HTTPStatus
 import json
 import unittest
@@ -163,7 +164,7 @@ async def test_description_xml(hass: HomeAssistant, hue_client) -> None:
         root = ET.fromstring(await result.text())
         ns = {"s": "urn:schemas-upnp-org:device-1-0"}
         assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         pytest.fail("description.xml is not valid XML!")
 
 

@@ -1,4 +1,5 @@
 """The D-Link Power Plug integration."""
+
 from __future__ import annotations
 
 from pyW215.pyW215 import SmartPlug

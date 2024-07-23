@@ -1,4 +1,5 @@
 """The tests for UVC camera module."""
+
 from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
@@ -277,7 +278,7 @@ async def test_setup_nvr_errors_during_indexing(
     mock_remote.return_value.index.side_effect = None
 
     async_fire_time_changed(hass, now + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     camera_states = hass.states.async_all("camera")
 
@@ -312,7 +313,7 @@ async def test_setup_nvr_errors_during_initialization(
     mock_remote.side_effect = None
 
     async_fire_time_changed(hass, now + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     camera_states = hass.states.async_all("camera")
 
@@ -361,7 +362,7 @@ async def test_motion_recording_mode_properties(
     ] = True
 
     async_fire_time_changed(hass, now + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 
@@ -374,31 +375,31 @@ async def test_motion_recording_mode_properties(
     mock_remote.return_value.get_camera.return_value["recordingIndicator"] = "DISABLED"
 
     async_fire_time_changed(hass, now + timedelta(seconds=61))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 
     assert state
     assert state.state != STATE_RECORDING
 
-    mock_remote.return_value.get_camera.return_value[
-        "recordingIndicator"
-    ] = "MOTION_INPROGRESS"
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
+        "MOTION_INPROGRESS"
+    )
 
     async_fire_time_changed(hass, now + timedelta(seconds=91))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 
     assert state
     assert state.state == STATE_RECORDING
 
-    mock_remote.return_value.get_camera.return_value[
-        "recordingIndicator"
-    ] = "MOTION_FINISHED"
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
+        "MOTION_FINISHED"
+    )
 
     async_fire_time_changed(hass, now + timedelta(seconds=121))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 
@@ -471,7 +472,7 @@ async def test_login_tries_both_addrs_and_caches(
         """Mock get snapshots."""
         try:
             snapshots.pop(0)
-            raise camera.CameraAuthError()
+            raise camera.CameraAuthError
         except IndexError:
             pass
         return "test_image"

@@ -1,4 +1,5 @@
 """Support for Join notifications."""
+
 from __future__ import annotations
 
 import logging

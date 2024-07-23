@@ -1,6 +1,11 @@
 """Tests for the IPMA component."""
-from collections import namedtuple
+
 from datetime import UTC, datetime
+
+from pyipma.forecast import Forecast, Forecast_Location, Weather_Type
+from pyipma.observation import Observation
+from pyipma.rcm import RCM
+from pyipma.uv import UV
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
 
@@ -17,109 +22,90 @@ class MockLocation:
 
     async def fire_risk(self, api):
         """Mock Fire Risk."""
-        RCM = namedtuple(
-            "RCM",
-            [
-                "dico",
-                "rcm",
-                "coordinates",
-            ],
-        )
         return RCM("some place", 3, (0, 0))
 
     async def uv_risk(self, api):
         """Mock UV Index."""
-        UV = namedtuple(
-            "UV",
-            ["idPeriodo", "intervaloHora", "data", "globalIdLocal", "iUv"],
-        )
-        return UV(0, "0", datetime.now(), 0, 5.7)
+        return UV(0, "0", datetime(2020, 1, 16, 0, 0, 0), 0, 5.7)
 
     async def observation(self, api):
         """Mock Observation."""
-        Observation = namedtuple(
-            "Observation",
-            [
-                "accumulated_precipitation",
-                "humidity",
-                "pressure",
-                "radiation",
-                "temperature",
-                "wind_direction",
-                "wind_intensity_km",
-            ],
+        return Observation(
+            precAcumulada=0.0,
+            humidade=71.0,
+            pressao=1000.0,
+            radiacao=0.0,
+            temperatura=18.0,
+            idDireccVento=8,
+            intensidadeVentoKM=3.94,
+            intensidadeVento=1.0944,
+            timestamp=datetime(2020, 1, 16, 0, 0, 0),
+            idEstacao=0,
         )
-
-        return Observation(0.0, 71.0, 1000.0, 0.0, 18.0, "NW", 3.94)
 
     async def forecast(self, api, period):
         """Mock Forecast."""
-        Forecast = namedtuple(
-            "Forecast",
-            [
-                "feels_like_temperature",
-                "forecast_date",
-                "forecasted_hours",
-                "humidity",
-                "max_temperature",
-                "min_temperature",
-                "precipitation_probability",
-                "temperature",
-                "update_date",
-                "weather_type",
-                "wind_direction",
-                "wind_strength",
-            ],
-        )
-
-        WeatherType = namedtuple("WeatherType", ["id", "en", "pt"])
 
         if period == 24:
             return [
                 Forecast(
-                    None,
-                    datetime(2020, 1, 16, 0, 0, 0),
-                    24,
-                    None,
-                    16.2,
-                    10.6,
-                    "100.0",
-                    13.4,
-                    "2020-01-15T07:51:00",
-                    WeatherType(9, "Rain/showers", "Chuva/aguaceiros"),
-                    "S",
-                    "10",
+                    utci=None,
+                    dataPrev=datetime(2020, 1, 16, 0, 0, 0),
+                    idPeriodo=24,
+                    hR=None,
+                    tMax=16.2,
+                    tMin=10.6,
+                    probabilidadePrecipita=100.0,
+                    tMed=13.4,
+                    dataUpdate=datetime(2020, 1, 15, 7, 51, 0),
+                    idTipoTempo=Weather_Type(9, "Rain/showers", "Chuva/aguaceiros"),
+                    ddVento="S",
+                    ffVento=10,
+                    idFfxVento=0,
+                    iUv=0,
+                    intervaloHora="",
+                    location=Forecast_Location(0, "", 0, 0, 0, "", (0, 0)),
                 ),
             ]
         if period == 1:
             return [
                 Forecast(
-                    "7.7",
-                    datetime(2020, 1, 15, 1, 0, 0, tzinfo=UTC),
-                    1,
-                    "86.9",
-                    12.0,
-                    None,
-                    80.0,
-                    10.6,
-                    "2020-01-15T02:51:00",
-                    WeatherType(10, "Light rain", "Chuva fraca ou chuvisco"),
-                    "S",
-                    "32.7",
+                    utci=7.7,
+                    dataPrev=datetime(2020, 1, 15, 1, 0, 0, tzinfo=UTC),
+                    idPeriodo=1,
+                    hR=86.9,
+                    tMax=12.0,
+                    tMin=None,
+                    probabilidadePrecipita=80.0,
+                    tMed=10.6,
+                    dataUpdate=datetime(2020, 1, 15, 2, 51, 0),
+                    idTipoTempo=Weather_Type(
+                        10, "Light rain", "Chuva fraca ou chuvisco"
+                    ),
+                    ddVento="S",
+                    ffVento=32.7,
+                    idFfxVento=0,
+                    iUv=0,
+                    intervaloHora="",
+                    location=Forecast_Location(0, "", 0, 0, 0, "", (0, 0)),
                 ),
                 Forecast(
-                    "5.7",
-                    datetime(2020, 1, 15, 2, 0, 0, tzinfo=UTC),
-                    1,
-                    "86.9",
-                    12.0,
-                    None,
-                    80.0,
-                    10.6,
-                    "2020-01-15T02:51:00",
-                    WeatherType(1, "Clear sky", "C\u00e9u limpo"),
-                    "S",
-                    "32.7",
+                    utci=5.7,
+                    dataPrev=datetime(2020, 1, 15, 2, 0, 0, tzinfo=UTC),
+                    idPeriodo=1,
+                    hR=86.9,
+                    tMax=12.0,
+                    tMin=None,
+                    probabilidadePrecipita=80.0,
+                    tMed=10.6,
+                    dataUpdate=datetime(2020, 1, 15, 2, 51, 0),
+                    idTipoTempo=Weather_Type(1, "Clear sky", "C\u00e9u limpo"),
+                    ddVento="S",
+                    ffVento=32.7,
+                    idFfxVento=0,
+                    iUv=0,
+                    intervaloHora="",
+                    location=Forecast_Location(0, "", 0, 0, 0, "", (0, 0)),
                 ),
             ]
 

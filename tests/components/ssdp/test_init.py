@@ -1,4 +1,5 @@
 """Test the SSDP integration."""
+
 from datetime import datetime
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
@@ -342,7 +343,7 @@ async def test_flow_start_only_alive(
         }
     )
     ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -463,6 +464,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
+@pytest.mark.no_fail_on_log_exception
 @patch("homeassistant.components.ssdp.async_get_ssdp", return_value={})
 async def test_scan_with_registered_callback(
     mock_get_ssdp,
@@ -522,9 +524,9 @@ async def test_scan_with_registered_callback(
     async_match_any_callback = AsyncMock()
     await ssdp.async_register_callback(hass, async_match_any_callback)
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert async_integration_callback.call_count == 1
     assert async_integration_match_all_callback.call_count == 1
@@ -548,7 +550,7 @@ async def test_scan_with_registered_callback(
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
-    assert "Failed to callback info" in caplog.text
+    assert "Exception in SSDP callback" in caplog.text
 
     async_integration_callback_from_cache = AsyncMock()
     await ssdp.async_register_callback(
@@ -834,7 +836,7 @@ async def test_flow_dismiss_on_byebye(
         }
     )
     ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -852,22 +854,23 @@ async def test_flow_dismiss_on_byebye(
         }
     )
     ssdp_listener._on_alive(mock_ssdp_advertisement)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
     )
 
     mock_ssdp_advertisement["nts"] = "ssdp:byebye"
     # ssdp:byebye advertisement should dismiss existing flows
-    with patch.object(
-        hass.config_entries.flow,
-        "async_progress_by_init_data_type",
-        return_value=[{"flow_id": "mock_flow_id"}],
-    ) as mock_async_progress_by_init_data_type, patch.object(
-        hass.config_entries.flow, "async_abort"
-    ) as mock_async_abort:
+    with (
+        patch.object(
+            hass.config_entries.flow,
+            "async_progress_by_init_data_type",
+            return_value=[{"flow_id": "mock_flow_id"}],
+        ) as mock_async_progress_by_init_data_type,
+        patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
+    ):
         ssdp_listener._on_byebye(mock_ssdp_advertisement)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
     assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"

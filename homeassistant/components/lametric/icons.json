@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "button": {
+      "app_next": {
+        "default": "mdi:arrow-right-bold"
+      },
+      "app_previous": {
+        "default": "mdi:arrow-left-bold"
+      },
+      "dismiss_current": {
+        "default": "mdi:bell-cancel"
+      },
+      "dismiss_all": {
+        "default": "mdi:bell-cancel"
+      }
+    },
+    "number": {
+      "brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "select": {
+      "brightness_mode": {
+        "default": "mdi:brightness-auto"
+      }
+    },
+    "sensor": {
+      "rssi": {
+        "default": "mdi:wifi"
+      }
+    },
+    "switch": {
+      "bluetooth": {
+        "default": "mdi:bluetooth"
+      }
+    }
+  },
+  "services": {
+    "chart": "mdi:chart-areaspline-variant",
+    "message": "mdi:message"
+  }
+}

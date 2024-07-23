@@ -1,4 +1,5 @@
 """Support for UPC ConnectBox router."""
+
 from __future__ import annotations
 
 import logging

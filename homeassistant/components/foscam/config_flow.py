@@ -1,4 +1,5 @@
 """Config flow for foscam integration."""
+
 from libpyfoscam import FoscamCamera
 from libpyfoscam.foscam import (
     ERROR_FOSCAM_AUTH,
@@ -109,7 +110,7 @@ class FoscamConfigFlow(ConfigFlow, domain=DOMAIN):
             except AbortFlow:
                 raise
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

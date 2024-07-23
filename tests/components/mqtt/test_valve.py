@@ -1,4 +1,5 @@
 """The tests for the MQTT valve platform."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -26,7 +27,6 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -84,13 +84,6 @@ DEFAULT_CONFIG_REPORTS_POSITION = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def valve_platform_only():
-    """Only setup the valve platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VALVE]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -484,7 +477,7 @@ async def test_state_via_state_trough_position_with_alt_range(
         (SERVICE_STOP_VALVE, "SToP"),
     ],
 )
-async def tests_controling_valve_by_state(
+async def test_controlling_valve_by_state(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
@@ -560,7 +553,7 @@ async def tests_controling_valve_by_state(
         ),
     ],
 )
-async def tests_supported_features(
+async def test_supported_features(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     supported_features: ValveEntityFeature,
@@ -590,7 +583,7 @@ async def tests_supported_features(
         ),
     ],
 )
-async def tests_open_close_payload_config_not_allowed(
+async def test_open_close_payload_config_not_allowed(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -638,7 +631,7 @@ async def tests_open_close_payload_config_not_allowed(
         (SERVICE_OPEN_VALVE, "OPEN", STATE_OPEN),
     ],
 )
-async def tests_controling_valve_by_state_optimistic(
+async def test_controlling_valve_by_state_optimistic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
@@ -690,7 +683,7 @@ async def tests_controling_valve_by_state_optimistic(
         (SERVICE_STOP_VALVE, "-1"),
     ],
 )
-async def tests_controling_valve_by_position(
+async def test_controlling_valve_by_position(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
@@ -741,7 +734,7 @@ async def tests_controling_valve_by_position(
         (100, "100"),
     ],
 )
-async def tests_controling_valve_by_set_valve_position(
+async def test_controlling_valve_by_set_valve_position(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     position: int,
@@ -793,7 +786,7 @@ async def tests_controling_valve_by_set_valve_position(
         (100, "100", 100, STATE_OPEN),
     ],
 )
-async def tests_controling_valve_optimistic_by_set_valve_position(
+async def test_controlling_valve_optimistic_by_set_valve_position(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     position: int,
@@ -850,7 +843,7 @@ async def tests_controling_valve_optimistic_by_set_valve_position(
         (100, "127"),
     ],
 )
-async def tests_controling_valve_with_alt_range_by_set_valve_position(
+async def test_controlling_valve_with_alt_range_by_set_valve_position(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     position: int,
@@ -901,7 +894,7 @@ async def tests_controling_valve_with_alt_range_by_set_valve_position(
         (SERVICE_OPEN_VALVE, "127"),
     ],
 )
-async def tests_controling_valve_with_alt_range_by_position(
+async def test_controlling_valve_with_alt_range_by_position(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
@@ -962,7 +955,7 @@ async def tests_controling_valve_with_alt_range_by_position(
         (SERVICE_OPEN_VALVE, "100", STATE_OPEN, 100),
     ],
 )
-async def tests_controling_valve_by_position_optimistic(
+async def test_controlling_valve_by_position_optimistic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
@@ -1021,7 +1014,7 @@ async def tests_controling_valve_by_position_optimistic(
         (100, "127", 100, STATE_OPEN),
     ],
 )
-async def tests_controling_valve_optimistic_alt_trange_by_set_valve_position(
+async def test_controlling_valve_optimistic_alt_range_by_set_valve_position(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     position: int,

@@ -1,4 +1,5 @@
 """Support for update entities of a Pi-hole system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,14 +8,12 @@ from dataclasses import dataclass
 from hole import Hole
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
+from . import PiHoleConfigEntry, PiHoleEntity
 
 
 @dataclass(frozen=True)
@@ -59,16 +58,18 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PiHoleConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole update entities."""
     name = entry.data[CONF_NAME]
-    hole_data = hass.data[DOMAIN][entry.entry_id]
+    hole_data = entry.runtime_data
 
     async_add_entities(
         PiHoleUpdateEntity(
-            hole_data[DATA_KEY_API],
-            hole_data[DATA_KEY_COORDINATOR],
+            hole_data.api,
+            hole_data.coordinator,
             name,
             entry.entry_id,
             description,
@@ -86,7 +87,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         name: str,
         server_unique_id: str,
         description: PiHoleUpdateEntityDescription,

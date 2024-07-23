@@ -1,4 +1,5 @@
 """Support for Google Sheets."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -95,9 +96,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
         try:
             sheet = service.open_by_key(entry.unique_id)
-        except RefreshError as ex:
+        except RefreshError:
             entry.async_start_reauth(hass)
-            raise ex
+            raise
         except APIError as ex:
             raise HomeAssistantError("Failed to write data") from ex
 

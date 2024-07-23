@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -83,7 +84,7 @@ async def test_basic_usage(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.available is True
 
@@ -126,10 +127,7 @@ async def test_poll_can_be_skipped(
         needs_poll_method=_poll_needed,
         poll_method=_poll,
         poll_debouncer=Debouncer(
-            hass,
-            _LOGGER,
-            cooldown=0,
-            immediate=True,
+            hass, _LOGGER, cooldown=0, immediate=True, background=True
         ),
     )
     assert coordinator.available is False  # no data yet
@@ -141,19 +139,19 @@ async def test_poll_can_be_skipped(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": True})
 
     flag = False
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": None}, True)
 
     flag = True
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": True})
 
     cancel()
@@ -207,7 +205,7 @@ async def test_bleak_error_and_recover(
 
     # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": None}, False)
 
     assert (
@@ -218,7 +216,7 @@ async def test_bleak_error_and_recover(
     # Second poll works
     flag = False
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
@@ -271,13 +269,13 @@ async def test_poll_failure_and_recover(
 
     # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": None}, False)
 
     # Second poll works
     flag = False
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
@@ -328,8 +326,8 @@ async def test_second_poll_needed(
     # Second poll gets stuck behind first poll
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
-    await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert async_handle_update.mock_calls[1] == call({"testdata": 1})
 
     cancel()
 
@@ -380,7 +378,7 @@ async def test_rate_limit(
     # Third poll gets stuck behind first poll doesn't get queued
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
 
     cancel()
@@ -424,7 +422,7 @@ async def test_no_polling_after_stop_event(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     assert coordinator.available is True
@@ -437,12 +435,12 @@ async def test_no_polling_after_stop_event(
     assert async_handle_update.mock_calls[1] == call({"testdata": 1})
 
     hass.set_state(CoreState.stopping)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     # Should not generate a poll now that CoreState is stopping
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     cancel()

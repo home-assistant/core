@@ -1,4 +1,5 @@
 """Sensor platform that for Ping integration."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 

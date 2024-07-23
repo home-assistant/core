@@ -1,4 +1,5 @@
 """Geolocation support for GeoNet NZ Quakes Feeds."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

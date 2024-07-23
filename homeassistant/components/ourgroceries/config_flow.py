@@ -1,4 +1,5 @@
 """Config flow for OurGroceries integration."""
+
 from __future__ import annotations
 
 import logging
@@ -42,7 +43,7 @@ class OurGroceriesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidLoginException:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

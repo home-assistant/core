@@ -1,4 +1,5 @@
 """Test APRS device tracker."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, Mock, patch
 
@@ -6,7 +7,7 @@ import aprslib
 from aprslib import IS
 import pytest
 
-import homeassistant.components.aprs.device_tracker as device_tracker
+from homeassistant.components.aprs import device_tracker
 from homeassistant.core import HomeAssistant
 
 DEFAULT_PORT = 14580

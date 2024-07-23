@@ -1,4 +1,5 @@
 """The tests for the microsoft face identify platform."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -98,15 +99,15 @@ async def test_ms_identify_process_image(
     """Set up and scan a picture and test plates from event."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("microsoft_face_persongroups.json"),
+        text=load_fixture("persongroups.json", "microsoft_face_identify"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face_identify"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face_identify"),
     )
 
     await async_setup_component(hass, ip.DOMAIN, CONFIG)
@@ -128,11 +129,11 @@ async def test_ms_identify_process_image(
 
     aioclient_mock.post(
         ENDPOINT_URL.format("detect"),
-        text=load_fixture("microsoft_face_detect.json"),
+        text=load_fixture("detect.json", "microsoft_face_identify"),
     )
     aioclient_mock.post(
         ENDPOINT_URL.format("identify"),
-        text=load_fixture("microsoft_face_identify.json"),
+        text=load_fixture("identify.json", "microsoft_face_identify"),
     )
 
     common.async_scan(hass, entity_id="image_processing.test_local")

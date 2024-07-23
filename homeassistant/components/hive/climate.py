@@ -1,4 +1,5 @@
 """Support for the Hive climate devices."""
+
 from datetime import timedelta
 import logging
 from typing import Any
@@ -58,11 +59,8 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("climate")
-    entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveClimateEntity(hive, dev))
-    async_add_entities(entities, True)
+        async_add_entities((HiveClimateEntity(hive, dev) for dev in devices), True)
 
     platform = entity_platform.async_get_current_platform()
 

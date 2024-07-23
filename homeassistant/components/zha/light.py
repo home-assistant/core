@@ -1,4 +1,5 @@
 """Lights on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 from collections import Counter
@@ -146,11 +147,10 @@ class BaseLight(LogMixin, light.LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
-        attributes = {
+        return {
             "off_with_transition": self._off_with_transition,
             "off_brightness": self._off_brightness,
         }
-        return attributes
 
     @property
     def is_on(self) -> bool:
@@ -1136,13 +1136,13 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             # time of any members.
             if member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS:
                 self._DEFAULT_MIN_TRANSITION_TIME = (
-                    MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME
+                    MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME  # noqa: SLF001
                 )
 
             # Check all group members to see if they support execute_if_off.
             # If at least one member has a color cluster and doesn't support it,
             # it's not used.
-            for endpoint in member.device._endpoints.values():
+            for endpoint in member.device._endpoints.values():  # noqa: SLF001
                 for cluster_handler in endpoint.all_cluster_handlers.values():
                     if (
                         cluster_handler.name == CLUSTER_HANDLER_COLOR

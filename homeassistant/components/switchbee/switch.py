@@ -102,7 +102,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             await self.coordinator.async_refresh()
             raise HomeAssistantError(
-                f"Failed to set {self._attr_name} state {state}, {str(exp)}"
+                f"Failed to set {self._attr_name} state {state}, {exp!s}"
             ) from exp
 
         await self.coordinator.async_refresh()

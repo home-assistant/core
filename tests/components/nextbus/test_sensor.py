@@ -1,10 +1,11 @@
 """The tests for the nexbus sensor component."""
+
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 
-from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
+from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 import pytest
 
 from homeassistant.components import sensor
@@ -12,10 +13,8 @@ from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMA
 from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_STOP
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -104,58 +103,6 @@ async def assert_setup_sensor(
     assert config_entry.state is expected_state
 
     return config_entry
-
-
-async def test_legacy_yaml_setup(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test config setup and yaml deprecation."""
-    with patch(
-        "homeassistant.components.nextbus.config_flow.NextBusClient",
-    ) as NextBusClient:
-        NextBusClient.return_value.get_predictions_for_multi_stops.return_value = (
-            BASIC_RESULTS
-        )
-        await async_setup_component(hass, sensor.DOMAIN, PLATFORM_CONFIG)
-        await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue
-
-
-async def test_valid_config(
-    hass: HomeAssistant, mock_nextbus: MagicMock, mock_nextbus_lists: MagicMock
-) -> None:
-    """Test that sensor is set up properly with valid config."""
-    await assert_setup_sensor(hass, CONFIG_BASIC)
-
-
-async def test_verify_valid_state(
-    hass: HomeAssistant,
-    mock_nextbus: MagicMock,
-    mock_nextbus_lists: MagicMock,
-    mock_nextbus_predictions: MagicMock,
-) -> None:
-    """Verify all attributes are set from a valid response."""
-    await assert_setup_sensor(hass, CONFIG_BASIC)
-    entity = er.async_get(hass).async_get(SENSOR_ID)
-    assert entity
-
-    mock_nextbus_predictions.assert_called_once_with(
-        {RouteStop(VALID_ROUTE, VALID_STOP)}
-    )
-
-    state = hass.states.get(SENSOR_ID)
-    assert state is not None
-    assert state.state == "2019-03-28T21:09:31+00:00"
-    assert state.attributes["agency"] == VALID_AGENCY_TITLE
-    assert state.attributes["route"] == VALID_ROUTE_TITLE
-    assert state.attributes["stop"] == VALID_STOP_TITLE
-    assert state.attributes["direction"] == "Outbound"
-    assert state.attributes["upcoming"] == "1, 2, 3, 10"
 
 
 async def test_message_dict(
@@ -273,10 +220,10 @@ async def test_direction_list(
 
 @pytest.mark.parametrize(
     "client_exception",
-    (
+    [
         NextBusHTTPError("failed", HTTPError("url", 500, "error", MagicMock(), None)),
         NextBusFormatError("failed"),
-    ),
+    ],
 )
 async def test_prediction_exceptions(
     hass: HomeAssistant,
@@ -311,10 +258,10 @@ async def test_custom_name(
 
 @pytest.mark.parametrize(
     "prediction_results",
-    (
+    [
         {},
         {"Error": "Failed"},
-    ),
+    ],
 )
 async def test_no_predictions(
     hass: HomeAssistant,

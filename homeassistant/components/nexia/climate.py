@@ -1,4 +1,5 @@
 """Support for Nexia / Trane XL thermostats."""
+
 from __future__ import annotations
 
 from typing import Any

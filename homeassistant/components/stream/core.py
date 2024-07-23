@@ -1,4 +1,5 @@
 """Provides core stream functionality."""
+
 from __future__ import annotations
 
 import asyncio
@@ -388,7 +389,7 @@ class StreamView(HomeAssistantView):
         )
 
         if not stream:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         # Start worker if not already started
         await stream.start()
@@ -399,7 +400,7 @@ class StreamView(HomeAssistantView):
         self, request: web.Request, stream: Stream, sequence: str, part_num: str
     ) -> web.StreamResponse:
         """Handle the stream request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 TRANSFORM_IMAGE_FUNCTION = (

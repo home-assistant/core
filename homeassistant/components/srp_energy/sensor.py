@@ -1,4 +1,5 @@
 """Support for SRP Energy Sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (

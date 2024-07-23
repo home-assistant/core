@@ -1,4 +1,5 @@
 """Support for DD-WRT routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -97,7 +98,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             elements = cleaned_str.split(",")
             num_clients = int(len(elements) / 5)
             self.mac2name = {}
-            for idx in range(0, num_clients):
+            for idx in range(num_clients):
                 # The data is a single array
                 # every 5 elements represents one host, the MAC
                 # is the third element and the name is the first.

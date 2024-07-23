@@ -21,12 +21,10 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
         self._inverse: dict[_ValT, _EnumT] = {v: k for k, v in mapping.items()}
 
     @overload
-    def from_esphome(self, value: _EnumT) -> _ValT:
-        ...
+    def from_esphome(self, value: _EnumT) -> _ValT: ...
 
     @overload
-    def from_esphome(self, value: _EnumT | None) -> _ValT | None:
-        ...
+    def from_esphome(self, value: _EnumT | None) -> _ValT | None: ...
 
     def from_esphome(self, value: _EnumT | None) -> _ValT | None:
         """Convert from an esphome int representation to a hass string."""

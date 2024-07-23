@@ -1,4 +1,5 @@
 """Binary Sensor platform for FireServiceRota integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -62,7 +63,7 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             return attr
 
         data = self.coordinator.data
-        attr = {
+        return {
             key: data[key]
             for key in (
                 "start_time",
@@ -76,5 +77,3 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             )
             if key in data
         }
-
-        return attr

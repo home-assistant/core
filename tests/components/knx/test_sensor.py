@@ -1,4 +1,5 @@
 """Test KNX sensor."""
+
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
 from homeassistant.components.knx.schema import SensorSchema
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN

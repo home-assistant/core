@@ -1,4 +1,5 @@
 """Constants for Roborock."""
+
 from vacuum_map_parser_base.config.drawable import Drawable
 
 from homeassistant.const import Platform
@@ -29,3 +30,5 @@ IMAGE_DRAWABLES: list[Drawable] = [
 IMAGE_CACHE_INTERVAL = 90
 
 MAP_SLEEP = 3
+
+GET_MAPS_SERVICE_NAME = "get_maps"

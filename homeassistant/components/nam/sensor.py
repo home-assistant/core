@@ -1,4 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -32,7 +32,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import NAMDataUpdateCoordinator
+from . import NAMConfigEntry, NAMDataUpdateCoordinator
 from .const import (
     ATTR_BME280_HUMIDITY,
     ATTR_BME280_PRESSURE,
@@ -74,16 +74,11 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class NAMSensorRequiredKeysMixin:
-    """Class for NAM entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class NAMSensorEntityDescription(SensorEntityDescription):
+    """NAM sensor entity description."""
 
     value: Callable[[NAMSensors], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class NAMSensorEntityDescription(SensorEntityDescription, NAMSensorRequiredKeysMixin):
-    """NAM sensor entity description."""
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (
@@ -351,10 +346,10 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NAMConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
-    coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     # Due to the change of the attribute name of two sensors, it is necessary to migrate
     # the unique_ids to the new names.
@@ -371,12 +366,11 @@ async def async_setup_entry(
             )
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    sensors: list[NAMSensor] = []
-    for description in SENSORS:
-        if getattr(coordinator.data, description.key) is not None:
-            sensors.append(NAMSensor(coordinator, description))
-
-    async_add_entities(sensors, False)
+    async_add_entities(
+        NAMSensor(coordinator, description)
+        for description in SENSORS
+        if getattr(coordinator.data, description.key) is not None
+    )
 
 
 class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):

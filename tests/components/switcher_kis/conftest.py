@@ -1,4 +1,5 @@
 """Common fixtures and objects for the Switcher integration tests."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

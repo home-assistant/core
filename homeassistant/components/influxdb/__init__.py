@@ -1,4 +1,5 @@
 """Support for sending data to an Influx database."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -512,9 +513,9 @@ class InfluxThread(threading.Thread):
     def __init__(self, hass, influx, event_to_json, max_tries):
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
-        self.queue: queue.SimpleQueue[
-            threading.Event | tuple[float, Event] | None
-        ] = queue.SimpleQueue()
+        self.queue: queue.SimpleQueue[threading.Event | tuple[float, Event] | None] = (
+            queue.SimpleQueue()
+        )
         self.influx = influx
         self.event_to_json = event_to_json
         self.max_tries = max_tries
@@ -550,7 +551,7 @@ class InfluxThread(threading.Thread):
 
                 if item is None:
                     self.shutdown = True
-                elif type(item) is tuple:  # noqa: E721
+                elif type(item) is tuple:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
 

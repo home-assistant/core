@@ -1,4 +1,5 @@
 """The sensor tests for the august platform."""
+
 from typing import Any
 
 from homeassistant import core as ha

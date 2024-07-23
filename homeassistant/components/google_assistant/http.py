@@ -1,4 +1,5 @@
 """Support for Google Actions Smart Home Control."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,7 +13,7 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components import webhook
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -123,7 +124,7 @@ class GoogleConfig(AbstractConfig):
     def get_local_user_id(self, webhook_id):
         """Map webhook ID to a Home Assistant user ID.
 
-        Any action inititated by Google Assistant via the local SDK will be attributed
+        Any action initiated by Google Assistant via the local SDK will be attributed
         to the returned user ID.
 
         Return None if no user id is found for the webhook_id.
@@ -380,7 +381,7 @@ class GoogleAssistantView(HomeAssistantView):
         """Handle Google Assistant requests."""
         message: dict = await request.json()
         result = await async_handle_message(
-            request.app["hass"],
+            request.app[KEY_HASS],
             self.config,
             request["hass_user"].id,
             request["hass_user"].id,
@@ -395,8 +396,7 @@ async def async_get_users(hass: HomeAssistant) -> list[str]:
 
     This is called by the cloud integration to import from the previously shared store.
     """
-    # pylint: disable-next=protected-access
-    path = hass.config.path(STORAGE_DIR, GoogleConfigStore._STORAGE_KEY)
+    path = hass.config.path(STORAGE_DIR, GoogleConfigStore._STORAGE_KEY)  # noqa: SLF001
     try:
         store_data = await hass.async_add_executor_job(json_util.load_json, path)
     except HomeAssistantError:

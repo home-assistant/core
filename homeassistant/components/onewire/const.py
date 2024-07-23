@@ -1,4 +1,5 @@
 """Constants for 1-Wire component."""
+
 from __future__ import annotations
 
 from homeassistant.const import Platform
@@ -27,6 +28,7 @@ DEVICE_SUPPORT = {
     "3B": (),
     "42": (),
     "7E": ("EDS0066", "EDS0068"),
+    "A6": (),
     "EF": ("HB_HUB", "HB_MOISTURE_METER", "HobbyBoards_EF"),
 }
 

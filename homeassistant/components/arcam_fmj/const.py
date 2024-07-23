@@ -1,4 +1,5 @@
 """Constants used for arcam."""
+
 DOMAIN = "arcam_fmj"
 
 SIGNAL_CLIENT_STARTED = "arcam.client_started"

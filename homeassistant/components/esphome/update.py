@@ -1,4 +1,5 @@
 """Update platform for ESPHome."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,11 +17,11 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .dashboard import ESPHomeDashboard, async_get_dashboard
+from .coordinator import ESPHomeDashboardCoordinator
+from .dashboard import async_get_dashboard
 from .domain_data import DomainData
 from .entry_data import RuntimeEntryData
 
@@ -60,14 +61,12 @@ async def async_setup_entry(
         return
 
     unsubs = [
-        async_dispatcher_connect(
-            hass, entry_data.signal_device_updated, _async_setup_update_entity
-        ),
+        entry_data.async_subscribe_device_updated(_async_setup_update_entity),
         dashboard.async_add_listener(_async_setup_update_entity),
     ]
 
 
-class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
+class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboardCoordinator], UpdateEntity):
     """Defines an ESPHome update entity."""
 
     _attr_has_entity_name = True
@@ -77,7 +76,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     _attr_release_url = "https://esphome.io/changelog/"
 
     def __init__(
-        self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboard
+        self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboardCoordinator
     ) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator=coordinator)
@@ -140,7 +139,9 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         )
 
     @callback
-    def _handle_device_update(self, static_info: EntityInfo | None = None) -> None:
+    def _handle_device_update(
+        self, static_info: list[EntityInfo] | None = None
+    ) -> None:
         """Handle updated data from the device."""
         self._update_attrs()
         self.async_write_ha_state()
@@ -148,21 +149,12 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
-        hass = self.hass
         entry_data = self._entry_data
         self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_static_info_updated,
-                self._handle_device_update,
-            )
+            entry_data.async_subscribe_static_info_updated(self._handle_device_update)
         )
         self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_device_updated,
-                self._handle_device_update,
-            )
+            entry_data.async_subscribe_device_updated(self._handle_device_update)
         )
 
     async def async_install(

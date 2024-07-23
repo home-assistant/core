@@ -1,4 +1,5 @@
 """Test the Tessie binary sensor platform."""
+
 import pytest
 from syrupy import SnapshotAssertion
 

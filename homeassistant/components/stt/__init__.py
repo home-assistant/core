@@ -1,8 +1,8 @@
 """Provide functionality to STT."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import AsyncIterable
 from dataclasses import asdict
 import logging
@@ -126,8 +126,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.register_shutdown()
     platform_setups = async_setup_legacy(hass, config)
 
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
+    for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use stt as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
 
     hass.http.register_view(SpeechToTextView(hass.data[DATA_PROVIDERS]))
     return True
@@ -256,7 +262,7 @@ class SpeechToTextView(HomeAssistantView):
             not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
-            raise HTTPNotFound()
+            raise HTTPNotFound
 
         # Get metadata
         try:
@@ -269,7 +275,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Check format
             if not stt_provider.check_metadata(metadata):
-                raise HTTPUnsupportedMediaType()
+                raise HTTPUnsupportedMediaType
 
             # Process audio stream
             result = await stt_provider.async_process_audio_stream(
@@ -278,7 +284,7 @@ class SpeechToTextView(HomeAssistantView):
         else:
             # Check format
             if not provider_entity.check_metadata(metadata):
-                raise HTTPUnsupportedMediaType()
+                raise HTTPUnsupportedMediaType
 
             # Process audio stream
             result = await provider_entity.internal_async_process_audio_stream(
@@ -295,7 +301,7 @@ class SpeechToTextView(HomeAssistantView):
             not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
-            raise HTTPNotFound()
+            raise HTTPNotFound
 
         if not provider_entity:
             stt_provider = self._get_provider(hass, provider)

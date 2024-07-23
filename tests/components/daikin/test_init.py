@@ -1,4 +1,5 @@
 """Define tests for the Daikin init."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -211,7 +212,7 @@ async def test_client_connection_error(hass: HomeAssistant, mock_daikin) -> None
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
@@ -227,4 +228,4 @@ async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

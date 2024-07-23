@@ -1,4 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from datetime import datetime as dt, timedelta

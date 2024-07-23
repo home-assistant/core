@@ -1,4 +1,5 @@
 """Test recorder system health."""
+
 from unittest.mock import ANY, Mock, patch
 
 import pytest
@@ -44,11 +45,14 @@ async def test_recorder_system_health_alternate_dbms(
     """Test recorder system health."""
     assert await async_setup_component(hass, "system_health", {})
     await async_wait_recording_done(hass)
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
-    ), patch(
-        "sqlalchemy.orm.session.Session.execute",
-        return_value=Mock(scalar=Mock(return_value=("1048576"))),
+    with (
+        patch(
+            "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
+        ),
+        patch(
+            "sqlalchemy.orm.session.Session.execute",
+            return_value=Mock(scalar=Mock(return_value=("1048576"))),
+        ),
     ):
         info = await get_system_health_info(hass, "recorder")
     instance = get_instance(hass)
@@ -72,15 +76,19 @@ async def test_recorder_system_health_db_url_missing_host(
     await async_wait_recording_done(hass)
 
     instance = get_instance(hass)
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
-    ), patch.object(
-        instance,
-        "db_url",
-        "postgresql://homeassistant:blabla@/home_assistant?host=/config/socket",
-    ), patch(
-        "sqlalchemy.orm.session.Session.execute",
-        return_value=Mock(scalar=Mock(return_value=("1048576"))),
+    with (
+        patch(
+            "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
+        ),
+        patch.object(
+            instance,
+            "db_url",
+            "postgresql://homeassistant:blabla@/home_assistant?host=/config/socket",
+        ),
+        patch(
+            "sqlalchemy.orm.session.Session.execute",
+            return_value=Mock(scalar=Mock(return_value=("1048576"))),
+        ),
     ):
         info = await get_system_health_info(hass, "recorder")
     assert info == {

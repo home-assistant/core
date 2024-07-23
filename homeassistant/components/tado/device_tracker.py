@@ -1,4 +1,5 @@
 """Support for Tado Smart device trackers."""
+
 from __future__ import annotations
 
 import logging

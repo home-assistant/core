@@ -1,4 +1,5 @@
 """Support for interface with an Samsung TV."""
+
 from __future__ import annotations
 
 import asyncio
@@ -37,6 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.util.async_ import create_eager_task
 
+from . import SamsungTVConfigEntry
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
 from .entity import SamsungTVEntity
@@ -45,15 +47,17 @@ from .triggers.turn_on import async_get_turn_on_trigger
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
-    MediaPlayerEntityFeature.PAUSE
-    | MediaPlayerEntityFeature.VOLUME_STEP
-    | MediaPlayerEntityFeature.VOLUME_MUTE
-    | MediaPlayerEntityFeature.PREVIOUS_TRACK
-    | MediaPlayerEntityFeature.SELECT_SOURCE
-    | MediaPlayerEntityFeature.NEXT_TRACK
-    | MediaPlayerEntityFeature.TURN_OFF
+    MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 
@@ -62,10 +66,12 @@ APP_LIST_DELAY = 3
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SamsungTVConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Samsung TV from a config entry."""
-    bridge = hass.data[DOMAIN][entry.entry_id]
+    bridge = entry.runtime_data
     async_add_entities([SamsungTVDevice(bridge, entry)], True)
 
 

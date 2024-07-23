@@ -1,4 +1,5 @@
 """Support for performing TensorFlow classification on images."""
+
 from __future__ import annotations
 
 import io
@@ -95,9 +96,7 @@ def get_model_detection_function(model):
 
         image, shapes = model.preprocess(image)
         prediction_dict = model.predict(image, shapes)
-        detections = model.postprocess(prediction_dict, shapes)
-
-        return detections
+        return model.postprocess(prediction_dict, shapes)
 
     return detect_fn
 
@@ -195,20 +194,16 @@ def setup_platform(
         labels, use_display_name=True
     )
 
-    entities = []
-
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            TensorFlowImageProcessor(
-                hass,
-                camera[CONF_ENTITY_ID],
-                camera.get(CONF_NAME),
-                category_index,
-                config,
-            )
+    add_entities(
+        TensorFlowImageProcessor(
+            hass,
+            camera[CONF_ENTITY_ID],
+            camera.get(CONF_NAME),
+            category_index,
+            config,
         )
-
-    add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class TensorFlowImageProcessor(ImageProcessingEntity):
@@ -381,7 +376,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         matches = {}
         total_matches = 0
-        for box, score, obj_class in zip(boxes, scores, classes):
+        for box, score, obj_class in zip(boxes, scores, classes, strict=False):
             score = score * 100
             boxes = box.tolist()
 

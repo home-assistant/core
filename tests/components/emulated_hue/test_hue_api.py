@@ -1,4 +1,5 @@
 """The tests for the emulated Hue component."""
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus

@@ -1,4 +1,5 @@
 """Config flow for OpenWeatherMap."""
+
 from __future__ import annotations
 
 from pyowm import OWM

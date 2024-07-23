@@ -1,4 +1,5 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Test the Z-Wave JS helpers module."""
+
 import voluptuous as vol
 
 from homeassistant.components.zwave_js.helpers import (

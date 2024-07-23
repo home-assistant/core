@@ -1,4 +1,5 @@
 """Support for airthings ble sensors."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -12,11 +13,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
     Platform,
@@ -36,12 +35,10 @@ from homeassistant.helpers.entity_registry import (
     async_get as entity_async_get,
 )
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from . import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,12 +48,14 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         key="radon_1day_avg",
         translation_key="radon_1day_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
+        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_longterm_avg": SensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
+        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_1day_level": SensorEntityDescription(
@@ -81,7 +80,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -106,8 +105,8 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "illuminance": SensorEntityDescription(
         key="illuminance",
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        native_unit_of_measurement=LIGHT_LUX,
+        translation_key="illuminance",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -150,15 +149,13 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AirthingsBLEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
     is_metric = hass.config.units is METRIC_SYSTEM
 
-    coordinator: DataUpdateCoordinator[AirthingsDevice] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
 
     # we need to change some units
     sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
@@ -169,6 +166,7 @@ async def async_setup_entry(
             sensors_mapping[key] = dataclasses.replace(
                 val,
                 native_unit_of_measurement=VOLUME_PICOCURIE,
+                suggested_display_precision=1,
             )
 
     entities = []
@@ -190,7 +188,7 @@ async def async_setup_entry(
 
 
 class AirthingsSensor(
-    CoordinatorEntity[DataUpdateCoordinator[AirthingsDevice]], SensorEntity
+    CoordinatorEntity[AirthingsBLEDataUpdateCoordinator], SensorEntity
 ):
     """Airthings BLE sensors for the device."""
 
@@ -198,7 +196,7 @@ class AirthingsSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[AirthingsDevice],
+        coordinator: AirthingsBLEDataUpdateCoordinator,
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:
@@ -222,7 +220,7 @@ class AirthingsSensor(
             manufacturer=airthings_device.manufacturer,
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
-            model=airthings_device.model,
+            model=airthings_device.model.product_name,
         )
 
     @property

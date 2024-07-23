@@ -1,4 +1,5 @@
 """Constants for the AirNow integration."""
+
 ATTR_API_AQI = "AQI"
 ATTR_API_AQI_LEVEL = "Category.Number"
 ATTR_API_AQI_DESCRIPTION = "Category.Name"
@@ -7,6 +8,7 @@ ATTR_API_CATEGORY = "Category"
 ATTR_API_CAT_LEVEL = "Number"
 ATTR_API_CAT_DESCRIPTION = "Name"
 ATTR_API_O3 = "O3"
+ATTR_API_PM10 = "PM10"
 ATTR_API_PM25 = "PM2.5"
 ATTR_API_POLLUTANT = "Pollutant"
 ATTR_API_REPORT_DATE = "DateObserved"

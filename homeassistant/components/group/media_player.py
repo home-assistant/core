@@ -1,4 +1,5 @@
 """Platform allowing several media players to be grouped into one media player."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -44,14 +45,18 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 KEY_ANNOUNCE = "announce"
 KEY_CLEAR_PLAYLIST = "clear_playlist"
@@ -147,7 +152,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         }
 
     @callback
-    def async_on_state_change(self, event: EventType[EventStateChangedData]) -> None:
+    def async_on_state_change(self, event: Event[EventStateChangedData]) -> None:
         """Update supported features and state when a new state is received."""
         self.async_set_context(event.context)
         self.async_update_supported_features(
@@ -232,7 +237,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
 
         @callback
         def async_state_changed_listener(
-            event: EventType[EventStateChangedData] | None,
+            event: Event[EventStateChangedData] | None,
         ) -> None:
             """Handle child updates."""
             self.async_update_group_state()

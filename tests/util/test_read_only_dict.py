@@ -1,4 +1,5 @@
 """Test read only dictionary."""
+
 import json
 
 import pytest

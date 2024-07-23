@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_burner',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -21,6 +22,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_circulation_pump',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -33,6 +35,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_frost_protection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })

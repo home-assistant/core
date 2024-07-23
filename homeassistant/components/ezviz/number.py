@@ -1,4 +1,5 @@
 """Support for EZVIZ number controls."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -30,19 +31,12 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class EzvizNumberEntityDescriptionMixin:
-    """Mixin values for EZVIZ Number entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizNumberEntityDescription(NumberEntityDescription):
+    """Describe a EZVIZ Number."""
 
     supported_ext: str
     supported_ext_value: list
-
-
-@dataclass(frozen=True)
-class EzvizNumberEntityDescription(
-    NumberEntityDescription, EzvizNumberEntityDescriptionMixin
-):
-    """Describe a EZVIZ Number."""
 
 
 NUMBER_TYPE = EzvizNumberEntityDescription(

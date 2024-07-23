@@ -1,4 +1,5 @@
 """Vodafone Station sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,21 +25,14 @@ from .coordinator import VodafoneStationRouter
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 
 
-@dataclass(frozen=True)
-class VodafoneStationBaseEntityDescription:
-    """Vodafone Station entity base description."""
+@dataclass(frozen=True, kw_only=True)
+class VodafoneStationEntityDescription(SensorEntityDescription):
+    """Vodafone Station entity description."""
 
     value: Callable[[Any, Any], Any] = (
         lambda coordinator, key: coordinator.data.sensors[key]
     )
     is_suitable: Callable[[dict], bool] = lambda val: True
-
-
-@dataclass(frozen=True, kw_only=True)
-class VodafoneStationEntityDescription(
-    VodafoneStationBaseEntityDescription, SensorEntityDescription
-):
-    """Vodafone Station entity description."""
 
 
 def _calculate_uptime(coordinator: VodafoneStationRouter, key: str) -> datetime:
@@ -113,12 +107,12 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="phone_num1",
         translation_key="phone_num1",
-        is_suitable=lambda info: info["phone_unavailable1"] == "0",
+        is_suitable=lambda info: info["phone_num1"] != "",
     ),
     VodafoneStationEntityDescription(
         key="phone_num2",
         translation_key="phone_num2",
-        is_suitable=lambda info: info["phone_unavailable2"] == "0",
+        is_suitable=lambda info: info["phone_num2"] != "",
     ),
     VodafoneStationEntityDescription(
         key="sys_uptime",

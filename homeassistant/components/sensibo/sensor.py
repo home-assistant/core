@@ -1,4 +1,5 @@
 """Sensor platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -29,40 +29,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class MotionBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboMotionSensorEntityDescription(SensorEntityDescription):
+    """Describes Sensibo Motion sensor entity."""
 
     value_fn: Callable[[MotionSensor], StateType]
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceSensorEntityDescription(SensorEntityDescription):
+    """Describes Sensibo Device sensor entity."""
 
     value_fn: Callable[[SensiboDevice], StateType | datetime]
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
-
-
-@dataclass(frozen=True)
-class SensiboMotionSensorEntityDescription(
-    SensorEntityDescription, MotionBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
-
-
-@dataclass(frozen=True)
-class SensiboDeviceSensorEntityDescription(
-    SensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Device sensor entity."""
 
 
 FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
@@ -244,11 +230,13 @@ DESCRIPTION_BY_MODELS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo sensor platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 
@@ -324,8 +312,7 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
-        state = self.entity_description.value_fn(self.device_data)
-        return state
+        return self.entity_description.value_fn(self.device_data)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

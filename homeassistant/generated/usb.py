@@ -11,6 +11,12 @@ USB = [
         "vid": "10C4",
     },
     {
+        "description": "*home assistant connect zbt-1*",
+        "domain": "homeassistant_sky_connect",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
         "domain": "insteon",
         "vid": "10BF",
     },

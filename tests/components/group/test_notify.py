@@ -1,30 +1,87 @@
 """The tests for the notify.group platform."""
-from unittest.mock import MagicMock, patch
+
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
+from unittest.mock import MagicMock, call, patch
 
 from homeassistant import config as hass_config
-import homeassistant.components.demo.notify as demo
+from homeassistant.components import notify
 from homeassistant.components.group import SERVICE_RELOAD
-import homeassistant.components.group.notify as group
-import homeassistant.components.notify as notify
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.common import MockPlatform, get_fixture_path, mock_platform
 
 
-async def test_send_message_with_data(hass: HomeAssistant) -> None:
+class MockNotifyPlatform(MockPlatform):
+    """Help to set up a legacy test notify platform."""
+
+    def __init__(self, async_get_service: Any) -> None:
+        """Initialize platform."""
+        super().__init__()
+        self.async_get_service = async_get_service
+
+
+def mock_notify_platform(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    async_get_service: Any = None,
+):
+    """Specialize the mock platform for legacy notify service."""
+    loaded_platform = MockNotifyPlatform(async_get_service)
+    mock_platform(hass, "test.notify", loaded_platform)
+
+    return loaded_platform
+
+
+async def help_setup_notify(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    targets: dict[str, None] | None = None,
+    group_setup: list[dict[str, None]] | None = None,
+) -> MagicMock:
+    """Help set up a platform notify service."""
+    send_message_mock = MagicMock()
+
+    class _TestNotifyService(notify.BaseNotificationService):
+        def __init__(self, targets: dict[str, None] | None) -> None:
+            """Initialize service."""
+            self._targets = targets
+            super().__init__()
+
+        @property
+        def targets(self) -> Mapping[str, Any] | None:
+            """Return a dictionary of registered targets."""
+            return self._targets
+
+        def send_message(self, message: str, **kwargs: Any) -> None:
+            """Send a message."""
+            send_message_mock(message, kwargs)
+
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> notify.BaseNotificationService:
+        """Get notify service for mocked platform."""
+        return _TestNotifyService(targets)
+
+    # Mock platform with service
+    mock_notify_platform(hass, tmp_path, async_get_service=async_get_service)
+    # Setup the platform
+    items: list[dict[str, Any]] = [{"platform": "test"}]
+    items.extend(group_setup or [])
+    await async_setup_component(hass, "notify", {"notify": items})
+    await hass.async_block_till_done()
+
+    # Return mock for assertion service calls
+    return send_message_mock
+
+
+async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test sending a message with to a notify group."""
-    service1 = demo.DemoNotificationService(hass)
-    service2 = demo.DemoNotificationService(hass)
-
-    service1.send_message = MagicMock(autospec=True)
-    service2.send_message = MagicMock(autospec=True)
-
-    def mock_get_service(hass, config, discovery_info=None):
-        if config["name"] == "demo1":
-            return service1
-        return service2
-
     assert await async_setup_component(
         hass,
         "group",
@@ -32,79 +89,95 @@ async def test_send_message_with_data(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with patch.object(demo, "get_service", mock_get_service):
-        await async_setup_component(
-            hass,
-            notify.DOMAIN,
-            {
-                "notify": [
-                    {"name": "demo1", "platform": "demo"},
-                    {"name": "demo2", "platform": "demo"},
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-
-    service = await group.async_get_service(
-        hass,
+    group_setup = [
         {
+            "platform": "group",
+            "name": "My notification group",
             "services": [
-                {"service": "demo1"},
+                {"service": "test_service1"},
                 {
-                    "service": "demo2",
+                    "service": "test_service2",
                     "data": {
                         "target": "unnamed device",
                         "data": {"test": "message", "default": "default"},
                     },
                 },
-            ]
+            ],
+        }
+    ]
+    send_message_mock = await help_setup_notify(
+        hass, tmp_path, {"service1": 1, "service2": 2}, group_setup
+    )
+    assert hass.services.has_service("notify", "my_notification_group")
+
+    # Test sending a message to a notify group.
+    await hass.services.async_call(
+        "notify",
+        "my_notification_group",
+        {"message": "Hello", "title": "Test notification", "data": {"hello": "world"}},
+        blocking=True,
+    )
+    send_message_mock.assert_has_calls(
+        [
+            call(
+                "Hello",
+                {
+                    "title": "Test notification",
+                    "target": [1],
+                    "data": {"hello": "world"},
+                },
+            ),
+            call(
+                "Hello",
+                {
+                    "title": "Test notification",
+                    "target": [2],
+                    "data": {"hello": "world", "test": "message", "default": "default"},
+                },
+            ),
+        ]
+    )
+    send_message_mock.reset_mock()
+
+    # Test sending a message which overrides service defaults to a notify group
+    await hass.services.async_call(
+        "notify",
+        "my_notification_group",
+        {
+            "message": "Hello",
+            "title": "Test notification",
+            "data": {"hello": "world", "default": "override"},
         },
+        blocking=True,
+    )
+    send_message_mock.assert_has_calls(
+        [
+            call(
+                "Hello",
+                {
+                    "title": "Test notification",
+                    "target": [1],
+                    "data": {"hello": "world", "default": "override"},
+                },
+            ),
+            call(
+                "Hello",
+                {
+                    "title": "Test notification",
+                    "target": [2],
+                    "data": {
+                        "hello": "world",
+                        "test": "message",
+                        "default": "override",
+                    },
+                },
+            ),
+        ]
     )
 
-    """Test sending a message to a notify group."""
-    await service.async_send_message(
-        "Hello", title="Test notification", data={"hello": "world"}
-    )
 
-    await hass.async_block_till_done()
-
-    assert service1.send_message.mock_calls[0][1][0] == "Hello"
-    assert service1.send_message.mock_calls[0][2] == {
-        "title": "Test notification",
-        "data": {"hello": "world"},
-    }
-    assert service2.send_message.mock_calls[0][1][0] == "Hello"
-    assert service2.send_message.mock_calls[0][2] == {
-        "target": ["unnamed device"],
-        "title": "Test notification",
-        "data": {"hello": "world", "test": "message", "default": "default"},
-    }
-
-    """Test sending a message which overrides service defaults to a notify group."""
-    await service.async_send_message(
-        "Hello",
-        title="Test notification",
-        data={"hello": "world", "default": "override"},
-    )
-
-    await hass.async_block_till_done()
-
-    assert service1.send_message.mock_calls[1][1][0] == "Hello"
-    assert service1.send_message.mock_calls[1][2] == {
-        "title": "Test notification",
-        "data": {"hello": "world", "default": "override"},
-    }
-    assert service2.send_message.mock_calls[1][1][0] == "Hello"
-    assert service2.send_message.mock_calls[1][2] == {
-        "target": ["unnamed device"],
-        "title": "Test notification",
-        "data": {"hello": "world", "test": "message", "default": "override"},
-    }
-
-
-async def test_reload_notify(hass: HomeAssistant) -> None:
+async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
     """Verify we can reload the notify service."""
-
     assert await async_setup_component(
         hass,
         "group",
@@ -112,25 +185,21 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert await async_setup_component(
+    await help_setup_notify(
         hass,
-        notify.DOMAIN,
-        {
-            notify.DOMAIN: [
-                {"name": "demo1", "platform": "demo"},
-                {"name": "demo2", "platform": "demo"},
-                {
-                    "name": "group_notify",
-                    "platform": "group",
-                    "services": [{"service": "demo1"}],
-                },
-            ]
-        },
+        tmp_path,
+        {"service1": 1, "service2": 2},
+        [
+            {
+                "name": "group_notify",
+                "platform": "group",
+                "services": [{"service": "test_service1"}],
+            }
+        ],
     )
-    await hass.async_block_till_done()
 
-    assert hass.services.has_service(notify.DOMAIN, "demo1")
-    assert hass.services.has_service(notify.DOMAIN, "demo2")
+    assert hass.services.has_service(notify.DOMAIN, "test_service1")
+    assert hass.services.has_service(notify.DOMAIN, "test_service2")
     assert hass.services.has_service(notify.DOMAIN, "group_notify")
 
     yaml_path = get_fixture_path("configuration.yaml", "group")
@@ -144,7 +213,7 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert hass.services.has_service(notify.DOMAIN, "demo1")
-    assert hass.services.has_service(notify.DOMAIN, "demo2")
+    assert hass.services.has_service(notify.DOMAIN, "test_service1")
+    assert hass.services.has_service(notify.DOMAIN, "test_service2")
     assert not hass.services.has_service(notify.DOMAIN, "group_notify")
     assert hass.services.has_service(notify.DOMAIN, "new_group_notify")

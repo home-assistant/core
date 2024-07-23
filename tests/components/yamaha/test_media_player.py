@@ -1,4 +1,5 @@
 """The tests for the Yamaha Media player platform."""
+
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest

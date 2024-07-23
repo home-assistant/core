@@ -1,4 +1,5 @@
 """Helper to handle a set of topics to subscribe to."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -6,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 from functools import wraps
+import time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
@@ -56,7 +58,7 @@ class TimestampedPublishMessage:
     payload: PublishPayloadType
     qos: int
     retain: bool
-    timestamp: dt.datetime
+    timestamp: float
 
 
 def log_message(
@@ -76,7 +78,7 @@ def log_message(
             "messages": deque([], STORED_MESSAGES),
         }
     msg = TimestampedPublishMessage(
-        topic, payload, qos, retain, timestamp=dt_util.utcnow()
+        topic, payload, qos, retain, timestamp=time.monotonic()
     )
     entity_info["transmitted"][topic]["messages"].append(msg)
 
@@ -174,6 +176,7 @@ def remove_trigger_discovery_data(
 
 def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
     entity_info = get_mqtt_data(hass).debug_info_entities[entity_id]
+    monotonic_time_diff = time.time() - time.monotonic()
     subscriptions = [
         {
             "topic": topic,
@@ -182,7 +185,10 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "payload": str(msg.payload),
                     "qos": msg.qos,
                     "retain": msg.retain,
-                    "time": msg.timestamp,
+                    "time": dt_util.utc_from_timestamp(
+                        msg.timestamp + monotonic_time_diff,
+                        tz=dt.UTC,
+                    ),
                     "topic": msg.topic,
                 }
                 for msg in subscription["messages"]
@@ -198,7 +204,10 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "payload": str(msg.payload),
                     "qos": msg.qos,
                     "retain": msg.retain,
-                    "time": msg.timestamp,
+                    "time": dt_util.utc_from_timestamp(
+                        msg.timestamp + monotonic_time_diff,
+                        tz=dt.UTC,
+                    ),
                     "topic": msg.topic,
                 }
                 for msg in subscription["messages"]
@@ -238,11 +247,14 @@ def info_for_config_entry(hass: HomeAssistant) -> dict[str, list[Any]]:
     mqtt_data = get_mqtt_data(hass)
     mqtt_info: dict[str, list[Any]] = {"entities": [], "triggers": []}
 
-    for entity_id in mqtt_data.debug_info_entities:
-        mqtt_info["entities"].append(_info_for_entity(hass, entity_id))
+    mqtt_info["entities"].extend(
+        _info_for_entity(hass, entity_id) for entity_id in mqtt_data.debug_info_entities
+    )
 
-    for trigger_key in mqtt_data.debug_info_triggers:
-        mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
+    mqtt_info["triggers"].extend(
+        _info_for_trigger(hass, trigger_key)
+        for trigger_key in mqtt_data.debug_info_triggers
+    )
 
     return mqtt_info
 
@@ -258,16 +270,16 @@ def info_for_device(hass: HomeAssistant, device_id: str) -> dict[str, list[Any]]
     entries = er.async_entries_for_device(
         entity_registry, device_id, include_disabled_entities=True
     )
-    for entry in entries:
-        if entry.entity_id not in mqtt_data.debug_info_entities:
-            continue
+    mqtt_info["entities"].extend(
+        _info_for_entity(hass, entry.entity_id)
+        for entry in entries
+        if entry.entity_id in mqtt_data.debug_info_entities
+    )
 
-        mqtt_info["entities"].append(_info_for_entity(hass, entry.entity_id))
-
-    for trigger_key, trigger in mqtt_data.debug_info_triggers.items():
-        if trigger["device_id"] != device_id:
-            continue
-
-        mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
+    mqtt_info["triggers"].extend(
+        _info_for_trigger(hass, trigger_key)
+        for trigger_key, trigger in mqtt_data.debug_info_triggers.items()
+        if trigger["device_id"] == device_id
+    )
 
     return mqtt_info

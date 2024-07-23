@@ -1,4 +1,5 @@
 """Test the Rainforest Eagle diagnostics."""
+
 from dataclasses import asdict
 
 import pytest

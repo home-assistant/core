@@ -1,4 +1,5 @@
 """The tests for the simulated sensor."""
+
 from homeassistant.components.simulated.sensor import (
     CONF_AMP,
     CONF_FWHM,

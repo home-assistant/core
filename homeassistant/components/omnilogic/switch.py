@@ -1,4 +1,5 @@
 """Platform for Omnilogic switch integration."""
+
 import time
 from typing import Any
 

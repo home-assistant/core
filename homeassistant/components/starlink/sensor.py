@@ -1,4 +1,5 @@
 """Contains sensors exposed by the Starlink integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -40,18 +41,11 @@ async def async_setup_entry(
     )
 
 
-@dataclass(frozen=True)
-class StarlinkSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkSensorEntityDescription(SensorEntityDescription):
+    """Describes a Starlink sensor entity."""
 
     value_fn: Callable[[StarlinkData], datetime | StateType]
-
-
-@dataclass(frozen=True)
-class StarlinkSensorEntityDescription(
-    SensorEntityDescription, StarlinkSensorEntityDescriptionMixin
-):
-    """Describes a Starlink sensor entity."""
 
 
 class StarlinkSensorEntity(StarlinkEntity, SensorEntity):

@@ -48,5 +48,42 @@
         "name": "All torrents"
       }
     }
+  },
+  "services": {
+    "get_torrents": {
+      "name": "Get torrents",
+      "description": "Gets a list of current torrents",
+      "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "Which service to grab the list from"
+        },
+        "torrent_filter": {
+          "name": "Torrent filter",
+          "description": "What kind of torrents you want to return, such as All or Active."
+        }
+      }
+    },
+    "get_all_torrents": {
+      "name": "Get all torrents",
+      "description": "Gets a list of current torrents from all instances of qBittorrent",
+      "fields": {
+        "torrent_filter": {
+          "name": "Torrent filter",
+          "description": "What kind of torrents you want to return, such as All or Active."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_device": {
+      "message": "No device with id {device_id} was found"
+    },
+    "invalid_entry_id": {
+      "message": "No entry with id {device_id} was found"
+    },
+    "login_error": {
+      "message": "A login error occured. Please check you username and password."
+    }
   }
 }

@@ -1,4 +1,5 @@
 """Test the Tessie sensor platform."""
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion

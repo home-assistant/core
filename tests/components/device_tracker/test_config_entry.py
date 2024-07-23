@@ -1,4 +1,5 @@
 """Test Device Tracker config entry things."""
+
 from collections.abc import Generator
 from typing import Any
 
@@ -335,14 +336,14 @@ async def test_load_unload_entry(
 ) -> None:
     """Test loading and unloading a config entry with a device tracker entity."""
     config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(entity_id)
     assert state
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     state = hass.states.get(entity_id)
     assert not state
@@ -435,7 +436,7 @@ async def test_tracker_entity_state(
 ) -> None:
     """Test tracker entity state and state attributes."""
     config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     hass.states.async_set(
         "zone.home",
         "0",
@@ -481,7 +482,7 @@ async def test_scanner_entity_state(
     )
 
     config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_state = hass.states.get(entity_id)
     assert entity_state
@@ -578,88 +579,6 @@ def test_base_tracker_entity() -> None:
     assert entity.battery_level is None
     with pytest.raises(NotImplementedError):
         assert entity.state_attributes is None
-
-
-async def test_cleanup_legacy(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test we clean up devices created by old device tracker."""
-    device_entry_1 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device1")}
-    )
-    device_entry_2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device2")}
-    )
-    device_entry_3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device3")}
-    )
-
-    # Device with light + device tracker entity
-    entity_entry_1a = entity_registry.async_get_or_create(
-        DOMAIN,
-        "test",
-        "entity1a-unique",
-        config_entry=config_entry,
-        device_id=device_entry_1.id,
-    )
-    entity_entry_1b = entity_registry.async_get_or_create(
-        "light",
-        "test",
-        "entity1b-unique",
-        config_entry=config_entry,
-        device_id=device_entry_1.id,
-    )
-    # Just device tracker entity
-    entity_entry_2a = entity_registry.async_get_or_create(
-        DOMAIN,
-        "test",
-        "entity2a-unique",
-        config_entry=config_entry,
-        device_id=device_entry_2.id,
-    )
-    # Device with no device tracker entities
-    entity_entry_3a = entity_registry.async_get_or_create(
-        "light",
-        "test",
-        "entity3a-unique",
-        config_entry=config_entry,
-        device_id=device_entry_3.id,
-    )
-    # Device tracker but no device
-    entity_entry_4a = entity_registry.async_get_or_create(
-        DOMAIN,
-        "test",
-        "entity4a-unique",
-        config_entry=config_entry,
-    )
-    # Completely different entity
-    entity_entry_5a = entity_registry.async_get_or_create(
-        "light",
-        "test",
-        "entity4a-unique",
-        config_entry=config_entry,
-    )
-
-    await create_mock_platform(hass, config_entry, [])
-
-    for entity_entry in (
-        entity_entry_1a,
-        entity_entry_1b,
-        entity_entry_3a,
-        entity_entry_4a,
-        entity_entry_5a,
-    ):
-        assert entity_registry.async_get(entity_entry.entity_id) is not None
-
-    entity_entry = entity_registry.async_get(entity_entry_2a.entity_id)
-    assert entity_entry is not None
-    # We've removed device so device ID cleared
-    assert entity_entry.device_id is None
-    # Removed because only had device tracker entity
-    assert device_registry.async_get(device_entry_2.id) is None
 
 
 @pytest.mark.parametrize(

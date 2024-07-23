@@ -1,4 +1,5 @@
 """Tests for Home Assistant View."""
+
 from decimal import Decimal
 from http import HTTPStatus
 import json

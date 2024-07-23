@@ -1,4 +1,5 @@
 """The serive tests for the tado platform."""
+
 import json
 from unittest.mock import patch
 

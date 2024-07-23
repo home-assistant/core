@@ -1,4 +1,5 @@
 """Test different accessory types: Security Systems."""
+
 from pyhap.loader import get_loader
 import pytest
 

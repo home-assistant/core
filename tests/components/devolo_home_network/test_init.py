@@ -1,4 +1,5 @@
 """Test the devolo Home Network integration setup."""
+
 from unittest.mock import patch
 
 from devolo_plc_api.exceptions.device import DeviceNotFound
@@ -52,10 +53,13 @@ async def test_setup_without_password(hass: HomeAssistant) -> None:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=config)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
-        return_value=True,
-    ), patch("homeassistant.core.EventBus.async_listen_once"):
+    with (
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+            return_value=True,
+        ),
+        patch("homeassistant.core.EventBus.async_listen_once"),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.LOADED
 
@@ -94,15 +98,15 @@ async def test_hass_stop(hass: HomeAssistant, mock_device: MockDevice) -> None:
 @pytest.mark.parametrize(
     ("device", "expected_platforms"),
     [
-        [
+        (
             "mock_device",
             (BINARY_SENSOR, BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
-        ],
-        [
+        ),
+        (
             "mock_repeater_device",
             (BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
-        ],
-        ["mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH, UPDATE)],
+        ),
+        ("mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH, UPDATE)),
     ],
 )
 async def test_platforms(

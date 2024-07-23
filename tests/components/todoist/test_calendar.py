@@ -1,4 +1,5 @@
 """Unit tests for the Todoist calendar platform."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any

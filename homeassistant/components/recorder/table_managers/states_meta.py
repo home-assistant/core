@@ -1,4 +1,5 @@
 """Support managing StatesMeta."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
@@ -6,7 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
 
-from homeassistant.core import Event
+from homeassistant.core import Event, EventStateChangedData
 
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
@@ -27,7 +28,9 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         self._did_first_load = False
         super().__init__(recorder, CACHE_SIZE)
 
-    def load(self, events: list[Event], session: Session) -> None:
+    def load(
+        self, events: list[Event[EventStateChangedData]], session: Session
+    ) -> None:
         """Load the entity_id to metadata_id mapping into memory.
 
         This call is not thread-safe and must be called from the
@@ -36,9 +39,9 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         self._did_first_load = True
         self.get_many(
             {
-                event.data["new_state"].entity_id
+                new_state.entity_id
                 for event in events
-                if event.data.get("new_state") is not None
+                if (new_state := event.data["new_state"]) is not None
             },
             session,
             True,

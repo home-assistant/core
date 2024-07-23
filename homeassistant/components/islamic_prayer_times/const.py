@@ -1,4 +1,5 @@
 """Constants for the Islamic Prayer component."""
+
 from typing import Final
 
 DOMAIN: Final = "islamic_prayer_times"

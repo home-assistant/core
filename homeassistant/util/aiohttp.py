@@ -1,4 +1,5 @@
 """Utilities to help with aiohttp."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -89,8 +90,7 @@ def serialize_response(response: web.Response) -> dict[str, Any]:
     if (body := response.body) is None:
         body_decoded = None
     elif isinstance(body, payload.StringPayload):
-        # pylint: disable-next=protected-access
-        body_decoded = body._value.decode(body.encoding)
+        body_decoded = body._value.decode(body.encoding)  # noqa: SLF001
     elif isinstance(body, bytes):
         body_decoded = body.decode(response.charset or "utf-8")
     else:

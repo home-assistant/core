@@ -1,4 +1,5 @@
 """Support for the ZHA platform."""
+
 from __future__ import annotations
 
 import functools

@@ -1,4 +1,5 @@
 """Support for a ScreenLogic heating device."""
+
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -46,29 +47,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    entities = []
     coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
 
     gateway = coordinator.gateway
 
-    for body_index in gateway.get_data(DEVICE.BODY):
-        entities.append(
-            ScreenLogicClimate(
-                coordinator,
-                ScreenLogicClimateDescription(
-                    subscription_code=CODE.STATUS_CHANGED,
-                    data_root=(DEVICE.BODY,),
-                    key=body_index,
-                ),
-            )
+    async_add_entities(
+        ScreenLogicClimate(
+            coordinator,
+            ScreenLogicClimateDescription(
+                subscription_code=CODE.STATUS_CHANGED,
+                data_root=(DEVICE.BODY,),
+                key=body_index,
+            ),
         )
+        for body_index in gateway.get_data(DEVICE.BODY)
+    )
 
-    async_add_entities(entities)
 
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ScreenLogicClimateDescription(
     ClimateEntityDescription, ScreenLogicPushEntityDescription
 ):

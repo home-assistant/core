@@ -1,4 +1,5 @@
 """Support for OpenUV binary sensors."""
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,

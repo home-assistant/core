@@ -5,12 +5,10 @@
 # cleanup is planned with HA Core 2025.2
 
 import json
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import mqtt, vacuum
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -18,13 +16,6 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator
 
 DEFAULT_CONFIG = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
-
-
-@pytest.fixture(autouse=True)
-def vacuum_platform_only():
-    """Only setup the vacuum platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
-        yield
 
 
 @pytest.mark.parametrize(

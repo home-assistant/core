@@ -1,4 +1,5 @@
 """Config flow for Broadlink devices."""
+
 from collections.abc import Mapping
 import errno
 from functools import partial

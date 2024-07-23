@@ -1,4 +1,5 @@
 """Helpers for device automations."""
+
 from __future__ import annotations
 
 import asyncio
@@ -133,8 +134,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
-) -> DeviceAutomationTriggerProtocol:
-    ...
+) -> DeviceAutomationTriggerProtocol: ...
 
 
 @overload
@@ -142,8 +142,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
-) -> DeviceAutomationConditionProtocol:
-    ...
+) -> DeviceAutomationConditionProtocol: ...
 
 
 @overload
@@ -151,15 +150,13 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
-) -> DeviceAutomationActionProtocol:
-    ...
+) -> DeviceAutomationActionProtocol: ...
 
 
 @overload
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> DeviceAutomationPlatformType:
-    ...
+) -> DeviceAutomationPlatformType: ...
 
 
 async def async_get_device_automation_platform(

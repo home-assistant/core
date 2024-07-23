@@ -1,4 +1,5 @@
 """The tests for the time automation."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 

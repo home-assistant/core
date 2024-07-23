@@ -1,4 +1,5 @@
 """Test ZHA switch."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -10,12 +11,11 @@ from zhaquirks.const import (
     PROFILE_ID,
 )
 from zigpy.exceptions import ZigbeeException
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 from zigpy.quirks import _DEVICE_REGISTRY, CustomCluster, CustomDevice
 from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
 import zigpy.types as t
-import zigpy.zcl.clusters.closures as closures
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import closures, general
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.foundation as zcl_f
 

@@ -1,6 +1,8 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 from abc import abstractmethod
 import logging
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,16 +16,21 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN as DOMAIN_RACHIO,
+    KEY_BATTERY_STATUS,
     KEY_DEVICE_ID,
+    KEY_LOW,
     KEY_RAIN_SENSOR_TRIPPED,
+    KEY_REPORTED_STATE,
+    KEY_STATE,
     KEY_STATUS,
     KEY_SUBTYPE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
     STATUS_ONLINE,
 )
+from .coordinator import RachioUpdateCoordinator
 from .device import RachioPerson
-from .entity import RachioDevice
+from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_COLD_REBOOT,
     SUBTYPE_OFFLINE,
@@ -51,6 +58,11 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
     for controller in person.controllers:
         entities.append(RachioControllerOnlineBinarySensor(controller))
         entities.append(RachioRainSensor(controller))
+    entities.extend(
+        RachioHoseTimerBattery(valve, base_station.coordinator)
+        for base_station in person.base_stations
+        for valve in base_station.coordinator.data.values()
+    )
     return entities
 
 
@@ -139,3 +151,24 @@ class RachioRainSensor(RachioControllerBinarySensor):
                 self._async_handle_any_update,
             )
         )
+
+
+class RachioHoseTimerBattery(RachioHoseTimerEntity, BinarySensorEntity):
+    """Represents a battery sensor for a smart hose timer."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+
+    def __init__(
+        self, data: dict[str, Any], coordinator: RachioUpdateCoordinator
+    ) -> None:
+        """Initialize a smart hose timer battery sensor."""
+        super().__init__(data, coordinator)
+        self._attr_unique_id = f"{self.id}-battery"
+
+    @callback
+    def _update_attr(self) -> None:
+        """Handle updated coordinator data."""
+        data = self.coordinator.data[self.id]
+
+        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] == KEY_LOW

@@ -1,4 +1,5 @@
 """The tests for lutron caseta logbook."""
+
 from unittest.mock import patch
 
 from homeassistant.components.lutron_caseta.const import (

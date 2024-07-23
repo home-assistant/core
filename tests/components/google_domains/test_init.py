@@ -1,4 +1,5 @@
 """Test the Google Domains component."""
+
 from datetime import timedelta
 
 import pytest

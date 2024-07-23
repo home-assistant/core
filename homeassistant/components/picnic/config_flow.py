@@ -1,4 +1,5 @@
 """Config flow for Picnic integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -67,7 +68,7 @@ async def validate_input(hass: HomeAssistant, data):
     # Return the validation result
     address = (
         f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}'
-        + f'{user_data["address"]["house_number_ext"]}'
+        f'{user_data["address"]["house_number_ext"]}'
     )
     return auth_token, {
         "title": address,
@@ -101,7 +102,7 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

@@ -1,4 +1,5 @@
 """Support for Nexia / Trane XL Thermostats."""
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -40,7 +41,7 @@ async def async_setup_entry(
 
 
 class NexiaBinarySensor(NexiaThermostatEntity, BinarySensorEntity):
-    """Provices Nexia BinarySensor support."""
+    """Provides Nexia BinarySensor support."""
 
     def __init__(self, coordinator, thermostat, sensor_call, translation_key):
         """Initialize the nexia sensor."""

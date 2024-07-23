@@ -1,4 +1,5 @@
 """The tests for the Template button platform."""
+
 import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory

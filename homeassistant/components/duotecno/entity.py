@@ -1,4 +1,5 @@
 """Support for Velbus devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -39,6 +40,11 @@ class DuotecnoEntity(Entity):
     async def _on_update(self) -> None:
         """When a unit has an update."""
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Available state for the unit."""
+        return self._unit.is_available()
 
 
 _T = TypeVar("_T", bound="DuotecnoEntity")

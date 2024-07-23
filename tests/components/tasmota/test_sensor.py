@@ -1,4 +1,5 @@
 """The tests for the Tasmota sensor platform."""
+
 import copy
 import datetime
 from datetime import timedelta

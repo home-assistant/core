@@ -1,4 +1,5 @@
 """Config flow for Enphase Envoy integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -88,6 +89,14 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            current_hosts = self._async_current_hosts()
+            _LOGGER.debug(
+                "Zeroconf ip %s processing %s, current hosts: %s",
+                discovery_info.ip_address.version,
+                discovery_info.host,
+                current_hosts,
+            )
         if discovery_info.ip_address.version != 4:
             return self.async_abort(reason="not_ipv4_address")
         serial = discovery_info.properties["serialnum"]
@@ -95,17 +104,27 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial)
         self.ip_address = discovery_info.host
         self._abort_if_unique_id_configured({CONF_HOST: self.ip_address})
+        _LOGGER.debug(
+            "Zeroconf ip %s, fw %s, no existing entry with serial %s",
+            self.ip_address,
+            self.protovers,
+            serial,
+        )
         for entry in self._async_current_entries(include_ignore=False):
             if (
                 entry.unique_id is None
                 and CONF_HOST in entry.data
                 and entry.data[CONF_HOST] == self.ip_address
             ):
+                _LOGGER.debug(
+                    "Zeroconf update envoy with this ip and blank serial in unique_id",
+                )
                 title = f"{ENVOY} {serial}" if entry.title == ENVOY else ENVOY
                 return self.async_update_reload_and_abort(
                     entry, title=title, unique_id=serial, reason="already_configured"
                 )
 
+        _LOGGER.debug("Zeroconf ip %s to step user", self.ip_address)
         return await self.async_step_user()
 
     async def async_step_reauth(
@@ -150,7 +169,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             except EnvoyError as e:
                 errors["base"] = "cannot_connect"
                 description_placeholders = {"reason": str(e)}
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

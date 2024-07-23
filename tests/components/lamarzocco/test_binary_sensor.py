@@ -1,4 +1,5 @@
 """Tests for La Marzocco binary sensors."""
+
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,4 +1,5 @@
 """Number entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -8,15 +9,14 @@ from typing import Any
 from gotailwind import Tailwind, TailwindDeviceStatus, TailwindError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
 from .entity import TailwindEntity
+from .typing import TailwindConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,14 +46,13 @@ DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TailwindConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tailwind number based on a config entry."""
-    coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         TailwindNumberEntity(
-            coordinator,
+            entry.runtime_data,
             description,
         )
         for description in DESCRIPTIONS
@@ -76,7 +75,6 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
             await self.entity_description.set_value_fn(self.coordinator.tailwind, value)
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc

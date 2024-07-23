@@ -1,4 +1,5 @@
 """Config flow for Netatmo."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -148,13 +149,13 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
     async def async_step_public_weather(self, user_input: dict) -> ConfigFlowResult:
         """Manage configuration of Netatmo public weather sensors."""
         if user_input is not None and CONF_NEW_AREA not in user_input:
-            self.options[CONF_WEATHER_AREAS][
-                user_input[CONF_AREA_NAME]
-            ] = fix_coordinates(user_input)
+            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]] = (
+                fix_coordinates(user_input)
+            )
 
-            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]][
-                CONF_UUID
-            ] = str(uuid.uuid4())
+            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]][CONF_UUID] = (
+                str(uuid.uuid4())
+            )
 
             return await self.async_step_public_weather_areas()
 

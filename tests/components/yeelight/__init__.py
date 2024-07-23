@@ -1,4 +1,5 @@
 """Tests for the Yeelight integration."""
+
 from datetime import timedelta
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch

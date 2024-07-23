@@ -1,4 +1,5 @@
 """Platform for switch integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -42,21 +43,21 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
     "smartplug": SHCSwitchEntityDescription(
         key="smartplug",
         device_class=SwitchDeviceClass.OUTLET,
-        on_key="state",
+        on_key="switchstate",
         on_value=SHCSmartPlug.PowerSwitchService.State.ON,
         should_poll=False,
     ),
     "smartplugcompact": SHCSwitchEntityDescription(
         key="smartplugcompact",
         device_class=SwitchDeviceClass.OUTLET,
-        on_key="state",
+        on_key="switchstate",
         on_value=SHCSmartPlugCompact.PowerSwitchService.State.ON,
         should_poll=False,
     ),
     "lightswitch": SHCSwitchEntityDescription(
         key="lightswitch",
         device_class=SwitchDeviceClass.SWITCH,
-        on_key="state",
+        on_key="switchstate",
         on_value=SHCLightSwitch.PowerSwitchService.State.ON,
         should_poll=False,
     ),
@@ -83,65 +84,66 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC switch platform."""
-    entities: list[SwitchEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
-    for switch in session.device_helper.smart_plugs:
-        entities.append(
-            SHCSwitch(
-                device=switch,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-                description=SWITCH_TYPES["smartplug"],
-            )
+    entities: list[SwitchEntity] = [
+        SHCSwitch(
+            device=switch,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["smartplug"],
         )
-        entities.append(
-            SHCRoutingSwitch(
-                device=switch,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-            )
-        )
+        for switch in session.device_helper.smart_plugs
+    ]
 
-    for switch in session.device_helper.light_switches_bsm:
-        entities.append(
-            SHCSwitch(
-                device=switch,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-                description=SWITCH_TYPES["lightswitch"],
-            )
+    entities.extend(
+        SHCRoutingSwitch(
+            device=switch,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
         )
+        for switch in session.device_helper.smart_plugs
+    )
 
-    for switch in session.device_helper.smart_plugs_compact:
-        entities.append(
-            SHCSwitch(
-                device=switch,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-                description=SWITCH_TYPES["smartplugcompact"],
-            )
+    entities.extend(
+        SHCSwitch(
+            device=switch,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["lightswitch"],
         )
+        for switch in session.device_helper.light_switches_bsm
+    )
 
-    for switch in session.device_helper.camera_eyes:
-        entities.append(
-            SHCSwitch(
-                device=switch,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-                description=SWITCH_TYPES["cameraeyes"],
-            )
+    entities.extend(
+        SHCSwitch(
+            device=switch,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["smartplugcompact"],
         )
+        for switch in session.device_helper.smart_plugs_compact
+    )
 
-    for switch in session.device_helper.camera_360:
-        entities.append(
-            SHCSwitch(
-                device=switch,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-                description=SWITCH_TYPES["camera360"],
-            )
+    entities.extend(
+        SHCSwitch(
+            device=switch,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraeyes"],
         )
+        for switch in session.device_helper.camera_eyes
+    )
+
+    entities.extend(
+        SHCSwitch(
+            device=switch,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["camera360"],
+        )
+        for switch in session.device_helper.camera_360
+    )
 
     async_add_entities(entities)
 

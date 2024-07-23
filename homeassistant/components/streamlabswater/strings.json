@@ -52,7 +52,7 @@
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The Streamlabs water YAML configuration import failed",
-      "description": "Configuring Streamlabs water using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to Streamlabs water works and restart Home Assistant to try again or remove the Streamlabs water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+      "description": "Configuring Streamlabs water using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to Streamlabs water works and restart Home Assistant to try again or remove the Streamlabs water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     },
     "deprecated_yaml_import_issue_unknown": {
       "title": "The Streamlabs water YAML configuration import failed",

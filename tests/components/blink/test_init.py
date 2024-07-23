@@ -1,7 +1,9 @@
 """Test the Blink init."""
-from unittest.mock import AsyncMock, MagicMock
+
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
+from blinkpy.auth import LoginError
 import pytest
 
 from homeassistant.components.blink.const import (
@@ -52,9 +54,16 @@ async def test_setup_not_ready_authkey_required(
     """Test setup failed because 2FA is needed to connect to the Blink system."""
 
     mock_blink_auth_api.check_key_required = MagicMock(return_value=True)
+    mock_blink_auth_api.send_auth_key = AsyncMock(return_value=False)
 
     mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.blink.config_flow.Auth.startup",
+        side_effect=LoginError,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 

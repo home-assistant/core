@@ -26,19 +26,12 @@ async def async_setup_entry(
     )
 
 
-@dataclass(frozen=True)
-class StarlinkDeviceTrackerEntityDescriptionMixin:
-    """Describes a Starlink device tracker."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkDeviceTrackerEntityDescription(EntityDescription):
+    """Describes a Starlink button entity."""
 
     latitude_fn: Callable[[StarlinkData], float]
     longitude_fn: Callable[[StarlinkData], float]
-
-
-@dataclass(frozen=True)
-class StarlinkDeviceTrackerEntityDescription(
-    EntityDescription, StarlinkDeviceTrackerEntityDescriptionMixin
-):
-    """Describes a Starlink button entity."""
 
 
 DEVICE_TRACKERS = [

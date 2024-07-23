@@ -1,4 +1,5 @@
 """Config flow for Rainforest Eagle integration."""
+
 from __future__ import annotations
 
 import logging
@@ -58,7 +59,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except data.InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

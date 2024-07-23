@@ -1,7 +1,10 @@
 """Passive update coordinator for the Bluetooth integration."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
+
+from typing_extensions import TypeVar
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import (
@@ -20,6 +23,7 @@ if TYPE_CHECKING:
 _PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
     "_PassiveBluetoothDataUpdateCoordinatorT",
     bound="PassiveBluetoothDataUpdateCoordinator",
+    default="PassiveBluetoothDataUpdateCoordinator",
 )
 
 
@@ -43,6 +47,11 @@ class PassiveBluetoothDataUpdateCoordinator(
         """Initialize PassiveBluetoothDataUpdateCoordinator."""
         super().__init__(hass, logger, address, mode, connectable)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
+
+    @property
+    def available(self) -> bool:
+        """Return if device is available."""
+        return self._available
 
     @callback
     def async_update_listeners(self) -> None:

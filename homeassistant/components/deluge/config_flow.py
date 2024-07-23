@@ -1,4 +1,5 @@
 """Config flow for the Deluge integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -93,7 +94,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(api.connect)
         except (ConnectionRefusedError, TimeoutError, SSLError):
             return "cannot_connect"
-        except Exception as ex:  # pylint:disable=broad-except
+        except Exception as ex:  # noqa: BLE001
             if type(ex).__name__ == "BadLoginError":
                 return "invalid_auth"
             return "unknown"

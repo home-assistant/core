@@ -1,4 +1,5 @@
 """Sensors for National Weather Service (NWS)."""
+
 import pytest
 
 from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN

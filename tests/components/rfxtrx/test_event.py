@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx sensor platform."""
+
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.rfxtrx import get_rfx_object
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_rfx_test_cfg
 
@@ -100,3 +102,25 @@ async def test_invalid_event_type(
     await hass.async_block_till_done()
 
     assert hass.states.get("event.arc_c1") == state
+
+
+async def test_ignoring_lighting4(hass: HomeAssistant, rfxtrx) -> None:
+    """Test with 1 sensor."""
+    entry = await setup_rfx_test_cfg(
+        hass,
+        devices={
+            "0913000022670e013970": {
+                "data_bits": 4,
+                "command_on": 0xE,
+                "command_off": 0x7,
+            }
+        },
+    )
+
+    registry = er.async_get(hass)
+    entries = [
+        entry
+        for entry in registry.entities.get_entries_for_config_entry_id(entry.entry_id)
+        if entry.domain == Platform.EVENT
+    ]
+    assert entries == []

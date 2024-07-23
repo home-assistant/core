@@ -1,4 +1,5 @@
 """Diagnostics support for myUplink."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -38,9 +39,7 @@ async def async_get_config_entry_diagnostics(
                 }
             )
 
-    diagnostics_data = {
+    return {
         "config_entry_data": async_redact_data(dict(config_entry.data), TO_REDACT),
         "myuplink_data": async_redact_data(myuplink_data, TO_REDACT),
     }
-
-    return diagnostics_data

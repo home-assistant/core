@@ -1,4 +1,5 @@
 """Provides device automations for Climate."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -139,13 +140,13 @@ async def async_attach_trigger(
     }
 
     if trigger_type == "current_temperature_changed":
-        numeric_state_config[
-            numeric_state_trigger.CONF_VALUE_TEMPLATE
-        ] = "{{ state.attributes.current_temperature }}"
+        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+            "{{ state.attributes.current_temperature }}"
+        )
     else:  # trigger_type == "current_humidity_changed"
-        numeric_state_config[
-            numeric_state_trigger.CONF_VALUE_TEMPLATE
-        ] = "{{ state.attributes.current_humidity }}"
+        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+            "{{ state.attributes.current_humidity }}"
+        )
 
     if CONF_ABOVE in config:
         numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]

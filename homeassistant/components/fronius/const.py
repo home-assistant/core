@@ -1,4 +1,5 @@
 """Constants for the Fronius integration."""
+
 from enum import StrEnum
 from typing import Final, NamedTuple, TypedDict
 

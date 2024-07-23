@@ -1,4 +1,5 @@
 """Test the ibeacon sensors."""
+
 from datetime import timedelta
 
 import pytest

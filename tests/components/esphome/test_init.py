@@ -1,6 +1,5 @@
 """ESPHome set up tests."""
 
-
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant

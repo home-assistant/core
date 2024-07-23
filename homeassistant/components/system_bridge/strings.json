@@ -30,6 +30,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "camera_in_use": {
+        "name": "Camera in use"
+      },
+      "pending_reboot": {
+        "name": "Pending reboot"
+      }
+    },
     "media_player": {
       "media": {
         "name": "Media"
@@ -86,6 +94,29 @@
       }
     }
   },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed for {title} ({host})"
+    },
+    "connection_failed": {
+      "message": "A connection error occurred for {title} ({host})"
+    },
+    "device_not_found": {
+      "message": "Could not find device {device}"
+    },
+    "no_data_received": {
+      "message": "No data received from {host}"
+    },
+    "process_not_found": {
+      "message": "Could not find process with id {id}."
+    },
+    "timeout": {
+      "message": "A timeout occurred for {title} ({host})"
+    },
+    "unsupported_version": {
+      "message": "You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the latest version"
+    }
+  },
   "issues": {
     "unsupported_version": {
       "title": "System Bridge Upgrade Required",
@@ -104,6 +135,34 @@
         "path": {
           "name": "[%key:common::config_flow::data::path%]",
           "description": "Path to open."
+        }
+      }
+    },
+    "get_process_by_id": {
+      "name": "Get process by ID",
+      "description": "Gets a process by the ID.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "id": {
+          "name": "ID",
+          "description": "ID of the process to get."
+        }
+      }
+    },
+    "get_processes_by_name": {
+      "name": "Get processes by name",
+      "description": "Gets a list of processes by the name.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of the process to get."
         }
       }
     },

@@ -1,4 +1,5 @@
 """Config flow to configure the Azure DevOps integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,6 +10,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
@@ -55,7 +57,8 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Check the setup of the flow."""
         errors: dict[str, str] = {}
 
-        client = DevOpsClient()
+        aiohttp_session = async_get_clientsession(self.hass)
+        client = DevOpsClient(session=aiohttp_session)
 
         try:
             if self._pat is not None:

@@ -1,9 +1,11 @@
 """Selectors for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from enum import IntFlag, StrEnum
+from enum import StrEnum
 from functools import cache
+import importlib
 from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
 from uuid import UUID
 
@@ -81,61 +83,23 @@ class Selector(Generic[_T]):
 
 
 @cache
-def _entity_features() -> dict[str, type[IntFlag]]:
-    """Return a cached lookup of entity feature enums."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.alarm_control_panel import (
-        AlarmControlPanelEntityFeature,
-    )
-    from homeassistant.components.calendar import CalendarEntityFeature
-    from homeassistant.components.camera import CameraEntityFeature
-    from homeassistant.components.climate import ClimateEntityFeature
-    from homeassistant.components.cover import CoverEntityFeature
-    from homeassistant.components.fan import FanEntityFeature
-    from homeassistant.components.humidifier import HumidifierEntityFeature
-    from homeassistant.components.lawn_mower import LawnMowerEntityFeature
-    from homeassistant.components.light import LightEntityFeature
-    from homeassistant.components.lock import LockEntityFeature
-    from homeassistant.components.media_player import MediaPlayerEntityFeature
-    from homeassistant.components.remote import RemoteEntityFeature
-    from homeassistant.components.siren import SirenEntityFeature
-    from homeassistant.components.todo import TodoListEntityFeature
-    from homeassistant.components.update import UpdateEntityFeature
-    from homeassistant.components.vacuum import VacuumEntityFeature
-    from homeassistant.components.valve import ValveEntityFeature
-    from homeassistant.components.water_heater import WaterHeaterEntityFeature
-    from homeassistant.components.weather import WeatherEntityFeature
+def _entity_feature_flag(domain: str, enum_name: str, feature_name: str) -> int:
+    """Return a cached lookup of an entity feature enum.
 
-    return {
-        "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
-        "CalendarEntityFeature": CalendarEntityFeature,
-        "CameraEntityFeature": CameraEntityFeature,
-        "ClimateEntityFeature": ClimateEntityFeature,
-        "CoverEntityFeature": CoverEntityFeature,
-        "FanEntityFeature": FanEntityFeature,
-        "HumidifierEntityFeature": HumidifierEntityFeature,
-        "LawnMowerEntityFeature": LawnMowerEntityFeature,
-        "LightEntityFeature": LightEntityFeature,
-        "LockEntityFeature": LockEntityFeature,
-        "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
-        "RemoteEntityFeature": RemoteEntityFeature,
-        "SirenEntityFeature": SirenEntityFeature,
-        "TodoListEntityFeature": TodoListEntityFeature,
-        "UpdateEntityFeature": UpdateEntityFeature,
-        "VacuumEntityFeature": VacuumEntityFeature,
-        "ValveEntityFeature": ValveEntityFeature,
-        "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
-        "WeatherEntityFeature": WeatherEntityFeature,
-    }
+    This will import a module from disk and is run from an executor when
+    loading the services schema files.
+    """
+    module = importlib.import_module(f"homeassistant.components.{domain}")
+    enum = getattr(module, enum_name)
+    feature = getattr(enum, feature_name)
+    return cast(int, feature.value)
 
 
 def _validate_supported_feature(supported_feature: str) -> int:
     """Validate a supported feature and resolve an enum string to its value."""
 
-    known_entity_features = _entity_features()
-
     try:
-        _, enum, feature = supported_feature.split(".", 2)
+        domain, enum, feature = supported_feature.split(".", 2)
     except ValueError as exc:
         raise vol.Invalid(
             f"Invalid supported feature '{supported_feature}', expected "
@@ -143,8 +107,8 @@ def _validate_supported_feature(supported_feature: str) -> int:
         ) from exc
 
     try:
-        return cast(int, getattr(known_entity_features[enum], feature).value)
-    except (AttributeError, KeyError) as exc:
+        return _entity_feature_flag(domain, enum, feature)
+    except (ModuleNotFoundError, AttributeError) as exc:
         raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
@@ -843,6 +807,48 @@ class EntitySelector(Selector[EntitySelectorConfig]):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
+class FloorSelectorConfig(TypedDict, total=False):
+    """Class to represent an floor selector config."""
+
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    multiple: bool
+
+
+@SELECTORS.register("floor")
+class FloorSelector(Selector[AreaSelectorConfig]):
+    """Selector of a single or list of floors."""
+
+    selector_type = "floor"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: FloorSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            floor_id: str = vol.Schema(str)(data)
+            return floor_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
+
+
 class IconSelectorConfig(TypedDict, total=False):
     """Class to represent an icon selector config."""
 
@@ -868,6 +874,38 @@ class IconSelector(Selector[IconSelectorConfig]):
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LabelSelectorConfig(TypedDict, total=False):
+    """Class to represent a label selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("label")
+class LabelSelector(Selector[LabelSelectorConfig]):
+    """Selector of a single or list of labels."""
+
+    selector_type = "label"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: LabelSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            label_id: str = vol.Schema(str)(data)
+            return label_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class LanguageSelectorConfig(TypedDict, total=False):

@@ -1,4 +1,5 @@
 """Test Cloudflare integration helpers."""
+
 from homeassistant.components.cloudflare.helpers import get_zone_id
 
 

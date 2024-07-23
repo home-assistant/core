@@ -1,4 +1,5 @@
 """Google config for Cloud."""
+
 from __future__ import annotations
 
 import asyncio
@@ -176,7 +177,7 @@ class CloudGoogleConfig(AbstractConfig):
     def get_local_user_id(self, webhook_id: Any) -> str:
         """Map webhook ID to a Home Assistant user ID.
 
-        Any action inititated by Google Assistant via the local SDK will be attributed
+        Any action initiated by Google Assistant via the local SDK will be attributed
         to the returned user ID.
         """
         return self._user
@@ -399,7 +400,11 @@ class CloudGoogleConfig(AbstractConfig):
     @callback
     def async_get_agent_users(self) -> tuple:
         """Return known agent users."""
-        if not self._prefs.google_connected or not self._cloud.username:
+        if (
+            not self._cloud.is_logged_in  # Can't call Cloud.username if not logged in
+            or not self._prefs.google_connected
+            or not self._cloud.username
+        ):
             return ()
         return (self._cloud.username,)
 
@@ -448,7 +453,9 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    def _handle_entity_registry_updated(self, event: Event) -> None:
+    def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle when entity registry updated."""
         if (
             not self.enabled
@@ -471,7 +478,9 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    async def _handle_device_registry_updated(self, event: Event) -> None:
+    async def _handle_device_registry_updated(
+        self, event: Event[dr.EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle when device registry updated."""
         if (
             not self.enabled

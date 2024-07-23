@@ -1,4 +1,5 @@
 """Support for local control of entities by emulating a Philips Hue bridge."""
+
 from __future__ import annotations
 
 import logging
@@ -6,6 +7,7 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
     CONF_ENTITIES,
@@ -130,12 +132,11 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     await config.async_setup()
 
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
 
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
-    # pylint: disable-next=protected-access
-    app._on_startup.freeze()
+    app._on_startup.freeze()  # noqa: SLF001
     await app.startup()
 
     DescriptionXmlView(config).register(hass, app, app.router)

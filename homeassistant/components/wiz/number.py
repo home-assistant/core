@@ -1,4 +1,5 @@
 """Support for WiZ effect speed numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -46,7 +47,6 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_min_value=10,
         native_max_value=200,
         native_step=1,
-        icon="mdi:speedometer",
         value_fn=lambda device: cast(int | None, device.state.get_speed()),
         set_value_fn=_async_set_speed,
         required_feature="effect",
@@ -58,7 +58,6 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        icon="mdi:floor-lamp-dual",
         value_fn=lambda device: cast(int | None, device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",

@@ -1,11 +1,11 @@
 """The tests for the Template Weather platform."""
+
 from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -35,6 +35,8 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
 )
 
+ATTR_FORECAST = "forecast"
+
 
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
@@ -48,7 +50,6 @@ from tests.common import (
                     "name": "test",
                     "attribution_template": "{{ states('sensor.attribution') }}",
                     "condition_template": "sunny",
-                    "forecast_template": "{{ states.weather.demo.attributes.forecast }}",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
                     "humidity_template": "{{ states('sensor.humidity') | int }}",
                     "pressure_template": "{{ states('sensor.pressure') }}",
@@ -110,7 +111,6 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
                     "platform": "template",
                     "name": "forecast",
                     "condition_template": "sunny",
-                    "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_daily_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_hourly_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_twice_daily_template": "{{ states.weather.forecast_twice_daily.attributes.forecast }}",
@@ -237,7 +237,6 @@ async def test_forecasts(
                     "platform": "template",
                     "name": "forecast",
                     "condition_template": "sunny",
-                    "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_daily_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_hourly_template": "{{ states.weather.forecast_hourly.attributes.forecast }}",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
@@ -322,7 +321,6 @@ async def test_forecast_invalid(
                     "platform": "template",
                     "name": "forecast",
                     "condition_template": "sunny",
-                    "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_twice_daily_template": "{{ states.weather.forecast_twice_daily.attributes.forecast }}",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
                     "humidity_template": "{{ states('sensor.humidity') | int }}",
@@ -392,7 +390,6 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
                     "platform": "template",
                     "name": "forecast",
                     "condition_template": "sunny",
-                    "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_twice_daily_template": "{{ states.weather.forecast_twice_daily.attributes.forecast }}",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
                     "humidity_template": "{{ states('sensor.humidity') | int }}",
@@ -462,7 +459,6 @@ async def test_forecast_invalid_datetime_missing(
                     "platform": "template",
                     "name": "forecast",
                     "condition_template": "sunny",
-                    "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "forecast_daily_template": "{{ states.weather.forecast_daily.attributes.forecast }}",
                     "forecast_hourly_template": "{{ states.weather.forecast_hourly.attributes.forecast }}",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
@@ -506,6 +502,7 @@ async def test_forecast_format_error(
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -726,7 +723,6 @@ async def test_trigger_action(
                             "cloud_coverage_template": "{{ my_variable + 1 }}",
                             "dew_point_template": "{{ my_variable + 1 }}",
                             "apparent_temperature_template": "{{ my_variable + 1 }}",
-                            "forecast_template": "{{ var_forecast_daily }}",
                             "forecast_daily_template": "{{ var_forecast_daily }}",
                             "forecast_hourly_template": "{{ var_forecast_hourly }}",
                             "forecast_twice_daily_template": "{{ var_forecast_twice_daily }}",

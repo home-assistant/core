@@ -1,4 +1,5 @@
 """Helper for HomematicIP Cloud Tests."""
+
 import json
 from unittest.mock import Mock, patch
 
@@ -27,8 +28,7 @@ from tests.common import load_fixture
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
 AUTH_TOKEN = "1234"
-HOME_JSON = "homematicip_cloud.json"
-FIXTURE_DATA = load_fixture(HOME_JSON)
+FIXTURE_DATA = load_fixture("homematicip_cloud.json", "homematicip_cloud")
 
 
 def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model):
@@ -171,15 +171,9 @@ class HomeTemplate(Home):
 
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
-        mock_devices = []
-        for device in self.devices:
-            mock_devices.append(_get_mock(device))
-        self.devices = mock_devices
+        self.devices = [_get_mock(device) for device in self.devices]
 
-        mock_groups = []
-        for group in self.groups:
-            mock_groups.append(_get_mock(group))
-        self.groups = mock_groups
+        self.groups = [_get_mock(group) for group in self.groups]
 
     def download_configuration(self):
         """Return the initial json config."""

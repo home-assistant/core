@@ -1,4 +1,5 @@
 """Config Flow for Flick Electric integration."""
+
 import asyncio
 import logging
 
@@ -48,9 +49,9 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             async with asyncio.timeout(60):
                 token = await auth.async_get_access_token()
         except TimeoutError as err:
-            raise CannotConnect() from err
+            raise CannotConnect from err
         except AuthException as err:
-            raise InvalidAuth() from err
+            raise InvalidAuth from err
 
         return token is not None
 
@@ -64,7 +65,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

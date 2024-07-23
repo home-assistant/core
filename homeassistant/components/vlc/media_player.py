@@ -1,4 +1,5 @@
 """Provide functionality to interact with vlc devices on the network."""
+
 from __future__ import annotations
 
 import logging

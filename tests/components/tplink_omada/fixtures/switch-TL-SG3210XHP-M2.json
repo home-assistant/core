@@ -11,7 +11,7 @@
   "hwVersion": "1.0",
   "status": 14,
   "statusCategory": 1,
-  "site": "000000000000000000000000",
+  "site": "Test",
   "omadacId": "00000000000000000000000000000000",
   "compatible": 0,
   "sn": "Y220000000001",
@@ -124,7 +124,7 @@
     {
       "id": "000000000000000000000002",
       "port": 2,
-      "name": "Port2",
+      "name": "Renamed Port",
       "disable": false,
       "type": 1,
       "maxSpeed": 4,

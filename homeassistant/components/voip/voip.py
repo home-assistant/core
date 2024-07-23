@@ -1,4 +1,5 @@
 """Voice over IP (VoIP) implementation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -444,9 +445,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             async with asyncio.timeout(tts_seconds + self.tts_extra_timeout):
                 # TTS audio is 16Khz 16-bit mono
                 await self._async_send_audio(audio_bytes)
-        except TimeoutError as err:
+        except TimeoutError:
             _LOGGER.warning("TTS timeout")
-            raise err
+            raise
         finally:
             # Signal pipeline to restart
             self._tts_done.set()

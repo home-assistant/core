@@ -1,4 +1,5 @@
 """The tests for the mqtt climate component."""
+
 import copy
 import json
 from typing import Any
@@ -31,7 +32,7 @@ from homeassistant.components.mqtt.climate import (
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
     VALUE_TEMPLATE_KEYS,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -98,13 +99,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def climate_platform_only():
-    """Only setup the climate platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE]):
-        yield
-
-
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_setup_params(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -152,74 +146,6 @@ async def test_preset_none_in_preset_modes(
     """Test the preset mode payload reset configuration."""
     assert await mqtt_mock_entry()
     assert "preset_modes must not include preset mode 'none'" in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("hass_config", "parameter"),
-    [
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_command_topic": "away-mode-command-topic"},),
-            ),
-            "away_mode_command_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_state_topic": "away-mode-state-topic"},),
-            ),
-            "away_mode_state_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_state_template": "{{ value_json }}"},),
-            ),
-            "away_mode_state_template",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_command_topic": "hold-mode-command-topic"},),
-            ),
-            "hold_mode_command_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_command_template": "hold-mode-command-template"},),
-            ),
-            "hold_mode_command_template",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_state_topic": "hold-mode-state-topic"},),
-            ),
-            "hold_mode_state_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_state_template": "{{ value_json }}"},),
-            ),
-            "hold_mode_state_template",
-        ),
-    ],
-)
-async def test_preset_modes_deprecation_guard(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, parameter: str
-) -> None:
-    """Test the configuration for invalid legacy parameters."""
-    assert f"[{parameter}] is an invalid option for [mqtt]. Check: mqtt->mqtt->climate->0->{parameter}"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

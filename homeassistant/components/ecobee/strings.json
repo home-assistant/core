@@ -20,6 +20,17 @@
     }
   },
   "entity": {
+    "climate": {
+      "ecobee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "away_indefinitely": "Away Indefinitely"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "ventilator_min_type_home": {
         "name": "Ventilator min time home"

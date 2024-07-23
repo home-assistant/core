@@ -1,4 +1,5 @@
 """Constants for Met Office Integration."""
+
 from datetime import timedelta
 
 from homeassistant.components.weather import (

@@ -76,6 +76,7 @@
       'context': <ANY>,
       'entity_id': 'button.sfr_box_restart',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),

@@ -2,6 +2,7 @@
 
 It will be removed when auth system production ready
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

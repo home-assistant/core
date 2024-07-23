@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "button": {
+      "connect": {
+        "default": "mdi:bluetooth"
+      },
+      "disconnect": {
+        "default": "mdi:bluetooth-off"
+      },
+      "favorite": {
+        "default": "mdi:star"
+      }
+    },
+    "select": {
+      "speed": {
+        "default": "mdi:run-fast"
+      }
+    }
+  }
+}

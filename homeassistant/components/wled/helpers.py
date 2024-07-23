@@ -1,4 +1,5 @@
 """Helpers for WLED."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -8,7 +9,7 @@ from wled import WLEDConnectionError, WLEDError
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .models import WLEDEntity
+from .entity import WLEDEntity
 
 _WLEDEntityT = TypeVar("_WLEDEntityT", bound=WLEDEntity)
 _P = ParamSpec("_P")

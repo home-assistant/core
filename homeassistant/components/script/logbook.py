@@ -1,4 +1,5 @@
 """Describe logbook events."""
+
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_CONTEXT_ID,
     LOGBOOK_ENTRY_ENTITY_ID,

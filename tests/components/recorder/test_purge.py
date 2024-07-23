@@ -1,4 +1,5 @@
 """Test data purging."""
+
 from datetime import datetime, timedelta
 import json
 import sqlite3
@@ -8,6 +9,7 @@ from freezegun import freeze_time
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import SupportedDialect
@@ -78,9 +80,11 @@ async def test_purge_big_database(
         await _add_test_states(hass, wait_recording_done=False)
     await async_wait_recording_done(hass)
 
-    with patch.object(instance, "max_bind_vars", 72), patch.object(
-        instance.database_engine, "max_bind_vars", 72
-    ), session_scope(hass=hass) as session:
+    with (
+        patch.object(instance, "max_bind_vars", 72),
+        patch.object(instance.database_engine, "max_bind_vars", 72),
+        session_scope(hass=hass) as session,
+    ):
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
         assert states.count() == 72
@@ -207,11 +211,14 @@ async def test_purge_old_states_encouters_database_corruption(
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
-    with patch(
-        "homeassistant.components.recorder.core.move_away_broken_database"
-    ) as move_away, patch(
-        "homeassistant.components.recorder.purge.purge_old_data",
-        side_effect=sqlite3_exception,
+    with (
+        patch(
+            "homeassistant.components.recorder.core.move_away_broken_database"
+        ) as move_away,
+        patch(
+            "homeassistant.components.recorder.purge.purge_old_data",
+            side_effect=sqlite3_exception,
+        ),
     ):
         await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
@@ -239,12 +246,14 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     mysql_exception = OperationalError("statement", {}, [])
     mysql_exception.orig = Exception(1205, "retryable")
 
-    with patch(
-        "homeassistant.components.recorder.util.time.sleep"
-    ) as sleep_mock, patch(
-        "homeassistant.components.recorder.purge._purge_old_recorder_runs",
-        side_effect=[mysql_exception, None],
-    ), patch.object(instance.engine.dialect, "name", "mysql"):
+    with (
+        patch("homeassistant.components.recorder.util.time.sleep") as sleep_mock,
+        patch(
+            "homeassistant.components.recorder.purge._purge_old_recorder_runs",
+            side_effect=[mysql_exception, None],
+        ),
+        patch.object(instance.engine.dialect, "name", "mysql"),
+    ):
         await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
@@ -380,7 +389,7 @@ async def test_purge_old_statistics_runs(
         assert statistics_runs.count() == 1
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_method(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -505,7 +514,7 @@ async def test_purge_method(
     )
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_edge_case(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -748,7 +757,7 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_filtered_states(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -943,7 +952,7 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 0
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_filtered_states_to_empty(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -997,7 +1006,7 @@ async def test_purge_filtered_states_to_empty(
     await async_wait_purge_done(hass)
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_without_state_attributes_filtered_states_to_empty(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -1438,20 +1447,20 @@ async def test_purge_entities(
 
     _add_purge_records(hass)
 
-    # Confirm calling service without arguments matches all records (default filter behavior)
+    # Confirm calling service without arguments is invalid
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 190
 
-    await _purge_entities(hass, [], [], [])
+    with pytest.raises(MultipleInvalid):
+        await _purge_entities(hass, [], [], [])
 
     with session_scope(hass=hass, read_only=True) as session:
         states = session.query(States)
-        assert states.count() == 0
+        assert states.count() == 190
 
-        # The states_meta table should be empty
         states_meta_remain = session.query(StatesMeta)
-        assert states_meta_remain.count() == 0
+        assert states_meta_remain.count() == 4
 
 
 async def _add_test_states(hass: HomeAssistant, wait_recording_done: bool = True):
@@ -1653,8 +1662,9 @@ async def test_purge_many_old_events(
     old_events_count = 5
     instance = await async_setup_recorder_instance(hass)
 
-    with patch.object(instance, "max_bind_vars", old_events_count), patch.object(
-        instance.database_engine, "max_bind_vars", old_events_count
+    with (
+        patch.object(instance, "max_bind_vars", old_events_count),
+        patch.object(instance.database_engine, "max_bind_vars", old_events_count),
     ):
         await _add_test_events(hass, old_events_count)
 

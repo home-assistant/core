@@ -1,5 +1,5 @@
 """The Hunter Douglas PowerView integration."""
-import asyncio
+
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
@@ -51,11 +51,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hub_address, loop=hass.loop, websession=websession, api_version=api_version
     )
 
+    # default 15 second timeout for each call in upstream
     try:
-        async with asyncio.timeout(10):
-            hub = Hub(pv_request)
-            await hub.query_firmware()
-            device_info = await async_get_device_info(hub)
+        hub = Hub(pv_request)
+        await hub.query_firmware()
+        device_info = await async_get_device_info(hub)
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             f"Connection error to PowerView hub {hub_address}: {err}"
@@ -74,15 +74,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     try:
-        async with asyncio.timeout(10):
-            rooms = Rooms(pv_request)
-            room_data: PowerviewData = await rooms.get_rooms()
-        async with asyncio.timeout(10):
-            scenes = Scenes(pv_request)
-            scene_data: PowerviewData = await scenes.get_scenes()
-        async with asyncio.timeout(10):
-            shades = Shades(pv_request)
-            shade_data: PowerviewData = await shades.get_shades()
+        rooms = Rooms(pv_request)
+        room_data: PowerviewData = await rooms.get_rooms()
+
+        scenes = Scenes(pv_request)
+        scene_data: PowerviewData = await scenes.get_scenes()
+
+        shades = Shades(pv_request)
+        shade_data: PowerviewData = await shades.get_shades()
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             f"Connection error to PowerView hub {hub_address}: {err}"

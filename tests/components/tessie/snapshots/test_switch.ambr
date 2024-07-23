@@ -41,6 +41,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -87,6 +88,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_defrost_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -133,6 +135,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_sentry_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -179,6 +182,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_steering_wheel_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -225,6 +229,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_valet_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -238,6 +243,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -251,6 +257,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

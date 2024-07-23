@@ -1,6 +1,5 @@
 """The tests for Weather platforms."""
 
-
 from typing import Any
 
 from homeassistant.components.weather import (

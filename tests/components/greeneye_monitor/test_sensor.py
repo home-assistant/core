@@ -1,4 +1,5 @@
 """Tests for greeneye_monitor sensors."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.greeneye_monitor.sensor import (

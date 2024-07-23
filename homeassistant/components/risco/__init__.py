@@ -1,4 +1,5 @@
 """The Risco integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,7 +17,7 @@ from pyrisco import (
 )
 from pyrisco.cloud.alarm import Alarm
 from pyrisco.cloud.event import Event
-from pyrisco.common import Partition, Zone
+from pyrisco.common import Partition, System, Zone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,12 +38,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_COMMUNICATION_DELAY,
+    CONF_CONCURRENCY,
     DATA_COORDINATOR,
+    DEFAULT_CONCURRENCY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
-    MAX_COMMUNICATION_DELAY,
+    SYSTEM_UPDATE_SIGNAL,
     TYPE_LOCAL,
 )
 
@@ -85,34 +87,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
-    comm_delay = initial_delay = data.get(CONF_COMMUNICATION_DELAY, 0)
+    concurrency = entry.options.get(CONF_CONCURRENCY, DEFAULT_CONCURRENCY)
+    risco = RiscoLocal(
+        data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], concurrency=concurrency
+    )
 
-    while True:
-        risco = RiscoLocal(
-            data[CONF_HOST],
-            data[CONF_PORT],
-            data[CONF_PIN],
-            communication_delay=comm_delay,
-        )
-        try:
-            await risco.connect()
-        except CannotConnectError as error:
-            if comm_delay >= MAX_COMMUNICATION_DELAY:
-                raise ConfigEntryNotReady() from error
-            comm_delay += 1
-        except UnauthorizedError:
-            _LOGGER.exception("Failed to login to Risco cloud")
-            return False
-        else:
-            break
-
-    if comm_delay > initial_delay:
-        new_data = data.copy()
-        new_data[CONF_COMMUNICATION_DELAY] = comm_delay
-        hass.config_entries.async_update_entry(entry, data=new_data)
+    try:
+        await risco.connect()
+    except CannotConnectError as error:
+        raise ConfigEntryNotReady from error
+    except UnauthorizedError:
+        _LOGGER.exception("Failed to login to Risco cloud")
+        return False
 
     async def _error(error: Exception) -> None:
-        _LOGGER.error("Error in Risco library: %s", error)
+        _LOGGER.error("Error in Risco library", exc_info=error)
 
     entry.async_on_unload(risco.add_error_handler(_error))
 
@@ -138,6 +127,12 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             callback()
 
     entry.async_on_unload(risco.add_partition_handler(_partition))
+
+    async def _system(system: System) -> None:
+        _LOGGER.debug("Risco system update")
+        async_dispatcher_send(hass, SYSTEM_UPDATE_SIGNAL)
+
+    entry.async_on_unload(risco.add_system_handler(_system))
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 

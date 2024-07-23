@@ -1,4 +1,5 @@
 """Support for LimitlessLED bulbs."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -199,14 +200,14 @@ def state(
             transition_time = DEFAULT_TRANSITION
             if self.effect == EFFECT_COLORLOOP:
                 self.group.stop()
-            self._attr_effect = None  # pylint: disable=protected-access
+            self._attr_effect = None
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
                 transition_time = int(cast(float, kwargs[ATTR_TRANSITION]))
             # Do group type-specific work.
             function(self, transition_time, pipeline, *args, **kwargs)
             # Update state.
-            self._attr_is_on = new_state  # pylint: disable=protected-access
+            self._attr_is_on = new_state
             self.group.enqueue(pipeline)
             self.schedule_update_ha_state()
 

@@ -1,4 +1,5 @@
 """The tests for the Switch component."""
+
 import pytest
 
 from homeassistant import core
@@ -8,20 +9,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import common
+from .common import MockSwitch
 
 from tests.common import (
     MockUser,
     help_test_all,
     import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
 )
 
 
 @pytest.fixture(autouse=True)
-def entities(hass):
+def entities(hass: HomeAssistant, mock_switch_entities: list[MockSwitch]):
     """Initialize the test switch."""
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    return platform.ENTITIES
+    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
+    return mock_switch_entities
 
 
 async def test_methods(

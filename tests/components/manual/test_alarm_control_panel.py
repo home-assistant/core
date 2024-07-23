@@ -1,4 +1,5 @@
 """The tests for the manual Alarm Control Panel component."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 

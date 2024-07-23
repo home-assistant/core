@@ -1,4 +1,5 @@
 """Support for iBeacon device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,16 +24,11 @@ from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
 
 
-@dataclass(frozen=True)
-class IBeaconRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class IBeaconSensorEntityDescription(SensorEntityDescription):
+    """Describes iBeacon sensor entity."""
 
     value_fn: Callable[[iBeaconAdvertisement], str | int | None]
-
-
-@dataclass(frozen=True)
-class IBeaconSensorEntityDescription(SensorEntityDescription, IBeaconRequiredKeysMixin):
-    """Describes iBeacon sensor entity."""
 
 
 SENSOR_DESCRIPTIONS = (

@@ -1,6 +1,5 @@
 """Constants for google_travel_time tests."""
 
-
 from homeassistant.components.google_travel_time.const import (
     CONF_DESTINATION,
     CONF_ORIGIN,

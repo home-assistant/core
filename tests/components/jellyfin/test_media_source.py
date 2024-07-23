@@ -1,4 +1,5 @@
 """Tests for the Jellyfin media_player platform."""
+
 from unittest.mock import MagicMock
 
 import pytest

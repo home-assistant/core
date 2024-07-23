@@ -1,4 +1,5 @@
 """The tests for the input_test component."""
+
 import logging
 from unittest.mock import patch
 

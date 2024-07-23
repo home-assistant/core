@@ -1,4 +1,5 @@
 """Fixtures for the Tailwind integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -46,11 +47,14 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_tailwind(device_fixture: str) -> Generator[MagicMock, None, None]:
     """Return a mocked Tailwind client."""
-    with patch(
-        "homeassistant.components.tailwind.coordinator.Tailwind", autospec=True
-    ) as tailwind_mock, patch(
-        "homeassistant.components.tailwind.config_flow.Tailwind",
-        new=tailwind_mock,
+    with (
+        patch(
+            "homeassistant.components.tailwind.coordinator.Tailwind", autospec=True
+        ) as tailwind_mock,
+        patch(
+            "homeassistant.components.tailwind.config_flow.Tailwind",
+            new=tailwind_mock,
+        ),
     ):
         tailwind = tailwind_mock.return_value
         tailwind.status.return_value = TailwindDeviceStatus.from_json(

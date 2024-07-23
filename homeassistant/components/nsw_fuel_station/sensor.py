@@ -1,4 +1,5 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
+
 from __future__ import annotations
 
 import logging

@@ -1,5 +1,5 @@
 """Tests for switch platform."""
-from datetime import timedelta
+
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
@@ -10,6 +10,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -22,6 +23,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_value_fixture,
+    snapshot_platform,
 )
 
 
@@ -44,7 +46,7 @@ async def test_switch_states(
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=5))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("switch.test_mower_1_enable_schedule")
@@ -74,7 +76,7 @@ async def test_switch_commands(
         service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
         blocking=True,
     )
-    mocked_method = getattr(mock_automower_client, aioautomower_command)
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
@@ -105,13 +107,6 @@ async def test_switch(
         [Platform.SWITCH],
     ):
         await setup_integration(hass, mock_config_entry)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
-
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")

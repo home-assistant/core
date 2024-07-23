@@ -1,4 +1,5 @@
 """The PoolSense integration."""
+
 import logging
 
 from poolsense import PoolSense

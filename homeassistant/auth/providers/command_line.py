@@ -1,4 +1,5 @@
 """Auth provider that validates credentials via an external command."""
+
 from __future__ import annotations
 
 import asyncio

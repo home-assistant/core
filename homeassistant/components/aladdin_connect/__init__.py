@@ -1,4 +1,5 @@
 """The aladdin_connect component."""
+
 import logging
 from typing import Final
 

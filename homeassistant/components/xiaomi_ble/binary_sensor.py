@@ -1,4 +1,5 @@
 """Support for Xiaomi binary sensors."""
+
 from __future__ import annotations
 
 from xiaomi_ble.parser import (
@@ -41,6 +42,10 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=XiaomiBinarySensorDeviceClass.LIGHT,
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
+    XiaomiBinarySensorDeviceClass.LOCK: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.LOCK,
+        device_class=BinarySensorDeviceClass.LOCK,
+    ),
     XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.MOISTURE,
         device_class=BinarySensorDeviceClass.MOISTURE,
@@ -61,6 +66,16 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=XiaomiBinarySensorDeviceClass.SMOKE,
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
+    ExtendedBinarySensorDeviceClass.ANTILOCK: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.ANTILOCK,
+    ),
+    ExtendedBinarySensorDeviceClass.ARMED: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.ARMED,
+        icon="mdi:shield-check",
+    ),
+    ExtendedBinarySensorDeviceClass.CHILDLOCK: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.CHILDLOCK,
+    ),
     ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -72,6 +87,10 @@ BINARY_SENSOR_DESCRIPTIONS = {
     ExtendedBinarySensorDeviceClass.DOOR_STUCK: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.DOOR_STUCK,
         device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ExtendedBinarySensorDeviceClass.FINGERPRINT: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.FINGERPRINT,
+        icon="mdi:fingerprint",
     ),
     ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR,
@@ -88,7 +107,7 @@ BINARY_SENSOR_DESCRIPTIONS = {
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[bool | None]:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -136,7 +155,7 @@ async def async_setup_entry(
 
 
 class XiaomiBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[XiaomiPassiveBluetoothDataProcessor],
+    PassiveBluetoothProcessorEntity[XiaomiPassiveBluetoothDataProcessor[bool | None]],
     BinarySensorEntity,
 ):
     """Representation of a Xiaomi binary sensor."""

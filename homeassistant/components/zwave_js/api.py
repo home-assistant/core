@@ -1,4 +1,5 @@
 """Websocket API for Z-Wave JS."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -74,7 +75,6 @@ from .config_validation import BITMASK_SCHEMA
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
-    DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     USER_AGENT,
 )
@@ -284,7 +284,7 @@ async def _async_get_entry(
         )
         return None, None, None
 
-    client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    client: Client = entry.runtime_data[DATA_CLIENT]
 
     if client.driver is None:
         connection.send_error(
@@ -2209,7 +2209,7 @@ class FirmwareUploadView(HomeAssistantView):
         assert node.client.driver
 
         # Increase max payload
-        request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
+        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
 
         data = await request.post()
 
@@ -2338,7 +2338,7 @@ async def websocket_subscribe_controller_statistics(
     client: Client,
     driver: Driver,
 ) -> None:
-    """Subsribe to the statistics updates for a controller."""
+    """Subscribe to the statistics updates for a controller."""
 
     @callback
     def async_cleanup() -> None:
@@ -2433,7 +2433,7 @@ async def websocket_subscribe_node_statistics(
     msg: dict[str, Any],
     node: Node,
 ) -> None:
-    """Subsribe to the statistics updates for a node."""
+    """Subscribe to the statistics updates for a node."""
 
     @callback
     def async_cleanup() -> None:

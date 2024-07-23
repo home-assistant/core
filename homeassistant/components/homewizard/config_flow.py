@@ -1,4 +1,5 @@
 """Config flow for HomeWizard."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -65,11 +66,14 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             data_schema=Schema(
                 {
-                    Required(CONF_IP_ADDRESS): str,
+                    Required(
+                        CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
+                    ): str,
                 }
             ),
             errors=errors,
@@ -197,7 +201,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except Exception as ex:
-            _LOGGER.exception(ex)
+            _LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown_error") from ex
 
         finally:

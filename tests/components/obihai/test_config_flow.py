@@ -24,7 +24,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -35,7 +35,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT}
 
@@ -55,7 +55,7 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "invalid_auth"
 
@@ -73,7 +73,7 @@ async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) ->
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
@@ -92,7 +92,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         )
 
         flows = hass.config_entries.flow.async_progress()
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert len(flows) == 1
         assert (
             get_schema_suggestion(result["data_schema"].schema, CONF_USERNAME)
@@ -114,7 +114,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:

@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS device triggers."""
+
 from unittest.mock import patch
 
 import pytest
@@ -340,7 +341,7 @@ async def test_get_node_status_triggers(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device.id, ent_reg, dev_reg
     )
-    entity = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    entity = ent_reg.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -372,7 +373,7 @@ async def test_if_node_status_change_fires(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device.id, ent_reg, dev_reg
     )
-    entity = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    entity = ent_reg.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -451,7 +452,7 @@ async def test_if_node_status_change_fires_legacy(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device.id, ent_reg, dev_reg
     )
-    ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    ent_reg.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -529,7 +530,7 @@ async def test_get_trigger_capabilities_node_status(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device.id, ent_reg, dev_reg
     )
-    ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    ent_reg.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -1570,12 +1571,15 @@ async def test_failure_scenarios(
             {},
         )
 
-    with patch(
-        "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zwave_js.helpers.get_zwave_value_from_config",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zwave_js.helpers.get_zwave_value_from_config",
+            return_value=None,
+        ),
     ):
         assert (
             await device_trigger.async_get_trigger_capabilities(

@@ -1,4 +1,5 @@
 """Tests for the Elmax component."""
+
 from tests.common import load_fixture
 
 MOCK_USER_JWT = (

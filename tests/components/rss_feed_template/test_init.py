@@ -1,4 +1,5 @@
 """The tests for the rss_feed_api component."""
+
 from http import HTTPStatus
 
 from defusedxml import ElementTree

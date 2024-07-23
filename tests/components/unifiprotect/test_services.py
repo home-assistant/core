@@ -5,17 +5,19 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Chime, Light, ModelType
+from pyunifiprotect.data import Camera, Chime, Color, Light, ModelType
+from pyunifiprotect.data.devices import CameraZone
 from pyunifiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
+    SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -177,3 +179,55 @@ async def test_set_chime_paired_doorbells(
     ufp.api.update_device.assert_called_once_with(
         ModelType.CHIME, chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
     )
+
+
+async def test_remove_privacy_zone_no_zone(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test remove_privacy_zone service."""
+
+    ufp.api.update_device = AsyncMock()
+    doorbell.privacy_zones = []
+
+    await init_entry(hass, ufp, [doorbell])
+
+    registry = er.async_get(hass)
+    camera_entry = registry.async_get("binary_sensor.test_camera_doorbell")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REMOVE_PRIVACY_ZONE,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_NAME: "Testing"},
+            blocking=True,
+        )
+    ufp.api.update_device.assert_not_called()
+
+
+async def test_remove_privacy_zone(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test remove_privacy_zone service."""
+
+    ufp.api.update_device = AsyncMock()
+    doorbell.privacy_zones = [
+        CameraZone(id=0, name="Testing", color=Color("red"), points=[(0, 0), (1, 1)])
+    ]
+
+    await init_entry(hass, ufp, [doorbell])
+
+    registry = er.async_get(hass)
+    camera_entry = registry.async_get("binary_sensor.test_camera_doorbell")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REMOVE_PRIVACY_ZONE,
+        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_NAME: "Testing"},
+        blocking=True,
+    )
+    ufp.api.update_device.assert_called()
+    assert not len(doorbell.privacy_zones)

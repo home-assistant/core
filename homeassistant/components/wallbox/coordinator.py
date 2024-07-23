@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the wallbox integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -132,9 +133,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
             CHARGER_ENERGY_PRICE_KEY
         ]
-        data[
-            CHARGER_CURRENCY_KEY
-        ] = f"{data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][CODE_KEY]}/kWh"
+        data[CHARGER_CURRENCY_KEY] = (
+            f"{data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][CODE_KEY]}/kWh"
+        )
 
         data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
             data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
@@ -153,7 +154,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
-            raise wallbox_connection_error
+            raise
 
     async def async_set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
@@ -184,7 +185,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
-            raise wallbox_connection_error
+            raise
 
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""

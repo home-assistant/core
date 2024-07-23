@@ -1,7 +1,8 @@
 """The Minecraft Server sensor platform."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -31,20 +32,13 @@ UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 
 
-@dataclass(frozen=True)
-class MinecraftServerEntityDescriptionMixin:
-    """Mixin values for Minecraft Server entities."""
+@dataclass(frozen=True, kw_only=True)
+class MinecraftServerSensorEntityDescription(SensorEntityDescription):
+    """Class describing Minecraft Server sensor entities."""
 
     value_fn: Callable[[MinecraftServerData], StateType]
-    attributes_fn: Callable[[MinecraftServerData], MutableMapping[str, Any]] | None
+    attributes_fn: Callable[[MinecraftServerData], dict[str, Any]] | None
     supported_server_types: set[MinecraftServerType]
-
-
-@dataclass(frozen=True)
-class MinecraftServerSensorEntityDescription(
-    SensorEntityDescription, MinecraftServerEntityDescriptionMixin
-):
-    """Class describing Minecraft Server sensor entities."""
 
 
 def get_extra_state_attributes_players_list(

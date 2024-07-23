@@ -1,4 +1,5 @@
 """Matter climate platform."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -312,6 +313,6 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
         ),
-        device_type=(device_types.Thermostat,),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),
 ]

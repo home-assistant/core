@@ -1,4 +1,5 @@
 """Websocket API to interact with the floor registry."""
+
 from typing import Any
 
 import voluptuous as vol
@@ -40,8 +41,9 @@ def websocket_list_floors(
     {
         vol.Required("type"): "config/floor_registry/create",
         vol.Required("name"): str,
+        vol.Optional("aliases"): list,
         vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("level"): int,
+        vol.Optional("level"): vol.Any(int, None),
     }
 )
 @websocket_api.require_admin
@@ -55,6 +57,10 @@ def websocket_create_floor(
     data = dict(msg)
     data.pop("type")
     data.pop("id")
+
+    if "aliases" in data:
+        # Convert aliases to a set
+        data["aliases"] = set(data["aliases"])
 
     try:
         entry = registry.async_create(**data)
@@ -90,8 +96,9 @@ def websocket_delete_floor(
     {
         vol.Required("type"): "config/floor_registry/update",
         vol.Required("floor_id"): str,
+        vol.Optional("aliases"): list,
         vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("level"): int,
+        vol.Optional("level"): vol.Any(int, None),
         vol.Optional("name"): str,
     }
 )
@@ -107,6 +114,10 @@ def websocket_update_floor(
     data.pop("type")
     data.pop("id")
 
+    if "aliases" in data:
+        # Convert aliases to a set
+        data["aliases"] = set(data["aliases"])
+
     try:
         entry = registry.async_update(**data)
     except ValueError as err:
@@ -119,6 +130,7 @@ def websocket_update_floor(
 def _entry_dict(entry: FloorEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
+        "aliases": list(entry.aliases),
         "floor_id": entry.floor_id,
         "icon": entry.icon,
         "level": entry.level,

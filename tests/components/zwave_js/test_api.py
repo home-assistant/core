@@ -1,6 +1,8 @@
 """Test the Z-Wave JS Websocket API."""
+
 from copy import deepcopy
 from http import HTTPStatus
+from io import BytesIO
 import json
 from typing import Any
 from unittest.mock import patch
@@ -1334,6 +1336,7 @@ async def test_get_provisioning_entries(
             "security_classes": [SecurityClass.S2_UNAUTHENTICATED],
             "requested_security_classes": None,
             "status": 0,
+            "protocol": None,
             "additional_properties": {"fake": "test"},
         }
     ]
@@ -1420,6 +1423,7 @@ async def test_parse_qr_code_string(
         "manufacturer_id": 1,
         "product_type": 1,
         "product_id": 1,
+        "protocol": None,
         "application_version": "test",
         "max_inclusion_request_interval": 1,
         "uuid": "test",
@@ -3069,13 +3073,17 @@ async def test_firmware_upload_view(
     """Test the HTTP firmware upload view."""
     client = await hass_client()
     device = get_device(hass, multisensor_6)
-    with patch(
-        "homeassistant.components.zwave_js.api.update_firmware",
-    ) as mock_node_cmd, patch(
-        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
-    ) as mock_controller_cmd, patch.dict(
-        "homeassistant.components.zwave_js.api.USER_AGENT",
-        {"HomeAssistant": "0.0.0"},
+    with (
+        patch(
+            "homeassistant.components.zwave_js.api.update_firmware",
+        ) as mock_node_cmd,
+        patch(
+            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+        ) as mock_controller_cmd,
+        patch.dict(
+            "homeassistant.components.zwave_js.api.USER_AGENT",
+            {"HomeAssistant": "0.0.0"},
+        ),
     ):
         data = {"file": firmware_file}
         data.update(firmware_data)
@@ -3084,7 +3092,9 @@ async def test_firmware_upload_view(
             f"/api/zwave_js/firmware/upload/{device.id}", data=data
         )
 
-        update_data = NodeFirmwareUpdateData("file", bytes(10))
+        update_data = NodeFirmwareUpdateData(
+            "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        )
         for attr, value in expected_data.items():
             setattr(update_data, attr, value)
 
@@ -3106,13 +3116,17 @@ async def test_firmware_upload_view_controller(
     """Test the HTTP firmware upload view for a controller."""
     hass_client = await hass_client()
     device = get_device(hass, client.driver.controller.nodes[1])
-    with patch(
-        "homeassistant.components.zwave_js.api.update_firmware",
-    ) as mock_node_cmd, patch(
-        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
-    ) as mock_controller_cmd, patch.dict(
-        "homeassistant.components.zwave_js.api.USER_AGENT",
-        {"HomeAssistant": "0.0.0"},
+    with (
+        patch(
+            "homeassistant.components.zwave_js.api.update_firmware",
+        ) as mock_node_cmd,
+        patch(
+            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+        ) as mock_controller_cmd,
+        patch.dict(
+            "homeassistant.components.zwave_js.api.USER_AGENT",
+            {"HomeAssistant": "0.0.0"},
+        ),
     ):
         resp = await hass_client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
@@ -3120,7 +3134,9 @@ async def test_firmware_upload_view_controller(
         )
         mock_node_cmd.assert_not_called()
         assert mock_controller_cmd.call_args[0][1:2] == (
-            ControllerFirmwareUpdateData("file", bytes(10)),
+            ControllerFirmwareUpdateData(
+                "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            ),
         )
         assert mock_controller_cmd.call_args[1] == {
             "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
@@ -3157,7 +3173,7 @@ async def test_firmware_upload_view_invalid_payload(
     client = await hass_client()
     resp = await client.post(
         f"/api/zwave_js/firmware/upload/{device.id}",
-        data={"wrong_key": bytes(10)},
+        data={"wrong_key": BytesIO(bytes(10))},
     )
     assert resp.status == HTTPStatus.BAD_REQUEST
 
@@ -3175,7 +3191,7 @@ async def test_firmware_upload_view_no_driver(
     aiohttp_client = await hass_client()
     resp = await aiohttp_client.post(
         f"/api/zwave_js/firmware/upload/{device.id}",
-        data={"wrong_key": bytes(10)},
+        data={"wrong_key": BytesIO(bytes(10))},
     )
     assert resp.status == HTTPStatus.NOT_FOUND
 

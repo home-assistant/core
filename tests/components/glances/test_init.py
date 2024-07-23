@@ -1,4 +1,5 @@
 """Tests for Glances integration."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from glances_api.exceptions import (
@@ -26,7 +27,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_entry_deprecated_version(
@@ -44,7 +45,7 @@ async def test_entry_deprecated_version(
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_version")
     assert issue is not None

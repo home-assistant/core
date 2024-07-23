@@ -1,4 +1,5 @@
 """Elmax switch platform."""
+
 import asyncio
 import logging
 from typing import Any

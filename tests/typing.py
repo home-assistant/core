@@ -1,4 +1,5 @@
 """Typing helpers for Home Assistant tests."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -19,6 +20,7 @@ class MockHAClientWebSocket(ClientWebSocketResponse):
 
     client: TestClient
     send_json_auto_id: Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
+    remove_device: Callable[[str, str], Coroutine[Any, Any, Any]]
 
 
 ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]

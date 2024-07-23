@@ -1,10 +1,11 @@
 """The tests for the Geofency device tracker platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zone
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
 from homeassistant.config import async_process_ha_core_config
@@ -15,6 +16,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -156,10 +158,10 @@ async def webhook_id(hass, geofency_client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     return result["result"].data["webhook_id"]

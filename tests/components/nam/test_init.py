@@ -1,4 +1,5 @@
 """Test init of Nettigo Air Monitor integration."""
+
 from unittest.mock import patch
 
 from nettigo_air_monitor import ApiError, AuthFailedError
@@ -53,9 +54,12 @@ async def test_config_not_ready_while_checking_credentials(hass: HomeAssistant) 
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        side_effect=ApiError("API Error"),
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+            side_effect=ApiError("API Error"),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY

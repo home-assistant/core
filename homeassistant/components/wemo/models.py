@@ -12,7 +12,7 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:  # Avoid circular dependencies.
     from . import HostPortTuple, WemoDiscovery, WemoDispatcher
-    from .wemo_device import DeviceCoordinator
+    from .coordinator import DeviceCoordinator
 
 
 @dataclass

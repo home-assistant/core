@@ -2,21 +2,21 @@
   "entity": {
     "binary_sensor": {
       "filter_1": {
-        "default": "mdi:sync-off",
+        "default": "mdi:sync",
         "state": {
-          "on": "mdi:sync"
+          "off": "mdi:sync-off"
         }
       },
       "filter_2": {
-        "default": "mdi:sync-off",
+        "default": "mdi:sync",
         "state": {
-          "on": "mdi:sync"
+          "off": "mdi:sync-off"
         }
       },
       "circ_pump": {
-        "default": "mdi:pump-off",
+        "default": "mdi:pump",
         "state": {
-          "on": "mdi:pump"
+          "off": "mdi:pump-off"
         }
       }
     },
@@ -26,6 +26,11 @@
         "state": {
           "off": "mdi:pump-off"
         }
+      }
+    },
+    "select": {
+      "temperature_range": {
+        "default": "mdi:thermometer-lines"
       }
     }
   }

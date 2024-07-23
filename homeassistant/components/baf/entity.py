@@ -1,4 +1,5 @@
 """The baf integration entities."""
+
 from __future__ import annotations
 
 from aiobafi6 import Device

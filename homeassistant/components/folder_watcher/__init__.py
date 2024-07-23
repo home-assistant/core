@@ -1,9 +1,10 @@
 """Component for monitoring activity on a folder."""
+
 from __future__ import annotations
 
 import logging
 import os
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 from watchdog.events import (
@@ -18,17 +19,17 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
+
+from .const import CONF_FOLDER, CONF_PATTERNS, DEFAULT_PATTERN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FOLDER = "folder"
-CONF_PATTERNS = "patterns"
-DEFAULT_PATTERN = "*"
-DOMAIN = "folder_watcher"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -50,17 +51,59 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the folder watcher."""
-    conf = config[DOMAIN]
-    for watcher in conf:
-        path: str = watcher[CONF_FOLDER]
-        patterns: list[str] = watcher[CONF_PATTERNS]
-        if not hass.config.is_allowed_path(path):
-            _LOGGER.error("Folder %s is not valid or allowed", path)
-            return False
-        Watcher(path, patterns, hass)
+    if DOMAIN in config:
+        conf: list[dict[str, Any]] = config[DOMAIN]
+        for watcher in conf:
+            path: str = watcher[CONF_FOLDER]
+            if not hass.config.is_allowed_path(path):
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"import_failed_not_allowed_path_{path}",
+                    is_fixable=False,
+                    is_persistent=False,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="import_failed_not_allowed_path",
+                    translation_placeholders={
+                        "path": path,
+                        "config_variable": "allowlist_external_dirs",
+                    },
+                )
+                continue
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=watcher
+                )
+            )
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Folder watcher from a config entry."""
+
+    path: str = entry.options[CONF_FOLDER]
+    patterns: list[str] = entry.options[CONF_PATTERNS]
+    if not hass.config.is_allowed_path(path):
+        _LOGGER.error("Folder %s is not valid or allowed", path)
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"setup_not_allowed_path_{path}",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.ERROR,
+            translation_key="setup_not_allowed_path",
+            translation_placeholders={
+                "path": path,
+                "config_variable": "allowlist_external_dirs",
+            },
+            learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
+        )
+        return False
+    await hass.async_add_executor_job(Watcher, path, patterns, hass)
     return True
 
 

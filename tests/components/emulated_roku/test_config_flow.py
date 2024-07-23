@@ -1,7 +1,9 @@
 """Tests for emulated_roku config flow."""
+
 from homeassistant import config_entries
 from homeassistant.components.emulated_roku import config_flow
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -14,7 +16,7 @@ async def test_flow_works(hass: HomeAssistant, mock_get_source_ip) -> None:
         data={"name": "Emulated Roku Test", "listen_port": 8060},
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Emulated Roku Test"
     assert result["data"] == {"name": "Emulated Roku Test", "listen_port": 8060}
 
@@ -33,5 +35,5 @@ async def test_flow_already_registered_entry(
         data={"name": "Emulated Roku Test", "listen_port": 8062},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

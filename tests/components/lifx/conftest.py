@@ -1,11 +1,21 @@
 """Tests for the lifx integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.lifx import config_flow, coordinator, util
 
+from . import _patch_discovery
+
 from tests.common import mock_device_registry, mock_registry
+
+
+@pytest.fixture
+def mock_discovery():
+    """Mock discovery."""
+    with _patch_discovery():
+        yield
 
 
 @pytest.fixture
@@ -39,10 +49,11 @@ def lifx_mock_get_source_ip(mock_get_source_ip):
 @pytest.fixture(autouse=True)
 def lifx_no_wait_for_timeouts():
     """Avoid waiting for timeouts in tests."""
-    with patch.object(util, "OVERALL_TIMEOUT", 0), patch.object(
-        config_flow, "OVERALL_TIMEOUT", 0
-    ), patch.object(coordinator, "OVERALL_TIMEOUT", 0), patch.object(
-        coordinator, "MAX_UPDATE_TIME", 0
+    with (
+        patch.object(util, "OVERALL_TIMEOUT", 0),
+        patch.object(config_flow, "OVERALL_TIMEOUT", 0),
+        patch.object(coordinator, "OVERALL_TIMEOUT", 0),
+        patch.object(coordinator, "MAX_UPDATE_TIME", 0),
     ):
         yield
 

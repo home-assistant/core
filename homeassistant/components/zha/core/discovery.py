@@ -1,4 +1,5 @@
 """Device discovery functions for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections import Counter
@@ -84,12 +85,18 @@ QUIRKS_ENTITY_META_TO_ENTITY_CLASS = {
         WriteAttributeButtonMetadata,
         EntityType.CONFIG,
     ): button.ZHAAttributeButton,
+    (
+        Platform.BUTTON,
+        WriteAttributeButtonMetadata,
+        EntityType.STANDARD,
+    ): button.ZHAAttributeButton,
     (Platform.BUTTON, ZCLCommandButtonMetadata, EntityType.CONFIG): button.ZHAButton,
     (
         Platform.BUTTON,
         ZCLCommandButtonMetadata,
         EntityType.DIAGNOSTIC,
     ): button.ZHAButton,
+    (Platform.BUTTON, ZCLCommandButtonMetadata, EntityType.STANDARD): button.ZHAButton,
     (
         Platform.BINARY_SENSOR,
         BinarySensorMetadata,
@@ -110,6 +117,7 @@ QUIRKS_ENTITY_META_TO_ENTITY_CLASS = {
     (Platform.SENSOR, ZCLSensorMetadata, EntityType.DIAGNOSTIC): sensor.Sensor,
     (Platform.SENSOR, ZCLSensorMetadata, EntityType.STANDARD): sensor.Sensor,
     (Platform.SELECT, ZCLEnumMetadata, EntityType.CONFIG): select.ZCLEnumSelectEntity,
+    (Platform.SELECT, ZCLEnumMetadata, EntityType.STANDARD): select.ZCLEnumSelectEntity,
     (
         Platform.SELECT,
         ZCLEnumMetadata,
@@ -223,7 +231,7 @@ class ProbeEndpoint:
 
         for (
             cluster_details,
-            quirk_metadata_list,
+            entity_metadata_list,
         ) in zigpy_device.exposes_metadata.items():
             endpoint_id, cluster_id, cluster_type = cluster_details
 
@@ -264,11 +272,11 @@ class ProbeEndpoint:
             )
             assert cluster_handler
 
-            for quirk_metadata in quirk_metadata_list:
-                platform = Platform(quirk_metadata.entity_platform.value)
-                metadata_type = type(quirk_metadata.entity_metadata)
+            for entity_metadata in entity_metadata_list:
+                platform = Platform(entity_metadata.entity_platform.value)
+                metadata_type = type(entity_metadata)
                 entity_class = QUIRKS_ENTITY_META_TO_ENTITY_CLASS.get(
-                    (platform, metadata_type, quirk_metadata.entity_type)
+                    (platform, metadata_type, entity_metadata.entity_type)
                 )
 
                 if entity_class is None:
@@ -279,7 +287,7 @@ class ProbeEndpoint:
                         device.name,
                         {
                             zha_const.CLUSTER_DETAILS: cluster_details,
-                            zha_const.QUIRK_METADATA: quirk_metadata,
+                            zha_const.ENTITY_METADATA: entity_metadata,
                         },
                     )
                     continue
@@ -287,14 +295,14 @@ class ProbeEndpoint:
                 # automatically add the attribute to ZCL_INIT_ATTRS for the cluster
                 # handler if it is not already in the list
                 if (
-                    hasattr(quirk_metadata.entity_metadata, "attribute_name")
-                    and quirk_metadata.entity_metadata.attribute_name
+                    hasattr(entity_metadata, "attribute_name")
+                    and entity_metadata.attribute_name
                     not in cluster_handler.ZCL_INIT_ATTRS
                 ):
                     init_attrs = cluster_handler.ZCL_INIT_ATTRS.copy()
-                    init_attrs[
-                        quirk_metadata.entity_metadata.attribute_name
-                    ] = quirk_metadata.attribute_initialized_from_cache
+                    init_attrs[entity_metadata.attribute_name] = (
+                        entity_metadata.attribute_initialized_from_cache
+                    )
                     cluster_handler.__dict__[zha_const.ZCL_INIT_ATTRS] = init_attrs
 
                 endpoint.async_new_entity(
@@ -302,7 +310,7 @@ class ProbeEndpoint:
                     entity_class,
                     endpoint.unique_id,
                     [cluster_handler],
-                    quirk_metadata=quirk_metadata,
+                    entity_metadata=entity_metadata,
                 )
 
                 _LOGGER.debug(

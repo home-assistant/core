@@ -1,4 +1,5 @@
 """Config flow for A. O. Smith integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -35,7 +36,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.get_devices()
         except AOSmithInvalidCredentialsException:
             return "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
 

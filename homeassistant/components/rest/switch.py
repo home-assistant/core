@@ -1,4 +1,5 @@
 """Support for RESTful switches."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -218,8 +219,8 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
             req = await self.get_device_state(self.hass)
         except (TimeoutError, httpx.TimeoutException):
             _LOGGER.exception("Timed out while fetching data")
-        except httpx.RequestError as err:
-            _LOGGER.exception("Error while fetching data: %s", err)
+        except httpx.RequestError:
+            _LOGGER.exception("Error while fetching data")
 
         if req:
             self._process_manual_data(req.text)

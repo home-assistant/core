@@ -1,4 +1,5 @@
 """Tests for the USB Discovery integration."""
+
 import os
 import sys
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
@@ -84,17 +85,18 @@ async def test_observer_discovery(
 
     def _create_mock_monitor_observer(monitor, callback, name):
         nonlocal mock_observer
-        hass.async_create_task(_mock_monitor_observer_callback(callback))
+        hass.create_task(_mock_monitor_observer_callback(callback))
         mock_observer = MagicMock()
         return mock_observer
 
-    with patch("pyudev.Context"), patch(
-        "pyudev.MonitorObserver", new=_create_mock_monitor_observer
-    ), patch("pyudev.Monitor.filter_by"), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context"),
+        patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer),
+        patch("pyudev.Monitor.filter_by"),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -106,7 +108,7 @@ async def test_observer_discovery(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    assert mock_observer.mock_calls == [call.start(), call.stop()]
+    assert mock_observer.mock_calls == [call.start(), call.__bool__(), call.stop()]
 
 
 @pytest.mark.skipif(
@@ -139,13 +141,12 @@ async def test_removal_by_observer_before_started(
         )
     ]
 
-    with patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer), patch.object(
-        hass.config_entries.flow, "async_init"
-    ) as mock_config_flow:
+    with (
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
 
@@ -176,11 +177,12 @@ async def test_discovered_by_websocket_scan(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -214,11 +216,12 @@ async def test_discovered_by_websocket_scan_limited_by_description_matcher(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -253,11 +256,12 @@ async def test_most_targeted_matcher_wins(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -291,11 +295,12 @@ async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -333,11 +338,12 @@ async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -371,11 +377,12 @@ async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -413,11 +420,12 @@ async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -456,11 +464,12 @@ async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -493,11 +502,12 @@ async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -528,11 +538,12 @@ async def test_discovered_by_websocket_scan_match_vid_only(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -564,11 +575,12 @@ async def test_discovered_by_websocket_scan_match_vid_wrong_pid(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -599,11 +611,12 @@ async def test_discovered_by_websocket_no_vid_pid(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -635,11 +648,12 @@ async def test_non_matching_discovered_by_scanner_after_started(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=exception_type), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=exception_type),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -674,11 +688,13 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
         )
     ]
 
-    with patch("pyudev.Context"), patch(
-        "pyudev.Monitor.filter_by", side_effect=ValueError
-    ), patch("homeassistant.components.usb.async_get_usb", return_value=new_usb), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context"),
+        patch("pyudev.Monitor.filter_by", side_effect=ValueError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -724,17 +740,18 @@ async def test_not_discovered_by_observer_before_started_on_docker(
         )
     ]
 
-    with patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer):
+    with (
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer),
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
 
-    with patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
-        hass.config_entries.flow, "async_init"
-    ) as mock_config_flow:
+    with (
+        patch("homeassistant.components.usb.comports", return_value=[]),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -842,10 +859,11 @@ async def test_async_is_plugged_in(
         "pid": "3039",
     }
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
-        hass.config_entries.flow, "async_init"
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+        patch.object(hass.config_entries.flow, "async_init"),
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
@@ -853,9 +871,10 @@ async def test_async_is_plugged_in(
         await hass.async_block_till_done()
         assert not usb.async_is_plugged_in(hass, matcher)
 
-    with patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init"):
+    with (
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch.object(hass.config_entries.flow, "async_init"),
+    ):
         ws_client = await hass_ws_client(hass)
         await ws_client.send_json({"id": 1, "type": "usb/scan"})
         response = await ws_client.receive_json()
@@ -881,10 +900,11 @@ async def test_async_is_plugged_in_case_enforcement(
 
     new_usb = [{"domain": "test1", "vid": "ABCD"}]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
-        hass.config_entries.flow, "async_init"
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+        patch.object(hass.config_entries.flow, "async_init"),
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
@@ -901,10 +921,11 @@ async def test_web_socket_triggers_discovery_request_callbacks(
     """Test the websocket call triggers a discovery request callback."""
     mock_callback = Mock()
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=[]
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
-        hass.config_entries.flow, "async_init"
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+        patch.object(hass.config_entries.flow, "async_init"),
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
@@ -936,10 +957,11 @@ async def test_initial_scan_callback(
     mock_callback_1 = Mock()
     mock_callback_2 = Mock()
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=[]
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
-        hass.config_entries.flow, "async_init"
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+        patch.object(hass.config_entries.flow, "async_init"),
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         cancel_1 = usb.async_register_initial_scan_callback(hass, mock_callback_1)
@@ -970,10 +992,11 @@ async def test_cancel_initial_scan_callback(
     """Test it's possible to cancel an initial scan callback."""
     mock_callback = Mock()
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=[]
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
-        hass.config_entries.flow, "async_init"
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+        patch.object(hass.config_entries.flow, "async_init"),
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         cancel = usb.async_register_initial_scan_callback(hass, mock_callback)
@@ -1006,14 +1029,16 @@ async def test_resolve_serial_by_id(
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch(
-        "homeassistant.components.usb.get_serial_by_id",
-        return_value="/dev/serial/by-id/bla",
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=mock_comports),
+        patch(
+            "homeassistant.components.usb.get_serial_by_id",
+            return_value="/dev/serial/by-id/bla",
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

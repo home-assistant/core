@@ -14,12 +14,14 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.setup import SetupPhases, async_pause_setup
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_TODO_LIST_NAME, DOMAIN
+from . import LocalTodoConfigEntry
+from .const import CONF_TODO_LIST_NAME
 from .store import LocalTodoListStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,14 +63,21 @@ def _migrate_calendar(calendar: Calendar) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LocalTodoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the local_todo todo platform."""
 
-    store = hass.data[DOMAIN][config_entry.entry_id]
+    store = config_entry.runtime_data
     ics = await store.async_load()
-    calendar = IcsCalendarStream.calendar_from_ics(ics)
+
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        # calendar_from_ics will dynamically load packages
+        # the first time it is called, so we need to do it
+        # in a separate thread to avoid blocking the event loop
+        calendar: Calendar = await hass.async_add_import_executor_job(
+            IcsCalendarStream.calendar_from_ics, ics
+        )
     migrated = _migrate_calendar(calendar)
     calendar.prodid = PRODID
 
@@ -124,6 +133,9 @@ class LocalTodoListEntity(TodoListEntity):
         self._attr_name = name.capitalize()
         self._attr_unique_id = unique_id
 
+    def _new_todo_store(self) -> TodoStore:
+        return TodoStore(self._calendar, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
     async def async_update(self) -> None:
         """Update entity state based on the local To-do items."""
         todo_items = []
@@ -147,20 +159,20 @@ class LocalTodoListEntity(TodoListEntity):
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         todo = _convert_item(item)
-        TodoStore(self._calendar).add(todo)
+        self._new_todo_store().add(todo)
         await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
         todo = _convert_item(item)
-        TodoStore(self._calendar).edit(todo.uid, todo)
+        self._new_todo_store().edit(todo.uid, todo)
         await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
-        store = TodoStore(self._calendar)
+        store = self._new_todo_store()
         for uid in uids:
             store.delete(uid)
         await self.async_save()

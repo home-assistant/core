@@ -1,4 +1,5 @@
 """Config flow for Roborock."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -68,11 +69,11 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown_url"
         except RoborockInvalidEmail:
             errors["base"] = "invalid_email_format"
-        except RoborockException as ex:
-            _LOGGER.exception(ex)
+        except RoborockException:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown_roborock"
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception(ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return errors
 
@@ -91,11 +92,11 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 login_data = await self._client.code_login(code)
             except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
-            except RoborockException as ex:
-                _LOGGER.exception(ex)
+            except RoborockException:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown_roborock"
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception(ex)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 if self.reauth_entry is not None:

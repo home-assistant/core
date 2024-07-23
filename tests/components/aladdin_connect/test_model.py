@@ -1,4 +1,5 @@
 """Test the Aladdin Connect model class."""
+
 from homeassistant.components.aladdin_connect.model import DoorDevice
 from homeassistant.core import HomeAssistant
 

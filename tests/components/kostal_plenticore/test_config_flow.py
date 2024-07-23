@@ -1,4 +1,5 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
+
 from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -8,6 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -43,7 +45,7 @@ async def test_form_g1(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -90,7 +92,7 @@ async def test_form_g1(
             "scb:network", "Hostname"
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "scb"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -109,7 +111,7 @@ async def test_form_g2(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -156,7 +158,7 @@ async def test_form_g2(
             "scb:network", "Network:Hostname"
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "scb"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -195,7 +197,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
@@ -229,7 +231,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"host": "cannot_connect"}
 
 
@@ -263,7 +265,7 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -287,5 +289,5 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

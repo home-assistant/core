@@ -1,4 +1,5 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -40,7 +41,6 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_SETPOINT_PROPERTY,
 )
 from zwave_js_server.exceptions import UnknownValueData
-from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -446,6 +446,61 @@ DISCOVERY_SCHEMAS = [
         product_type={0x2400},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
+    ),
+    # Shelly Qubino Wave Shutter QNSH-001P10
+    # Combine both switch_multilevel endpoints into shutter_tilt
+    # if operating mode (71) is set to venetian blind (1)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter_tilt",
+        manufacturer_id={0x0460},
+        product_id={0x0082},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={1},
+            type={ValueType.NUMBER},
+        ),
+        data_template=CoverTiltDataTemplate(
+            current_tilt_value_id=ZwaveValueID(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_=TARGET_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={71},
+                endpoint={0},
+                value={1},
+            )
+        ],
+    ),
+    # Shelly Qubino Wave Shutter QNSH-001P10
+    # Disable endpoint 2 (slat),
+    # as these are either combined with endpoint one as shutter_tilt
+    # or it has no practical function.
+    # CC: Switch_Multilevel
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x0460},
+        product_id={0x0082},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
@@ -1179,14 +1234,22 @@ def async_discover_single_value(
             continue
 
         # check device_class_generic
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.generic, schema.device_class_generic
+        if schema.device_class_generic and (
+            not value.node.device_class
+            or not any(
+                value.node.device_class.generic.label == val
+                for val in schema.device_class_generic
+            )
         ):
             continue
 
         # check device_class_specific
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.specific, schema.device_class_specific
+        if schema.device_class_specific and (
+            not value.node.device_class
+            or not any(
+                value.node.device_class.specific.label == val
+                for val in schema.device_class_specific
+            )
         ):
             continue
 
@@ -1378,15 +1441,3 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if schema.stateful is not None and value.metadata.stateful != schema.stateful:
         return False
     return True
-
-
-@callback
-def check_device_class(
-    device_class: DeviceClassItem, required_value: set[str] | None
-) -> bool:
-    """Check if device class id or label matches."""
-    if required_value is None:
-        return True
-    if any(device_class.label == val for val in required_value):
-        return True
-    return False

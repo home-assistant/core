@@ -1,11 +1,14 @@
 """The tests for sensor recorder platform can catch up."""
+
 from datetime import datetime, timedelta
 from pathlib import Path
+import threading
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.statistics import (
     get_latest_short_term_statistics_with_session,
@@ -56,6 +59,7 @@ def test_compile_missing_statistics(
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "sensor", {})
         setup_component(hass, "recorder", {"recorder": config})
+        get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         hass.start()
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -97,6 +101,7 @@ def test_compile_missing_statistics(
         setup_component(hass, "sensor", {})
         hass.states.set("sensor.test1", "0", POWER_SENSOR_ATTRIBUTES)
         setup_component(hass, "recorder", {"recorder": config})
+        get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         hass.start()
         wait_recording_done(hass)
         wait_recording_done(hass)

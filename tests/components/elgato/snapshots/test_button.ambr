@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'button.frenck_identify',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -88,6 +89,7 @@
     'context': <ANY>,
     'entity_id': 'button.frenck_restart',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })

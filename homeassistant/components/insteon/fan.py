@@ -1,4 +1,5 @@
 """Support for INSTEON fans via PowerLinc Modem."""
+
 from __future__ import annotations
 
 import math

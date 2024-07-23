@@ -1,4 +1,5 @@
 """Test the NamecheapDNS component."""
+
 from datetime import timedelta
 
 import pytest

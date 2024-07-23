@@ -1,4 +1,5 @@
 """Support for the Airzone sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -83,22 +84,18 @@ async def async_setup_entry(
     """Add Airzone sensors from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[AirzoneBaseSelect] = []
-
-    for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        for description in ZONE_SELECT_TYPES:
-            if description.key in zone_data:
-                entities.append(
-                    AirzoneZoneSelect(
-                        coordinator,
-                        description,
-                        entry,
-                        system_zone_id,
-                        zone_data,
-                    )
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AirzoneZoneSelect(
+            coordinator,
+            description,
+            entry,
+            system_zone_id,
+            zone_data,
+        )
+        for description in ZONE_SELECT_TYPES
+        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
+        if description.key in zone_data
+    )
 
 
 class AirzoneBaseSelect(AirzoneEntity, SelectEntity):

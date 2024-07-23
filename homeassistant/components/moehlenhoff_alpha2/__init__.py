@@ -1,4 +1,5 @@
 """Support for the Moehlenhoff Alpha2."""
+
 from __future__ import annotations
 
 from datetime import timedelta

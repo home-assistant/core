@@ -1,4 +1,5 @@
 """Map Matter Nodes and Attributes to Home Assistant entities."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the RDW integration."""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.rdw.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON

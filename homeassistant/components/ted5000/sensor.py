@@ -1,4 +1,5 @@
 """Support gathering ted5000 information."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -77,12 +78,11 @@ def setup_platform(
     # Get MUT information to create the sensors.
     gateway.update()
 
-    entities = []
-    for mtu in gateway.data:
-        for description in SENSORS:
-            entities.append(Ted5000Sensor(gateway, name, mtu, description))
-
-    add_entities(entities)
+    add_entities(
+        Ted5000Sensor(gateway, name, mtu, description)
+        for mtu in gateway.data
+        for description in SENSORS
+    )
 
 
 class Ted5000Sensor(SensorEntity):

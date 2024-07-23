@@ -1,4 +1,5 @@
 """Button platform for CoolMasterNet integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription

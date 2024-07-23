@@ -88,8 +88,11 @@ async def integration_fixture(
 
     lock_status = json.loads(load_fixture("loqed/status_ok.json"))
 
-    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

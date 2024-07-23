@@ -1,4 +1,5 @@
 """Support for Magic Home select."""
+
 from __future__ import annotations
 
 import asyncio

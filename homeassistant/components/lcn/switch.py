@@ -1,4 +1,5 @@
 """Support for LCN switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -40,13 +41,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up LCN switch entities from a config entry."""
 
-    entities = []
-
-    for entity_config in config_entry.data[CONF_ENTITIES]:
-        if entity_config[CONF_DOMAIN] == DOMAIN_SWITCH:
-            entities.append(create_lcn_switch_entity(hass, entity_config, config_entry))
-
-    async_add_entities(entities)
+    async_add_entities(
+        create_lcn_switch_entity(hass, entity_config, config_entry)
+        for entity_config in config_entry.data[CONF_ENTITIES]
+        if entity_config[CONF_DOMAIN] == DOMAIN_SWITCH
+    )
 
 
 class LcnOutputSwitch(LcnEntity, SwitchEntity):

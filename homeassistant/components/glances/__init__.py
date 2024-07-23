@@ -1,4 +1,5 @@
 """The Glances component."""
+
 import logging
 from typing import Any
 

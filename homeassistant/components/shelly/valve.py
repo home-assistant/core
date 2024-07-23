@@ -1,4 +1,5 @@
 """Valve for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,11 +14,10 @@ from homeassistant.components.valve import (
     ValveEntityDescription,
     ValveEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import ShellyBlockCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry
 from .entity import (
     BlockEntityDescription,
     ShellyBlockAttributeEntity,
@@ -41,7 +41,7 @@ GAS_VALVE = BlockValveDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up valves for device."""
@@ -52,11 +52,11 @@ async def async_setup_entry(
 @callback
 def async_setup_block_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up valve for device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    coordinator = config_entry.runtime_data.block
     assert coordinator and coordinator.device.blocks
 
     if coordinator.model == MODEL_GAS:

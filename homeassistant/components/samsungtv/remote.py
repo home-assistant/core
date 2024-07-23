@@ -1,23 +1,26 @@
 """Support for the SamsungTV remote."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from . import SamsungTVConfigEntry
+from .const import LOGGER
 from .entity import SamsungTVEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SamsungTVConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Samsung TV from a config entry."""
-    bridge = hass.data[DOMAIN][entry.entry_id]
+    bridge = entry.runtime_data
     async_add_entities([SamsungTVRemote(bridge=bridge, config_entry=entry)])
 
 

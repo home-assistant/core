@@ -1,4 +1,5 @@
 """The tests for YoLink device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER

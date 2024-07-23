@@ -40,11 +40,14 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
         domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "password"}
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -63,7 +66,7 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
 
         async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         flows = hass.config_entries.flow.async_progress(DOMAIN)
         assert len(flows) == 1

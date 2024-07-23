@@ -1,4 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
+
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -73,18 +74,6 @@ class FritzConnectionMock:
         return self._services[service][action]
 
 
-class FritzHostMock(FritzHosts):
-    """FritzHosts mocking."""
-
-    def get_mesh_topology(self, raw=False):
-        """Retrurn mocked mesh data."""
-        return MOCK_MESH_DATA
-
-    def get_hosts_attributes(self):
-        """Retrurn mocked host attributes data."""
-        return MOCK_HOST_ATTRIBUTES_DATA
-
-
 @pytest.fixture(name="fc_data")
 def fc_data_mock():
     """Fixture for default fc_data."""
@@ -106,6 +95,8 @@ def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
     with patch(
         "homeassistant.components.fritz.common.FritzHosts",
-        new=FritzHostMock,
+        new=FritzHosts,
     ) as result:
+        result.get_mesh_topology = MagicMock(return_value=MOCK_MESH_DATA)
+        result.get_hosts_attributes = MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA)
         yield result

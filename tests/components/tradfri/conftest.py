@@ -1,4 +1,5 @@
 """Common tradfri test fixtures."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -95,13 +96,13 @@ def device(
     return device
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def air_purifier() -> str:
     """Return an air purifier response."""
     return load_fixture("air_purifier.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def blind() -> str:
     """Return a blind response."""
     return load_fixture("blind.json", DOMAIN)

@@ -1,4 +1,5 @@
 """Support for a ScreenLogic 'circuit' switch."""
+
 from dataclasses import dataclass
 import logging
 
@@ -22,7 +23,7 @@ from .entity import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ScreenLogicCircuitSwitchDescription(
     SwitchEntityDescription, ScreenLogicPushEntityDescription
 ):

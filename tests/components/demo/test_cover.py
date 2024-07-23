@@ -1,4 +1,5 @@
 """The tests for the Demo cover platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

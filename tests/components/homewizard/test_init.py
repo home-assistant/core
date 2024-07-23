@@ -1,4 +1,5 @@
 """Tests for the homewizard component."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, HomeWizardEnergyException
@@ -125,12 +126,22 @@ async def test_load_handles_homewizardenergy_exception(
     ("device_fixture", "old_unique_id", "new_unique_id"),
     [
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
             "aabbccddeeff_total_power_import_t1_kwh",
             "aabbccddeeff_total_power_import_kwh",
         ),
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
+            "aabbccddeeff_total_power_export_t1_kwh",
+            "aabbccddeeff_total_power_export_kwh",
+        ),
+        (
+            "HWE-SKT-21",
+            "aabbccddeeff_total_power_import_t1_kwh",
+            "aabbccddeeff_total_power_import_kwh",
+        ),
+        (
+            "HWE-SKT-21",
             "aabbccddeeff_total_power_export_t1_kwh",
             "aabbccddeeff_total_power_export_kwh",
         ),
@@ -169,12 +180,22 @@ async def test_sensor_migration(
     ("device_fixture", "old_unique_id", "new_unique_id"),
     [
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
             "aabbccddeeff_total_power_import_t1_kwh",
             "aabbccddeeff_total_power_import_kwh",
         ),
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
+            "aabbccddeeff_total_power_export_t1_kwh",
+            "aabbccddeeff_total_power_export_kwh",
+        ),
+        (
+            "HWE-SKT-21",
+            "aabbccddeeff_total_power_import_t1_kwh",
+            "aabbccddeeff_total_power_import_kwh",
+        ),
+        (
+            "HWE-SKT-21",
             "aabbccddeeff_total_power_export_t1_kwh",
             "aabbccddeeff_total_power_export_kwh",
         ),

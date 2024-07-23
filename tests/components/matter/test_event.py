@@ -1,4 +1,5 @@
 """Test Matter Event entities."""
+
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode

@@ -15,3 +15,6 @@ ATTR_ARGS = "args"
 # event constants
 EVENT_API_CALL_SUCCESS = f"{DOMAIN}_{SERVICE_API_CALL}_success"
 ATTR_DATA = "data"
+
+MANUFACTURER = "HabitRPG, Inc."
+NAME = "Habitica"

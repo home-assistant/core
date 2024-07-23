@@ -1,6 +1,5 @@
 """Constants used for testing the bang_olufsen integration."""
 
-
 from ipaddress import IPv4Address, IPv6Address
 
 from homeassistant.components.bang_olufsen.const import (

@@ -4,6 +4,7 @@ Test setup of RFLink covers component/platform. State tracking and
 control of RFLink cover devices.
 
 """
+
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,

@@ -1,4 +1,5 @@
 """The tests for SleepIQ number platform."""
+
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,

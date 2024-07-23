@@ -1,4 +1,5 @@
 """The tests for the  MQTT binary sensor platform."""
+
 import copy
 from datetime import datetime, timedelta
 import json
@@ -17,7 +18,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.typing import ConfigType
@@ -69,13 +69,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def binary_sensor_platform_only():
-    """Only setup the binary_sensor platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
-        yield
 
 
 @pytest.mark.parametrize(

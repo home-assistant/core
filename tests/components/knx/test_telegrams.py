@@ -1,4 +1,5 @@
 """KNX Telegrams Tests."""
+
 from copy import copy
 from datetime import datetime
 from typing import Any

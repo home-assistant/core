@@ -1,4 +1,5 @@
 """Config flow for brunt integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -37,13 +38,13 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:
             _LOGGER.warning("Brunt Credentials are incorrect")
             errors = {"base": "invalid_auth"}
         else:
-            _LOGGER.exception("Unknown error when trying to login to Brunt: %s", exc)
+            _LOGGER.exception("Unknown error when trying to login to Brunt")
             errors = {"base": "unknown"}
     except ServerDisconnectedError:
         _LOGGER.warning("Cannot connect to Brunt")
         errors = {"base": "cannot_connect"}
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unknown error when trying to login to Brunt: %s", exc)
+    except Exception:
+        _LOGGER.exception("Unknown error when trying to login to Brunt")
         errors = {"base": "unknown"}
     finally:
         await bapi.async_close()

@@ -1,4 +1,5 @@
 """The tests for unifiprotect recorder."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

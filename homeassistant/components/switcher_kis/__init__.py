@@ -1,4 +1,5 @@
 """The Switcher integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -97,9 +98,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device.device_type.hex_rep,
         )
 
-        coordinator = hass.data[DOMAIN][DATA_DEVICE][
-            device.device_id
-        ] = SwitcherDataUpdateCoordinator(hass, entry, device)
+        coordinator = hass.data[DOMAIN][DATA_DEVICE][device.device_id] = (
+            SwitcherDataUpdateCoordinator(hass, entry, device)
+        )
         coordinator.async_setup()
 
     # Must be ready before dispatcher is called

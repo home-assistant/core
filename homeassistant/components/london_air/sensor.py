@@ -1,4 +1,5 @@
 """Sensor for checking the status of London air."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -71,11 +72,8 @@ def setup_platform(
     """Set up the London Air sensor."""
     data = APIData()
     data.update()
-    sensors = []
-    for name in config[CONF_LOCATIONS]:
-        sensors.append(AirSensor(name, data))
 
-    add_entities(sensors, True)
+    add_entities((AirSensor(name, data) for name in config[CONF_LOCATIONS]), True)
 
 
 class APIData:
@@ -140,14 +138,16 @@ class AirSensor(SensorEntity):
 
     def update(self) -> None:
         """Update the sensor."""
-        sites_status = []
+        sites_status: list = []
         self._api_data.update()
         if self._api_data.data:
             self._site_data = self._api_data.data[self._name]
             self._updated = self._site_data[0]["updated"]
-            for site in self._site_data:
-                if site["pollutants_status"] != "no_species_data":
-                    sites_status.append(site["pollutants_status"])
+            sites_status.extend(
+                site["pollutants_status"]
+                for site in self._site_data
+                if site["pollutants_status"] != "no_species_data"
+            )
 
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
@@ -166,9 +166,9 @@ def parse_species(species_data):
             species_dict["code"] = species["@SpeciesCode"]
             species_dict["quality"] = species["@AirQualityBand"]
             species_dict["index"] = species["@AirQualityIndex"]
-            species_dict[
-                "summary"
-            ] = f"{species_dict['code']} is {species_dict['quality']}"
+            species_dict["summary"] = (
+                f"{species_dict['code']} is {species_dict['quality']}"
+            )
             parsed_species_data.append(species_dict)
             quality_list.append(species_dict["quality"])
     return parsed_species_data, quality_list

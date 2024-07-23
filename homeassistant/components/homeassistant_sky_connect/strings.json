@@ -57,6 +57,50 @@
       "start_flasher_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::description%]"
+      },
+      "confirm": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::confirm::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::confirm::description%]"
+      },
+      "pick_firmware": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::description%]",
+        "menu_options": {
+          "pick_firmware_thread": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::menu_options::pick_firmware_thread%]",
+          "pick_firmware_zigbee": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::menu_options::pick_firmware_zigbee%]"
+        }
+      },
+      "install_zigbee_flasher_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::install_zigbee_flasher_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::install_zigbee_flasher_addon::description%]"
+      },
+      "run_zigbee_flasher_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::run_zigbee_flasher_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::run_zigbee_flasher_addon::description%]"
+      },
+      "zigbee_flasher_failed": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::zigbee_flasher_failed::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::zigbee_flasher_failed::description%]"
+      },
+      "confirm_zigbee": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::confirm_zigbee::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::confirm_zigbee::description%]"
+      },
+      "install_otbr_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::install_otbr_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::install_otbr_addon::description%]"
+      },
+      "start_otbr_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::start_otbr_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::start_otbr_addon::description%]"
+      },
+      "otbr_failed": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::otbr_failed::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::otbr_failed::description%]"
+      },
+      "confirm_otbr": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::confirm_otbr::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::confirm_otbr::description%]"
       }
     },
     "error": {
@@ -68,12 +112,92 @@
       "addon_already_running": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_already_running%]",
       "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
       "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
+      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]",
       "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
-      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
+      "not_hassio_thread": "[%key:component::homeassistant_sky_connect::config::abort::not_hassio_thread%]",
+      "otbr_addon_already_running": "[%key:component::homeassistant_sky_connect::config::abort::otbr_addon_already_running%]",
+      "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
+      "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again."
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
-      "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]"
+      "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
+      "install_zigbee_flasher_addon": "[%key:component::homeassistant_sky_connect::config::progress::install_zigbee_flasher_addon%]",
+      "run_zigbee_flasher_addon": "[%key:component::homeassistant_sky_connect::config::progress::run_zigbee_flasher_addon%]",
+      "uninstall_zigbee_flasher_addon": "[%key:component::homeassistant_sky_connect::config::progress::uninstall_zigbee_flasher_addon%]"
+    }
+  },
+  "config": {
+    "flow_title": "{model}",
+    "step": {
+      "confirm": {
+        "title": "Set up the {model}",
+        "description": "The {model} can be used as either a Thread border router or a Zigbee coordinator. In the next step, you will choose which firmware will be configured."
+      },
+      "pick_firmware": {
+        "title": "Pick your firmware",
+        "description": "The {model} can be used as a Thread border router or a Zigbee coordinator.",
+        "menu_options": {
+          "pick_firmware_thread": "Use as a Thread border router",
+          "pick_firmware_zigbee": "Use as a Zigbee coordinator"
+        }
+      },
+      "install_zigbee_flasher_addon": {
+        "title": "Installing flasher",
+        "description": "Installing the Silicon Labs Flasher add-on."
+      },
+      "run_zigbee_flasher_addon": {
+        "title": "Installing Zigbee firmware",
+        "description": "Installing Zigbee firmware. This will take about a minute."
+      },
+      "uninstall_zigbee_flasher_addon": {
+        "title": "Removing flasher",
+        "description": "Removing the Silicon Labs Flasher add-on."
+      },
+      "zigbee_flasher_failed": {
+        "title": "Zigbee installation failed",
+        "description": "The Zigbee firmware installation process was unsuccessful. Ensure no other software is trying to communicate with the {model} and try again."
+      },
+      "confirm_zigbee": {
+        "title": "Zigbee setup complete",
+        "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration once you exit."
+      },
+      "install_otbr_addon": {
+        "title": "Installing OpenThread Border Router add-on",
+        "description": "The OpenThread Border Router (OTBR) add-on is being installed."
+      },
+      "start_otbr_addon": {
+        "title": "Starting OpenThread Border Router add-on",
+        "description": "The OpenThread Border Router (OTBR) add-on is now starting."
+      },
+      "otbr_failed": {
+        "title": "Failed to setup OpenThread Border Router",
+        "description": "The OpenThread Border Router add-on installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the internet and can install other add-ons, and try again. Check the Supervisor logs if the problem persists."
+      },
+      "confirm_otbr": {
+        "title": "OpenThread Border Router setup complete",
+        "description": "Your {model} is now an OpenThread Border Router and will show up in the Thread integration once you exit."
+      }
+    },
+    "abort": {
+      "addon_info_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_info_failed%]",
+      "addon_install_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_install_failed%]",
+      "addon_already_running": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_already_running%]",
+      "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
+      "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
+      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]",
+      "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
+      "not_hassio_thread": "The OpenThread Border Router addon can only be installed with Home Assistant OS. If you would like to use the {model} as an Thread border router, please flash the firmware manually using the [web flasher]({docs_web_flasher_url}) and set up OpenThread Border Router to communicate with it.",
+      "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again."
+    },
+    "progress": {
+      "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
+      "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
+      "install_zigbee_flasher_addon": "The Silicon Labs Flasher addon is installed, this may take a few minutes.",
+      "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes.",
+      "uninstall_zigbee_flasher_addon": "The Silicon Labs Flasher addon is being removed."
     }
   }
 }

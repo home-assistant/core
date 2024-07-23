@@ -1,4 +1,5 @@
 """Support for Google Assistant Smart Home API."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from itertools import product
@@ -89,7 +90,7 @@ async def _process(hass, data, message):
         result = await handler(hass, data, inputs[0].get("payload"))
     except SmartHomeError as err:
         return {"requestId": data.request_id, "payload": {"errorCode": err.code}}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected error")
         return {
             "requestId": data.request_id,
@@ -114,7 +115,7 @@ async def async_devices_sync_response(hass, config, agent_user_id):
 
         try:
             devices.append(entity.sync_serialize(agent_user_id, instance_uuid))
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error serializing %s", entity.entity_id)
 
     return devices
@@ -138,9 +139,7 @@ async def async_devices_sync(
     await data.config.async_connect_agent_user(agent_user_id)
 
     devices = await async_devices_sync_response(hass, data.config, agent_user_id)
-    response = create_sync_response(agent_user_id, devices)
-
-    return response
+    return create_sync_response(agent_user_id, devices)
 
 
 @HANDLERS.register("action.devices.QUERY")
@@ -180,7 +179,7 @@ async def async_devices_query_response(hass, config, payload_devices):
         entity = GoogleEntity(hass, config, state)
         try:
             devices[devid] = entity.query_serialize()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error serializing query for %s", state)
             devices[devid] = {"online": False}
 
@@ -263,7 +262,7 @@ async def handle_devices_execute(
             ),
             EXECUTE_LIMIT,
         )
-        for entity_id, result in zip(executions, execute_results):
+        for entity_id, result in zip(executions, execute_results, strict=False):
             if result is not None:
                 results[entity_id] = result
     except TimeoutError:

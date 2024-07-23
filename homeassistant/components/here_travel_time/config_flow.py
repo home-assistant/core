@@ -1,4 +1,5 @@
 """Config flow for HERE Travel Time integration."""
+
 from __future__ import annotations
 
 import logging
@@ -123,8 +124,8 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await async_validate_api_key(user_input[CONF_API_KEY])
             except HERERoutingUnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except (HERERoutingError, HERETransitError) as error:
-                _LOGGER.exception("Unexpected exception: %s", error)
+            except (HERERoutingError, HERETransitError):
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:
                 self._config = user_input

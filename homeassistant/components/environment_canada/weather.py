@@ -1,4 +1,5 @@
 """Platform for retrieving meteorological data from Environment Canada."""
+
 from __future__ import annotations
 
 import datetime
@@ -173,11 +174,6 @@ class ECWeather(SingleCoordinatorWeatherEntity):
             return icon_code_to_condition(int(icon_code))
         return ""
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return get_forecast(self.ec_data, False)
-
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
@@ -226,7 +222,9 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
 
         forecast_array.append(today)
 
-        for day, high, low in zip(range(1, 6), range(0, 9, 2), range(1, 10, 2)):
+        for day, high, low in zip(
+            range(1, 6), range(0, 9, 2), range(1, 10, 2), strict=False
+        ):
             forecast_array.append(
                 {
                     ATTR_FORECAST_TIME: (
@@ -244,19 +242,17 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
             )
 
     else:
-        for hour in ec_data.hourly_forecasts:
-            forecast_array.append(
-                {
-                    ATTR_FORECAST_TIME: hour["period"].isoformat(),
-                    ATTR_FORECAST_NATIVE_TEMP: int(hour["temperature"]),
-                    ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(hour["icon_code"])
-                    ),
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
-                        hour["precip_probability"]
-                    ),
-                }
-            )
+        forecast_array.extend(
+            {
+                ATTR_FORECAST_TIME: hour["period"].isoformat(),
+                ATTR_FORECAST_NATIVE_TEMP: int(hour["temperature"]),
+                ATTR_FORECAST_CONDITION: icon_code_to_condition(int(hour["icon_code"])),
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                    hour["precip_probability"]
+                ),
+            }
+            for hour in ec_data.hourly_forecasts
+        )
 
     return forecast_array
 

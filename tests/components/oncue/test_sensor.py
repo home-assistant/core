@@ -1,4 +1,5 @@
 """Tests for the oncue sensor."""
+
 from __future__ import annotations
 
 import pytest
@@ -24,8 +25,8 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("patcher", "connections"),
     [
-        [_patch_login_and_data, {("mac", "c9:24:22:6f:14:00")}],
-        [_patch_login_and_data_offline_device, set()],
+        (_patch_login_and_data, {("mac", "c9:24:22:6f:14:00")}),
+        (_patch_login_and_data_offline_device, set()),
     ],
 )
 async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
@@ -39,7 +40,7 @@ async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
     with patcher():
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_registry = er.async_get(hass)
     ent = entity_registry.async_get("sensor.my_generator_latest_firmware")
@@ -151,8 +152,8 @@ async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
 @pytest.mark.parametrize(
     ("patcher", "connections"),
     [
-        [_patch_login_and_data_unavailable_device, set()],
-        [_patch_login_and_data_unavailable, {("mac", "c9:24:22:6f:14:00")}],
+        (_patch_login_and_data_unavailable_device, set()),
+        (_patch_login_and_data_unavailable, {("mac", "c9:24:22:6f:14:00")}),
     ],
 )
 async def test_sensors_unavailable(hass: HomeAssistant, patcher, connections) -> None:
@@ -166,7 +167,7 @@ async def test_sensors_unavailable(hass: HomeAssistant, patcher, connections) ->
     with patcher():
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(hass.states.async_all("sensor")) == 25
     assert (

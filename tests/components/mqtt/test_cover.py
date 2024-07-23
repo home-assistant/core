@@ -1,4 +1,5 @@
 """The tests for the MQTT cover platform."""
+
 from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
@@ -42,7 +43,6 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -83,13 +83,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {cover.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def cover_platform_only():
-    """Only setup the cover platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.COVER]):
-        yield
 
 
 @pytest.mark.parametrize(

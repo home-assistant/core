@@ -1,4 +1,5 @@
 """Support for the OSO Energy devices and services."""
+
 from typing import Any, Generic, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
@@ -15,18 +16,25 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
-_T = TypeVar(
-    "_T", OSOEnergyBinarySensorData, OSOEnergySensorData, OSOEnergyWaterHeaterData
+_OSOEnergyT = TypeVar(
+    "_OSOEnergyT",
+    OSOEnergyBinarySensorData,
+    OSOEnergySensorData,
+    OSOEnergyWaterHeaterData,
 )
 
+MANUFACTURER = "OSO Energy"
 PLATFORMS = [
+    Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
+    Platform.SENSOR: "sensor",
     Platform.WATER_HEATER: "water_heater",
 }
 
@@ -44,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         devices: Any = await osoenergy.session.start_session(osoenergy_config)
     except HTTPException as error:
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     except OSOEnergyReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
@@ -69,13 +77,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OSOEnergyEntity(Entity, Generic[_T]):
+class OSOEnergyEntity(Entity, Generic[_OSOEnergyT]):
     """Initiate OSO Energy Base Class."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, osoenergy: OSOEnergy, osoenergy_device: _T) -> None:
+    def __init__(self, osoenergy: OSOEnergy, entity_data: _OSOEnergyT) -> None:
         """Initialize the instance."""
         self.osoenergy = osoenergy
-        self.device = osoenergy_device
-        self._attr_unique_id = osoenergy_device.device_id
+        self.entity_data = entity_data
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entity_data.device_id)},
+            manufacturer=MANUFACTURER,
+            model=entity_data.device_type,
+            name=entity_data.device_name,
+        )

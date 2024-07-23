@@ -1,4 +1,5 @@
 """The tests for the Input number component."""
+
 from unittest.mock import patch
 
 import pytest

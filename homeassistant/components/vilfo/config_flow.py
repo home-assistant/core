@@ -1,4 +1,5 @@
 """Config flow for Vilfo Router integration."""
+
 import logging
 
 from vilfo import Client as VilfoClient
@@ -110,7 +111,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.error("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:

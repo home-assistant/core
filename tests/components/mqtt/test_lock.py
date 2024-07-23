@@ -1,4 +1,5 @@
 """The tests for the MQTT lock platform."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -12,6 +13,8 @@ from homeassistant.components.lock import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
     LockEntityFeature,
@@ -23,7 +26,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -75,18 +77,13 @@ CONFIG_WITH_STATES = {
             "payload_unlock": "UNLOCK",
             "state_locked": "closed",
             "state_locking": "closing",
-            "state_unlocked": "open",
-            "state_unlocking": "opening",
+            "state_open": "open",
+            "state_opening": "opening",
+            "state_unlocked": "unlocked",
+            "state_unlocking": "unlocking",
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def lock_platform_only():
-    """Only setup the lock platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LOCK]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -94,8 +91,10 @@ def lock_platform_only():
     [
         (CONFIG_WITH_STATES, "closed", STATE_LOCKED),
         (CONFIG_WITH_STATES, "closing", STATE_LOCKING),
-        (CONFIG_WITH_STATES, "open", STATE_UNLOCKED),
-        (CONFIG_WITH_STATES, "opening", STATE_UNLOCKING),
+        (CONFIG_WITH_STATES, "open", STATE_OPEN),
+        (CONFIG_WITH_STATES, "opening", STATE_OPENING),
+        (CONFIG_WITH_STATES, "unlocked", STATE_UNLOCKED),
+        (CONFIG_WITH_STATES, "unlocking", STATE_UNLOCKING),
     ],
 )
 async def test_controlling_state_via_topic(
@@ -124,8 +123,10 @@ async def test_controlling_state_via_topic(
     [
         (CONFIG_WITH_STATES, "closed", STATE_LOCKED),
         (CONFIG_WITH_STATES, "closing", STATE_LOCKING),
-        (CONFIG_WITH_STATES, "open", STATE_UNLOCKED),
-        (CONFIG_WITH_STATES, "opening", STATE_UNLOCKING),
+        (CONFIG_WITH_STATES, "open", STATE_OPEN),
+        (CONFIG_WITH_STATES, "opening", STATE_OPENING),
+        (CONFIG_WITH_STATES, "unlocked", STATE_UNLOCKED),
+        (CONFIG_WITH_STATES, "unlocking", STATE_UNLOCKING),
         (CONFIG_WITH_STATES, "None", STATE_UNKNOWN),
     ],
 )
@@ -175,7 +176,7 @@ async def test_controlling_non_default_state_via_topic(
                 CONFIG_WITH_STATES,
                 ({"value_template": "{{ value_json.val }}"},),
             ),
-            '{"val":"opening"}',
+            '{"val":"unlocking"}',
             STATE_UNLOCKING,
         ),
         (
@@ -185,6 +186,24 @@ async def test_controlling_non_default_state_via_topic(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"open"}',
+            STATE_OPEN,
+        ),
+        (
+            help_custom_config(
+                lock.DOMAIN,
+                CONFIG_WITH_STATES,
+                ({"value_template": "{{ value_json.val }}"},),
+            ),
+            '{"val":"opening"}',
+            STATE_OPENING,
+        ),
+        (
+            help_custom_config(
+                lock.DOMAIN,
+                CONFIG_WITH_STATES,
+                ({"value_template": "{{ value_json.val }}"},),
+            ),
+            '{"val":"unlocked"}',
             STATE_UNLOCKED,
         ),
         (
@@ -244,7 +263,7 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"open"}',
-            STATE_UNLOCKED,
+            STATE_OPEN,
         ),
         (
             help_custom_config(
@@ -253,6 +272,24 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"opening"}',
+            STATE_OPENING,
+        ),
+        (
+            help_custom_config(
+                lock.DOMAIN,
+                CONFIG_WITH_STATES,
+                ({"value_template": "{{ value_json.val }}"},),
+            ),
+            '{"val":"unlocked"}',
+            STATE_UNLOCKED,
+        ),
+        (
+            help_custom_config(
+                lock.DOMAIN,
+                CONFIG_WITH_STATES,
+                ({"value_template": "{{ value_json.val }}"},),
+            ),
+            '{"val":"unlocking"}',
             STATE_UNLOCKING,
         ),
     ],
@@ -490,7 +527,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state is STATE_OPEN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -552,7 +589,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state is STATE_OPEN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 

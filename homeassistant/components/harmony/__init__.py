@@ -1,4 +1,5 @@
 """The Logitech Harmony Hub integration."""
+
 import logging
 
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS

@@ -1,4 +1,5 @@
 """Config flow for GPSD integration."""
+
 from __future__ import annotations
 
 import socket

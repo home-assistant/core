@@ -1,4 +1,5 @@
 """Helper classes for Google Assistant SDK integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -69,7 +70,7 @@ async def async_send_text_commands(
     except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
             entry.async_start_reauth(hass)
-        raise err
+        raise
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
@@ -78,7 +79,7 @@ async def async_send_text_commands(
     ) as assistant:
         command_response_list = []
         for command in commands:
-            resp = assistant.assist(command)
+            resp = await hass.async_add_executor_job(assistant.assist, command)
             text_response = resp[0]
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
             audio_response = resp[2]

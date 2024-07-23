@@ -1,4 +1,5 @@
 """Support for the Environment Canada radar imagery."""
+
 from __future__ import annotations
 
 import voluptuous as vol

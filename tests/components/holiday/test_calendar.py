@@ -1,4 +1,5 @@
 """Tests for calendar platform of Holiday integration."""
+
 from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory

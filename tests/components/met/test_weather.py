@@ -1,4 +1,5 @@
 """Test Met weather entity."""
+
 from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN

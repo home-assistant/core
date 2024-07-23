@@ -1,4 +1,5 @@
 """Support for UK public transport data provided by transportapi.com."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -283,5 +284,4 @@ def _delta_mins(hhmm_time_str):
     if hhmm_datetime < now:
         hhmm_datetime += timedelta(days=1)
 
-    delta_mins = (hhmm_datetime - now).total_seconds() // 60
-    return delta_mins
+    return (hhmm_datetime - now).total_seconds() // 60

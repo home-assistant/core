@@ -1,4 +1,5 @@
 """Support for Hue lights."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -234,6 +235,9 @@ class HueLight(HueBaseEntity, LightEntity):
                 if transition is None:
                     # a transition is required for timed effect, default to 10 minutes
                     transition = 600000
+            # we need to clear color values if an effect is applied
+            color_temp = None
+            xy_color = None
 
         if flash is not None:
             await self.async_set_flash(flash)

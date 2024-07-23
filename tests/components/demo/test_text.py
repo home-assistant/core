@@ -1,4 +1,5 @@
 """The tests for the demo text component."""
+
 from unittest.mock import patch
 
 import pytest

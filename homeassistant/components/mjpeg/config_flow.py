@@ -1,4 +1,5 @@
 """Config flow to configure the MJPEG IP Camera integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

@@ -1,4 +1,5 @@
 """Test cases for the switcher_kis component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

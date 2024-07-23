@@ -1,4 +1,5 @@
 """Config flow for V2C integration."""
+
 from __future__ import annotations
 
 import logging
@@ -43,7 +44,7 @@ class V2CConfigFlow(ConfigFlow, domain=DOMAIN):
                 await evse.get_data()
             except TrydanError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

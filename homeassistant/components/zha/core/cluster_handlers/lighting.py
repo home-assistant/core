@@ -1,9 +1,10 @@
 """Lighting cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
-from zigpy.zcl.clusters.lighting import Ballast, Color
+from functools import cached_property
 
-from homeassistant.backports.functools import cached_property
+from zigpy.zcl.clusters.lighting import Ballast, Color
 
 from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT

@@ -1,4 +1,5 @@
 """Platform for shared base classes for sensors."""
+
 from __future__ import annotations
 
 from typing import TypeVar

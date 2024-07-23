@@ -1,10 +1,10 @@
 """The tests for the Pilight sensor platform."""
+
 import logging
 
 import pytest
 
-from homeassistant.components import pilight
-import homeassistant.components.sensor as sensor
+from homeassistant.components import pilight, sensor
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

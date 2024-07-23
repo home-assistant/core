@@ -1,4 +1,5 @@
 """PlaatoEntity class."""
+
 from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity

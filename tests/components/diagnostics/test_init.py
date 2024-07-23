@@ -1,4 +1,5 @@
 """Test the Diagnostics integration."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
@@ -79,7 +80,9 @@ async def test_websocket(
 
 
 async def test_download_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    enable_custom_integrations: None,
 ) -> None:
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
@@ -90,7 +93,73 @@ async def test_download_diagnostics(
 
     assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "home_assistant": hass_sys_info,
-        "custom_components": {},
+        "custom_components": {
+            "test": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_blocked_version": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0.0",
+            },
+            "test_embedded": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_frame": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_platform": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations_bad_data": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_executor": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_loop": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error_config_entry": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_with_services": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0",
+            },
+        },
         "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
@@ -111,7 +180,73 @@ async def test_download_diagnostics(
         hass, hass_client, config_entry, device
     ) == {
         "home_assistant": hass_sys_info,
-        "custom_components": {},
+        "custom_components": {
+            "test": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_blocked_version": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0.0",
+            },
+            "test_embedded": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_frame": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_platform": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations_bad_data": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_executor": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_loop": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error_config_entry": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_with_services": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0",
+            },
+        },
         "integration_manifest": {
             "codeowners": [],
             "dependencies": [],

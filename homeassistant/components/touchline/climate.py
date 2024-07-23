@@ -1,4 +1,5 @@
 """Platform for Roth Touchline floor heating controller."""
+
 from __future__ import annotations
 
 from typing import Any, NamedTuple
@@ -54,10 +55,10 @@ def setup_platform(
     host = config[CONF_HOST]
     py_touchline = PyTouchline()
     number_of_devices = int(py_touchline.get_number_of_devices(host))
-    devices = []
-    for device_id in range(0, number_of_devices):
-        devices.append(Touchline(PyTouchline(device_id)))
-    add_entities(devices, True)
+    add_entities(
+        (Touchline(PyTouchline(device_id)) for device_id in range(number_of_devices)),
+        True,
+    )
 
 
 class Touchline(ClimateEntity):

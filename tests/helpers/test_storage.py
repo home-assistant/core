@@ -1,4 +1,5 @@
 """Tests for the storage helper."""
+
 import asyncio
 from datetime import timedelta
 import json
@@ -12,11 +13,14 @@ import pytest
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir, storage
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 
@@ -409,8 +413,9 @@ async def test_migrator_no_existing_config(
     hass: HomeAssistant, store, hass_storage: dict[str, Any]
 ) -> None:
     """Test migrator with no existing config."""
-    with patch("os.path.isfile", return_value=False), patch.object(
-        store, "async_load", return_value={"cur": "config"}
+    with (
+        patch("os.path.isfile", return_value=False),
+        patch.object(store, "async_load", return_value={"cur": "config"}),
     ):
         data = await storage.async_migrator(hass, "old-path", store)
 
@@ -620,10 +625,9 @@ async def test_changing_delayed_written_data(
 
 async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
     """Test saving and loading round trip."""
-    async with async_test_home_assistant() as hass:
-        hass.config.config_dir = await hass.async_add_executor_job(
-            tmpdir.mkdir, "temp_storage"
-        )
+    loop = asyncio.get_running_loop()
+    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
 
         class NamedTupleSubclass(NamedTuple):
             """A NamedTuple subclass."""
@@ -667,7 +671,7 @@ async def test_loading_corrupt_core_file(
     loop = asyncio.get_running_loop()
     tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
 
-    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
+    async with async_test_home_assistant(config_dir=tmp_storage.strpath) as hass:
         storage_key = "core.anything"
         store = storage.Store(
             hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
@@ -726,7 +730,7 @@ async def test_loading_corrupt_file_known_domain(
     loop = asyncio.get_running_loop()
     tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
 
-    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
+    async with async_test_home_assistant(config_dir=tmp_storage.strpath) as hass:
         hass.config.components.add("testdomain")
         storage_key = "testdomain.testkey"
 
@@ -781,23 +785,28 @@ async def test_loading_corrupt_file_known_domain(
 
 async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
     """Test OSError during load is fatal."""
-    async with async_test_home_assistant() as hass:
-        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-        hass.config.config_dir = tmp_storage
-
+    loop = asyncio.get_running_loop()
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    async with async_test_home_assistant(config_dir=tmp_storage.strpath) as hass:
         store = storage.Store(
             hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
         )
         await store.async_save({"hello": "world"})
 
-        with pytest.raises(OSError), patch(
-            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        with (
+            pytest.raises(OSError),
+            patch(
+                "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+            ),
         ):
             await store.async_load()
 
         # Verify second load is also failing
-        with pytest.raises(OSError), patch(
-            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        with (
+            pytest.raises(OSError),
+            patch(
+                "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+            ),
         ):
             await store.async_load()
 
@@ -806,10 +815,9 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
 
 async def test_json_load_failure(tmpdir: py.path.local) -> None:
     """Test json load raising HomeAssistantError."""
-    async with async_test_home_assistant() as hass:
-        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-        hass.config.config_dir = tmp_storage
-
+    loop = asyncio.get_running_loop()
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    async with async_test_home_assistant(config_dir=tmp_storage.strpath) as hass:
         store = storage.Store(
             hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
         )
@@ -819,9 +827,12 @@ async def test_json_load_failure(tmpdir: py.path.local) -> None:
         home_assistant_error = HomeAssistantError()
         home_assistant_error.__cause__ = base_os_error
 
-        with pytest.raises(HomeAssistantError), patch(
-            "homeassistant.helpers.storage.json_util.load_json",
-            side_effect=home_assistant_error,
+        with (
+            pytest.raises(HomeAssistantError),
+            patch(
+                "homeassistant.helpers.storage.json_util.load_json",
+                side_effect=home_assistant_error,
+            ),
         ):
             await store.async_load()
 
@@ -850,3 +861,319 @@ async def test_read_only_store(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
     assert read_only_store.key not in hass_storage
+
+
+async def test_store_manager_caching(
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test store manager caching."""
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        tmp_storage = config_dir.mkdir(".storage")
+        tmp_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
+        )
+        tmp_storage.join("integration2").write_binary(
+            json_bytes({"data": {"integration2": "integration2"}, "version": 1})
+        )
+        tmp_storage.join("broken").write_binary(b"invalid")
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        assert (
+            store_manager.async_fetch("integration1") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration2") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration3") is None
+        )  # no file not but cached
+
+        await store_manager.async_initialize()
+        assert (
+            store_manager.async_fetch("integration1") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration2") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration3") is not None
+        )  # no file and initialized
+
+        result = store_manager.async_fetch("integration3")
+        assert result is not None
+        exists, data = result
+        assert exists is False
+        assert data is None
+
+        await store_manager.async_preload(["integration3", "integration2", "broken"])
+        assert "Error loading broken" in caplog.text
+
+        assert (
+            store_manager.async_fetch("integration1") is None
+        )  # has data but not cached
+        result = store_manager.async_fetch("integration2")
+        assert result is not None
+        exists, data = result
+        assert exists is True
+        assert data == {"data": {"integration2": "integration2"}, "version": 1}
+
+        assert (
+            store_manager.async_fetch("integration3") is not None
+        )  # no file and initialized
+        result = store_manager.async_fetch("integration3")
+        assert result is not None
+        exists, data = result
+        assert exists is False
+        assert data is None
+
+        integration1 = storage.Store(hass, 1, "integration1")
+        await integration1.async_save({"integration1": "updated"})
+        # Save should invalidate the cache
+        assert store_manager.async_fetch("integration1") is None  # invalidated
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        integration2.async_delay_save(lambda: {"integration2": "updated"})
+        # Delay save should invalidate the cache after it saves
+        assert "integration2" not in store_manager._invalidated
+
+        # Block twice to flush out the delayed save
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        assert store_manager.async_fetch("integration2") is None  # invalidated
+
+        store_manager.async_invalidate("integration3")
+        assert store_manager.async_fetch("integration1") is None  # invalidated by save
+        assert (
+            store_manager.async_fetch("integration2") is None
+        )  # invalidated by delay save
+        assert store_manager.async_fetch("integration3") is None  # invalidated
+
+        await hass.async_stop(force=True)
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
+        assert store_manager.async_fetch("integration3") is None
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+        result = store_manager.async_fetch("integration1")
+        assert result is not None
+        exists, data = result
+        assert exists is True
+        assert data["data"] == {"integration1": "updated"}
+
+        integration1 = storage.Store(hass, 1, "integration1")
+        assert await integration1.async_load() == {"integration1": "updated"}
+
+        # Load should pop the cache
+        assert store_manager.async_fetch("integration1") is None
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        assert await integration2.async_load() == {"integration2": "updated"}
+
+        # Load should pop the cache
+        assert store_manager.async_fetch("integration2") is None
+
+        integration3 = storage.Store(hass, 1, "integration3")
+        assert await integration3.async_load() is None
+
+        await integration3.async_save({"integration3": "updated"})
+        assert await integration3.async_load() == {"integration3": "updated"}
+
+        await hass.async_stop(force=True)
+
+    # Now make sure everything still works when we do not
+    # manually load the storage manager
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        integration1 = storage.Store(hass, 1, "integration1")
+        assert await integration1.async_load() == {"integration1": "updated"}
+        await integration1.async_save({"integration1": "updated2"})
+        assert await integration1.async_load() == {"integration1": "updated2"}
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        assert await integration2.async_load() == {"integration2": "updated"}
+        await integration2.async_save({"integration2": "updated2"})
+        assert await integration2.async_load() == {"integration2": "updated2"}
+
+        await hass.async_stop(force=True)
+
+    # Now remove the stores
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+
+        integration1 = storage.Store(hass, 1, "integration1")
+        assert integration1._manager is store_manager
+        assert await integration1.async_load() == {"integration1": "updated2"}
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        assert integration2._manager is store_manager
+        assert await integration2.async_load() == {"integration2": "updated2"}
+
+        await integration1.async_remove()
+        await integration2.async_remove()
+
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
+
+        assert await integration1.async_load() is None
+        assert await integration2.async_load() is None
+
+        await hass.async_stop(force=True)
+
+    # Now make sure the stores are removed and another run works
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1"])
+        result = store_manager.async_fetch("integration1")
+        assert result is not None
+        exists, data = result
+        assert exists is False
+        assert data is None
+        await hass.async_stop(force=True)
+
+
+async def test_store_manager_sub_dirs(tmpdir: py.path.local) -> None:
+    """Test store manager ignores subdirs."""
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        sub_dir_storage = config_dir.mkdir(".storage").mkdir("subdir")
+
+        sub_dir_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
+        )
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        assert store_manager.async_fetch("subdir/integration1") is None
+        assert store_manager.async_fetch("subdir/integrationx") is None
+        integration1 = storage.Store(hass, 1, "subdir/integration1")
+        assert await integration1.async_load() == {"integration1": "integration1"}
+        await hass.async_stop(force=True)
+
+
+async def test_store_manager_cleanup_after_started(
+    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the cache is cleaned up after startup."""
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        tmp_storage = config_dir.mkdir(".storage")
+        tmp_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
+        )
+        tmp_storage.join("integration2").write_binary(
+            json_bytes({"data": {"integration2": "integration2"}, "version": 1})
+        )
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        hass.set_state(CoreState.not_running)
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
+        freezer.tick(storage.MANAGER_CLEANUP_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        # The cache should be removed after the cleanup delay
+        # since it means nothing ever loaded it and we want to
+        # recover the memory
+        assert "integration1" not in store_manager._data_preload
+        assert "integration2" not in store_manager._data_preload
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
+        await hass.async_stop(force=True)
+
+
+async def test_store_manager_cleanup_after_stop(
+    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the cache is cleaned up after stop event.
+
+    This should only happen if we stop within the cleanup delay.
+    """
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        tmp_storage = config_dir.mkdir(".storage")
+        tmp_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
+        )
+        tmp_storage.join("integration2").write_binary(
+            json_bytes({"data": {"integration2": "integration2"}, "version": 1})
+        )
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        hass.set_state(CoreState.not_running)
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        assert "integration1" not in store_manager._data_preload
+        assert "integration2" not in store_manager._data_preload
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
+        await hass.async_stop(force=True)
+
+
+async def test_storage_concurrent_load(hass: HomeAssistant) -> None:
+    """Test that we can load the store concurrently."""
+
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+
+    async def _load_store():
+        await asyncio.sleep(0)
+        return "data"
+
+    with patch.object(store, "_async_load", side_effect=_load_store):
+        # Test that we can load the store concurrently
+        loads = await asyncio.gather(
+            store.async_load(), store.async_load(), store.async_load()
+        )
+        for load in loads:
+            assert load == "data"

@@ -1,4 +1,5 @@
 """Component to count within automations."""
+
 from __future__ import annotations
 
 import logging

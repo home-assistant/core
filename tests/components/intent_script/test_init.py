@@ -1,4 +1,5 @@
 """Test intent_script component."""
+
 from unittest.mock import patch
 
 from homeassistant import config as hass_config

@@ -27,7 +27,7 @@ def fixture_mock_device(request) -> Generator[None, AsyncMock, None]:
         device.port = MOCK_PORT
         device.mac = MOCK_MAC
         device.model = MOCK_MODEL
-        device.get_state.return_value = {"power": "standby"}
+        device.get_state.return_value = {"power": "standby", "input": "hdmi1"}
         yield device
 
 

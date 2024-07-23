@@ -1,4 +1,5 @@
 """Sensor for Suez Water Consumption data."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -73,12 +74,12 @@ async def async_setup_platform(
         async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_${result['reason']}",
+            f"deprecated_yaml_import_issue_{result['reason']}",
             breaks_in_ha_version="2024.7.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
             translation_placeholders=ISSUE_PLACEHOLDER,
         )
 
@@ -123,28 +124,28 @@ class SuezSensor(SensorEntity):
 
             self._attr_extra_state_attributes["this_month_consumption"] = {}
             for item in self.client.attributes["thisMonthConsumption"]:
-                self._attr_extra_state_attributes["this_month_consumption"][
-                    item
-                ] = self.client.attributes["thisMonthConsumption"][item]
+                self._attr_extra_state_attributes["this_month_consumption"][item] = (
+                    self.client.attributes["thisMonthConsumption"][item]
+                )
             self._attr_extra_state_attributes["previous_month_consumption"] = {}
             for item in self.client.attributes["previousMonthConsumption"]:
                 self._attr_extra_state_attributes["previous_month_consumption"][
                     item
                 ] = self.client.attributes["previousMonthConsumption"][item]
-            self._attr_extra_state_attributes[
-                "highest_monthly_consumption"
-            ] = self.client.attributes["highestMonthlyConsumption"]
-            self._attr_extra_state_attributes[
-                "last_year_overall"
-            ] = self.client.attributes["lastYearOverAll"]
-            self._attr_extra_state_attributes[
-                "this_year_overall"
-            ] = self.client.attributes["thisYearOverAll"]
+            self._attr_extra_state_attributes["highest_monthly_consumption"] = (
+                self.client.attributes["highestMonthlyConsumption"]
+            )
+            self._attr_extra_state_attributes["last_year_overall"] = (
+                self.client.attributes["lastYearOverAll"]
+            )
+            self._attr_extra_state_attributes["this_year_overall"] = (
+                self.client.attributes["thisYearOverAll"]
+            )
             self._attr_extra_state_attributes["history"] = {}
             for item in self.client.attributes["history"]:
-                self._attr_extra_state_attributes["history"][
-                    item
-                ] = self.client.attributes["history"][item]
+                self._attr_extra_state_attributes["history"][item] = (
+                    self.client.attributes["history"][item]
+                )
 
         except PySuezError:
             self._attr_available = False

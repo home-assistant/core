@@ -1,4 +1,5 @@
 """Tests for the Sonarr sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -89,13 +90,13 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.sonarr_commands",
         "sensor.sonarr_disk_space",
         "sensor.sonarr_queue",
         "sensor.sonarr_shows",
         "sensor.sonarr_wanted",
-    ),
+    ],
 )
 async def test_disabled_by_default_sensors(
     hass: HomeAssistant,

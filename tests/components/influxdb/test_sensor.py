@@ -1,4 +1,5 @@
 """The tests for the InfluxDB sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from influxdb_client.rest import ApiException
 import pytest
 from voluptuous import Invalid
 
+from homeassistant.components import sensor
 from homeassistant.components.influxdb.const import (
     API_VERSION_2,
     DEFAULT_API_VERSION,
@@ -21,7 +23,6 @@ from homeassistant.components.influxdb.const import (
     TEST_QUERY_V2,
 )
 from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
-import homeassistant.components.sensor as sensor
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
@@ -92,9 +93,10 @@ def mock_client_fixture(request):
 @pytest.fixture(autouse=True, scope="module")
 def mock_client_close():
     """Mock close method of clients at module scope."""
-    with patch(f"{INFLUXDB_CLIENT_PATH}.close") as close_v1, patch(
-        f"{INFLUXDB_CLIENT_PATH}V2.close"
-    ) as close_v2:
+    with (
+        patch(f"{INFLUXDB_CLIENT_PATH}.close") as close_v1,
+        patch(f"{INFLUXDB_CLIENT_PATH}V2.close") as close_v2,
+    ):
         yield (close_v1, close_v2)
 
 
@@ -124,9 +126,7 @@ def _make_v2_resultset(*args):
 
 def _make_v2_buckets_resultset():
     """Create a mock V2 'buckets()' resultset."""
-    records = []
-    for name in [DEFAULT_BUCKET, "bucket2"]:
-        records.append(Record({"name": name}))
+    records = [Record({"name": name}) for name in [DEFAULT_BUCKET, "bucket2"]]
 
     return [Table(records)]
 

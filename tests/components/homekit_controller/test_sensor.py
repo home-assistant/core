@@ -1,4 +1,5 @@
 """Basic checks for HomeKit sensor."""
+
 from unittest.mock import patch
 
 from aiohomekit.model import Transport

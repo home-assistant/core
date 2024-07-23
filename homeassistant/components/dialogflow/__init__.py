@@ -1,4 +1,5 @@
 """Support for Dialogflow webhook."""
+
 import logging
 
 from aiohttp import web

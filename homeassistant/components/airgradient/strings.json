@@ -1,0 +1,44 @@
+{
+  "config": {
+    "flow_title": "{model}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Airgradient device."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {model}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_volatile_organic_component_index": {
+        "name": "Total VOC index"
+      },
+      "nitrogen_index": {
+        "name": "Nitrogen index"
+      },
+      "pm003_count": {
+        "name": "PM0.3 count"
+      },
+      "raw_total_volatile_organic_component": {
+        "name": "Raw total VOC"
+      },
+      "raw_nitrogen": {
+        "name": "Raw nitrogen"
+      }
+    }
+  }
+}

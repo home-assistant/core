@@ -1,4 +1,5 @@
 """Basic checks for HomeKitSwitch."""
+
 from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
     InUseValues,

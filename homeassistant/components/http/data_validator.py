@@ -1,4 +1,5 @@
 """Decorator for view methods to help with data validation."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -69,7 +70,6 @@ class RequestDataValidator:
                     f"Message format incorrect: {err}", HTTPStatus.BAD_REQUEST
                 )
 
-            result = await method(view, request, data, *args, **kwargs)
-            return result
+            return await method(view, request, data, *args, **kwargs)
 
         return wrapper

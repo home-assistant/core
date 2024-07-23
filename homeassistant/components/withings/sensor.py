@@ -1,4 +1,5 @@
 """Sensors flow for Withings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,7 +22,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     Platform,
@@ -37,7 +37,7 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import WithingsData
+from . import WithingsConfigEntry
 from .const import (
     DOMAIN,
     LOGGER,
@@ -618,13 +618,13 @@ def get_current_goals(goals: Goals) -> set[str]:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WithingsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     ent_reg = er.async_get(hass)
 
-    withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
+    withings_data = entry.runtime_data
 
     measurement_coordinator = withings_data.measurement_coordinator
 

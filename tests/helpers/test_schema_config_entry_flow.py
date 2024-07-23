@@ -1,4 +1,5 @@
 """Tests for the schema based data entry flows."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -103,7 +104,7 @@ async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> 
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Custom Name"
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_config_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:
@@ -198,7 +199,7 @@ async def test_config_flow_advanced_option(
         assert isinstance(option, str)
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_options_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:

@@ -1,4 +1,5 @@
 """Tests for the auth component."""
+
 from typing import Any
 
 from homeassistant import auth

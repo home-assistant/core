@@ -1,4 +1,5 @@
 """Test the Switcher Sensor Platform."""
+
 import pytest
 
 from homeassistant.components.switcher_kis.const import DATA_DEVICE, DOMAIN
@@ -65,9 +66,7 @@ async def test_sensor_disabled(hass: HomeAssistant, mock_bridge) -> None:
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
+    updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
 
     assert updated_entry != entry
     assert updated_entry.disabled is False

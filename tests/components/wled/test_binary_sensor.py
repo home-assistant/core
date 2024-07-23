@@ -1,4 +1,5 @@
 """Tests for the WLED binary sensor platform."""
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

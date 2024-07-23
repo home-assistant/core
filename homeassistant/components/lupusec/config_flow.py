@@ -1,4 +1,4 @@
-""""Config flow for Lupusec integration."""
+"""Config flow for Lupusec integration."""
 
 from json import JSONDecodeError
 import logging
@@ -7,7 +7,7 @@ from typing import Any
 import lupupy
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
@@ -31,12 +31,12 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Lupusec config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -52,7 +52,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except JSONDecodeError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -66,9 +66,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
         self._async_abort_entries_match(
             {
@@ -86,7 +84,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except JSONDecodeError:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 

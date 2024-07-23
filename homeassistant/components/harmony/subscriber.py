@@ -1,17 +1,17 @@
 """Mixin class for handling harmony callback subscriptions."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 from typing import Any, NamedTuple
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 
 _LOGGER = logging.getLogger(__name__)
 
-NoParamCallback = Callable[[], Any] | None
-ActivityCallback = Callable[[tuple], Any] | None
+NoParamCallback = HassJob[[], Any] | None
+ActivityCallback = HassJob[[tuple], Any] | None
 
 
 class HarmonyCallback(NamedTuple):
@@ -88,9 +88,8 @@ class HarmonySubscriberMixin:
         self, callback_func_name: str, argument: tuple | None = None
     ) -> None:
         for subscription in self._subscriptions:
-            current_callback = getattr(subscription, callback_func_name)
-            if current_callback:
+            if current_callback_job := getattr(subscription, callback_func_name):
                 if argument:
-                    self._hass.async_run_job(current_callback, argument)
+                    self._hass.async_run_hass_job(current_callback_job, argument)
                 else:
-                    self._hass.async_run_job(current_callback)
+                    self._hass.async_run_hass_job(current_callback_job)

@@ -1,4 +1,5 @@
 """The tests for Samsung TV device triggers."""
+
 import pytest
 
 from homeassistant.components import automation

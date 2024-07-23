@@ -1,4 +1,5 @@
 """The tests for lastfm."""
+
 from unittest.mock import patch
 
 from pylast import PyLastError, Track

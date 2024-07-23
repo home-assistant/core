@@ -1,5 +1,7 @@
 """Tests for diagnostics platform of google calendar."""
+
 from collections.abc import Callable
+import time
 from typing import Any
 
 from aiohttp.test_utils import TestClient
@@ -15,6 +17,7 @@ from .conftest import TEST_EVENT, ComponentSetup
 
 from tests.common import CLIENT_ID, MockConfigEntry, MockUser
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
@@ -69,8 +72,21 @@ async def test_diagnostics(
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
     snapshot: SnapshotAssertion,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test diagnostics for the calendar."""
+
+    expires_in = 86400
+    expires_at = time.time() + expires_in
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        json={
+            "refresh_token": "some-refresh-token",
+            "access_token": "some-updated-token",
+            "expires_at": expires_at,
+            "expires_in": expires_in,
+        },
+    )
     mock_events_list_items(
         [
             {

@@ -1,4 +1,5 @@
 """Initializer helpers for HomematicIP fake server."""
+
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.aio.auth import AsyncAuth
@@ -37,7 +38,7 @@ def mock_connection_fixture() -> AsyncConnection:
     def _rest_call_side_effect(path, body=None):
         return path, body
 
-    connection._restCall.side_effect = _rest_call_side_effect
+    connection._rest_call.side_effect = _rest_call_side_effect
     connection.api_call = AsyncMock(return_value=True)
     connection.init = AsyncMock(side_effect=True)
 
@@ -53,7 +54,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
         HMIPC_NAME: "",
         HMIPC_PIN: HAPPIN,
     }
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         version=1,
         domain=HMIPC_DOMAIN,
         title="Home Test SN",
@@ -61,8 +62,6 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
         data=entry_data,
         source=SOURCE_IMPORT,
     )
-
-    return config_entry
 
 
 @pytest.fixture(name="default_mock_hap_factory")
@@ -144,12 +143,15 @@ def simple_mock_home_fixture():
 def mock_connection_init_fixture():
     """Return a simple mocked connection."""
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.init",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncAuth.init",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.init",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncAuth.init",
+            return_value=None,
+        ),
     ):
         yield
 

@@ -1,4 +1,5 @@
 """Test automation logbook."""
+
 from homeassistant.components import automation
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component

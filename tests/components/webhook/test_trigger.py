@@ -1,4 +1,5 @@
 """The tests for the webhook automation trigger."""
+
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 

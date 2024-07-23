@@ -1,4 +1,5 @@
 """Test the Trend config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -19,7 +20,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -27,7 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     # test step 2 of config flow: settings of trend sensor
     with patch(
@@ -41,7 +42,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CPU Temperature rising"
     assert result["data"] == {}
     assert result["options"] == {
@@ -56,7 +57,7 @@ async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -68,7 +69,7 @@ async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "min_samples": 30,
         "max_samples": 50,

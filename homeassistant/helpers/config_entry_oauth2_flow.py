@@ -5,6 +5,7 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
@@ -26,6 +27,7 @@ from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import async_get_application_credentials
+from homeassistant.util.hass_dict import HassKey
 
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
@@ -33,8 +35,15 @@ from .network import NoURLAvailableError
 _LOGGER = logging.getLogger(__name__)
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
-DATA_IMPLEMENTATIONS = "oauth2_impl"
-DATA_PROVIDERS = "oauth2_providers"
+DATA_IMPLEMENTATIONS: HassKey[dict[str, dict[str, AbstractOAuth2Implementation]]] = (
+    HassKey("oauth2_impl")
+)
+DATA_PROVIDERS: HassKey[
+    dict[
+        str,
+        Callable[[HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]],
+    ]
+] = HassKey("oauth2_providers")
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
@@ -397,10 +406,7 @@ async def async_get_implementations(
     hass: HomeAssistant, domain: str
 ) -> dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
-    registered = cast(
-        dict[str, AbstractOAuth2Implementation],
-        hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}),
-    )
+    registered = hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {})
 
     if DATA_PROVIDERS not in hass.data:
         return registered
@@ -438,9 +444,9 @@ def async_add_implementation_provider(
 
     If no implementation found, return None.
     """
-    hass.data.setdefault(DATA_PROVIDERS, {})[
-        provider_domain
-    ] = async_provide_implementation
+    hass.data.setdefault(DATA_PROVIDERS, {})[provider_domain] = (
+        async_provide_implementation
+    )
 
 
 class OAuth2AuthorizeCallbackView(http.HomeAssistantView):

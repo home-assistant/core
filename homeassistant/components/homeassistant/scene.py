@@ -1,4 +1,5 @@
 """Allow users to set and activate scenes."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping, ValuesView
@@ -281,7 +282,6 @@ async def async_setup_platform(
             scene = platform.entities.get(entity_id)
             if scene is None:
                 raise ServiceValidationError(
-                    f"{entity_id} is not a valid scene entity_id",
                     translation_domain=SCENE_DOMAIN,
                     translation_key="entity_not_scene",
                     translation_placeholders={
@@ -291,7 +291,6 @@ async def async_setup_platform(
             assert isinstance(scene, HomeAssistantScene)
             if not scene.from_service:
                 raise ServiceValidationError(
-                    f"The scene {entity_id} is not created with service `scene.create`",
                     translation_domain=SCENE_DOMAIN,
                     translation_key="entity_not_dynamically_created",
                     translation_placeholders={

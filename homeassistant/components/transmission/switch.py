@@ -1,4 +1,5 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -17,20 +18,13 @@ from .coordinator import TransmissionDataUpdateCoordinator
 _LOGGING = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class TransmissionSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TransmissionSwitchEntityDescription(SwitchEntityDescription):
+    """Entity description class for Transmission switches."""
 
     is_on_func: Callable[[TransmissionDataUpdateCoordinator], bool | None]
     on_func: Callable[[TransmissionDataUpdateCoordinator], None]
     off_func: Callable[[TransmissionDataUpdateCoordinator], None]
-
-
-@dataclass(frozen=True)
-class TransmissionSwitchEntityDescription(
-    SwitchEntityDescription, TransmissionSwitchEntityDescriptionMixin
-):
-    """Entity description class for Transmission switches."""
 
 
 SWITCH_TYPES: tuple[TransmissionSwitchEntityDescription, ...] = (

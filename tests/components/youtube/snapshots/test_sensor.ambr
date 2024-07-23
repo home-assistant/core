@@ -10,6 +10,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_latest_upload',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': "What's new in Google Home in less than 1 minute",
   })
@@ -24,6 +25,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_subscribers',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2290000',
   })
@@ -36,6 +38,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_latest_upload',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -50,6 +53,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_subscribers',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2290000',
   })

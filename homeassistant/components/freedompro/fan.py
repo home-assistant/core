@@ -1,4 +1,5 @@
 """Support for Freedompro fan."""
+
 from __future__ import annotations
 
 import json

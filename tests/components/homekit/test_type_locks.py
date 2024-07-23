@@ -1,4 +1,5 @@
 """Test different accessory types: Locks."""
+
 import pytest
 
 from homeassistant.components.homekit.const import ATTR_VALUE

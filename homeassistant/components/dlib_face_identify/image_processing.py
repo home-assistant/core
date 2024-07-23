@@ -1,4 +1,5 @@
 """Component that will help set the Dlib face detect processing."""
+
 from __future__ import annotations
 
 import io
@@ -37,18 +38,15 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Dlib Face detection platform."""
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            DlibFaceIdentifyEntity(
-                camera[CONF_ENTITY_ID],
-                config[CONF_FACES],
-                camera.get(CONF_NAME),
-                config[CONF_CONFIDENCE],
-            )
+    add_entities(
+        DlibFaceIdentifyEntity(
+            camera[CONF_ENTITY_ID],
+            config[CONF_FACES],
+            camera.get(CONF_NAME),
+            config[CONF_CONFIDENCE],
         )
-
-    add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):

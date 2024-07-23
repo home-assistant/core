@@ -1,4 +1,5 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
+
 from __future__ import annotations
 
 from concurrent import futures

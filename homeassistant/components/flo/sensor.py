@@ -1,4 +1,5 @@
 """Support for Flo Water Monitor sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
 

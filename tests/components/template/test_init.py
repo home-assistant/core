@@ -1,4 +1,5 @@
 """The test for the Template sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -247,7 +248,7 @@ async def test_reload_sensors_that_reference_other_template_sensors(
 
     next_time = dt_util.utcnow() + timedelta(seconds=1.2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()

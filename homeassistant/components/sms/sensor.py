@@ -1,4 +1,5 @@
 """Support for SMS dongle sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -84,15 +85,14 @@ async def async_setup_entry(
     network_coordinator = sms_data[NETWORK_COORDINATOR]
     gateway = sms_data[GATEWAY]
     unique_id = str(await gateway.get_imei_async())
-    entities = []
-    for description in SIGNAL_SENSORS:
-        entities.append(
-            DeviceSensor(signal_coordinator, description, unique_id, gateway)
-        )
-    for description in NETWORK_SENSORS:
-        entities.append(
-            DeviceSensor(network_coordinator, description, unique_id, gateway)
-        )
+    entities = [
+        DeviceSensor(signal_coordinator, description, unique_id, gateway)
+        for description in SIGNAL_SENSORS
+    ]
+    entities.extend(
+        DeviceSensor(network_coordinator, description, unique_id, gateway)
+        for description in NETWORK_SENSORS
+    )
     async_add_entities(entities, True)
 
 

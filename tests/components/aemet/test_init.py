@@ -1,4 +1,5 @@
 """Define tests for the AEMET OpenData init."""
+
 from unittest.mock import patch
 
 from aemet_opendata.exceptions import AemetTimeout

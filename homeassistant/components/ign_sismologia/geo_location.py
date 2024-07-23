@@ -1,4 +1,5 @@
 """Support for IGN Sismologia (Earthquakes) Feeds."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """Webhooks for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Iterable
@@ -88,9 +89,9 @@ def async_generate_id() -> str:
 @bind_hass
 def async_generate_url(hass: HomeAssistant, webhook_id: str) -> str:
     """Generate the full URL for a webhook_id."""
-    return "{}{}".format(
-        get_url(hass, prefer_external=True, allow_cloud=False),
-        async_generate_path(webhook_id),
+    return (
+        f"{get_url(hass, prefer_external=True, allow_cloud=False)}"
+        f"{async_generate_path(webhook_id)}"
     )
 
 
@@ -177,10 +178,10 @@ async def async_handle_webhook(
         response: Response | None = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTPStatus.OK)
-        return response
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error processing webhook %s", webhook_id)
         return Response(status=HTTPStatus.OK)
+    return response
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -209,7 +210,6 @@ class WebhookView(HomeAssistantView):
     head = _handle
     post = _handle
     put = _handle
-    get = _handle
 
 
 @websocket_api.websocket_command(

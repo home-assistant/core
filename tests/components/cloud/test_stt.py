@@ -1,4 +1,5 @@
 """Test the speech-to-text platform for the cloud integration."""
+
 from collections.abc import AsyncGenerator
 from copy import deepcopy
 from http import HTTPStatus

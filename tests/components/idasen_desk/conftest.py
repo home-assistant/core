@@ -19,7 +19,9 @@ def mock_bluetooth(enable_bluetooth):
 @pytest.fixture(autouse=False)
 def mock_desk_api():
     """Set up idasen desk API fixture."""
-    with mock.patch("homeassistant.components.idasen_desk.Desk") as desk_patched:
+    with mock.patch(
+        "homeassistant.components.idasen_desk.coordinator.Desk"
+    ) as desk_patched:
         mock_desk = MagicMock()
 
         def mock_init(

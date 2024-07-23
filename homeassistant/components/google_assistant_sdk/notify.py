@@ -1,4 +1,5 @@
 """Support for Google Assistant SDK broadcast notifications."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -65,8 +66,8 @@ class BroadcastNotificationService(BaseNotificationService):
         if not targets:
             commands.append(broadcast_commands(language_code)[0].format(message))
         else:
-            for target in targets:
-                commands.append(
-                    broadcast_commands(language_code)[1].format(message, target)
-                )
+            commands.extend(
+                broadcast_commands(language_code)[1].format(message, target)
+                for target in targets
+            )
         await async_send_text_commands(self.hass, commands)

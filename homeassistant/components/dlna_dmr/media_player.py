@@ -1,4 +1,5 @@
 """Support for DLNA DMR (Device Media Renderer)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -54,6 +55,17 @@ PARALLEL_UPDATES = 0
 _DlnaDmrEntityT = TypeVar("_DlnaDmrEntityT", bound="DlnaDmrEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+_TRANSPORT_STATE_TO_MEDIA_PLAYER_STATE = {
+    TransportState.PLAYING: MediaPlayerState.PLAYING,
+    TransportState.TRANSITIONING: MediaPlayerState.PLAYING,
+    TransportState.PAUSED_PLAYBACK: MediaPlayerState.PAUSED,
+    TransportState.PAUSED_RECORDING: MediaPlayerState.PAUSED,
+    # Unable to map this state to anything reasonable, so it's "Unknown"
+    TransportState.VENDOR_DEFINED: None,
+    None: MediaPlayerState.ON,
+}
 
 
 def catch_request_errors(
@@ -185,6 +197,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._updated_registry: bool = False
         self._config_entry = config_entry
         self._attr_device_info = dr.DeviceInfo(connections={(dr.CONNECTION_UPNP, udn)})
+        self._attr_supported_features = self._supported_features()
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
@@ -344,6 +357,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # Device was de/re-connected, state might have changed
         self.async_write_ha_state()
 
+    def async_write_ha_state(self) -> None:
+        """Write the state."""
+        self._attr_supported_features = self._supported_features()
+        super().async_write_ha_state()
+
     async def _device_connect(self, location: str) -> None:
         """Connect to the device now that it's available."""
         _LOGGER.debug("Connecting to device at %s", location)
@@ -490,6 +508,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
         finally:
             self.check_available = False
 
+        # Supported features may have changed
+        self._attr_supported_features = self._supported_features()
+
     def _on_event(
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
@@ -530,28 +551,13 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
-        if not self._device or not self.available:
+        if not self._device:
             return MediaPlayerState.OFF
-        if self._device.transport_state is None:
-            return MediaPlayerState.ON
-        if self._device.transport_state in (
-            TransportState.PLAYING,
-            TransportState.TRANSITIONING,
-        ):
-            return MediaPlayerState.PLAYING
-        if self._device.transport_state in (
-            TransportState.PAUSED_PLAYBACK,
-            TransportState.PAUSED_RECORDING,
-        ):
-            return MediaPlayerState.PAUSED
-        if self._device.transport_state == TransportState.VENDOR_DEFINED:
-            # Unable to map this state to anything reasonable, so it's "Unknown"
-            return None
+        return _TRANSPORT_STATE_TO_MEDIA_PLAYER_STATE.get(
+            self._device.transport_state, MediaPlayerState.IDLE
+        )
 
-        return MediaPlayerState.IDLE
-
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
+    def _supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported at this moment.
 
         Supported features may change as the device enters different states.

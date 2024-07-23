@@ -1,4 +1,5 @@
 """Config flow for UPNP."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -41,7 +42,7 @@ def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
 def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     """Test if discovery is complete and usable."""
     return bool(
-        ssdp.ATTR_UPNP_UDN in discovery_info.upnp
+        discovery_info.ssdp_udn
         and discovery_info.ssdp_st
         and discovery_info.ssdp_all_locations
         and discovery_info.ssdp_usn
@@ -79,9 +80,8 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     # Paths:
-    # - ssdp(discovery_info) --> ssdp_confirm(None)
-    # --> ssdp_confirm({}) --> create_entry()
-    # - user(None): scan --> user({...}) --> create_entry()
+    # 1: ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
+    # 2: user(None): scan --> user({...}) --> create_entry()
 
     @property
     def _discoveries(self) -> dict[str, SsdpServiceInfo]:
@@ -242,9 +242,9 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         discovery = self._remove_discovery(usn)
         mac_address = await _async_mac_address_from_discovery(self.hass, discovery)
         data = {
-            CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_ST: discovery.ssdp_st,
-            CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_ORIGINAL_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
             CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
@@ -266,9 +266,9 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         title = _friendly_name_from_discovery(discovery)
         mac_address = await _async_mac_address_from_discovery(self.hass, discovery)
         data = {
-            CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_ST: discovery.ssdp_st,
-            CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_ORIGINAL_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],

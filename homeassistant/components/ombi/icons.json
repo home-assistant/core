@@ -1,0 +1,7 @@
+{
+  "services": {
+    "submit_movie_request": "mdi:movie-roll",
+    "submit_tv_request": "mdi:television-classic",
+    "submit_music_request": "mdi:music"
+  }
+}

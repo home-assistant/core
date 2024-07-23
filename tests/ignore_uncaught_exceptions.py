@@ -1,10 +1,17 @@
 """List of tests that have uncaught exceptions today. Will be shrunk over time."""
+
 IGNORE_UNCAUGHT_EXCEPTIONS = [
     (
         # This test explicitly throws an uncaught exception
         # and should not be removed.
         "tests.test_runner",
         "test_unhandled_exception_traceback",
+    ),
+    (
+        # This test explicitly throws an uncaught exception
+        # and should not be removed.
+        "tests.helpers.test_event",
+        "test_track_point_in_time_repr",
     ),
     (
         "test_homeassistant_bridge",

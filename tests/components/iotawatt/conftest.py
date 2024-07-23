@@ -1,4 +1,5 @@
 """Test fixtures for IoTaWatt."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

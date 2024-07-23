@@ -1,11 +1,11 @@
 """Test ZHA light."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
-import zigpy.profiles.zha as zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.profiles import zha
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.light import (
@@ -1630,10 +1630,7 @@ async def test_zha_group_light_entity(
     device_2_entity_id = find_entity_id(Platform.LIGHT, device_light_2, hass)
     device_3_entity_id = find_entity_id(Platform.LIGHT, device_light_3, hass)
 
-    assert (
-        device_1_entity_id != device_2_entity_id
-        and device_1_entity_id != device_3_entity_id
-    )
+    assert device_1_entity_id not in (device_2_entity_id, device_3_entity_id)
     assert device_2_entity_id != device_3_entity_id
 
     group_entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)

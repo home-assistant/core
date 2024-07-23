@@ -1,4 +1,5 @@
 """Platform for the Daikin AC."""
+
 from __future__ import annotations
 
 import asyncio
@@ -92,13 +93,11 @@ async def daikin_api_setup(
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
-    api = DaikinApi(device)
-
-    return api
+    return DaikinApi(device)
 
 
 class DaikinApi:

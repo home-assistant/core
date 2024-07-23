@@ -1,4 +1,5 @@
 """Test STT component setup."""
+
 from collections.abc import AsyncIterable, Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -299,7 +300,7 @@ async def test_stream_audio(
 )
 @pytest.mark.parametrize(
     ("header", "status", "error"),
-    (
+    [
         (None, 400, "Missing X-Speech-Content header"),
         (
             (
@@ -330,7 +331,7 @@ async def test_stream_audio(
             400,
             "Missing language in X-Speech-Content header",
         ),
-    ),
+    ],
 )
 async def test_metadata_errors(
     hass: HomeAssistant,
@@ -369,9 +370,9 @@ async def test_config_entry_unload(
 ) -> None:
     """Test we can unload config entry."""
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_restore_state(
@@ -387,7 +388,7 @@ async def test_restore_state(
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp

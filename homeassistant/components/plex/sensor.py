@@ -1,4 +1,5 @@
 """Support for Plex media server monitoring."""
+
 from __future__ import annotations
 
 import logging
@@ -56,12 +57,14 @@ async def async_setup_entry(
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     plexserver = get_plex_server(hass, server_id)
-    sensors = [PlexSensor(hass, plexserver)]
+    sensors: list[SensorEntity] = [PlexSensor(hass, plexserver)]
 
     def create_library_sensors():
         """Create Plex library sensors with sync calls."""
-        for library in plexserver.library.sections():
-            sensors.append(PlexLibrarySectionSensor(hass, plexserver, library))
+        sensors.extend(
+            PlexLibrarySectionSensor(hass, plexserver, library)
+            for library in plexserver.library.sections()
+        )
 
     await hass.async_add_executor_job(create_library_sensors)
     async_add_entities(sensors)
@@ -183,10 +186,10 @@ class PlexLibrarySectionSensor(SensorEntity):
             libtype=primary_libtype, includeCollections=False
         )
         for libtype in LIBRARY_ATTRIBUTE_TYPES.get(self.library_type, []):
-            self._attr_extra_state_attributes[
-                f"{libtype}s"
-            ] = self.library_section.totalViewSize(
-                libtype=libtype, includeCollections=False
+            self._attr_extra_state_attributes[f"{libtype}s"] = (
+                self.library_section.totalViewSize(
+                    libtype=libtype, includeCollections=False
+                )
             )
 
         recent_libtype = LIBRARY_RECENT_LIBTYPE.get(

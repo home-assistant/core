@@ -1,4 +1,5 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
+
 from __future__ import annotations
 
 from phone_modem import PhoneModem

@@ -1,4 +1,5 @@
 """Representation of a Zigbee endpoint for zha."""
+
 from __future__ import annotations
 
 import asyncio
@@ -43,7 +44,7 @@ class Endpoint:
         self._all_cluster_handlers: dict[str, ClusterHandler] = {}
         self._claimed_cluster_handlers: dict[str, ClusterHandler] = {}
         self._client_cluster_handlers: dict[str, ClientClusterHandler] = {}
-        self._unique_id: str = f"{str(device.ieee)}-{zigpy_endpoint.endpoint_id}"
+        self._unique_id: str = f"{device.ieee!s}-{zigpy_endpoint.endpoint_id}"
 
     @property
     def device(self) -> ZHADevice:
@@ -197,7 +198,7 @@ class Endpoint:
             gather = functools.partial(gather_with_limited_concurrency, max_concurrency)
 
         results = await gather(*tasks, return_exceptions=True)
-        for cluster_handler, outcome in zip(cluster_handlers, results):
+        for cluster_handler, outcome in zip(cluster_handlers, results, strict=False):
             if isinstance(outcome, Exception):
                 cluster_handler.debug(
                     "'%s' stage failed: %s", func_name, str(outcome), exc_info=outcome

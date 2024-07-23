@@ -1,4 +1,5 @@
 """Test the api module."""
+
 from unittest.mock import AsyncMock, MagicMock, call
 
 from matter_server.client.models.node import (

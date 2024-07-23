@@ -1,4 +1,5 @@
 """Helper methods for various modules."""
+
 from __future__ import annotations
 
 import asyncio
@@ -170,14 +171,12 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
-            # pylint: disable=protected-access
             if not hasattr(host, "_throttle"):
-                host._throttle = {}
+                host._throttle = {}  # noqa: SLF001
 
-            if id(self) not in host._throttle:
-                host._throttle[id(self)] = [threading.Lock(), None]
-            throttle = host._throttle[id(self)]
-            # pylint: enable=protected-access
+            if id(self) not in host._throttle:  # noqa: SLF001
+                host._throttle[id(self)] = [threading.Lock(), None]  # noqa: SLF001
+            throttle = host._throttle[id(self)]  # noqa: SLF001
 
             if not throttle[0].acquire(False):
                 return throttled_value()

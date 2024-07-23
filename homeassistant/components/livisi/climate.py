@@ -1,4 +1,5 @@
 """Code to handle a Livisi Virtual Climate Control."""
+
 from __future__ import annotations
 
 from typing import Any

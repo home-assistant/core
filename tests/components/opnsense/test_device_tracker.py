@@ -1,4 +1,5 @@
 """The tests for the opnsense device tracker platform."""
+
 from unittest import mock
 
 import pytest

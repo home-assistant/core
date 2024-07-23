@@ -1,4 +1,5 @@
 """Support for Electric Kiwi sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -166,8 +167,8 @@ class ElectricKiwiAccountEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"
-            f"_{coordinator._ek_api.connection_id}_{description.key}"
+            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
+            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
         )
         self.entity_description = description
 
@@ -195,8 +196,8 @@ class ElectricKiwiHOPEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"
-            f"_{coordinator._ek_api.connection_id}_{description.key}"
+            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
+            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
         )
         self.entity_description = description
 

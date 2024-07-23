@@ -1,4 +1,5 @@
 """Config flow for Samsung TV."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -183,13 +184,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._model:
             updates[CONF_MODEL] = self._model
         if self._ssdp_rendering_control_location:
-            updates[
-                CONF_SSDP_RENDERING_CONTROL_LOCATION
-            ] = self._ssdp_rendering_control_location
+            updates[CONF_SSDP_RENDERING_CONTROL_LOCATION] = (
+                self._ssdp_rendering_control_location
+            )
         if self._ssdp_main_tv_agent_location:
-            updates[
-                CONF_SSDP_MAIN_TV_AGENT_LOCATION
-            ] = self._ssdp_main_tv_agent_location
+            updates[CONF_SSDP_MAIN_TV_AGENT_LOCATION] = (
+                self._ssdp_main_tv_agent_location
+            )
         self._abort_if_unique_id_configured(updates=updates, reload_on_update=False)
 
     async def _async_create_bridge(self) -> None:
@@ -387,13 +388,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             or update_model
         ):
             if update_ssdp_rendering_control_location:
-                data[
-                    CONF_SSDP_RENDERING_CONTROL_LOCATION
-                ] = self._ssdp_rendering_control_location
+                data[CONF_SSDP_RENDERING_CONTROL_LOCATION] = (
+                    self._ssdp_rendering_control_location
+                )
             if update_ssdp_main_tv_agent_location:
-                data[
-                    CONF_SSDP_MAIN_TV_AGENT_LOCATION
-                ] = self._ssdp_main_tv_agent_location
+                data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] = (
+                    self._ssdp_main_tv_agent_location
+                )
             if update_mac:
                 data[CONF_MAC] = self._mac
             if update_model:

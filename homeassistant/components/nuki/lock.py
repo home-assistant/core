@@ -1,4 +1,5 @@
 """Nuki.io lock platform."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

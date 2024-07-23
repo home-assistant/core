@@ -1,8 +1,9 @@
 """The tests for Lock device actions."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.lock import DOMAIN, LockEntityFeature
 from homeassistant.const import EntityCategory
@@ -89,12 +90,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,

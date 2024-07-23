@@ -1,16 +1,19 @@
 """The tests for Lock device triggers."""
+
 from datetime import timedelta
 
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.lock import DOMAIN
+from homeassistant.components.lock import DOMAIN, LockEntityFeature
 from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
     EntityCategory,
@@ -36,7 +39,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -54,7 +57,11 @@ async def test_get_triggers(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=LockEntityFeature.OPEN,
     )
     expected_triggers = [
         {
@@ -65,7 +72,15 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["locked", "unlocked", "unlocking", "locking", "jammed"]
+        for trigger in [
+            "locked",
+            "unlocked",
+            "unlocking",
+            "locking",
+            "jammed",
+            "open",
+            "opening",
+        ]
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -75,12 +90,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
@@ -103,6 +118,7 @@ async def test_get_triggers_hidden_auxiliary(
         device_id=device_entry.id,
         entity_category=entity_category,
         hidden_by=hidden_by,
+        supported_features=LockEntityFeature.OPEN,
     )
     expected_triggers = [
         {
@@ -113,7 +129,15 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["locked", "unlocked", "unlocking", "locking", "jammed"]
+        for trigger in [
+            "locked",
+            "unlocked",
+            "unlocking",
+            "locking",
+            "jammed",
+            "open",
+            "opening",
+        ]
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -140,7 +164,7 @@ async def test_get_trigger_capabilities(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 5
+    assert len(triggers) == 7
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.TRIGGER, trigger
@@ -171,7 +195,7 @@ async def test_get_trigger_capabilities_legacy(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 5
+    assert len(triggers) == 7
     for trigger in triggers:
         trigger["entity_id"] = entity_registry.async_get(trigger["entity_id"]).entity_id
         capabilities = await async_get_device_automation_capabilities(
@@ -246,6 +270,25 @@ async def test_if_fires_on_state_change(
                         },
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
+                        "type": "open",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "open - {{ trigger.platform}} - "
+                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -266,6 +309,15 @@ async def test_if_fires_on_state_change(
     assert (
         calls[1].data["some"]
         == f"unlocked - device - {entry.entity_id} - locked - unlocked - None"
+    )
+
+    # Fake that the entity is opens.
+    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert (
+        calls[2].data["some"]
+        == f"open - device - {entry.entity_id} - unlocked - open - None"
     )
 
 
@@ -362,15 +414,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -387,15 +436,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -412,15 +458,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -437,15 +480,34 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
+                            )
+                        },
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
+                        "type": "opening",
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "turn_on {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -502,4 +564,16 @@ async def test_if_fires_on_state_change_with_for(
     assert (
         calls[3].data["some"]
         == f"turn_on device - {entry.entity_id} - jammed - locking - 0:00:05"
+    )
+
+    hass.states.async_set(entry.entity_id, STATE_OPENING)
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=27))
+    await hass.async_block_till_done()
+    assert len(calls) == 5
+    await hass.async_block_till_done()
+    assert (
+        calls[4].data["some"]
+        == f"turn_on device - {entry.entity_id} - locking - opening - 0:00:05"
     )

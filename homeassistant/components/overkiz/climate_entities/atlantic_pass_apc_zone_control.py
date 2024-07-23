@@ -1,4 +1,5 @@
 """Support for Atlantic Pass APC Zone Control."""
+
 from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState

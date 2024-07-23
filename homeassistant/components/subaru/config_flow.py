@@ -1,4 +1,5 @@
 """Config flow for Subaru integration."""
+
 from __future__ import annotations
 
 from datetime import datetime

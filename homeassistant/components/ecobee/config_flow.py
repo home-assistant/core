@@ -1,4 +1,5 @@
 """Config flow to configure ecobee."""
+
 from pyecobee import (
     ECOBEE_API_KEY,
     ECOBEE_CONFIG_FILENAME,

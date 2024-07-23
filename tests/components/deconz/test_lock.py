@@ -1,4 +1,5 @@
 """deCONZ lock platform tests."""
+
 from unittest.mock import patch
 
 from homeassistant.components.lock import (

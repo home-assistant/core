@@ -1,4 +1,5 @@
 """Test the Media Player significant change platform."""
+
 import pytest
 
 from homeassistant.components.media_player import (

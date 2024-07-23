@@ -1,8 +1,10 @@
 """Support for Synology DSM sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import cast
 
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
@@ -39,7 +41,7 @@ from .entity import (
 from .models import SynologyDSMData
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMSensorEntityDescription(
     SensorEntityDescription, SynologyDSMEntityDescription
 ):
@@ -290,6 +292,8 @@ async def async_setup_entry(
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
     coordinator = data.coordinator_central
+    storage = api.storage
+    assert storage is not None
 
     entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
         SynoDSMUtilSensor(api, coordinator, description)
@@ -297,21 +301,21 @@ async def async_setup_entry(
     ]
 
     # Handle all volumes
-    if api.storage.volumes_ids:
+    if storage.volumes_ids:
         entities.extend(
             [
                 SynoDSMStorageSensor(api, coordinator, description, volume)
-                for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids)
+                for volume in entry.data.get(CONF_VOLUMES, storage.volumes_ids)
                 for description in STORAGE_VOL_SENSORS
             ]
         )
 
     # Handle all disks
-    if api.storage.disks_ids:
+    if storage.disks_ids:
         entities.extend(
             [
                 SynoDSMStorageSensor(api, coordinator, description, disk)
-                for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids)
+                for disk in entry.data.get(CONF_DISKS, storage.disks_ids)
                 for description in STORAGE_DISK_SENSORS
             ]
         )
@@ -365,7 +369,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.utilisation)
+        return bool(self._api.utilisation) and super().available
 
 
 class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
@@ -386,8 +390,10 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        attr = getattr(self._api.storage, self.entity_description.key)(self._device_id)
-        return attr  # type: ignore[no-any-return]
+        return cast(
+            StateType,
+            getattr(self._api.storage, self.entity_description.key)(self._device_id),
+        )
 
 
 class SynoDSMInfoSensor(SynoDSMSensor):

@@ -1,4 +1,5 @@
 """Tests for the Canary integration."""
+
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from canary.model import SensorType

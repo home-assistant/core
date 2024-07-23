@@ -1,4 +1,5 @@
 """Support for the OpenWeatherMap (OWM) service."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -20,7 +21,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OpenweathermapConfigEntry
 from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
@@ -58,8 +59,6 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_ONECALL_DAILY,
     MANUFACTURER,
@@ -84,13 +83,13 @@ FORECAST_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenweathermapConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up OpenWeatherMap weather entity based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    name = domain_data[ENTRY_NAME]
-    weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    weather_coordinator = domain_data.coordinator
 
     unique_id = f"{config_entry.unique_id}"
     owm_weather = OpenWeatherMapWeather(name, unique_id, weather_coordinator)
@@ -184,7 +183,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         return self.coordinator.data[ATTR_API_WIND_BEARING]
 
     @property
-    def forecast(self) -> list[Forecast] | None:
+    def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         api_forecasts = self.coordinator.data[ATTR_API_FORECAST]
         forecasts = [
@@ -200,9 +199,9 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.forecast
+        return self._forecast
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        return self.forecast
+        return self._forecast

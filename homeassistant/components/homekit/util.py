@@ -1,4 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
+
 from __future__ import annotations
 
 import io
@@ -37,11 +38,16 @@ from homeassistant.const import (
     CONF_TYPE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -326,10 +332,7 @@ def validate_media_player_features(state: State, feature_list: str) -> bool:
         # Auto detected
         return True
 
-    error_list = []
-    for feature in feature_list:
-        if feature not in supported_modes:
-            error_list.append(feature)
+    error_list = [feature for feature in feature_list if feature not in supported_modes]
 
     if error_list:
         _LOGGER.error(
@@ -398,14 +401,14 @@ def cleanup_name_for_homekit(name: str | None) -> str:
     return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
-def temperature_to_homekit(temperature: float | int, unit: str) -> float:
+def temperature_to_homekit(temperature: float, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
     return round(
         TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
     )
 
 
-def temperature_to_states(temperature: float | int, unit: str) -> float:
+def temperature_to_states(temperature: float, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
     return (
         round(
@@ -575,11 +578,12 @@ def _async_find_next_available_port(start_port: int, exclude_ports: set) -> int:
             continue
         try:
             test_socket.bind(("", port))
-            return port
         except OSError:
             if port == MAX_PORT:
                 raise
             continue
+        else:
+            return port
     raise RuntimeError("unreachable")
 
 
@@ -587,10 +591,9 @@ def pid_is_alive(pid: int) -> bool:
     """Check to see if a process is alive."""
     try:
         os.kill(pid, 0)
-        return True
     except OSError:
-        pass
-    return False
+        return False
+    return True
 
 
 def accessory_friendly_name(hass_name: str, accessory: Accessory) -> str:
@@ -623,7 +626,7 @@ def state_needs_accessory_mode(state: State) -> bool:
     )
 
 
-def state_changed_event_is_same_state(event: EventType[EventStateChangedData]) -> bool:
+def state_changed_event_is_same_state(event: Event[EventStateChangedData]) -> bool:
     """Check if a state changed event is the same state."""
     event_data = event.data
     old_state = event_data["old_state"]

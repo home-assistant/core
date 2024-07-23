@@ -1,4 +1,5 @@
 """Support for MQTT binary sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -215,8 +216,8 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 template_info = ""
                 if self._config.get(CONF_VALUE_TEMPLATE) is not None:
                     template_info = (
-                        f", template output: '{str(payload)}', with value template"
-                        f" '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
+                        f", template output: '{payload!s}', with value template"
+                        f" '{self._config.get(CONF_VALUE_TEMPLATE)!s}'"
                     )
                 _LOGGER.info(
                     (

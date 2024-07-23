@@ -3,6 +3,7 @@
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -460,9 +461,12 @@ async def test_structure_update_event(
         },
         auth=None,
     )
-    with patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=subscriber,
+    with (
+        patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber",
+            return_value=subscriber,
+        ),
     ):
         await subscriber.async_receive_event(message)
         await hass.async_block_till_done()

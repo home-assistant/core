@@ -1,4 +1,5 @@
 """Support for AquaLogic switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -45,13 +46,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
-    switches = []
-
     processor: AquaLogicProcessor = hass.data[DOMAIN]
-    for switch_type in config[CONF_MONITORED_CONDITIONS]:
-        switches.append(AquaLogicSwitch(processor, switch_type))
 
-    async_add_entities(switches)
+    async_add_entities(
+        AquaLogicSwitch(processor, switch_type)
+        for switch_type in config[CONF_MONITORED_CONDITIONS]
+    )
 
 
 class AquaLogicSwitch(SwitchEntity):

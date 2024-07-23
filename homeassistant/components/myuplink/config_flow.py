@@ -1,4 +1,5 @@
 """Config flow for myUplink."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any

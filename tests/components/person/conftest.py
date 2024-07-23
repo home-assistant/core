@@ -1,4 +1,5 @@
 """The tests for the person component."""
+
 import logging
 
 import pytest

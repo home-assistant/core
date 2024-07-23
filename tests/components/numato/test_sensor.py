@@ -1,4 +1,5 @@
 """Tests for the numato sensor platform."""
+
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery

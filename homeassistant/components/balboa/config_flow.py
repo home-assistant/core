@@ -1,4 +1,5 @@
 """Config flow for Balboa Spa Client integration."""
+
 from __future__ import annotations
 
 import logging
@@ -73,7 +74,7 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

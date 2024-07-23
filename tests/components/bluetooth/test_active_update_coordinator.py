@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration ActiveBluetoothDataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -128,7 +129,7 @@ async def test_basic_usage(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     assert coordinator.data == {"fake": "data"}
 
@@ -174,13 +175,13 @@ async def test_bleak_error_during_polling(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     assert coordinator.data is None
     assert coordinator.last_poll_successful is False
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO_2.rssi}
     assert coordinator.data == {"fake": "data"}
     assert coordinator.last_poll_successful is True
@@ -227,13 +228,13 @@ async def test_generic_exception_during_polling(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     assert coordinator.data is None
     assert coordinator.last_poll_successful is False
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO_2.rssi}
     assert coordinator.data == {"fake": "data"}
     assert coordinator.last_poll_successful is True
@@ -279,7 +280,7 @@ async def test_polling_debounce(
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     # We should only get one poll because of the debounce
     assert coordinator.data == {"poll_count": 1}
@@ -315,7 +316,9 @@ async def test_polling_debounce_with_custom_debouncer(
         mode=BluetoothScanningMode.ACTIVE,
         needs_poll_method=_needs_poll,
         poll_method=_poll_method,
-        poll_debouncer=Debouncer(hass, _LOGGER, cooldown=0.1, immediate=True),
+        poll_debouncer=Debouncer(
+            hass, _LOGGER, cooldown=0.1, immediate=True, background=True
+        ),
     )
     assert coordinator.available is False  # no data yet
 
@@ -326,7 +329,7 @@ async def test_polling_debounce_with_custom_debouncer(
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     # We should only get one poll because of the debounce
     assert coordinator.data == {"poll_count": 1}
@@ -370,25 +373,25 @@ async def test_polling_rejecting_the_first_time(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     # First poll is rejected, so no data yet
     assert coordinator.data is None
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     # Data is the same so no poll check
     assert coordinator.data is None
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO_2.rssi}
     # Data is different so poll is done
     assert coordinator.data == {"fake": "data"}
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     # Data is different again so poll is done
     assert coordinator.data == {"fake": "data"}
@@ -433,19 +436,19 @@ async def test_no_polling_after_stop_event(
     assert needs_poll_calls == 0
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     assert coordinator.data == {"fake": "data"}
 
     assert needs_poll_calls == 1
 
     hass.set_state(CoreState.stopping)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     # Should not generate a poll now
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     cancel()

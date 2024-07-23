@@ -1,4 +1,5 @@
 """Xbox Media Player Support."""
+
 from __future__ import annotations
 
 import re

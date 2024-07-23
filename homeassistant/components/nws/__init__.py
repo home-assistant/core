@@ -1,21 +1,21 @@
 """The National Weather Service integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
+from functools import partial
 import logging
-from typing import TYPE_CHECKING
 
-from pynws import SimpleNWS
+from pynws import SimpleNWS, call_with_retry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
@@ -26,8 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
-FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
-DEBOUNCE_TIME = 60  # in seconds
+RETRY_INTERVAL = datetime.timedelta(minutes=1)
+RETRY_STOP = datetime.timedelta(minutes=10)
+
+DEBOUNCE_TIME = 10 * 60  # in seconds
 
 
 def base_unique_id(latitude: float, longitude: float) -> str:
@@ -40,62 +42,9 @@ class NWSData:
     """Data for the National Weather Service integration."""
 
     api: SimpleNWS
-    coordinator_observation: NwsDataUpdateCoordinator
-    coordinator_forecast: NwsDataUpdateCoordinator
-    coordinator_forecast_hourly: NwsDataUpdateCoordinator
-
-
-class NwsDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
-    """NWS data update coordinator.
-
-    Implements faster data update intervals for failed updates and exposes a last successful update time.
-    """
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: logging.Logger,
-        *,
-        name: str,
-        update_interval: datetime.timedelta,
-        failed_update_interval: datetime.timedelta,
-        update_method: Callable[[], Awaitable[None]] | None = None,
-        request_refresh_debouncer: debounce.Debouncer | None = None,
-    ) -> None:
-        """Initialize NWS coordinator."""
-        super().__init__(
-            hass,
-            logger,
-            name=name,
-            update_interval=update_interval,
-            update_method=update_method,
-            request_refresh_debouncer=request_refresh_debouncer,
-        )
-        self.failed_update_interval = failed_update_interval
-
-    @callback
-    def _schedule_refresh(self) -> None:
-        """Schedule a refresh."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        # We _floor_ utcnow to create a schedule on a rounded second,
-        # minimizing the time between the point and the real activation.
-        # That way we obtain a constant update frequency,
-        # as long as the update process takes less than a second
-        if self.last_update_success:
-            if TYPE_CHECKING:
-                # the base class allows None, but this one doesn't
-                assert self.update_interval is not None
-            update_interval = self.update_interval
-        else:
-            update_interval = self.failed_update_interval
-        self._unsub_refresh = async_track_point_in_utc_time(
-            self.hass,
-            self._handle_refresh_interval,
-            utcnow().replace(microsecond=0) + update_interval,
-        )
+    coordinator_observation: TimestampDataUpdateCoordinator[None]
+    coordinator_forecast: TimestampDataUpdateCoordinator[None]
+    coordinator_forecast_hourly: TimestampDataUpdateCoordinator[None]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -111,41 +60,72 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nws_data = SimpleNWS(latitude, longitude, api_key, client_session)
     await nws_data.set_station(station)
 
-    async def update_observation() -> None:
-        """Retrieve recent observations."""
-        await nws_data.update_observation(start_time=utcnow() - UPDATE_TIME_PERIOD)
+    def async_setup_update_observation(
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
+    ) -> Callable[[], Awaitable[None]]:
+        async def update_observation() -> None:
+            """Retrieve recent observations."""
+            await call_with_retry(
+                nws_data.update_observation,
+                retry_interval,
+                retry_stop,
+                start_time=utcnow() - UPDATE_TIME_PERIOD,
+            )
 
-    coordinator_observation = NwsDataUpdateCoordinator(
+        return update_observation
+
+    def async_setup_update_forecast(
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
+    ) -> Callable[[], Awaitable[None]]:
+        return partial(
+            call_with_retry,
+            nws_data.update_forecast,
+            retry_interval,
+            retry_stop,
+        )
+
+    def async_setup_update_forecast_hourly(
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
+    ) -> Callable[[], Awaitable[None]]:
+        return partial(
+            call_with_retry,
+            nws_data.update_forecast_hourly,
+            retry_interval,
+            retry_stop,
+        )
+
+    # Don't use retries in setup
+    coordinator_observation = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS observation station {station}",
-        update_method=update_observation,
+        update_method=async_setup_update_observation(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
-        failed_update_interval=FAILED_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
     )
 
-    coordinator_forecast = NwsDataUpdateCoordinator(
+    coordinator_forecast = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS forecast station {station}",
-        update_method=nws_data.update_forecast,
+        update_method=async_setup_update_forecast(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
-        failed_update_interval=FAILED_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
     )
 
-    coordinator_forecast_hourly = NwsDataUpdateCoordinator(
+    coordinator_forecast_hourly = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS forecast hourly station {station}",
-        update_method=nws_data.update_forecast_hourly,
+        update_method=async_setup_update_forecast_hourly(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
-        failed_update_interval=FAILED_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
@@ -162,6 +142,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_observation.async_refresh()
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
+
+    # Use retries
+    coordinator_observation.update_method = async_setup_update_observation(
+        RETRY_INTERVAL, RETRY_STOP
+    )
+    coordinator_forecast.update_method = async_setup_update_forecast(
+        RETRY_INTERVAL, RETRY_STOP
+    )
+    coordinator_forecast_hourly.update_method = async_setup_update_forecast_hourly(
+        RETRY_INTERVAL, RETRY_STOP
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

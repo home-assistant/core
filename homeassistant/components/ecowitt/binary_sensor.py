@@ -1,4 +1,5 @@
 """Support for Ecowitt Weather Stations."""
+
 import dataclasses
 from typing import Final
 

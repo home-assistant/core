@@ -1,4 +1,5 @@
 """Constants for the Fast.com integration."""
+
 import logging
 
 from homeassistant.const import Platform

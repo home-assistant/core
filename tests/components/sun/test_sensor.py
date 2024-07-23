@@ -1,4 +1,5 @@
 """The tests for the Sun sensor platform."""
+
 from datetime import datetime, timedelta
 
 from astral import LocationInfo

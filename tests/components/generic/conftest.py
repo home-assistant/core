@@ -68,11 +68,10 @@ def mock_create_stream():
     mock_stream.add_provider.return_value = mock_provider
     mock_stream.start = AsyncMock()
     mock_stream.stop = AsyncMock()
-    fake_create_stream = patch(
+    return patch(
         "homeassistant.components.generic.config_flow.create_stream",
         return_value=mock_stream,
     )
-    return fake_create_stream
 
 
 @pytest.fixture

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "total_volatile_organic_component_index": {
+        "default": "mdi:molecule"
+      },
+      "nitrogen_index": {
+        "default": "mdi:molecule"
+      },
+      "pm003_count": {
+        "default": "mdi:blur"
+      }
+    }
+  }
+}

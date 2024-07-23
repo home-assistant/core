@@ -1,6 +1,8 @@
 """Tests for the Device Registry."""
+
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
+from functools import partial
 import time
 from typing import Any
 from unittest.mock import patch
@@ -10,7 +12,7 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, ReleaseChannel
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -2303,7 +2305,7 @@ async def test_entries_for_label(
         "placeholders",
         "expected_device_name",
     ),
-    (
+    [
         (None, None, None, "Device Bla"),
         (
             "test_device",
@@ -2333,7 +2335,7 @@ async def test_entries_for_label(
             {"placeholder": "special"},
             "English dev special",
         ),
-    ),
+    ],
 )
 async def test_device_name_translation_placeholders(
     hass: HomeAssistant,
@@ -2380,7 +2382,7 @@ async def test_device_name_translation_placeholders(
         "expectation",
         "expected_error",
     ),
-    (
+    [
         (
             "test_device",
             {
@@ -2389,7 +2391,7 @@ async def test_device_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
-            "stable",
+            ReleaseChannel.STABLE,
             nullcontext(),
             (
                 "has translation placeholders '{'placeholder': 'special'}' which do "
@@ -2404,7 +2406,7 @@ async def test_device_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
-            "beta",
+            ReleaseChannel.BETA,
             pytest.raises(
                 HomeAssistantError, match="Missing placeholder '2ndplaceholder'"
             ),
@@ -2418,14 +2420,14 @@ async def test_device_name_translation_placeholders(
                 },
             },
             None,
-            "stable",
+            ReleaseChannel.STABLE,
             nullcontext(),
             (
                 "has translation placeholders '{}' which do "
                 "not match the name '{placeholder} English dev'"
             ),
         ),
-    ),
+    ],
 )
 async def test_device_name_translation_placeholders_errors(
     hass: HomeAssistant,
@@ -2433,7 +2435,7 @@ async def test_device_name_translation_placeholders_errors(
     translation_key: str | None,
     translations: dict[str, str] | None,
     placeholders: dict[str, str] | None,
-    release_channel: str,
+    release_channel: ReleaseChannel,
     expectation: AbstractContextManager,
     expected_error: str,
     caplog: pytest.LogCaptureFixture,
@@ -2452,13 +2454,17 @@ async def test_device_name_translation_placeholders_errors(
 
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
-    with patch(
-        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
-        side_effect=async_get_cached_translations,
-    ), patch(
-        "homeassistant.helpers.device_registry.get_release_channel",
-        return_value=release_channel,
-    ), expectation:
+    with (
+        patch(
+            "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+            side_effect=async_get_cached_translations,
+        ),
+        patch(
+            "homeassistant.helpers.device_registry.get_release_channel",
+            return_value=release_channel,
+        ),
+        expectation,
+    ):
         device_registry.async_get_or_create(
             config_entry_id=config_entry_1.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -2468,3 +2474,49 @@ async def test_device_name_translation_placeholders_errors(
         )
 
     assert expected_error in caplog.text
+
+
+async def test_async_get_or_create_thread_safety(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_get_or_create raises when called from wrong thread."""
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls device_registry.async_update_device from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                device_registry.async_get_or_create,
+                config_entry_id=mock_config_entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+                identifiers=set(),
+                manufacturer="manufacturer",
+                model="model",
+            )
+        )
+
+
+async def test_async_remove_device_thread_safety(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_remove_device raises when called from wrong thread."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers=set(),
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls device_registry.async_remove_device from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            device_registry.async_remove_device, device.id
+        )

@@ -1,4 +1,5 @@
 """Tests for the TechnoVE sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -44,10 +45,10 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.technove_station_signal_strength",
         "sensor.technove_station_wi_fi_network_name",
-    ),
+    ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_disabled_by_default_sensors(

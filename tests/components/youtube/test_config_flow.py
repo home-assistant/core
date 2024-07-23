@@ -1,4 +1,5 @@
 """Test the YouTube config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -54,14 +55,17 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    with patch(
-        "homeassistant.components.youtube.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.youtube.config_flow.YouTube",
-        return_value=MockYouTube(),
+    with (
+        patch(
+            "homeassistant.components.youtube.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube",
+            return_value=MockYouTube(),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "channels"
 
         result = await hass.config_entries.flow.async_configure(
@@ -71,7 +75,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert "result" in result
     assert result["result"].unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
@@ -111,13 +115,14 @@ async def test_flow_abort_without_channel(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     service = MockYouTube(channel_fixture="youtube/get_no_channel.json")
-    with patch(
-        "homeassistant.components.youtube.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.youtube.config_flow.YouTube", return_value=service
+    with (
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube", return_value=service
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_channel"
 
 
@@ -151,13 +156,14 @@ async def test_flow_abort_without_subscriptions(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     service = MockYouTube(subscriptions_fixture="youtube/get_no_subscriptions.json")
-    with patch(
-        "homeassistant.components.youtube.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.youtube.config_flow.YouTube", return_value=service
+    with (
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube", return_value=service
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_subscriptions"
 
 
@@ -197,7 +203,7 @@ async def test_flow_http_error(
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "access_not_configured"
         assert result["description_placeholders"]["message"] == (
             "YouTube Data API v3 has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
@@ -281,17 +287,20 @@ async def test_reauth(
     )
 
     youtube = MockYouTube(channel_fixture=f"youtube/{fixture}.json")
-    with patch(
-        "homeassistant.components.youtube.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.youtube.config_flow.YouTube",
-        return_value=youtube,
+    with (
+        patch(
+            "homeassistant.components.youtube.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube",
+            return_value=youtube,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
     assert result["description_placeholders"] == placeholders
     assert len(mock_setup.mock_calls) == calls
@@ -336,7 +345,7 @@ async def test_flow_exception(
         "homeassistant.components.youtube.config_flow.YouTube", side_effect=Exception
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
 
@@ -353,7 +362,7 @@ async def test_options_flow(
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -362,5 +371,5 @@ async def test_options_flow(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}

@@ -1,4 +1,5 @@
 """Support for Tibber sensors."""
+
 from __future__ import annotations
 
 import datetime
@@ -51,6 +52,8 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
+
+FIVE_YEARS = 5 * 365 * 24
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -285,17 +288,19 @@ async def async_setup_entry(
             await home.update_info()
         except TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
-            raise PlatformNotReady() from err
+            raise PlatformNotReady from err
         except aiohttp.ClientError as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
-            raise PlatformNotReady() from err
+            raise PlatformNotReady from err
 
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, tibber_connection)
-            for entity_description in SENSORS:
-                entities.append(TibberDataSensor(home, coordinator, entity_description))
+            entities.extend(
+                TibberDataSensor(home, coordinator, entity_description)
+                for entity_description in SENSORS
+            )
 
         if home.has_real_time_consumption:
             await home.rt_subscribe(
@@ -721,9 +726,16 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=has
                         None,
                         {"sum"},
                     )
-                    first_stat = stat[statistic_id][0]
-                    _sum = cast(float, first_stat["sum"])
-                    last_stats_time = first_stat["start"]
+                    if statistic_id in stat:
+                        first_stat = stat[statistic_id][0]
+                        _sum = cast(float, first_stat["sum"])
+                        last_stats_time = first_stat["start"]
+                    else:
+                        hourly_data = await home.get_historic_data(
+                            FIVE_YEARS, production=is_production
+                        )
+                        _sum = 0.0
+                        last_stats_time = None
 
                 statistics = []
 

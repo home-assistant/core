@@ -1,4 +1,5 @@
 """deCONZ switch platform tests."""
+
 from unittest.mock import patch
 
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN

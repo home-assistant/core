@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Select region",
+        "description": "Choose the region you want to survey in order to locate Ambient personal weather stations."
+      },
+      "station": {
+        "title": "Select station",
+        "description": "Select the weather station you want to add to Home Assistant.",
+        "data": {
+          "station": "Station"
+        }
+      }
+    },
+    "error": {
+      "no_stations_found": "Did not find any stations in the selected region."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pm25_24h_average": {
+        "name": "PM2.5 (24 hour average)"
+      },
+      "pm25_aqi": {
+        "name": "PM2.5 AQI"
+      },
+      "pm25_aqi_24h_average": {
+        "name": "PM2.5 AQI (24 hour average)"
+      },
+      "absolute_pressure": {
+        "name": "Absolute pressure"
+      },
+      "relative_pressure": {
+        "name": "Relative pressure"
+      },
+      "daily_rain": {
+        "name": "Daily rain"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "hourly_rain": {
+        "name": "Hourly rain"
+      },
+      "last_rain": {
+        "name": "Last rain"
+      },
+      "lightning_strikes_per_day": {
+        "name": "Lightning strikes per day"
+      },
+      "lightning_strikes_per_hour": {
+        "name": "Lightning strikes per hour"
+      },
+      "lightning_distance": {
+        "name": "Lightning distance"
+      },
+      "max_daily_gust": {
+        "name": "Max daily gust"
+      },
+      "monthly_rain": {
+        "name": "Monthly rain"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "weekly_rain": {
+        "name": "Weekly rain"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "yearly_rain": {
+        "name": "Yearly rain"
+      }
+    }
+  }
+}

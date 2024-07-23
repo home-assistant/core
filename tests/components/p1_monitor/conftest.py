@@ -1,4 +1,5 @@
 """Fixtures for P1 Monitor integration tests."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 

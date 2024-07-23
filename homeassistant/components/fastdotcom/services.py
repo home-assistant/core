@@ -1,4 +1,5 @@
 """Services for the Fastdotcom integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntryState
@@ -7,14 +8,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN, SERVICE_NAME
-from .coordinator import FastdotcomDataUpdateCoordindator
+from .coordinator import FastdotcomDataUpdateCoordinator
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the service for the Fastdotcom integration."""
 
     @callback
-    def collect_coordinator() -> FastdotcomDataUpdateCoordindator:
+    def collect_coordinator() -> FastdotcomDataUpdateCoordinator:
         """Collect the coordinator Fastdotcom."""
         config_entries = hass.config_entries.async_entries(DOMAIN)
         if not config_entries:
@@ -23,7 +24,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         for config_entry in config_entries:
             if config_entry.state != ConfigEntryState.LOADED:
                 raise HomeAssistantError(f"{config_entry.title} is not loaded")
-            coordinator: FastdotcomDataUpdateCoordindator = hass.data[DOMAIN][
+            coordinator: FastdotcomDataUpdateCoordinator = hass.data[DOMAIN][
                 config_entry.entry_id
             ]
             break

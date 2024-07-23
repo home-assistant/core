@@ -1,4 +1,5 @@
 """The tests for local file camera component."""
+
 from unittest.mock import patch
 
 import pytest

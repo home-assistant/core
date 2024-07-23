@@ -1,24 +1,16 @@
 """Fixtures for Tankerkoenig integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.tankerkoenig import DOMAIN
-from homeassistant.components.tankerkoenig.const import CONF_FUEL_TYPES, CONF_STATIONS
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LOCATION,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_RADIUS,
-    CONF_SHOW_ON_MAP,
-)
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import NEARBY_STATIONS, PRICES, STATION
+from .const import CONFIG_DATA, NEARBY_STATIONS, PRICES, STATION
 
 from tests.common import MockConfigEntry
 
@@ -26,12 +18,15 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="tankerkoenig")
 def mock_tankerkoenig() -> Generator[AsyncMock, None, None]:
     """Mock the aiotankerkoenig client."""
-    with patch(
-        "homeassistant.components.tankerkoenig.coordinator.Tankerkoenig",
-        autospec=True,
-    ) as mock_tankerkoenig, patch(
-        "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig",
-        new=mock_tankerkoenig,
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.coordinator.Tankerkoenig",
+            autospec=True,
+        ) as mock_tankerkoenig,
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig",
+            new=mock_tankerkoenig,
+        ),
     ):
         mock = mock_tankerkoenig.return_value
         mock.station_details.return_value = STATION
@@ -51,16 +46,7 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         options={
             CONF_SHOW_ON_MAP: True,
         },
-        data={
-            CONF_NAME: "Home",
-            CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
-            CONF_FUEL_TYPES: ["e5"],
-            CONF_LOCATION: {CONF_LATITUDE: 51.0, CONF_LONGITUDE: 13.0},
-            CONF_RADIUS: 2.0,
-            CONF_STATIONS: [
-                "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
-            ],
-        },
+        data=CONFIG_DATA,
     )
 
 

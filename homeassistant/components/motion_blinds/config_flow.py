@@ -1,4 +1,5 @@
 """Config flow to configure Motionblinds using their WLAN API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -96,7 +97,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             # key not needed for GetDeviceList request
             await self.hass.async_add_executor_job(gateway.GetDeviceList)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return self.async_abort(reason="not_motionblinds")
 
         if not gateway.available:

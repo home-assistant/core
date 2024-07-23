@@ -1,4 +1,5 @@
 """Sensor platform support for wiffi devices."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

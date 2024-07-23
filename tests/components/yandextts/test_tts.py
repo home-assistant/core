@@ -1,4 +1,5 @@
 """The tests for the Yandex SpeechKit speech platform."""
+
 from http import HTTPStatus
 
 import pytest

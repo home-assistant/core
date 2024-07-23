@@ -1,4 +1,5 @@
 """Support for Tuya Alarm."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -10,7 +11,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityDescription,
     AlarmControlPanelEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -21,9 +21,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantTuyaData
+from . import TuyaConfigEntry
 from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 class Mode(StrEnum):
@@ -58,10 +58,10 @@ ALARM: dict[str, tuple[AlarmControlPanelEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya alarm dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -70,11 +70,11 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := ALARM.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaAlarmEntity(device, hass_data.manager, description)
-                        )
+                entities.extend(
+                    TuyaAlarmEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
         async_add_entities(entities)
 
     async_discover_device([*hass_data.manager.device_map])

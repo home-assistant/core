@@ -1,4 +1,5 @@
 """Tests for the sql component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -261,7 +262,7 @@ YAML_CONFIG_ALL_TEMPLATES = {
 
 async def init_integration(
     hass: HomeAssistant,
-    config: dict[str, Any] = None,
+    config: dict[str, Any] | None = None,
     entry_id: str = "1",
     source: str = SOURCE_USER,
 ) -> MockConfigEntry:

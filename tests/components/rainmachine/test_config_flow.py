@@ -1,11 +1,12 @@
 """Define tests for the OpenUV config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
 from regenmaschine.errors import RainMachineError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, setup
 from homeassistant.components import zeroconf
 from homeassistant.components.rainmachine import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
@@ -15,6 +16,7 @@ from homeassistant.components.rainmachine import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 
@@ -23,7 +25,7 @@ async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -81,10 +83,14 @@ async def test_migrate_1_2(
     assert entity_entry.entity_id == entity_id
     assert entity_entry.unique_id == old_unique_id
 
-    with patch(
-        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.rainmachine.config_flow.Client", return_value=client
+    with (
+        patch(
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
     ):
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -102,7 +108,7 @@ async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -113,7 +119,7 @@ async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:
                 CONF_ALLOW_INACTIVE_ZONES_TO_RUN: False,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_DEFAULT_ZONE_RUN_TIME: 600,
             CONF_USE_APP_RUN_TIMES: False,
@@ -128,7 +134,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
         data=None,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -139,7 +145,7 @@ async def test_step_user(hass: HomeAssistant, config, setup_rainmachine) -> None
         context={"source": config_entries.SOURCE_USER},
         data=config,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "12345"
     assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
@@ -174,7 +180,7 @@ async def test_step_homekit_zeroconf_ip_already_exists(
             ),
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -202,7 +208,7 @@ async def test_step_homekit_zeroconf_ip_change(
             ),
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_IP_ADDRESS] == "192.168.1.2"
 
@@ -231,13 +237,17 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             ),
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.rainmachine.config_flow.Client", return_value=client
+    with (
+        patch(
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -249,7 +259,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "12345"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
@@ -281,7 +291,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
             ),
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -301,5 +311,5 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
             ),
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"

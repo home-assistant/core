@@ -1,0 +1,41 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'bme280_humidity': 45.7,
+      'bme280_pressure': 1011.012,
+      'bme280_temperature': 7.6,
+      'bmp180_pressure': 1032.012,
+      'bmp180_temperature': 7.6,
+      'bmp280_pressure': 1022.012,
+      'bmp280_temperature': 5.6,
+      'dht22_humidity': 46.2,
+      'dht22_temperature': 6.3,
+      'heca_humidity': 50.0,
+      'heca_temperature': 8.0,
+      'mhz14a_carbon_dioxide': 865.0,
+      'pms_caqi': 19,
+      'pms_caqi_level': 'very_low',
+      'pms_p0': 6.0,
+      'pms_p1': 10.0,
+      'pms_p2': 11.0,
+      'sds011_caqi': 19,
+      'sds011_caqi_level': 'very_low',
+      'sds011_p1': 18.6,
+      'sds011_p2': 11.0,
+      'sht3x_humidity': 34.7,
+      'sht3x_temperature': 6.3,
+      'signal': -72.0,
+      'sps30_caqi': 54,
+      'sps30_caqi_level': 'medium',
+      'sps30_p0': 31.2,
+      'sps30_p1': 21.2,
+      'sps30_p2': 34.3,
+      'sps30_p4': 24.7,
+      'uptime': 456987,
+    }),
+    'info': dict({
+      'host': '10.10.2.3',
+    }),
+  })
+# ---

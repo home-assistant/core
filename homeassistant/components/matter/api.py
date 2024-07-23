@@ -1,4 +1,5 @@
 """Handle websocket api for Matter."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -165,7 +166,7 @@ async def websocket_commission_on_network(
 ) -> None:
     """Commission a device already on the network."""
     await matter.matter_client.commission_on_network(
-        msg["pin"], ip_addr=msg.get("ip_addr", None)
+        msg["pin"], ip_addr=msg.get("ip_addr")
     )
     connection.send_result(msg[ID])
 

@@ -1,10 +1,11 @@
 """The myUplink integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
-from myuplink import MyUplinkAPI
+from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -82,12 +83,16 @@ def create_devices(
     """Update all devices."""
     device_registry = dr.async_get(hass)
 
-    for device_id, device in coordinator.data.devices.items():
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, device_id)},
-            name=device.productName,
-            manufacturer=device.productName.split(" ")[0],
-            model=device.productName,
-            sw_version=device.firmwareCurrent,
-        )
+    for system in coordinator.data.systems:
+        devices_in_system = [x.id for x in system.devices]
+        for device_id, device in coordinator.data.devices.items():
+            if device_id in devices_in_system:
+                device_registry.async_get_or_create(
+                    config_entry_id=config_entry.entry_id,
+                    identifiers={(DOMAIN, device_id)},
+                    name=get_system_name(system),
+                    manufacturer=get_manufacturer(device),
+                    model=get_model(device),
+                    sw_version=device.firmwareCurrent,
+                    serial_number=device.product_serial_number,
+                )

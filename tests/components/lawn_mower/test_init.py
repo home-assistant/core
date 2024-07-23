@@ -1,4 +1,5 @@
 """The tests for the lawn mower integration."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock
 
@@ -113,13 +114,13 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(entity1.entity_id)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     entity_state = hass.states.get(entity1.entity_id)
 
     assert entity_state

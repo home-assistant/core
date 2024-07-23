@@ -1,4 +1,5 @@
 """Tests for the Google Generative AI Conversation integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from google.api_core.exceptions import ClientError
@@ -94,29 +95,59 @@ async def test_default_prompt(
         suggested_area="Test Area 2",
     )
     with patch("google.generativeai.GenerativeModel") as mock_model:
-        mock_model.return_value.start_chat.return_value = AsyncMock()
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        chat_response = MagicMock()
+        mock_chat.send_message_async.return_value = chat_response
+        chat_response.parts = ["Hi there!"]
+        chat_response.text = "Hi there!"
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
     assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
 
 
 async def test_error_handling(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
-    """Test that the default prompt works."""
+    """Test that client errors are caught."""
     with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
-        mock_chat.send_message_async.side_effect = ClientError("")
+        mock_chat.send_message_async.side_effect = ClientError("some error")
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == (
+        "Sorry, I had a problem talking to Google Generative AI: None some error"
+    )
+
+
+async def test_blocked_response(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+) -> None:
+    """Test response was blocked."""
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        chat_response = MagicMock()
+        mock_chat.send_message_async.return_value = chat_response
+        chat_response.parts = []
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == (
+        "Sorry, I had a problem talking to Google Generative AI. Likely blocked"
+    )
 
 
 async def test_template_error(
@@ -129,9 +160,12 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with patch(
-        "google.generativeai.get_model",
-    ), patch("google.generativeai.GenerativeModel"):
+    with (
+        patch(
+            "google.generativeai.get_model",
+        ),
+        patch("google.generativeai.GenerativeModel"),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
@@ -148,7 +182,7 @@ async def test_conversation_agent(
     mock_init_component,
 ) -> None:
     """Test GoogleGenerativeAIAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = conversation.get_agent_manager(hass).async_get_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == "*"
@@ -197,11 +231,14 @@ async def test_generate_content_service_with_image(
         "A mail carrier is at your front door delivering a package"
     )
 
-    with patch("google.generativeai.GenerativeModel") as mock_model, patch(
-        "homeassistant.components.google_generative_ai_conversation.Path.read_bytes",
-        return_value=b"image bytes",
-    ), patch("pathlib.Path.exists", return_value=True), patch.object(
-        hass.config, "is_allowed_path", return_value=True
+    with (
+        patch("google.generativeai.GenerativeModel") as mock_model,
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.Path.read_bytes",
+            return_value=b"image bytes",
+        ),
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
         mock_response = MagicMock()
         mock_response.text = stubbed_generated_content
@@ -231,8 +268,11 @@ async def test_generate_content_service_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test generate content service handles errors."""
-    with patch("google.generativeai.GenerativeModel") as mock_model, pytest.raises(
-        HomeAssistantError, match="Error generating content: None reason"
+    with (
+        patch("google.generativeai.GenerativeModel") as mock_model,
+        pytest.raises(
+            HomeAssistantError, match="Error generating content: None reason"
+        ),
     ):
         mock_model.return_value.generate_content_async = AsyncMock(
             side_effect=ClientError("reason")
@@ -253,14 +293,16 @@ async def test_generate_content_service_with_image_not_allowed_path(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generate content service with an image in a not allowed path."""
-    with patch("pathlib.Path.exists", return_value=True), patch.object(
-        hass.config, "is_allowed_path", return_value=False
-    ), pytest.raises(
-        HomeAssistantError,
-        match=(
-            "Cannot read `doorbell_snapshot.jpg`, no access to path; "
-            "`allowlist_external_dirs` may need to be adjusted in "
-            "`configuration.yaml`"
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=False),
+        pytest.raises(
+            HomeAssistantError,
+            match=(
+                "Cannot read `doorbell_snapshot.jpg`, no access to path; "
+                "`allowlist_external_dirs` may need to be adjusted in "
+                "`configuration.yaml`"
+            ),
         ),
     ):
         await hass.services.async_call(
@@ -282,10 +324,13 @@ async def test_generate_content_service_with_image_not_exists(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generate content service with an image that does not exist."""
-    with patch("pathlib.Path.exists", return_value=True), patch.object(
-        hass.config, "is_allowed_path", return_value=True
-    ), patch("pathlib.Path.exists", return_value=False), pytest.raises(
-        HomeAssistantError, match="`doorbell_snapshot.jpg` does not exist"
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("pathlib.Path.exists", return_value=False),
+        pytest.raises(
+            HomeAssistantError, match="`doorbell_snapshot.jpg` does not exist"
+        ),
     ):
         await hass.services.async_call(
             "google_generative_ai_conversation",
@@ -306,10 +351,13 @@ async def test_generate_content_service_with_non_image(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generate content service with a non image."""
-    with patch("pathlib.Path.exists", return_value=True), patch.object(
-        hass.config, "is_allowed_path", return_value=True
-    ), patch("pathlib.Path.exists", return_value=True), pytest.raises(
-        HomeAssistantError, match="`doorbell_snapshot.mp4` is not an image"
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("pathlib.Path.exists", return_value=True),
+        pytest.raises(
+            HomeAssistantError, match="`doorbell_snapshot.mp4` is not an image"
+        ),
     ):
         await hass.services.async_call(
             "google_generative_ai_conversation",

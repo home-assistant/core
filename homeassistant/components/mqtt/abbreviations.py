@@ -86,7 +86,6 @@ ABBREVIATIONS = {
     "json_attr": "json_attributes",
     "json_attr_t": "json_attributes_topic",
     "json_attr_tpl": "json_attributes_template",
-    "lrst_t": "last_reset_topic",
     "lrst_val_tpl": "last_reset_value_template",
     "max": "max",
     "min": "min",

@@ -1,4 +1,5 @@
 """The tests for update recorder."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,17 +17,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, setup_test_component_platform
 from tests.components.recorder.common import async_wait_recording_done
+from tests.components.update.common import MockUpdateEntity
 
 
 async def test_exclude_attributes(
-    recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test update attributes to be excluded."""
     now = dt_util.utcnow()
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
     state = hass.states.get("update.update_already_in_progress")

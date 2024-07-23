@@ -1,4 +1,5 @@
 """The Flux LED/MagicLight integration discovery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,6 +29,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -184,7 +186,7 @@ async def async_discover_devices(
     for idx, discovered in enumerate(
         await asyncio.gather(
             *[
-                scanner.async_scan(timeout=timeout, address=address)
+                create_eager_task(scanner.async_scan(timeout=timeout, address=address))
                 for address in targets
             ],
             return_exceptions=True,

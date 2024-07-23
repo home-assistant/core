@@ -1,4 +1,5 @@
 """Test Discovergy diagnostics."""
+
 import pytest
 from syrupy import SnapshotAssertion
 

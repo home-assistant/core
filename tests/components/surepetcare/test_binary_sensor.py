@@ -1,4 +1,5 @@
 """The tests for the Sure Petcare binary sensor platform."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 

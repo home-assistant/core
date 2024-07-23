@@ -1,4 +1,5 @@
 """Debounce helper."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +23,7 @@ class Debouncer(Generic[_R_co]):
         cooldown: float,
         immediate: bool,
         function: Callable[[], _R_co] | None = None,
+        background: bool = False,
     ) -> None:
         """Initialize debounce.
 
@@ -37,6 +39,7 @@ class Debouncer(Generic[_R_co]):
         self._timer_task: asyncio.TimerHandle | None = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
+        self._background = background
         self._job: HassJob[[], _R_co] | None = (
             None
             if function is None
@@ -108,7 +111,9 @@ class Debouncer(Generic[_R_co]):
 
             assert self._job is not None
             try:
-                if task := self.hass.async_run_hass_job(self._job):
+                if task := self.hass.async_run_hass_job(
+                    self._job, background=self._background
+                ):
                     await task
             finally:
                 self._schedule_timer()
@@ -129,9 +134,11 @@ class Debouncer(Generic[_R_co]):
                 return
 
             try:
-                if task := self.hass.async_run_hass_job(self._job):
+                if task := self.hass.async_run_hass_job(
+                    self._job, background=self._background
+                ):
                     await task
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception("Unexpected exception from %s", self.function)
             finally:
                 # Schedule a new timer to prevent new runs during cooldown
@@ -156,13 +163,18 @@ class Debouncer(Generic[_R_co]):
     def _on_debounce(self) -> None:
         """Create job task, but only if pending."""
         self._timer_task = None
-        if self._execute_at_end_of_timer:
-            self._execute_at_end_of_timer = False
+        if not self._execute_at_end_of_timer:
+            return
+        self._execute_at_end_of_timer = False
+        name = f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}"
+        if not self._background:
             self.hass.async_create_task(
-                self._handle_timer_finish(),
-                f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
-                eager_start=True,
+                self._handle_timer_finish(), name, eager_start=True
             )
+            return
+        self.hass.async_create_background_task(
+            self._handle_timer_finish(), name, eager_start=True
+        )
 
     @callback
     def _schedule_timer(self) -> None:

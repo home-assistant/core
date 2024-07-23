@@ -105,5 +105,8 @@
         "default": "mdi:power-plug-off"
       }
     }
+  },
+  "services": {
+    "get_maps": "mdi:floor-plan"
   }
 }

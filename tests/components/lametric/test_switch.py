@@ -1,4 +1,5 @@
 """Tests for the LaMetric switch platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
@@ -14,7 +15,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     STATE_OFF,
     STATE_UNAVAILABLE,
     EntityCategory,
@@ -40,7 +40,6 @@ async def test_bluetooth(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Bluetooth"
-    assert state.attributes.get(ATTR_ICON) == "mdi:bluetooth"
     assert state.state == STATE_OFF
 
     entry = entity_registry.async_get(state.entity_id)

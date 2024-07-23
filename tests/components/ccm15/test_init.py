@@ -1,4 +1,5 @@
 """Tests for the ccm15 component."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.ccm15.const import DOMAIN

@@ -5,23 +5,21 @@ from deebot_client.device import Device
 from deebot_client.events.map import CachedMapInfoEvent, MapChangedEvent
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     entities = []
     for device in controller.devices(VacuumCapabilities):
         capabilities: VacuumCapabilities = device.capabilities

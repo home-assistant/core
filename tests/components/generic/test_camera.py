@@ -1,4 +1,5 @@
 """The tests for generic camera component."""
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
@@ -272,8 +273,9 @@ async def test_limit_refetch(
 
     hass.states.async_set("sensor.temp", "5")
 
-    with pytest.raises(aiohttp.ServerTimeoutError), patch(
-        "asyncio.timeout", side_effect=TimeoutError()
+    with (
+        pytest.raises(aiohttp.ServerTimeoutError),
+        patch("asyncio.timeout", side_effect=TimeoutError()),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
 

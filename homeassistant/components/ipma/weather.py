@@ -1,4 +1,5 @@
 """Support for IPMA weather service."""
+
 from __future__ import annotations
 
 import asyncio
@@ -203,13 +204,6 @@ class IPMAWeather(WeatherEntity, IPMADevice):
             }
             for data_in in forecast
         ]
-
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self._forecast(
-            self._hourly_forecast if self._period == 1 else self._daily_forecast
-        )
 
     async def _try_update_forecast(
         self,

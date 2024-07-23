@@ -1,4 +1,5 @@
 """Test the SRP Energy config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
@@ -30,7 +31,7 @@ async def test_show_form(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -43,7 +44,7 @@ async def test_show_form(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == ACCNT_NAME
 
         assert "data" in result
@@ -73,7 +74,7 @@ async def test_form_invalid_account(
         flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_account"}
 
 
@@ -92,7 +93,7 @@ async def test_form_invalid_auth(
         flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -111,7 +112,7 @@ async def test_form_unknown_error(
         flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -120,7 +121,7 @@ async def test_flow_entry_already_configured(
 ) -> None:
     """Test user input for config_entry that already exists."""
     # Verify mock config setup from fixture
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
@@ -134,7 +135,7 @@ async def test_flow_entry_already_configured(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input_second
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -143,7 +144,7 @@ async def test_flow_multiple_configs(
 ) -> None:
     """Test multiple config entries."""
     # Verify mock config setup from fixture
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
@@ -155,7 +156,7 @@ async def test_flow_multiple_configs(
     )
 
     # Verify created
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ACCNT_NAME_2
 
     assert "data" in result

@@ -1,4 +1,5 @@
 """Support for covers which integrate with other components."""
+
 from __future__ import annotations
 
 import logging

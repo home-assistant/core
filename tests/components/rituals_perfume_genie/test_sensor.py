@@ -1,4 +1,5 @@
 """Tests for the Rituals Perfume Genie sensor platform."""
+
 from homeassistant.components.rituals_perfume_genie.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

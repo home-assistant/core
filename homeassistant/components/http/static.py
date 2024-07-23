@@ -1,4 +1,5 @@
 """Static file handling for HTTP component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -51,14 +52,14 @@ class CachingStaticResource(StaticResource):
                 filepath = await hass.async_add_executor_job(_get_file_path, *key)
             except (ValueError, FileNotFoundError) as error:
                 # relatively safe
-                raise HTTPNotFound() from error
+                raise HTTPNotFound from error
             except HTTPForbidden:
                 # forbidden
                 raise
             except Exception as error:
                 # perm error or other kind!
-                request.app.logger.exception(error)
-                raise HTTPNotFound() from error
+                request.app.logger.exception("Unexpected exception")
+                raise HTTPNotFound from error
 
             content_type: str | None = None
             if filepath is not None:

@@ -1,4 +1,5 @@
 """The tests for the geojson platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -65,9 +66,10 @@ async def test_entity_lifecycle(
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
 
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
 
         # Load config entry.

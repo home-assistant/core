@@ -1,4 +1,5 @@
 """Support for RainMachine selects."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

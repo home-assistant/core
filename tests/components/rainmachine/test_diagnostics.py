@@ -1,4 +1,5 @@
 """Test RainMachine diagnostics."""
+
 from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.diagnostics import REDACTED

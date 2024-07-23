@@ -1,4 +1,5 @@
 """The tests for the MQTT discovery."""
+
 import copy
 import json
 from unittest.mock import ANY, patch

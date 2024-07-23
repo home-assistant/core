@@ -1,11 +1,12 @@
 """Support for the Foursquare (Swarm) API."""
+
 from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -105,4 +106,4 @@ class FoursquarePushReceiver(HomeAssistantView):
             )
             return self.json_message("Incorrect secret", HTTPStatus.BAD_REQUEST)
 
-        request.app["hass"].bus.async_fire(EVENT_PUSH, data)
+        request.app[KEY_HASS].bus.async_fire(EVENT_PUSH, data)

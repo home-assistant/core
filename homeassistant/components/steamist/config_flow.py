@@ -1,4 +1,5 @@
 """Config flow for Steamist integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ from discovery30303 import Device30303, normalize_mac
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -71,10 +72,11 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.unique_id == mac or entry.data[CONF_HOST] == host:
-                if async_update_entry_from_discovery(self.hass, entry, device):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                if (
+                    async_update_entry_from_discovery(self.hass, entry, device)
+                    and entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
+                ):
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
@@ -166,7 +168,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
                 await Steamist(host, websession).async_get_status()
             except CONNECTION_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

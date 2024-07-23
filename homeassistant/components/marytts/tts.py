@@ -1,4 +1,5 @@
 """Support for the MaryTTS service."""
+
 from __future__ import annotations
 
 from speak2mary import MaryTTS

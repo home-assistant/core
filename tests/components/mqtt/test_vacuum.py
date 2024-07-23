@@ -1,4 +1,5 @@
 """The tests for the State vacuum Mqtt platform."""
+
 from copy import deepcopy
 import json
 from typing import Any
@@ -31,7 +32,7 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
 )
-from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN, Platform
+from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -100,13 +101,6 @@ CONFIG_ALL_SERVICES = help_custom_config(
         },
     ),
 )
-
-
-@pytest.fixture(autouse=True)
-def vacuum_platform_only():
-    """Only setup the vacuum platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
-        yield
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

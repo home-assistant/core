@@ -1,4 +1,5 @@
 """Test ESPHome binary sensors."""
+
 import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -22,13 +23,9 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import EventType
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .conftest import MockESPHomeDevice
 
@@ -224,7 +221,7 @@ async def test_entities_removed_after_reload(
     on_future = hass.loop.create_future()
 
     @callback
-    def _async_wait_for_on(event: EventType[EventStateChangedData]) -> None:
+    def _async_wait_for_on(event: Event[EventStateChangedData]) -> None:
         if event.data["new_state"].state == STATE_ON:
             on_future.set_result(None)
 

@@ -1,9 +1,9 @@
 """Test for DNS IP component Init."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
 from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
     CONF_IPV4,
@@ -12,7 +12,7 @@ from homeassistant.components.dnsip.const import (
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -48,7 +48,7 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

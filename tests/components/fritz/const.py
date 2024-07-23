@@ -1,4 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
+
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
@@ -7,6 +8,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SSL,
     CONF_USERNAME,
 )
 
@@ -21,12 +23,18 @@ MOCK_CONFIG = {
                 CONF_PORT: "1234",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
+                CONF_SSL: False,
             }
         ]
     }
 }
+
 MOCK_HOST = "fake_host"
-MOCK_IPS = {"fritz.box": "192.168.178.1", "printer": "192.168.178.2"}
+MOCK_IPS = {
+    "fritz.box": "192.168.178.1",
+    "printer": "192.168.178.2",
+    "server": "192.168.178.3",
+}
 MOCK_MODELNAME = "FRITZ!Box 7530 AX"
 MOCK_FIRMWARE = "256.07.29"
 MOCK_FIRMWARE_AVAILABLE = "7.50"
@@ -779,6 +787,45 @@ MOCK_MESH_DATA = {
     ],
 }
 
+MOCK_NEW_DEVICE_NODE = {
+    "uid": "n-900",
+    "device_name": "server",
+    "device_model": "",
+    "device_manufacturer": "",
+    "device_firmware_version": "",
+    "device_mac_address": "AA:BB:CC:33:44:55",
+    "is_meshed": False,
+    "mesh_role": "unknown",
+    "meshd_version": "0.0",
+    "node_interfaces": [
+        {
+            "uid": "ni-901",
+            "name": "eth0",
+            "type": "LAN",
+            "mac_address": "AA:BB:CC:33:44:55",
+            "blocking_state": "UNKNOWN",
+            "node_links": [
+                {
+                    "uid": "nl-902",
+                    "type": "LAN",
+                    "state": "CONNECTED",
+                    "last_connected": 1642872967,
+                    "node_1_uid": "n-1",
+                    "node_2_uid": "n-900",
+                    "node_interface_1_uid": "ni-31",
+                    "node_interface_2_uid": "ni-901",
+                    "max_data_rate_rx": 1000000,
+                    "max_data_rate_tx": 1000000,
+                    "cur_data_rate_rx": 0,
+                    "cur_data_rate_tx": 0,
+                    "cur_availability_rx": 99,
+                    "cur_availability_tx": 99,
+                }
+            ],
+        }
+    ],
+}
+
 MOCK_HOST_ATTRIBUTES_DATA = [
     {
         "Index": 1,
@@ -830,9 +877,42 @@ MOCK_HOST_ATTRIBUTES_DATA = [
         "X_AVM-DE_FriendlyName": "fritz.box",
         "X_AVM-DE_FriendlyNameIsWriteable": "0",
     },
+    {
+        "Index": 3,
+        "IPAddress": MOCK_IPS["server"],
+        "MACAddress": "AA:BB:CC:33:44:55",
+        "Active": True,
+        "HostName": "server",
+        "InterfaceType": "Ethernet",
+        "X_AVM-DE_Port": 1,
+        "X_AVM-DE_Speed": 1000,
+        "X_AVM-DE_UpdateAvailable": False,
+        "X_AVM-DE_UpdateSuccessful": "unknown",
+        "X_AVM-DE_InfoURL": None,
+        "X_AVM-DE_MACAddressList": None,
+        "X_AVM-DE_Model": None,
+        "X_AVM-DE_URL": f"http://{MOCK_IPS['server']}",
+        "X_AVM-DE_Guest": False,
+        "X_AVM-DE_RequestClient": "0",
+        "X_AVM-DE_VPN": False,
+        "X_AVM-DE_WANAccess": "granted",
+        "X_AVM-DE_Disallow": False,
+        "X_AVM-DE_IsMeshable": "0",
+        "X_AVM-DE_Priority": "0",
+        "X_AVM-DE_FriendlyName": "server",
+        "X_AVM-DE_FriendlyNameIsWriteable": "1",
+    },
 ]
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
+MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
+MOCK_USER_INPUT_SIMPLE = {
+    CONF_HOST: "fake_host",
+    CONF_PASSWORD: "fake_pass",
+    CONF_USERNAME: "fake_user",
+    CONF_SSL: False,
+}
+
 MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,

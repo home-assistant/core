@@ -1,4 +1,5 @@
 """Tests for Shelly switch platform."""
+
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
@@ -97,7 +98,7 @@ async def test_block_set_state_auth_error(
     )
     entry = await init_integration(hass, 1)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -107,7 +108,7 @@ async def test_block_set_state_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -241,7 +242,7 @@ async def test_rpc_auth_error(
     )
     entry = await init_integration(hass, 2)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -251,7 +252,7 @@ async def test_rpc_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -329,6 +330,7 @@ async def test_wall_display_relay_mode(
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
+    new_status.pop("thermostat:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)

@@ -1,4 +1,5 @@
 """Test Radarr integration."""
+
 import pytest
 
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
@@ -15,7 +16,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test unload."""
     entry = await setup_integration(hass, aioclient_mock)
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -30,7 +31,7 @@ async def test_async_setup_entry_not_ready(
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = await setup_integration(hass, aioclient_mock, connection_error=True)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.data.get(DOMAIN)
 
 
@@ -42,7 +43,7 @@ async def test_async_setup_entry_auth_failed(
     mock_connection_invalid_auth(aioclient_mock)
     await hass.config_entries.async_setup(entry.entry_id)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     assert not hass.data.get(DOMAIN)
 
 

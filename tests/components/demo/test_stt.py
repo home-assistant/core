@@ -1,4 +1,5 @@
 """The tests for the demo stt component."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

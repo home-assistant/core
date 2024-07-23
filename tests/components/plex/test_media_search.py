@@ -1,4 +1,5 @@
 """Tests for Plex server."""
+
 from unittest.mock import patch
 
 from plexapi.exceptions import BadRequest, NotFound
@@ -40,8 +41,9 @@ async def test_media_lookups(
         },
         True,
     )
-    with pytest.raises(MediaNotFound) as excinfo, patch(
-        "plexapi.server.PlexServer.fetchItem", side_effect=NotFound
+    with (
+        pytest.raises(MediaNotFound) as excinfo,
+        patch("plexapi.server.PlexServer.fetchItem", side_effect=NotFound),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -246,7 +248,7 @@ async def test_media_lookups(
             },
             True,
         )
-        search.assert_called_with(**{"title": "Movie 1", "libtype": None})
+        search.assert_called_with(title="Movie 1", libtype=None)
 
     with pytest.raises(MediaNotFound) as excinfo:
         payload = '{"title": "Movie 1"}'

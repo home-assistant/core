@@ -1,4 +1,5 @@
 """The tests for the person component."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -348,8 +349,8 @@ async def test_create_person_during_run(hass: HomeAssistant) -> None:
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
-    await hass.components.person.async_create_person(
-        "tracked person", device_trackers=[DEVICE_TRACKER]
+    await person.async_create_person(
+        hass, "tracked person", device_trackers=[DEVICE_TRACKER]
     )
     await hass.async_block_till_done()
 

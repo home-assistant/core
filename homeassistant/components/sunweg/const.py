@@ -1,4 +1,5 @@
 """Define constants for the Sun WEG component."""
+
 from enum import Enum
 
 from homeassistant.const import Platform

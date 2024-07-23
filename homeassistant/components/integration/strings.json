@@ -25,10 +25,16 @@
     "step": {
       "init": {
         "data": {
-          "round": "[%key:component::integration::config::step::user::data::round%]"
+          "method": "[%key:component::integration::config::step::user::data::method%]",
+          "round": "[%key:component::integration::config::step::user::data::round%]",
+          "source": "[%key:component::integration::config::step::user::data::source%]",
+          "unit_prefix": "[%key:component::integration::config::step::user::data::unit_prefix%]",
+          "unit_time": "[%key:component::integration::config::step::user::data::unit_time%]"
         },
         "data_description": {
-          "round": "[%key:component::integration::config::step::user::data_description::round%]"
+          "round": "[%key:component::integration::config::step::user::data_description::round%]",
+          "unit_prefix": "[%key:component::integration::config::step::user::data_description::unit_prefix%]",
+          "unit_time": "[%key:component::integration::config::step::user::data_description::unit_time%]"
         }
       }
     }

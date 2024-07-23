@@ -1,4 +1,5 @@
 """Support for the Asterisk CDR interface."""
+
 from __future__ import annotations
 
 import datetime

@@ -1,4 +1,5 @@
 """Tests for the switch domain for Flo by Moen."""
+
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_OFF, STATE_ON

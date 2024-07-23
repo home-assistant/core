@@ -1,4 +1,5 @@
 """Support for tracking MQTT enabled devices identified."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

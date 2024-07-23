@@ -1,4 +1,5 @@
 """Constants for the Transmission Bittorent Client component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -30,7 +31,9 @@ DEFAULT_DELETE_DATA = False
 DEFAULT_LIMIT = 10
 DEFAULT_ORDER = ORDER_OLDEST_FIRST
 DEFAULT_NAME = "Transmission"
+DEFAULT_SSL = False
 DEFAULT_PORT = 9091
+DEFAULT_PATH = "/transmission/rpc"
 DEFAULT_SCAN_INTERVAL = 120
 
 STATE_ATTR_TORRENT_INFO = "torrent_info"

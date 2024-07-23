@@ -1,4 +1,5 @@
 """Test cases around the demo fan platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -24,13 +25,12 @@ from homeassistant.setup import async_setup_component
 
 FULL_FAN_ENTITY_IDS = ["fan.living_room_fan", "fan.percentage_full_fan"]
 FANS_WITH_PRESET_MODE_ONLY = ["fan.preset_only_limited_fan"]
-LIMITED_AND_FULL_FAN_ENTITY_IDS = FULL_FAN_ENTITY_IDS + [
+LIMITED_AND_FULL_FAN_ENTITY_IDS = [
+    *FULL_FAN_ENTITY_IDS,
     "fan.ceiling_fan",
     "fan.percentage_limited_fan",
 ]
-FANS_WITH_PRESET_MODES = FULL_FAN_ENTITY_IDS + [
-    "fan.percentage_limited_fan",
-]
+FANS_WITH_PRESET_MODES = [*FULL_FAN_ENTITY_IDS, "fan.percentage_limited_fan"]
 PERCENTAGE_MODEL_FANS = ["fan.percentage_full_fan", "fan.percentage_limited_fan"]
 
 

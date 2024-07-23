@@ -1,4 +1,5 @@
 """Support for Nest devices."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -201,7 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await subscriber.start_async()
     except AuthException as err:
         raise ConfigEntryAuthFailed(
-            f"Subscriber authentication error: {str(err)}"
+            f"Subscriber authentication error: {err!s}"
         ) from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
@@ -209,13 +210,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     except SubscriberException as err:
         subscriber.stop_async()
-        raise ConfigEntryNotReady(f"Subscriber error: {str(err)}") from err
+        raise ConfigEntryNotReady(f"Subscriber error: {err!s}") from err
 
     try:
         device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
         subscriber.stop_async()
-        raise ConfigEntryNotReady(f"Device manager error: {str(err)}") from err
+        raise ConfigEntryNotReady(f"Device manager error: {err!s}") from err
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SUBSCRIBER: subscriber,

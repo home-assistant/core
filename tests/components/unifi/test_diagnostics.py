@@ -1,4 +1,5 @@
 """Test UniFi Network diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,

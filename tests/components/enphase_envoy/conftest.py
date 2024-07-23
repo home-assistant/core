@@ -1,6 +1,8 @@
 """Define test fixtures for Enphase Envoy."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
+import jwt
 from pyenphase import (
     Envoy,
     EnvoyData,
@@ -54,15 +56,18 @@ def config_fixture():
 
 
 @pytest.fixture(name="mock_envoy")
-def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
+def mock_envoy_fixture(
+    serial_number,
+    mock_authenticate,
+    mock_setup,
+    mock_auth,
+):
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
     mock_envoy.firmware = "7.1.2"
     mock_envoy.part_number = "123456789"
-    mock_envoy.envoy_model = (
-        "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT"
-    )
+    mock_envoy.envoy_model = "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT"
     mock_envoy.authenticate = mock_authenticate
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
@@ -77,9 +82,10 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
     mock_envoy.phase_mode = EnvoyPhaseMode.THREE
     mock_envoy.phase_count = 3
     mock_envoy.active_phase_count = 3
-    mock_envoy.ct_meter_count = 2
+    mock_envoy.ct_meter_count = 3
     mock_envoy.consumption_meter_type = CtType.NET_CONSUMPTION
     mock_envoy.production_meter_type = CtType.PRODUCTION
+    mock_envoy.storage_meter_type = CtType.STORAGE
     mock_envoy.data = EnvoyData(
         system_consumption=EnvoySystemConsumption(
             watt_hours_last_7_days=1234,
@@ -163,6 +169,21 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
             frequency=50.2,
             state=CtState.ENABLED,
             measurement_type=CtType.NET_CONSUMPTION,
+            metering_status=CtMeterStatus.NORMAL,
+            status_flags=[],
+        ),
+        ctmeter_storage=EnvoyMeterData(
+            eid="100000030",
+            timestamp=1708006120,
+            energy_delivered=31234,
+            energy_received=32345,
+            active_power=103,
+            power_factor=0.23,
+            voltage=113,
+            current=0.4,
+            frequency=50.3,
+            state=CtState.ENABLED,
+            measurement_type=CtType.STORAGE,
             metering_status=CtMeterStatus.NORMAL,
             status_flags=[],
         ),
@@ -260,6 +281,53 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
                 status_flags=[],
             ),
         },
+        ctmeter_storage_phases={
+            PhaseNames.PHASE_1: EnvoyMeterData(
+                eid="100000031",
+                timestamp=1708006121,
+                energy_delivered=312341,
+                energy_received=323451,
+                active_power=22,
+                power_factor=0.32,
+                voltage=113,
+                current=0.4,
+                frequency=50.3,
+                state=CtState.ENABLED,
+                measurement_type=CtType.STORAGE,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[],
+            ),
+            PhaseNames.PHASE_2: EnvoyMeterData(
+                eid="100000032",
+                timestamp=1708006122,
+                energy_delivered=312342,
+                energy_received=323452,
+                active_power=33,
+                power_factor=0.23,
+                voltage=112,
+                current=0.3,
+                frequency=50.2,
+                state=CtState.ENABLED,
+                measurement_type=CtType.STORAGE,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[],
+            ),
+            PhaseNames.PHASE_3: EnvoyMeterData(
+                eid="100000033",
+                timestamp=1708006123,
+                energy_delivered=312343,
+                energy_received=323453,
+                active_power=53,
+                power_factor=0.24,
+                voltage=112,
+                current=0.3,
+                frequency=50.2,
+                state=CtState.ENABLED,
+                measurement_type=CtType.STORAGE,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[],
+            ),
+        },
         inverters={
             "1": EnvoyInverter(
                 serial_number="1",
@@ -275,14 +343,17 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
 
 
 @pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
+async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
     """Define a fixture to set up Enphase Envoy."""
-    with patch(
-        "homeassistant.components.enphase_envoy.config_flow.Envoy",
-        return_value=mock_envoy,
-    ), patch(
-        "homeassistant.components.enphase_envoy.Envoy",
-        return_value=mock_envoy,
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mock_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mock_envoy,
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
@@ -298,7 +369,10 @@ def mock_authenticate():
 @pytest.fixture(name="mock_auth")
 def mock_auth(serial_number):
     """Define a mocked EnvoyAuth fixture."""
-    return EnvoyTokenAuth("127.0.0.1", token="abc", envoy_serial=serial_number)
+    token = jwt.encode(
+        payload={"name": "envoy", "exp": 1907837780}, key="secret", algorithm="HS256"
+    )
+    return EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial=serial_number)
 
 
 @pytest.fixture(name="mock_setup")

@@ -1,13 +1,14 @@
 """Support for Roborock number."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
 
-from roborock.api import AttributeCache
 from roborock.command_cache import CacheableAttribute
 from roborock.exceptions import RoborockException
+from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -23,21 +24,14 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class RoborockNumberDescriptionMixin:
-    """Define an entity description mixin for button entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockNumberDescription(NumberEntityDescription):
+    """Class to describe a Roborock number entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
     # Sets the status of the switch
     update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, dict]]
-
-
-@dataclass(frozen=True)
-class RoborockNumberDescription(
-    NumberEntityDescription, RoborockNumberDescriptionMixin
-):
-    """Class to describe an Roborock number entity."""
 
 
 NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
@@ -79,7 +73,9 @@ async def async_setup_entry(
         return_exceptions=True,
     )
     valid_entities: list[RoborockNumberEntity] = []
-    for (coordinator, description), result in zip(possible_entities, results):
+    for (coordinator, description), result in zip(
+        possible_entities, results, strict=False
+    ):
         if result is None or isinstance(result, RoborockException):
             _LOGGER.debug("Not adding entity because of %s", result)
         else:
