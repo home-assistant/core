@@ -1,31 +1,31 @@
 # serializer version: 1
-# name: test_devices_in_dr[E1234567890000000001]
+# name: test_device_registry_entry
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
-    'configuration_url': None,
+    'configuration_url': 'http://1.2.3.4:80',
     'connections': set({
     }),
     'disabled_by': None,
-    'entry_type': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
       tuple(
-        'ecovacs',
-        'E1234567890000000001',
+        'deconz',
+        '01234E56789A',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'Ecovacs',
-    'model': 'DEEBOT OZMO 950 Series',
-    'model_id': 'yna5xi',
-    'name': 'Ozmo 950',
+    'manufacturer': 'Dresden Elektronik',
+    'model': 'deCONZ',
+    'model_id': None,
+    'name': 'deCONZ mock gateway',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'E1234567890000000001',
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
