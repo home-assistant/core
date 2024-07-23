@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from madvr.madvr import HeartBeatError, Madvr
@@ -77,7 +77,9 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                     # if mac does change, it should be updated
                     await self.async_set_unique_id(mac)
 
-                    if step_id == "reconfigure" and self.entry:
+                    if step_id == "reconfigure":
+                        if TYPE_CHECKING:
+                            assert self.entry is not None
                         _LOGGER.debug("Reconfiguration done")
                         return self.async_update_reload_and_abort(
                             entry=self.entry,
