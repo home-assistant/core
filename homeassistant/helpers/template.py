@@ -2844,6 +2844,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
+        self.globals["zip"] = zip
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
