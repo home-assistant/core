@@ -2758,7 +2758,7 @@ transmission-rpc==7.0.3
 trest_identity==1.0.0
 
 # homeassistant.components.trest_solar
-trest_solar==1.0.1
+trest_solar==1.0.2
 
 # homeassistant.components.twinkly
 ttls==1.5.1
