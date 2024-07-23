@@ -5,20 +5,6 @@ DOMAIN = "ollama"
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
 
-TOOL_CALL = "TOOL_CALL"
-TOOL_ARGS = "TOOL_ARGS"
-TOOLS_PROMPT = (
-    "There are certain tools (functions) that you can call (execute)"
-    " and get the result before answering to the user. You can either call a tool or"
-    """ respond to the user in one response.
-To call the tool, start the response with TOOL_CALL followed by tool name and"""
-    ' parameters in json format, example: TOOL_CALL {"name": "tool_name", "parameters":'
-    """ {\"arg\": 42}}
-Respond with TOOL_ARGS followed by the tool name without quotes to get the available"""
-    """ tool args in JSON object schema format. Always do it before calling the tool.
-Available tools:"""
-)
-
 CONF_KEEP_ALIVE = "keep_alive"
 DEFAULT_KEEP_ALIVE = -1  # seconds. -1 = indefinite, 0 = never
 

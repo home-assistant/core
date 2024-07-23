@@ -31,9 +31,6 @@ from .const import (
     DEFAULT_MAX_HISTORY,
     DOMAIN,
     MAX_HISTORY_SECONDS,
-    TOOL_ARGS,
-    TOOL_CALL,
-    TOOLS_PROMPT,
 )
 from .models import MessageHistory, MessageRole
 
@@ -63,7 +60,7 @@ def _format_tool(
     }
     if tool.description:
         tool_spec["description"] = tool.description
-    return tool_spec
+    return {"type": "function", "function": tool_spec}
 
 
 class OllamaConversationEntity(
@@ -185,21 +182,6 @@ class OllamaConversationEntity(
                     response=intent_response, conversation_id=conversation_id
                 )
 
-            if llm_api:
-                if tools:
-                    prompt_parts.append(TOOLS_PROMPT)
-                    prompt_parts.append(
-                        ", ".join(
-                            [
-                                f"\"{tool_name}\" ({tool['description']})"
-                                if tool.get("description")
-                                else f'"{tool_name}"'
-                                for tool_name, tool in tools.items()
-                            ]
-                        )
-                    )
-                prompt_parts.append(llm_api.api_prompt)
-
             prompt = "\n".join(prompt_parts)
             _LOGGER.debug("Prompt: %s", prompt)
 
@@ -239,13 +221,13 @@ class OllamaConversationEntity(
                     model=model,
                     # Make a copy of the messages because we mutate the list later
                     messages=list(message_history.messages),
+                    tools=tools,
                     stream=False,
                     # keep_alive requires specifying unit. In this case, seconds
                     keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
-                intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Sorry, I had a problem talking to the Ollama server: {err}",
@@ -261,49 +243,15 @@ class OllamaConversationEntity(
                 )
             )
 
-            if not llm_api:
+            tool_calls = response_message.get("tool_calls")
+            if not tool_calls or not llm_api:
                 break
 
-            _LOGGER.debug("Response: %s", response_message["content"])
-
-            if response_message["content"].startswith(TOOL_ARGS):
-                tool_name = response_message["content"][len(TOOL_ARGS) :].strip()
-                if tools and tool_name in tools:
-                    message_history.messages.append(
-                        ollama.Message(
-                            role=MessageRole.SYSTEM.value,
-                            content=json.dumps(tools[tool_name]["parameters"]),
-                        )
-                    )
-                    tools[tool_name]["args_sent"] = True
-                else:
-                    message_history.messages.append(
-                        ollama.Message(
-                            role=MessageRole.SYSTEM.value,
-                            content=f"Cannot find tool {tool_name}",
-                        )
-                    )
-                continue
-
-            if response_message["content"].startswith(TOOL_CALL):
-                try:
-                    tool_call = json.loads(
-                        response_message["content"][len(TOOL_CALL) :]
-                    )
-                    tool_input = llm.ToolInput(
-                        tool_name=tool_call["name"],
-                        tool_args=tool_call["parameters"],
-                    )
-                except json.decoder.JSONDecodeError as err:
-                    _LOGGER.error("Unable to parse tools: %s", err)
-                    message_history.messages.append(
-                        ollama.Message(
-                            role=MessageRole.SYSTEM.value,
-                            content=f"Unable to parse tool parameters, please fix and try again, the error is {err}",
-                        )
-                    )
-                    continue
-
+            for tool_call in tool_calls:
+                tool_input = llm.ToolInput(
+                    tool_name=tool_call["function"]["name"],
+                    tool_args=tool_call["function"]["arguments"],
+                )
                 _LOGGER.debug(
                     "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
                 )
@@ -314,25 +262,14 @@ class OllamaConversationEntity(
                     tool_response = {"error": type(e).__name__}
                     if str(e):
                         tool_response["error_text"] = str(e)
-                    if (
-                        tools
-                        and tool_input.tool_name in tools
-                        and not tools[tool_input.tool_name].get("args_sent")
-                    ):
-                        tools[tool_input.tool_name]["args_sent"] = True
-                        tool_response["correct_tool_parameters"] = tools[
-                            tool_input.tool_name
-                        ]["parameters"]
 
                 _LOGGER.debug("Tool response: %s", tool_response)
                 message_history.messages.append(
                     ollama.Message(
-                        role=MessageRole.SYSTEM.value, content=json.dumps(tool_response)
+                        role=MessageRole.TOOL.value,
+                        content=json.dumps(tool_response),
                     )
                 )
-                continue
-
-            break
 
         # Create intent response
         intent_response.async_set_speech(response_message["content"])
