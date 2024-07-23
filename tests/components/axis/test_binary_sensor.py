@@ -1,17 +1,22 @@
 """Axis binary sensor platform tests."""
 
+from unittest.mock import patch
+
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import RtspEventMock
-from .const import NAME
+
+from tests.common import snapshot_platform
 
 
 @pytest.mark.parametrize(
-    ("event", "entity_id"),
+    "event",
     [
         (
             {
@@ -20,8 +25,7 @@ from .const import NAME
                 "source_idx": "1",
                 "data_type": "DayNight",
                 "data_value": "1",
-            },
-            "daynight_1",
+            }
         ),
         (
             {
@@ -30,8 +34,7 @@ from .const import NAME
                 "source_idx": "1",
                 "data_type": "Sound",
                 "data_value": "0",
-            },
-            "sound_1",
+            }
         ),
         (
             {
@@ -41,8 +44,7 @@ from .const import NAME
                 "operation": "Initialized",
                 "source_name": "port",
                 "source_idx": "0",
-            },
-            "pir_sensor",
+            }
         ),
         (
             {
@@ -51,48 +53,42 @@ from .const import NAME
                 "data_value": "0",
                 "source_name": "sensor",
                 "source_idx": "0",
-            },
-            "pir_0",
+            }
         ),
         (
             {
                 "topic": "tnsaxis:CameraApplicationPlatform/FenceGuard/Camera1Profile1",
                 "data_type": "active",
                 "data_value": "1",
-            },
-            "fence_guard_profile_1",
+            }
         ),
         (
             {
                 "topic": "tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1",
                 "data_type": "active",
                 "data_value": "1",
-            },
-            "motion_guard_profile_1",
+            }
         ),
         (
             {
                 "topic": "tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1",
                 "data_type": "active",
                 "data_value": "1",
-            },
-            "loitering_guard_profile_1",
+            }
         ),
         (
             {
                 "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
                 "data_type": "active",
                 "data_value": "1",
-            },
-            "vmd4_profile_1",
+            }
         ),
         (
             {
                 "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1",
                 "data_type": "active",
                 "data_value": "1",
-            },
-            "object_analytics_scenario_1",
+            }
         ),
         # Events with names generated from event ID and topic
         (
@@ -100,31 +96,31 @@ from .const import NAME
                 "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile9",
                 "data_type": "active",
                 "data_value": "1",
-            },
-            "vmd4_camera1profile9",
+            }
         ),
         (
             {
                 "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8",
                 "data_type": "active",
                 "data_value": "1",
-            },
-            "object_analytics_device1scenario8",
+            }
         ),
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_binary_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    config_entry_factory,
     mock_rtsp_event: RtspEventMock,
     event: dict[str, str],
-    entity_id: str,
 ) -> None:
     """Test that sensors are loaded properly."""
+    with patch("homeassistant.components.axis.PLATFORMS", [Platform.BINARY_SENSOR]):
+        config_entry = await config_entry_factory()
     mock_rtsp_event(**event)
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
-    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_{entity_id}") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
