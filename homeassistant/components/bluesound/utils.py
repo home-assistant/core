@@ -1,6 +1,6 @@
 """Utilty functions for the Bluesound component."""
 
-from homeassistant.components.broadlink.helpers import format_mac
+from homeassistant.helpers.device_registry import format_mac
 
 
 def format_unique_id(mac: str, port: int) -> str:

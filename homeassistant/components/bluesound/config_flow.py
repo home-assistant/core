@@ -32,7 +32,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
                 except TimeoutError:
                     return self.async_abort(reason="cannot_connect")
 
-            await self.async_set_unique_id(format_unique_id(user_input[CONF_HOST], user_input[CONF_PORT]))
+            await self.async_set_unique_id(format_unique_id(sync_status.mac, user_input[CONF_PORT]))
 
             return self.async_create_entry(
                 title=sync_status.name,
@@ -48,3 +48,8 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
+
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import `incomfort` config entry from configuration.yaml."""
+        return await self.async_step_user(import_data)
