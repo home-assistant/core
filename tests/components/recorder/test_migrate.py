@@ -83,17 +83,13 @@ async def test_schema_update_calls(
     instance = recorder.get_instance(hass)
     engine = instance.engine
     session_maker = instance.get_session
-    update.assert_has_calls(
-        [
-            call(instance, hass, engine, session_maker, version + 1, 0)
-            for version in range(db_schema.SCHEMA_VERSION)
-        ]
-    )
-    migrate_schema.assert_has_calls(
-        [
-            call(instance, hass, engine, session_maker, ANY, db_schema.SCHEMA_VERSION),
-        ]
-    )
+    assert update.mock_calls == [
+        call(instance, hass, engine, session_maker, version + 1, 0)
+        for version in range(db_schema.SCHEMA_VERSION)
+    ]
+    assert migrate_schema.mock_calls == [
+        call(instance, hass, engine, session_maker, ANY, db_schema.SCHEMA_VERSION),
+    ]
 
 
 async def test_migration_in_progress(
