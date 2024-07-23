@@ -28,4 +28,4 @@ class MessageHistory:
     @property
     def num_user_messages(self) -> int:
         """Return a count of user messages."""
-        return sum(m["role"] == MessageRole.USER for m in self.messages)
+        return sum(m["role"] == MessageRole.USER.value for m in self.messages)

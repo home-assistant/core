@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
@@ -82,7 +83,9 @@ class HassClientResponse(aiohttp.ClientResponse):
 @callback
 @bind_hass
 def async_get_clientsession(
-    hass: HomeAssistant, verify_ssl: bool = True, family: int = 0
+    hass: HomeAssistant,
+    verify_ssl: bool = True,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
 ) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
@@ -111,7 +114,7 @@ def async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
-    family: int = 0,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies.
@@ -142,7 +145,7 @@ def _async_create_clientsession(
     verify_ssl: bool = True,
     auto_cleanup_method: Callable[[HomeAssistant, aiohttp.ClientSession], None]
     | None = None,
-    family: int = 0,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies."""
@@ -275,14 +278,18 @@ def _async_register_default_clientsession_shutdown(
 
 
 @callback
-def _make_key(verify_ssl: bool = True, family: int = 0) -> tuple[bool, int]:
+def _make_key(
+    verify_ssl: bool = True, family: socket.AddressFamily = socket.AF_UNSPEC
+) -> tuple[bool, socket.AddressFamily]:
     """Make a key for connector or session pool."""
     return (verify_ssl, family)
 
 
 @callback
 def _async_get_connector(
-    hass: HomeAssistant, verify_ssl: bool = True, family: int = 0
+    hass: HomeAssistant,
+    verify_ssl: bool = True,
+    family: socket.AddressFamily = socket.AF_UNSPEC,
 ) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 
