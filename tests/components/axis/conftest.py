@@ -13,7 +13,6 @@ import pytest
 import respx
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -66,9 +65,9 @@ def fixture_config_entry(
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
     config_entry_version: int,
-) -> ConfigEntry:
+) -> MockConfigEntry:
     """Define a config entry fixture."""
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=AXIS_DOMAIN,
         entry_id="676abe5b73621446e6550a2e86ffe3dd",
         unique_id=FORMATTED_MAC,
@@ -76,8 +75,6 @@ def fixture_config_entry(
         options=config_entry_options,
         version=config_entry_version,
     )
-    config_entry.add_to_hass(hass)
-    return config_entry
 
 
 @pytest.fixture(name="config_entry_version")
@@ -255,12 +252,13 @@ def fixture_default_requests(mock_requests: Callable[[str], None]) -> None:
 @pytest.fixture(name="config_entry_factory")
 async def fixture_config_entry_factory(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     mock_requests: Callable[[str], None],
-) -> Callable[[], ConfigEntry]:
+) -> Callable[[], MockConfigEntry]:
     """Fixture factory to set up Axis network device."""
 
-    async def __mock_setup_config_entry() -> ConfigEntry:
+    async def __mock_setup_config_entry() -> MockConfigEntry:
+        config_entry.add_to_hass(hass)
         mock_requests(config_entry.data[CONF_HOST])
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -271,8 +269,8 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
-) -> ConfigEntry:
+    config_entry_factory: Callable[[], MockConfigEntry],
+) -> MockConfigEntry:
     """Define a fixture to set up Axis network device."""
     return await config_entry_factory()
 

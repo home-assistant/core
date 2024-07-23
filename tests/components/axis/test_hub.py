@@ -191,6 +191,7 @@ async def test_device_not_accessible(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Failed setup schedules a retry of setup."""
+    config_entry.add_to_hass(hass)
     with patch.object(axis, "get_axis_api", side_effect=axis.errors.CannotConnect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -202,6 +203,7 @@ async def test_device_trigger_reauth_flow(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
+    config_entry.add_to_hass(hass)
     with (
         patch.object(
             axis, "get_axis_api", side_effect=axis.errors.AuthenticationRequired
@@ -219,6 +221,7 @@ async def test_device_unknown_error(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Unknown errors are handled."""
+    config_entry.add_to_hass(hass)
     with patch.object(axis, "get_axis_api", side_effect=Exception):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

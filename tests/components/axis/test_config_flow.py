@@ -50,6 +50,7 @@ async def mock_config_entry_fixture(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
 ) -> MockConfigEntry:
     """Mock config entry and setup entry."""
+    config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     return config_entry
