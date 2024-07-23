@@ -39,7 +39,7 @@ from .coordinator import LMSStatusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER]
 
 
 @dataclass
@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         serial_number=lms.uuid,
         connections=STATUS_QUERY_MAC in status
         and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
-        or None,
+        or (),
     )
     _LOGGER.debug("LMS Device %s", device)
 

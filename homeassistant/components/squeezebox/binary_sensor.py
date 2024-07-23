@@ -65,8 +65,7 @@ class ServerStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_info = device
         self._attr_name = description.key
         self._attr_is_on = coordinator.data[description.key]
-        self._attr_unique_id = device["serial_number"]
-        self._attr_unique_id += description.key
+        self._attr_unique_id = device["serial_number"]+description.key
 
     @callback
     def _handle_coordinator_update(self) -> None:
