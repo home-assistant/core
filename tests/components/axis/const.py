@@ -4,7 +4,7 @@ from axis.models.api import CONTEXT
 
 MAC = "00408C123456"
 FORMATTED_MAC = "00:40:8c:12:34:56"
-MODEL = "model"
+MODEL = "A1234"
 NAME = "name"
 
 DEFAULT_HOST = "1.2.3.4"

@@ -30,7 +30,7 @@
     'config': dict({
       'data': dict({
         'host': '1.2.3.4',
-        'model': 'model',
+        'model': 'A1234',
         'name': 'name',
         'password': '**REDACTED**',
         'port': 80,
