@@ -1,6 +1,7 @@
 """The Squeezebox integration."""
 
 from asyncio import timeout
+from dataclasses import dataclass
 import logging
 
 from pysqueezebox import Server
@@ -16,22 +17,41 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 
 from .const import (
     CONF_HTTPS,
     DISCOVERY_TASK,
     DOMAIN,
+    MANUFACTURER,
+    SERVER_MODEL,
     STATUS_API_TIMEOUT,
     STATUS_QUERY_LIBRARYNAME,
+    STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
+    STATUS_QUERY_VERSION,
 )
+from .coordinator import LMSStatusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 
 
-type SqueezeboxConfigEntry = ConfigEntry[Server]
+@dataclass
+class SqueezeboxData:
+    """SqueezeboxData data class."""
+
+    coordinator: LMSStatusDataUpdateCoordinator
+    server: Server
+    device: DeviceInfo
+
+
+type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
@@ -73,18 +93,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
-    entry.runtime_data = lms
+    device = DeviceInfo(
+        identifiers={(DOMAIN, lms.uuid)},
+        name=lms.name,
+        manufacturer=MANUFACTURER,
+        model=SERVER_MODEL,
+        sw_version=STATUS_QUERY_VERSION in status
+        and status[STATUS_QUERY_VERSION]
+        or None,
+        serial_number=lms.uuid,
+        connections=STATUS_QUERY_MAC in status
+        and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
+        or None,
+    )
+    _LOGGER.debug("LMS Device %s", device)
 
+    coordinator = LMSStatusDataUpdateCoordinator(hass, lms)
+
+    entry.runtime_data = SqueezeboxData(
+        coordinator=coordinator,
+        device=device,
+        server=lms,
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+    # Make sure data is present before we add the server status sensors
+    # As always_update is false the data doesnt chanage and the entities don't get a value
+    # unless we set the value at sensor init.
+    # If the refresh fails, async_config_entry_first_refresh will
+    # raise ConfigEntryNotReady and setup will try again later
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
     _LOGGER.debug(
         "Reached async_unload_entry for LMS=%s(%s)",
-        entry.runtime_data.name or "Unknown",
+        entry.runtime_data.server.name or "Unknown",
         entry.entry_id,
     )
 

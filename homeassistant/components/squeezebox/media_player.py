@@ -116,7 +116,7 @@ async def async_setup_entry(
     """Set up an player discovery from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
-    lms = entry.runtime_data
+    lms = entry.runtime_data.server
 
     async def _player_discovery(now=None):
         """Discover squeezebox players by polling server."""
