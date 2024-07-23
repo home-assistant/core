@@ -23,7 +23,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RussoundConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, MP_FEATURES_BY_FLAG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,8 +115,7 @@ class RussoundZoneDevice(MediaPlayerEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
     _attr_supported_features = (
-        MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.VOLUME_SET
+        MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -143,6 +142,9 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 DOMAIN,
                 self._controller.parent_controller.mac_address,
             )
+        for flag, feature in MP_FEATURES_BY_FLAG.items():
+            if flag in zone.instance.supported_features:
+                self._attr_supported_features |= feature
 
     def _callback_handler(self, device_str, *args):
         if (
