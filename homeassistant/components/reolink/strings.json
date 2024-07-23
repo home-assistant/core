@@ -70,9 +70,9 @@
       "title": "Reolink firmware update required",
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
-    "hdr_switch_depricated": {
-      "title": "Reolink HDR switch depricated",
-      "description": "The Reolink HDR switch entity will be depricated in HA 2025.2.0 and has been replaced by a HDR select entity offering options "on", "off" and "auto", please disable the HDR switch entity and adjust automations accordingly"
+    "hdr_switch_deprecated": {
+      "title": "Reolink HDR switch deprecated",
+      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options 'on', 'off' and 'auto', please disable the HDR switch entity and adjust automations accordingly"
     }
   },
   "services": {
@@ -566,7 +566,7 @@
         "name": "Doorbell button sound"
       },
       "hdr": {
-        "name": "HDR"
+        "name": "[%key:component::reolink::entity::select::hdr::name%]"
       },
       "pir_enabled": {
         "name": "PIR enabled"
