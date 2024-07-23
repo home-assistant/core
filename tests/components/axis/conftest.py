@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator
 from copy import deepcopy
 from types import MappingProxyType
 from typing import Any, Protocol
@@ -46,6 +46,7 @@ from .const import (
 
 from tests.common import MockConfigEntry
 
+type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 type RtspStateType = Callable[[bool], None]
 
 
@@ -277,7 +278,7 @@ async def fixture_config_entry_factory(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_requests: Callable[[str], None],
-) -> Callable[[], MockConfigEntry]:
+) -> ConfigEntryFactoryType:
     """Fixture factory to set up Axis network device."""
 
     async def __mock_setup_config_entry() -> MockConfigEntry:
@@ -292,7 +293,7 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    config_entry_factory: Callable[[], MockConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
 ) -> MockConfigEntry:
     """Define a fixture to set up Axis network device."""
     return await config_entry_factory()
