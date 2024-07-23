@@ -56,21 +56,10 @@ async def test_fans(
 
     # Test states
 
-    await light_ws_data({"state": {"speed": 1}})
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 25
-
-    await light_ws_data({"state": {"speed": 2}})
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 50
-
-    await light_ws_data({"state": {"speed": 3}})
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
-
-    await light_ws_data({"state": {"speed": 4}})
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
+    for speed, percent in (1, 25), (2, 50), (3, 75), (4, 100):
+        await light_ws_data({"state": {"speed": speed}})
+        assert hass.states.get("fan.ceiling_fan").state == STATE_ON
+        assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == percent
 
     await light_ws_data({"state": {"speed": 0}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
@@ -110,55 +99,17 @@ async def test_fans(
     )
     assert aioclient_mock.mock_calls[3][2] == {"speed": 1}
 
-    # Service set fan percentage to 20%
+    # Service set fan percentage
 
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 20},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[4][2] == {"speed": 1}
-
-    # Service set fan percentage to 40%
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 40},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[5][2] == {"speed": 2}
-
-    # Service set fan percentage to 60%
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 60},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[6][2] == {"speed": 3}
-
-    # Service set fan percentage to 80%
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 80},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[7][2] == {"speed": 4}
-
-    # Service set fan percentage to 0% does not equal off
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 0},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[8][2] == {"speed": 0}
+    for percent, speed in (20, 1), (40, 2), (60, 3), (80, 4), (0, 0):
+        aioclient_mock.mock_calls.clear()
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: percent},
+            blocking=True,
+        )
+        assert aioclient_mock.mock_calls[0][2] == {"speed": speed}
 
     # Events with an unsupported speed does not get converted
 
