@@ -10,10 +10,10 @@ import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
 from tests.typing import WebSocketGenerator

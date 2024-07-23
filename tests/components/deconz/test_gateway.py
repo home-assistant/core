@@ -121,13 +121,11 @@ async def test_gateway_device_configuration_url_when_addon(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "presence",
-                "type": "ZHAPresence",
-                "state": {"presence": False},
-                "config": {"on": True, "reachable": True},
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "name": "presence",
+            "type": "ZHAPresence",
+            "state": {"presence": False},
+            "config": {"on": True, "reachable": True},
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )

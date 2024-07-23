@@ -780,6 +780,46 @@ async def test_script_tool(
     }
 
 
+async def test_script_tool_name(hass: HomeAssistant) -> None:
+    """Test that script tool name is not started with a digit."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "123456": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers", "required": True},
+                    },
+                },
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.123456", True)
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    assert len(tools) == 1
+
+    tool = tools[0]
+    assert tool.name == "_123456"
+
+
 async def test_selector_serializer(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:

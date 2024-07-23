@@ -899,14 +899,14 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_1_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
 async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
     expected: dict[str, Any],
 ) -> None:
     """Test successful creation of sensor entities."""
@@ -952,9 +952,7 @@ async def test_sensors(
 
     # Change state
 
-    event_changed_sensor = {"r": "sensors", "id": "1"}
-    event_changed_sensor |= expected["websocket_event"]
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data(expected["websocket_event"])
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
@@ -974,14 +972,12 @@ async def test_sensors(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "CLIP temperature sensor",
-                "type": "CLIPTemperature",
-                "state": {"temperature": 2600},
-                "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
-        }
+            "name": "CLIP temperature sensor",
+            "type": "CLIPTemperature",
+            "state": {"temperature": 2600},
+            "config": {},
+            "uniqueid": "00:00:00:00:00:00:00:02-00",
+        },
     ],
 )
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: False}])
@@ -1059,13 +1055,11 @@ async def test_allow_clip_sensors(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_add_new_sensor(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
         "e": "added",
-        "r": "sensors",
-        "id": "1",
         "sensor": {
             "id": "Light sensor id",
             "name": "Light level sensor",
@@ -1078,7 +1072,7 @@ async def test_add_new_sensor(
 
     assert len(hass.states.async_all()) == 0
 
-    await mock_websocket_data(event_added_sensor)
+    await sensor_ws_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
@@ -1102,14 +1096,12 @@ async def test_dont_add_sensor_if_state_is_none(
     sensor_property: str,
 ) -> None:
     """Test sensor with scaled data is not created if state is None."""
-    sensor_payload |= {
-        "1": {
-            "name": "Sensor 1",
-            "type": sensor_type,
-            "state": {sensor_property: None},
-            "config": {},
-            "uniqueid": "00:00:00:00:00:00:00:00-00",
-        }
+    sensor_payload["0"] = {
+        "name": "Sensor 1",
+        "type": sensor_type,
+        "state": {sensor_property: None},
+        "config": {},
+        "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
     await config_entry_factory()
 
@@ -1120,25 +1112,23 @@ async def test_dont_add_sensor_if_state_is_none(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 2,
-                "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
-                "lastseen": "2020-11-20T22:48Z",
-                "manufacturername": "BOSCH",
-                "modelid": "AIR",
-                "name": "BOSCH Air quality sensor",
-                "state": {
-                    "airquality": "poor",
-                    "lastupdated": "2020-11-20T22:48:00.209",
-                },
-                "swversion": "20200402",
-                "type": "ZHAAirQuality",
-                "uniqueid": "00:00:00:00:00:00:00:00-02-fdef",
-            }
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 2,
+            "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
+            "lastseen": "2020-11-20T22:48Z",
+            "manufacturername": "BOSCH",
+            "modelid": "AIR",
+            "name": "BOSCH Air quality sensor",
+            "state": {
+                "airquality": "poor",
+                "lastupdated": "2020-11-20T22:48:00.209",
+            },
+            "swversion": "20200402",
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:00-02-fdef",
         }
     ],
 )
@@ -1172,7 +1162,7 @@ async def test_air_quality_sensor_without_ppb(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_add_battery_later(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that a battery sensor can be created later on.
 
@@ -1181,24 +1171,12 @@ async def test_add_battery_later(
     """
     assert len(hass.states.async_all()) == 0
 
-    event_changed_sensor = {
-        "e": "changed",
-        "r": "sensors",
-        "id": "2",
-        "config": {"battery": 50},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"id": "2", "config": {"battery": 50}})
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
 
-    event_changed_sensor = {
-        "e": "changed",
-        "r": "sensors",
-        "id": "1",
-        "config": {"battery": 50},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"id": "1", "config": {"battery": 50}})
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
@@ -1350,7 +1328,7 @@ async def test_special_danfoss_battery_creation(
 
 @pytest.mark.parametrize(
     "sensor_payload",
-    [{"0": {"type": "not supported", "name": "name", "state": {}, "config": {}}}],
+    [{"type": "not supported", "name": "name", "state": {}, "config": {}}],
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_unsupported_sensor(hass: HomeAssistant) -> None:

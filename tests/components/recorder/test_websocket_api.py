@@ -819,7 +819,7 @@ async def test_statistic_during_period_partial_overlap(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    frozen_time: datetime,
+    frozen_time: datetime.datetime,
 ) -> None:
     """Test statistic_during_period."""
     client = await hass_ws_client()
@@ -2466,7 +2466,7 @@ async def test_recorder_info_bad_recorder_config(
 
     client = await hass_ws_client()
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch("homeassistant.components.recorder.migration._migrate_schema"):
         recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
@@ -2491,7 +2491,7 @@ async def test_recorder_info_no_instance(
     client = await hass_ws_client()
 
     with patch(
-        "homeassistant.components.recorder.websocket_api.get_instance",
+        "homeassistant.components.recorder.basic_websocket_api.get_instance",
         return_value=None,
     ):
         await client.send_json_auto_id({"type": "recorder/info"})

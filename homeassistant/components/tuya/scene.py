@@ -8,7 +8,7 @@ from tuya_sharing import Manager, SharingScene
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
@@ -46,6 +46,7 @@ class TuyaSceneEntity(Scene):
             manufacturer="tuya",
             name=self.scene.name,
             model="Tuya Scene",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property

@@ -79,7 +79,7 @@ async def test_deconz_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz events."""
     assert len(hass.states.async_all()) == 3
@@ -98,12 +98,7 @@ async def test_deconz_events(
 
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"buttonevent": 2000},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"id": "1", "state": {"buttonevent": 2000}})
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -118,12 +113,7 @@ async def test_deconz_events(
         "device_id": device.id,
     }
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "3",
-        "state": {"buttonevent": 2000},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"id": "3", "state": {"buttonevent": 2000}})
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -139,12 +129,7 @@ async def test_deconz_events(
         "device_id": device.id,
     }
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "4",
-        "state": {"gesture": 0},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"id": "4", "state": {"gesture": 0}})
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -161,11 +146,10 @@ async def test_deconz_events(
     }
 
     event_changed_sensor = {
-        "r": "sensors",
         "id": "5",
         "state": {"buttonevent": 6002, "angle": 110, "xy": [0.5982, 0.3897]},
     }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -184,12 +168,7 @@ async def test_deconz_events(
 
     # Unsupported event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "name": "other name",
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"id": "1", "name": "other name"})
     await hass.async_block_till_done()
 
     assert len(captured_events) == 4
@@ -243,32 +222,30 @@ async def test_deconz_events(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "battery": 95,
-                    "enrolled": 1,
-                    "on": True,
-                    "pending": [],
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
-                "lastseen": "2021-07-25T18:07Z",
-                "manufacturername": "lk",
-                "modelid": "ZB-KeypadGeneric-D0002",
-                "name": "Keypad",
-                "state": {
-                    "action": "invalid_code",
-                    "lastupdated": "2021-07-25T18:02:51.172",
-                    "lowbattery": False,
-                    "panel": "exit_delay",
-                    "seconds_remaining": 55,
-                    "tampered": False,
-                },
-                "swversion": "3.13",
-                "type": "ZHAAncillaryControl",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "config": {
+                "battery": 95,
+                "enrolled": 1,
+                "on": True,
+                "pending": [],
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
+            "lastseen": "2021-07-25T18:07Z",
+            "manufacturername": "lk",
+            "modelid": "ZB-KeypadGeneric-D0002",
+            "name": "Keypad",
+            "state": {
+                "action": "invalid_code",
+                "lastupdated": "2021-07-25T18:02:51.172",
+                "lowbattery": False,
+                "panel": "exit_delay",
+                "seconds_remaining": 55,
+                "tampered": False,
+            },
+            "swversion": "3.13",
+            "type": "ZHAAncillaryControl",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -276,7 +253,7 @@ async def test_deconz_alarm_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz alarm events."""
     assert len(hass.states.async_all()) == 4
@@ -294,12 +271,7 @@ async def test_deconz_alarm_events(
 
     # Emergency event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"action": AncillaryControlAction.EMERGENCY},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.EMERGENCY}})
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -316,12 +288,7 @@ async def test_deconz_alarm_events(
 
     # Fire event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"action": AncillaryControlAction.FIRE},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.FIRE}})
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -338,12 +305,7 @@ async def test_deconz_alarm_events(
 
     # Invalid code event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"action": AncillaryControlAction.INVALID_CODE},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.INVALID_CODE}})
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -360,12 +322,7 @@ async def test_deconz_alarm_events(
 
     # Panic event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"action": AncillaryControlAction.PANIC},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.PANIC}})
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -382,24 +339,14 @@ async def test_deconz_alarm_events(
 
     # Only care for changes to specific action events
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"action": AncillaryControlAction.ARMED_AWAY},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.ARMED_AWAY}})
     await hass.async_block_till_done()
 
     assert len(captured_events) == 4
 
     # Only care for action events
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
     await hass.async_block_till_done()
 
     assert len(captured_events) == 4
@@ -420,29 +367,27 @@ async def test_deconz_alarm_events(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "devicemode": "undirected",
-                    "on": True,
-                    "reachable": True,
-                    "sensitivity": 3,
-                    "triggerdistance": "medium",
-                },
-                "etag": "13ff209f9401b317987d42506dd4cd79",
-                "lastannounced": None,
-                "lastseen": "2022-06-28T23:13Z",
-                "manufacturername": "aqara",
-                "modelid": "lumi.motion.ac01",
-                "name": "Aqara FP1",
-                "state": {
-                    "lastupdated": "2022-06-28T23:13:38.577",
-                    "presence": True,
-                    "presenceevent": "leave",
-                },
-                "swversion": "20210121",
-                "type": "ZHAPresence",
-                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
-            }
+            "config": {
+                "devicemode": "undirected",
+                "on": True,
+                "reachable": True,
+                "sensitivity": 3,
+                "triggerdistance": "medium",
+            },
+            "etag": "13ff209f9401b317987d42506dd4cd79",
+            "lastannounced": None,
+            "lastseen": "2022-06-28T23:13Z",
+            "manufacturername": "aqara",
+            "modelid": "lumi.motion.ac01",
+            "name": "Aqara FP1",
+            "state": {
+                "lastupdated": "2022-06-28T23:13:38.577",
+                "presence": True,
+                "presenceevent": "leave",
+            },
+            "swversion": "20210121",
+            "type": "ZHAPresence",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         }
     ],
 )
@@ -450,7 +395,7 @@ async def test_deconz_presence_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz presence events."""
     assert len(hass.states.async_all()) == 5
@@ -479,12 +424,7 @@ async def test_deconz_presence_events(
         PresenceStatePresenceEvent.LEFT_LEAVE,
         PresenceStatePresenceEvent.RIGHT_LEAVE,
     ):
-        event_changed_sensor = {
-            "r": "sensors",
-            "id": "1",
-            "state": {"presenceevent": presence_event},
-        }
-        await mock_websocket_data(event_changed_sensor)
+        await sensor_ws_data({"state": {"presenceevent": presence_event}})
         await hass.async_block_till_done()
 
         assert len(captured_events) == 1
@@ -498,12 +438,7 @@ async def test_deconz_presence_events(
 
     # Unsupported presence event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"presenceevent": PresenceStatePresenceEvent.NINE},
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"state": {"presenceevent": PresenceStatePresenceEvent.NINE}})
     await hass.async_block_till_done()
 
     assert len(captured_events) == 0
@@ -524,28 +459,26 @@ async def test_deconz_presence_events(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "battery": 100,
-                    "on": True,
-                    "reachable": True,
-                },
-                "etag": "463728970bdb7d04048fc4373654f45a",
-                "lastannounced": "2022-07-03T13:57:59Z",
-                "lastseen": "2022-07-03T14:02Z",
-                "manufacturername": "Signify Netherlands B.V.",
-                "modelid": "RDM002",
-                "name": "RDM002 44",
-                "state": {
-                    "expectedeventduration": 400,
-                    "expectedrotation": 75,
-                    "lastupdated": "2022-07-03T11:37:49.586",
-                    "rotaryevent": 2,
-                },
-                "swversion": "2.59.19",
-                "type": "ZHARelativeRotary",
-                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-14-fc00",
-            }
+            "config": {
+                "battery": 100,
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "463728970bdb7d04048fc4373654f45a",
+            "lastannounced": "2022-07-03T13:57:59Z",
+            "lastseen": "2022-07-03T14:02Z",
+            "manufacturername": "Signify Netherlands B.V.",
+            "modelid": "RDM002",
+            "name": "RDM002 44",
+            "state": {
+                "expectedeventduration": 400,
+                "expectedrotation": 75,
+                "lastupdated": "2022-07-03T11:37:49.586",
+                "rotaryevent": 2,
+            },
+            "swversion": "2.59.19",
+            "type": "ZHARelativeRotary",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-14-fc00",
         }
     ],
 )
@@ -553,7 +486,7 @@ async def test_deconz_relative_rotary_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz relative rotary events."""
     assert len(hass.states.async_all()) == 1
@@ -574,15 +507,13 @@ async def test_deconz_relative_rotary_events(
 
     for rotary_event, duration, rotation in ((1, 100, 50), (2, 200, -50)):
         event_changed_sensor = {
-            "r": "sensors",
-            "id": "1",
             "state": {
                 "rotaryevent": rotary_event,
                 "expectedeventduration": duration,
                 "expectedrotation": rotation,
-            },
+            }
         }
-        await mock_websocket_data(event_changed_sensor)
+        await sensor_ws_data(event_changed_sensor)
         await hass.async_block_till_done()
 
         assert len(captured_events) == 1
@@ -598,12 +529,7 @@ async def test_deconz_relative_rotary_events(
 
     # Unsupported relative rotary event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "name": "123",
-    }
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data({"name": "123"})
     await hass.async_block_till_done()
 
     assert len(captured_events) == 0

@@ -23,18 +23,16 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 TEST_DATA = [
     (  # Presence sensor - delay configuration
         {
-            "0": {
-                "name": "Presence sensor",
-                "type": "ZHAPresence",
-                "state": {"dark": False, "presence": False},
-                "config": {
-                    "delay": 0,
-                    "on": True,
-                    "reachable": True,
-                    "temperature": 10,
-                },
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "name": "Presence sensor",
+            "type": "ZHAPresence",
+            "state": {"dark": False, "presence": False},
+            "config": {
+                "delay": 0,
+                "on": True,
+                "reachable": True,
+                "temperature": 10,
+            },
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         },
         {
             "entity_count": 3,
@@ -61,18 +59,16 @@ TEST_DATA = [
     ),
     (  # Presence sensor - duration configuration
         {
-            "0": {
-                "name": "Presence sensor",
-                "type": "ZHAPresence",
-                "state": {"dark": False, "presence": False},
-                "config": {
-                    "duration": 0,
-                    "on": True,
-                    "reachable": True,
-                    "temperature": 10,
-                },
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "name": "Presence sensor",
+            "type": "ZHAPresence",
+            "state": {"dark": False, "presence": False},
+            "config": {
+                "duration": 0,
+                "on": True,
+                "reachable": True,
+                "temperature": 10,
+            },
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         },
         {
             "entity_count": 3,
@@ -106,7 +102,7 @@ async def test_number_entities(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     expected: dict[str, Any],
 ) -> None:
@@ -138,8 +134,7 @@ async def test_number_entities(
 
     # Change state
 
-    event_changed_sensor = {"r": "sensors"} | expected["websocket_event"]
-    await mock_websocket_data(event_changed_sensor)
+    await sensor_ws_data(expected["websocket_event"])
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
