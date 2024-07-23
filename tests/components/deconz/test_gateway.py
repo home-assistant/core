@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pydeconz
 from pydeconz.websocket import State
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components import ssdp
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
@@ -19,8 +20,21 @@ from homeassistant.components.ssdp import (
 from homeassistant.config_entries import SOURCE_SSDP, ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import BRIDGEID
+
+
+async def test_device_registry_entry(
+    config_entry_setup: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Successful setup."""
+    device_entry = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, config_entry_setup.unique_id)}
+    )
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
