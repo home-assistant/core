@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import ApSystemsConfigEntry, ApSystemsData
 from .entity import ApSystemsEntity
@@ -46,10 +45,8 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.hass.async_add_executor_job(self._api.set_device_power_status(0))
-        await self._api.async_refresh()
+        await self._api.set_device_power_status(0)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.hass.async_add_executor_job(self._api.set_device_power_status(1))
-        await self._api.async_refresh()
+        await self._api.set_device_power_status(1)
