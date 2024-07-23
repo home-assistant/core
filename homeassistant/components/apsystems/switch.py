@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohttp.client_exceptions import ClientConnectionError
 from APsystemsEZ1 import Status
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -47,17 +48,20 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
         return self._state
 
     async def async_update(self) -> None:
+        """Update switch status."""
         try:
             status = await self._api.get_device_power_status()
             self._state = status == Status.normal
             self._attr_available = True
-        except Exception:
+        except (TimeoutError, ClientConnectionError):
             self._attr_available = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
         await self.hass.async_add_executor_job(self._api.set_device_power_status(0))
         await self.async_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
         await self.hass.async_add_executor_job(self._api.set_device_power_status(1))
         await self.async_update()
