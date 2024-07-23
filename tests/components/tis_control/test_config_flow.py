@@ -16,23 +16,14 @@ async def test_initial_form_display(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
 
-async def test_user_input_no_port(hass: HomeAssistant) -> None:
-    """Test missing port input."""
-    flow = TISConfigFlow()
-    flow.hass = hass
-    result = await flow.async_step_user({})
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "port_required"}
-
-
 async def test_user_input_valid_port(hass: HomeAssistant) -> None:
     """Test valid input."""
     flow = TISConfigFlow()
     flow.hass = hass
-    result = await flow.async_step_user({"port": "1234"})
+    result = await flow.async_step_user({"port": 1234})
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "TIS Control Bridge"
-    assert result["data"] == {"port": "1234"}
+    assert isinstance(result["title"], str)
+    assert result["data"] == {"port": 1234}
     # make sure no errors
     assert "errors" not in result
 

@@ -31,7 +31,9 @@ async def test_async_setup_entry_success(
 async def test_async_setup_entry_failure(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test async_setup_entry with connection failure."""
     with (
-        patch.object(MockTISApi, "connect", side_effect=Exception("Connection error")),
+        patch.object(
+            MockTISApi, "connect", side_effect=ConnectionError("Connection error")
+        ),
         patch(
             "homeassistant.components.tis_control.TISApi",
             new=MockTISApi,

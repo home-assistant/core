@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from TISControlProtocol.mock_api import TISApi
+from TISControlProtocol.api import TISApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -20,23 +20,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN not in hass.data:
         hass.data.setdefault(DOMAIN, {"tis_api": {}})
     tis_api = TISApi(
-        # this vlaue is not used,to be removed
-        "0.0.0.0",
-        int(entry.data["port"]),
-        "0.0.0.0",
-        hass,
-        DOMAIN,
-        DEVICES_DICT,
-        display_logo="./homeassistant/components/tis_control/logo.png",
+        port=int(entry.data["port"]),
+        hass=hass,
+        domain=DOMAIN,
+        devices_dict=DEVICES_DICT,
     )
 
     hass.data[DOMAIN]["supported_platforms"] = PLATFORMS
-    hass.data[DOMAIN]["discovered_devices"] = []
-
     try:
         await tis_api.connect()
-    except Exception as e:  # noqa: BLE001, F841
-        logging.info("error connecting to TIS api %s", e)
+    except ConnectionError as e:
+        logging.error("error connecting to TIS api %s", e)
         return False
     # add the tis api to the hass data
     hass.data[DOMAIN]["tis_api"] = tis_api

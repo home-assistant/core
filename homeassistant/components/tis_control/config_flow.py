@@ -14,7 +14,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PORT): str}, required=True)
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PORT): int}, required=True)
 
 
 class TISConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,22 +22,16 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
             logging.debug("recieved user input %s", user_input)
-            # Example validation: Check if the port is not empty
-            if not user_input.get(CONF_PORT):
-                errors["base"] = "port_required"  # Custom error key
-                logging.error("Port is required but was not provided.")
-
-            else:
-                # Assuming a function `validate_port` that returns True if the port is valid
-                is_valid = await self.validate_port(user_input[CONF_PORT])
-                if not is_valid:
-                    errors["base"] = "invalid_port"  # Custom error key
-                    logging.error("Provided port is invalid: %s", user_input[CONF_PORT])
+            # Assuming a function `validate_port` that returns True if the port is valid
+            is_valid = await self.validate_port(user_input[CONF_PORT])
+            if not is_valid:
+                errors["base"] = "invalid_port"  # Custom error key
+                logging.error("Provided port is invalid: %s", user_input[CONF_PORT])
 
             if not errors:
                 return self.async_create_entry(
@@ -61,10 +55,9 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_PORT: "Port"},
         )
 
-    async def validate_port(self, port: str) -> bool:
+    async def validate_port(self, port: int) -> bool:
         """Validate the port."""
-        if port.isdigit():
-            port_num = int(port)
-            if 1 <= port_num <= 65535:
+        if isinstance(port, int):
+            if 1 <= port <= 65535:
                 return True
         return False
