@@ -906,7 +906,7 @@ async def test_sensors(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
     expected: dict[str, Any],
 ) -> None:
     """Test successful creation of sensor entities."""
@@ -952,10 +952,7 @@ async def test_sensors(
 
     # Change state
 
-    event_changed_sensor = {"r": "sensors"}
-    event_changed_sensor |= expected["websocket_event"]
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data(expected["websocket_event"])
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Unload entry
@@ -1057,12 +1054,11 @@ async def test_allow_clip_sensors(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_add_new_sensor(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
         "e": "added",
-        "r": "sensors",
         "sensor": {
             "id": "Light sensor id",
             "name": "Light level sensor",
@@ -1075,9 +1071,7 @@ async def test_add_new_sensor(
 
     assert len(hass.states.async_all()) == 0
 
-    await mock_websocket_data(event_added_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data(event_added_sensor)
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("sensor.light_level_sensor").state == "999.8"
 
@@ -1165,7 +1159,7 @@ async def test_air_quality_sensor_without_ppb(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_add_battery_later(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that a battery sensor can be created later on.
 
@@ -1174,28 +1168,11 @@ async def test_add_battery_later(
     """
     assert len(hass.states.async_all()) == 0
 
-    event_changed_sensor = {
-        "e": "changed",
-        "r": "sensors",
-        "id": "2",
-        "config": {"battery": 50},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"id": "2", "config": {"battery": 50}})
     assert len(hass.states.async_all()) == 0
 
-    event_changed_sensor = {
-        "e": "changed",
-        "r": "sensors",
-        "id": "1",
-        "config": {"battery": 50},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"id": "1", "config": {"battery": 50}})
     assert len(hass.states.async_all()) == 1
-
     assert hass.states.get("sensor.switch_1_battery").state == "50"
 
 

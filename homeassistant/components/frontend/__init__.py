@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
-from functools import lru_cache, partial
+from functools import cached_property, lru_cache, partial
 import logging
 import os
 import pathlib
@@ -588,12 +588,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         self.hass = hass
         self._template_cache: jinja2.Template | None = None
 
-    @property
+    @cached_property
     def canonical(self) -> str:
         """Return resource's canonical path."""
         return "/"
 
-    @property
+    @cached_property
     def _route(self) -> web_urldispatcher.ResourceRoute:
         """Return the index route."""
         return web_urldispatcher.ResourceRoute("GET", self.get, self)

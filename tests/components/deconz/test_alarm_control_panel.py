@@ -102,7 +102,7 @@ async def test_alarm_control_panel(
     aioclient_mock: AiohttpClientMocker,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of alarm control panel entities."""
     assert len(hass.states.async_all()) == 4
@@ -110,48 +110,24 @@ async def test_alarm_control_panel(
 
     # Event signals alarm control panel armed away
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMED_AWAY
 
     # Event signals alarm control panel armed night
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"panel": AncillaryControlPanel.ARMED_NIGHT},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_NIGHT}})
     assert (
         hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMED_NIGHT
     )
 
     # Event signals alarm control panel armed home
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"panel": AncillaryControlPanel.ARMED_STAY},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_STAY}})
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMED_HOME
 
     # Event signals alarm control panel disarmed
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"panel": AncillaryControlPanel.DISARMED},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.DISARMED}})
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_DISARMED
 
     # Event signals alarm control panel arming
@@ -161,13 +137,7 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.ARMING_NIGHT,
         AncillaryControlPanel.ARMING_STAY,
     ):
-        event_changed_sensor = {
-            "r": "sensors",
-            "state": {"panel": arming_event},
-        }
-        await mock_websocket_data(event_changed_sensor)
-        await hass.async_block_till_done()
-
+        await sensor_ws_data({"state": {"panel": arming_event}})
         assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMING
 
     # Event signals alarm control panel pending
@@ -176,37 +146,19 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.ENTRY_DELAY,
         AncillaryControlPanel.EXIT_DELAY,
     ):
-        event_changed_sensor = {
-            "r": "sensors",
-            "state": {"panel": pending_event},
-        }
-        await mock_websocket_data(event_changed_sensor)
-        await hass.async_block_till_done()
-
+        await sensor_ws_data({"state": {"panel": pending_event}})
         assert (
             hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_PENDING
         )
 
     # Event signals alarm control panel triggered
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"panel": AncillaryControlPanel.IN_ALARM},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.IN_ALARM}})
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_TRIGGERED
 
     # Event signals alarm control panel unknown state keeps previous state
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"panel": AncillaryControlPanel.NOT_READY},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.NOT_READY}})
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_TRIGGERED
 
     # Verify service calls

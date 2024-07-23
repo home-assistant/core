@@ -33,7 +33,11 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
 @callback
 def async_initialize_recorder(hass: HomeAssistant) -> None:
     """Initialize recorder data."""
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.basic_websocket_api import async_setup
+
     hass.data[DOMAIN] = RecorderData()
+    async_setup(hass)
 
 
 async def async_wait_recorder(hass: HomeAssistant) -> bool:
