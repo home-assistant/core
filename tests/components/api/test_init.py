@@ -770,4 +770,37 @@ async def test_api_core_state(hass: HomeAssistant, mock_api_client: TestClient) 
     resp = await mock_api_client.get("/api/core/state")
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
-    assert json["state"] == "RUNNING"
+    assert json == {"state": "RUNNING"}
+
+
+@pytest.mark.parametrize(
+    ("migration_in_progress", "migration_is_live", "expected_state"),
+    [
+        (False, False, "RUNNING"),
+        (False, True, "RUNNING"),
+        (True, False, "MIGRATING"),
+        (True, True, "RUNNING"),
+    ],
+)
+async def test_api_core_state_recorder_migrating(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    migration_in_progress: bool,
+    migration_is_live: bool,
+    expected_state: str,
+) -> None:
+    """Test getting core status."""
+    with (
+        patch(
+            "homeassistant.helpers.recorder.async_migration_in_progress",
+            return_value=migration_in_progress,
+        ),
+        patch(
+            "homeassistant.helpers.recorder.async_migration_is_live",
+            return_value=migration_is_live,
+        ),
+    ):
+        resp = await mock_api_client.get("/api/core/state")
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert json == {"state": expected_state}
