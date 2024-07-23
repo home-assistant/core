@@ -26,12 +26,13 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
     """The switch class for APSystems switches."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_translation_key = "power_output"
 
     def __init__(self, data: ApSystemsData) -> None:
         """Initialize the switch."""
         super().__init__(data)
         self._api = data.coordinator.api
-        self._attr_unique_id = f"{data.device_id}_power_switch"
+        self._attr_unique_id = f"{data.device_id}_power_output"
 
     @property
     def available(self) -> bool:
