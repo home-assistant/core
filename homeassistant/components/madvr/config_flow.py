@@ -77,8 +77,8 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "no_mac"
                 else:
                     _LOGGER.debug("MAC address found: %s", mac)
+                    # if mac does change, it should be updated
                     await self.async_set_unique_id(mac)
-                    self._abort_if_unique_id_configured()
 
                     if reconfigure:
                         _LOGGER.debug("Reconfiguring device")
@@ -92,6 +92,8 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                         _LOGGER.debug("Reconfiguration successful")
                         return self.async_abort(reason="reconfigure_successful")
 
+                    # however dont abort if not unique because the IP could change but keep the same mac
+                    self._abort_if_unique_id_configured()
                     _LOGGER.debug("Configuration successful")
                     return self.async_create_entry(
                         title=DEFAULT_NAME,

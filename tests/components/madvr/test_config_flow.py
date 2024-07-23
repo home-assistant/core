@@ -147,20 +147,6 @@ async def test_reconfigure_flow(
     new_host = "192.168.1.100"
     new_port = 44077
 
-    # First configuration step
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: new_host, CONF_PORT: new_port},
-    )
-    await hass.async_block_till_done()
-
-    # Should abort because mac is the same
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    # Simulate adding a new device
-    mock_madvr_client.mac_address = MOCK_MAC_NEW
-
     # make a new flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
