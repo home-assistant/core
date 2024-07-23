@@ -1199,7 +1199,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ollama
-ollama-hass==0.1.7
+ollama==0.3.0
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -1795,7 +1795,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.0.5
 
 # homeassistant.components.matter
-python-matter-server==6.2.2
+python-matter-server==6.3.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2277,7 +2277,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wled
-wled==0.19.2
+wled==0.20.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9
