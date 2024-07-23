@@ -17,8 +17,6 @@ type JellyfinConfigEntry = ConfigEntry[JellyfinData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
     """Set up Jellyfin from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     if CONF_CLIENT_DEVICE_ID not in entry.data:
         entry_data = entry.data.copy()
         entry_data[CONF_CLIENT_DEVICE_ID] = entry.entry_id
@@ -62,8 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) ->
     """Unload a config entry."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
-        data = entry.runtime_data
-        data.jellyfin_client.stop()
+        entry.runtime_data.jellyfin_client.stop()
 
     return unloaded
 

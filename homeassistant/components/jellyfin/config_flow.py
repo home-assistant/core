@@ -8,7 +8,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.util.uuid import random_uuid_hex
@@ -142,17 +146,15 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: JellyfinConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: JellyfinConfigEntry,
+    ) -> OptionsFlowWithConfigEntry:
         """Create the options flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle an option flow for jellyfin."""
-
-    def __init__(self, config_entry: JellyfinConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
