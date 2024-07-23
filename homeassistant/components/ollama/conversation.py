@@ -181,8 +181,12 @@ class OllamaConversationEntity(
                     response=intent_response, conversation_id=conversation_id
                 )
 
+            if llm_api:
+                prompt_parts.append(llm_api.api_prompt)
+
             prompt = "\n".join(prompt_parts)
             _LOGGER.debug("Prompt: %s", prompt)
+            _LOGGER.debug("Tools: %s", tools)
 
             message_history = MessageHistory(
                 timestamp=time.monotonic(),
