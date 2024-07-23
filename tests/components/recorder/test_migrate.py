@@ -87,8 +87,10 @@ async def test_schema_update_calls(
         call(instance, hass, engine, session_maker, version + 1, 0)
         for version in range(db_schema.SCHEMA_VERSION)
     ]
+    status = migration.SchemaValidationStatus(0, True, set(), 0)
     assert migrate_schema.mock_calls == [
-        call(instance, hass, engine, session_maker, ANY, db_schema.SCHEMA_VERSION),
+        call(instance, hass, engine, session_maker, status, 0),
+        call(instance, hass, engine, session_maker, status, db_schema.SCHEMA_VERSION),
     ]
 
 
