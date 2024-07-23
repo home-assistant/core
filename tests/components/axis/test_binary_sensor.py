@@ -1,14 +1,9 @@
 """Axis binary sensor platform tests."""
 
-from typing import Any
-
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .conftest import RtspEventMock
@@ -16,7 +11,7 @@ from .const import NAME
 
 
 @pytest.mark.parametrize(
-    ("event", "entity"),
+    ("event", "entity_id"),
     [
         (
             {
@@ -26,12 +21,7 @@ from .const import NAME
                 "data_type": "DayNight",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_daynight_1",
-                "state": STATE_ON,
-                "name": f"{NAME} DayNight 1",
-                "device_class": BinarySensorDeviceClass.LIGHT,
-            },
+            "daynight_1",
         ),
         (
             {
@@ -41,12 +31,7 @@ from .const import NAME
                 "data_type": "Sound",
                 "data_value": "0",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1",
-                "state": STATE_OFF,
-                "name": f"{NAME} Sound 1",
-                "device_class": BinarySensorDeviceClass.SOUND,
-            },
+            "sound_1",
         ),
         (
             {
@@ -57,12 +42,7 @@ from .const import NAME
                 "source_name": "port",
                 "source_idx": "0",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_sensor",
-                "state": STATE_OFF,
-                "name": f"{NAME} PIR sensor",
-                "device_class": BinarySensorDeviceClass.CONNECTIVITY,
-            },
+            "pir_sensor",
         ),
         (
             {
@@ -72,12 +52,7 @@ from .const import NAME
                 "source_name": "sensor",
                 "source_idx": "0",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0",
-                "state": STATE_OFF,
-                "name": f"{NAME} PIR 0",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "pir_0",
         ),
         (
             {
@@ -85,12 +60,7 @@ from .const import NAME
                 "data_type": "active",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_fence_guard_profile_1",
-                "state": STATE_ON,
-                "name": f"{NAME} Fence Guard Profile 1",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "fence_guard_profile_1",
         ),
         (
             {
@@ -98,12 +68,7 @@ from .const import NAME
                 "data_type": "active",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_motion_guard_profile_1",
-                "state": STATE_ON,
-                "name": f"{NAME} Motion Guard Profile 1",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "motion_guard_profile_1",
         ),
         (
             {
@@ -111,12 +76,7 @@ from .const import NAME
                 "data_type": "active",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_loitering_guard_profile_1",
-                "state": STATE_ON,
-                "name": f"{NAME} Loitering Guard Profile 1",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "loitering_guard_profile_1",
         ),
         (
             {
@@ -124,12 +84,7 @@ from .const import NAME
                 "data_type": "active",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_vmd4_profile_1",
-                "state": STATE_ON,
-                "name": f"{NAME} VMD4 Profile 1",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "vmd4_profile_1",
         ),
         (
             {
@@ -137,12 +92,7 @@ from .const import NAME
                 "data_type": "active",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_object_analytics_scenario_1",
-                "state": STATE_ON,
-                "name": f"{NAME} Object Analytics Scenario 1",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "object_analytics_scenario_1",
         ),
         # Events with names generated from event ID and topic
         (
@@ -151,12 +101,7 @@ from .const import NAME
                 "data_type": "active",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_vmd4_camera1profile9",
-                "state": STATE_ON,
-                "name": f"{NAME} VMD4 Camera1Profile9",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "vmd4_camera1profile9",
         ),
         (
             {
@@ -164,32 +109,22 @@ from .const import NAME
                 "data_type": "active",
                 "data_value": "1",
             },
-            {
-                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_object_analytics_device1scenario8",
-                "state": STATE_ON,
-                "name": f"{NAME} Object Analytics Device1Scenario8",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
+            "object_analytics_device1scenario8",
         ),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_binary_sensors(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_rtsp_event: RtspEventMock,
     event: dict[str, str],
-    entity: dict[str, Any],
+    entity_id: str,
 ) -> None:
     """Test that sensors are loaded properly."""
     mock_rtsp_event(**event)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
-
-    state = hass.states.get(entity["id"])
-    assert state.state == entity["state"]
-    assert state.name == entity["name"]
-    assert state.attributes["device_class"] == entity["device_class"]
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_{entity_id}") == snapshot
 
 
 @pytest.mark.parametrize(
@@ -233,5 +168,4 @@ async def test_unsupported_events(
 ) -> None:
     """Validate nothing breaks with unsupported events."""
     mock_rtsp_event(**event)
-    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
