@@ -9,6 +9,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
+    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -20,6 +21,8 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .const import (
+    HA_CMD_SVC,
+    TEST_COMMAND,
     TEST_CON_ERROR,
     TEST_FAILED_CMD,
     TEST_FAILED_OFF,
@@ -122,19 +125,19 @@ async def test_send_command(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        "send_command",
-        {ATTR_ENTITY_ID: entity_id, "command": "test"},
+        HA_CMD_SVC,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
         blocking=True,
     )
 
-    mock_madvr_client.add_command_to_queue.assert_called_once_with(["test"])
+    mock_madvr_client.add_command_to_queue.assert_called_once_with([TEST_COMMAND])
     # cover exceptions
     # Test ConnectionError
     mock_madvr_client.add_command_to_queue.side_effect = TEST_CON_ERROR
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        "send_command",
-        {ATTR_ENTITY_ID: entity_id, "command": "test"},
+        HA_CMD_SVC,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
         blocking=True,
     )
     assert TEST_FAILED_CMD in caplog.text
@@ -143,8 +146,8 @@ async def test_send_command(
     mock_madvr_client.add_command_to_queue.side_effect = TEST_IMP_ERROR
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        "send_command",
-        {ATTR_ENTITY_ID: entity_id, "command": "test"},
+        HA_CMD_SVC,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
         blocking=True,
     )
     assert TEST_FAILED_CMD in caplog.text
