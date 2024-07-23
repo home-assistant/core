@@ -20,7 +20,6 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ApSystemsConfigEntry,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
 
