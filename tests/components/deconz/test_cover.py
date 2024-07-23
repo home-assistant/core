@@ -57,7 +57,7 @@ async def test_cover(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Test that all supported cover entities are created."""
     assert len(hass.states.async_all()) == 2
@@ -68,9 +68,7 @@ async def test_cover(
 
     # Event signals cover is open
 
-    await mock_websocket_data({"r": "lights", "state": {"lift": 0, "open": True}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"lift": 0, "open": True}})
     cover = hass.states.get("cover.window_covering_device")
     assert cover.state == STATE_OPEN
     assert cover.attributes[ATTR_CURRENT_POSITION] == 100
