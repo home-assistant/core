@@ -274,15 +274,6 @@ async def test_removing_disconnected_cams(
             False,
         ),
         (
-            f"{TEST_UID}_hdr",
-            None,
-            f"{TEST_UID}",
-            f"{TEST_UID}",
-            Platform.SWITCH,
-            True,
-            False,
-        ),
-        (
             f"{TEST_MAC}_0_record_audio",
             f"{TEST_UID}_0_record_audio",
             f"{TEST_MAC}_ch0",
