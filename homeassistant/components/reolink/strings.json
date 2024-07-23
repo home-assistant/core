@@ -72,7 +72,7 @@
     },
     "hdr_switch_deprecated": {
       "title": "Reolink HDR switch deprecated",
-      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options 'on', 'off' and 'auto', please disable the HDR switch entity and adjust automations accordingly"
+      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
     }
   },
   "services": {
