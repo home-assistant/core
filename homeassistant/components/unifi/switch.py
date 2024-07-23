@@ -259,7 +259,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         available_fn=lambda hub, obj_id: hub.available,
         control_fn=async_traffic_rule_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
-        event_is_on=None,
         is_on_fn=lambda hub, traffic_rule: traffic_rule.enabled,
         name_fn=lambda traffic_rule: f"{traffic_rule.description}",
         object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
