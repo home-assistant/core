@@ -1,5 +1,7 @@
 """Test the Teslemetry init."""
 
+from unittest.mock import AsyncMock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -69,7 +71,10 @@ async def test_devices(
 
 # Vehicle Coordinator
 async def test_vehicle_refresh_asleep(
-    hass: HomeAssistant, mock_vehicle, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_vehicle: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
 
