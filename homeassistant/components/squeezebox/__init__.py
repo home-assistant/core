@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = config[CONF_PORT]
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    entry.runtime_data = {}
 
     lms = Server(session, host, port, username, password, https=https)
     _LOGGER.debug("LMS object for %s", lms)
@@ -62,9 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     lms.uuid = status[STATUS_QUERY_UUID]
     lms.name = (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME]) and status[STATUS_QUERY_LIBRARYNAME] or host
-    _LOGGER.info("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
+    _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
-    hass.data[DOMAIN][entry.entry_id][DATA_SERVER] = lms
+    entry.runtime_data[DATA_SERVER] = lms
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -73,11 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
-    _LOGGER.debug("Reached async_unload_entry for LMS=%s(%s)", hass.data[DOMAIN][entry.entry_id][DATA_SERVER].name or "Unkown" ,entry.entry_id)
-    hass.data[DOMAIN][entry.entry_id][PLAYER_DISCOVERY_UNSUB]()
-
-    # Remove stored data for this config entry
-    hass.data[DOMAIN].pop(entry.entry_id)
+    _LOGGER.debug("Reached async_unload_entry for LMS=%s(%s)", entry.runtime_data[DATA_SERVER].name or "Unkown" ,entry.entry_id)
+    entry.runtime_data[PLAYER_DISCOVERY_UNSUB]()
 
     # Stop server discovery task if this is the last config entry.
     current_entries = hass.config_entries.async_entries(DOMAIN)
