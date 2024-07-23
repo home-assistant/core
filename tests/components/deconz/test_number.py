@@ -135,7 +135,6 @@ async def test_number_entities(
     # Change state
 
     await sensor_ws_data(expected["websocket_event"])
-    await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Verify service calls

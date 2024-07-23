@@ -131,6 +131,4 @@ async def test_only_new_scenes_are_created(
         "scenes": [{"id": "1", "name": "Scene"}],
     }
     await mock_websocket_data(event_changed_group)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 2

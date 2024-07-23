@@ -953,7 +953,6 @@ async def test_sensors(
     # Change state
 
     await sensor_ws_data(expected["websocket_event"])
-    await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Unload entry
@@ -1073,8 +1072,6 @@ async def test_add_new_sensor(
     assert len(hass.states.async_all()) == 0
 
     await sensor_ws_data(event_added_sensor)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("sensor.light_level_sensor").state == "999.8"
 
@@ -1172,15 +1169,10 @@ async def test_add_battery_later(
     assert len(hass.states.async_all()) == 0
 
     await sensor_ws_data({"id": "2", "config": {"battery": 50}})
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
 
     await sensor_ws_data({"id": "1", "config": {"battery": 50}})
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 1
-
     assert hass.states.get("sensor.switch_1_battery").state == "50"
 
 
