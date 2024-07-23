@@ -4,10 +4,7 @@ import logging
 
 LOGGER = logging.getLogger(__package__)
 
-DOMAIN = "homeassistant_sky_connect"
 ZHA_DOMAIN = "zha"
-
-DOCS_WEB_FLASHER_URL = "https://skyconnect.home-assistant.io/firmware-update/"
 
 OTBR_ADDON_NAME = "OpenThread Border Router"
 OTBR_ADDON_MANAGER_DATA = "openthread_border_router"
