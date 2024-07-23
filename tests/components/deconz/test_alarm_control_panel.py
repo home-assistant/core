@@ -111,15 +111,11 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed away
 
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMED_AWAY
 
     # Event signals alarm control panel armed night
 
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_NIGHT}})
-    await hass.async_block_till_done()
-
     assert (
         hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMED_NIGHT
     )
@@ -127,15 +123,11 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed home
 
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_STAY}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMED_HOME
 
     # Event signals alarm control panel disarmed
 
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.DISARMED}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_DISARMED
 
     # Event signals alarm control panel arming
@@ -146,8 +138,6 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.ARMING_STAY,
     ):
         await sensor_ws_data({"state": {"panel": arming_event}})
-        await hass.async_block_till_done()
-
         assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_ARMING
 
     # Event signals alarm control panel pending
@@ -157,8 +147,6 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.EXIT_DELAY,
     ):
         await sensor_ws_data({"state": {"panel": pending_event}})
-        await hass.async_block_till_done()
-
         assert (
             hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_PENDING
         )
@@ -166,15 +154,11 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel triggered
 
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.IN_ALARM}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_TRIGGERED
 
     # Event signals alarm control panel unknown state keeps previous state
 
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.NOT_READY}})
-    await hass.async_block_till_done()
-
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_TRIGGERED
 
     # Verify service calls

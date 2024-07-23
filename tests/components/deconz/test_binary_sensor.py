@@ -493,7 +493,6 @@ async def test_binary_sensors(
     # Change state
 
     await sensor_ws_data({"state": expected["websocket_event"]})
-    await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
     # Unload entry
@@ -611,8 +610,6 @@ async def test_add_new_binary_sensor(
         },
     }
     await sensor_ws_data(event_added_sensor)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
 
@@ -640,8 +637,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     assert len(hass.states.async_all()) == 0
 
     await sensor_ws_data({"e": "added", "sensor": sensor})
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
@@ -687,8 +682,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     assert len(hass.states.async_all()) == 0
 
     await sensor_ws_data({"e": "added", "sensor": sensor})
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 

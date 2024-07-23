@@ -56,7 +56,7 @@ async def test_power_plugs(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Test that all supported switch entities are created."""
     assert len(hass.states.async_all()) == 4
@@ -65,9 +65,7 @@ async def test_power_plugs(
     assert hass.states.get("switch.on_off_relay").state == STATE_ON
     assert hass.states.get("switch.unsupported_switch") is None
 
-    await mock_websocket_data({"r": "lights", "state": {"on": False}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"on": False}})
     assert hass.states.get("switch.on_off_switch").state == STATE_OFF
 
     # Verify service calls

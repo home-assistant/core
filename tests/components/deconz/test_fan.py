@@ -47,7 +47,7 @@ async def test_fans(
     aioclient_mock: AiohttpClientMocker,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Test that all supported fan entities are created."""
     assert len(hass.states.async_all()) == 2  # Light and fan
@@ -56,33 +56,23 @@ async def test_fans(
 
     # Test states
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 1}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 1}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 25
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 2}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 2}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 50
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 3}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 3}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 4}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 4}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 0}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 0}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 0
 
@@ -172,9 +162,7 @@ async def test_fans(
 
     # Events with an unsupported speed does not get converted
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 5}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 5}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert not hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE]
 
