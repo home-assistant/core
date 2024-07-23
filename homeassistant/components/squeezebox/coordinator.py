@@ -42,7 +42,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data fromn LMS status call.
 
-        Then we procees only a subset to make then nice for HA
+        Then we process only a subset to make then nice for HA
         """
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
