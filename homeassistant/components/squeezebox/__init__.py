@@ -84,7 +84,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Stop player discovery task for this config entry.
     _LOGGER.debug(
         "Reached async_unload_entry for LMS=%s(%s)",
-        entry.runtime_data.name or "Unkown",
+        entry.runtime_data.name or "Unknown",
         entry.entry_id,
     )
 
