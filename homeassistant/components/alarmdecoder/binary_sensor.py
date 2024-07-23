@@ -3,11 +3,11 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AlarmDecoderConfigEntry
 from .const import (
     CONF_RELAY_ADDR,
     CONF_RELAY_CHAN,
@@ -23,6 +23,7 @@ from .const import (
     SIGNAL_ZONE_FAULT,
     SIGNAL_ZONE_RESTORE,
 )
+from .entity import AlarmDecoderEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +38,13 @@ ATTR_RF_LOOP1 = "rf_loop1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AlarmDecoderConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up for AlarmDecoder sensor."""
 
+    client = entry.runtime_data.client
     zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
 
     entities = []
@@ -53,20 +57,28 @@ async def async_setup_entry(
         relay_addr = zone_info.get(CONF_RELAY_ADDR)
         relay_chan = zone_info.get(CONF_RELAY_CHAN)
         entity = AlarmDecoderBinarySensor(
-            zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
+            client,
+            zone_num,
+            zone_name,
+            zone_type,
+            zone_rfid,
+            zone_loop,
+            relay_addr,
+            relay_chan,
         )
         entities.append(entity)
 
     async_add_entities(entities)
 
 
-class AlarmDecoderBinarySensor(BinarySensorEntity):
+class AlarmDecoderBinarySensor(AlarmDecoderEntity, BinarySensorEntity):
     """Representation of an AlarmDecoder binary sensor."""
 
     _attr_should_poll = False
 
     def __init__(
         self,
+        client,
         zone_number,
         zone_name,
         zone_type,
@@ -76,6 +88,8 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         relay_chan,
     ):
         """Initialize the binary_sensor."""
+        super().__init__(client)
+        self._attr_unique_id = f"{client.serial_number}-zone-{zone_number}"
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name

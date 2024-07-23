@@ -5,6 +5,7 @@ from __future__ import annotations
 import mimetypes
 
 from radios import FilterBy, Order, RadioBrowser, Station
+from radios.radio_browser import pycountry
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
@@ -145,6 +146,8 @@ class RadioMediaSource(MediaSource):
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
+            # Trigger the lazy loading of the country database to happen inside the executor
+            await self.hass.async_add_executor_job(lambda: len(pycountry.countries))
             countries = await radios.countries(order=Order.NAME)
             return [
                 BrowseMediaSource(

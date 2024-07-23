@@ -1706,7 +1706,23 @@
           'windows',
         ]),
         'brand': 'bmw',
-        'charging_profile': None,
+        'charging_profile': dict({
+          'ac_available_limits': None,
+          'ac_current_limit': None,
+          'charging_mode': 'IMMEDIATE_CHARGING',
+          'charging_preferences': 'NO_PRESELECTION',
+          'charging_preferences_service_pack': None,
+          'departure_times': list([
+          ]),
+          'is_pre_entry_climatization_enabled': False,
+          'preferred_charging_window': dict({
+            '_window_dict': dict({
+            }),
+            'end_time': '00:00:00',
+            'start_time': '00:00:00',
+          }),
+          'timer_type': 'UNKNOWN',
+        }),
         'check_control_messages': dict({
           'has_check_control_messages': False,
           'messages': list([
@@ -2861,7 +2877,7 @@
         ]),
         'fuel_and_battery': dict({
           'charging_end_time': None,
-          'charging_start_time': '2022-07-10T18:01:00+00:00',
+          'charging_start_time': '2022-07-10T18:01:00',
           'charging_status': 'WAITING_FOR_CHARGING',
           'charging_target': 100,
           'is_charger_connected': True,
@@ -5263,7 +5279,7 @@
       ]),
       'fuel_and_battery': dict({
         'charging_end_time': None,
-        'charging_start_time': '2022-07-10T18:01:00+00:00',
+        'charging_start_time': '2022-07-10T18:01:00',
         'charging_status': 'WAITING_FOR_CHARGING',
         'charging_target': 100,
         'is_charger_connected': True,

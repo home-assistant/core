@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import Plenticore, SelectDataUpdateCoordinator
+from .coordinator import Plenticore, SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

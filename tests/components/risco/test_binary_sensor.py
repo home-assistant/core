@@ -23,32 +23,36 @@ SECOND_ARMED_ENTITY_ID = SECOND_ENTITY_ID + "_armed"
 
 @pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
 async def test_error_on_login(
-    hass: HomeAssistant, login_with_error, cloud_config_entry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    login_with_error,
+    cloud_config_entry,
 ) -> None:
     """Test error on login."""
     await hass.config_entries.async_setup(cloud_config_entry.entry_id)
     await hass.async_block_till_done()
-    registry = er.async_get(hass)
-    assert not registry.async_is_registered(FIRST_ENTITY_ID)
-    assert not registry.async_is_registered(SECOND_ENTITY_ID)
+    assert not entity_registry.async_is_registered(FIRST_ENTITY_ID)
+    assert not entity_registry.async_is_registered(SECOND_ENTITY_ID)
 
 
 async def test_cloud_setup(
-    hass: HomeAssistant, two_zone_cloud, setup_risco_cloud
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    two_zone_cloud,
+    setup_risco_cloud,
 ) -> None:
     """Test entity setup."""
-    registry = er.async_get(hass)
-    assert registry.async_is_registered(FIRST_ENTITY_ID)
-    assert registry.async_is_registered(SECOND_ENTITY_ID)
+    assert entity_registry.async_is_registered(FIRST_ENTITY_ID)
+    assert entity_registry.async_is_registered(SECOND_ENTITY_ID)
 
-    registry = dr.async_get(hass)
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_0")}
     )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_1")}
     )
     assert device is not None
@@ -81,42 +85,46 @@ async def test_cloud_states(
 
 @pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
 async def test_error_on_connect(
-    hass: HomeAssistant, connect_with_error, local_config_entry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    connect_with_error,
+    local_config_entry,
 ) -> None:
     """Test error on connect."""
     await hass.config_entries.async_setup(local_config_entry.entry_id)
     await hass.async_block_till_done()
-    registry = er.async_get(hass)
-    assert not registry.async_is_registered(FIRST_ENTITY_ID)
-    assert not registry.async_is_registered(SECOND_ENTITY_ID)
-    assert not registry.async_is_registered(FIRST_ALARMED_ENTITY_ID)
-    assert not registry.async_is_registered(SECOND_ALARMED_ENTITY_ID)
+    assert not entity_registry.async_is_registered(FIRST_ENTITY_ID)
+    assert not entity_registry.async_is_registered(SECOND_ENTITY_ID)
+    assert not entity_registry.async_is_registered(FIRST_ALARMED_ENTITY_ID)
+    assert not entity_registry.async_is_registered(SECOND_ALARMED_ENTITY_ID)
 
 
 async def test_local_setup(
-    hass: HomeAssistant, two_zone_local, setup_risco_local
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    two_zone_local,
+    setup_risco_local,
 ) -> None:
     """Test entity setup."""
-    registry = er.async_get(hass)
-    assert registry.async_is_registered(FIRST_ENTITY_ID)
-    assert registry.async_is_registered(SECOND_ENTITY_ID)
-    assert registry.async_is_registered(FIRST_ALARMED_ENTITY_ID)
-    assert registry.async_is_registered(SECOND_ALARMED_ENTITY_ID)
+    assert entity_registry.async_is_registered(FIRST_ENTITY_ID)
+    assert entity_registry.async_is_registered(SECOND_ENTITY_ID)
+    assert entity_registry.async_is_registered(FIRST_ALARMED_ENTITY_ID)
+    assert entity_registry.async_is_registered(SECOND_ALARMED_ENTITY_ID)
 
-    registry = dr.async_get(hass)
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_0_local")}
     )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_1_local")}
     )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device(identifiers={(DOMAIN, TEST_SITE_UUID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_SITE_UUID)})
     assert device is not None
     assert device.manufacturer == "Risco"
 

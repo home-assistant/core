@@ -2,28 +2,44 @@
 
 from __future__ import annotations
 
-import logging
+from dataclasses import dataclass
 
 from APsystemsEZ1 import APsystemsEZ1M
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
+from .const import DEFAULT_PORT
 from .coordinator import ApSystemsDataCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class ApSystemsData:
+    """Store runtime data."""
+
+    coordinator: ApSystemsDataCoordinator
+    device_id: str
+
+
+type ApSystemsConfigEntry = ConfigEntry[ApSystemsData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
     """Set up this integration using UI."""
-    entry.runtime_data = {}
-    api = APsystemsEZ1M(ip_address=entry.data[CONF_IP_ADDRESS], timeout=8)
+    api = APsystemsEZ1M(
+        ip_address=entry.data[CONF_IP_ADDRESS],
+        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        timeout=8,
+    )
     coordinator = ApSystemsDataCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = {"COORDINATOR": coordinator}
+    assert entry.unique_id
+    entry.runtime_data = ApSystemsData(
+        coordinator=coordinator, device_id=entry.unique_id
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

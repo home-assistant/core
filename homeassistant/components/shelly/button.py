@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -26,13 +26,11 @@ from .const import LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import get_device_entry_gen
 
-_ShellyCoordinatorT = TypeVar(
-    "_ShellyCoordinatorT", bound=ShellyBlockCoordinator | ShellyRpcCoordinator
-)
-
 
 @dataclass(frozen=True, kw_only=True)
-class ShellyButtonDescription(ButtonEntityDescription, Generic[_ShellyCoordinatorT]):
+class ShellyButtonDescription[
+    _ShellyCoordinatorT: ShellyBlockCoordinator | ShellyRpcCoordinator
+](ButtonEntityDescription):
     """Class to describe a Button entity."""
 
     press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]

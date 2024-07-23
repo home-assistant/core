@@ -12,9 +12,6 @@ import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
@@ -731,22 +728,6 @@ async def test_rendering_template_admin(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_rendering_template_legacy_user(
-    hass: HomeAssistant,
-    mock_api_client: TestClient,
-    aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
-) -> None:
-    """Test rendering a template with legacy API password."""
-    hass.states.async_set("sensor.temperature", 10)
-    client = await aiohttp_client(hass.http.app)
-    resp = await client.post(
-        const.URL_API_TEMPLATE,
-        json={"template": "{{ states.sensor.temperature.state }}"},
-    )
-    assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
 async def test_api_call_service_not_found(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -789,4 +770,43 @@ async def test_api_core_state(hass: HomeAssistant, mock_api_client: TestClient) 
     resp = await mock_api_client.get("/api/core/state")
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
-    assert json["state"] == "RUNNING"
+    assert json == {
+        "state": "RUNNING",
+        "recorder_state": {"migration_in_progress": False, "migration_is_live": False},
+    }
+
+
+@pytest.mark.parametrize(
+    ("migration_in_progress", "migration_is_live"),
+    [
+        (False, False),
+        (False, True),
+        (True, False),
+        (True, True),
+    ],
+)
+async def test_api_core_state_recorder_migrating(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    migration_in_progress: bool,
+    migration_is_live: bool,
+) -> None:
+    """Test getting core status."""
+    with (
+        patch(
+            "homeassistant.helpers.recorder.async_migration_in_progress",
+            return_value=migration_in_progress,
+        ),
+        patch(
+            "homeassistant.helpers.recorder.async_migration_is_live",
+            return_value=migration_is_live,
+        ),
+    ):
+        resp = await mock_api_client.get("/api/core/state")
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    expected_recorder_state = {
+        "migration_in_progress": migration_in_progress,
+        "migration_is_live": migration_is_live,
+    }
+    assert json == {"state": "RUNNING", "recorder_state": expected_recorder_state}

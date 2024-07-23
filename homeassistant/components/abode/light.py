@@ -6,7 +6,6 @@ from math import ceil
 from typing import Any
 
 from jaraco.abode.devices.light import Light
-from jaraco.abode.helpers.constants import TYPE_LIGHT
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -36,7 +35,7 @@ async def async_setup_entry(
 
     async_add_entities(
         AbodeLight(data, device)
-        for device in data.abode.get_devices(generic_type=TYPE_LIGHT)
+        for device in data.abode.get_devices(generic_type="light")
     )
 
 

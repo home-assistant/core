@@ -65,7 +65,7 @@ async def async_device_name(dev_registry, address):
 def notify_device_not_found(connection, msg, text):
     """Notify the caller that the device was not found."""
     connection.send_message(
-        websocket_api.error_message(msg[ID], websocket_api.const.ERR_NOT_FOUND, text)
+        websocket_api.error_message(msg[ID], websocket_api.ERR_NOT_FOUND, text)
     )
 
 

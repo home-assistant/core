@@ -20,6 +20,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
@@ -75,7 +76,7 @@ TDBU_DEVICE_MAP = {
 }
 
 
-SET_ABSOLUTE_POSITION_SCHEMA = {
+SET_ABSOLUTE_POSITION_SCHEMA: VolDictType = {
     vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
     vol.Optional(ATTR_TILT_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
     vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),

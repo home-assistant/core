@@ -17,7 +17,7 @@ async def test_extract_frame_integration(
     integration_frame = frame.get_integration_frame()
     assert integration_frame == frame.IntegrationFrame(
         custom_integration=False,
-        _frame=mock_integration_frame,
+        frame=mock_integration_frame,
         integration="hue",
         module=None,
         relative_filename="homeassistant/components/hue/light.py",
@@ -32,27 +32,27 @@ async def test_get_integration_logger(
     assert logger.name == "homeassistant.components.hue"
 
 
-async def test_extract_frame_resolve_module(
-    hass: HomeAssistant, enable_custom_integrations
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_extract_frame_resolve_module(hass: HomeAssistant) -> None:
     """Test extracting the current frame from integration context."""
+    # pylint: disable-next=import-outside-toplevel
     from custom_components.test_integration_frame import call_get_integration_frame
 
     integration_frame = call_get_integration_frame()
 
     assert integration_frame == frame.IntegrationFrame(
         custom_integration=True,
-        _frame=ANY,
+        frame=ANY,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
     )
 
 
-async def test_get_integration_logger_resolve_module(
-    hass: HomeAssistant, enable_custom_integrations
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_integration_logger_resolve_module(hass: HomeAssistant) -> None:
     """Test getting the logger from integration context."""
+    # pylint: disable-next=import-outside-toplevel
     from custom_components.test_integration_frame import call_get_integration_logger
 
     logger = call_get_integration_logger(__name__)
@@ -98,7 +98,7 @@ async def test_extract_frame_integration_with_excluded_integration(
 
     assert integration_frame == frame.IntegrationFrame(
         custom_integration=False,
-        _frame=correct_frame,
+        frame=correct_frame,
         integration="mdns",
         module=None,
         relative_filename="homeassistant/components/mdns/light.py",

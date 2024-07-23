@@ -17,7 +17,7 @@ from .coordinator import IPPDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-IPPConfigEntry = ConfigEntry[IPPDataUpdateCoordinator]
+type IPPConfigEntry = ConfigEntry[IPPDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IPPConfigEntry) -> bool:

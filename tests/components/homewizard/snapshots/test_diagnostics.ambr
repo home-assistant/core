@@ -65,6 +65,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
+        'product': dict({
+          'description': 'Measure solar panels, car chargers and more.',
+          'model': 'HWE-KWH1',
+          'name': 'Wi-Fi kWh Meter 1-phase',
+          'url': 'https://www.homewizard.com/kwh-meter/',
+        }),
         'product_name': 'kWh meter',
         'product_type': 'HWE-KWH1',
         'serial': '**REDACTED**',
@@ -148,6 +154,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
+        'product': dict({
+          'description': 'Measure solar panels, car chargers and more.',
+          'model': 'HWE-KWH3',
+          'name': 'Wi-Fi kWh Meter 3-phase',
+          'url': 'https://www.homewizard.com/kwh-meter/',
+        }),
         'product_name': 'KWh meter 3-phase',
         'product_type': 'HWE-KWH3',
         'serial': '**REDACTED**',
@@ -199,7 +211,7 @@
         'active_voltage_v': None,
         'any_power_fail_count': 4,
         'external_devices': dict({
-          'G001': dict({
+          'gas_meter_G001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.GAS_METER: 3>',
@@ -209,7 +221,7 @@
             'unit': 'm3',
             'value': 111.111,
           }),
-          'H001': dict({
+          'heat_meter_H001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.HEAT_METER: 4>',
@@ -219,7 +231,7 @@
             'unit': 'GJ',
             'value': 444.444,
           }),
-          'IH001': dict({
+          'inlet_heat_meter_IH001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.INLET_HEAT_METER: 12>',
@@ -229,17 +241,7 @@
             'unit': 'm3',
             'value': 555.555,
           }),
-          'W001': dict({
-            'meter_type': dict({
-              '__type': "<enum 'DeviceType'>",
-              'repr': '<DeviceType.WATER_METER: 7>',
-            }),
-            'timestamp': '2023-01-25T22:09:57',
-            'unique_id': '**REDACTED**',
-            'unit': 'm3',
-            'value': 222.222,
-          }),
-          'WW001': dict({
+          'warm_water_meter_WW001': dict({
             'meter_type': dict({
               '__type': "<enum 'DeviceType'>",
               'repr': '<DeviceType.WARM_WATER_METER: 6>',
@@ -248,6 +250,16 @@
             'unique_id': '**REDACTED**',
             'unit': 'm3',
             'value': 333.333,
+          }),
+          'water_meter_W001': dict({
+            'meter_type': dict({
+              '__type': "<enum 'DeviceType'>",
+              'repr': '<DeviceType.WATER_METER: 7>',
+            }),
+            'timestamp': '2023-01-25T22:09:57',
+            'unique_id': '**REDACTED**',
+            'unit': 'm3',
+            'value': 222.222,
           }),
         }),
         'gas_timestamp': '2021-03-14T11:22:33',
@@ -282,6 +294,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '4.19',
+        'product': dict({
+          'description': 'The HomeWizard P1 Meter gives you detailed insight in your electricity-, gas consumption and solar surplus.',
+          'model': 'HWE-P1',
+          'name': 'Wi-Fi P1 Meter',
+          'url': 'https://www.homewizard.com/p1-meter/',
+        }),
         'product_name': 'P1 meter',
         'product_type': 'HWE-P1',
         'serial': '**REDACTED**',
@@ -365,6 +383,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.03',
+        'product': dict({
+          'description': 'Measure and switch every device.',
+          'model': 'HWE-SKT',
+          'name': 'Wi-Fi Energy Socket',
+          'url': 'https://www.homewizard.com/energy-socket/',
+        }),
         'product_name': 'Energy Socket',
         'product_type': 'HWE-SKT',
         'serial': '**REDACTED**',
@@ -452,6 +476,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '4.07',
+        'product': dict({
+          'description': 'Measure and switch every device.',
+          'model': 'HWE-SKT',
+          'name': 'Wi-Fi Energy Socket',
+          'url': 'https://www.homewizard.com/energy-socket/',
+        }),
         'product_name': 'Energy Socket',
         'product_type': 'HWE-SKT',
         'serial': '**REDACTED**',
@@ -539,6 +569,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '2.03',
+        'product': dict({
+          'description': 'Real-time water consumption insights',
+          'model': 'HWE-WTR',
+          'name': 'Wi-Fi Watermeter',
+          'url': 'https://www.homewizard.com/watermeter/',
+        }),
         'product_name': 'Watermeter',
         'product_type': 'HWE-WTR',
         'serial': '**REDACTED**',
@@ -622,6 +658,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
+        'product': dict({
+          'description': 'Measure solar panels, car chargers and more.',
+          'model': 'SDM230-wifi',
+          'name': 'Wi-Fi kWh Meter 1-phase',
+          'url': 'https://www.homewizard.com/kwh-meter/',
+        }),
         'product_name': 'kWh meter',
         'product_type': 'SDM230-wifi',
         'serial': '**REDACTED**',
@@ -705,6 +747,12 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
+        'product': dict({
+          'description': 'Measure solar panels, car chargers and more.',
+          'model': 'SDM630-wifi',
+          'name': 'Wi-Fi kWh Meter 3-phase',
+          'url': 'https://www.homewizard.com/kwh-meter/',
+        }),
         'product_name': 'KWh meter 3-phase',
         'product_type': 'SDM630-wifi',
         'serial': '**REDACTED**',

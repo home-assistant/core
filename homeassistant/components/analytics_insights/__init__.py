@@ -19,7 +19,7 @@ from .const import CONF_TRACKED_INTEGRATIONS
 from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-AnalyticsInsightsConfigEntry = ConfigEntry["AnalyticsInsightsData"]
+type AnalyticsInsightsConfigEntry = ConfigEntry[AnalyticsInsightsData]
 
 
 @dataclass(frozen=True)

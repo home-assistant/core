@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -26,7 +26,6 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
-    chunked_or_all,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -34,7 +33,7 @@ from homeassistant.components.recorder.util import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -49,7 +48,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -74,7 +73,6 @@ async def test_session_scope_not_setup(
 
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
-    from sqlalchemy.exc import SQLAlchemyError
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
@@ -118,12 +116,18 @@ def test_validate_or_move_away_sqlite_database(
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_last_run_was_recently_clean(
-    async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+    async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
-    """Test we can check if the last recorder run was recently clean."""
+    """Test we can check if the last recorder run was recently clean.
+
+    This is only implemented for SQLite.
+    """
     config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
     async with async_test_home_assistant() as hass:
@@ -618,7 +622,11 @@ def test_warn_unsupported_dialect(
     ],
 )
 async def test_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version, min_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    min_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue for MariaDB versions affected.
 
@@ -653,8 +661,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is not None
     assert issue.translation_placeholders == {"min_version": min_version}
 
@@ -673,7 +680,10 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     ],
 )
 async def test_no_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create an issue for MariaDB versions not affected.
 
@@ -708,22 +718,22 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is None
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_basic_sanity_check(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test the basic sanity checks with a missing table."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test the basic sanity checks with a missing table.
 
+    This test is specific for SQLite.
+    """
     cursor = util.get_instance(hass).engine.raw_connection().cursor()
 
     assert util.basic_sanity_check(cursor) is True
@@ -734,17 +744,18 @@ async def test_basic_sanity_check(
         util.basic_sanity_check(cursor)
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_combined_checks(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
-    recorder_db_url,
+    recorder_db_url: str,
 ) -> None:
-    """Run Checks on the open database."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Run Checks on the open database.
 
+    This test is specific for SQLite.
+    """
     instance = util.get_instance(hass)
     instance.db_retry_wait = 0
 
@@ -826,14 +837,15 @@ async def test_end_incomplete_runs(
     assert "Ended unfinished session" in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_periodic_db_cleanups(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test periodic db cleanups."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test periodic db cleanups.
 
+    This test is specific for SQLite.
+    """
     with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
         util.periodic_db_cleanups(util.get_instance(hass))
 
@@ -844,18 +856,22 @@ async def test_periodic_db_cleanups(
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_write_lock_db(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-    tmp_path: Path,
+    recorder_db_url: str,
 ) -> None:
-    """Test database write lock."""
-    from sqlalchemy.exc import OperationalError
+    """Test database write lock.
 
-    # Use file DB, in memory DB cannot do write locks.
-    config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
-    }
+    This is only supported for SQLite.
+
+    Use file DB, in memory DB cannot do write locks.
+    """
+
+    config = {recorder.CONF_DB_URL: recorder_db_url + "?timeout=0.1"}
     instance = await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
 
@@ -1046,24 +1062,3 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
             }
         }
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
-
-
-def test_chunked_or_all():
-    """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
-    all_items = []
-    incoming = (1, 2, 3, 4)
-    for chunk in chunked_or_all(incoming, 2):
-        assert len(chunk) == 2
-        all_items.extend(chunk)
-    assert all_items == [1, 2, 3, 4]
-
-    all_items = []
-    incoming = (1, 2, 3, 4)
-    for chunk in chunked_or_all(incoming, 5):
-        assert len(chunk) == 4
-        # Verify the chunk is the same object as the incoming
-        # collection since we want to avoid copying the collection
-        # if we don't need to
-        assert chunk is incoming
-        all_items.extend(chunk)
-    assert all_items == [1, 2, 3, 4]

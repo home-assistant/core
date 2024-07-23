@@ -22,8 +22,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.opensky import setup_integration
 
 
 async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:

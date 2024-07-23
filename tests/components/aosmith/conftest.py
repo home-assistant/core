@@ -128,7 +128,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.aosmith.async_setup_entry", return_value=True
@@ -166,7 +166,7 @@ async def mock_client(
     get_devices_fixture_mode_pending: bool,
     get_devices_fixture_setpoint_pending: bool,
     get_devices_fixture_has_vacation_mode: bool,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Return a mocked client."""
     get_devices_fixture = [
         build_device_fixture(

@@ -14,7 +14,7 @@ from .const import CONFIG
 
 
 @pytest.fixture
-def client() -> Generator[Mock, None, None]:
+def client() -> Generator[Mock]:
     """Mock client."""
     with patch(
         "homeassistant.components.asterisk_mbox.asteriskClient", autospec=True

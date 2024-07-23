@@ -38,7 +38,7 @@ PLATFORMS = [Platform.SENSOR]
 
 UPDATE_INTERVAL = timedelta(minutes=1)
 
-AirVisualProConfigEntry = ConfigEntry["AirVisualProData"]
+type AirVisualProConfigEntry = ConfigEntry[AirVisualProData]
 
 
 @dataclass

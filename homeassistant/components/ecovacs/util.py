@@ -7,8 +7,6 @@ import random
 import string
 from typing import TYPE_CHECKING
 
-from deebot_client.capabilities import Capabilities
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -40,9 +38,8 @@ def get_supported_entitites(
     """Return all supported entities for all devices."""
     return [
         entity_class(device, capability, description)
-        for device in controller.devices(Capabilities)
+        for device in controller.devices
         for description in descriptions
-        if isinstance(device.capabilities, description.device_capabilities)
         if (capability := description.capability_fn(device.capabilities))
     ]
 

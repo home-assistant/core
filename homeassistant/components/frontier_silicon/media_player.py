@@ -308,10 +308,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             # Keys of presets are 0-based, while the list shown on the device starts from 1
             preset = int(keys[0]) - 1
 
-            result = await self.fs_device.select_preset(preset)
+            await self.fs_device.select_preset(preset)
         else:
-            result = await self.fs_device.nav_select_item_via_path(keys)
+            await self.fs_device.nav_select_item_via_path(keys)
 
         await self.async_update()
         self._attr_media_content_id = media_id
-        return result

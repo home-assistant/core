@@ -13,7 +13,7 @@ async def test_step_user_valid_number(
     hass: HomeAssistant,
     mock_setup_entry,
     mock_request_otp,
-    mock__get_devices,
+    mock__get_devices_metadata,
 ) -> None:
     """Test user step with valid phone number."""
 
@@ -37,7 +37,7 @@ async def test_step_user_invalid_number(
     hass: HomeAssistant,
     mock_setup_entry,
     mock_request_otp,
-    mock__get_devices,
+    mock__get_devices_metadata,
 ) -> None:
     """Test user step with invalid phone number."""
 
@@ -66,7 +66,7 @@ async def test_step_user_exception(
     hass: HomeAssistant,
     mock_setup_entry,
     mock_request_otp,
-    mock__get_devices,
+    mock__get_devices_metadata,
     expected_error,
 ) -> None:
     """Test user step with exception."""
@@ -92,7 +92,7 @@ async def test_step_otp_valid(
     mock_setup_entry,
     mock_request_otp,
     mock_submit_otp,
-    mock__get_devices,
+    mock__get_devices_metadata,
 ) -> None:
     """Test user step with valid phone number."""
 
@@ -134,7 +134,7 @@ async def test_step_otp_exception(
     mock_setup_entry,
     mock_request_otp,
     mock_submit_otp,
-    mock__get_devices,
+    mock__get_devices_metadata,
     expected_error,
 ) -> None:
     """Test user step with valid phone number."""

@@ -1,4 +1,4 @@
-"""Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+"""Support for Climate entities of the Evohome integration."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 import evohomeasync2 as evo
 from evohomeasync2.schema.const import (
     SZ_ACTIVE_FAULTS,
-    SZ_ALLOWED_SYSTEM_MODES,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_ID,
     SZ_SYSTEM_MODE,
@@ -37,19 +36,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import (
+from . import EvoChild, EvoDevice
+from .const import (
     ATTR_DURATION_DAYS,
     ATTR_DURATION_HOURS,
     ATTR_DURATION_UNTIL,
     ATTR_SYSTEM_MODE,
     ATTR_ZONE_TEMP,
-    CONF_LOCATION_IDX,
-    SVC_RESET_ZONE_OVERRIDE,
-    SVC_SET_SYSTEM_MODE,
-    EvoChild,
-    EvoDevice,
-)
-from .const import (
     DOMAIN,
     EVO_AUTO,
     EVO_AUTOECO,
@@ -61,6 +54,7 @@ from .const import (
     EVO_PERMOVER,
     EVO_RESET,
     EVO_TEMPOVER,
+    EvoService,
 )
 
 if TYPE_CHECKING:
@@ -116,8 +110,8 @@ async def async_setup_platform(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
         broker.tcs.modelType,
         broker.tcs.systemId,
-        broker.tcs.location.name,
-        broker.params[CONF_LOCATION_IDX],
+        broker.loc.name,
+        broker.loc_idx,
     )
 
     entities: list[EvoClimateEntity] = [EvoController(broker, broker.tcs)]
@@ -200,11 +194,11 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
-        if service == SVC_RESET_ZONE_OVERRIDE:
+        if service == EvoService.RESET_ZONE_OVERRIDE:
             await self._evo_broker.call_client_api(self._evo_device.reset_mode())
             return
 
-        # otherwise it is SVC_SET_ZONE_OVERRIDE
+        # otherwise it is EvoService.SET_ZONE_OVERRIDE
         temperature = max(min(data[ATTR_ZONE_TEMP], self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
@@ -371,7 +365,7 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.systemId
         self._attr_name = evo_device.location.name
 
-        modes = [m[SZ_SYSTEM_MODE] for m in evo_broker.config[SZ_ALLOWED_SYSTEM_MODES]]
+        modes = [m[SZ_SYSTEM_MODE] for m in evo_broker.tcs.allowedSystemModes]
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
@@ -386,9 +380,9 @@ class EvoController(EvoClimateEntity):
 
         Data validation is not required, it will have been done upstream.
         """
-        if service == SVC_SET_SYSTEM_MODE:
+        if service == EvoService.SET_SYSTEM_MODE:
             mode = data[ATTR_SYSTEM_MODE]
-        else:  # otherwise it is SVC_RESET_SYSTEM
+        else:  # otherwise it is EvoService.RESET_SYSTEM
             mode = EVO_RESET
 
         if ATTR_DURATION_DAYS in data:

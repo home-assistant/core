@@ -1,6 +1,5 @@
 """Axis light platform tests."""
 
-from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -9,7 +8,6 @@ import pytest
 import respx
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -19,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import RtspEventMock
 from .const import DEFAULT_HOST, NAME
 
 API_DISCOVERY_LIGHT_CONTROL = {
@@ -70,10 +69,10 @@ def light_control_fixture(light_control_items: list[dict[str, Any]]) -> None:
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
 @pytest.mark.parametrize("light_control_items", [[]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_no_light_entity_without_light_control_representation(
     hass: HomeAssistant,
-    setup_config_entry: ConfigEntry,
-    mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
+    mock_rtsp_event: RtspEventMock,
 ) -> None:
     """Verify no lights entities get created without light control representation."""
     mock_rtsp_event(
@@ -89,13 +88,8 @@ async def test_no_light_entity_without_light_control_representation(
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
-async def test_lights(
-    hass: HomeAssistant,
-    respx_mock: respx,
-    setup_config_entry: ConfigEntry,
-    mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
-    api_discovery_items: dict[str, Any],
-) -> None:
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_lights(hass: HomeAssistant, mock_rtsp_event: RtspEventMock) -> None:
     """Test that lights are loaded properly."""
     # Add light
     respx.post(

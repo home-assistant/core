@@ -66,6 +66,7 @@ async def test_async_get_config_entry_diagnostics__single_humidifier(
 
 async def test_async_get_device_diagnostics__single_fan(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
     config: ConfigType,
@@ -77,7 +78,6 @@ async def test_async_get_device_diagnostics__single_fan(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "abcdefghabcdefghabcdefghabcdefgh")},
     )

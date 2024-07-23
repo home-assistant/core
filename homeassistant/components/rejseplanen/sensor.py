@@ -14,7 +14,10 @@ from operator import itemgetter
 import rjpl
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -51,7 +54,7 @@ BUS_TYPES = ["BUS", "EXB", "TB"]
 TRAIN_TYPES = ["LET", "S", "REG", "IC", "LYN", "TOG"]
 METRO_TYPES = ["M"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

@@ -10,8 +10,8 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from . import data
 from .const import CONF_CLOUD_ID, CONF_HARDWARE_ADDRESS, CONF_INSTALL_CODE, DOMAIN
+from .data import CannotConnect, InvalidAuth, async_get_type
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,15 +49,15 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            eagle_type, hardware_address = await data.async_get_type(
+            eagle_type, hardware_address = await async_get_type(
                 self.hass,
                 user_input[CONF_CLOUD_ID],
                 user_input[CONF_INSTALL_CODE],
                 user_input[CONF_HOST],
             )
-        except data.CannotConnect:
+        except CannotConnect:
             errors["base"] = "cannot_connect"
-        except data.InvalidAuth:
+        except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:
             _LOGGER.exception("Unexpected exception")

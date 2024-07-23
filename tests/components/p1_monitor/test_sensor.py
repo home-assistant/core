@@ -30,12 +30,12 @@ from tests.common import MockConfigEntry
 
 async def test_smartmeter(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the P1 Monitor - SmartMeter sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.smartmeter_power_consumption")
     entry = entity_registry.async_get("sensor.smartmeter_power_consumption")
@@ -87,12 +87,12 @@ async def test_smartmeter(
 
 async def test_phases(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the P1 Monitor - Phases sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.phases_voltage_phase_l1")
     entry = entity_registry.async_get("sensor.phases_voltage_phase_l1")
@@ -144,12 +144,12 @@ async def test_phases(
 
 async def test_settings(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the P1 Monitor - Settings sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.settings_energy_consumption_price_low")
     entry = entity_registry.async_get("sensor.settings_energy_consumption_price_low")
@@ -196,12 +196,12 @@ async def test_settings(
 
 async def test_watermeter(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the P1 Monitor - WaterMeter sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     state = hass.states.get("sensor.watermeter_consumption_day")
     entry = entity_registry.async_get("sensor.watermeter_consumption_day")
     assert entry
@@ -242,11 +242,12 @@ async def test_no_watermeter(
     ["sensor.smartmeter_gas_consumption"],
 )
 async def test_smartmeter_disabled_by_default(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    entity_id: str,
 ) -> None:
     """Test the P1 Monitor - SmartMeter sensors that are disabled by default."""
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get(entity_id)
     assert state is None
 

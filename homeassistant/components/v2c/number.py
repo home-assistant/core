@@ -13,11 +13,10 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import V2CConfigEntry
 from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
@@ -48,11 +47,11 @@ TRYDAN_NUMBER_SETTINGS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: V2CConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C Trydan number platform."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CSettingsNumberEntity(coordinator, description, config_entry.entry_id)

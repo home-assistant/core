@@ -9,6 +9,7 @@ from typing import Literal
 import ollama
 
 from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -25,13 +26,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
 
 from .const import (
+    CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_PROMPT,
+    DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_PROMPT,
     DOMAIN,
-    KEEP_ALIVE_FOREVER,
     MAX_HISTORY_SECONDS,
 )
 from .models import ExposedEntity, MessageHistory, MessageRole
@@ -138,6 +140,11 @@ class OllamaConversationEntity(
             ollama.Message(role=MessageRole.USER.value, content=user_input.text)
         )
 
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {"messages": message_history.messages},
+        )
+
         # Get response
         try:
             response = await client.chat(
@@ -145,7 +152,8 @@ class OllamaConversationEntity(
                 # Make a copy of the messages because we mutate the list later
                 messages=list(message_history.messages),
                 stream=False,
-                keep_alive=KEEP_ALIVE_FOREVER,
+                # keep_alive requires specifying unit. In this case, seconds
+                keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
             )
         except (ollama.RequestError, ollama.ResponseError) as err:
             _LOGGER.error("Unexpected error talking to Ollama server: %s", err)

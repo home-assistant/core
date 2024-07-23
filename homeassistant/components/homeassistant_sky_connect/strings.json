@@ -58,10 +58,6 @@
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::description%]"
       },
-      "confirm": {
-        "title": "[%key:component::homeassistant_sky_connect::config::step::confirm::title%]",
-        "description": "[%key:component::homeassistant_sky_connect::config::step::confirm::description%]"
-      },
       "pick_firmware": {
         "title": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::title%]",
         "description": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::description%]",
@@ -131,16 +127,12 @@
   "config": {
     "flow_title": "{model}",
     "step": {
-      "confirm": {
-        "title": "Set up the {model}",
-        "description": "The {model} can be used as either a Thread border router or a Zigbee coordinator. In the next step, you will choose which firmware will be configured."
-      },
       "pick_firmware": {
         "title": "Pick your firmware",
-        "description": "The {model} can be used as a Thread border router or a Zigbee coordinator.",
+        "description": "Let's get started with setting up your {model}. Do you want to use it to set up a Zigbee or Thread network?",
         "menu_options": {
-          "pick_firmware_thread": "Use as a Thread border router",
-          "pick_firmware_zigbee": "Use as a Zigbee coordinator"
+          "pick_firmware_zigbee": "Zigbee",
+          "pick_firmware_thread": "Thread"
         }
       },
       "install_zigbee_flasher_addon": {

@@ -155,7 +155,7 @@ raise Exception('boom')
     task = hass.async_add_executor_job(execute, hass, "test.py", source, {}, True)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert type(task.exception()) == HomeAssistantError
+    assert type(task.exception()) is HomeAssistantError
     assert "Error executing script (Exception): boom" in str(task.exception())
 
 
@@ -183,7 +183,7 @@ hass.async_stop()
     task = hass.async_add_executor_job(execute, hass, "test.py", source, {}, True)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert type(task.exception()) == ServiceValidationError
+    assert type(task.exception()) is ServiceValidationError
     assert "Not allowed to access async methods" in str(task.exception())
 
 
@@ -233,7 +233,7 @@ async def test_accessing_forbidden_methods_with_response(hass: HomeAssistant) ->
         task = hass.async_add_executor_job(execute, hass, "test.py", source, {}, True)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert type(task.exception()) == ServiceValidationError
+        assert type(task.exception()) is ServiceValidationError
         assert f"Not allowed to access {name}" in str(task.exception())
 
 
@@ -682,7 +682,7 @@ hass.states.set('hello.c', c)
     ],
 )
 async def test_prohibited_augmented_assignment_operations(
-    hass: HomeAssistant, case: str, error: str, caplog
+    hass: HomeAssistant, case: str, error: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that prohibited augmented assignment operations raise an error."""
     hass.async_add_executor_job(execute, hass, "aug_assign_prohibited.py", case, {})

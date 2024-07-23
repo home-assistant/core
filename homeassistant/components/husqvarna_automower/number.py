@@ -1,26 +1,22 @@
 """Creates the number entities for the mower."""
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +26,8 @@ def _async_get_cutting_height(data: MowerAttributes) -> int:
     """Return the cutting height."""
     if TYPE_CHECKING:
         # Sensor does not get created if it is None
-        assert data.cutting_height is not None
-    return data.cutting_height
+        assert data.settings.cutting_height is not None
+    return data.settings.cutting_height
 
 
 @callback
@@ -52,10 +48,6 @@ async def async_set_work_area_cutting_height(
     await coordinator.api.commands.set_cutting_height_workarea(
         mower_id, int(cheight), work_area_id
     )
-    # As there are no updates from the websocket regarding work area changes,
-    # we need to wait 5s and then poll the API.
-    await asyncio.sleep(5)
-    await coordinator.async_request_refresh()
 
 
 async def async_set_cutting_height(
@@ -84,7 +76,7 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_min_value=1,
         native_max_value=9,
-        exists_fn=lambda data: data.cutting_height is not None,
+        exists_fn=lambda data: data.settings.cutting_height is not None,
         value_fn=_async_get_cutting_height,
         set_value_fn=async_set_cutting_height,
     ),
@@ -115,10 +107,12 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[NumberEntity] = []
 
     for mower_id in coordinator.data:
@@ -133,12 +127,11 @@ async def async_setup_entry(
                     for work_area_id in _work_areas
                 )
             async_remove_entities(hass, coordinator, entry, mower_id)
-    entities.extend(
-        AutomowerNumberEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in NUMBER_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
+        entities.extend(
+            AutomowerNumberEntity(mower_id, coordinator, description)
+            for description in NUMBER_TYPES
+            if description.exists_fn(coordinator.data[mower_id])
+        )
     async_add_entities(entities)
 
 
@@ -163,16 +156,12 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.mower_attributes)
 
+    @handle_sending_exception()
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
-        try:
-            await self.entity_description.set_value_fn(
-                self.coordinator.api, self.mower_id, value
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.entity_description.set_value_fn(
+            self.coordinator.api, self.mower_id, value
+        )
 
 
 class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
@@ -211,23 +200,19 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.work_area)
 
+    @handle_sending_exception(poll_after_sending=True)
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
-        try:
-            await self.entity_description.set_value_fn(
-                self.coordinator, self.mower_id, value, self.work_area_id
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.entity_description.set_value_fn(
+            self.coordinator, self.mower_id, value, self.work_area_id
+        )
 
 
 @callback
 def async_remove_entities(
     hass: HomeAssistant,
     coordinator: AutomowerDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    entry: AutomowerConfigEntry,
     mower_id: str,
 ) -> None:
     """Remove deleted work areas from Home Assistant."""
@@ -238,10 +223,11 @@ def async_remove_entities(
         for work_area_id in _work_areas:
             uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
             active_work_areas.add(uid)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, config_entry.entry_id
+    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
+        if (
+            entity_entry.domain == Platform.NUMBER
+            and (split := entity_entry.unique_id.split("_"))[0] == mower_id
+            and split[-1] == "area"
+            and entity_entry.unique_id not in active_work_areas
         ):
-            if entity_entry.unique_id.split("_")[0] == mower_id:
-                if entity_entry.unique_id.endswith("cutting_height_work_area"):
-                    if entity_entry.unique_id not in active_work_areas:
-                        entity_reg.async_remove(entity_entry.entity_id)
+            entity_reg.async_remove(entity_entry.entity_id)

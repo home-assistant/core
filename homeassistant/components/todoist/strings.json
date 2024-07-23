@@ -29,6 +29,10 @@
           "name": "Content",
           "description": "The name of the task."
         },
+        "description": {
+          "name": "Description",
+          "description": "A description for the task."
+        },
         "project": {
           "name": "Project",
           "description": "The name of the project this task should belong to."

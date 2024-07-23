@@ -74,6 +74,7 @@ async def test_no_appliances(
 
 async def test_static_attributes(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_aircon1_api: MagicMock,
     mock_aircon_api_instances: MagicMock,
 ) -> None:
@@ -81,7 +82,7 @@ async def test_static_attributes(
     await init_integration(hass)
 
     for entity_id in ("climate.said1", "climate.said2"):
-        entry = er.async_get(hass).async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == entity_id.split(".")[1]
 

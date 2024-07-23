@@ -1,5 +1,7 @@
 """Handle forward of events transmitted by Hue devices to HASS."""
 
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -25,7 +27,7 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_hue_events(bridge: "HueBridge"):
+async def async_setup_hue_events(bridge: HueBridge):
     """Manage listeners for stateless Hue sensors that emit events."""
     hass = bridge.hass
     api: HueBridgeV2 = bridge.api  # to satisfy typing

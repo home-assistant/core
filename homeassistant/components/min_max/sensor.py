@@ -10,7 +10,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorStateClass,
 )
@@ -59,7 +59,7 @@ SENSOR_TYPES = {
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
             cv.string, vol.In(SENSOR_TYPES.values())

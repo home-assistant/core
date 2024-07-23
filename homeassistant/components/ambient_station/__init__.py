@@ -39,7 +39,7 @@ DEFAULT_SOCKET_MIN_RETRY = 15
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-AmbientStationConfigEntry = ConfigEntry["AmbientStation"]
+type AmbientStationConfigEntry = ConfigEntry[AmbientStation]
 
 
 @callback

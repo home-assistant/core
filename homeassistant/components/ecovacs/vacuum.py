@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from deebot_client.capabilities import VacuumCapabilities
+from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
 from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
@@ -23,8 +23,9 @@ from homeassistant.components.vacuum import (
     StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -39,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
+SERVICE_RAW_GET_POSITIONS = "raw_get_positions"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -46,15 +49,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
+
     controller = config_entry.runtime_data
     vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
-        EcovacsVacuum(device) for device in controller.devices(VacuumCapabilities)
+        EcovacsVacuum(device)
+        for device in controller.devices
+        if device.capabilities.device_type is DeviceType.VACUUM
     ]
     for device in controller.legacy_devices:
         await hass.async_add_executor_job(device.connect_and_wait_until_ready)
         vacuums.append(EcovacsLegacyVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_RAW_GET_POSITIONS,
+        {},
+        "async_raw_get_positions",
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
 class EcovacsLegacyVacuum(StateVacuumEntity):
@@ -197,6 +211,15 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
 
+    async def async_raw_get_positions(
+        self,
+    ) -> None:
+        """Get bot and chargers positions."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="vacuum_raw_get_positions_not_supported",
+        )
+
 
 _STATE_TO_VACUUM_STATE = {
     State.IDLE: STATE_IDLE,
@@ -211,7 +234,7 @@ _ATTR_ROOMS = "rooms"
 
 
 class EcovacsVacuum(
-    EcovacsEntity[VacuumCapabilities, VacuumCapabilities],
+    EcovacsEntity[Capabilities],
     StateVacuumEntity,
 ):
     """Ecovacs vacuum."""
@@ -222,7 +245,6 @@ class EcovacsVacuum(
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
@@ -234,16 +256,17 @@ class EcovacsVacuum(
         key="vacuum", translation_key="vacuum", name=None
     )
 
-    def __init__(self, device: Device[VacuumCapabilities]) -> None:
+    def __init__(self, device: Device) -> None:
         """Initialize the vacuum."""
-        capabilities = device.capabilities
-        super().__init__(device, capabilities)
+        super().__init__(device, device.capabilities)
 
         self._rooms: list[Room] = []
 
-        self._attr_fan_speed_list = [
-            get_name_key(level) for level in capabilities.fan_speed.types
-        ]
+        if fan_speed := self._capability.fan_speed:
+            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
+            self._attr_fan_speed_list = [
+                get_name_key(level) for level in fan_speed.types
+            ]
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
@@ -251,10 +274,6 @@ class EcovacsVacuum(
 
         async def on_battery(event: BatteryEvent) -> None:
             self._attr_battery_level = event.value
-            self.async_write_ha_state()
-
-        async def on_fan_speed(event: FanSpeedEvent) -> None:
-            self._attr_fan_speed = get_name_key(event.speed)
             self.async_write_ha_state()
 
         async def on_rooms(event: RoomsEvent) -> None:
@@ -266,8 +285,15 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         self._subscribe(self._capability.battery.event, on_battery)
-        self._subscribe(self._capability.fan_speed.event, on_fan_speed)
         self._subscribe(self._capability.state.event, on_status)
+
+        if self._capability.fan_speed:
+
+            async def on_fan_speed(event: FanSpeedEvent) -> None:
+                self._attr_fan_speed = get_name_key(event.speed)
+                self.async_write_ha_state()
+
+            self._subscribe(self._capability.fan_speed.event, on_fan_speed)
 
         if map_caps := self._capability.map:
             self._subscribe(map_caps.rooms.event, on_rooms)
@@ -298,6 +324,8 @@ class EcovacsVacuum(
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
+        if TYPE_CHECKING:
+            assert self._capability.fan_speed
         await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
@@ -377,3 +405,19 @@ class EcovacsVacuum(
             await self._device.execute_command(
                 self._capability.custom.set(command, params)
             )
+
+    async def async_raw_get_positions(
+        self,
+    ) -> dict[str, Any]:
+        """Get bot and chargers positions."""
+        _LOGGER.debug("async_raw_get_positions")
+
+        if not (map_cap := self._capability.map) or not (
+            position_commands := map_cap.position.get
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="vacuum_raw_get_positions_not_supported",
+            )
+
+        return await self._device.execute_command(position_commands[0])

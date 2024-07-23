@@ -21,14 +21,10 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_entries_for_config_entry,
-    async_get as er_async_get,
-)
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -104,8 +100,8 @@ def async_restore_climate_entities(
 ) -> None:
     """Restore sleeping climate devices."""
 
-    ent_reg = er_async_get(hass)
-    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     for entry in entries:
         if entry.domain != CLIMATE_DOMAIN:
@@ -472,6 +468,10 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._humidity_key: str | None = None
+        # Check if there is a corresponding humidity key for the thermostat ID
+        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
+            self._humidity_key = humidity_key
 
     @property
     def target_temperature(self) -> float | None:
@@ -482,6 +482,14 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         return cast(float, self.status["current_C"])
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return current humidity."""
+        if self._humidity_key is None:
+            return None
+
+        return cast(float, self.coordinator.device.status[self._humidity_key]["rh"])
 
     @property
     def hvac_mode(self) -> HVACMode:

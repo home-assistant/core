@@ -70,6 +70,7 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
 
 async def test_config_entry_fills_unique_id_with_directed_discovery(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
     config_entry = MockConfigEntry(
@@ -107,7 +108,6 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     assert config_entry.data[CONF_NAME] == DEVICE_NAME
     assert config_entry.title == DEVICE_NAME
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}
     )

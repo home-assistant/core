@@ -1,13 +1,14 @@
 """The sensor tests for the Airzone Cloud platform."""
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_airzone_create_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of sensors."""
 
     await async_init_integration(hass)

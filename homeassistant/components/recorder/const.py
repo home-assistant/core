@@ -1,6 +1,9 @@
 """Recorder constants."""
 
+from __future__ import annotations
+
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -10,8 +13,15 @@ from homeassistant.const import (
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
 )
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
+from homeassistant.util.hass_dict import HassKey
 
-DATA_INSTANCE = "recorder_instance"
+if TYPE_CHECKING:
+    from .core import Recorder  # noqa: F401
+
+
+DATA_INSTANCE: HassKey[Recorder] = HassKey("recorder_instance")
+
+
 SQLITE_URL_PREFIX = "sqlite://"
 MARIADB_URL_PREFIX = "mariadb://"
 MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
@@ -22,8 +32,7 @@ DOMAIN = "recorder"
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
 MAX_QUEUE_BACKLOG_MIN_VALUE = 65000
-ESTIMATED_QUEUE_ITEM_SIZE = 10240
-QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY = 0.65
+MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG = 256 * 1024**2
 
 # The maximum number of rows (events) we purge in one delete statement
 

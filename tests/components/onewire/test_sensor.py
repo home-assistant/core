@@ -19,7 +19,7 @@ from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
         yield

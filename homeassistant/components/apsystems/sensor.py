@@ -7,21 +7,22 @@ from dataclasses import dataclass
 
 from APsystemsEZ1 import ReturnOutputData
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    StateType,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import ApSystemsConfigEntry, ApSystemsData
 from .coordinator import ApSystemsDataCoordinator
+from .entity import ApSystemsEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -109,57 +110,42 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ApSystemsConfigEntry,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
     config = config_entry.runtime_data
-    coordinator = config["COORDINATOR"]
-    device_name = config_entry.title
-    device_id: str = config_entry.unique_id  # type: ignore[assignment]
 
     add_entities(
-        ApSystemsSensorWithDescription(coordinator, desc, device_name, device_id)
+        ApSystemsSensorWithDescription(
+            data=config,
+            entity_description=desc,
+        )
         for desc in SENSORS
     )
 
 
-class ApSystemsSensorWithDescription(CoordinatorEntity, SensorEntity):
+class ApSystemsSensorWithDescription(
+    CoordinatorEntity[ApSystemsDataCoordinator], ApSystemsEntity, SensorEntity
+):
     """Base sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiSensorDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: ApSystemsDataCoordinator,
+        data: ApSystemsData,
         entity_description: ApsystemsLocalApiSensorDescription,
-        device_name: str,
-        device_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(data.coordinator)
+        ApSystemsEntity.__init__(self, data)
         self.entity_description = entity_description
-        self._device_name = device_name
-        self._device_id = device_id
-        self._attr_unique_id = f"{device_id}_{entity_description.key}"
+        self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Get the DeviceInfo."""
-        return DeviceInfo(
-            identifiers={("apsystems", self._device_id)},
-            name=self._device_name,
-            serial_number=self._device_id,
-            manufacturer="APsystems",
-            model="EZ1-M",
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        if self.coordinator.data is None:
-            return  # type: ignore[unreachable]
-        self._attr_native_value = self.entity_description.value_fn(
-            self.coordinator.data
-        )
-        self.async_write_ha_state()
+    def native_value(self) -> StateType:
+        """Return value of sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)

@@ -13,10 +13,10 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import setup_platform
 
 
-async def test_entity_and_device_attributes(hass: HomeAssistant, scene) -> None:
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, scene
+) -> None:
     """Test the attributes of the entity are correct."""
-    # Arrange
-    entity_registry = er.async_get(hass)
     # Act
     await setup_platform(hass, SCENE_DOMAIN, scenes=[scene])
     # Assert

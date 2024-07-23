@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from py17track.package import Package
+from pyseventeentrack.package import Package
 import pytest
 
 from homeassistant.components.seventeentrack.const import (
@@ -69,7 +69,7 @@ VALID_PLATFORM_CONFIG_FULL = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.seventeentrack.async_setup_entry", return_value=True

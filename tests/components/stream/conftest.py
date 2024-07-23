@@ -175,7 +175,7 @@ def hls_sync():
 
 
 @pytest.fixture(autouse=True)
-def should_retry() -> Generator[Mock, None, None]:
+def should_retry() -> Generator[Mock]:
     """Fixture to disable stream worker retries in tests by default."""
     with patch(
         "homeassistant.components.stream._should_retry", return_value=False

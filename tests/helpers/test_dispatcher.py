@@ -188,6 +188,7 @@ async def test_callback_exception_gets_logged(
     @callback
     def bad_handler(*args):
         """Record calls."""
+        # pylint: disable-next=broad-exception-raised
         raise Exception("This is a bad message callback")
 
     # wrap in partial to test message logging.
@@ -208,6 +209,7 @@ async def test_coro_exception_gets_logged(
 
     async def bad_async_handler(*args):
         """Record calls."""
+        # pylint: disable-next=broad-exception-raised
         raise Exception("This is a bad message in a coro")
 
     # wrap in partial to test message logging.

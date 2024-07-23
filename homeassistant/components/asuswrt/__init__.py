@@ -8,7 +8,7 @@ from .router import AsusWrtRouter
 
 PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
-AsusWrtConfigEntry = ConfigEntry[AsusWrtRouter]
+type AsusWrtConfigEntry = ConfigEntry[AsusWrtRouter]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> bool:
