@@ -22,7 +22,7 @@ from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import BRIDGEID
+from .conftest import BRIDGE_ID
 
 
 async def test_device_registry_entry(
@@ -86,7 +86,7 @@ async def test_update_address(
                 ssdp_location="http://2.3.4.5:80/",
                 upnp={
                     ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-                    ATTR_UPNP_SERIAL: BRIDGEID,
+                    ATTR_UPNP_SERIAL: BRIDGE_ID,
                     ATTR_UPNP_UDN: "uuid:456DEF",
                 },
             ),
