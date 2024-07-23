@@ -43,14 +43,7 @@ async def test_device_registry_entry(
     device_entry = device_registry.async_get_device(
         identifiers={(AXIS_DOMAIN, config_entry_setup.unique_id)}
     )
-
-    assert device_entry.configuration_url == snapshot
-    assert device_entry.connections == snapshot
-    assert device_entry.identifiers == snapshot
-    assert device_entry.manufacturer == snapshot
-    assert device_entry.model == snapshot
-    assert device_entry.name == snapshot
-    assert device_entry.sw_version == snapshot
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
