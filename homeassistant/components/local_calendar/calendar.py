@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
+import json
 import logging
 from typing import Any
 
@@ -11,10 +12,11 @@ from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 from ical.exceptions import CalendarParseError
 from ical.store import EventStore, EventStoreError
-from ical.types import Range, Recur
+from ical.types import CalAddress, Range, Recur
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
+    EVENT_ATTENDEES,
     EVENT_END,
     EVENT_RRULE,
     EVENT_START,
@@ -111,7 +113,6 @@ class LocalCalendarEntity(CalendarEntity):
         """Add a new event to calendar."""
         event = _parse_event(kwargs)
         EventStore(self._calendar).add(event)
-        ### Remove before commit
         _LOGGER.debug("event: %s", event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
@@ -173,6 +174,12 @@ def _parse_event(event: dict[str, Any]) -> Event:
     # floating local time to ensure we still apply proper local timezone rules.
     # This can be removed when ical is updated with a new recurrence_id format
     # https://github.com/home-assistant/core/issues/87759
+
+    if attendees := event.get(EVENT_ATTENDEES):
+        _LOGGER.debug(attendees)
+        if attendees[0]["common_name"] == "empty":
+            event[EVENT_ATTENDEES] = []
+
     for key in (EVENT_START, EVENT_END):
         if (
             (value := event[key])
@@ -192,6 +199,7 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     start: datetime | date
     end: datetime | date
+    attendees = None
     if isinstance(event.start, datetime) and isinstance(event.end, datetime):
         start = dt_util.as_local(event.start)
         end = dt_util.as_local(event.end)
@@ -203,6 +211,27 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         if (end - start) < timedelta(days=0):
             end = start + timedelta(days=1)
 
+    if event.attendees is not None:
+        attendees = []
+        for attendee in event.attendees:
+            _LOGGER.debug(attendee)
+            attendees.append(
+                {
+                    "uri": attendee.uri,
+                    "common_name": attendee.common_name,
+                    "user_type": attendee.user_type,
+                    "delegator": attendee.delegator,
+                    "delegate": attendee.delegate,
+                    "directory_entry": attendee.directory_entry,
+                    "member": attendee.member,
+                    "status": attendee.status,
+                    "role": attendee.role,
+                    "rsvp": attendee.rsvp,
+                    "sent_by": attendee.sent_by,
+                    "language": attendee.language,
+                }
+            )
+
     return CalendarEvent(
         summary=event.summary,
         start=start,
@@ -212,5 +241,5 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
-        attendees=event.attendees,
+        attendees=attendees,
     )

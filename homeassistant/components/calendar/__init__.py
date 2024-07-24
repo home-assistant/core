@@ -201,7 +201,7 @@ CREATE_EVENT_SCHEMA = vol.All(
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
             vol.Optional(EVENT_LOCATION): cv.string,
-            vol.Optional(EVENT_ATTENDEES): cv.string,
+            vol.Optional(EVENT_ATTENDEES): cv.ensure_list,
             vol.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
@@ -240,7 +240,7 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION): cv.string,
             vol.Optional(EVENT_LOCATION): cv.string,
-            vol.Optional(EVENT_ATTENDEES): cv.string,
+            vol.Optional(EVENT_ATTENDEES): cv.ensure_list,
             vol.Optional(EVENT_RRULE): _validate_rrule,
         },
         _has_same_type(EVENT_START, EVENT_END),
@@ -350,7 +350,7 @@ class CalendarEvent:
     summary: str
     description: str | None = None
     location: str | None = None
-    attendees: str | None = None
+    attendees: list | None = None
 
     uid: str | None = None
     recurrence_id: str | None = None
