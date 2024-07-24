@@ -5,8 +5,19 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import (
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -15,6 +26,8 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
+    CONF_P_GIVEN_F,
+    CONF_P_GIVEN_T,
     CONF_PRIOR,
     CONF_PROBABILITY_THRESHOLD,
     DEFAULT_NAME,
@@ -64,11 +77,74 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
     }
 )
+SUBSCHEMA_BOILERPLATE = vol.Schema(
+    {
+        vol.Required(CONF_P_GIVEN_T): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.SLIDER,
+                step=1.0,
+                min=0,
+                max=100,
+                unit_of_measurement="%",
+            ),
+        ),
+        vol.Required(CONF_P_GIVEN_F): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.SLIDER,
+                step=1.0,
+                min=0,
+                max=100,
+                unit_of_measurement="%",
+            ),
+        ),
+    }
+)
+
+NUMERIC_STATE_SUBSCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
+        ),
+        vol.Optional(CONF_ABOVE): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step="any"
+            ),
+        ),
+        vol.Optional(CONF_BELOW): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step="any"
+            ),
+        ),
+    },
+).extend(SUBSCHEMA_BOILERPLATE.schema)
+
+STATE_SUBSCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN])
+        ),
+        vol.Required(CONF_ENTITY_ID): selector.StateSelector(
+            selector.StateSelectorConfig(
+                entity_id="***THAT_ENTITY_ABOVE_DYNAMICALLY_SOMEHOW***"
+            )
+        ),
+    },
+).extend(SUBSCHEMA_BOILERPLATE.schema)
+
+TEMPLATE_SUBSCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
+            selector.TemplateSelectorConfig(),
+        ),
+    },
+).extend(SUBSCHEMA_BOILERPLATE.schema)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
+
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
