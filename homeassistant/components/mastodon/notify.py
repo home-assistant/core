@@ -73,8 +73,8 @@ class MastodonNotificationService(BaseNotificationService):
         """Toot a message, with media perhaps."""
 
         target = None
-        if kwargs.get(ATTR_TARGET):
-            target = cast(list[str], kwargs.get(ATTR_TARGET))[0]
+        if (target_list := kwargs.get(ATTR_TARGET)) is not None:
+            target = cast(list[str], target_list)[0]
 
         data = kwargs.get(ATTR_DATA)
 
