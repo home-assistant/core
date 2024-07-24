@@ -180,7 +180,7 @@ class MatterLock(MatterEntity, LockEntity):
     def _calculate_features(
         self,
     ) -> None:
-        """Calculate features for HA Lock platform from Matter FeatureMap.."""
+        """Calculate features for HA Lock platform from Matter FeatureMap."""
         feature_map = int(
             self.get_matter_attribute_value(clusters.DoorLock.Attributes.FeatureMap)
         )

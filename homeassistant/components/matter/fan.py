@@ -241,7 +241,7 @@ class MatterFan(MatterEntity, FanEntity):
     def _calculate_features(
         self,
     ) -> None:
-        """Calculate features for HA Fan platform from Matter FeatureMap.."""
+        """Calculate features for HA Fan platform from Matter FeatureMap."""
         feature_map = int(
             self.get_matter_attribute_value(clusters.FanControl.Attributes.FeatureMap)
         )
