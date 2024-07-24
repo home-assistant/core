@@ -30,7 +30,7 @@ BINARY_SENSOR_DESCRIPTIONS = {
     GoveeBLEBinarySensorDeviceClass.WINDOW: BinarySensorEntityDescription(
         key=GoveeBLEBinarySensorDeviceClass.WINDOW,
         device_class=BinarySensorDeviceClass.WINDOW,
-    )
+    ),
 }
 
 
