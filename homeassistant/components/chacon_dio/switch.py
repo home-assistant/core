@@ -24,8 +24,6 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     client = data.client
 
-    _LOGGER.debug("Setting up switch devices %s", data.list_devices)
-
     async_add_entities(
         ChaconDioSwitch(client, device)
         for device in data.list_devices
