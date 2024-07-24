@@ -115,29 +115,31 @@ class YamahaConfigInfo:
 def _discovery(config_info):
     """Discover list of zone controllers from configuration in the network."""
     if config_info.from_discovery:
+        _LOGGER.debug("Discovery Zones")
         zones = rxv.RXV(
             config_info.ctrl_url,
             model_name=config_info.model,
             friendly_name=config_info.name,
             unit_desc_url=config_info.desc_url,
         ).zone_controllers()
-        _LOGGER.debug("Discovery Zones: %s", zones)
     elif config_info.host is None:
+        _LOGGER.debug("Config No Host Supplied Zones")
         zones = []
         for recv in rxv.find():
             zones.extend(recv.zone_controllers())
-        _LOGGER.debug("No Host Supplied Zones: %s", zones)
     else:
+        _LOGGER.debug("Config Zones")
         zones = None
         for recv in rxv.find():
             if recv.ctrl_url == config_info.ctrl_url:
+                _LOGGER.debug("Config Zones Matched %s",config_info.ctrl_url)
                 zones = recv.zone_controllers()
-                _LOGGER.debug("Config Zones: %s", zones)
                 break
         if not zones:
+            _LOGGER.debug("Config Zones Fallback")
             zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
-            _LOGGER.debug("Config Zones Fallback: %s", zones)
 
+    _LOGGER.debug("Returned _discover zones: %s", zones)
     return zones
 
 
