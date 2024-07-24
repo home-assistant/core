@@ -105,7 +105,7 @@
     "sensor": {
       "heating": {
         "state": {
-          "on": "[%key:common::state::on%]",
+          "manual": "Manual",
           "off": "[%key:common::state::off%]",
           "schedule": "Schedule"
         }
