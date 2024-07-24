@@ -30,6 +30,7 @@
         }
       },
       "vibration": {
+        "name": "Vibration",
         "state_attributes": {
           "event_type": {
             "state": {
