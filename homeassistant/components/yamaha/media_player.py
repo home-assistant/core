@@ -234,7 +234,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # the default name of the integration may not be changed
             # to avoid a breaking change.
             # Prefix as MusicCast could have used this
-            self._attr_unique_id = f"{DOMAIN}_{self.zctrl.serial_number}_{self._zone}"
+            self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
             _LOGGER.debug(
                 "Receiver zone: %s zone %s uid %s",
                 self._name,
