@@ -301,7 +301,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this media_player."""
-        return self._attr_unique_id or ''
+        return self._attr_unique_id or ""
 
     @property
     def name(self):
