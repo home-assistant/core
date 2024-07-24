@@ -176,7 +176,6 @@ def _parse_event(event: dict[str, Any]) -> Event:
     # https://github.com/home-assistant/core/issues/87759
 
     if attendees := event.get(EVENT_ATTENDEES):
-        _LOGGER.debug(attendees)
         if attendees[0]["common_name"] == "empty":
             event[EVENT_ATTENDEES] = []
 
@@ -214,7 +213,6 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
     if event.attendees is not None:
         attendees = []
         for attendee in event.attendees:
-            _LOGGER.debug(attendee)
             attendees.append(
                 {
                     "uri": attendee.uri,
