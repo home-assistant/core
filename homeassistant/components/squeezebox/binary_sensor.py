@@ -54,6 +54,7 @@ class ServerStatusBinarySensor(LMSStatusEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, description)
+        # needs to be set as auto update is off
         self._attr_is_on = coordinator.data[description.key]
 
     @callback
