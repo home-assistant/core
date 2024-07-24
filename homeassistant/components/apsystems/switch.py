@@ -35,8 +35,6 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
         super().__init__(data)
         self._api = data.coordinator.api
         self._attr_unique_id = f"{data.device_id}_power_output"
-        self._attr_is_on = None
-        self._attr_available = False
 
     async def async_update(self) -> None:
         """Update switch status and availability."""
