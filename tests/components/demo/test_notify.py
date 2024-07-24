@@ -4,12 +4,14 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN
 import homeassistant.components.demo.notify as demo
 from homeassistant.const import Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_capture_events
@@ -83,4 +85,52 @@ async def test_calling_notify_from_script_loaded_from_yaml(
     assert len(events) == 1
     assert events[0].data == {
         "message": "Test 123 4",
+    }
+
+
+async def test_calling_service_from_script_loaded_from_yaml_with_variables(
+    hass: HomeAssistant, events: list[Event]
+) -> None:
+    """Test calling a service with variables & a schema."""
+
+    TEST_TEMPLATING_SCHEMA = vol.Schema(
+        {
+            vol.Required(notify.ATTR_MESSAGE): cv.template,
+        }
+    )
+
+    @callback
+    def test_templating(service) -> None:
+        message = service.data[notify.ATTR_MESSAGE]
+        message = message.async_render(parse_result=False)
+        event_notification = {"message": message}
+        hass.bus.async_fire(demo.EVENT_NOTIFY, event_notification)
+
+    hass.services.async_register(
+        "template_test",
+        "test_templating",
+        test_templating,
+        schema=TEST_TEMPLATING_SCHEMA,
+    )
+
+    steps = [
+        {
+            "variables": {"templatable_str": "{{ '{{ 2 + 2 }}' }}"},
+        },
+        {
+            "service": "template_test.test_templating",
+            "data": {
+                "message": "Test 123 {{ templatable_str }}\n",
+            },
+        },
+    ]
+
+    await async_setup_component(
+        hass, "script", {"script": {"test": {"sequence": steps}}}
+    )
+    await hass.services.async_call("script", "test")
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data == {
+        "message": "Test 123 {{ 2 + 2 }}",
     }
