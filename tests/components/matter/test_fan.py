@@ -98,6 +98,11 @@ async def test_fan_base(
     state = hass.states.get(entity_id)
     assert state.attributes["preset_mode"] is None
     assert state.attributes["percentage"] == 0
+    # test featuremap update
+    set_node_attribute(air_purifier, 1, 514, 65532, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["supported_features"] & FanEntityFeature.SET_SPEED
 
 
 async def test_fan_turn_on_with_percentage(

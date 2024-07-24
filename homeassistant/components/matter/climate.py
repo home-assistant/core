@@ -286,7 +286,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     ) -> None:
         """Calculate features for HA Thermostat platform from Matter FeatureMap."""
         feature_map = int(
-            self.get_matter_attribute_value(clusters.FanControl.Attributes.FeatureMap)
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
         )
         # NOTE: the featuremap can dynamically change, so we need to update the
         # supported features if the featuremap changes.
