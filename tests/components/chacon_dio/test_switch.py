@@ -9,9 +9,8 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -68,7 +67,6 @@ async def test_switch_actions(
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -78,11 +76,9 @@ async def test_switch_actions(
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get(SWITCH_ENTITY_ID)
-    assert (
-        state.state == STATE_ON
-    )  # turn off does not change directly the state, it is made by a server side callback.
+    # turn off does not change directly the state, it is made by a server side callback.
+    assert state.state == STATE_ON
 
 
 async def test_switch_callbacks(
@@ -118,7 +114,7 @@ async def test_switch_callbacks(
     await _callback_device_state_function(False)
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_no_switch_found(
@@ -127,7 +123,7 @@ async def test_no_switch_found(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the cover absence."""
+    """Test the switch absence."""
 
     mock_dio_chacon_client.search_all_devices.return_value = None
 
