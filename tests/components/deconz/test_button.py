@@ -8,10 +8,11 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import ConfigEntryFactoryType
 
 from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -79,7 +80,7 @@ async def test_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_factory: ConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     expected: dict[str, Any],
     snapshot: SnapshotAssertion,
