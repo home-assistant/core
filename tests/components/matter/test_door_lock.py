@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.lock import (
     STATE_LOCKED,
+    STATE_OPEN,
     STATE_UNLOCKED,
     LockEntityFeature,
 )
@@ -213,9 +214,16 @@ async def test_lock_with_unbolt(
     assert state
     assert state.state == STATE_OPENING
 
-    set_node_attribute(door_lock_with_unbolt, 1, 257, 3, 0)
+    set_node_attribute(door_lock_with_unbolt, 1, 257, 0, 0)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_LOCKED
+    assert state.state == STATE_UNLOCKED
+
+    set_node_attribute(door_lock_with_unbolt, 1, 257, 0, 3)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock_lock")
+    assert state
+    assert state.state == STATE_OPEN
