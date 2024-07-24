@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from simplefin4py import Account
 
@@ -25,7 +26,7 @@ from .entity import SimpleFinEntity
 class SimpleFinSensorEntityDescription(SensorEntityDescription):
     """Describes a sensor entity."""
 
-    value_fn: Callable[[Account], StateType]
+    value_fn: Callable[[Account], StateType | datetime]
     icon_fn: Callable[[Account], str] | None = None
     unit_fn: Callable[[Account], str] | None = None
 
@@ -39,6 +40,12 @@ SIMPLEFIN_SENSORS: tuple[SimpleFinSensorEntityDescription, ...] = (
         value_fn=lambda account: account.balance,
         unit_fn=lambda account: account.currency,
         icon_fn=lambda account: account.inferred_account_type,
+    ),
+    SimpleFinSensorEntityDescription(
+        key="age",
+        translation_key="age",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda account: account.last_update_utc,
     ),
 )
 
@@ -70,7 +77,7 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
     entity_description: SimpleFinSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime | None:
         """Return the state."""
         return self.entity_description.value_fn(self.account_data)
 
