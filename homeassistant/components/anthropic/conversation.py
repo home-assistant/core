@@ -81,7 +81,6 @@ class AnthropicConversationEntity(
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
             manufacturer="Anthropic",
             model="Claude",
             entry_type=dr.DeviceEntryType.SERVICE,
