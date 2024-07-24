@@ -830,7 +830,7 @@ googlemaps==2.5.1
 gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
-govee-ble==0.38.0
+govee-ble==0.39.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.1
