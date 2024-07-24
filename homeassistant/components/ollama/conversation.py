@@ -216,7 +216,7 @@ class OllamaConversationEntity(
 
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL,
-            {"messages": message_history.messages},
+            {"messages": message_history.messages, "tools": tools},
         )
 
         # Get response
