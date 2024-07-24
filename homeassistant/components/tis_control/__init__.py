@@ -24,17 +24,14 @@ class TISData:
     api: TISApi
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     """Set up TISControl from a config entry."""
-    # if DOMAIN not in hass.data:
-    #     hass.data.setdefault(DOMAIN, {"tis_api": {}})
     tis_api = TISApi(
         port=int(entry.data["port"]),
         hass=hass,
         domain=DOMAIN,
         devices_dict=DEVICES_DICT,
     )
-    # hass.data[DOMAIN]["tis_api"] = tis_api
     entry.runtime_data = TISData(api=tis_api)
 
     hass.data.setdefault(DOMAIN, {"supported_platforms": PLATFORMS})
@@ -48,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return unload_ok

@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.tis_control import async_setup_entry, async_unload_entry
-from homeassistant.components.tis_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockTISApi

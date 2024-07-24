@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.tis_control.const import DEVICES_DICT, DOMAIN
+from homeassistant.components.tis_control.const import DEVICES_DICT
 from homeassistant.components.tis_control.switch import async_setup_entry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
