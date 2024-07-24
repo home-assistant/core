@@ -147,16 +147,10 @@ async def test_reconfigure_flow(
     new_host = "192.168.1.100"
     new_port = 44077
 
-    # make a new flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: new_host, CONF_PORT: new_port},
     )
-    await hass.async_block_till_done()
 
     # Now we should get the abort with success result
     assert result["type"] == FlowResultType.ABORT

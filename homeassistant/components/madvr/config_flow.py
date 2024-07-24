@@ -88,7 +88,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                         )
 
                     # however dont abort if not unique because the IP could change but keep the same mac
-                    self._abort_if_unique_id_configured()
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                     _LOGGER.debug("Configuration successful")
                     return self.async_create_entry(
                         title=DEFAULT_NAME,
