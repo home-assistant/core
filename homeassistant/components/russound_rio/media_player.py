@@ -231,10 +231,10 @@ class RussoundZoneDevice(MediaPlayerEntity):
             await self._zone.select_source(source_id)
             break
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Step the volume up."""
         await self._zone.volume_up()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Step the volume down."""
         await self._zone.volume_down()
