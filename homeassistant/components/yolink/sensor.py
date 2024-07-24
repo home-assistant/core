@@ -48,7 +48,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
-from .const import DOMAIN
+from .const import DEV_MODEL_TH_SENSOR_YS8017_EC, DEV_MODEL_TH_SENSOR_YS8017_UC, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -108,6 +108,11 @@ MCU_DEV_TEMPERATURE_SENSOR = [
     ATTR_DEVICE_CO_SMOKE_SENSOR,
 ]
 
+NONE_HUMIDITY_SENSOR_MODELS = [
+    DEV_MODEL_TH_SENSOR_YS8017_UC,
+    DEV_MODEL_TH_SENSOR_YS8017_EC,
+]
+
 
 def cvt_battery(val: int | None) -> int | None:
     """Convert battery to percentage."""
@@ -141,7 +146,8 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR]
+        and device.device_model_name not in NONE_HUMIDITY_SENSOR_MODELS,
     ),
     YoLinkSensorEntityDescription(
         key="temperature",

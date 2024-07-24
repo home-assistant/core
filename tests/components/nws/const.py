@@ -66,6 +66,7 @@ CLEAR_NIGHT_OBSERVATION = DEFAULT_OBSERVATION.copy()
 CLEAR_NIGHT_OBSERVATION["iconTime"] = "night"
 
 SENSOR_EXPECTED_OBSERVATION_METRIC = {
+    "timestamp": "2019-08-12T23:53:00+00:00",
     "dewpoint": "5",
     "temperature": "10",
     "windChill": "5",
@@ -80,6 +81,7 @@ SENSOR_EXPECTED_OBSERVATION_METRIC = {
 }
 
 SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
+    "timestamp": "2019-08-12T23:53:00+00:00",
     "dewpoint": str(
         round(
             TemperatureConverter.convert(
@@ -185,6 +187,7 @@ DEFAULT_FORECAST = [
         "temperature": 10,
         "windSpeedAvg": 10,
         "windBearing": 180,
+        "shortForecast": "A short forecast.",
         "detailedForecast": "A detailed forecast.",
         "timestamp": "2019-08-12T23:53:00+00:00",
         "iconTime": "night",
