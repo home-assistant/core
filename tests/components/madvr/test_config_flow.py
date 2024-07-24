@@ -152,13 +152,15 @@ async def test_reconfigure_flow(
         {CONF_HOST: new_host, CONF_PORT: new_port},
     )
 
-    # Now we should get the abort with success result
+    # should get the abort with success result
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
     # Verify that the config entry was updated
     assert mock_config_entry.data[CONF_HOST] == new_host
     assert mock_config_entry.data[CONF_PORT] == new_port
+    # unique id should remain unchanged with new host
+    assert mock_config_entry.unique_id == MOCK_MAC
 
     # Verify that the connection was tested
     mock_madvr_client.open_connection.assert_called()
