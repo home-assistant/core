@@ -4704,7 +4704,6 @@
       }),
       'disabled_by': None,
       'domain': 'vicare',
-      'entry_id': '1234',
       'minor_version': 1,
       'options': dict({
       }),

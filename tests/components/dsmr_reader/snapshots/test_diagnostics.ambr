@@ -8,7 +8,6 @@
       }),
       'disabled_by': None,
       'domain': 'dsmr_reader',
-      'entry_id': 'TEST_ENTRY_ID',
       'minor_version': 1,
       'options': dict({
       }),

@@ -12,7 +12,6 @@
       }),
       'disabled_by': None,
       'domain': 'onvif',
-      'entry_id': '1',
       'minor_version': 1,
       'options': dict({
         'enable_webhooks': True,

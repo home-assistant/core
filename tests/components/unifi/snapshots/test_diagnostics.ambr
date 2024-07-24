@@ -28,7 +28,6 @@
       }),
       'disabled_by': None,
       'domain': 'unifi',
-      'entry_id': '1',
       'minor_version': 1,
       'options': dict({
         'allow_bandwidth_sensors': True,

@@ -24,7 +24,6 @@
       }),
       'disabled_by': None,
       'domain': 'pi_hole',
-      'entry_id': 'pi_hole_mock_entry',
       'minor_version': 1,
       'options': dict({
       }),

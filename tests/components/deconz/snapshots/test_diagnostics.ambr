@@ -11,7 +11,6 @@
       }),
       'disabled_by': None,
       'domain': 'deconz',
-      'entry_id': '1',
       'minor_version': 1,
       'options': dict({
         'master': True,

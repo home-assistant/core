@@ -238,7 +238,6 @@
       }),
       'disabled_by': None,
       'domain': 'webmin',
-      'entry_id': '**REDACTED**',
       'minor_version': 1,
       'options': dict({
         'host': '**REDACTED**',
