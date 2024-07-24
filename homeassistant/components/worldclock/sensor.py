@@ -14,6 +14,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -85,15 +86,21 @@ class WorldClockSensor(SensorEntity):
     """Representation of a World clock sensor."""
 
     _attr_icon = "mdi:clock"
+    _attr_name = None
 
     def __init__(
         self, time_zone: tzinfo | None, name: str, time_format: str, unique_id: str
     ) -> None:
         """Initialize the sensor."""
-        self._attr_name = name
         self._time_zone = time_zone
         self._time_format = time_format
         self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Worldclock",
+        )
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""
