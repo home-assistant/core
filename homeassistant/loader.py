@@ -100,7 +100,7 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2024.8.0 because of
     # https://github.com/sh00t2kill/dolphin-robot/issues/221
     "mydolphin_plus": BlockedIntegration(
-        AwesomeVersion("1.0.16"), "thousands of reuqest Maytronics login API per user"
+        AwesomeVersion("1.0.16"), "thousands of requests Maytronics login API per user"
     ),
     # Added in 2024.7.2 because of
     # https://github.com/gcobb321/icloud3/issues/349
