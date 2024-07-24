@@ -48,6 +48,8 @@ def device_fixture(main_zone):
     device = FakeYamahaDevice("http://receiver", "Receiver", zones=[main_zone])
     with patch("rxv.RXV", return_value=device):
         yield device
+    with patch("rxv.find", return_value=[device]):
+        yield device
 
 
 async def test_setup_host(hass: HomeAssistant, device, main_zone) -> None:
