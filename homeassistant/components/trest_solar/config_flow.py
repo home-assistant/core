@@ -43,6 +43,7 @@ class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
                     raise InvalidAuth
 
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
+                self._abort_if_unique_id_configured()
 
                 info = {"title": "Trest Solar Controller"}
             except InvalidAuth:
