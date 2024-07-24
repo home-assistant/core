@@ -725,7 +725,6 @@ async def test_shuffle_get(
     no_media_event.variables["current_play_mode"] = "SHUFFLE_NOREPEAT"
     sub_callback(no_media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
-
     state = hass.states.get("media_player.zone_a")
     assert state.attributes["shuffle"] is True
 
@@ -735,7 +734,6 @@ async def test_shuffle_get(
     no_media_event.variables["current_play_mode"] = "NORMAL"
     sub_callback(no_media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
-
     state = hass.states.get("media_player.zone_a")
     assert state.attributes["shuffle"] is False
 
