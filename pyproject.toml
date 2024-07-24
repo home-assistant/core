@@ -24,9 +24,8 @@ classifiers = [
 requires-python = ">=3.12.0"
 dependencies    = [
     "aiodns==3.2.0",
-    "aiohttp==3.9.5",
+    "aiohttp==3.10.0b1",
     "aiohttp_cors==0.7.0",
-    "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-fast-zlib==0.1.1",
     "aiozoneinfo==0.2.1",
     "astral==2.2",
@@ -540,7 +539,7 @@ filterwarnings = [
     # https://pypi.org/project/emulated-roku/ - v0.3.0 - 2023-12-19
     # https://github.com/martonperei/emulated_roku
     "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
-    # https://github.com/thecynic/pylutron - v0.2.13
+    # https://github.com/thecynic/pylutron - v0.2.15
     "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
     # https://github.com/pschmitt/pynuki/blob/1.6.3/pynuki/utils.py#L21 - v1.6.3
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pynuki.utils",
@@ -599,9 +598,6 @@ filterwarnings = [
     # https://github.com/nextcord/nextcord/issues/1174
     # https://github.com/nextcord/nextcord/blob/v2.6.1/nextcord/player.py#L5
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nextcord.player",
-    # https://pypi.org/project/pylutron/ - v0.2.12 - 2024-02-12
-    # https://github.com/thecynic/pylutron/issues/89
-    "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pylutron",
     # https://pypi.org/project/SpeechRecognition/ - v3.10.4 - 2024-05-05
     # https://github.com/Uberi/speech_recognition/blob/3.10.4/speech_recognition/__init__.py#L7
     "ignore:'aifc' is deprecated and slated for removal in Python 3.13:DeprecationWarning:speech_recognition",
