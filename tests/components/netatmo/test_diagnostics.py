@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 from .common import fake_post_request
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -40,6 +40,9 @@ async def test_entry_diagnostics(
 
     await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    ) == snapshot(exclude=paths("info.data.token.expires_at", "info.entry_id"))
+    await snapshot_get_diagnostics_for_config_entry(
+        hass,
+        hass_client,
+        config_entry,
+        snapshot(exclude=paths("info.data.token.expires_at", "info.entry_id")),
+    )

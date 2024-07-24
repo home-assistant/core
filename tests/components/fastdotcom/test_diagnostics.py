@@ -9,7 +9,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -37,7 +37,6 @@ async def test_get_config_entry_diagnostics(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry, snapshot
     )

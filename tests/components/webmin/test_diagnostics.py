@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import async_init_integration
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -16,9 +16,6 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    assert (
-        await get_diagnostics_for_config_entry(
-            hass, hass_client, await async_init_integration(hass)
-        )
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, await async_init_integration(hass), snapshot
     )

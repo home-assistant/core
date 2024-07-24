@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import ComponentSetup
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -21,4 +21,4 @@ async def test_diagnostics(
     await setup_integration()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    await snapshot_get_diagnostics_for_config_entry(hass, hass_client, entry, snapshot)

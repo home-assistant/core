@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 YAML_CONFIG = {"username": "test-user", "password": "test-password"}
@@ -31,6 +31,6 @@ async def test_entry_diagnostics(
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.async_entity_ids_count() == 8
 
-    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-
-    assert result == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry, snapshot
+    )

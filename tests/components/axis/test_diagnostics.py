@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import API_DISCOVERY_BASIC_DEVICE_INFO
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -20,7 +20,6 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry_setup)
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_setup, snapshot
     )

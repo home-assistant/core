@@ -14,7 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from . import DATASET_1
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 TEST_ZEROCONF_RECORD_1 = ServiceInfo(
@@ -275,6 +275,6 @@ async def test_diagnostics(
         )
     )
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-
-    assert diag == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry, snapshot
+    )

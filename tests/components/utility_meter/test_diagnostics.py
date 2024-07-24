@@ -16,7 +16,7 @@ from tests.common import (
     MockUser,
     mock_restore_cache_with_extra_data,
 )
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -121,8 +121,9 @@ async def test_diagnostics(
         hass, hass_admin_user, hass_admin_credential
     )
 
-    diag = await get_diagnostics_for_config_entry(
-        hass, _get_test_client_generator(hass, aiohttp_client, new_token), config_entry
+    await snapshot_get_diagnostics_for_config_entry(
+        hass,
+        _get_test_client_generator(hass, aiohttp_client, new_token),
+        config_entry,
+        snapshot(exclude=limit_diagnostic_attrs),
     )
-
-    assert diag == snapshot(exclude=limit_diagnostic_attrs)

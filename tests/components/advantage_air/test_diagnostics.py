@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from . import add_mock_config
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -21,5 +21,4 @@ async def test_select_async_setup_entry(
     """Test select platform."""
 
     entry = await add_mock_config(hass)
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-    assert diag == snapshot
+    await snapshot_get_diagnostics_for_config_entry(hass, hass_client, entry, snapshot)

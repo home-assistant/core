@@ -9,8 +9,8 @@ from homeassistant.helpers import device_registry as dr
 from . import MOCK_SERIAL_NUMBER, init_integration
 
 from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
+    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -24,7 +24,7 @@ async def test_entry_diagnostics(
 
     entry = await init_integration(hass)
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    await snapshot_get_diagnostics_for_config_entry(hass, hass_client, entry, snapshot)
 
 
 async def test_device_diagnostics(

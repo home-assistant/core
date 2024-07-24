@@ -10,8 +10,8 @@ from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
+    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -30,9 +30,8 @@ async def test_diagnostics(
         get_diagnostic_data=AsyncMock(return_value=diagnostic_data),
         get_execution_history=AsyncMock(return_value=[]),
     ):
-        assert (
-            await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
-            == snapshot
+        await snapshot_get_diagnostics_for_config_entry(
+            hass, hass_client, init_integration, snapshot
         )
 
 

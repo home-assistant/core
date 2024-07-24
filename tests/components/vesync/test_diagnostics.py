@@ -20,8 +20,8 @@ from .common import (
 )
 
 from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
+    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -39,10 +39,9 @@ async def test_async_get_config_entry_diagnostics__no_devices(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-
-    assert isinstance(diag, dict)
-    assert diag == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry, snapshot
+    )
 
 
 async def test_async_get_config_entry_diagnostics__single_humidifier(
@@ -58,10 +57,9 @@ async def test_async_get_config_entry_diagnostics__single_humidifier(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-
-    assert isinstance(diag, dict)
-    assert diag == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry, snapshot
+    )
 
 
 async def test_async_get_device_diagnostics__single_fan(

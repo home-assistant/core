@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from . import prepare_webhook_setup, setup_integration
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -24,9 +24,8 @@ async def test_diagnostics_polling_instance(
     """Test diagnostics."""
     await setup_integration(hass, polling_config_entry, False)
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, polling_config_entry)
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, polling_config_entry, snapshot
     )
 
 
@@ -42,9 +41,8 @@ async def test_diagnostics_webhook_instance(
     await setup_integration(hass, webhook_config_entry)
     await prepare_webhook_setup(hass, freezer)
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, webhook_config_entry)
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, webhook_config_entry, snapshot
     )
 
 
@@ -81,7 +79,6 @@ async def test_diagnostics_cloudhook_instance(
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, webhook_config_entry)
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, webhook_config_entry, snapshot
     )

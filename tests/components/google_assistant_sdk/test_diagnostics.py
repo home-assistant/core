@@ -8,7 +8,7 @@ from homeassistant.components.google_assistant_sdk.const import CONF_LANGUAGE_CO
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -32,7 +32,6 @@ async def test_diagnostics(
         options={CONF_LANGUAGE_CODE: "en-US"},
     )
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry, snapshot
     )

@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import TEST_ENTITY, Client
 
 from tests.common import CLIENT_ID, MockConfigEntry, MockUser
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -62,10 +62,12 @@ async def test_empty_calendar(
     new_token = await generate_new_hass_access_token(
         hass, hass_admin_user, hass_admin_credential
     )
-    data = await get_diagnostics_for_config_entry(
-        hass, _get_test_client_generator(hass, aiohttp_client, new_token), config_entry
+    await snapshot_get_diagnostics_for_config_entry(
+        hass,
+        _get_test_client_generator(hass, aiohttp_client, new_token),
+        config_entry,
+        snapshot,
     )
-    assert data == snapshot
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")
@@ -105,7 +107,9 @@ async def test_api_date_time_event(
         },
     )
 
-    data = await get_diagnostics_for_config_entry(
-        hass, _get_test_client_generator(hass, aiohttp_client, new_token), config_entry
+    await snapshot_get_diagnostics_for_config_entry(
+        hass,
+        _get_test_client_generator(hass, aiohttp_client, new_token),
+        config_entry,
+        snapshot,
     )
-    assert data == snapshot

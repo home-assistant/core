@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 
 from .util import CONFIG, WS_ID, WS_ID_AIDOO, WS_ID_AIDOO_PRO, async_init_integration
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 RAW_DATA_MOCK = {
@@ -110,5 +110,6 @@ async def test_config_entry_diagnostics(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.raw_data",
         return_value=RAW_DATA_MOCK,
     ):
-        result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        assert result == snapshot
+        await snapshot_get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry, snapshot
+        )

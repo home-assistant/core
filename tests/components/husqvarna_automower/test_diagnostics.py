@@ -14,8 +14,8 @@ from .const import TEST_MOWER_ID
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
+    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -33,10 +33,9 @@ async def test_entry_diagnostics(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    result = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry, snapshot
     )
-    assert result == snapshot
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))

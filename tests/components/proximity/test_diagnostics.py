@@ -16,7 +16,7 @@ from homeassistant.const import CONF_ZONE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -69,8 +69,11 @@ async def test_entry_diagnostics(
     await hass.async_block_till_done()
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_entry
-    ) == snapshot(
-        exclude=props("entry_id", "last_changed", "last_reported", "last_updated")
+    await snapshot_get_diagnostics_for_config_entry(
+        hass,
+        hass_client,
+        mock_entry,
+        snapshot(
+            exclude=props("entry_id", "last_changed", "last_reported", "last_updated")
+        ),
     )

@@ -24,7 +24,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -53,7 +53,6 @@ async def test_diagnostics(
         },
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
-        == snapshot
+    await snapshot_get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry, snapshot
     )
