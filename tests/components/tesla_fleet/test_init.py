@@ -102,18 +102,17 @@ async def test_vehicle_refresh_offline(
     mock_vehicle_state.reset_mock()
     mock_vehicle_data.reset_mock()
 
-    # Test the unlikely condition that a vehicle state is online but actually offline
+    # Then the vehicle goes offline
     mock_vehicle_data.side_effect = VehicleOffline
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_vehicle_state.assert_called_once()
+    mock_vehicle_state.assert_not_called()
     mock_vehicle_data.assert_called_once()
-    mock_vehicle_state.reset_mock()
     mock_vehicle_data.reset_mock()
 
-    # Test the normal condition that a vehcile state is offline
+    # And stays offline
     mock_vehicle_state.return_value = VEHICLE_ASLEEP
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
@@ -127,7 +126,7 @@ async def test_vehicle_refresh_offline(
 async def test_vehicle_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_vehicle_state,
+    mock_vehicle_data,
     side_effect,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -135,7 +134,7 @@ async def test_vehicle_refresh_error(
 
     await setup_platform(hass, normal_config_entry)
 
-    mock_vehicle_state.side_effect = side_effect
+    mock_vehicle_data.side_effect = side_effect
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

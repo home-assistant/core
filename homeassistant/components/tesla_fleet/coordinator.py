@@ -120,14 +120,18 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             # Check if the vehicle is awake using a non-rate limited API call
-            state = (await self.api.vehicle())["response"]
-            if state and state["state"] != TeslaFleetState.ONLINE:
-                self.data["state"] = state["state"]
+            if self.data["state"] != TeslaFleetState.ONLINE:
+                response = await self.api.vehicle()
+                self.data["state"] = response["response"]["state"]
+
+            if self.data["state"] != TeslaFleetState.ONLINE:
                 return self.data
 
             # This is a rated limited API call
             self.rate.consume()
-            data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
+            response = await self.api.vehicle_data(endpoints=ENDPOINTS)
+            data = response["response"]
+
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
