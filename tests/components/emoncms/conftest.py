@@ -72,10 +72,10 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     """Mock pyemoncms success response."""
     with (
         patch(
-            "homeassistant.components.emoncms.sensor.EmoncmsClient", autospec=True
+            "homeassistant.components.emoncms.EmoncmsClient", autospec=True
         ) as mock_client,
         patch(
-            "homeassistant.components.emoncms.coordinator.EmoncmsClient",
+            "homeassistant.components.emoncms.config_flow.EmoncmsClient",
             new=mock_client,
         ),
     ):

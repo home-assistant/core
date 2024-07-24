@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_coordinator_update[sensor.emoncms_parameter_1]
+# name: test_coordinator_update[sensor.emoncms_1_1_1_1_parameter_1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'FeedId': '1',
