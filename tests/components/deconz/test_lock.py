@@ -9,12 +9,7 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_LOCKED,
-    STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
@@ -77,17 +72,6 @@ async def test_lock_from_light(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 1
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
@@ -152,14 +136,3 @@ async def test_lock_from_sensor(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"lock": False}
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 2
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

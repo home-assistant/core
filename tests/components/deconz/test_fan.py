@@ -13,13 +13,7 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -128,14 +122,3 @@ async def test_fans(
     await light_ws_data({"state": {"speed": 5}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert not hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE]
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 1
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

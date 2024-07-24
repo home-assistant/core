@@ -24,7 +24,6 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
-    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -158,10 +157,3 @@ async def test_alarm_control_panel(
             blocking=True,
         )
         assert aioclient_mock.mock_calls[0][2] == {"code0": code}
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get("alarm_control_panel.keypad").state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

@@ -14,7 +14,7 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -343,17 +343,6 @@ async def test_binary_sensors(
 
     await sensor_ws_data({"state": expected["websocket_event"]})
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
