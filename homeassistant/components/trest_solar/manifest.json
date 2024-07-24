@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/trest_solar",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["trest_identity==1.0.0", "trest_solar==1.0.1"]
+  "requirements": ["trest_identity==1.0.0", "trest_solar==1.0.2"]
 }

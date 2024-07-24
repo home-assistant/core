@@ -42,6 +42,8 @@ class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not identity.check_token_is_expired():
                     raise InvalidAuth
 
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
+
                 info = {"title": "Trest Solar Controller"}
             except InvalidAuth:
                 errors["base"] = "invalid_auth"

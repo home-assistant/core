@@ -2776,7 +2776,7 @@ tplink-omada-client==1.3.12
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
 
-# homeassistant.components.trest_identity
+# homeassistant.components.trest_solar
 trest_identity==1.0.0
 
 # homeassistant.components.trest_solar
