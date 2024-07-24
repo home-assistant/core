@@ -171,6 +171,48 @@ async def test_service_call_create_log_book_entry_no_message(hass_) -> None:
     assert len(calls) == 0
 
 
+async def test_script_service_call_does_not_double_template(hass_) -> None:
+    """Test to ensure service call from a script create does not template data twice."""
+
+    calls = async_capture_events(hass_, logbook.EVENT_LOGBOOK_ENTRY)
+
+    steps = [
+        {
+            "variables": {"templatable_str": "{{ '{{ 2 + 2 }}' }}"},
+        },
+        {
+            "service": "logbook.log",
+            "data": {
+                "name": "Alarm",
+                "message": "Test 123 {{ templatable_str }}\n",
+            },
+        },
+    ]
+
+    await async_setup_component(
+        hass_, "script", {"script": {"test": {"sequence": steps}}}
+    )
+
+    await hass_.services.async_call("script", "test")
+    await async_wait_recording_done(hass_)
+    event_processor = EventProcessor(hass_, (EVENT_LOGBOOK_ENTRY,))
+
+    events = list(
+        event_processor.get_events(
+            dt_util.utcnow() - timedelta(hours=1),
+            dt_util.utcnow() + timedelta(hours=1),
+        )
+    )
+    assert len(events) == 3
+
+    assert len(calls) == 1
+    call = calls[-1]
+
+    assert call.data.get(logbook.ATTR_NAME) == "Alarm"
+    assert call.data.get(logbook.ATTR_MESSAGE) == "Test 123 {{ 2 + 2 }}"
+    assert call.data.get(logbook.ATTR_DOMAIN) == "logbook"
+
+
 async def test_filter_sensor(
     hass_: ha.HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
