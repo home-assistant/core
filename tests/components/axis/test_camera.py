@@ -1,7 +1,5 @@
 """Axis camera platform tests."""
 
-from collections.abc import Callable
-
 import pytest
 
 from homeassistant.components import camera
@@ -10,7 +8,6 @@ from homeassistant.components.axis.const import (
     DOMAIN as AXIS_DOMAIN,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -82,13 +79,11 @@ root.Properties.Firmware.BuildDate=Feb 15 2019 09:42
 root.Properties.Firmware.BuildNumber=26
 root.Properties.Firmware.Version=9.10.1
 root.Properties.System.SerialNumber={MAC}
-"""
+"""  # No image format data to signal camera support
 
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])
-async def test_camera_disabled(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
-) -> None:
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_camera_disabled(hass: HomeAssistant) -> None:
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
-    await config_entry_factory()
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0

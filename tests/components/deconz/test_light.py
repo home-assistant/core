@@ -46,7 +46,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    ("light_0_payload", "expected"),
+    ("light_payload", "expected"),
     [
         (  # RGB light in color temp color mode
             {
@@ -440,51 +440,43 @@ async def test_lights(
     "light_payload",
     [
         {
-            "0": {
-                "colorcapabilities": 31,
-                "ctmax": 500,
-                "ctmin": 153,
-                "etag": "055485a82553e654f156d41c9301b7cf",
-                "hascolor": True,
-                "lastannounced": None,
-                "lastseen": "2021-06-10T20:25Z",
-                "manufacturername": "Philips",
-                "modelid": "LLC020",
-                "name": "Hue Go",
-                "state": {
-                    "alert": "none",
-                    "bri": 254,
-                    "colormode": "ct",
-                    "ct": 375,
-                    "effect": "none",
-                    "hue": 8348,
-                    "on": True,
-                    "reachable": True,
-                    "sat": 147,
-                    "xy": [0.462, 0.4111],
-                },
-                "swversion": "5.127.1.26420",
-                "type": "Extended color light",
-                "uniqueid": "00:17:88:01:01:23:45:67-00",
-            }
+            "colorcapabilities": 31,
+            "ctmax": 500,
+            "ctmin": 153,
+            "etag": "055485a82553e654f156d41c9301b7cf",
+            "hascolor": True,
+            "lastannounced": None,
+            "lastseen": "2021-06-10T20:25Z",
+            "manufacturername": "Philips",
+            "modelid": "LLC020",
+            "name": "Hue Go",
+            "state": {
+                "alert": "none",
+                "bri": 254,
+                "colormode": "ct",
+                "ct": 375,
+                "effect": "none",
+                "hue": 8348,
+                "on": True,
+                "reachable": True,
+                "sat": 147,
+                "xy": [0.462, 0.4111],
+            },
+            "swversion": "5.127.1.26420",
+            "type": "Extended color light",
+            "uniqueid": "00:17:88:01:01:23:45:67-00",
         }
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_light_state_change(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Verify light can change state on websocket event."""
     assert hass.states.get("light.hue_go").state == STATE_ON
 
-    event_changed_light = {
-        "r": "lights",
-        "state": {"on": False},
-    }
-    await mock_websocket_data(event_changed_light)
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"on": False}})
     assert hass.states.get("light.hue_go").state == STATE_OFF
 
 
@@ -635,34 +627,32 @@ async def test_light_service_calls(
     expected: dict[str, Any],
 ) -> None:
     """Verify light can change state on websocket event."""
-    light_payload |= {
-        "0": {
-            "colorcapabilities": 31,
-            "ctmax": 500,
-            "ctmin": 153,
-            "etag": "055485a82553e654f156d41c9301b7cf",
-            "hascolor": True,
-            "lastannounced": None,
-            "lastseen": "2021-06-10T20:25Z",
-            "manufacturername": "Philips",
-            "modelid": "LLC020",
-            "name": "Hue Go",
-            "state": {
-                "alert": "none",
-                "bri": 254,
-                "colormode": "ct",
-                "ct": 375,
-                "effect": "none",
-                "hue": 8348,
-                "on": input["light_on"],
-                "reachable": True,
-                "sat": 147,
-                "xy": [0.462, 0.4111],
-            },
-            "swversion": "5.127.1.26420",
-            "type": "Extended color light",
-            "uniqueid": "00:17:88:01:01:23:45:67-00",
-        }
+    light_payload[0] = {
+        "colorcapabilities": 31,
+        "ctmax": 500,
+        "ctmin": 153,
+        "etag": "055485a82553e654f156d41c9301b7cf",
+        "hascolor": True,
+        "lastannounced": None,
+        "lastseen": "2021-06-10T20:25Z",
+        "manufacturername": "Philips",
+        "modelid": "LLC020",
+        "name": "Hue Go",
+        "state": {
+            "alert": "none",
+            "bri": 254,
+            "colormode": "ct",
+            "ct": 375,
+            "effect": "none",
+            "hue": 8348,
+            "on": input["light_on"],
+            "reachable": True,
+            "sat": 147,
+            "xy": [0.462, 0.4111],
+        },
+        "swversion": "5.127.1.26420",
+        "type": "Extended color light",
+        "uniqueid": "00:17:88:01:01:23:45:67-00",
     }
     await config_entry_factory()
 
@@ -684,29 +674,27 @@ async def test_light_service_calls(
     "light_payload",
     [
         {
-            "0": {
-                "colorcapabilities": 0,
-                "ctmax": 65535,
-                "ctmin": 0,
-                "etag": "9dd510cd474791481f189d2a68a3c7f1",
-                "hascolor": True,
-                "lastannounced": "2020-12-17T17:44:38Z",
-                "lastseen": "2021-01-11T18:36Z",
-                "manufacturername": "IKEA of Sweden",
-                "modelid": "TRADFRI bulb E27 WS opal 1000lm",
-                "name": "IKEA light",
-                "state": {
-                    "alert": "none",
-                    "bri": 156,
-                    "colormode": "ct",
-                    "ct": 250,
-                    "on": True,
-                    "reachable": True,
-                },
-                "swversion": "2.0.022",
-                "type": "Color temperature light",
-                "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
-            }
+            "colorcapabilities": 0,
+            "ctmax": 65535,
+            "ctmin": 0,
+            "etag": "9dd510cd474791481f189d2a68a3c7f1",
+            "hascolor": True,
+            "lastannounced": "2020-12-17T17:44:38Z",
+            "lastseen": "2021-01-11T18:36Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "TRADFRI bulb E27 WS opal 1000lm",
+            "name": "IKEA light",
+            "state": {
+                "alert": "none",
+                "bri": 156,
+                "colormode": "ct",
+                "ct": 250,
+                "on": True,
+                "reachable": True,
+            },
+            "swversion": "2.0.022",
+            "type": "Color temperature light",
+            "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
         }
     ],
 )
@@ -754,27 +742,25 @@ async def test_ikea_default_transition_time(
     "light_payload",
     [
         {
-            "0": {
-                "etag": "87a89542bf9b9d0aa8134919056844f8",
-                "hascolor": True,
-                "lastannounced": None,
-                "lastseen": "2020-12-05T22:57Z",
-                "manufacturername": "_TZE200_s8gkrkxk",
-                "modelid": "TS0601",
-                "name": "LIDL xmas light",
-                "state": {
-                    "bri": 25,
-                    "colormode": "hs",
-                    "effect": "none",
-                    "hue": 53691,
-                    "on": True,
-                    "reachable": True,
-                    "sat": 141,
-                },
-                "swversion": None,
-                "type": "Color dimmable light",
-                "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
-            }
+            "etag": "87a89542bf9b9d0aa8134919056844f8",
+            "hascolor": True,
+            "lastannounced": None,
+            "lastseen": "2020-12-05T22:57Z",
+            "manufacturername": "_TZE200_s8gkrkxk",
+            "modelid": "TS0601",
+            "name": "LIDL xmas light",
+            "state": {
+                "bri": 25,
+                "colormode": "hs",
+                "effect": "none",
+                "hue": 53691,
+                "on": True,
+                "reachable": True,
+                "sat": 141,
+            },
+            "swversion": None,
+            "type": "Color dimmable light",
+            "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
         }
     ],
 )
@@ -803,19 +789,17 @@ async def test_lidl_christmas_light(
     "light_payload",
     [
         {
-            "0": {
-                "etag": "26839cb118f5bf7ba1f2108256644010",
-                "hascolor": False,
-                "lastannounced": None,
-                "lastseen": "2020-11-22T11:27Z",
-                "manufacturername": "dresden elektronik",
-                "modelid": "ConBee II",
-                "name": "Configuration tool 1",
-                "state": {"reachable": True},
-                "swversion": "0x264a0700",
-                "type": "Configuration tool",
-                "uniqueid": "00:21:2e:ff:ff:05:a7:a3-01",
-            }
+            "etag": "26839cb118f5bf7ba1f2108256644010",
+            "hascolor": False,
+            "lastannounced": None,
+            "lastseen": "2020-11-22T11:27Z",
+            "manufacturername": "dresden elektronik",
+            "modelid": "ConBee II",
+            "name": "Configuration tool 1",
+            "state": {"reachable": True},
+            "swversion": "0x264a0700",
+            "type": "Configuration tool",
+            "uniqueid": "00:21:2e:ff:ff:05:a7:a3-01",
         }
     ],
 )
@@ -1152,7 +1136,7 @@ async def test_empty_group(hass: HomeAssistant) -> None:
                 "state": {"all_on": False, "any_on": True},
                 "action": {},
                 "scenes": [],
-                "lights": ["1"],
+                "lights": ["0"],
             },
             "2": {
                 "id": "Empty group id",
@@ -1170,14 +1154,12 @@ async def test_empty_group(hass: HomeAssistant) -> None:
     "light_payload",
     [
         {
-            "1": {
-                "ctmax": 454,
-                "ctmin": 155,
-                "name": "Tunable white light",
-                "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
-                "type": "Tunable white light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            },
+            "ctmax": 454,
+            "ctmin": 155,
+            "name": "Tunable white light",
+            "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
+            "type": "Tunable white light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -1296,7 +1278,7 @@ async def test_disable_light_groups(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_non_color_light_reports_color(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Verify hs_color does not crash when a group gets updated with a bad color value.
 
@@ -1319,7 +1301,6 @@ async def test_non_color_light_reports_color(
     # for a non-color light causing an exception in hs_color
     event_changed_light = {
         "id": "1",
-        "r": "lights",
         "state": {
             "alert": None,
             "bri": 216,
@@ -1330,9 +1311,7 @@ async def test_non_color_light_reports_color(
         },
         "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
     }
-    await mock_websocket_data(event_changed_light)
-    await hass.async_block_till_done()
-
+    await light_ws_data(event_changed_light)
     group = hass.states.get("light.group")
     assert group.attributes[ATTR_COLOR_MODE] == ColorMode.XY
     assert group.attributes[ATTR_HS_COLOR] == (40.571, 41.176)
@@ -1425,7 +1404,7 @@ async def test_verify_group_supported_features(hass: HomeAssistant) -> None:
                 "devicemembership": [],
                 "etag": "4548e982c4cfff942f7af80958abb2a0",
                 "id": "43",
-                "lights": ["13"],
+                "lights": ["0"],
                 "name": "Opbergruimte",
                 "scenes": [
                     {
@@ -1463,47 +1442,45 @@ async def test_verify_group_supported_features(hass: HomeAssistant) -> None:
     "light_payload",
     [
         {
-            "13": {
-                "capabilities": {
-                    "alerts": [
-                        "none",
-                        "select",
-                        "lselect",
-                        "blink",
-                        "breathe",
-                        "okay",
-                        "channelchange",
-                        "finish",
-                        "stop",
-                    ],
-                    "bri": {"min_dim_level": 5},
-                },
-                "config": {
-                    "bri": {"execute_if_off": True, "startup": "previous"},
-                    "groups": ["43"],
-                    "on": {"startup": "previous"},
-                },
-                "etag": "ca0ed7763eca37f5e6b24f6d46f8a518",
-                "hascolor": False,
-                "lastannounced": None,
-                "lastseen": "2024-03-02T20:08Z",
-                "manufacturername": "Signify Netherlands B.V.",
-                "modelid": "LWA001",
-                "name": "Opbergruimte Lamp Plafond",
-                "productid": "Philips-LWA001-1-A19DLv5",
-                "productname": "Hue white lamp",
-                "state": {
-                    "alert": "none",
-                    "bri": 76,
-                    "effect": "none",
-                    "on": False,
-                    "reachable": True,
-                },
-                "swconfigid": "87169548",
-                "swversion": "1.104.2",
-                "type": "Dimmable light",
-                "uniqueid": "00:17:88:01:08:11:22:33-01",
+            "capabilities": {
+                "alerts": [
+                    "none",
+                    "select",
+                    "lselect",
+                    "blink",
+                    "breathe",
+                    "okay",
+                    "channelchange",
+                    "finish",
+                    "stop",
+                ],
+                "bri": {"min_dim_level": 5},
             },
+            "config": {
+                "bri": {"execute_if_off": True, "startup": "previous"},
+                "groups": ["43"],
+                "on": {"startup": "previous"},
+            },
+            "etag": "ca0ed7763eca37f5e6b24f6d46f8a518",
+            "hascolor": False,
+            "lastannounced": None,
+            "lastseen": "2024-03-02T20:08Z",
+            "manufacturername": "Signify Netherlands B.V.",
+            "modelid": "LWA001",
+            "name": "Opbergruimte Lamp Plafond",
+            "productid": "Philips-LWA001-1-A19DLv5",
+            "productname": "Hue white lamp",
+            "state": {
+                "alert": "none",
+                "bri": 76,
+                "effect": "none",
+                "on": False,
+                "reachable": True,
+            },
+            "swconfigid": "87169548",
+            "swversion": "1.104.2",
+            "type": "Dimmable light",
+            "uniqueid": "00:17:88:01:08:11:22:33-01",
         }
     ],
 )
@@ -1519,7 +1496,7 @@ async def test_verify_group_color_mode_fallback(
 
     await mock_websocket_data(
         {
-            "id": "13",
+            "id": "0",
             "r": "lights",
             "state": {
                 "alert": "none",

@@ -2,11 +2,13 @@
 
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
+from datetime import datetime
 from functools import partial
 import time
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
 
@@ -19,6 +21,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.util.dt import utcnow
 
 from tests.common import (
     MockConfigEntry,
@@ -177,12 +180,15 @@ async def test_multiple_config_entries(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
 async def test_loading_from_storage(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading stored devices on start."""
+    created_at = "2024-01-01T00:00:00+00:00"
+    modified_at = "2024-02-01T00:00:00+00:00"
     hass_storage[dr.STORAGE_KEY] = {
         "version": dr.STORAGE_VERSION_MAJOR,
         "minor_version": dr.STORAGE_VERSION_MINOR,
@@ -193,6 +199,7 @@ async def test_loading_from_storage(
                     "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": "https://example.com/config",
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": created_at,
                     "disabled_by": dr.DeviceEntryDisabler.USER,
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": "hw_version",
@@ -202,6 +209,7 @@ async def test_loading_from_storage(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": "model_id",
+                    "modified_at": modified_at,
                     "name_by_user": "Test Friendly Name",
                     "name": "name",
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -214,8 +222,10 @@ async def test_loading_from_storage(
                 {
                     "config_entries": [mock_config_entry.entry_id],
                     "connections": [["Zigbee", "23.45.67.89.01"]],
+                    "created_at": created_at,
                     "id": "bcdefghijklmn",
                     "identifiers": [["serial", "3456ABCDEF12"]],
+                    "modified_at": modified_at,
                     "orphaned_timestamp": None,
                 }
             ],
@@ -226,6 +236,16 @@ async def test_loading_from_storage(
     registry = dr.async_get(hass)
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 1
+
+    assert registry.deleted_devices["bcdefghijklmn"] == dr.DeletedDeviceEntry(
+        config_entries={mock_config_entry.entry_id},
+        connections={("Zigbee", "23.45.67.89.01")},
+        created_at=datetime.fromisoformat(created_at),
+        id="bcdefghijklmn",
+        identifiers={("serial", "3456ABCDEF12")},
+        modified_at=datetime.fromisoformat(modified_at),
+        orphaned_timestamp=None,
+    )
 
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -239,6 +259,7 @@ async def test_loading_from_storage(
         config_entries={mock_config_entry.entry_id},
         configuration_url="https://example.com/config",
         connections={("Zigbee", "01.23.45.67.89")},
+        created_at=datetime.fromisoformat(created_at),
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
@@ -248,6 +269,7 @@ async def test_loading_from_storage(
         manufacturer="manufacturer",
         model="model",
         model_id="model_id",
+        modified_at=datetime.fromisoformat(modified_at),
         name_by_user="Test Friendly Name",
         name="name",
         primary_config_entry=mock_config_entry.entry_id,
@@ -270,10 +292,12 @@ async def test_loading_from_storage(
     assert entry == dr.DeviceEntry(
         config_entries={mock_config_entry.entry_id},
         connections={("Zigbee", "23.45.67.89.01")},
+        created_at=datetime.fromisoformat(created_at),
         id="bcdefghijklmn",
         identifiers={("serial", "3456ABCDEF12")},
         manufacturer="manufacturer",
         model="model",
+        modified_at=utcnow(),
         primary_config_entry=mock_config_entry.entry_id,
     )
     assert entry.id == "bcdefghijklmn"
@@ -283,6 +307,7 @@ async def test_loading_from_storage(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
 async def test_migration_1_1_to_1_7(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -367,6 +392,7 @@ async def test_migration_1_1_to_1_7(
                     "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": None,
@@ -376,6 +402,7 @@ async def test_migration_1_1_to_1_7(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -388,6 +415,7 @@ async def test_migration_1_1_to_1_7(
                     "config_entries": [None],
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -397,6 +425,7 @@ async def test_migration_1_1_to_1_7(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -409,8 +438,10 @@ async def test_migration_1_1_to_1_7(
                 {
                     "config_entries": ["123456"],
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "id": "deletedid",
                     "identifiers": [["serial", "123456ABCDFF"]],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "orphaned_timestamp": None,
                 }
             ],
@@ -419,6 +450,7 @@ async def test_migration_1_1_to_1_7(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
 async def test_migration_1_2_to_1_7(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -442,6 +474,7 @@ async def test_migration_1_2_to_1_7(
                     "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "sw_version": "version",
@@ -458,6 +491,7 @@ async def test_migration_1_2_to_1_7(
                     "identifiers": [["serial", "mock-id-invalid-entry"]],
                     "manufacturer": None,
                     "model": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "sw_version": None,
@@ -502,6 +536,7 @@ async def test_migration_1_2_to_1_7(
                     "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": None,
@@ -511,6 +546,7 @@ async def test_migration_1_2_to_1_7(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -523,6 +559,7 @@ async def test_migration_1_2_to_1_7(
                     "config_entries": [None],
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -532,6 +569,7 @@ async def test_migration_1_2_to_1_7(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -546,6 +584,7 @@ async def test_migration_1_2_to_1_7(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
 async def test_migration_1_3_to_1_7(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -631,6 +670,7 @@ async def test_migration_1_3_to_1_7(
                     "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": "hw_version",
@@ -640,6 +680,7 @@ async def test_migration_1_3_to_1_7(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -652,6 +693,7 @@ async def test_migration_1_3_to_1_7(
                     "config_entries": [None],
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -661,6 +703,7 @@ async def test_migration_1_3_to_1_7(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
                     "name_by_user": None,
                     "primary_config_entry": None,
@@ -675,6 +718,7 @@ async def test_migration_1_3_to_1_7(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
 async def test_migration_1_4_to_1_7(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -762,6 +806,7 @@ async def test_migration_1_4_to_1_7(
                     "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": "hw_version",
@@ -771,6 +816,7 @@ async def test_migration_1_4_to_1_7(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -783,6 +829,7 @@ async def test_migration_1_4_to_1_7(
                     "config_entries": [None],
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -792,6 +839,7 @@ async def test_migration_1_4_to_1_7(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -806,6 +854,7 @@ async def test_migration_1_4_to_1_7(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
 async def test_migration_1_5_to_1_7(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -895,6 +944,7 @@ async def test_migration_1_5_to_1_7(
                     "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": "hw_version",
@@ -905,6 +955,7 @@ async def test_migration_1_5_to_1_7(
                     "model": "model",
                     "name": "name",
                     "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
@@ -916,6 +967,7 @@ async def test_migration_1_5_to_1_7(
                     "config_entries": [None],
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -925,6 +977,7 @@ async def test_migration_1_5_to_1_7(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -939,12 +992,13 @@ async def test_migration_1_5_to_1_7(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_6_to_1_7(
+@pytest.mark.usefixtures("freezer")
+async def test_migration_1_6_to_1_8(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.6 to 1.7."""
+    """Test migration from version 1.6 to 1.8."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 6,
@@ -1030,6 +1084,7 @@ async def test_migration_1_6_to_1_7(
                     "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": "hw_version",
@@ -1040,6 +1095,71 @@ async def test_migration_1_6_to_1_7(
                     "model": "model",
                     "name": "name",
                     "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "labels": ["blah"],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": None,
+                    "primary_config_entry": None,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
+async def test_migration_1_7_to_1_8(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from version 1.7 to 1.8."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 7,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "model_id": None,
+                    "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
@@ -1060,6 +1180,86 @@ async def test_migration_1_6_to_1_7(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "name_by_user": None,
+                    "primary_config_entry": None,
+                    "name": None,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+        sw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+
+    assert hass_storage[dr.STORAGE_KEY] == {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "labels": ["blah"],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -1546,8 +1746,11 @@ async def test_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Verify that we can update some attributes of a device."""
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    freezer.move_to(created_at)
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -1559,7 +1762,11 @@ async def test_update(
     assert not entry.area_id
     assert not entry.labels
     assert not entry.name_by_user
+    assert entry.created_at == created_at
+    assert entry.modified_at == created_at
 
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
+    freezer.move_to(modified_at)
     with patch.object(device_registry, "async_schedule_save") as mock_save:
         updated_entry = device_registry.async_update_device(
             entry.id,
@@ -1589,6 +1796,7 @@ async def test_update(
         config_entries={mock_config_entry.entry_id},
         configuration_url="https://example.com/config",
         connections={("mac", "65:43:21:fe:dc:ba")},
+        created_at=created_at,
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
@@ -1598,6 +1806,7 @@ async def test_update(
         manufacturer="Test Producer",
         model="Test Model",
         model_id="Test Model Name",
+        modified_at=modified_at,
         name_by_user="Test Friendly Name",
         name="name",
         serial_number="serial_no",
@@ -2616,6 +2825,7 @@ async def test_loading_invalid_configuration_url_from_storage(
                     "config_entries": ["1234"],
                     "configuration_url": "invalid",
                     "connections": [],
+                    "created_at": "2024-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": None,
@@ -2625,6 +2835,7 @@ async def test_loading_invalid_configuration_url_from_storage(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "modified_at": "2024-02-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": "1234",

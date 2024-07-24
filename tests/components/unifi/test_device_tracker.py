@@ -627,7 +627,7 @@ async def test_config_entry_options_track(
     config_entry_setup: ConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
     counts: tuple[int],
-    expected: dict[tuple[bool | None]],
+    expected: tuple[tuple[bool | None, ...], ...],
 ) -> None:
     """Test the different config entry options.
 

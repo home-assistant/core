@@ -125,7 +125,6 @@ EXCEPTIONS = {
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "aiohappyeyeballs",  # PSF-2.0 license
-    "aiohttp-fast-url-dispatcher",  # https://github.com/bdraco/aiohttp-fast-url-dispatcher/pull/10
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6

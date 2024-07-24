@@ -9,11 +9,11 @@ from unittest.mock import patch
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.setup import async_setup_component
 from homeassistant.util.uuid import random_uuid_hex
 
 from tests.common import load_fixture

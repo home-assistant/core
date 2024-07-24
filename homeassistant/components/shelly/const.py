@@ -244,7 +244,8 @@ SHELLY_PLUS_RGBW_CHANNELS = 4
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
-    "sensor": {"types": ["number", "text"], "modes": ["label"]},
+    "select": {"types": ["enum"], "modes": ["dropdown"]},
+    "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
     "switch": {"types": ["boolean"], "modes": ["toggle"]},
     "text": {"types": ["text"], "modes": ["field"]},
 }
