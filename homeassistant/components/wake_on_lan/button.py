@@ -25,7 +25,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Wake on LAN sensor entry."""
+    """Set up the Wake on LAN button entry."""
     broadcast_address: str | None = entry.options.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = entry.options.get(CONF_BROADCAST_PORT)
     mac_address: str = entry.options[CONF_MAC]
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            WolSwitch(
+            WolButton(
                 name,
                 mac_address,
                 broadcast_address,
@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class WolSwitch(ButtonEntity):
+class WolButton(ButtonEntity):
     """Representation of a wake on lan button."""
 
     _attr_name = None
