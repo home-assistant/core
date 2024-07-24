@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -29,9 +29,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
-if TYPE_CHECKING:
-    pass
 
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
