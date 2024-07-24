@@ -2032,7 +2032,11 @@ sfrbox-api==0.0.8
 sharkiq==1.0.2
 
 # homeassistant.components.simplefin
+<<<<<<< HEAD
 simplefin4py==0.0.18
+=======
+simplefin4py==0.0.17
+>>>>>>> 0f054e3b2c (Binary Sensor Support)
 
 # homeassistant.components.sighthound
 simplehound==0.3
