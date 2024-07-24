@@ -97,10 +97,10 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     "dreame_vacuum": BlockedIntegration(
         AwesomeVersion("1.0.4"), "crashes Home Assistant"
     ),
-    # Added in 2024.5.5 because of
-    # https://github.com/sh00t2kill/dolphin-robot/issues/185
+    # Added in 2024.8.0 because of
+    # https://github.com/sh00t2kill/dolphin-robot/issues/221
     "mydolphin_plus": BlockedIntegration(
-        AwesomeVersion("1.0.13"), "crashes Home Assistant"
+        AwesomeVersion("1.0.16"), "thousands of reuqest Maytronics login API per user"
     ),
     # Added in 2024.7.2 because of
     # https://github.com/gcobb321/icloud3/issues/349
