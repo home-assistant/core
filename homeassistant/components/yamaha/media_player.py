@@ -132,7 +132,7 @@ def _discovery(config_info):
         zones = None
         for recv in rxv.find():
             if recv.ctrl_url == config_info.ctrl_url:
-                _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
+                _LOGGER.debug("Config Zones Matched %s",config_info.ctrl_url)
                 zones = recv.zone_controllers()
                 break
         if not zones:
