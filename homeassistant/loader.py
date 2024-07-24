@@ -1672,11 +1672,6 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 
 
-def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
-    """Test if a component module is loaded."""
-    return module in hass.data[DATA_COMPONENTS]
-
-
 @callback
 def async_get_issue_tracker(
     hass: HomeAssistant | None,

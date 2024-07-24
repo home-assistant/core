@@ -2849,11 +2849,8 @@ async def _async_get_flow_handler(
     hass: HomeAssistant, domain: str, hass_config: ConfigType
 ) -> type[ConfigFlow]:
     """Get a flow handler for specified domain."""
-
     # First check if there is a handler registered for the domain
-    if loader.is_component_module_loaded(hass, f"{domain}.config_flow") and (
-        handler := HANDLERS.get(domain)
-    ):
+    if handler := HANDLERS.get(domain):
         return handler
 
     await _load_integration(hass, domain, hass_config)
