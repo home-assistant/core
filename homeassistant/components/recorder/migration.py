@@ -120,6 +120,12 @@ if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
+
+MIGRATION_NOTE_OFFLINE = (
+    "Note: this may take several hours on large databases and slow computers. "
+    "Home Assistant will not start until the upgrade is completed. Please be patient!"
+)
+
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
 
@@ -276,9 +282,12 @@ def _migrate_schema(
 
     if current_version < end_version:
         _LOGGER.warning(
-            "Database is about to upgrade from schema version: %s to: %s",
+            "The database is about to upgrade from schema version %s to %s%s",
             current_version,
             end_version,
+            f". {MIGRATION_NOTE_OFFLINE}"
+            if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
+            else "",
         )
         schema_status = dataclass_replace(schema_status, current_version=end_version)
 
