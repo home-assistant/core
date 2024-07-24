@@ -1,4 +1,5 @@
 """Representation of the Damper for AirTouch 5 Devices."""
+
 import logging
 from typing import Any
 
@@ -17,11 +18,11 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from . import Airtouch5ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Airtouch5ConfigEntry
 from .const import DOMAIN
 from .entity import Airtouch5Entity
 
@@ -36,15 +37,13 @@ async def async_setup_entry(
     """Set up the Airtouch 5 Cover entities."""
     client = config_entry.runtime_data
 
-    entities: list[CoverEntity] = []
-
     # Each zone has a cover for its open percentage
-    for zone in client.zones:
-        entities.append(
-            Airtouch5ZoneOpenPercentage(
-                client, zone, client.latest_zone_status[zone.zone_number].has_sensor
-            )
+    entities = [
+        Airtouch5ZoneOpenPercentage(
+            client, zone, client.latest_zone_status[zone.zone_number].has_sensor
         )
+        for zone in client.zones
+    ]
 
     async_add_entities(entities)
 
@@ -73,10 +72,10 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
         # Zones with temperature sensors shouldn't be manually controlled.
         # We allow it but warn the user in the integration documentation.
         self._attr_supported_features = (
-                CoverEntityFeature.SET_POSITION
-                | CoverEntityFeature.OPEN
-                | CoverEntityFeature.CLOSE
-            )
+            CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+        )
 
     @callback
     def _async_update_attrs(self, data: dict[int, ZoneStatusZone]) -> None:
@@ -125,13 +124,13 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
             power = ZoneSettingPower.SET_TO_OFF
         else:
             power = ZoneSettingPower.SET_TO_ON
-        
+
         zcz = ZoneControlZone(
             self._name.zone_number,
             ZoneSettingValue.SET_OPEN_PERCENTAGE,
             power,
             position_percent / 100.0,
         )
-        
+
         packet = self._client.data_packet_factory.zone_control([zcz])
         await self._client.send_packet(packet)
