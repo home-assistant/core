@@ -31,7 +31,7 @@ from .const import (
 )
 from .coordinator import WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
-from .helpers import kelvinTo255, kelvinTo255Reverse, wled_exception_handler
+from .helpers import kelvin_to_255, kelvin_to_255_reverse, wled_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -176,7 +176,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in K."""
         cct = self.coordinator.data.state.segments[self._segment].cct
-        return kelvinTo255Reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
+        return kelvin_to_255_reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
 
     @property
     def effect(self) -> str | None:
@@ -248,7 +248,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            data[ATTR_CCT] = kelvinTo255(
+            data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
             )
 

@@ -37,11 +37,11 @@ def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
     return handler
 
 
-def kelvinTo255(k: int, minK: int, maxK: int) -> int:
+def kelvin_to_255(k: int, min_k: int, max_k: int) -> int:
     """Map color temperature in K from minK-maxK to 0-255."""
-    return int((k - minK) / (maxK - minK) * 255)
+    return int((k - min_k) / (max_k - min_k) * 255)
 
 
-def kelvinTo255Reverse(v: int, minK: int, maxK: int) -> int:
+def kelvin_to_255_reverse(v: int, min_k: int, max_k: int) -> int:
     """Map color temperature from 0-255 to minK-maxK K."""
-    return int(v / 255 * (maxK - minK) + minK)
+    return int(v / 255 * (max_k - min_k) + min_k)
