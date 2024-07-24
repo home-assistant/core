@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.madvr.sensor import get_temperature
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -89,3 +90,6 @@ async def test_sensor_setup_and_states(
     update_callback({"temp_gpu": 41.2})
     await hass.async_block_till_done()
     assert hass.states.get("sensor.madvr_envy_gpu_temperature").state == "41.2"
+
+    # test get_temperature ValueError
+    assert get_temperature(None, "temp_key") is None
