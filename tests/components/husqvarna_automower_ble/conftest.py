@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.components.husqvarna_automower_ble.coordinator import SCAN_INTERVAL
-from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID
+from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
 from . import AUTOMOWER_SERVICE_INFO
@@ -23,6 +23,7 @@ def mock_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_ADDRESS: AUTOMOWER_SERVICE_INFO.address,
+            CONF_UNIQUE_ID: AUTOMOWER_SERVICE_INFO.address,
             CONF_CLIENT_ID: 1197489078,
         },
     )
