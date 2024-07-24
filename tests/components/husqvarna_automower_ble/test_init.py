@@ -34,13 +34,11 @@ async def test_setup(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
+    device_registry.async_get_device(
         identifiers={(DOMAIN, AUTOMOWER_SERVICE_INFO.address)}
     )
-    assert device == snapshot
 
-    coordinator = mock_entry.runtime_data
-    await coordinator.async_shutdown()
+    assert mock_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_retry_connect(

@@ -4,12 +4,12 @@ from unittest.mock import Mock
 
 from bleak import BleakError
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     AUTOMOWER_MISSING_SERVICE_SERVICE_INFO,
@@ -25,7 +25,6 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_user_selection(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test we can select a device."""
 
@@ -36,23 +35,28 @@ async def test_user_selection(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"address": "00000000-0000-0000-0000-000000000001"},
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
+    assert result["title"] == "Husqvarna Automower"
+    assert result["handler"] == "husqvarna_automower_ble"
+
+    assert result["data"]["address"] == "00000000-0000-0000-0000-000000000001"
 
 
 async def test_no_devices(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test missing device."""
 
@@ -63,12 +67,12 @@ async def test_no_devices(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
 
 async def test_bluetooth(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test bluetooth device discovery."""
 
@@ -76,17 +80,22 @@ async def test_bluetooth(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
-    assert result == snapshot
+    assert result["step_id"] == "confirm"
+    assert result["context"]["unique_id"] == "00000000-0000-0000-0000-000000000003"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
+    assert result["title"] == "Husqvarna Automower"
+    assert result["handler"] == "husqvarna_automower_ble"
+
+    assert result["data"]["address"] == "00000000-0000-0000-0000-000000000003"
+    assert result["context"]["unique_id"] == "00000000-0000-0000-0000-000000000003"
 
 
 async def test_bluetooth_invalid(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test bluetooth device discovery with invalid data."""
 
@@ -98,13 +107,13 @@ async def test_bluetooth_invalid(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO,
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_failed_connect(
     hass: HomeAssistant,
     mock_client: Mock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test we can select a device."""
 
@@ -117,24 +126,29 @@ async def test_failed_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"address": "00000000-0000-0000-0000-000000000001"},
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
+    assert result["title"] == "Husqvarna Automower"
+    assert result["handler"] == "husqvarna_automower_ble"
+
+    assert result["data"]["address"] == "00000000-0000-0000-0000-000000000001"
 
 
 async def test_exception_connect(
     hass: HomeAssistant,
     mock_client: Mock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test we can select a device."""
 
@@ -152,7 +166,6 @@ async def test_exception_connect(
 async def test_failed_is_connected(
     hass: HomeAssistant,
     mock_client: Mock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test we can select a device."""
 
