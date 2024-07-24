@@ -58,7 +58,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self.info["name"] or user_input[CONF_EMAIL], data=user_input
+                title=self.info.get("name") or user_input[CONF_EMAIL], data=user_input
             )
 
         return self.async_show_form(

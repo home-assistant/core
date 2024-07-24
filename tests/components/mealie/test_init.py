@@ -33,6 +33,15 @@ async def test_device_info(
 
 
 @pytest.mark.parametrize(
+    "field",
+    [
+        "get_about",
+        "get_mealplans",
+        "get_shopping_lists",
+        "get_statistics",
+    ],
+)
+@pytest.mark.parametrize(
     ("exc", "state"),
     [
         (MealieConnectionError, ConfigEntryState.SETUP_RETRY),
@@ -43,11 +52,12 @@ async def test_setup_failure(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    field: str,
     exc: Exception,
     state: ConfigEntryState,
 ) -> None:
     """Test setup failure."""
-    mock_mealie_client.get_about.side_effect = exc
+    getattr(mock_mealie_client, field).side_effect = exc
 
     await setup_integration(hass, mock_config_entry)
 
