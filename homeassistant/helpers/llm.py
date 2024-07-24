@@ -167,7 +167,7 @@ class APIInstance:
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
         async_conversation_trace_append(
-            ConversationTraceEventType.LLM_TOOL_CALL,
+            ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
