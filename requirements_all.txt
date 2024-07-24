@@ -410,7 +410,7 @@ aiowithings==3.0.2
 aioymaps==1.2.4
 
 # homeassistant.components.airgradient
-airgradient==0.7.0
+airgradient==0.7.1
 
 # homeassistant.components.airly
 airly==1.1.0
