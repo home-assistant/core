@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch platform."""
 
-    add_entities([ApSystemsPowerSwitch(config_entry.runtime_data)])
+    add_entities([ApSystemsPowerSwitch(config_entry.runtime_data)], True)
 
 
 class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
@@ -36,8 +36,6 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
         super().__init__(data)
         self._api = data.coordinator.api
         self._attr_unique_id = f"{data.device_id}_power_output"
-        self._attr_is_on = None
-        self._attr_available = False
 
     async def async_update(self) -> None:
         """Update switch status and availability."""
