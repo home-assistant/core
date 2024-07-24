@@ -102,7 +102,7 @@ class BringTodoListEntity(
             identifiers={(DOMAIN, f"{unique_id}_{self._list_uuid}")},
             manufacturer="Bring! Labs AG",
             model="Bring! Grocery Shopping List",
-            configuration_url="https://web.getbring.com/",
+            configuration_url=f"https://web.getbring.com/app/lists/{list(self.coordinator.data.keys()).index(bring_list["listUuid"])}",
         )
 
     @property
