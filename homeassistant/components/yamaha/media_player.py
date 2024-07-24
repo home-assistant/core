@@ -121,21 +121,22 @@ def _discovery(config_info):
             friendly_name=config_info.name,
             unit_desc_url=config_info.desc_url,
         ).zone_controllers()
-        _LOGGER.debug("discovery Zones: %s", zones)
+        _LOGGER.debug("Discovery Zones: %s", zones)
     elif config_info.host is None:
         zones = []
         for recv in rxv.find():
             zones.extend(recv.zone_controllers())
-        _LOGGER.debug("No Host Zones: %s", zones)
+        _LOGGER.debug("No Host Supplied Zones: %s", zones)
     else:
         zones = None
         for recv in rxv.find():
             if recv.ctrl_url == config_info.ctrl_url:
                 zones = recv.zone_controllers()
+                _LOGGER.debug("Config Zones: %s", zones)
                 break
         if not zones:
             zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
-        _LOGGER.debug("Config Zones: %s", zones)
+            _LOGGER.debug("Config Zones Fallback: %s", zones)
 
     return zones
 
