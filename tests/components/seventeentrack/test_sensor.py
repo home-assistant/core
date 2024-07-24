@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack.errors import SeventeenTrackError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir

@@ -42,6 +42,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic: str
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -113,7 +114,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @cached_property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        features = FanEntityFeature(0)
+        features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
             features |= FanEntityFeature.DIRECTION

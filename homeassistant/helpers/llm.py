@@ -617,6 +617,9 @@ class ScriptTool(Tool):
         entity_registry = er.async_get(hass)
 
         self.name = split_entity_id(script_entity_id)[1]
+        if self.name[0].isdigit():
+            self.name = "_" + self.name
+        self._entity_id = script_entity_id
         self.parameters = vol.Schema({})
         entity_entry = entity_registry.async_get(script_entity_id)
         if entity_entry and entity_entry.unique_id:
@@ -717,7 +720,7 @@ class ScriptTool(Tool):
             SCRIPT_DOMAIN,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: SCRIPT_DOMAIN + "." + self.name,
+                ATTR_ENTITY_ID: self._entity_id,
                 ATTR_VARIABLES: tool_input.tool_args,
             },
             context=llm_context.context,
