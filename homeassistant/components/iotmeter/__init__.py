@@ -12,7 +12,7 @@ from .coordinator import IotMeterDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
-PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]  # Platform.NUMBER
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
