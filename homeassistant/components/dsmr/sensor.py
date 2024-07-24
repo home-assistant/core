@@ -8,6 +8,7 @@ from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 from functools import partial
 
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -75,6 +76,13 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
     is_gas: bool = False
     is_water: bool = False
     obis_reference: str
+
+
+class MbusDeviceType(IntEnum):
+    """Types of mbus devices (13757-3:2013)."""
+
+    GAS = 3
+    WATER = 7
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
@@ -378,7 +386,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 )
 
 SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
-    3: (
+    MbusDeviceType.GAS: (
         DSMRSensorEntityDescription(
             key="gas_reading",
             translation_key="gas_meter_reading",
@@ -389,7 +397,7 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
-    7: (
+    MbusDeviceType.WATER: (
         DSMRSensorEntityDescription(
             key="water_reading",
             translation_key="water_meter_reading",
