@@ -48,6 +48,9 @@ ATTR_DURATION_HOURS: Final = "duration"
 ATTR_ZONE_TEMP: Final = "setpoint"
 ATTR_DURATION_UNTIL: Final = "duration"
 
+CONF_REFRESH_TOKEN = "refresh_token"
+CONF_EXPIRES = "expires"
+
 
 @unique
 class EvoService(StrEnum):

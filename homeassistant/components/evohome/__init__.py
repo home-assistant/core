@@ -21,6 +21,7 @@ from evohomeasync2.schema.const import (
 )
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -95,6 +97,43 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
         ),
     }
 )
+
+PLATFORMS = [Platform.CLIMATE, Platform.WATER_HEATER]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up integration."""
+    sess = EvoSession(hass)
+
+    try:
+        await sess.authenticate(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+        )
+
+    except evo.AuthenticationFailed as err:
+        handle_evo_exception(err)
+        raise ConfigEntryError("Auth failed") from err
+
+    broker = EvoBroker(sess)
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{DOMAIN}_coordinator",
+        update_interval=SCAN_INTERVAL_DEFAULT,
+        update_method=broker.async_update,
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN] = {"broker": broker, "coordinator": coordinator}
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    setup_service_functions(hass, broker)
+
+    return True
 
 
 class EvoSession:
