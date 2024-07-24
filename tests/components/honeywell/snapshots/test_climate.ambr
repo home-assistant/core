@@ -20,9 +20,9 @@
       <HVACMode.HEAT: 'heat'>,
     ]),
     'max_humidity': 99,
-    'max_temp': 95,
+    'max_temp': 35,
     'min_humidity': 30,
-    'min_temp': 45,
+    'min_temp': 7,
     'permanent_hold': False,
     'preset_mode': 'none',
     'preset_modes': list([
