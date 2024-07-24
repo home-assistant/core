@@ -54,8 +54,8 @@
       }
     },
     "switch": {
-      "power_output": {
-        "name": "Power output"
+      "inverter_status": {
+        "name": "Inverter status"
       }
     }
   }
