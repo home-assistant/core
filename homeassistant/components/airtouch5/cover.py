@@ -68,11 +68,9 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
             model="AirTouch 5",
         )
 
-        # Zones with temperature sensors shouldn't be manually controlled
-        if has_sensor:
-            self._attr_supported_features = CoverEntityFeature(0)
-        else:
-            self._attr_supported_features = (
+        # Zones with temperature sensors shouldn't be manually controlled.
+        # We allow it but warn the user in the integration documentation.
+        self._attr_supported_features = (
                 CoverEntityFeature.SET_POSITION
                 | CoverEntityFeature.OPEN
                 | CoverEntityFeature.CLOSE
