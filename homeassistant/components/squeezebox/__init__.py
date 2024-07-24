@@ -114,11 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
 
     await coordinator.async_config_entry_first_refresh()
-    # Make sure data is present before we add the server status sensors
-    # As always_update is false the data doesn't change and the entities don't get a value
-    # unless we set the value at sensor init.
-    # If the refresh fails, async_config_entry_first_refresh will
-    # raise ConfigEntryNotReady and setup will try again later
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
