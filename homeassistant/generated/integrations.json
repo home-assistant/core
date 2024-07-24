@@ -7165,7 +7165,7 @@
     "bayesian": {
       "name": "Bayesian",
       "integration_type": "helper",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "counter": {
