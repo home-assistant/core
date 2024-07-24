@@ -82,12 +82,12 @@ async def test_lock(
     assert state
     assert state.state == STATE_UNLOCKED
 
-    set_node_attribute(door_lock, 1, 257, 0, 0)
+    set_node_attribute(door_lock, 1, 257, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_UNLOCKED
+    assert state.state == STATE_LOCKED
 
     set_node_attribute(door_lock, 1, 257, 0, None)
     await trigger_subscription_callback(hass, matter_client)
