@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectionError
+from APsystemsEZ1 import Status
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -46,7 +47,7 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
             self._attr_available = False
         else:
             self._attr_available = True
-            self._attr_is_on = bool(status)
+            self._attr_is_on = status == Status.normal
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
