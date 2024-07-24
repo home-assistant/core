@@ -170,6 +170,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GVH5127*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -255,6 +260,17 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": False,
         "domain": "govee_ble",
         "manufacturer_id": 61320,
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "manufacturer_data_start": [
+            236,
+            0,
+            0,
+            1,
+        ],
+        "manufacturer_id": 34819,
     },
     {
         "domain": "homekit_controller",
