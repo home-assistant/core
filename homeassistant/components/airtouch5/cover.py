@@ -38,50 +38,48 @@ async def async_setup_entry(
     client = config_entry.runtime_data
 
     # Each zone has a cover for its open percentage
-    entities = [
+    async_add_entities(
         Airtouch5ZoneOpenPercentage(
             client, zone, client.latest_zone_status[zone.zone_number].has_sensor
         )
         for zone in client.zones
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
     """How open the damper is in each zone."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
+    _attr_translation_key = "damper"
+
+    # Zones with temperature sensors shouldn't be manually controlled.
+    # We allow it but warn the user in the integration documentation.
+    _attr_supported_features = (
+        CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+    )
 
     def __init__(
-        self, client: Airtouch5SimpleClient, name: ZoneName, has_sensor: bool
+        self, client: Airtouch5SimpleClient, zone_name: ZoneName, has_sensor: bool
     ) -> None:
         """Initialise the Cover Entity."""
         super().__init__(client)
-        self._name = name
+        self._zone_name = zone_name
 
-        self._attr_unique_id = f"zone_{name.zone_number}_open_percentage"
-        self._attr_name = "Damper"
+        self._attr_unique_id = f"zone_{zone_name.zone_number}_open_percentage"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"zone_{name.zone_number}")},
-            name=name.zone_name,
+            identifiers={(DOMAIN, f"zone_{zone_name.zone_number}")},
+            name=zone_name.zone_name,
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
 
-        # Zones with temperature sensors shouldn't be manually controlled.
-        # We allow it but warn the user in the integration documentation.
-        self._attr_supported_features = (
-            CoverEntityFeature.SET_POSITION
-            | CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-        )
-
     @callback
     def _async_update_attrs(self, data: dict[int, ZoneStatusZone]) -> None:
-        if self._name.zone_number not in data:
+        if self._zone_name.zone_number not in data:
             return
-        status = data[self._name.zone_number]
+        status = data[self._zone_name.zone_number]
 
         self._attr_current_cover_position = int(status.open_percentage * 100)
         if status.open_percentage == 0:
@@ -126,7 +124,7 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
             power = ZoneSettingPower.SET_TO_ON
 
         zcz = ZoneControlZone(
-            self._name.zone_number,
+            self._zone_name.zone_number,
             ZoneSettingValue.SET_OPEN_PERCENTAGE,
             power,
             position_percent / 100.0,
