@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.2
+AEMET-OpenData==0.5.3
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -164,10 +164,10 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.4
+aioairzone-cloud==0.5.5
 
 # homeassistant.components.airzone
-aioairzone==0.8.0
+aioairzone==0.8.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -1583,7 +1583,7 @@ pylitterbot==2023.5.0
 pylutron-caseta==0.20.0
 
 # homeassistant.components.lutron
-pylutron==0.2.13
+pylutron==0.2.15
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
