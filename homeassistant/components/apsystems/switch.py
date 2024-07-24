@@ -38,23 +38,13 @@ class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
         self._attr_is_on = None
         self._attr_available = False
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._attr_available
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return state of the switch."""
-        return self._attr_is_on
-
     async def async_update(self) -> None:
         """Update switch status and availability."""
         try:
             status = await self._api.get_device_power_status()
         except (TimeoutError, ClientConnectionError):
             self._attr_available = False
-        finally:
+        else:
             self._attr_available = True
             self._attr_is_on = bool(status)
 
