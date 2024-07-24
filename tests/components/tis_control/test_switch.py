@@ -36,9 +36,9 @@ async def test_async_setup_entry_with_switches(
             new=MockTISApi,
         ) as mock_tis_api,
     ):
-        hass.data[DOMAIN] = {
-            "tis_api": mock_tis_api(hass=hass, devices_dict=DEVICES_DICT)
-        }
+        mock_setup_entry.runtime_data.api = mock_tis_api(
+            hass=hass, devices_dict=DEVICES_DICT
+        )
         await async_setup_entry(hass, mock_setup_entry, async_add_devices)
         mock_get_entities.assert_called_once()
         async_add_devices.assert_called_once()
@@ -61,7 +61,7 @@ async def test_async_setup_entry_no_switches(
             new=MockTISApi(hass=hass, devices_dict=DEVICES_DICT),
         ) as mock_tis_api,
     ):
-        hass.data[DOMAIN] = {"tis_api": mock_tis_api}
+        mock_setup_entry.runtime_data.api = mock_tis_api
         await async_setup_entry(hass, mock_setup_entry, async_add_devices)
         assert not async_add_devices.called
 

@@ -9,19 +9,19 @@ from TISControlProtocol.BytesHelper import build_packet, int_to_8_bit_binary
 from TISControlProtocol.mock_api import TISApi
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TISConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+    hass: HomeAssistant, entry: TISConfigEntry, async_add_devices: AddEntitiesCallback
 ) -> None:
     """Set up the TIS switches."""
-    tis_api: TISApi = hass.data[DOMAIN]["tis_api"]
+    # tis_api: TISApi = hass.data[DOMAIN]["tis_api"]
+    tis_api: TISApi = entry.runtime_data.api
     # Fetch all switches from the TIS API
     switches: dict = await tis_api.get_entities(platform=Platform.SWITCH)
     if switches:

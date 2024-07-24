@@ -24,7 +24,6 @@ async def test_async_setup_entry_success(
         # modify domain
         result = await async_setup_entry(hass, mock_setup_entry)
         assert result is True
-        assert hass.data[DOMAIN]["tis_api"] is not None
 
 
 @pytest.mark.asyncio
@@ -48,11 +47,9 @@ async def test_async_unload_entry_success_with_tis_api(
     hass: HomeAssistant, mock_setup_entry
 ) -> None:
     """Test successful unload of entry with tis_api present."""
-    hass.data[DOMAIN] = {"tis_api": MagicMock()}
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
         result = await async_unload_entry(hass, mock_setup_entry)
         assert result is True
-        assert "tis_api" not in hass.data[DOMAIN]
 
 
 @pytest.mark.asyncio
@@ -60,13 +57,9 @@ async def test_async_unload_entry_success_without_tis_api(
     hass: HomeAssistant, mock_setup_entry
 ) -> None:
     """Test successful unload of entry without tis_api present."""
-    hass.data[DOMAIN] = {}
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
         result = await async_unload_entry(hass, mock_setup_entry)
         assert result is True
-        assert (
-            "tis_api" not in hass.data[DOMAIN]
-        )  # Ensures no error if tis_api is not present
 
 
 @pytest.mark.asyncio
@@ -75,7 +68,6 @@ async def test_async_unload_entry_failure(
 ) -> None:
     """Test unsuccessful unload of entry."""
     entry = MagicMock()
-    hass.data[DOMAIN] = {"tis_api": MagicMock()}
 
     # Patch the async_unload_platforms method of hass.config_entries
     with patch.object(
@@ -85,4 +77,3 @@ async def test_async_unload_entry_failure(
 
         assert result is False
         mock_unload_platforms.assert_called_once()
-        assert "tis_api" in hass.data[DOMAIN]  # tis_api should remain if unload fails
