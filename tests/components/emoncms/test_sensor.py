@@ -133,7 +133,7 @@ async def test_coordinator_update(
     )
     for entity_entry in entity_entries:
         state = hass.states.get(entity_entry.entity_id)
-        assert state == snapshot
+        assert state == snapshot(name=entity_entry.entity_id)
 
     async def skip_time() -> None:
         freezer.tick(60)
@@ -149,7 +149,8 @@ async def test_coordinator_update(
 
     for entity_entry in entity_entries:
         state = hass.states.get(entity_entry.entity_id)
-        assert state == snapshot
+        assert state.attributes["LastUpdated"] == 1665509670
+        assert state.state == "24.04"
 
     emoncms_client.async_request.return_value = EMONCMS_FAILURE
 

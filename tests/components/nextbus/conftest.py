@@ -8,15 +8,32 @@ import pytest
 
 @pytest.fixture(
     params=[
-        {"name": "Outbound", "stop": [{"tag": "5650"}]},
         [
             {
                 "name": "Outbound",
-                "stop": [{"tag": "5650"}],
+                "shortName": "Outbound",
+                "useForUi": True,
+                "stops": ["5184"],
+            },
+            {
+                "name": "Outbound - Hidden",
+                "shortName": "Outbound - Hidden",
+                "useForUi": False,
+                "stops": ["5651"],
+            },
+        ],
+        [
+            {
+                "name": "Outbound",
+                "shortName": "Outbound",
+                "useForUi": True,
+                "stops": ["5184"],
             },
             {
                 "name": "Inbound",
-                "stop": [{"tag": "5651"}],
+                "shortName": "Inbound",
+                "useForUi": True,
+                "stops": ["5651"],
             },
         ],
     ]
@@ -35,22 +52,65 @@ def mock_nextbus_lists(
 ) -> MagicMock:
     """Mock all list functions in nextbus to test validate logic."""
     instance = mock_nextbus.return_value
-    instance.get_agency_list.return_value = {
-        "agency": [{"tag": "sf-muni", "title": "San Francisco Muni"}]
-    }
-    instance.get_route_list.return_value = {
-        "route": [{"tag": "F", "title": "F - Market & Wharves"}]
-    }
-    instance.get_route_config.return_value = {
-        "route": {
-            "stop": [
-                {"tag": "5650", "title": "Market St & 7th St"},
-                {"tag": "5651", "title": "Market St & 7th St"},
-                # Error case test. Duplicate title with no unique direction
-                {"tag": "5652", "title": "Market St & 7th St"},
-            ],
-            "direction": route_config_direction,
+    instance.agencies.return_value = [
+        {
+            "id": "sfmta-cis",
+            "name": "San Francisco Muni CIS",
+            "shortName": "SF Muni CIS",
+            "region": "",
+            "website": "",
+            "logo": "",
+            "nxbs2RedirectUrl": "",
         }
+    ]
+
+    instance.routes.return_value = [
+        {
+            "id": "F",
+            "rev": 1057,
+            "title": "F Market & Wharves",
+            "description": "7am-10pm daily",
+            "color": "",
+            "textColor": "",
+            "hidden": False,
+            "timestamp": "2024-06-23T03:06:58Z",
+        },
+    ]
+
+    instance.route_details.return_value = {
+        "id": "F",
+        "rev": 1057,
+        "title": "F Market & Wharves",
+        "description": "7am-10pm daily",
+        "color": "",
+        "textColor": "",
+        "hidden": False,
+        "boundingBox": {},
+        "stops": [
+            {
+                "id": "5184",
+                "lat": 37.8071299,
+                "lon": -122.41732,
+                "name": "Jones St & Beach St",
+                "code": "15184",
+                "hidden": False,
+                "showDestinationSelector": True,
+                "directions": ["F_0_var1", "F_0_var0"],
+            },
+            {
+                "id": "5651",
+                "lat": 37.8071299,
+                "lon": -122.41732,
+                "name": "Jones St & Beach St",
+                "code": "15651",
+                "hidden": False,
+                "showDestinationSelector": True,
+                "directions": ["F_0_var1", "F_0_var0"],
+            },
+        ],
+        "directions": route_config_direction,
+        "paths": [],
+        "timestamp": "2024-06-23T03:06:58Z",
     }
 
     return instance
