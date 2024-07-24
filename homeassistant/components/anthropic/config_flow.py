@@ -148,7 +148,15 @@ class AnthropicOptionsFlow(OptionsFlow):
                 CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
             }
 
-        schema = anthropic_config_option_schema(self.hass, options)
+        suggested_values = options.copy()
+        if not suggested_values.get(CONF_PROMPT):
+            suggested_values[CONF_PROMPT] = llm.DEFAULT_INSTRUCTIONS_PROMPT
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(anthropic_config_option_schema(self.hass, options)),
+            suggested_values,
+        )
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
@@ -175,19 +183,10 @@ def anthropic_config_option_schema(
     )
 
     schema = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={
-                "suggested_value": options.get(
-                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                )
-            },
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        vol.Optional(CONF_PROMPT): TemplateSelector(),
+        vol.Optional(CONF_LLM_HASS_API, default="none"): SelectSelector(
+            SelectSelectorConfig(options=hass_apis)
+        ),
         vol.Required(
             CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
         ): bool,
@@ -200,17 +199,14 @@ def anthropic_config_option_schema(
         {
             vol.Optional(
                 CONF_CHAT_MODEL,
-                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
                 default=RECOMMENDED_CHAT_MODEL,
             ): str,
             vol.Optional(
                 CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=RECOMMENDED_MAX_TOKENS,
             ): int,
             vol.Optional(
                 CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         }
