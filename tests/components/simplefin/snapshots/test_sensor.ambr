@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-4k5l6m7n-8o9p-1q2r-3s4t_balance',
+    'unique_id': 'balance_ACT-4k5l6m7n-8o9p-1q2r-3s4t',
     'unit_of_measurement': 'USD',
   })
 # ---
@@ -100,6 +100,54 @@
     'state': '2024-01-16T06:55:19+00:00',
   })
 # ---
+# name: test_all_entities[sensor.investments_dr_evil_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.investments_dr_evil_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-4k5l6m7n-8o9p-1q2r-3s4t',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.investments_dr_evil_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'Investments Dr Evil Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.investments_dr_evil_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T06:55:19+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.investments_my_checking_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -131,7 +179,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-1k2l3m4n-5o6p-7q8r-9s0t_balance',
+    'unique_id': 'balance_ACT-1k2l3m4n-5o6p-7q8r-9s0t',
     'unit_of_measurement': 'USD',
   })
 # ---
@@ -201,6 +249,54 @@
     'state': '2024-01-16T06:55:19+00:00',
   })
 # ---
+# name: test_all_entities[sensor.investments_my_checking_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.investments_my_checking_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-1k2l3m4n-5o6p-7q8r-9s0t',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.investments_my_checking_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'Investments My Checking Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.investments_my_checking_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T06:55:19+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.investments_nerdcorp_series_b_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -232,7 +328,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-5k6l7m8n-9o0p-1q2r-3s4t_balance',
+    'unique_id': 'balance_ACT-5k6l7m8n-9o0p-1q2r-3s4t',
     'unit_of_measurement': 'EUR',
   })
 # ---
@@ -302,6 +398,54 @@
     'state': '2024-01-16T06:55:19+00:00',
   })
 # ---
+# name: test_all_entities[sensor.investments_nerdcorp_series_b_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.investments_nerdcorp_series_b_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-5k6l7m8n-9o0p-1q2r-3s4t',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.investments_nerdcorp_series_b_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'Investments NerdCorp Series B Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.investments_nerdcorp_series_b_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T06:55:19+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -333,7 +477,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-7a8b9c0d-1e2f-3g4h-5i6j_balance',
+    'unique_id': 'balance_ACT-7a8b9c0d-1e2f-3g4h-5i6j',
     'unit_of_measurement': 'USD',
   })
 # ---
@@ -403,6 +547,54 @@
     'state': '2024-01-16T11:16:42+00:00',
   })
 # ---
+# name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mythical_randomsavings_castle_mortgage_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-7a8b9c0d-1e2f-3g4h-5i6j',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mythical RandomSavings Castle Mortgage Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mythical_randomsavings_castle_mortgage_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T11:16:42+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -434,7 +626,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-6a7b8c9d-0e1f-2g3h-4i5j_balance',
+    'unique_id': 'balance_ACT-6a7b8c9d-0e1f-2g3h-4i5j',
     'unit_of_measurement': 'USD',
   })
 # ---
@@ -504,6 +696,54 @@
     'state': '2024-01-16T11:16:42+00:00',
   })
 # ---
+# name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mythical_randomsavings_unicorn_pot_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-6a7b8c9d-0e1f-2g3h-4i5j',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'Mythical RandomSavings Unicorn Pot Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mythical_randomsavings_unicorn_pot_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T11:16:42+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -535,7 +775,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-3a4b5c6d-7e8f-9g0h-1i2j_balance',
+    'unique_id': 'balance_ACT-3a4b5c6d-7e8f-9g0h-1i2j',
     'unit_of_measurement': 'USD',
   })
 # ---
@@ -605,6 +845,54 @@
     'state': '2024-01-16T11:16:42+00:00',
   })
 # ---
+# name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.random_bank_costco_anywhere_visa_r_card_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-3a4b5c6d-7e8f-9g0h-1i2j',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'Random Bank Costco Anywhere Visa® Card Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.random_bank_costco_anywhere_visa_r_card_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T11:16:42+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.the_bank_of_go_prime_savings_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -636,7 +924,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-2a3b4c5d-6e7f-8g9h-0i1j_balance',
+    'unique_id': 'balance_ACT-2a3b4c5d-6e7f-8g9h-0i1j',
     'unit_of_measurement': 'EUR',
   })
 # ---
@@ -706,6 +994,54 @@
     'state': '2024-01-16T11:14:21+00:00',
   })
 # ---
+# name: test_all_entities[sensor.the_bank_of_go_prime_savings_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.the_bank_of_go_prime_savings_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-2a3b4c5d-6e7f-8g9h-0i1j',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.the_bank_of_go_prime_savings_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'The Bank of Go PRIME SAVINGS Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.the_bank_of_go_prime_savings_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T11:14:21+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.the_bank_of_go_the_bank_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -737,7 +1073,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'account_ACT-1a2b3c4d-5e6f-7g8h-9i0j_balance',
+    'unique_id': 'balance_ACT-1a2b3c4d-5e6f-7g8h-9i0j',
     'unit_of_measurement': 'USD',
   })
 # ---
@@ -801,6 +1137,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.the_bank_of_go_the_bank_data_age',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-16T07:04:03+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.the_bank_of_go_the_bank_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.the_bank_of_go_the_bank_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'simplefin',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'age_ACT-1a2b3c4d-5e6f-7g8h-9i0j',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.the_bank_of_go_the_bank_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by SimpleFIN API',
+      'device_class': 'timestamp',
+      'friendly_name': 'The Bank of Go The Bank Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.the_bank_of_go_the_bank_timestamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
