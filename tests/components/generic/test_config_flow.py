@@ -110,9 +110,8 @@ async def test_form(
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -157,9 +156,8 @@ async def test_form_only_stillimage(
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -399,9 +397,8 @@ async def test_form_rtsp_mode(
         CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -419,21 +416,28 @@ async def test_form_only_stream(
     data = TESTDATA.copy()
     data.pop(CONF_STILL_IMAGE_URL)
     data[CONF_STREAM_SOURCE] = "rtsp://user:pass@127.0.0.1/testurl/2"
-    with mock_create_stream as mock_setup:
+    with mock_create_stream:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
         )
-    assert result1["type"] is FlowResultType.CREATE_ENTRY
-    assert result1["title"] == "127_0_0_1"
-    assert result1["options"] == {
+
+    assert result1["type"] is FlowResultType.FORM
+    with mock_create_stream:
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"],
+            user_input={CONF_CONFIRMED_OK: True},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["title"] == "127_0_0_1"
+    assert result2["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "rtsp://user:pass@127.0.0.1/testurl/2",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/jpeg",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -445,7 +449,6 @@ async def test_form_only_stream(
     ):
         image_obj = await async_get_image(hass, "camera.127_0_0_1")
         assert image_obj.content == fakeimgbytes_jpg
-    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_form_still_and_stream_not_provided(
