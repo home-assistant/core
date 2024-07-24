@@ -83,6 +83,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                         _LOGGER.debug("Reconfiguration done")
                         return self.async_update_reload_and_abort(
                             entry=self.entry,
+                            unique_id=mac,
                             data={**user_input, CONF_HOST: host, CONF_PORT: port},
                             reason="reconfigure_successful",
                         )
