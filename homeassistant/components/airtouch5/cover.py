@@ -59,8 +59,6 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
     ) -> None:
         """Initialise the Cover Entity."""
         super().__init__(client)
-        self._name = name
-
         self._attr_unique_id = f"zone_{name.zone_number}_open_percentage"
         self._attr_name = "Damper"
         self._attr_device_info = DeviceInfo(
