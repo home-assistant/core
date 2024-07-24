@@ -12,13 +12,7 @@ from homeassistant.components.emoncms.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlowResult
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_PLATFORM,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_URL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -133,7 +127,6 @@ CONFIG_ENTRY = {
     CONF_ONLY_INCLUDE_FEEDID: ["1"],
     CONF_URL: "http://1.1.1.1",
     CONF_EXCLUDE_FEEDID: None,
-    CONF_UNIT_OF_MEASUREMENT: None,
 }
 
 USER_INPUT_2 = {

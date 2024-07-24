@@ -10,7 +10,7 @@ from homeassistant.components.emoncms.const import (
     CONF_ONLY_INCLUDE_FEEDID,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_UNIT_OF_MEASUREMENT, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from tests.common import MockConfigEntry
 
@@ -45,7 +45,6 @@ FLOW_RESULT = {
     CONF_ONLY_INCLUDE_FEEDID: [str(i + 1) for i in range(len(UNITS))],
     CONF_URL: "http://1.1.1.1",
     CONF_EXCLUDE_FEEDID: None,
-    CONF_UNIT_OF_MEASUREMENT: None,
 }
 
 SENSOR_NAME = "emoncms@1.1.1.1"

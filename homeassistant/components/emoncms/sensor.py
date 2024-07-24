@@ -31,7 +31,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .config_flow import sensor_name
-from .const import CONF_EXCLUDE_FEEDID, CONF_ONLY_INCLUDE_FEEDID, DOMAIN, FEED_NAME
+from .const import (
+    CONF_EXCLUDE_FEEDID,
+    CONF_ONLY_INCLUDE_FEEDID,
+    DOMAIN,
+    FEED_ID,
+    FEED_NAME,
+    FEED_TAG,
+)
 from .coordinator import EmoncmsCoordinator
 
 ATTR_FEEDID = "FeedId"
@@ -105,7 +112,6 @@ async def async_setup_entry(
     """Set up the emoncms sensors."""
     config = entry.data
     name = sensor_name(config[CONF_URL])
-    config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
 
@@ -121,22 +127,17 @@ async def async_setup_entry(
     sensors: list[EmonCmsSensor] = []
 
     for idx, elem in enumerate(elems):
-        if exclude_feeds is not None and elem["id"] in exclude_feeds:
+        if exclude_feeds is not None and elem[FEED_ID] in exclude_feeds:
             continue
 
-        if include_only_feeds is not None and elem["id"] not in include_only_feeds:
+        if include_only_feeds is not None and elem[FEED_ID] not in include_only_feeds:
             continue
-
-        if unit := elem.get("unit"):
-            unit_of_measurement = unit
-        else:
-            unit_of_measurement = config_unit
 
         sensors.append(
             EmonCmsSensor(
                 coordinator,
                 entry.entry_id,
-                unit_of_measurement,
+                elem["unit"],
                 name,
                 idx,
             )
@@ -163,7 +164,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             elem = self.coordinator.data[self.idx]
         self._attr_name = f"{name} {elem[FEED_NAME]}"
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_unique_id = f"{entry_id}-{elem['id']}"
+        self._attr_unique_id = f"{entry_id}-{elem[FEED_ID]}"
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -193,9 +194,9 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     def _update_attributes(self, elem: dict[str, Any]) -> None:
         """Update entity attributes."""
         self._attr_extra_state_attributes = {
-            ATTR_FEEDID: elem["id"],
-            ATTR_TAG: elem["tag"],
-            ATTR_FEEDNAME: elem["name"],
+            ATTR_FEEDID: elem[FEED_ID],
+            ATTR_TAG: elem[FEED_TAG],
+            ATTR_FEEDNAME: elem[FEED_NAME],
         }
         if elem["value"] is not None:
             self._attr_extra_state_attributes[ATTR_SIZE] = elem["size"]

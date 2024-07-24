@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_API_KEY, CONF_UNIT_OF_MEASUREMENT, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import selector
@@ -123,7 +123,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_API_KEY: api_key,
             CONF_EXCLUDE_FEEDID: exclude_feeds,
             CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
-            CONF_UNIT_OF_MEASUREMENT: import_info.get(CONF_UNIT_OF_MEASUREMENT),
             CONF_URL: url,
         }
         LOGGER.debug(config)
@@ -145,7 +144,6 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
         api_key = self._config_entry.data[CONF_API_KEY]
         exclude_feeds = self._config_entry.data.get(CONF_EXCLUDE_FEEDID)
         include_only_feeds = self._config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID)
-        unit_of_measurement = self._config_entry.data.get(CONF_UNIT_OF_MEASUREMENT)
         selected_feeds = []
         if include_only_feeds:
             selected_feeds = include_only_feeds
@@ -167,7 +165,6 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
             api_key = user_input[CONF_API_KEY]
             selected_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
             user_input[CONF_EXCLUDE_FEEDID] = None
-            user_input[CONF_UNIT_OF_MEASUREMENT] = unit_of_measurement
             if self.hass.config_entries.async_update_entry(
                 self._config_entry, title=sensor_name(url), data=user_input
             ):
