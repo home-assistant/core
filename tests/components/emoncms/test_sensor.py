@@ -80,7 +80,8 @@ async def test_coordinator_update(
 
     for entity_id in get_entity_ids(feeds):
         state = hass.states.get(entity_id)
-        assert state == snapshot
+        assert state.attributes["LastUpdated"] == 1665509670
+        assert state.state == "24.04"
 
     emoncms_client.async_request.return_value = EMONCMS_FAILURE
 

@@ -24,23 +24,23 @@ def get_feed(
     }
 
 
-FEEDS = []
-for i, unit in enumerate(UNITS):
-    FEEDS.append(get_feed(i + 1, unit=unit))
+FEEDS = [get_feed(i + 1, unit=unit) for i, unit in enumerate(UNITS)]
 
 
 EMONCMS_FAILURE = {"success": False, "message": "failure"}
-
-PATH = "homeassistant.components.emoncms"
-LIB = "EmoncmsClient"
 
 
 @pytest.fixture
 async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     """Mock pyemoncms success response."""
     with (
-        patch(f"{PATH}.sensor.{LIB}", autospec=True) as mock_client,
-        patch(f"{PATH}.coordinator.{LIB}", new=mock_client),
+        patch(
+            "homeassistant.components.emoncms.sensor.EmoncmsClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.emoncms.coordinator.EmoncmsClient",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}
