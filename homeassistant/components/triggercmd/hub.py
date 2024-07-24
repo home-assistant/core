@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 
+import jwt
 from triggercmd import client
 
 from homeassistant.core import HomeAssistant
@@ -20,10 +20,9 @@ class Hub:
 
     def __init__(self, hass: HomeAssistant, token: str) -> None:
         """Init hub."""
+        tokenData = jwt.decode(token, options={"verify_signature": False})
+        self._id = tokenData["id"]
         self._token = token
-        self._hass = hass
-        self._name = "TRIGGERcmd"
-        self._id = token
 
         r = client.list(token)
         self.switches = []
@@ -56,7 +55,6 @@ class Switch:
         self.hub = hub
         self.name = name
         self._is_on = False
-        self._callbacks: set[Callable[[], None]] = set()
         self._loop = asyncio.get_event_loop()
         self.firmware_version = "1.0.0"
         self.model = "Trigger Device"
@@ -65,11 +63,3 @@ class Switch:
     def switch_id(self) -> str:
         """Return ID for switch."""
         return self._id
-
-    def register_callback(self, callback: Callable[[], None]) -> None:
-        """Register callback, called when switch changes state."""
-        self._callbacks.add(callback)
-
-    def remove_callback(self, callback: Callable[[], None]) -> None:
-        """Remove previously registered callback."""
-        self._callbacks.discard(callback)

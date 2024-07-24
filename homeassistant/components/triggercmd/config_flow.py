@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import jwt
+from triggercmd import client
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -30,6 +31,10 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     if not tokenData["id"]:
         raise InvalidToken
 
+    r = client.list(data["token"])
+    if not str(r) == "<Response [200 OK]>":
+        raise InvalidToken
+
     return {"title": tokenData["id"]}
 
 
@@ -37,7 +42,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
