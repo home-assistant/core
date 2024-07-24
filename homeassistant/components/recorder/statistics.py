@@ -587,6 +587,10 @@ def _compile_statistics(
         ):
             new_short_term_stats.append(new_stat)
 
+    if start.minute == 50:
+        # Once every hour, update issues
+        get_metadata(instance.hass, statistic_source=DOMAIN)
+
     if start.minute == 55:
         # A full hour is ready, summarize it
         _compile_hourly_statistics(session, start)

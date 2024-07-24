@@ -2079,6 +2079,7 @@ async def test_clear_statistics(
     ("new_unit", "new_unit_class", "new_display_unit"),
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
 )
+@pytest.mark.freeze_time("2024-07-24 11:50:00+00:00")  # Breaks metadata, why?
 async def test_update_statistics_metadata(
     recorder_mock: Recorder,
     hass: HomeAssistant,
