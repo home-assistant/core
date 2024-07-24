@@ -1,0 +1,119 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'bridges': list([
+        dict({
+          'firmware': dict({
+            'silabs': '1.1.2',
+            'ti': None,
+            'wifi': '0.121.0',
+            'wifi_app': '3.3.0',
+          }),
+          'firmware_version': dict({
+            'silabs': '1.1.2',
+            'ti': None,
+            'wifi': '0.121.0',
+            'wifi_app': '3.3.0',
+          }),
+          'hardware_id': '**REDACTED**',
+          'hardware_revision': 4,
+          'id': 12345,
+          'links': dict({
+            'system': 12345,
+          }),
+          'missing_at': None,
+          'mode': 'home',
+          'name': 'Laundry Closet',
+          'system_id': 12345,
+          'updated_at': '2023-12-12T22:33:01.073000+00:00',
+        }),
+      ]),
+      'listeners': list([
+        dict({
+          'configuration': dict({
+          }),
+          'definition_id': 24,
+          'device_type': 'sensor',
+          'id': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+          'insights': dict({
+            'primary': dict({
+              'data_received_at': '2023-06-18T06:17:00.697000+00:00',
+              'origin': dict({
+                'id': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+                'type': 'Sensor',
+              }),
+              'value': 'idle',
+            }),
+          }),
+          'model_version': '1.0',
+          'pro_monitoring_status': 'ineligible',
+          'sensor_id': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+          'status_localized': dict({
+            'description': 'Jun 18 at 12:17am',
+            'state': 'Idle',
+          }),
+        }),
+      ]),
+      'sensors': list([
+        dict({
+          'bridge': dict({
+            'hardware_id': '**REDACTED**',
+            'id': 67890,
+          }),
+          'calibrated_at': '2024-01-19T00:38:15.372000+00:00',
+          'device_key': '**REDACTED**',
+          'encryption_key': True,
+          'firmware': dict({
+            'status': 'valid',
+          }),
+          'firmware_version': '1.1.2',
+          'hardware_id': '**REDACTED**',
+          'hardware_revision': 5,
+          'id': 123456,
+          'installed_at': '2019-06-17T03:30:27.766000+00:00',
+          'last_bridge_hardware_id': '**REDACTED**',
+          'last_reported_at': '2024-01-21T00:00:46.705000+00:00',
+          'location_id': 123456,
+          'missing_at': None,
+          'name': 'Sensor 1',
+          'signal_strength': 4,
+          'surface_type': None,
+          'system_id': 12345,
+          'updated_at': '2024-01-19T00:38:16.856000+00:00',
+          'user': dict({
+            'email': '**REDACTED**',
+            'id': 12345,
+          }),
+          'uuid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+        }),
+      ]),
+      'user_preferences': dict({
+        'battery_alerts_enabled': True,
+        'celsius_enabled': False,
+        'disconnect_alerts_enabled': True,
+        'home_away_alerts_enabled': False,
+        'military_time_enabled': False,
+        'user_id': '**REDACTED**',
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'refresh_token': '**REDACTED**',
+        'user_uuid': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'notion',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

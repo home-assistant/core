@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': list([
+      dict({
+        'area_name': '**REDACTED**',
+        'date': dict({
+          '__type': "<class 'datetime.date'>",
+          'isoformat': '2022-01-23',
+        }),
+        'pickup_types': list([
+          dict({
+            'friendly_name': 'Trash Collection',
+            'name': 'garbage',
+          }),
+        ]),
+      }),
+    ]),
+    'entry': dict({
+      'data': dict({
+        'place_id': '**REDACTED**',
+        'service_id': '67890',
+      }),
+      'disabled_by': None,
+      'domain': 'recollect_waste',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+  })
+# ---

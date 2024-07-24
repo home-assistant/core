@@ -1,7 +1,6 @@
 """Test WattTime diagnostics."""
 
 from syrupy import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -18,5 +17,5 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot(exclude=props("entry_id"))
+        hass, hass_client, config_entry, snapshot
     )

@@ -51,7 +51,7 @@ async def snapshot_get_diagnostics_for_config_entry(
 ) -> JsonObjectType:
     """Snapshot get_diagnostics_for_config_entry."""
     snapshot_exclude_functions: list[PropertyFilter] = [
-        props("created_at", "modified_at")  # we don't care about these
+        props("created_at", "entry_id", "modified_at")  # we don't care about these
     ]
 
     if snapshot._exclude:

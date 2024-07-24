@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock
 
 from syrupy import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -25,5 +24,5 @@ async def test_entry_diagnostics(
     await init_integration(hass, mock_config_entry)
 
     await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry, snapshot(exclude=props("entry_id"))
+        hass, hass_client, mock_config_entry, snapshot
     )

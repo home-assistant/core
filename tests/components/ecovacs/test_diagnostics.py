@@ -2,7 +2,6 @@
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -27,5 +26,5 @@ async def test_diagnostics(
 ) -> None:
     """Test diagnostics."""
     await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration, snapshot(exclude=props("entry_id"))
+        hass, hass_client, init_integration, snapshot
     )

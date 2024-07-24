@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from syrupy import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -31,5 +30,5 @@ async def test_entry_diagnostics(
         hass,
         hass_client,
         mock_config_entry,
-        snapshot(exclude=props("entry_id")),
+        snapshot,
     )
