@@ -8,6 +8,7 @@ from io import BytesIO
 import logging
 from typing import TYPE_CHECKING
 
+import aiohttp
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
     MultipleCamerasFound,
@@ -77,7 +78,9 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         if camera_data.fullsizephoto:
             image_url = f"{camera_data.photourl}?type=fullsize"
 
-        async with self.session.get(image_url, timeout=10) as get_image:
+        async with self.session.get(
+            image_url, timeout=aiohttp.ClientTimeout(total=10)
+        ) as get_image:
             if get_image.status not in range(200, 299):
                 raise UpdateFailed("Could not retrieve image")
             image = BytesIO(await get_image.read()).getvalue()

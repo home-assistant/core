@@ -89,7 +89,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_simple_climate_device(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of climate entities.
 
@@ -110,13 +110,7 @@ async def test_simple_climate_device(
 
     # Event signals thermostat configured off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": False},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"on": False}})
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -125,13 +119,7 @@ async def test_simple_climate_device(
 
     # Event signals thermostat state on
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": True},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"on": True}})
     assert hass.states.get("climate.thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -195,7 +183,7 @@ async def test_climate_device_without_cooling_support(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of sensor entities."""
     assert len(hass.states.async_all()) == 2
@@ -219,13 +207,7 @@ async def test_climate_device_without_cooling_support(
 
     # Event signals thermostat configured off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"mode": "off"},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"mode": "off"}})
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -234,14 +216,7 @@ async def test_climate_device_without_cooling_support(
 
     # Event signals thermostat state on
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"mode": "other"},
-        "state": {"on": True},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"mode": "other"}, "state": {"on": True}})
     assert hass.states.get("climate.thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -250,13 +225,7 @@ async def test_climate_device_without_cooling_support(
 
     # Event signals thermostat state off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": False},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"on": False}})
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -377,7 +346,7 @@ async def test_climate_device_without_cooling_support(
 async def test_climate_device_with_cooling_support(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of sensor entities."""
     assert len(hass.states.async_all()) == 2
@@ -398,14 +367,7 @@ async def test_climate_device_with_cooling_support(
 
     # Event signals thermostat mode cool
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"mode": "cool"},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"mode": "cool"}})
     assert hass.states.get("climate.zen_01").state == HVACMode.COOL
     assert hass.states.get("climate.zen_01").attributes["temperature"] == 11.1
     assert (
@@ -414,13 +376,7 @@ async def test_climate_device_with_cooling_support(
 
     # Event signals thermostat state on
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"on": True},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"on": True}})
     assert hass.states.get("climate.zen_01").state == HVACMode.COOL
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"]
@@ -476,7 +432,7 @@ async def test_climate_device_with_cooling_support(
 async def test_climate_device_with_fan_support(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of sensor entities."""
     assert len(hass.states.async_all()) == 2
@@ -498,13 +454,7 @@ async def test_climate_device_with_fan_support(
 
     # Event signals fan mode defaults to off
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"fanmode": "unsupported"},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"fanmode": "unsupported"}})
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_OFF
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
@@ -512,14 +462,7 @@ async def test_climate_device_with_fan_support(
 
     # Event signals unsupported fan mode
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"fanmode": "unsupported"},
-        "state": {"on": True},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"fanmode": "unsupported"}, "state": {"on": True}})
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"]
@@ -528,13 +471,7 @@ async def test_climate_device_with_fan_support(
 
     # Event signals unsupported fan mode
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"fanmode": "unsupported"},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"fanmode": "unsupported"}})
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
         hass.states.get("climate.zen_01").attributes["hvac_action"]
@@ -611,7 +548,7 @@ async def test_climate_device_with_fan_support(
 async def test_climate_device_with_preset(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of sensor entities."""
     assert len(hass.states.async_all()) == 2
@@ -636,13 +573,7 @@ async def test_climate_device_with_preset(
 
     # Event signals deCONZ preset
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"preset": "manual"},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"preset": "manual"}})
     assert (
         hass.states.get("climate.zen_01").attributes["preset_mode"]
         == DECONZ_PRESET_MANUAL
@@ -650,13 +581,7 @@ async def test_climate_device_with_preset(
 
     # Event signals unknown preset
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"preset": "unsupported"},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"config": {"preset": "unsupported"}})
     assert hass.states.get("climate.zen_01").attributes["preset_mode"] is None
 
     # Verify service calls
@@ -779,7 +704,7 @@ async def test_clip_climate_device(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_verify_state_update(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that state update properly."""
     assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
@@ -788,10 +713,7 @@ async def test_verify_state_update(
         == HVACAction.HEATING
     )
 
-    event_changed_sensor = {"r": "sensors", "state": {"on": False}}
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"on": False}})
     assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
@@ -802,12 +724,11 @@ async def test_verify_state_update(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_add_new_climate_device(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new climate device works."""
     event_added_sensor = {
         "e": "added",
-        "r": "sensors",
         "sensor": {
             "id": "Thermostat id",
             "name": "Thermostat",
@@ -826,8 +747,7 @@ async def test_add_new_climate_device(
 
     assert len(hass.states.async_all()) == 0
 
-    await mock_websocket_data(event_added_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data(event_added_sensor)
 
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
@@ -934,7 +854,7 @@ async def test_no_mode_no_state(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_boost_mode(
     hass: HomeAssistant,
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that a climate device with boost mode and different state works."""
 
@@ -948,14 +868,8 @@ async def test_boost_mode(
     assert climate_thermostat.attributes["hvac_action"] is HVACAction.IDLE
 
     # Event signals thermostat preset boost and valve 100 (real data)
-    event_changed_sensor = {
-        "r": "sensors",
-        "config": {"preset": "boost"},
-        "state": {"valve": 100},
-    }
 
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"config": {"preset": "boost"}, "state": {"valve": 100}})
 
     climate_thermostat = hass.states.get("climate.thermostat")
     assert climate_thermostat.attributes["preset_mode"] is PRESET_BOOST

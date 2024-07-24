@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.2
+AEMET-OpenData==0.5.3
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -176,10 +176,10 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.4
+aioairzone-cloud==0.5.5
 
 # homeassistant.components.airzone
-aioairzone==0.8.0
+aioairzone==0.8.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -273,7 +273,7 @@ aiokef==0.2.16
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.4.15
+aiolifx-themes==0.5.0
 
 # homeassistant.components.lifx
 aiolifx==1.0.5
@@ -350,7 +350,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==1.1.2
+aiorussound==2.2.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -383,7 +383,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.6
+aiotractive==0.6.0
 
 # homeassistant.components.unifi
 aiounifi==79
@@ -487,7 +487,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.39.0
+async-upnp-client==0.40.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -1463,7 +1463,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ollama
-ollama-hass==0.1.7
+ollama==0.3.0
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -1987,7 +1987,7 @@ pylitterbot==2023.5.0
 pylutron-caseta==0.20.0
 
 # homeassistant.components.lutron
-pylutron==0.2.13
+pylutron==0.2.15
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2268,7 +2268,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.0.0
+python-homewizard-energy==v6.1.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2289,7 +2289,7 @@ python-kasa[speedups]==0.7.0.5
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.2.2
+python-matter-server==6.3.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2384,7 +2384,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.10
+pyvesync==2.1.12
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2468,7 +2468,7 @@ renault-api==0.2.5
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.4
+reolink-aio==0.9.5
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2903,7 +2903,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.19.2
+wled==0.20.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9

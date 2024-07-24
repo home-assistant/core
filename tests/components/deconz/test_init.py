@@ -16,22 +16,9 @@ from homeassistant.core import HomeAssistant
 from .conftest import ConfigEntryFactoryType
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-ENTRY1_HOST = "1.2.3.4"
-ENTRY1_PORT = 80
-ENTRY1_API_KEY = "1234567890ABCDEF"
-ENTRY1_BRIDGEID = "12345ABC"
-ENTRY1_UUID = "456DEF"
-
-ENTRY2_HOST = "2.3.4.5"
-ENTRY2_PORT = 80
-ENTRY2_API_KEY = "1234567890ABCDEF"
-ENTRY2_BRIDGEID = "23456DEF"
-ENTRY2_UUID = "789ACE"
 
 
-async def setup_entry(hass, entry):
+async def setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Test that setup entry works."""
     with (
         patch.object(DeconzHub, "async_setup", return_value=True),
@@ -109,9 +96,7 @@ async def test_unload_entry(
 
 
 async def test_unload_entry_multiple_gateways(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry_factory,
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Test being able to unload an entry and master gateway gets moved."""
     config_entry = await config_entry_factory()
@@ -133,7 +118,7 @@ async def test_unload_entry_multiple_gateways(
 
 
 async def test_unload_entry_multiple_gateways_parallel(
-    hass: HomeAssistant, config_entry_factory
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Test race condition when unloading multiple config entries in parallel."""
     config_entry = await config_entry_factory()
