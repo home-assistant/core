@@ -319,6 +319,12 @@ RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _ty
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
+class RenderedTemplateResultStrWrapper(str):
+    """Wrapper class to store template result string to avoid double renders."""
+
+    __slots__ = ()
+
+
 def _true(arg: str) -> bool:
     return True
 
@@ -618,7 +624,7 @@ class Template:
         except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
 
-        return render_result
+        return RenderedTemplateResultStrWrapper(render_result)
 
     async def async_render_will_timeout(
         self,
