@@ -77,36 +77,32 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
 
-        try:
-            await validate_input(self.hass, user_input)
-        except anthropic.APITimeoutError:
-            errors["base"] = "timeout_connect"
-        except anthropic.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except anthropic.APIStatusError as e:
-            if isinstance(e.body, dict):
-                errors["base"] = e.body.get("error", {}).get("type", "unknown")
-            else:
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input)
+            except anthropic.APITimeoutError:
+                errors["base"] = "timeout_connect"
+            except anthropic.APIConnectionError:
+                errors["base"] = "cannot_connect"
+            except anthropic.APIStatusError as e:
+                if isinstance(e.body, dict):
+                    errors["base"] = e.body.get("error", {}).get("type", "unknown")
+                else:
+                    errors["base"] = "unknown"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title="Claude",
-                data=user_input,
-                options=RECOMMENDED_OPTIONS,
-            )
+            else:
+                return self.async_create_entry(
+                    title="Claude",
+                    data=user_input,
+                    options=RECOMMENDED_OPTIONS,
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors or None
         )
 
     @staticmethod
