@@ -113,6 +113,8 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_translation_key = "segment"
+    _attr_min_color_temp_kelvin = COLOR_TEMP_K_MIN
+    _attr_max_color_temp_kelvin = COLOR_TEMP_K_MAX
 
     def __init__(
         self,
@@ -175,16 +177,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         """Return the CT color value in K."""
         cct = self.coordinator.data.state.segments[self._segment].cct
         return kelvinTo255Reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return the warmest K."""
-        return COLOR_TEMP_K_MIN
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return the coldest K."""
-        return COLOR_TEMP_K_MAX
 
     @property
     def effect(self) -> str | None:
