@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch platform."""
 
-    add_entities([ApSystemsPowerSwitch(config_entry.runtime_data)])
+    add_entities([ApSystemsPowerSwitch(config_entry.runtime_data)], True)
 
 
 class ApSystemsPowerSwitch(ApSystemsEntity, SwitchEntity):
