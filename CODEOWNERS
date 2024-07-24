@@ -384,6 +384,7 @@ build.json @home-assistant/supervisor
 /tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin @alexandrecuer
+/tests/components/emoncms/ @borpin @alexandrecuer
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85
