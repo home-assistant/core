@@ -1504,10 +1504,10 @@ async def test_wan_monitor_latency(
     entity_registry: er.EntityRegistry,
     mock_websocket_message,
     device_payload: list[dict[str, Any]],
-    entity_id,
-    state,
-    updated_state,
-    index_to_update,
+    entity_id: str,
+    state: str,
+    updated_state: str,
+    index_to_update: int,
 ) -> None:
     """Verify that monitor latency sensors are working as expected."""
 

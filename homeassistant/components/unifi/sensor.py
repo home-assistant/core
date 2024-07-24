@@ -200,7 +200,27 @@ def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str:
 
 
 @callback
-def async_client_wan_monitor_latency(
+def async_device_wan_monitor_latency_supported_fn(
+    wan: Literal["WAN", "WAN2"],
+    monitor_target: str,
+    hub: UnifiHub,
+    obj_id: str,
+) -> bool:
+    """Determine if an device have a latency monitor."""
+
+    device = hub.api.devices[obj_id]
+
+    if device is None or device.uptime_stats is None:
+        return False
+
+    return (
+        async_device_wan_monitor_latency_value_fn(wan, monitor_target, hub, device)
+        is not None
+    )
+
+
+@callback
+def async_device_wan_monitor_latency_value_fn(
     wan: Literal["WAN", "WAN2"],
     monitor_target: str,
     hub: UnifiHub,
@@ -239,24 +259,26 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
             device_info_fn=async_device_device_info_fn,
             name_fn=lambda _: f"{name} {wan} latency",
             object_fn=lambda api, obj_id: api.devices[obj_id],
-            supported_fn=lambda hub, obj_id: async_client_wan_monitor_latency(
-                wan, monitor_target, hub, hub.api.devices[obj_id]
-            )
-            is not None,
+            supported_fn=partial(
+                async_device_wan_monitor_latency_supported_fn, wan, monitor_target
+            ),
             unique_id_fn=lambda hub,
             obj_id: f"{name.lower}_{wan.lower}_latency-{obj_id}",
-            value_fn=partial(async_client_wan_monitor_latency, wan, monitor_target),
+            value_fn=partial(
+                async_device_wan_monitor_latency_value_fn, wan, monitor_target
+            ),
         )
 
-    descriptions = []
-    for wan in ["WAN", "WAN2"]:
-        descriptions += [
-            make_wan_latency_entity_description(wan, "Microsoft", "microsoft"),
-            make_wan_latency_entity_description(wan, "Google", "google"),
-            make_wan_latency_entity_description(wan, "Cloudflare", "1.1.1.1"),
-        ]
-
-    return tuple(descriptions)
+    wans: tuple[Literal["WAN"], Literal["WAN2"]] = ("WAN", "WAN2")
+    return tuple(
+        make_wan_latency_entity_description(wan, name, target)
+        for wan in wans
+        for name, target in (
+            ("Microsoft", "microsoft"),
+            ("Google", "google"),
+            ("Cloudflare", "1.1.1.1"),
+        )
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
