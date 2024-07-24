@@ -30,11 +30,7 @@ BINARY_SENSOR_DESCRIPTIONS = {
     GoveeBLEBinarySensorDeviceClass.WINDOW: BinarySensorEntityDescription(
         key=GoveeBLEBinarySensorDeviceClass.WINDOW,
         device_class=BinarySensorDeviceClass.WINDOW,
-    ),
-    GoveeBLEBinarySensorDeviceClass.VIBRATION: BinarySensorEntityDescription(
-        key=GoveeBLEBinarySensorDeviceClass.VIBRATION,
-        device_class=BinarySensorDeviceClass.VIBRATION,
-    ),
+    )
 }
 
 
