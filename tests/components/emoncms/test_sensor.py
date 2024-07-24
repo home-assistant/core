@@ -64,7 +64,7 @@ async def test_coordinator_update(
     feeds = get_feeds([1])
     for entity_id in get_entity_ids(feeds):
         state = hass.states.get(entity_id)
-        assert state == snapshot
+        assert state == snapshot(name=entity_id)
 
     async def skip_time() -> None:
         freezer.tick(60)
