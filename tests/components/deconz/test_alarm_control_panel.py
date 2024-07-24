@@ -117,22 +117,19 @@ async def test_alarm_control_panel(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     for action, state in (
-        # Event signals alarm control panel armed away
+        # Event signals alarm control panel armed state
         (AncillaryControlPanel.ARMED_AWAY, STATE_ALARM_ARMED_AWAY),
-        # Event signals alarm control panel armed night
         (AncillaryControlPanel.ARMED_NIGHT, STATE_ALARM_ARMED_NIGHT),
-        # Event signals alarm control panel armed home
         (AncillaryControlPanel.ARMED_STAY, STATE_ALARM_ARMED_HOME),
-        # Event signals alarm control panel disarmed
         (AncillaryControlPanel.DISARMED, STATE_ALARM_DISARMED),
-        # Event signals alarm control panel arming
+        # Event signals alarm control panel arming state
         (AncillaryControlPanel.ARMING_AWAY, STATE_ALARM_ARMING),
         (AncillaryControlPanel.ARMING_NIGHT, STATE_ALARM_ARMING),
         (AncillaryControlPanel.ARMING_STAY, STATE_ALARM_ARMING),
-        # Event signals alarm control panel pending
+        # Event signals alarm control panel pending state
         (AncillaryControlPanel.ENTRY_DELAY, STATE_ALARM_PENDING),
         (AncillaryControlPanel.EXIT_DELAY, STATE_ALARM_PENDING),
-        # Event signals alarm control panel triggered
+        # Event signals alarm control panel triggered state
         (AncillaryControlPanel.IN_ALARM, STATE_ALARM_TRIGGERED),
         # Event signals alarm control panel unknown state keeps previous state
         (AncillaryControlPanel.NOT_READY, STATE_ALARM_TRIGGERED),
