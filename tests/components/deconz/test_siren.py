@@ -35,16 +35,14 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_sirens(
     hass: HomeAssistant,
     config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
     """Test that siren entities are created."""
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("siren.warning_device").state == STATE_ON
 
-    await mock_websocket_data({"r": "lights", "state": {"alert": None}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"alert": None}})
     assert hass.states.get("siren.warning_device").state == STATE_OFF
 
     # Verify service calls

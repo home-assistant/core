@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.2
+AEMET-OpenData==0.5.3
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -161,10 +161,10 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.4
+aioairzone-cloud==0.5.5
 
 # homeassistant.components.airzone
-aioairzone==0.8.0
+aioairzone==0.8.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -252,10 +252,10 @@ aiokafka==0.10.0
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.4.15
+aiolifx-themes==0.5.0
 
 # homeassistant.components.lifx
-aiolifx==1.0.5
+aiolifx==1.0.6
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -329,7 +329,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==2.0.6
+aiorussound==2.2.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -448,7 +448,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.39.0
+async-upnp-client==0.40.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -1199,7 +1199,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ollama
-ollama-hass==0.1.7
+ollama==0.3.0
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -1333,7 +1333,7 @@ py-madvr2==1.6.29
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==1.0.2
+py-nextbusnext==2.0.3
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1452,6 +1452,9 @@ pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
+
+# homeassistant.components.emoncms
+pyemoncms==0.0.7
 
 # homeassistant.components.enphase_envoy
 pyenphase==1.20.6
@@ -1577,7 +1580,7 @@ pylitterbot==2023.5.0
 pylutron-caseta==0.20.0
 
 # homeassistant.components.lutron
-pylutron==0.2.13
+pylutron==0.2.15
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1798,7 +1801,7 @@ python-kasa[speedups]==0.7.0.5
 python-linkplay==0.0.5
 
 # homeassistant.components.matter
-python-matter-server==6.2.2
+python-matter-server==6.3.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2280,7 +2283,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wled
-wled==0.19.2
+wled==0.20.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9

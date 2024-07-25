@@ -1,120 +1,40 @@
 """Test deCONZ gateway."""
 
-from collections.abc import Callable
 from unittest.mock import patch
 
 import pydeconz
 from pydeconz.websocket import State
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components import ssdp
-from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-)
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.deconz.hub import DeconzHub, get_deconz_api
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, ConfigEntry
+from homeassistant.config_entries import SOURCE_SSDP, ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import BRIDGEID, HOST, PORT
+from .conftest import BRIDGE_ID
 
 
-async def test_gateway_setup(
-    hass: HomeAssistant,
+async def test_device_registry_entry(
+    config_entry_setup: ConfigEntry,
     device_registry: dr.DeviceRegistry,
-    config_entry_factory: Callable[[], ConfigEntry],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Successful setup."""
-    # Patching async_forward_entry_setup* is not advisable, and should be refactored
-    # in the future.
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=True,
-    ) as forward_entry_setup:
-        config_entry = await config_entry_factory()
-        gateway = DeconzHub.get_hub(hass, config_entry)
-        assert gateway.bridgeid == BRIDGEID
-        assert gateway.master is True
-        assert gateway.config.allow_clip_sensor is False
-        assert gateway.config.allow_deconz_groups is True
-        assert gateway.config.allow_new_devices is True
-
-        assert len(gateway.deconz_ids) == 0
-        assert len(hass.states.async_all()) == 0
-
-        assert forward_entry_setup.mock_calls[0][1] == (
-            config_entry,
-            [
-                ALARM_CONTROL_PANEL_DOMAIN,
-                BINARY_SENSOR_DOMAIN,
-                BUTTON_DOMAIN,
-                CLIMATE_DOMAIN,
-                COVER_DOMAIN,
-                FAN_DOMAIN,
-                LIGHT_DOMAIN,
-                LOCK_DOMAIN,
-                NUMBER_DOMAIN,
-                SCENE_DOMAIN,
-                SELECT_DOMAIN,
-                SENSOR_DOMAIN,
-                SIREN_DOMAIN,
-                SWITCH_DOMAIN,
-            ],
-        )
-
-    gateway_entry = device_registry.async_get_device(
-        identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
+    device_entry = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, config_entry_setup.unique_id)}
     )
-
-    assert gateway_entry.configuration_url == f"http://{HOST}:{PORT}"
-    assert gateway_entry.entry_type is dr.DeviceEntryType.SERVICE
-
-
-@pytest.mark.parametrize("config_entry_source", [SOURCE_HASSIO])
-async def test_gateway_device_configuration_url_when_addon(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    config_entry_factory: Callable[[], ConfigEntry],
-) -> None:
-    """Successful setup."""
-    # Patching async_forward_entry_setup* is not advisable, and should be refactored
-    # in the future.
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=True,
-    ):
-        config_entry = await config_entry_factory()
-        gateway = DeconzHub.get_hub(hass, config_entry)
-
-    gateway_entry = device_registry.async_get_device(
-        identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
-    )
-
-    assert (
-        gateway_entry.configuration_url == "homeassistant://hassio/ingress/core_deconz"
-    )
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
@@ -166,7 +86,7 @@ async def test_update_address(
                 ssdp_location="http://2.3.4.5:80/",
                 upnp={
                     ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-                    ATTR_UPNP_SERIAL: BRIDGEID,
+                    ATTR_UPNP_SERIAL: BRIDGE_ID,
                     ATTR_UPNP_UDN: "uuid:456DEF",
                 },
             ),
