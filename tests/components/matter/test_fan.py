@@ -121,6 +121,7 @@ async def test_fan_turn_on_with_percentage(
     )
 
 
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_fan_turn_on_with_preset_mode(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -156,7 +157,7 @@ async def test_fan_turn_on_with_preset_mode(
             value=value,
         )
     # test again where preset_mode is omitted in the service call
-    # which should select a default preset mode
+    # which should select the last active percentage
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -167,8 +168,8 @@ async def test_fan_turn_on_with_preset_mode(
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
         node_id=air_purifier.node_id,
-        attribute_path="1/514/0",
-        value=5,
+        attribute_path="1/514/2",
+        value=255,
     )
     # test again if wind mode is explicitly turned off when we set a new preset mode
     matter_client.write_attribute.reset_mock()
