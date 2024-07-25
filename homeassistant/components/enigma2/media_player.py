@@ -225,6 +225,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
 
         if not self.coordinator.data.in_standby:
             self._attr_extra_state_attributes = {
+                # TODO(2025.3): Remove media currently recording
                 ATTR_MEDIA_CURRENTLY_RECORDING: self.coordinator.data.is_recording,
                 ATTR_MEDIA_DESCRIPTION: self.coordinator.data.currservice.fulldescription,
                 ATTR_MEDIA_START_TIME: self.coordinator.data.currservice.begin,
