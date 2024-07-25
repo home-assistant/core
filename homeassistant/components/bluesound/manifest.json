@@ -9,10 +9,7 @@
   "requirements": ["pyblu==0.4.0"],
   "zeroconf": [
     {
-      "type": "_airplay._tcp.local.",
-      "properties": {
-        "manufacturer": "bluesound"
-      }
+      "type": "_musc._tcp.local."
     }
   ]
 }
