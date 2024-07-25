@@ -81,3 +81,4 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             STATUS_SENSOR_NEWPLUGINS in data and data[STATUS_SENSOR_NEWPLUGINS] or None
         )
         _LOGGER.debug("Processed serverstatus %s=%s", self.my_api.name, data)
+        return data
