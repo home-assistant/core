@@ -82,12 +82,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     _LOGGER.debug("LMS Status for setup  = %s", status)
 
     lms.uuid = status[STATUS_QUERY_UUID]
+    _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
     lms.name = (
         (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME])
         and status[STATUS_QUERY_LIBRARYNAME]
         or host
     )
-    _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
+    version = STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION] or None
+    # mac can be missing
+    mac_connect = (
+        STATUS_QUERY_MAC in status
+        and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
+        or None
+    )
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
@@ -96,13 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         name=lms.name,
         manufacturer=MANUFACTURER,
         model=SERVER_MODEL,
-        sw_version=STATUS_QUERY_VERSION in status
-        and status[STATUS_QUERY_VERSION]
-        or None,
+        sw_version=version,
         serial_number=lms.uuid,
-        connections=STATUS_QUERY_MAC in status
-        and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
-        or None,
+        connections=mac_connect,
     )
     _LOGGER.debug("LMS Device %s", device)
 
