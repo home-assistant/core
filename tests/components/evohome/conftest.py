@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
 from evohomeasync2.broker import Broker
@@ -9,6 +10,8 @@ import pytest
 
 from homeassistant.components.evohome import DOMAIN
 from homeassistant.util.json import JsonObjectType
+
+from .const import ACCESS_TOKEN, REFRESH_TOKEN
 
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
@@ -40,6 +43,11 @@ def zone_schedule_fixture() -> JsonObjectType:
 
 async def mock_get(self: Broker, url: str, **kwargs: Any) -> JsonObjectType:
     """Return the JSON for a HTTP get of a given URL."""
+
+    if not self.refresh_token:
+        self.refresh_token = f"new_{REFRESH_TOKEN}"
+        self.access_token = f"new_{ACCESS_TOKEN}"
+        self.access_token_expires = datetime.now() + timedelta(hours=1)
 
     if url == "userAccount":  #                    userAccount
         return user_account_config_fixture()
