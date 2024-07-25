@@ -187,3 +187,32 @@ GVH5124_2_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
+
+GVH5127_MOTION_SERVICE_INFO = BluetoothServiceInfo(
+    name="GVH51275E3F",
+    address="D0:C9:07:1B:5E:3F",
+    rssi=-61,
+    manufacturer_data={34819: b"\xec\x00\x01\x01\x01\x11"},
+    service_data={},
+    service_uuids=[],
+    source="Core Bluetooth",
+)
+GVH5127_PRESENT_SERVICE_INFO = BluetoothServiceInfo(
+    name="GVH51275E3F",
+    address="D0:C9:07:1B:5E:3F",
+    rssi=-60,
+    manufacturer_data={34819: b"\xec\x00\x01\x01\x01\x01"},
+    service_data={},
+    service_uuids=[],
+    source="Core Bluetooth",
+)
+GVH5127_ABSENT_SERVICE_INFO = BluetoothServiceInfo(
+    name="GVH51275E3F",
+    address="D0:C9:07:1B:5E:3F",
+    rssi=-53,
+    manufacturer_data={34819: b"\xec\x00\x01\x01\x00\x00"},
+    service_data={},
+    service_uuids=[],
+    source="Core Bluetooth",
+)
