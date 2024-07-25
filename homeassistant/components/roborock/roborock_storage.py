@@ -58,8 +58,7 @@ class RoborockStorage:
             else:
                 _LOGGER.debug("Reading map from disk store: %s", filename)
                 try:
-                    with filename.open("rb") as stored_map:
-                        map_data = stored_map.read()
+                    map_data = filename.read_bytes()
                 except OSError as err:
                     _LOGGER.error("Unable to read map file: %s %s", filename, err)
                     results.append(None)
