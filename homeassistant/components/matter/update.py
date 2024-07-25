@@ -178,7 +178,6 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         else:
             # Check for updates when added the first time.
             await self.async_update()
-        await self.async_update()
 
     @property
     def extra_restore_state_data(self) -> MatterUpdateExtraStoredData:
