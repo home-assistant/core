@@ -223,7 +223,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     def __init__(self, player: Player, server: Server) -> None:
         """Initialize the SqueezeBox device."""
-        self._player: Player = player
+        self._player = player
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
         self._attr_unique_id = format_mac(player.player_id)
