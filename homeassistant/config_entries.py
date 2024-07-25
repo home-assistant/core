@@ -1820,13 +1820,13 @@ class ConfigEntries:
             entry_id = entry["entry_id"]
 
             config_entry = ConfigEntry(
-                created_at=entry["created_at"],
+                created_at=datetime.fromisoformat(entry["created_at"]),
                 data=entry["data"],
                 disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
                 domain=entry["domain"],
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
-                modified_at=entry["modified_at"],
+                modified_at=datetime.fromisoformat(entry["modified_at"]),
                 options=entry["options"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
