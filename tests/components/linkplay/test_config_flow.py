@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import HOST, HOST_REENTRY, NAME, UUID, mock_linkplay_bridge
+from .conftest import HOST, HOST_REENTRY, NAME, UUID
 
 from tests.common import MockConfigEntry
 
@@ -162,10 +162,15 @@ async def test_zeroconf_flow_re_entry(
 
 async def test_flow_errors(
     hass: HomeAssistant,
-    mock_linkplay_factory_bridge_empty: AsyncMock,
+    mock_linkplay_factory_bridge: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test flow when the device cannot be reached."""
+
+    # Temporarily store bridge in a separate variable and set factory to return None
+    bridge = mock_linkplay_factory_bridge.return_value
+    mock_linkplay_factory_bridge.return_value = None
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -183,8 +188,8 @@ async def test_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Make linkplay_factory_bridge return a mock bridge
-    mock_linkplay_factory_bridge_empty.return_value = mock_linkplay_bridge()
+    # Make linkplay_factory_bridge return a mock bridge again
+    mock_linkplay_factory_bridge.return_value = bridge
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
