@@ -27,6 +27,10 @@
       "connectable": false
     },
     {
+      "local_name": "GV5124*",
+      "connectable": false
+    },
+    {
       "local_name": "GV5125*",
       "connectable": false
     },
