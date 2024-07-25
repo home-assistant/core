@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import math
 from statistics import mean
-from typing import Literal
+from typing import Any, Literal
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -52,7 +52,11 @@ from tests.components.recorder.common import (
     do_adhoc_statistics,
     statistics_during_period,
 )
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+from tests.typing import (
+    MockHAClientWebSocket,
+    RecorderInstanceGenerator,
+    WebSocketGenerator,
+)
 
 BATTERY_SENSOR_ATTRIBUTES = {
     "device_class": "battery",
@@ -114,6 +118,33 @@ async def async_list_statistic_ids(
     return await hass.async_add_executor_job(
         list_statistic_ids, hass, statistic_ids, statistic_type
     )
+
+
+async def assert_statistic_ids(
+    hass: HomeAssistant,
+    expected_result: list[dict[str, Any]],
+) -> None:
+    """Assert statistic ids."""
+    with session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(StatisticsMeta))
+        assert len(db_states) == len(expected_result)
+        for i, db_state in enumerate(db_states):
+            assert db_state.statistic_id == expected_result[i]["statistic_id"]
+            assert (
+                db_state.unit_of_measurement
+                == expected_result[i]["unit_of_measurement"]
+            )
+
+
+async def assert_validation_result(
+    client: MockHAClientWebSocket,
+    expected_result: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Assert statistics validation result."""
+    await client.send_json_auto_id({"type": "recorder/validate_statistics"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == expected_result
 
 
 @pytest.mark.parametrize(
@@ -4178,20 +4209,6 @@ async def test_validate_unit_change_convertible(
 
     The test also asserts that the sensor's device class is ignored.
     """
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
 
     now = dt_util.utcnow()
 
@@ -4292,21 +4309,6 @@ async def test_validate_statistics_unit_ignore_device_class(
 
     The test asserts that the sensor's device class is ignored.
     """
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
     now = dt_util.utcnow()
 
     hass.config.units = units
@@ -4384,22 +4386,8 @@ async def test_validate_statistics_unit_change_no_device_class(
     conversion, and the unit is then changed to a unit which can and cannot be
     converted to the original unit.
     """
-    msg_id = 1
     attributes = dict(attributes)
     attributes.pop("device_class")
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
 
     now = dt_util.utcnow()
 
@@ -4498,21 +4486,6 @@ async def test_validate_statistics_unsupported_state_class(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
     now = dt_util.utcnow()
 
     hass.config.units = units
@@ -4566,21 +4539,6 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
     now = dt_util.utcnow()
 
     hass.config.units = units
@@ -4633,21 +4591,6 @@ async def test_validate_statistics_sensor_not_recorded(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
     now = dt_util.utcnow()
 
     hass.config.units = units
@@ -4697,21 +4640,6 @@ async def test_validate_statistics_sensor_removed(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
     now = dt_util.utcnow()
 
     hass.config.units = units
@@ -4760,32 +4688,6 @@ async def test_validate_statistics_unit_change_no_conversion(
     unit2,
 ) -> None:
     """Test validate_statistics."""
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
-    async def assert_statistic_ids(expected_result):
-        with session_scope(hass=hass, read_only=True) as session:
-            db_states = list(session.query(StatisticsMeta))
-            assert len(db_states) == len(expected_result)
-            for i, db_state in enumerate(db_states):
-                assert db_state.statistic_id == expected_result[i]["statistic_id"]
-                assert (
-                    db_state.unit_of_measurement
-                    == expected_result[i]["unit_of_measurement"]
-                )
-
     now = dt_util.utcnow()
 
     await async_setup_component(hass, "sensor", {})
@@ -4811,7 +4713,7 @@ async def test_validate_statistics_unit_change_no_conversion(
     await async_recorder_block_till_done(hass)
     do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
-    await assert_statistic_ids([])
+    await assert_statistic_ids(hass, [])
 
     # No statistics, original unit - empty response
     hass.states.async_set(
@@ -4824,7 +4726,7 @@ async def test_validate_statistics_unit_change_no_conversion(
     do_adhoc_statistics(hass, start=now + timedelta(hours=1))
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
-        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
     )
     await assert_validation_result(client, {})
 
@@ -4894,32 +4796,6 @@ async def test_validate_statistics_unit_change_equivalent_units(
     This tests no validation issue is created when a sensor's unit changes to an
     equivalent unit.
     """
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
-    async def assert_statistic_ids(expected_result):
-        with session_scope(hass=hass, read_only=True) as session:
-            db_states = list(session.query(StatisticsMeta))
-            assert len(db_states) == len(expected_result)
-            for i, db_state in enumerate(db_states):
-                assert db_state.statistic_id == expected_result[i]["statistic_id"]
-                assert (
-                    db_state.unit_of_measurement
-                    == expected_result[i]["unit_of_measurement"]
-                )
-
     now = dt_util.utcnow()
 
     await async_setup_component(hass, "sensor", {})
@@ -4940,7 +4816,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
     do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
-        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
     )
 
     # Units changed to an equivalent unit - empty response
@@ -4954,7 +4830,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
     do_adhoc_statistics(hass, start=now + timedelta(hours=1))
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
-        [{"statistic_id": "sensor.test", "unit_of_measurement": unit2}]
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit2}]
     )
     await assert_validation_result(client, {})
 
@@ -4978,33 +4854,6 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     This tests a validation issue is created when a sensor's unit changes to an
     equivalent unit which is not known to the unit converters.
     """
-
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
-    async def assert_statistic_ids(expected_result):
-        with session_scope(hass=hass, read_only=True) as session:
-            db_states = list(session.query(StatisticsMeta))
-            assert len(db_states) == len(expected_result)
-            for i, db_state in enumerate(db_states):
-                assert db_state.statistic_id == expected_result[i]["statistic_id"]
-                assert (
-                    db_state.unit_of_measurement
-                    == expected_result[i]["unit_of_measurement"]
-                )
-
     now = dt_util.utcnow()
 
     await async_setup_component(hass, "sensor", {})
@@ -5025,7 +4874,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
-        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
     )
 
     # Units changed to an equivalent unit which is not known by the unit converters
@@ -5052,7 +4901,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     do_adhoc_statistics(hass, start=now + timedelta(hours=1))
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
-        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
     )
     await assert_validation_result(client, expected)
 
@@ -5061,21 +4910,6 @@ async def test_validate_statistics_other_domain(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test sensor does not raise issues for statistics for other domains."""
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
