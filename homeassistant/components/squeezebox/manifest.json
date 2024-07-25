@@ -3,6 +3,7 @@
   "name": "Squeezebox (Lyrion Music Server)",
   "codeowners": ["@rajlaud"],
   "config_flow": true,
+  "version": "2.0.0.",
   "dhcp": [
     {
       "hostname": "squeezebox*",
