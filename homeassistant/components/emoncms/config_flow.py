@@ -18,7 +18,6 @@ from homeassistant.helpers.selector import selector
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_EXCLUDE_FEEDID,
     CONF_MESSAGE,
     CONF_ONLY_INCLUDE_FEEDID,
     CONF_SUCCESS,
@@ -107,13 +106,10 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import config from yaml."""
         url = import_info[CONF_URL]
         api_key = import_info[CONF_API_KEY]
-        exclude_feeds = None
         include_only_feeds = None
-        if import_info.get(CONF_EXCLUDE_FEEDID) is not None:
-            exclude_feeds = list(map(str, import_info[CONF_EXCLUDE_FEEDID]))
         if import_info.get(CONF_ONLY_INCLUDE_FEEDID) is not None:
             include_only_feeds = list(map(str, import_info[CONF_ONLY_INCLUDE_FEEDID]))
-        if not include_only_feeds and not exclude_feeds:
+        if not include_only_feeds:
             emoncms_result = await get_feed_list(self.hass, url, api_key)
             if emoncms_result[CONF_SUCCESS]:
                 include_only_feeds = [
@@ -121,7 +117,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 ]
         config = {
             CONF_API_KEY: api_key,
-            CONF_EXCLUDE_FEEDID: exclude_feeds,
             CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
             CONF_URL: url,
         }
@@ -142,29 +137,18 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
         errors: dict[str, str] = {}
         url = self._config_entry.data[CONF_URL]
         api_key = self._config_entry.data[CONF_API_KEY]
-        exclude_feeds = self._config_entry.data.get(CONF_EXCLUDE_FEEDID)
-        include_only_feeds = self._config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID)
-        selected_feeds = []
-        if include_only_feeds:
-            selected_feeds = include_only_feeds
-        options: Any = selected_feeds
+        include_only_feeds = self._config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID, [])
+        options: Any = include_only_feeds
         result = await get_feed_list(self.hass, url, api_key)
         if not result[CONF_SUCCESS]:
             errors["base"] = result[CONF_MESSAGE]
         else:
-            if exclude_feeds:
-                include_only_feeds = [
-                    feed[FEED_ID]
-                    for feed in result[CONF_MESSAGE]
-                    if feed[FEED_ID] not in exclude_feeds
-                ]
             options = get_options(result[CONF_MESSAGE])
         dropdown = {"options": options, "mode": "dropdown", "multiple": True}
         if user_input:
             url = user_input[CONF_URL]
             api_key = user_input[CONF_API_KEY]
-            selected_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
-            user_input[CONF_EXCLUDE_FEEDID] = None
+            include_only_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
             if self.hass.config_entries.async_update_entry(
                 self._config_entry, title=sensor_name(url), data=user_input
             ):
@@ -178,7 +162,7 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
                     vol.Required(CONF_URL, default=url): str,
                     vol.Required(CONF_API_KEY, default=api_key): str,
                     vol.Required(
-                        CONF_ONLY_INCLUDE_FEEDID, default=selected_feeds
+                        CONF_ONLY_INCLUDE_FEEDID, default=include_only_feeds
                     ): selector({"select": dropdown}),
                 }
             ),

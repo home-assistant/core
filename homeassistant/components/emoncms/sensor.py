@@ -127,9 +127,6 @@ async def async_setup_entry(
     sensors: list[EmonCmsSensor] = []
 
     for idx, elem in enumerate(elems):
-        if exclude_feeds is not None and elem[FEED_ID] in exclude_feeds:
-            continue
-
         if include_only_feeds is not None and elem[FEED_ID] not in include_only_feeds:
             continue
 
