@@ -90,12 +90,17 @@ async def test_setup_invalid(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup of Mealie entry with too old version of Mealie."""
     mock_mealie_client.get_about.return_value = About(version="nightly")
 
     await setup_integration(hass, mock_config_entry)
 
+    assert (
+        "It seems like you are using the nightly version of Mealie, nightly versions could have changes that stop this integration working"
+        in caplog.text
+    )
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
