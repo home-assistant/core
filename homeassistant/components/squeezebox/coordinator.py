@@ -49,7 +49,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 
         if not data:
             raise UpdateFailed("No data from status poll")
-        _LOGGER.debug("Raw serverstatus %s=%s", self.my_api.name, data)
+        _LOGGER.debug("Raw serverstatus %s=%s", self.lms.name, data)
 
         return self._prepare_status_data(data)
 
@@ -78,5 +78,5 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         data[STATUS_SENSOR_NEWPLUGINS] = (
             STATUS_SENSOR_NEWPLUGINS in data and data[STATUS_SENSOR_NEWPLUGINS] or None
         )
-        _LOGGER.debug("Processed serverstatus %s=%s", self.my_api.name, data)
+        _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data
