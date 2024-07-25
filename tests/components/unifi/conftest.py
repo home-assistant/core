@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator
 from datetime import timedelta
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Protocol
 from unittest.mock import AsyncMock, patch
 
 from aiounifi.models.message import MessageKey
@@ -16,7 +16,6 @@ import pytest
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -51,6 +50,22 @@ CONTROLLER_HOST = {
     "wired-tx_bytes": 5678000000,
     "uptime": 1562600160,
 }
+
+type ConfigEntryFactoryType = Callable[
+    [MockConfigEntry], Coroutine[Any, Any, MockConfigEntry]
+]
+
+
+class WebsocketMessageMock(Protocol):
+    """Fixture to mock websocket message."""
+
+    def __call__(
+        self,
+        *,
+        message: MessageKey | None = None,
+        data: list[dict[str, Any]] | dict[str, Any] | None = None,
+    ) -> None:
+        """Send websocket message."""
 
 
 @pytest.fixture(autouse=True, name="mock_discovery")
@@ -96,7 +111,7 @@ def fixture_config_entry(
     hass: HomeAssistant,
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
-) -> ConfigEntry:
+) -> MockConfigEntry:
     """Define a config entry fixture."""
     config_entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
@@ -295,12 +310,12 @@ def fixture_default_requests(
 @pytest.fixture(name="config_entry_factory")
 async def fixture_config_entry_factory(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     mock_requests: Callable[[str, str], None],
-) -> Callable[[], ConfigEntry]:
+) -> ConfigEntryFactoryType:
     """Fixture factory that can set up UniFi network integration."""
 
-    async def __mock_setup_config_entry() -> ConfigEntry:
+    async def __mock_setup_config_entry() -> MockConfigEntry:
         mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -311,8 +326,8 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    config_entry_factory: Callable[[], ConfigEntry],
-) -> ConfigEntry:
+    config_entry_factory: ConfigEntryFactoryType,
+) -> MockConfigEntry:
     """Fixture providing a set up instance of UniFi network integration."""
     return await config_entry_factory()
 
@@ -382,13 +397,15 @@ def fixture_aiounifi_websocket_state(
 
 
 @pytest.fixture(name="mock_websocket_message")
-def fixture_aiounifi_websocket_message(_mock_websocket: AsyncMock):
+def fixture_aiounifi_websocket_message(
+    _mock_websocket: AsyncMock,
+) -> WebsocketMessageMock:
     """No real websocket allowed."""
 
     def make_websocket_call(
         *,
         message: MessageKey | None = None,
-        data: list[dict] | dict | None = None,
+        data: list[dict[str, Any]] | dict[str, Any] | None = None,
     ) -> None:
         """Generate a websocket call."""
         message_handler = _mock_websocket.call_args[0][0]
