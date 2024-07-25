@@ -12,7 +12,6 @@ import pytest
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import generate_unique_id
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
