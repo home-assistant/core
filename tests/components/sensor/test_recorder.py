@@ -4889,7 +4889,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
         "sensor.test",
         12,
         attributes={**attributes, "unit_of_measurement": unit2},
-        timestamp=now.timestamp(),
+        timestamp=now.timestamp() + 1,
     )
     await assert_validation_result(client, {})
 
