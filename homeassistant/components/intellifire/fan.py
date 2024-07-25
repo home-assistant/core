@@ -24,7 +24,7 @@ from homeassistant.util.percentage import (
 )
 
 from .const import DOMAIN, LOGGER
-from .coordinator import IntellifireDataUpdateCoordinator
+from .coordinator import IntelliFireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the fans."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: IntelliFireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     if coordinator.data.has_fan:
         async_add_entities(

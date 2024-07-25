@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IntellifireDataUpdateCoordinator
+from . import IntelliFireDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import IntellifireEntity
 
@@ -20,9 +20,9 @@ from .entity import IntellifireEntity
 class IntellifireSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
-    on_fn: Callable[[IntellifireDataUpdateCoordinator], Awaitable]
-    off_fn: Callable[[IntellifireDataUpdateCoordinator], Awaitable]
-    value_fn: Callable[[IntellifireDataUpdateCoordinator], bool]
+    on_fn: Callable[[IntelliFireDataUpdateCoordinator], Awaitable]
+    off_fn: Callable[[IntelliFireDataUpdateCoordinator], Awaitable]
+    value_fn: Callable[[IntelliFireDataUpdateCoordinator], bool]
 
 
 @dataclass(frozen=True)
@@ -56,7 +56,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Configure switch entities."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: IntelliFireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         IntellifireSwitch(coordinator=coordinator, description=description)
