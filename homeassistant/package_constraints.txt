@@ -203,3 +203,9 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# Sub dependency dlms_cosem of dsmr_parser is using a incompatible
+# license make sure we stay on an old enough version that still
+# has a compatible OSI compatible license.
+# https://github.com/home-assistant/core/issues/122576
+dlms_cosem<24.1.0
