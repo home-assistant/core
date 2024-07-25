@@ -22,9 +22,7 @@ class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
         super().__init__(coordinator, context=description.key)
         self.entity_description = description
         self._attr_translation_key = description.key
-        self._attr_unique_id = (
-            f"{coordinator.data[STATUS_QUERY_UUID]}_{description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.data[STATUS_QUERY_UUID]}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data[STATUS_QUERY_UUID])},
