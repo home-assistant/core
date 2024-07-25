@@ -62,6 +62,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
         },
     )
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound."""
     setup_services(hass)

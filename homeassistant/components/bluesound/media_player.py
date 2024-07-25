@@ -109,7 +109,13 @@ SERVICE_TO_METHOD = {
 }
 
 
-def _add_player(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, host, port=None, name=None):
+def _add_player(
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    host,
+    port=None,
+    name=None,
+):
     """Add Bluesound players."""
 
     @callback
@@ -198,7 +204,13 @@ def setup_services(hass: HomeAssistant):
             DOMAIN, service, async_service_handler, schema=method.schema
         )
 
-async def async_setup_platform(hass: HomeAssistant, config: ConfigType, async_add_entities: AddEntitiesCallback, discovery_info: DiscoveryInfoType | None) -> None:
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None,
+) -> None:
     """Old setup which is not used anymore."""
 
 
