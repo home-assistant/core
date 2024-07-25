@@ -44,6 +44,7 @@ from .common import (
     async_record_states,
     async_wait_recording_done,
     do_adhoc_statistics,
+    get_start_time,
     statistics_during_period,
 )
 
@@ -342,7 +343,7 @@ async def test_compile_periodic_statistics_exception(
     """Test exception handling when compiling periodic statistics."""
     await async_setup_component(hass, "sensor", {})
 
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     do_adhoc_statistics(hass, start=now)
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     await async_wait_recording_done(hass)
