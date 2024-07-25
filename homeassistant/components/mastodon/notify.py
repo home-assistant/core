@@ -14,12 +14,20 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_BASE_URL, DEFAULT_URL, LOGGER
+from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
 
 ATTR_MEDIA = "media"
 ATTR_TARGET = "target"
@@ -42,10 +50,54 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MastodonNotificationService | None:
     """Get the Mastodon notification service."""
-    if discovery_info is None:
+
+    if not discovery_info:
+        # Import config entry
+        client_id = config.get(CONF_CLIENT_ID)
+        client_secret = config.get(CONF_CLIENT_SECRET)
+        access_token = config.get(CONF_ACCESS_TOKEN)
+        base_url = config.get(CONF_BASE_URL, DEFAULT_URL)
+        name = config.get(CONF_NAME, "Mastodon")
+
+        import_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_CLIENT_ID: client_id,
+                CONF_CLIENT_SECRET: client_secret,
+                CONF_ACCESS_TOKEN: access_token,
+                CONF_NAME: name,
+                CONF_BASE_URL: base_url,
+            },
+        )
+
+        translation_key = "deprecated_yaml"
+        if import_result.get("type") == FlowResultType.ABORT:
+            translation_key = "import_aborted"
+            if import_result.get("reason") == "import_failed":
+                translation_key = "import_failed"
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"config_import_{DOMAIN}",
+            breaks_in_ha_version="2025.2.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Mastodon",
+            },
+        )
+
         return None
 
-    return MastodonNotificationService(hass, discovery_info)
+    client: Mastodon = discovery_info.get("client")
+
+    return MastodonNotificationService(hass, client)
 
 
 class MastodonNotificationService(BaseNotificationService):
@@ -54,10 +106,11 @@ class MastodonNotificationService(BaseNotificationService):
     def __init__(
         self,
         hass: HomeAssistant,
-        discovery_info: dict[str, Any],
+        client: Mastodon,
     ) -> None:
         """Initialize the service."""
-        self.client: Mastodon = discovery_info["client"]
+
+        self.client = client
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Toot a message, with media perhaps."""

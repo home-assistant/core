@@ -2,89 +2,29 @@
 
 from __future__ import annotations
 
-from mastodon.Mastodon import MastodonError, MastodonUnauthorizedError
-import voluptuous as vol
+from mastodon.Mastodon import MastodonError
 
-from homeassistant.components.notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_NAME,
-    CONF_PLATFORM,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery,
 )
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_BASE_URL,
-    DATA_HASS_CONFIG,
-    DEFAULT_URL,
-    DOMAIN,
-    INSTANCE_VERSION,
-)
+from .const import CONF_BASE_URL, DOMAIN, INSTANCE_VERSION
 from .utils import create_mastodon_instance
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_BASE_URL, default=DEFAULT_URL): cv.string,
-    }
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Mastodon component."""
-    if Platform.NOTIFY in config:
-        for entry in config[Platform.NOTIFY]:
-            if entry[CONF_PLATFORM] == DOMAIN:
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_IMPORT},
-                        data={
-                            CONF_CLIENT_ID: entry[CONF_CLIENT_ID],
-                            CONF_CLIENT_SECRET: entry[CONF_CLIENT_SECRET],
-                            CONF_ACCESS_TOKEN: entry[CONF_ACCESS_TOKEN],
-                            CONF_NAME: entry.get(CONF_NAME, "Mastodon"),
-                            CONF_BASE_URL: entry.get(CONF_BASE_URL, DEFAULT_URL),
-                        },
-                    )
-                )
-
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.1.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Mastodon",
-            },
-        )
-
-    hass.data[DATA_HASS_CONFIG] = config
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -99,9 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_ACCESS_TOKEN],
         )
         instance: dict = await hass.async_add_executor_job(client.instance)
+        await hass.async_add_executor_job(client.account_verify_credentials)
 
-    except MastodonUnauthorizedError as ex:
-        raise ConfigEntryAuthFailed from ex
     except MastodonError as ex:
         raise ConfigEntryNotReady("Failed to connect") from ex
 
@@ -119,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         Platform.NOTIFY,
         DOMAIN,
         {CONF_NAME: entry.title, "client": client},
-        hass.data[DATA_HASS_CONFIG],
+        {},
     )
 
     return True

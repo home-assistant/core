@@ -7,25 +7,18 @@ from typing import Any
 from mastodon.Mastodon import MastodonError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_NAME,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DEFAULT_NAME, DEFAULT_URL, DOMAIN, LOGGER
 from .utils import create_mastodon_instance
@@ -58,20 +51,19 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     config_entry: ConfigEntry
-    base_url: str | None = None
 
     async def check_connection(
         self,
+        base_url: str,
         client_id: str,
         client_secret: str,
         access_token: str,
     ) -> tuple[dict[str, str], dict[str, Any] | None]:
         """Check connection to the Mastodon instance."""
-        assert self.base_url is not None
         try:
             client = await self.hass.async_add_executor_job(
                 create_mastodon_instance,
-                self.base_url,
+                base_url,
                 client_id,
                 client_secret,
                 access_token,
@@ -106,21 +98,6 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def abort_on_import_error(self, client_id: str, error: str) -> ConfigFlowResult:
-        """Abort import flow on error."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"import_yaml_error_{DOMAIN}_{slugify(client_id)}",
-            breaks_in_ha_version="2025.1.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="import_yaml_error",
-            translation_placeholders={"client_id": client_id},
-        )
-        return self.async_abort(reason=error)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -130,19 +107,14 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_CLIENT_ID: user_input[CONF_CLIENT_ID]})
 
-        self.base_url = user_input[CONF_BASE_URL]
-
         errors, account = await self.check_connection(
+            user_input[CONF_BASE_URL],
             user_input[CONF_CLIENT_ID],
             user_input[CONF_CLIENT_SECRET],
             user_input[CONF_ACCESS_TOKEN],
         )
 
         if errors:
-            if self.context["source"] == SOURCE_IMPORT:
-                return self.abort_on_import_error(
-                    user_input[CONF_CLIENT_ID], "credential_error"
-                )
             return self.show_user_form(user_input, errors)
 
         await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
@@ -151,14 +123,45 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
             data=user_input,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle an import flow."""
-        return await self.async_step_user(
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Import a config entry from configuration.yaml."""
+        LOGGER.debug("Importing Mastodon from configuration.yaml")
+
+        name = import_config[CONF_NAME]
+        base_url = import_config[CONF_BASE_URL]
+        client_id = import_config[CONF_CLIENT_ID]
+        client_secret = import_config[CONF_CLIENT_SECRET]
+        access_token = import_config[CONF_ACCESS_TOKEN]
+
+        self._async_abort_entries_match(
             {
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_BASE_URL: user_input[CONF_BASE_URL],
-                CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
-                CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
-                CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                CONF_NAME: name,
+                CONF_BASE_URL: base_url,
+                CONF_CLIENT_ID: client_id,
+                CONF_CLIENT_SECRET: client_secret,
+                CONF_ACCESS_TOKEN: access_token,
             }
+        )
+
+        errors, account = await self.check_connection(
+            base_url, client_id, client_secret, access_token
+        )
+
+        if errors:
+            return self.async_abort(reason="import_failed")
+
+        await self.async_set_unique_id(client_id)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=name,
+            data={
+                CONF_NAME: name,
+                CONF_BASE_URL: base_url,
+                CONF_CLIENT_ID: client_id,
+                CONF_CLIENT_SECRET: client_secret,
+                CONF_ACCESS_TOKEN: access_token,
+            },
         )

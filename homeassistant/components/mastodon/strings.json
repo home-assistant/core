@@ -22,9 +22,17 @@
     }
   },
   "issues": {
-    "import_yaml_error": {
-      "title": "The Mastodon YAML configuration import failed",
-      "description": "Configuring Mastodon using YAML is being removed but there was a connection error when trying to import the YAML configuration for `{client_id}`.\n\nPlease verify your app registration is correct and restart Home Assistant to try again or remove the Mastodon YAML configuration from your configuration.yaml file and continue to set up the integration manually."
+    "deprecated_yaml": {
+      "title": "Mastodon YAML notify configuration imported",
+      "description": "Configuring Mastodon notify using YAML is being removed.\nRemove the YAML notify configuration and restart Home Assistant."
+    },
+    "import_aborted": {
+      "title": "Import aborted",
+      "description": "Configuring Mastodon using YAML is being removed.\nThe import was aborted, due to an existing config entry being the same as the data being imported in the YAML. Remove the YAML notify configuration and restart Home Assistant. Please use the UI to configure Mastodon."
+    },
+    "import_failed": {
+      "title": "Failed to import",
+      "description": "Failed to import the configuration for Mastodon.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
     }
   }
 }
