@@ -79,10 +79,10 @@
   "entity": {
     "binary_sensor": {
       "rescan": {
-        "name": "Library rescan"
+        "name": "rescan"
       },
       "needsrestart": {
-        "name": "Needs restart"
+        "name": "needsrestart"
       }
     }
   }
