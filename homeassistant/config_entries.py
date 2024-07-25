@@ -841,6 +841,10 @@ class ConfigEntry(Generic[_DataT]):
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
+        old_modified_at = self.modified_at
+        object.__setattr__(self, "modified_at", utcnow())
+        self.clear_cache()
+
         if self.source == SOURCE_IGNORE:
             return
 
@@ -872,6 +876,8 @@ class ConfigEntry(Generic[_DataT]):
                 self.title,
                 integration.domain,
             )
+            # Restore modified_at
+            object.__setattr__(self, "modified_at", old_modified_at)
 
     @callback
     def _async_set_state(
