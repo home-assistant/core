@@ -69,6 +69,11 @@ async def mock_envoy(
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[AsyncMock]:
     """Define a mocked Envoy fixture."""
+    new_token = jwt.encode(
+        payload={"name": "envoy", "exp": 2007837780},
+        key="secret",
+        algorithm="HS256",
+    )
     with (
         patch(
             "homeassistant.components.enphase_envoy.config_flow.Envoy",
@@ -77,6 +82,10 @@ async def mock_envoy(
         patch(
             "homeassistant.components.enphase_envoy.Envoy",
             new=mock_client,
+        ),
+        patch(
+            "pyenphase.auth.EnvoyTokenAuth._obtain_token",
+            return_value=new_token,
         ),
     ):
         mock_envoy = mock_client.return_value

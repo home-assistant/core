@@ -86,52 +86,42 @@ async def test_expired_token_in_config(
     mock_envoy: AsyncMock,
 ) -> None:
     """Test coordinator with expired token provided from config."""
-    new_token = encode(
-        payload={"name": "envoy", "exp": 2007837780},
+    current_token = encode(
+        # some time in 2021
+        payload={"name": "envoy", "exp": 1627314600},
         key="secret",
         algorithm="HS256",
     )
-    # mock token authorization from pyenphase to test token refresh code
-    with patch(
-        "pyenphase.auth.EnvoyTokenAuth._obtain_token",
-        return_value=new_token,
-    ):
-        current_token = encode(
-            # some time in 2021
-            payload={"name": "envoy", "exp": 1627314600},
-            key="secret",
-            algorithm="HS256",
-        )
 
-        # mock envoy with expired token in config
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            entry_id="45a36e55aaddb2007c5f6602e0c38e72",
-            title="Envoy 1234",
-            unique_id="1234",
-            data={
-                CONF_HOST: "1.1.1.1",
-                CONF_NAME: "Envoy 1234",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-                CONF_TOKEN: current_token,
-            },
-        )
-        # Make sure to mock pyenphase.auth.EnvoyTokenAuth._obtain_token
-        # when specifying username and password in EnvoyTokenauth
-        mock_envoy.auth = EnvoyTokenAuth(
-            "127.0.0.1",
-            token=current_token,
-            envoy_serial="1234",
-            cloud_username="test_username",
-            cloud_password="test_password",
-        )
-        await setup_integration(hass, entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert entry.state is ConfigEntryState.LOADED
+    # mock envoy with expired token in config
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: current_token,
+        },
+    )
+    # Make sure to mock pyenphase.auth.EnvoyTokenAuth._obtain_token
+    # when specifying username and password in EnvoyTokenauth
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=current_token,
+        envoy_serial="1234",
+        cloud_username="test_username",
+        cloud_password="test_password",
+    )
+    await setup_integration(hass, entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
 
-        assert (entity_state := hass.states.get("sensor.inverter_1"))
-        assert entity_state.state == "1"
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "1"
 
 
 async def test_coordinator_update_error(
