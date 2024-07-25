@@ -27,16 +27,16 @@ _LOGGER = logging.getLogger(__name__)
 class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
     """LMS Status custom coordinator."""
 
-    def __init__(self, hass: HomeAssistant, my_api: Server) -> None:
+    def __init__(self, hass: HomeAssistant, lms: Server) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=my_api.name,
+            name=lms.name,
             update_interval=timedelta(seconds=SENSOR_UPDATE_INTERVAL),
             always_update=False,
         )
-        self.my_api = my_api
+        self.lms = lms
         self.newversion_regex = re.compile("<.*$")
 
     async def _async_update_data(self):
@@ -44,10 +44,8 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 
         Then we process only a subset to make then nice for HA
         """
-        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-        # handled by the data update coordinator.
         async with timeout(STATUS_API_TIMEOUT):
-            data = await self.my_api.async_status()
+            data = await self.lms.async_status()
 
         if not data:
             raise UpdateFailed("No data from status poll")
