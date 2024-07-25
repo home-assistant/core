@@ -9,7 +9,12 @@ from unittest.mock import MagicMock, patch
 from doorbirdpy import DoorBird, DoorBirdScheduleEntry
 import pytest
 
-from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
+from homeassistant.components.doorbird.const import (
+    CONF_EVENTS,
+    DEFAULT_DOORBELL_EVENT,
+    DEFAULT_MOTION_EVENT,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 
 from . import VALID_CONFIG, get_mock_doorbird_api
@@ -39,6 +44,12 @@ def doorbird_schedule() -> list[DoorBirdScheduleEntry]:
     return DoorBirdScheduleEntry.parse_all(
         load_json_value_fixture("schedule.json", "doorbird")
     )
+
+
+@pytest.fixture(scope="session")
+def doorbird_favorites() -> dict[str, dict[str, Any]]:
+    """Return a loaded DoorBird favorites fixture."""
+    return load_json_value_fixture("favorites.json", "doorbird")
 
 
 @pytest.fixture
@@ -72,6 +83,7 @@ async def doorbird_mocker(
     hass: HomeAssistant,
     doorbird_info: dict[str, Any],
     doorbird_schedule: dict[str, Any],
+    doorbird_favorites: dict[str, dict[str, Any]],
 ) -> DoorbirdMockerType:
     """Create a MockDoorbirdEntry."""
 
@@ -81,6 +93,7 @@ async def doorbird_mocker(
         info: dict[str, Any] | None = None,
         info_side_effect: Exception | None = None,
         schedule: list[DoorBirdScheduleEntry] | None = None,
+        favorites: dict[str, dict[str, Any]] | None = None,
         favorites_side_effect: Exception | None = None,
     ) -> MockDoorbirdEntry:
         """Create a MockDoorbirdEntry from defaults or specific values."""
@@ -88,12 +101,13 @@ async def doorbird_mocker(
             domain=DOMAIN,
             unique_id="1CCAE3AAAAAA",
             data=VALID_CONFIG,
-            options={CONF_EVENTS: ["event1", "event2", "event3"]},
+            options={CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]},
         )
         api = api or get_mock_doorbird_api(
             info=info or doorbird_info,
             info_side_effect=info_side_effect,
             schedule=schedule or doorbird_schedule,
+            favorites=favorites or doorbird_favorites,
             favorites_side_effect=favorites_side_effect,
         )
         entry.add_to_hass(hass)
