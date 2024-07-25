@@ -30,12 +30,14 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -670,6 +672,100 @@ def list_statistic_ids(
     return result
 
 
+@callback
+def _update_issues(
+    hass: HomeAssistant,
+    sensor_states: list[State],
+    metadatas: dict[str, tuple[int, StatisticMetaData]],
+) -> None:
+    """Update repair issues."""
+    for state in sensor_states:
+        entity_id = state.entity_id
+        state_class = try_parse_enum(
+            SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
+        )
+        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if metadata := metadatas.get(entity_id):
+            if state_class is None:
+                # Sensor no longer has a valid state class
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"unsupported_state_class_{entity_id}",
+                    data={
+                        "issue_type": "unsupported_state_class",
+                        "statistic_id": entity_id,
+                        "state_class": state_class,
+                    },
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="unsupported_state_class",
+                )
+            else:
+                ir.async_delete_issue(
+                    hass, DOMAIN, f"unsupported_state_class_{entity_id}"
+                )
+
+            metadata_unit = metadata[1]["unit_of_measurement"]
+            converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
+            if not converter:
+                if not _equivalent_units({state_unit, metadata_unit}):
+                    # The unit has changed, and it's not possible to convert
+                    ir.async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"units_changed_{entity_id}",
+                        data={
+                            "issue_type": "units_changed",
+                            "statistic_id": entity_id,
+                            "state_unit": state_unit,
+                            "metadata_unit": metadata_unit,
+                            "supported_unit": metadata_unit,
+                        },
+                        is_fixable=False,
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="units_changed",
+                    )
+                else:
+                    ir.async_delete_issue(hass, DOMAIN, f"units_changed_{entity_id}")
+            elif state_unit not in converter.VALID_UNITS:
+                # The state unit can't be converted to the unit in metadata
+                valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
+                valid_units_str = ", ".join(sorted(valid_units))
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"units_changed_{entity_id}",
+                    data={
+                        "issue_type": "units_changed",
+                        "statistic_id": entity_id,
+                        "state_unit": state_unit,
+                        "metadata_unit": metadata_unit,
+                        "supported_unit": valid_units_str,
+                    },
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="units_changed",
+                )
+            else:
+                ir.async_delete_issue(hass, DOMAIN, f"units_changed_{entity_id}")
+
+
+def update_statistics_issues(
+    hass: HomeAssistant,
+    session: Session,
+) -> None:
+    """Validate statistics."""
+    instance = get_instance(hass)
+    sensor_states = hass.states.all(DOMAIN)
+    metadatas = statistics.get_metadata_with_session(
+        instance, session, statistic_source=RECORDER_DOMAIN
+    )
+
+    run_callback_threadsafe(hass.loop, _update_issues, hass, sensor_states, metadatas)
+
+
 def validate_statistics(
     hass: HomeAssistant,
 ) -> dict[str, list[statistics.ValidationIssue]]:
@@ -683,61 +779,21 @@ def validate_statistics(
     instance = get_instance(hass)
     entity_filter = instance.entity_filter
 
+    run_callback_threadsafe(hass.loop, _update_issues, hass, sensor_states, metadatas)
+
     for state in sensor_states:
         entity_id = state.entity_id
         state_class = try_parse_enum(
             SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
         )
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if metadata := metadatas.get(entity_id):
+        if entity_id in metadatas:
             if entity_filter and not entity_filter(state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
                         "entity_no_longer_recorded",
                         {"statistic_id": entity_id},
-                    )
-                )
-
-            if state_class is None:
-                # Sensor no longer has a valid state class
-                validation_result[entity_id].append(
-                    statistics.ValidationIssue(
-                        "unsupported_state_class",
-                        {"statistic_id": entity_id, "state_class": state_class},
-                    )
-                )
-
-            metadata_unit = metadata[1]["unit_of_measurement"]
-            converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
-            if not converter:
-                if not _equivalent_units({state_unit, metadata_unit}):
-                    # The unit has changed, and it's not possible to convert
-                    validation_result[entity_id].append(
-                        statistics.ValidationIssue(
-                            "units_changed",
-                            {
-                                "statistic_id": entity_id,
-                                "state_unit": state_unit,
-                                "metadata_unit": metadata_unit,
-                                "supported_unit": metadata_unit,
-                            },
-                        )
-                    )
-            elif state_unit not in converter.VALID_UNITS:
-                # The state unit can't be converted to the unit in metadata
-                valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
-                valid_units_str = ", ".join(sorted(valid_units))
-                validation_result[entity_id].append(
-                    statistics.ValidationIssue(
-                        "units_changed",
-                        {
-                            "statistic_id": entity_id,
-                            "state_unit": state_unit,
-                            "metadata_unit": metadata_unit,
-                            "supported_unit": valid_units_str,
-                        },
                     )
                 )
         elif state_class is not None:
