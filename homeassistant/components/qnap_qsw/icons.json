@@ -25,7 +25,7 @@
       "tx_speed": {
         "default": "mdi:upload-network"
       },
-      "uptime_seconds": {
+      "uptime": {
         "default": "mdi:timer-outline"
       }
     }

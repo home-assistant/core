@@ -50,7 +50,7 @@
       "tx_speed": {
         "name": "TX speed"
       },
-      "uptime_seconds": {
+      "uptime": {
         "name": "Uptime seconds"
       },
       "uptime_timestamp": {

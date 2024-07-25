@@ -67,7 +67,7 @@ class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
 
 
 DEPRECATED_UPTIME_SECONDS = QswSensorEntityDescription(
-    translation_key="uptime_seconds",
+    translation_key="uptime",
     key=QSD_SYSTEM_TIME,
     entity_category=EntityCategory.DIAGNOSTIC,
     native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -357,7 +357,7 @@ async def async_setup_entry(
     entity_reg = er.async_get(hass)
     reg_entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
     for entity in reg_entities:
-        if entity.domain == "sensor" and entity.unique_id.endswith("_uptime_seconds"):
+        if entity.domain == "sensor" and entity.unique_id.endswith("_uptime"):
             if entity.disabled:
                 entity_reg.async_remove(entity.entity_id)
                 continue
