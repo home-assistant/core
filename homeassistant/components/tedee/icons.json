@@ -4,7 +4,7 @@
       "uncalibrated": {
         "state": {
           "on": "mdi:sync-alert",
-          "off": "mdi:check"
+          "off": "mdi:sync"
         }
       }
     },
