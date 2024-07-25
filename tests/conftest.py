@@ -39,6 +39,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
+# Setup patching of recorder functions before any other Home Assistant imports
+from . import patch_recorder  # noqa: F401, isort:skip
+
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
 
@@ -1423,6 +1426,15 @@ async def _async_init_recorder_component(
     )
 
 
+class ThreadSession(threading.local):
+    """Keep track of session per thread."""
+
+    has_session = False
+
+
+thread_session = ThreadSession()
+
+
 @pytest.fixture
 async def async_test_recorder(
     recorder_db_url: str,
@@ -1443,6 +1455,39 @@ async def async_test_recorder(
 
     # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
+
+    # pylint: disable-next=import-outside-toplevel
+    from .patch_recorder import real_session_scope
+
+    if TYPE_CHECKING:
+        # pylint: disable-next=import-outside-toplevel
+        from sqlalchemy.orm.session import Session
+
+    @contextmanager
+    def debug_session_scope(
+        *,
+        hass: HomeAssistant | None = None,
+        session: Session | None = None,
+        exception_filter: Callable[[Exception], bool] | None = None,
+        read_only: bool = False,
+    ) -> Generator[Session]:
+        """Wrap session_scope to bark if we create nested sessions."""
+        if thread_session.has_session:
+            raise RuntimeError(
+                f"Thread '{threading.current_thread().name}' already has an "
+                "active session"
+            )
+        thread_session.has_session = True
+        try:
+            with real_session_scope(
+                hass=hass,
+                session=session,
+                exception_filter=exception_filter,
+                read_only=read_only,
+            ) as ses:
+                yield ses
+        finally:
+            thread_session.has_session = False
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
@@ -1523,6 +1568,12 @@ async def async_test_recorder(
         patch(
             "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
             side_effect=compile_missing,
+            autospec=True,
+        ),
+        patch.object(
+            patch_recorder,
+            "real_session_scope",
+            side_effect=debug_session_scope,
             autospec=True,
         ),
     ):
