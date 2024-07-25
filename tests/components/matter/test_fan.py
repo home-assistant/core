@@ -1,5 +1,6 @@
 """Test Matter Fan platform."""
 
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from matter_server.client.models.node import MatterNode
@@ -307,3 +308,133 @@ async def test_fan_set_direction(
             value=value,
         )
         matter_client.write_attribute.reset_mock()
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize(
+    ("fixture", "entity_id", "attributes", "features"),
+    [
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {
+                "1/514/65532": 0,
+            },
+            (FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF),
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {
+                "1/514/65532": 1,
+            },
+            (
+                FanEntityFeature.TURN_ON
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.SET_SPEED
+            ),
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {
+                "1/514/65532": 4,
+            },
+            (
+                FanEntityFeature.TURN_ON
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.OSCILLATE
+            ),
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {
+                "1/514/65532": 36,
+            },
+            (
+                FanEntityFeature.TURN_ON
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.OSCILLATE
+                | FanEntityFeature.DIRECTION
+            ),
+        ),
+    ],
+)
+async def test_fan_supported_features(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    fixture: str,
+    entity_id: str,
+    attributes: dict[str, Any],
+    features: int,
+) -> None:
+    """Test if the correct features get discovered from featuremap."""
+    await setup_integration_with_node_fixture(hass, fixture, matter_client, attributes)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["supported_features"] & features == features
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize(
+    ("fixture", "entity_id", "attributes", "preset_modes"),
+    [
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {"1/514/1": 0, "1/514/65532": 0},
+            [
+                "low",
+                "medium",
+                "high",
+            ],
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {"1/514/1": 1, "1/514/65532": 0},
+            [
+                "low",
+                "high",
+            ],
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {"1/514/1": 2, "1/514/65532": 0},
+            ["low", "medium", "high", "auto"],
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {"1/514/1": 4, "1/514/65532": 0},
+            ["high", "auto"],
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {"1/514/1": 5, "1/514/65532": 0},
+            ["high"],
+        ),
+        (
+            "fan",
+            "fan.mocked_fan_switch_fan",
+            {"1/514/1": 5, "1/514/65532": 8, "1/514/9": 3},
+            ["high", "natural_wind", "sleep_wind"],
+        ),
+    ],
+)
+async def test_fan_features(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    fixture: str,
+    entity_id: str,
+    attributes: dict[str, Any],
+    preset_modes: list[str],
+) -> None:
+    """Test if the correct presets get discovered from fanmodesequence."""
+    await setup_integration_with_node_fixture(hass, fixture, matter_client, attributes)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["preset_modes"] == preset_modes
