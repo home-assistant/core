@@ -85,7 +85,9 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         except TimeoutError:
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(format_unique_id(sync_status.mac, DEFAULT_PORT))
+        config_entry = await self.async_set_unique_id(format_unique_id(sync_status.mac, DEFAULT_PORT))
+        if config_entry is not None:
+            return self.async_abort(reason="already_configured")
 
         self._host = discovery_info.host
         self._sync_status = sync_status

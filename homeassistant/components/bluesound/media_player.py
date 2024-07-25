@@ -40,6 +40,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -108,7 +109,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-def _add_player(hass: HomeAssistant, async_add_entities, host, port=None, name=None):
+def _add_player(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, host, port=None, name=None):
     """Add Bluesound players."""
 
     @callback
@@ -196,6 +197,9 @@ def setup_services(hass: HomeAssistant):
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=method.schema
         )
+
+async def async_setup_platform(hass: HomeAssistant, config: ConfigType, async_add_entities: AddEntitiesCallback, discovery_info: DiscoveryInfoType | None) -> None:
+    """Old setup which is not used anymore."""
 
 
 class BluesoundPlayer(MediaPlayerEntity):
