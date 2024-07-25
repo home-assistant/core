@@ -1003,7 +1003,7 @@ kegtron-ble==0.4.0
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.1.20.105944
+knx-frontend==2024.7.25.204106
 
 # homeassistant.components.konnected
 konnected==1.2.0
