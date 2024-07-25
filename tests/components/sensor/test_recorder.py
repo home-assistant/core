@@ -111,6 +111,15 @@ def setup_recorder(recorder_mock: Recorder) -> Recorder:
     """Set up recorder."""
 
 
+@pytest.fixture(autouse=True)
+def disable_mariadb_issue() -> None:
+    """Disable creating issue about outdated MariaDB version."""
+    with patch(
+        "homeassistant.components.recorder.util._async_create_mariadb_range_index_regression_issue"
+    ):
+        yield
+
+
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
