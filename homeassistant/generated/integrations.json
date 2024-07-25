@@ -635,12 +635,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "bayesian": {
-      "name": "Bayesian",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "bbox": {
       "name": "Bbox",
       "integration_type": "hub",
@@ -1351,7 +1345,7 @@
       "iot_class": "local_push"
     },
     "dsmr": {
-      "name": "DSMR Slimme Meter",
+      "name": "DSMR Smart Meter",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -1846,12 +1840,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "filter": {
-      "name": "Filter",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "fints": {
       "name": "FinTS",
       "integration_type": "service",
@@ -2136,7 +2124,7 @@
     "geniushub": {
       "name": "Genius Hub",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "geo_json_events": {
@@ -2869,6 +2857,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iotty": {
+      "name": "iotty",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "iperf3": {
       "name": "Iperf3",
       "integration_type": "hub",
@@ -3273,6 +3267,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "linkplay": {
+      "name": "LinkPlay",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "linksys_smart": {
       "name": "Linksys Smart Wi-Fi",
@@ -6133,6 +6133,12 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Tesla Wall Connector"
+        },
+        "tesla_fleet": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Tesla Fleet"
         }
       }
     },
@@ -6743,7 +6749,7 @@
     "wake_on_lan": {
       "name": "Wake on LAN",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "wallbox": {
@@ -6876,7 +6882,7 @@
     "worldclock": {
       "name": "Worldclock",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "worldtidesinfo": {
@@ -7162,6 +7168,12 @@
     }
   },
   "helper": {
+    "bayesian": {
+      "name": "Bayesian",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false
@@ -7170,6 +7182,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "filter": {
+      "name": "Filter",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_push"
     },
     "generic_hygrostat": {
       "integration_type": "helper",

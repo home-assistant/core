@@ -13,14 +13,14 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_solar_sensors(
+async def test_all_sensors(
     hass: HomeAssistant,
     mock_autarco_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the Autarco - Solar sensor."""
+    """Test the Autarco sensors."""
     with patch("homeassistant.components.autarco.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 

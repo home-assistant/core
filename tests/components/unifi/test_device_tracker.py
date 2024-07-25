@@ -4,11 +4,13 @@ from collections.abc import Callable
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any
+from unittest.mock import patch
 
 from aiounifi.models.event import EventKey
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
@@ -23,12 +25,12 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 WIRED_CLIENT_1 = {
     "hostname": "wd_client_1",
@@ -82,6 +84,25 @@ SWITCH_1 = {
     "upgradable": True,
     "version": "4.0.42.10433",
 }
+
+
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1, WIRELESS_CLIENT_1]])
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"desc": "Site name", "name": "site_id", "role": "not admin", "_id": "1"}]],
+)
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_entity_and_device_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Validate entity and device data with and without admin rights."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.DEVICE_TRACKER]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -627,7 +648,7 @@ async def test_config_entry_options_track(
     config_entry_setup: ConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
     counts: tuple[int],
-    expected: dict[tuple[bool | None]],
+    expected: tuple[tuple[bool | None, ...], ...],
 ) -> None:
     """Test the different config entry options.
 

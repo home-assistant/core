@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyenphase import Envoy, EnvoyDryContactStatus, EnvoyEnpower
@@ -13,16 +12,13 @@ from pyenphase.models.dry_contacts import DryContactStatus
 from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -78,11 +74,11 @@ CHARGE_FROM_GRID_SWITCH = EnvoyStorageSettingsSwitchEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnphaseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy switch platform."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     entities: list[SwitchEntity] = []
