@@ -57,5 +57,11 @@
         "name": "Uptime timestamp"
       }
     }
+  },
+  "issues": {
+    "uptime_seconds_deprecated": {
+      "title": "QNAP QSW uptime seconds sensor deprecated",
+      "description": "The QNAP QSW uptime seconds sensor entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by an uptime timestamp sensor. To remove this issue, please adjust automations accordingly and disable the uptime seconds sensor entity."
+    }
   }
 }

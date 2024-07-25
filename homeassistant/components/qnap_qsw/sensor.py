@@ -46,6 +46,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
@@ -63,6 +64,16 @@ class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
     qsw_type: QswEntityType | None = None
     sep_key: str = "_"
     value_fn: Callable[[str], datetime | float | int | str | None] = lambda value: value
+
+
+DEPRECATED_UPTIME_SECONDS = QswSensorEntityDescription(
+    translation_key="uptime_seconds",
+    key=QSD_SYSTEM_TIME,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    native_unit_of_measurement=UnitOfTime.SECONDS,
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    subkey=QSD_UPTIME_SECONDS,
+)
 
 
 SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
@@ -143,14 +154,6 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TX_SPEED,
-    ),
-    QswSensorEntityDescription(
-        translation_key="uptime_seconds",
-        key=QSD_SYSTEM_TIME,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        subkey=QSD_UPTIME_SECONDS,
     ),
     QswSensorEntityDescription(
         translation_key="uptime_timestamp",
@@ -349,6 +352,32 @@ async def async_setup_entry(
                 name=f"Port {port_id} {description.name}",
             )
             entities.append(QswSensor(coordinator, _desc, entry, port_id))
+
+    # Can be removed in HA 2025.2.0
+    entity_reg = er.async_get(hass)
+    reg_entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+    for entity in reg_entities:
+        if entity.domain == "sensor" and entity.unique_id.endswith("_uptime_seconds"):
+            if entity.disabled:
+                entity_reg.async_remove(entity.entity_id)
+                continue
+
+            if (
+                DEPRECATED_UPTIME_SECONDS.key in coordinator.data
+                and DEPRECATED_UPTIME_SECONDS.subkey
+                in coordinator.data[DEPRECATED_UPTIME_SECONDS.key]
+            ):
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "uptime_seconds_deprecated",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="uptime_seconds_deprecated",
+                )
+                entities.append(
+                    QswSensor(coordinator, DEPRECATED_UPTIME_SECONDS, entry)
+                )
 
     async_add_entities(entities)
 

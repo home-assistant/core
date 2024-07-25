@@ -3,10 +3,12 @@
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.qnap_qsw.const import ATTR_MAX
+from homeassistant.components.qnap_qsw.const import ATTR_MAX, DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from .util import async_init_integration
+from .util import async_init_integration, init_config_entry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -48,9 +50,6 @@ async def test_qnap_qsw_create_sensors(
 
     state = hass.states.get("sensor.qsw_m408_4c_tx_speed")
     assert state.state == "0"
-
-    state = hass.states.get("sensor.qsw_m408_4c_uptime_seconds")
-    assert state.state == "91"
 
     state = hass.states.get("sensor.qsw_m408_4c_uptime_timestamp")
     assert state.state == "2024-07-25T11:58:29+00:00"
@@ -380,3 +379,55 @@ async def test_qnap_qsw_create_sensors(
 
     state = hass.states.get("sensor.qsw_m408_4c_port_12_tx_speed")
     assert state.state == "0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_deprecated_uptime_seconds(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test cleanup of the Uptime seconds sensor entity."""
+    original_id = "sensor.qsw_m408_4c_uptime_seconds"
+    domain = Platform.SENSOR
+
+    config_entry = init_config_entry(hass)
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=original_id,
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=None,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+
+    await async_init_integration(hass, config_entry=config_entry)
+
+    assert (DOMAIN, "uptime_seconds_deprecated") in issue_registry.issues
+
+
+async def test_cleanup_deprecated_uptime_seconds(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cleanup of the Uptime seconds sensor entity."""
+    original_id = "sensor.qsw_m408_4c_uptime_seconds"
+    domain = Platform.SENSOR
+
+    config_entry = init_config_entry(hass)
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=original_id,
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+
+    await async_init_integration(hass, config_entry=config_entry)
