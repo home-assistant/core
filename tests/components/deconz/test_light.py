@@ -2,22 +2,19 @@
 
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.deconz.const import ATTR_ON, CONF_ALLOW_DECONZ_GROUPS
-from homeassistant.components.deconz.light import DECONZ_GROUP
+from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_EFFECT_LIST,
     ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
-    ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -37,16 +34,19 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    ("light_payload", "expected"),
+    "light_payload",
     [
         (  # RGB light in color temp color mode
             {
@@ -75,28 +75,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
                 "swversion": "5.127.1.26420",
                 "type": "Extended color light",
                 "uniqueid": "00:17:88:01:01:23:45:67-00",
-            },
-            {
-                "entity_id": "light.hue_go",
-                "state": STATE_ON,
-                "attributes": {
-                    ATTR_BRIGHTNESS: 254,
-                    ATTR_COLOR_TEMP: 375,
-                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
-                    ATTR_SUPPORTED_COLOR_MODES: [
-                        ColorMode.COLOR_TEMP,
-                        ColorMode.HS,
-                        ColorMode.XY,
-                    ],
-                    ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
-                    ATTR_MIN_MIREDS: 153,
-                    ATTR_MAX_MIREDS: 500,
-                    ATTR_SUPPORTED_FEATURES: LightEntityFeature.TRANSITION
-                    | LightEntityFeature.FLASH
-                    | LightEntityFeature.EFFECT,
-                    DECONZ_GROUP: False,
-                },
-            },
+            }
         ),
         (  # RGB light in XY color mode
             {
@@ -125,30 +104,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
                 "swversion": "1.65.9_hB3217DF4",
                 "type": "Extended color light",
                 "uniqueid": "00:17:88:01:01:23:45:67-01",
-            },
-            {
-                "entity_id": "light.hue_ensis",
-                "state": STATE_ON,
-                "attributes": {
-                    ATTR_MIN_MIREDS: 140,
-                    ATTR_MAX_MIREDS: 650,
-                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
-                    ATTR_SUPPORTED_COLOR_MODES: [
-                        ColorMode.COLOR_TEMP,
-                        ColorMode.HS,
-                        ColorMode.XY,
-                    ],
-                    ATTR_COLOR_MODE: ColorMode.XY,
-                    ATTR_BRIGHTNESS: 254,
-                    ATTR_HS_COLOR: (29.691, 38.039),
-                    ATTR_RGB_COLOR: (255, 206, 158),
-                    ATTR_XY_COLOR: (0.427, 0.373),
-                    DECONZ_GROUP: False,
-                    ATTR_SUPPORTED_FEATURES: LightEntityFeature.TRANSITION
-                    | LightEntityFeature.FLASH
-                    | LightEntityFeature.EFFECT,
-                },
-            },
+            }
         ),
         (  # RGB light with only HS color mode
             {
@@ -171,41 +127,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
                 "swversion": None,
                 "type": "Color dimmable light",
                 "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
-            },
-            {
-                "entity_id": "light.lidl_xmas_light",
-                "state": STATE_ON,
-                "attributes": {
-                    ATTR_EFFECT_LIST: [
-                        "carnival",
-                        "collide",
-                        "fading",
-                        "fireworks",
-                        "flag",
-                        "glow",
-                        "rainbow",
-                        "snake",
-                        "snow",
-                        "sparkles",
-                        "steady",
-                        "strobe",
-                        "twinkle",
-                        "updown",
-                        "vintage",
-                        "waves",
-                    ],
-                    ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
-                    ATTR_COLOR_MODE: ColorMode.HS,
-                    ATTR_BRIGHTNESS: 25,
-                    ATTR_HS_COLOR: (294.938, 55.294),
-                    ATTR_RGB_COLOR: (243, 113, 255),
-                    ATTR_XY_COLOR: (0.357, 0.188),
-                    DECONZ_GROUP: False,
-                    ATTR_SUPPORTED_FEATURES: LightEntityFeature.TRANSITION
-                    | LightEntityFeature.FLASH
-                    | LightEntityFeature.EFFECT,
-                },
-            },
+            }
         ),
         (  # Tunable white light in CT color mode
             {
@@ -230,22 +152,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
                 "swversion": "1.46.13_r26312",
                 "type": "Color temperature light",
                 "uniqueid": "00:17:88:01:01:23:45:67-02",
-            },
-            {
-                "entity_id": "light.hue_white_ambiance",
-                "state": STATE_ON,
-                "attributes": {
-                    ATTR_MIN_MIREDS: 153,
-                    ATTR_MAX_MIREDS: 454,
-                    ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
-                    ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
-                    ATTR_BRIGHTNESS: 254,
-                    ATTR_COLOR_TEMP: 396,
-                    DECONZ_GROUP: False,
-                    ATTR_SUPPORTED_FEATURES: LightEntityFeature.TRANSITION
-                    | LightEntityFeature.FLASH,
-                },
-            },
+            }
         ),
         (  # Dimmable light
             {
@@ -260,19 +167,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
                 "swversion": "1.55.8_r28815",
                 "type": "Dimmable light",
                 "uniqueid": "00:17:88:01:01:23:45:67-03",
-            },
-            {
-                "entity_id": "light.hue_filament",
-                "state": STATE_ON,
-                "attributes": {
-                    ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS],
-                    ATTR_COLOR_MODE: ColorMode.BRIGHTNESS,
-                    ATTR_BRIGHTNESS: 254,
-                    DECONZ_GROUP: False,
-                    ATTR_SUPPORTED_FEATURES: LightEntityFeature.TRANSITION
-                    | LightEntityFeature.FLASH,
-                },
-            },
+            }
         ),
         (  # On/Off light
             {
@@ -287,17 +182,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
                 "swversion": "2.0",
                 "type": "Simple light",
                 "uniqueid": "00:15:8d:00:01:23:45:67-01",
-            },
-            {
-                "entity_id": "light.simple_light",
-                "state": STATE_ON,
-                "attributes": {
-                    ATTR_SUPPORTED_COLOR_MODES: [ColorMode.ONOFF],
-                    ATTR_COLOR_MODE: ColorMode.ONOFF,
-                    DECONZ_GROUP: False,
-                    ATTR_SUPPORTED_FEATURES: 0,
-                },
-            },
+            }
         ),
         (  # Gradient light
             {
@@ -396,42 +281,28 @@ from tests.test_util.aiohttp import AiohttpClientMocker
                 "swversion": "1.104.2",
                 "type": "Extended color light",
                 "uniqueid": "00:17:88:01:0b:0c:0d:0e-0f",
-            },
-            {
-                "entity_id": "light.gradient_light",
-                "state": STATE_ON,
-                "attributes": {
-                    ATTR_SUPPORTED_COLOR_MODES: [
-                        ColorMode.COLOR_TEMP,
-                        ColorMode.HS,
-                        ColorMode.XY,
-                    ],
-                    ATTR_COLOR_MODE: ColorMode.XY,
-                },
-            },
+            }
         ),
     ],
 )
 async def test_lights(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
-    expected: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that different light entities are created with expected values."""
-    assert len(hass.states.async_all()) == 1
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.LIGHT]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
-    light = hass.states.get(expected["entity_id"])
-    assert light.state == expected["state"]
-    for attribute, expected_value in expected["attributes"].items():
-        assert light.attributes[attribute] == expected_value
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
+    await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
@@ -849,81 +720,20 @@ async def test_configuration_tool(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    ("input", "expected"),
+    "input",
     [
-        (
-            {
-                "lights": ["1", "2", "3"],
-            },
-            {
-                "entity_id": "light.group",
-                "state": ATTR_ON,
-                "attributes": {
-                    ATTR_MIN_MIREDS: 153,
-                    ATTR_MAX_MIREDS: 500,
-                    ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.XY],
-                    ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
-                    ATTR_BRIGHTNESS: 255,
-                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
-                    "all_on": False,
-                    DECONZ_GROUP: True,
-                    ATTR_SUPPORTED_FEATURES: 44,
-                },
-            },
-        ),
-        (
-            {
-                "lights": ["3", "1", "2"],
-            },
-            {
-                "entity_id": "light.group",
-                "state": ATTR_ON,
-                "attributes": {
-                    ATTR_MIN_MIREDS: 153,
-                    ATTR_MAX_MIREDS: 500,
-                    ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.XY],
-                    ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
-                    ATTR_BRIGHTNESS: 50,
-                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
-                    "all_on": False,
-                    DECONZ_GROUP: True,
-                    ATTR_SUPPORTED_FEATURES: LightEntityFeature.TRANSITION
-                    | LightEntityFeature.FLASH
-                    | LightEntityFeature.EFFECT,
-                },
-            },
-        ),
-        (
-            {
-                "lights": ["2", "3", "1"],
-            },
-            {
-                "entity_id": "light.group",
-                "state": ATTR_ON,
-                "attributes": {
-                    ATTR_MIN_MIREDS: 153,
-                    ATTR_MAX_MIREDS: 500,
-                    ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.XY],
-                    ATTR_COLOR_MODE: ColorMode.XY,
-                    ATTR_HS_COLOR: (52.0, 100.0),
-                    ATTR_RGB_COLOR: (255, 221, 0),
-                    ATTR_XY_COLOR: (0.5, 0.5),
-                    "all_on": False,
-                    DECONZ_GROUP: True,
-                    ATTR_SUPPORTED_FEATURES: LightEntityFeature.TRANSITION
-                    | LightEntityFeature.FLASH
-                    | LightEntityFeature.EFFECT,
-                },
-            },
-        ),
+        ({"lights": ["1", "2", "3"]}),
+        ({"lights": ["3", "1", "2"]}),
+        ({"lights": ["2", "3", "1"]}),
     ],
 )
 async def test_groups(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry_factory: Callable[[], ConfigEntry],
     group_payload: dict[str, Any],
     input: dict[str, list[str]],
-    expected: dict[str, Any],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that different group entities are created with expected values."""
     group_payload |= {
@@ -948,14 +758,10 @@ async def test_groups(
             "lights": input["lights"],
         },
     }
-    config_entry = await config_entry_factory()
 
-    assert len(hass.states.async_all()) == 4
-
-    group = hass.states.get(expected["entity_id"])
-    assert group.state == expected["state"]
-    for attribute, expected_value in expected["attributes"].items():
-        assert group.attributes[attribute] == expected_value
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.LIGHT]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 

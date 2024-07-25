@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, MIN_REQUIRED_MEALIE_VERSION
+from .const import DOMAIN, LOGGER, MIN_REQUIRED_MEALIE_VERSION
 from .coordinator import (
     MealieConfigEntry,
     MealieData,
@@ -55,7 +55,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     except MealieConnectionError as error:
         raise ConfigEntryNotReady(error) from error
 
-    if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
+    if not version.valid:
+        LOGGER.warning(
+            "It seems like you are using the nightly version of Mealie, nightly versions could have changes that stop this integration working"
+        )
+    if version.valid and version < MIN_REQUIRED_MEALIE_VERSION:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="version_error",

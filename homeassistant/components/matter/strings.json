@@ -74,7 +74,7 @@
             "state": {
               "switch_latched": "Switch latched",
               "initial_press": "Pressed",
-              "long_press": "Hold down",
+              "long_press": "Held down",
               "short_release": "Released after being pressed",
               "long_release": "Released after being held down",
               "multi_press_1": "Pressed once",

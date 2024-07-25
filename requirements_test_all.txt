@@ -222,7 +222,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.6.1
+aioesphomeapi==24.6.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -255,7 +255,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.5.0
 
 # homeassistant.components.lifx
-aiolifx==1.0.5
+aiolifx==1.0.6
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -314,7 +314,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.5
+aioqsw==0.4.0
 
 # homeassistant.components.rainforest_raven
 aioraven==0.7.0
@@ -389,7 +389,7 @@ aiowithings==3.0.2
 aioymaps==1.2.4
 
 # homeassistant.components.airgradient
-airgradient==0.7.0
+airgradient==0.7.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -596,7 +596,7 @@ dbus-fast==2.22.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==8.1.1
+deebot-client==8.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -830,7 +830,7 @@ googlemaps==2.5.1
 gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
-govee-ble==0.38.0
+govee-ble==0.40.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.1
@@ -1333,7 +1333,7 @@ py-madvr2==1.6.29
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==1.0.2
+py-nextbusnext==2.0.3
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1452,6 +1452,9 @@ pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
+
+# homeassistant.components.emoncms
+pyemoncms==0.0.7
 
 # homeassistant.components.enphase_envoy
 pyenphase==1.20.6
@@ -1793,6 +1796,9 @@ python-juicenet==1.1.0
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.7.0.5
+
+# homeassistant.components.linkplay
+python-linkplay==0.0.5
 
 # homeassistant.components.matter
 python-matter-server==6.3.0
