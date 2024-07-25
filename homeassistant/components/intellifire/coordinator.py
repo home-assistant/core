@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, LOGGER
 
 
-class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData]):
+class IntelliFireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData]):
     """Class to manage the polling of the fireplace API."""
 
     def __init__(

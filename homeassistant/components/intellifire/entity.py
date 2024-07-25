@@ -5,10 +5,10 @@ from __future__ import annotations
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IntellifireDataUpdateCoordinator
+from . import IntelliFireDataUpdateCoordinator
 
 
-class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
+class IntellifireEntity(CoordinatorEntity[IntelliFireDataUpdateCoordinator]):
     """Define a generic class for IntelliFire entities."""
 
     _attr_attribution = "Data provided by unpublished Intellifire API"
@@ -16,7 +16,7 @@ class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: IntellifireDataUpdateCoordinator,
+        coordinator: IntelliFireDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
         """Class initializer."""

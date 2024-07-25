@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
-from .coordinator import IntellifireDataUpdateCoordinator
+from .coordinator import IntelliFireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the fans."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: IntelliFireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     description = NumberEntityDescription(
         key="flame_control",
@@ -51,7 +51,7 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
 
     def __init__(
         self,
-        coordinator: IntellifireDataUpdateCoordinator,
+        coordinator: IntelliFireDataUpdateCoordinator,
         description: NumberEntityDescription,
     ) -> None:
         """Initialize Flame height Sensor."""

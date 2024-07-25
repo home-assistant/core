@@ -31,7 +31,7 @@ from .const import (
     LOGGER,
     STARTUP_TIMEOUT,
 )
-from .coordinator import IntellifireDataUpdateCoordinator
+from .coordinator import IntelliFireDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     # Construct coordinator
-    data_update_coordinator = IntellifireDataUpdateCoordinator(
+    data_update_coordinator = IntelliFireDataUpdateCoordinator(
         hass=hass, fireplace=fireplace
     )
 
