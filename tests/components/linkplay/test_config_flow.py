@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import HOST, HOST_REENTRY, NAME, UUID
+from .conftest import HOST, HOST_REENTRY, NAME, UUID, mock_linkplay_bridge
 
 from tests.common import MockConfigEntry
 
@@ -59,7 +59,7 @@ async def test_user_flow(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -79,7 +79,7 @@ async def test_user_flow_re_entry(
     mock_linkplay_factory_bridge: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test user setup config flow."""
+    """Test user setup config flow when an entry with the same unique id already exists."""
 
     # Create mock entry which already has the same UUID
     entry = MockConfigEntry(
@@ -87,7 +87,6 @@ async def test_user_flow_re_entry(
         domain=DOMAIN,
         title=NAME,
         unique_id=UUID,
-        source=SOURCE_USER,
     )
     entry.add_to_hass(hass)
 
@@ -139,7 +138,7 @@ async def test_zeroconf_flow_re_entry(
     mock_linkplay_factory_bridge: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test Zeroconf flow."""
+    """Test Zeroconf flow when an entry with the same unique id already exists."""
 
     # Create mock entry which already has the same UUID
     entry = MockConfigEntry(
@@ -147,7 +146,6 @@ async def test_zeroconf_flow_re_entry(
         domain=DOMAIN,
         title=NAME,
         unique_id=UUID,
-        source=SOURCE_ZEROCONF,
     )
     entry.add_to_hass(hass)
 
@@ -167,14 +165,14 @@ async def test_flow_errors(
     mock_linkplay_factory_bridge_empty: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test flow errors."""
+    """Test flow when the device cannot be reached."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -182,5 +180,20 @@ async def test_flow_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    # Make linkplay_factory_bridge return a mock bridge
+    mock_linkplay_factory_bridge_empty.return_value = mock_linkplay_bridge()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"] == {
+        CONF_HOST: HOST,
+    }
+    assert result["result"].unique_id == UUID
