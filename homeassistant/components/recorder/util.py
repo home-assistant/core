@@ -29,11 +29,14 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.recorder import session_scope  # noqa: F401
+from homeassistant.helpers.recorder import (  # noqa: F401
+    DATA_INSTANCE,
+    get_instance,
+    session_scope,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    DATA_INSTANCE,
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     SQLITE_MAX_BIND_VARS,
@@ -732,12 +735,6 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
-
-
-@functools.lru_cache(maxsize=1)
-def get_instance(hass: HomeAssistant) -> Recorder:
-    """Get the recorder instance."""
-    return hass.data[DATA_INSTANCE]
 
 
 PERIOD_SCHEMA = vol.Schema(

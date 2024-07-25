@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+import functools
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -15,9 +16,12 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
+    from homeassistant.components.recorder import Recorder
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN: HassKey[RecorderData] = HassKey("recorder")
+DATA_INSTANCE: HassKey[Recorder] = HassKey("recorder_instance")
 
 
 @dataclass(slots=True)
@@ -66,6 +70,12 @@ async def async_wait_recorder(hass: HomeAssistant) -> bool:
     return await hass.data[DOMAIN].db_connected
 
 
+@functools.lru_cache(maxsize=1)
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    return hass.data[DATA_INSTANCE]
+
+
 @contextmanager
 def session_scope(
     *,
@@ -80,9 +90,6 @@ def session_scope(
     data and that no commit is required. It does not prevent the session
     from writing and is not a security measure.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder.util import get_instance
-
     if session is None and hass is not None:
         session = get_instance(hass).get_session()
 
