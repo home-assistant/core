@@ -630,14 +630,14 @@ directv==0.4.0
 # homeassistant.components.steamist
 discovery30303==0.3.2
 
+# homeassistant.components.dsmr
+dlms_cosem==24.1.0
+
 # homeassistant.components.dremel_3d_printer
 dremel3dpy==2.1.1
 
 # homeassistant.components.drop_connect
 dropmqttapi==1.0.3
-
-# homeassistant.components.dsmr
-dsmr-parser==1.3.1
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
