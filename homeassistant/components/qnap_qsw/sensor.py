@@ -48,7 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_MAX, DOMAIN, QSW_COORD_DATA, RPM
@@ -63,7 +63,7 @@ class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
     attributes: dict[str, list[str]] | None = None
     qsw_type: QswEntityType | None = None
     sep_key: str = "_"
-    value_fn: Callable[[str], datetime | float | int | str | None] = lambda value: value
+    value_fn: Callable[[str], datetime | StateType] = lambda value: value
 
 
 DEPRECATED_UPTIME_SECONDS = QswSensorEntityDescription(

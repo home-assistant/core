@@ -51,7 +51,7 @@
         "name": "TX speed"
       },
       "uptime": {
-        "name": "Uptime seconds"
+        "name": "Uptime"
       },
       "uptime_timestamp": {
         "name": "Uptime timestamp"
