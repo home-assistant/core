@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "is_recording": {
+        "default": "mdi:radiobox-marked",
+        "state": {
+          "off": "mdi:radiobox-blank"
+        }
+      }
+    }
+  }
+}

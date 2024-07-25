@@ -8,7 +8,7 @@ from .coordinator import Enigma2UpdateCoordinator
 
 type Enigma2ConfigEntry = ConfigEntry[Enigma2UpdateCoordinator]
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Enigma2ConfigEntry) -> bool:
