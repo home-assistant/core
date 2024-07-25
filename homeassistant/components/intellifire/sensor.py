@@ -24,7 +24,7 @@ from .entity import IntellifireEntity
 
 
 @dataclass(frozen=True)
-class IntellifireSensorRequiredKeysMixin:
+class IntelliFireSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[
@@ -33,9 +33,9 @@ class IntellifireSensorRequiredKeysMixin:
 
 
 @dataclass(frozen=True)
-class IntellifireSensorEntityDescription(
+class IntelliFireSensorEntityDescription(
     SensorEntityDescription,
-    IntellifireSensorRequiredKeysMixin,
+    IntelliFireSensorRequiredKeysMixin,
 ):
     """Describes a sensor entity."""
 
@@ -58,22 +58,22 @@ def _downtime_to_timestamp(
     return utcnow() - timedelta(seconds=seconds_offset)
 
 
-INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
-    IntellifireSensorEntityDescription(
+INTELLIFIRE_SENSORS: tuple[IntelliFireSensorEntityDescription, ...] = (
+    IntelliFireSensorEntityDescription(
         key="flame_height",
         translation_key="flame_height",
         state_class=SensorStateClass.MEASUREMENT,
         # UI uses 1-5 for flame height, backing lib uses 0-4
         value_fn=lambda coordinator: (coordinator.data.flameheight + 1),
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda coordinator: coordinator.data.temperature_c,
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="target_temp",
         translation_key="target_temp",
         state_class=SensorStateClass.MEASUREMENT,
@@ -81,27 +81,27 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda coordinator: coordinator.data.thermostat_setpoint_c,
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="fan_speed",
         translation_key="fan_speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda coordinator: coordinator.data.fanspeed,
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="timer_end_timestamp",
         translation_key="timer_end_timestamp",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_time_remaining_to_timestamp,
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="downtime",
         translation_key="downtime",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_downtime_to_timestamp,
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -109,28 +109,28 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         value_fn=lambda coordinator: utcnow()
         - timedelta(seconds=coordinator.data.uptime),
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="connection_quality",
         translation_key="connection_quality",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.connection_quality,
         entity_registry_enabled_default=False,
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="ecm_latency",
         translation_key="ecm_latency",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.ecm_latency,
         entity_registry_enabled_default=False,
     ),
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="ipv4_address",
         translation_key="ipv4_address",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.ipv4_address,
     ),
     # HACS DIAGNOSTIC SENSORS
-    IntellifireSensorEntityDescription(
+    IntelliFireSensorEntityDescription(
         key="local_connectivity",
         translation_key="local_connectivity",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -154,7 +154,7 @@ async def async_setup_entry(
 class IntelliFireSensor(IntellifireEntity, SensorEntity):
     """Extends IntelliFireEntity with Sensor specific logic."""
 
-    entity_description: IntellifireSensorEntityDescription
+    entity_description: IntelliFireSensorEntityDescription
 
     @property
     def native_value(self) -> int | str | datetime | float | None:
