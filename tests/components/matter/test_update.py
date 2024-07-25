@@ -6,11 +6,14 @@ from unittest.mock import AsyncMock, MagicMock
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
 from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import UpdateCheckError, UpdateError
 from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 import pytest
 
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -18,6 +21,8 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
+
+from tests.common import async_mock_restore_state_shutdown_restart
 
 
 def set_node_attribute_typed(
@@ -37,6 +42,13 @@ async def check_node_update_fixture(matter_client: MagicMock) -> AsyncMock:
     """Fixture for a flow sensor node."""
     matter_client.check_node_update = AsyncMock(return_value=None)
     return matter_client.check_node_update
+
+
+@pytest.fixture(name="update_node")
+async def update_node_fixture(matter_client: MagicMock) -> AsyncMock:
+    """Fixture for a flow sensor node."""
+    matter_client.update_node = AsyncMock(return_value=None)
+    return matter_client.update_node
 
 
 @pytest.fixture(name="updateable_node")
@@ -109,8 +121,6 @@ async def test_update_install(
         == "http://home-assistant.io/non-existing-product"
     )
 
-    await async_setup_component(hass, "update", {})
-
     await hass.services.async_call(
         "update",
         "install",
@@ -169,3 +179,131 @@ async def test_update_install(
     state = hass.states.get("update.mock_dimmable_light")
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v2.0"
+
+
+async def test_update_install_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    check_node_update: AsyncMock,
+    update_node: AsyncMock,
+    updateable_node: MatterNode,
+) -> None:
+    """Test update entity exists and update check got made."""
+    state = hass.states.get("update.mock_dimmable_light")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "v1.0"
+
+    await async_setup_component(hass, "homeassistant", {})
+
+    check_node_update.return_value = MatterSoftwareVersion(
+        vid=65521,
+        pid=32768,
+        software_version=2,
+        software_version_string="v2.0",
+        firmware_information="",
+        min_applicable_software_version=0,
+        max_applicable_software_version=1,
+        release_notes_url="http://home-assistant.io/non-existing-product",
+        update_source=UpdateSource.LOCAL,
+    )
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {
+            ATTR_ENTITY_ID: "update.mock_dimmable_light",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.check_node_update.call_count == 2
+
+    state = hass.states.get("update.mock_dimmable_light")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("latest_version") == "v2.0"
+    assert (
+        state.attributes.get("release_url")
+        == "http://home-assistant.io/non-existing-product"
+    )
+
+    update_node.side_effect = UpdateCheckError("Error finding applicable update")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {
+                ATTR_ENTITY_ID: "update.mock_dimmable_light",
+                "version": "v3.0",
+            },
+            blocking=True,
+        )
+
+    update_node.side_effect = UpdateError("Error updating node")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {
+                ATTR_ENTITY_ID: "update.mock_dimmable_light",
+                "version": "v3.0",
+            },
+            blocking=True,
+        )
+
+
+async def test_update_state_restore(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    matter_client: MagicMock,
+    check_node_update: AsyncMock,
+    update_node: AsyncMock,
+    updateable_node: MatterNode,
+) -> None:
+    """Test update entity exists and update check got made."""
+    state = hass.states.get("update.mock_dimmable_light")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "v1.0"
+
+    await async_setup_component(hass, "homeassistant", {})
+
+    software_version = MatterSoftwareVersion(
+        vid=65521,
+        pid=32768,
+        software_version=2,
+        software_version_string="v2.0",
+        firmware_information="",
+        min_applicable_software_version=0,
+        max_applicable_software_version=1,
+        release_notes_url="http://home-assistant.io/non-existing-product",
+        update_source=UpdateSource.LOCAL,
+    )
+    check_node_update.return_value = software_version
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {
+            ATTR_ENTITY_ID: "update.mock_dimmable_light",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.check_node_update.call_count == 2
+
+    state = hass.states.get("update.mock_dimmable_light")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("latest_version") == "v2.0"
+    await hass.async_block_till_done()
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == "update.mock_dimmable_light"
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == {"software_update": software_version.as_dict()}
