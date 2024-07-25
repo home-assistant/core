@@ -19,7 +19,7 @@ class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
         description: EntityDescription,
     ) -> None:
         """Initialize status sensor entity."""
-        super().__init__(coordinator, context=description.key)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_unique_id = (
