@@ -204,6 +204,15 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("apower") is not None,
     ),
+    "overcurrent": RpcBinarySensorDescription(
+        key="switch",
+        sub_key="errors",
+        name="Overcurrent",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda status, _: False if status is None else "overcurrent" in status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("apower") is not None,
+    ),
     "smoke": RpcBinarySensorDescription(
         key="smoke",
         sub_key="alarm",
