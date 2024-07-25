@@ -3,7 +3,6 @@
 from typing import Any, Final
 from unittest.mock import patch
 
-from evohomeasync2.broker import Broker
 import pytest
 
 from homeassistant.components.evohome import (
@@ -20,17 +19,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .const import TEST_INSTALL_INFO, TEST_LOCN_STATUS, TEST_USER_ACCOUNT
+from .conftest import mock_get
 
 DIFF_EMAIL_ADDRESS: Final = "diff_user@email.com"
 SAME_EMAIL_ADDRESS: Final = "same_user@email.com"
 
-DATE_TIME_EXPIRES_STR: Final = "2024-06-10T22:05:54+00:00"  # tests need UTC TZ
+REFRESH_TOKEN: Final = "jg68ZCKYdxEI3fF..."
+ACCESS_TOKEN: Final = "1dc7z657UKzbhKA..."
 
-DATE_TIME_EXPIRES_DTM: Final = dt_aware_to_naive(
-    dt_util.parse_datetime(DATE_TIME_EXPIRES_STR)  # type: ignore[arg-type]
+ACCESS_TOKEN_EXPIRES_STR: Final = "2024-06-10T22:05:54+00:00"  # tests need UTC TZ
+ACCESS_TOKEN_EXPIRES_DTM: Final = dt_aware_to_naive(
+    dt_util.parse_datetime(ACCESS_TOKEN_EXPIRES_STR)  # type: ignore[arg-type]
 )
 
+SESSION_ID: Final = "F7181186..."
 
 TEST_CONFIG: Final = {
     CONF_USERNAME: SAME_EMAIL_ADDRESS,
@@ -43,17 +45,16 @@ TEST_DATA: Final = {
     "01": {},
     "10": {
         "username": SAME_EMAIL_ADDRESS,
-        "refresh_token": "jg68ZCKYdxEI3fF...",
-        "access_token": "1dc7z657UKzbhKA...",
-        "access_token_expires": DATE_TIME_EXPIRES_STR,
-        # "user_data": {"sessionId": None},
+        "refresh_token": REFRESH_TOKEN,
+        "access_token": ACCESS_TOKEN,
+        "access_token_expires": ACCESS_TOKEN_EXPIRES_STR,
     },
     "11": {
         "username": SAME_EMAIL_ADDRESS,
-        "refresh_token": "jg68ZCKYdxEI3fF...",
-        "access_token": "1dc7z657UKzbhKA...",
-        "access_token_expires": DATE_TIME_EXPIRES_STR,
-        "user_data": {"sessionId": "F7181186..."},
+        "refresh_token": REFRESH_TOKEN,
+        "access_token": ACCESS_TOKEN,
+        "access_token_expires": ACCESS_TOKEN_EXPIRES_STR,
+        "user_data": {"sessionId": SESSION_ID},
     },
 }
 
@@ -121,39 +122,19 @@ async def test_load_auth_tokens_diff(
     assert sess._tokens == {}
 
 
-async def mock_get(self: Broker, url: str, **kwargs: Any) -> dict[str, Any]:
-    """Mock the HTTP get method."""
-
-    if url == "userAccount":
-        return TEST_USER_ACCOUNT
-    if "installationInfo" in url:
-        return TEST_INSTALL_INFO
-    if "status" in url:
-        return TEST_LOCN_STATUS
-    if "schedule" not in url:
-        pytest.fail(f"Unexpected URL: {url}")
-    return {}
-
-
 @patch("evohomeasync2.broker.Broker.get", mock_get)
 async def test_save_auth_tokens(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test saving authentication tokens."""
 
     dt_util.set_default_time_zone(dt_util.UTC)
 
     with (
+        patch("evohomeasync2.EvohomeClient.refresh_token", REFRESH_TOKEN),
+        patch("evohomeasync2.EvohomeClient.access_token", ACCESS_TOKEN),
         patch(
-            "evohomeasync2.EvohomeClient.refresh_token",
-            TEST_DATA["10"]["refresh_token"],
-        ),
-        patch(
-            "evohomeasync2.EvohomeClient.access_token", TEST_DATA["10"]["access_token"]
-        ),
-        patch(
-            "evohomeasync2.EvohomeClient.access_token_expires", DATE_TIME_EXPIRES_DTM
+            "evohomeasync2.EvohomeClient.access_token_expires", ACCESS_TOKEN_EXPIRES_DTM
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: TEST_CONFIG})
