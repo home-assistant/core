@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
+from datetime import datetime
 from typing import Final
 
 from aioqsw.const import (
@@ -26,6 +28,7 @@ from aioqsw.const import (
     QSD_TX_OCTETS,
     QSD_TX_SPEED,
     QSD_UPTIME_SECONDS,
+    QSD_UPTIME_TIMESTAMP,
 )
 
 from homeassistant.components.sensor import (
@@ -45,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_MAX, DOMAIN, QSW_COORD_DATA, RPM
 from .coordinator import QswDataCoordinator
@@ -58,6 +62,7 @@ class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
     attributes: dict[str, list[str]] | None = None
     qsw_type: QswEntityType | None = None
     sep_key: str = "_"
+    value_fn: Callable[[str], datetime | float | int | str | None] = lambda value: value
 
 
 SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
@@ -140,12 +145,20 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_TX_SPEED,
     ),
     QswSensorEntityDescription(
-        translation_key="uptime",
+        translation_key="uptime_seconds",
         key=QSD_SYSTEM_TIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         subkey=QSD_UPTIME_SECONDS,
+    ),
+    QswSensorEntityDescription(
+        translation_key="uptime_timestamp",
+        key=QSD_SYSTEM_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        subkey=QSD_UPTIME_TIMESTAMP,
+        value_fn=dt_util.parse_datetime,
     ),
 )
 
@@ -374,5 +387,5 @@ class QswSensor(QswSensorEntity, SensorEntity):
             self.entity_description.subkey,
             self.entity_description.qsw_type,
         )
-        self._attr_native_value = value
+        self._attr_native_value = self.entity_description.value_fn(value)
         super()._async_update_attrs()
