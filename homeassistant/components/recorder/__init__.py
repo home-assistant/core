@@ -33,7 +33,7 @@ from .const import (  # noqa: F401
     DATA_INSTANCE,
     DOMAIN,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
-    INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD,
+    INTEGRATION_PLATFORMS_RUN_IN_RECORDER_THREAD,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -191,7 +191,7 @@ async def _async_setup_integration_platform(
         # add it to the recorder queue to be processed.
         if any(
             hasattr(platform, _attr)
-            for _attr in INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD
+            for _attr in INTEGRATION_PLATFORMS_RUN_IN_RECORDER_THREAD
         ):
             instance.queue_task(AddRecorderPlatformTask(domain, platform))
 

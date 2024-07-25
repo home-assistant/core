@@ -25,6 +25,31 @@
         },
         "title": "Template button"
       },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template image"
+      },
+      "select": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "select_option": "Actions on select",
+          "options": "Available options"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template select"
+      },
       "sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -44,9 +69,26 @@
         "menu_options": {
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
-          "sensor": "Template a sensor"
+          "image": "Template a image",
+          "select": "Template a select",
+          "sensor": "Template a sensor",
+          "switch": "Template a switch"
         },
         "title": "Template helper"
+      },
+      "switch": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "turn_off": "Actions on turn off",
+          "turn_on": "Actions on turn on",
+          "value_template": "Value template"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
+        },
+        "title": "Template switch"
       }
     }
   },
@@ -72,6 +114,30 @@
         },
         "title": "[%key:component::template::config::step::button::title%]"
       },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::image::title%]"
+      },
+      "select": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "select_option": "[%key:component::template::config::step::select::data::select_option%]",
+          "options": "[%key:component::template::config::step::select::data::options%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::select::title%]"
+      },
       "sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -84,6 +150,20 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::sensor::title%]"
+      },
+      "switch": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]"
+        },
+        "title": "[%key:component::template::config::step::switch::title%]"
       }
     }
   },

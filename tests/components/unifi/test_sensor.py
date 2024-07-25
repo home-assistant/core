@@ -740,9 +740,9 @@ async def test_outlet_power_readings(
     device_payload: list[dict[str, Any]],
     entity_id: str,
     expected_unique_id: str,
-    expected_value: any,
+    expected_value: Any,
     changed_data: dict | None,
-    expected_update_value: any,
+    expected_update_value: Any,
 ) -> None:
     """Test the outlet power reporting on PDU devices."""
     assert len(hass.states.async_all()) == 13

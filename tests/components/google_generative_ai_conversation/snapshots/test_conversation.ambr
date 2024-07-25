@@ -443,13 +443,30 @@
     parameters {
       type_: OBJECT
       properties {
+        key: "param3"
+        value {
+          type_: OBJECT
+          properties {
+            key: "json"
+            value {
+              type_: STRING
+            }
+          }
+        }
+      }
+      properties {
+        key: "param2"
+        value {
+          type_: NUMBER
+        }
+      }
+      properties {
         key: "param1"
         value {
           type_: ARRAY
           description: "Test parameters"
           items {
             type_: STRING
-            format_: "lower"
           }
         }
       }

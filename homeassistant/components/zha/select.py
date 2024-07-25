@@ -8,7 +8,7 @@ from typing import Any
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -69,7 +69,7 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
     @callback
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
-        if state.state and state.state != STATE_UNKNOWN:
+        if state.state and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self.entity_data.entity.restore_external_state_attributes(
                 state=state.state,
             )

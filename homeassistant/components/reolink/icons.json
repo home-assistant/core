@@ -203,6 +203,9 @@
       },
       "status_led": {
         "default": "mdi:lightning-bolt-circle"
+      },
+      "hdr": {
+        "default": "mdi:hdr"
       }
     },
     "sensor": {

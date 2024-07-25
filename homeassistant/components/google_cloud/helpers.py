@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+import operator
 from types import MappingProxyType
 from typing import Any
 
@@ -74,7 +76,7 @@ def tts_options_schema(
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
-                    options=["", *sum(voices.values(), [])],
+                    options=["", *functools.reduce(operator.iadd, voices.values(), [])],
                 )
             ),
             vol.Optional(

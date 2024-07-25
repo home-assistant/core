@@ -27,6 +27,8 @@ from aioshelly.const import (
     MODEL_WALL_DISPLAY,
 )
 
+from homeassistant.components.number import NumberMode
+
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
@@ -238,3 +240,17 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 CONF_GEN = "gen"
 
 SHELLY_PLUS_RGBW_CHANNELS = 4
+
+VIRTUAL_COMPONENTS_MAP = {
+    "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
+    "number": {"types": ["number"], "modes": ["field", "slider"]},
+    "select": {"types": ["enum"], "modes": ["dropdown"]},
+    "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
+    "switch": {"types": ["boolean"], "modes": ["toggle"]},
+    "text": {"types": ["text"], "modes": ["field"]},
+}
+
+VIRTUAL_NUMBER_MODE_MAP = {
+    "field": NumberMode.BOX,
+    "slider": NumberMode.SLIDER,
+}

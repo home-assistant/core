@@ -5,14 +5,14 @@ from __future__ import annotations
 from itertools import chain
 
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
-from tessie_api import set_seat_heat
+from tessie_api import set_seat_cool, set_seat_heat
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
-from .const import TessieSeatHeaterOptions
+from .const import TessieSeatCoolerOptions, TessieSeatHeaterOptions
 from .entity import TessieEnergyEntity, TessieEntity
 from .helpers import handle_command
 from .models import TessieEnergyData
@@ -26,6 +26,13 @@ SEAT_HEATERS = {
     "climate_state_seat_heater_third_row_left": "third_row_left",
     "climate_state_seat_heater_third_row_right": "third_row_right",
 }
+
+SEAT_COOLERS = {
+    "climate_state_seat_fan_front_left": "front_left",
+    "climate_state_seat_fan_front_right": "front_right",
+}
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -43,6 +50,13 @@ async def async_setup_entry(
                 for key in SEAT_HEATERS
                 if key
                 in vehicle.data_coordinator.data  # not all vehicles have rear center or third row
+            ),
+            (
+                TessieSeatCoolerSelectEntity(vehicle, key)
+                for vehicle in entry.runtime_data.vehicles
+                for key in SEAT_COOLERS
+                if key
+                in vehicle.data_coordinator.data  # not all vehicles have ventilated seats
             ),
             (
                 TessieOperationSelectEntity(energysite)
@@ -78,6 +92,28 @@ class TessieSeatHeaterSelectEntity(TessieEntity, SelectEntity):
         """Change the selected option."""
         level = self._attr_options.index(option)
         await self.run(set_seat_heat, seat=SEAT_HEATERS[self.key], level=level)
+        self.set((self.key, level))
+
+
+class TessieSeatCoolerSelectEntity(TessieEntity, SelectEntity):
+    """Select entity for cooled seat."""
+
+    _attr_options = [
+        TessieSeatCoolerOptions.OFF,
+        TessieSeatCoolerOptions.LOW,
+        TessieSeatCoolerOptions.MEDIUM,
+        TessieSeatCoolerOptions.HIGH,
+    ]
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current selected option."""
+        return self._attr_options[self._value]
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        level = self._attr_options.index(option)
+        await self.run(set_seat_cool, seat=SEAT_COOLERS[self.key], level=level)
         self.set((self.key, level))
 
 
