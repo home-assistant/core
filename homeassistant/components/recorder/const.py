@@ -13,13 +13,9 @@ from homeassistant.const import (
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
 )
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
-from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .core import Recorder  # noqa: F401
-
-
-DATA_INSTANCE: HassKey[Recorder] = HassKey("recorder_instance")
 
 
 SQLITE_URL_PREFIX = "sqlite://"
