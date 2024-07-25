@@ -21,6 +21,17 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
+
+@pytest.fixture(autouse=True)
+def mock_getrandbits():
+    """Mock image access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.image.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield
+
+
 WLAN = {
     "_id": "012345678910111213141516",
     "bc_filter_enabled": False,

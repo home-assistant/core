@@ -35,8 +35,8 @@
 # name: test_entity_and_device_data[site_payload0-wlan_payload0][image.ssid_1_qr_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': 'eb37f3faa6103bb65697c0e3bb32f3a0d655588f84b139f1539a6f3136251ea7',
-      'entity_picture': '/api/image_proxy/image.ssid_1_qr_code?token=eb37f3faa6103bb65697c0e3bb32f3a0d655588f84b139f1539a6f3136251ea7',
+      'access_token': '1',
+      'entity_picture': '/api/image_proxy/image.ssid_1_qr_code?token=1',
       'friendly_name': 'SSID 1 QR Code',
     }),
     'context': <ANY>,
