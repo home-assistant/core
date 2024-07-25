@@ -27,6 +27,7 @@ from aioqsw.const import (
     QSD_TEMP_MAX,
     QSD_TX_OCTETS,
     QSD_TX_SPEED,
+    QSD_UPTIME_SECONDS,
     QSD_UPTIME_TIMESTAMP,
 )
 
@@ -42,6 +43,7 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -141,6 +143,14 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TX_SPEED,
+    ),
+    QswSensorEntityDescription(
+        translation_key="uptime_seconds",
+        key=QSD_SYSTEM_TIME,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        subkey=QSD_UPTIME_SECONDS,
     ),
     QswSensorEntityDescription(
         translation_key="uptime_timestamp",

@@ -49,6 +49,9 @@ async def test_qnap_qsw_create_sensors(
     state = hass.states.get("sensor.qsw_m408_4c_tx_speed")
     assert state.state == "0"
 
+    state = hass.states.get("sensor.qsw_m408_4c_uptime_seconds")
+    assert state.state == "91"
+
     state = hass.states.get("sensor.qsw_m408_4c_uptime_timestamp")
     assert state.state == "2024-07-25T11:58:29+00:00"
 
