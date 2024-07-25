@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from unittest.mock import patch
 
@@ -27,7 +28,7 @@ from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
 @contextmanager
-def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
+def mock_shutdown(manager: HomeAssistantBluetoothManager) -> Iterator[None]:
     """Mock shutdown of the HomeAssistantBluetoothManager."""
     manager.shutdown = True
     yield

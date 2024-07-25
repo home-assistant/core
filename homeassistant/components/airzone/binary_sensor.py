@@ -99,12 +99,12 @@ async def async_setup_entry(
                     coordinator,
                     description,
                     entry,
-                    system_zone_id,
-                    systems_data.get(system_zone_id),
+                    system_id,
+                    systems_data.get(system_id),
                 )
-                for system_zone_id in new_systems
+                for system_id in new_systems
                 for description in SYSTEM_BINARY_SENSOR_TYPES
-                if description.key in systems_data.get(system_zone_id)
+                if description.key in systems_data.get(system_id)
             )
             added_systems.update(new_systems)
 

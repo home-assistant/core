@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 
-from dsmr_parser import obis_references
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
@@ -46,12 +45,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
+from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
-    DATA_TASK,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
@@ -81,7 +80,7 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="timestamp",
-        obis_reference=obis_references.P1_MESSAGE_TIMESTAMP,
+        obis_reference="P1_MESSAGE_TIMESTAMP",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -89,21 +88,21 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="current_electricity_usage",
         translation_key="current_electricity_usage",
-        obis_reference=obis_references.CURRENT_ELECTRICITY_USAGE,
+        obis_reference="CURRENT_ELECTRICITY_USAGE",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="current_electricity_delivery",
         translation_key="current_electricity_delivery",
-        obis_reference=obis_references.CURRENT_ELECTRICITY_DELIVERY,
+        obis_reference="CURRENT_ELECTRICITY_DELIVERY",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="electricity_active_tariff",
         translation_key="electricity_active_tariff",
-        obis_reference=obis_references.ELECTRICITY_ACTIVE_TARIFF,
+        obis_reference="ELECTRICITY_ACTIVE_TARIFF",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal"],
@@ -111,7 +110,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_1",
         translation_key="electricity_used_tariff_1",
-        obis_reference=obis_references.ELECTRICITY_USED_TARIFF_1,
+        obis_reference="ELECTRICITY_USED_TARIFF_1",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -119,7 +118,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_2",
         translation_key="electricity_used_tariff_2",
-        obis_reference=obis_references.ELECTRICITY_USED_TARIFF_2,
+        obis_reference="ELECTRICITY_USED_TARIFF_2",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -127,7 +126,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_1",
         translation_key="electricity_delivered_tariff_1",
-        obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_1,
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_1",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -135,7 +134,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_2",
         translation_key="electricity_delivered_tariff_2",
-        obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_2,
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_2",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -143,7 +142,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_positive",
         translation_key="instantaneous_active_power_l1_positive",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -151,7 +150,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_positive",
         translation_key="instantaneous_active_power_l2_positive",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE,
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -159,7 +158,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_positive",
         translation_key="instantaneous_active_power_l3_positive",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE,
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -167,7 +166,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_negative",
         translation_key="instantaneous_active_power_l1_negative",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE,
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -175,7 +174,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_negative",
         translation_key="instantaneous_active_power_l2_negative",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE,
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -183,7 +182,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_negative",
         translation_key="instantaneous_active_power_l3_negative",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE,
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -191,7 +190,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="short_power_failure_count",
         translation_key="short_power_failure_count",
-        obis_reference=obis_references.SHORT_POWER_FAILURE_COUNT,
+        obis_reference="SHORT_POWER_FAILURE_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -199,7 +198,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="long_power_failure_count",
         translation_key="long_power_failure_count",
-        obis_reference=obis_references.LONG_POWER_FAILURE_COUNT,
+        obis_reference="LONG_POWER_FAILURE_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -207,7 +206,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="voltage_sag_l1_count",
         translation_key="voltage_sag_l1_count",
-        obis_reference=obis_references.VOLTAGE_SAG_L1_COUNT,
+        obis_reference="VOLTAGE_SAG_L1_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -215,7 +214,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="voltage_sag_l2_count",
         translation_key="voltage_sag_l2_count",
-        obis_reference=obis_references.VOLTAGE_SAG_L2_COUNT,
+        obis_reference="VOLTAGE_SAG_L2_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -223,7 +222,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="voltage_sag_l3_count",
         translation_key="voltage_sag_l3_count",
-        obis_reference=obis_references.VOLTAGE_SAG_L3_COUNT,
+        obis_reference="VOLTAGE_SAG_L3_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -231,7 +230,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="voltage_swell_l1_count",
         translation_key="voltage_swell_l1_count",
-        obis_reference=obis_references.VOLTAGE_SWELL_L1_COUNT,
+        obis_reference="VOLTAGE_SWELL_L1_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -239,7 +238,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="voltage_swell_l2_count",
         translation_key="voltage_swell_l2_count",
-        obis_reference=obis_references.VOLTAGE_SWELL_L2_COUNT,
+        obis_reference="VOLTAGE_SWELL_L2_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -247,7 +246,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="voltage_swell_l3_count",
         translation_key="voltage_swell_l3_count",
-        obis_reference=obis_references.VOLTAGE_SWELL_L3_COUNT,
+        obis_reference="VOLTAGE_SWELL_L3_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -255,7 +254,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l1",
         translation_key="instantaneous_voltage_l1",
-        obis_reference=obis_references.INSTANTANEOUS_VOLTAGE_L1,
+        obis_reference="INSTANTANEOUS_VOLTAGE_L1",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -264,7 +263,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l2",
         translation_key="instantaneous_voltage_l2",
-        obis_reference=obis_references.INSTANTANEOUS_VOLTAGE_L2,
+        obis_reference="INSTANTANEOUS_VOLTAGE_L2",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -273,7 +272,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l3",
         translation_key="instantaneous_voltage_l3",
-        obis_reference=obis_references.INSTANTANEOUS_VOLTAGE_L3,
+        obis_reference="INSTANTANEOUS_VOLTAGE_L3",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -282,7 +281,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_current_l1",
         translation_key="instantaneous_current_l1",
-        obis_reference=obis_references.INSTANTANEOUS_CURRENT_L1,
+        obis_reference="INSTANTANEOUS_CURRENT_L1",
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -291,7 +290,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_current_l2",
         translation_key="instantaneous_current_l2",
-        obis_reference=obis_references.INSTANTANEOUS_CURRENT_L2,
+        obis_reference="INSTANTANEOUS_CURRENT_L2",
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -300,7 +299,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="instantaneous_current_l3",
         translation_key="instantaneous_current_l3",
-        obis_reference=obis_references.INSTANTANEOUS_CURRENT_L3,
+        obis_reference="INSTANTANEOUS_CURRENT_L3",
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -309,7 +308,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="belgium_max_power_per_phase",
         translation_key="max_power_per_phase",
-        obis_reference=obis_references.BELGIUM_MAX_POWER_PER_PHASE,
+        obis_reference="ACTUAL_TRESHOLD_ELECTRICITY",
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
@@ -319,7 +318,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="belgium_max_current_per_phase",
         translation_key="max_current_per_phase",
-        obis_reference=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
+        obis_reference="BELGIUM_MAX_CURRENT_PER_PHASE",
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
@@ -329,7 +328,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_imported_total",
         translation_key="electricity_imported_total",
-        obis_reference=obis_references.ELECTRICITY_IMPORTED_TOTAL,
+        obis_reference="ELECTRICITY_IMPORTED_TOTAL",
         dsmr_versions={"5L", "5S", "Q3D"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -337,7 +336,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_exported_total",
         translation_key="electricity_exported_total",
-        obis_reference=obis_references.ELECTRICITY_EXPORTED_TOTAL,
+        obis_reference="ELECTRICITY_EXPORTED_TOTAL",
         dsmr_versions={"5L", "5S", "Q3D"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -345,7 +344,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="belgium_current_average_demand",
         translation_key="current_average_demand",
-        obis_reference=obis_references.BELGIUM_CURRENT_AVERAGE_DEMAND,
+        obis_reference="BELGIUM_CURRENT_AVERAGE_DEMAND",
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -353,7 +352,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="belgium_maximum_demand_current_month",
         translation_key="maximum_demand_current_month",
-        obis_reference=obis_references.BELGIUM_MAXIMUM_DEMAND_MONTH,
+        obis_reference="BELGIUM_MAXIMUM_DEMAND_MONTH",
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -361,7 +360,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="hourly_gas_meter_reading",
         translation_key="gas_meter_reading",
-        obis_reference=obis_references.HOURLY_GAS_METER_READING,
+        obis_reference="HOURLY_GAS_METER_READING",
         dsmr_versions={"4", "5", "5L"},
         is_gas=True,
         device_class=SensorDeviceClass.GAS,
@@ -370,7 +369,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="gas_meter_reading",
         translation_key="gas_meter_reading",
-        obis_reference=obis_references.GAS_METER_READING,
+        obis_reference="GAS_METER_READING",
         dsmr_versions={"2.2"},
         is_gas=True,
         device_class=SensorDeviceClass.GAS,
@@ -383,36 +382,20 @@ def create_mbus_entity(
     mbus: int, mtype: int, telegram: Telegram
 ) -> DSMRSensorEntityDescription | None:
     """Create a new MBUS Entity."""
-    if (
-        mtype == 3
-        and (
-            obis_reference := getattr(
-                obis_references, f"BELGIUM_MBUS{mbus}_METER_READING2"
-            )
-        )
-        in telegram
-    ):
+    if mtype == 3 and hasattr(telegram, f"BELGIUM_MBUS{mbus}_METER_READING2"):
         return DSMRSensorEntityDescription(
             key=f"mbus{mbus}_gas_reading",
             translation_key="gas_meter_reading",
-            obis_reference=obis_reference,
+            obis_reference=f"BELGIUM_MBUS{mbus}_METER_READING2",
             is_gas=True,
             device_class=SensorDeviceClass.GAS,
             state_class=SensorStateClass.TOTAL_INCREASING,
         )
-    if (
-        mtype == 7
-        and (
-            obis_reference := getattr(
-                obis_references, f"BELGIUM_MBUS{mbus}_METER_READING1"
-            )
-        )
-        in telegram
-    ):
+    if mtype == 7 and (hasattr(telegram, f"BELGIUM_MBUS{mbus}_METER_READING1")):
         return DSMRSensorEntityDescription(
             key=f"mbus{mbus}_water_reading",
             translation_key="water_meter_reading",
-            obis_reference=obis_reference,
+            obis_reference=f"BELGIUM_MBUS{mbus}_METER_READING1",
             is_water=True,
             device_class=SensorDeviceClass.WATER,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -425,7 +408,7 @@ def device_class_and_uom(
     entity_description: DSMRSensorEntityDescription,
 ) -> tuple[SensorDeviceClass | None, str | None]:
     """Get native unit of measurement from telegram,."""
-    dsmr_object = telegram[entity_description.obis_reference]
+    dsmr_object = getattr(telegram, entity_description.obis_reference)
     uom: str | None = getattr(dsmr_object, "unit") or None
     with suppress(ValueError):
         if entity_description.device_class == SensorDeviceClass.GAS and (
@@ -484,18 +467,15 @@ def create_mbus_entities(
     entities = []
     for idx in range(1, 5):
         if (
-            device_type := getattr(obis_references, f"BELGIUM_MBUS{idx}_DEVICE_TYPE")
-        ) not in telegram:
+            device_type := getattr(telegram, f"BELGIUM_MBUS{idx}_DEVICE_TYPE", None)
+        ) is None:
             continue
-        if (type_ := int(telegram[device_type].value)) not in (3, 7):
+        if (type_ := int(device_type.value)) not in (3, 7):
             continue
-        if (
-            identifier := getattr(
-                obis_references,
-                f"BELGIUM_MBUS{idx}_EQUIPMENT_IDENTIFIER",
-            )
-        ) in telegram:
-            serial_ = telegram[identifier].value
+        if identifier := getattr(
+            telegram, f"BELGIUM_MBUS{idx}_EQUIPMENT_IDENTIFIER", None
+        ):
+            serial_ = identifier.value
             rename_old_gas_to_mbus(hass, entry, serial_)
         else:
             serial_ = ""
@@ -514,7 +494,7 @@ def create_mbus_entities(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: DsmrConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
@@ -547,7 +527,7 @@ async def async_setup_entry(
                     or dsmr_version in description.dsmr_versions
                 )
                 and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
-                and description.obis_reference in telegram
+                and hasattr(telegram, description.obis_reference)
             ]
         )
         async_add_entities(entities)
@@ -566,6 +546,8 @@ async def async_setup_entry(
         # Make all device entities aware of new telegram
         for entity in entities:
             entity.update_data(telegram)
+
+        entry.runtime_data.telegram = telegram
 
         if not initialized and telegram:
             initialized = True
@@ -695,7 +677,7 @@ async def async_setup_entry(
     )
 
     # Save the task to be able to cancel it when unloading
-    hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
+    entry.runtime_data.task = task
 
 
 class DSMREntity(SensorEntity):
@@ -754,21 +736,21 @@ class DSMREntity(SensorEntity):
         """Update data."""
         self.telegram = telegram
         if self.hass and (
-            telegram is None or self.entity_description.obis_reference in telegram
+            telegram is None
+            or hasattr(telegram, self.entity_description.obis_reference)
         ):
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute: str) -> str | None:
         """Read attribute from last received telegram for this DSMR object."""
         # Make sure telegram contains an object for this entities obis
-        if (
-            self.telegram is None
-            or self.entity_description.obis_reference not in self.telegram
+        if self.telegram is None or not hasattr(
+            self.telegram, self.entity_description.obis_reference
         ):
             return None
 
         # Get the attribute value if the object has it
-        dsmr_object = self.telegram[self.entity_description.obis_reference]
+        dsmr_object = getattr(self.telegram, self.entity_description.obis_reference)
         attr: str | None = getattr(dsmr_object, attribute)
         return attr
 
@@ -784,10 +766,7 @@ class DSMREntity(SensorEntity):
         if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
-        if (
-            self.entity_description.obis_reference
-            == obis_references.ELECTRICITY_ACTIVE_TARIFF
-        ):
+        if self.entity_description.obis_reference == "ELECTRICITY_ACTIVE_TARIFF":
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):

@@ -71,6 +71,8 @@ CHARGE_DESCRIPTION: TessieSwitchEntityDescription = TessieSwitchEntityDescriptio
     off_func=lambda: stop_charging,
 )
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

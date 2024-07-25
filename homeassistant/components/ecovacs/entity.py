@@ -53,6 +53,7 @@ class EcovacsEntity(Entity, Generic[CapabilityEntity]):
             manufacturer="Ecovacs",
             sw_version=self._device.fw_version,
             serial_number=device_info["name"],
+            model_id=device_info["class"],
         )
 
         if nick := device_info.get("nick"):
