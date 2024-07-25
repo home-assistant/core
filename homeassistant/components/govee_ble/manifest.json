@@ -39,6 +39,10 @@
       "connectable": false
     },
     {
+      "local_name": "GVH5127*",
+      "connectable": false
+    },
+    {
       "manufacturer_id": 1,
       "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
       "connectable": false
@@ -110,6 +114,11 @@
     },
     {
       "manufacturer_id": 61320,
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 34819,
+      "manufacturer_data_start": [236, 0, 0, 1],
       "connectable": false
     }
   ],
