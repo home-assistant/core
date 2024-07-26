@@ -18,7 +18,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -105,7 +104,6 @@ class YamahaConfigInfo:
         if discovery_info is not None:
             self.name = discovery_info.get("name")
             self.model = discovery_info.get("model_name")
-            self.serial = discovery_info.get("serial")
             self.ctrl_url = discovery_info.get("control_url")
             self.desc_url = discovery_info.get("description_url")
             self.zone_ignore = []
@@ -128,16 +126,8 @@ def _discovery(config_info):
         for recv in rxv.find():
             zones.extend(recv.zone_controllers())
     else:
-        _LOGGER.debug("Config Zones")
-        zones = None
-        for recv in rxv.find():
-            if recv.ctrl_url == config_info.ctrl_url:
-                _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
-                zones = recv.zone_controllers()
-                break
-        if not zones:
-            _LOGGER.debug("Config Zones Fallback")
-            zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
+        _LOGGER.debug("Config Zones Fallback")
+        zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
 
     _LOGGER.debug("Returned _discover zones: %s", zones)
     return zones
@@ -159,10 +149,7 @@ async def async_setup_platform(
     # Get the Infos for configuration from config (YAML) or Discovery
     config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
     # Async check if the Receivers are there in the network
-    try:
-        zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
-    except Exception as ex:
-        raise PlatformNotReady(f"Issue while connecting to {config_info.name}") from ex
+    zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
 
     entities = []
     for zctrl in zone_ctrls:
