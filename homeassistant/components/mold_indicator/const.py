@@ -1,4 +1,6 @@
-"""Constants for world clock component."""
+"""Constants for Mold indicator component."""
+
+from __future__ import annotations
 
 from homeassistant.const import Platform
 
