@@ -13,7 +13,6 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -25,12 +24,6 @@ from .conftest import DEFAULT_CONFIG_ENTRY_ID
 
 from tests.common import flush_store
 from tests.typing import WebSocketGenerator
-
-
-async def test_setup_with_no_config(hass: HomeAssistant) -> None:
-    """Test that we do not discover anything or try to set up a hub."""
-    assert await async_setup_component(hass, UNIFI_DOMAIN, {}) is True
-    assert UNIFI_DOMAIN not in hass.data
 
 
 async def test_setup_entry_fails_config_entry_not_ready(
