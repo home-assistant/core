@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -33,19 +33,25 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
+from . import BluesoundConfigEntry
 from .const import (
     DOMAIN,
+    INTEGRATION_TITLE,
     SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
     SERVICE_SET_TIMER,
@@ -58,7 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_BLUESOUND_GROUP = "bluesound_group"
 ATTR_MASTER = "master"
 
-DATA_BLUESOUND = "bluesound"
+DATA_BLUESOUND = DOMAIN
 DEFAULT_PORT = 11000
 
 NODE_OFFLINE_CHECK_TIMEOUT = 180
@@ -112,9 +118,10 @@ SERVICE_TO_METHOD = {
 def _add_player(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
-    host,
-    port=None,
-    name=None,
+    host: str,
+    port: int,
+    player: Player,
+    sync_status: SyncStatus,
 ):
     """Add Bluesound players."""
 
@@ -151,7 +158,7 @@ def _add_player(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
-    player = BluesoundPlayer(hass, host, port, name, _add_player_cb)
+    player = BluesoundPlayer(hass, host, port, player, sync_status, _add_player_cb)
 
     if hass.is_running:
         _init_player()
@@ -159,24 +166,71 @@ def _add_player(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
 
 
+async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import config entry from configuration.yaml."""
+    if not hass.config_entries.async_entries(DOMAIN):
+        # Start import flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+        if result["type"] == FlowResultType.ABORT:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{result['reason']}",
+                breaks_in_ha_version="2025.1.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": INTEGRATION_TITLE,
+                },
+            )
+            return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.1.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BluesoundConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Bluesound entry."""
     if DATA_BLUESOUND not in hass.data:
         hass.data[DATA_BLUESOUND] = []
 
+    host = config_entry.data.get(CONF_HOST)
+    port = config_entry.data.get(CONF_PORT)
+    assert isinstance(host, str)
+    assert isinstance(port, int)
+
     _add_player(
         hass,
         async_add_entities,
-        config_entry.data.get(CONF_HOST),
-        config_entry.data.get(CONF_PORT),
+        host,
+        port,
+        config_entry.runtime_data.player,
+        config_entry.runtime_data.sync_status,
     )
 
 
-def setup_services(hass: HomeAssistant):
+def setup_services(hass: HomeAssistant) -> None:
     """Set up services for Bluesound component."""
 
     async def async_service_handler(service: ServiceCall) -> None:
@@ -211,7 +265,16 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None,
 ) -> None:
-    """Old setup which is not used anymore."""
+    """Trigger import flows."""
+    setup_services(hass)
+
+    hosts = config.get(CONF_HOSTS, [])
+    for host in hosts:
+        import_data = {
+            CONF_HOST: host[CONF_HOST],
+            CONF_PORT: host.get(CONF_PORT, 11000),
+        }
+        hass.async_create_task(_async_import(hass, import_data))
 
 
 class BluesoundPlayer(MediaPlayerEntity):
@@ -220,14 +283,20 @@ class BluesoundPlayer(MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
 
     def __init__(
-        self, hass: HomeAssistant, host, port=None, name=None, init_callback=None
+        self,
+        hass: HomeAssistant,
+        host: str,
+        port: int,
+        player: Player,
+        sync_status: SyncStatus,
+        init_callback=None,
     ) -> None:
         """Initialize the media player."""
         self.host = host
         self._hass = hass
         self.port = port
         self._polling_task = None  # The actual polling task.
-        self._name = name
+        self._name = sync_status.name
         self._id = None
         self._last_status_update = None
         self._sync_status: SyncStatus | None = None
@@ -242,14 +311,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._group_name = None
         self._group_list: list[str] = []
         self._bluesound_device_name = None
-        self._player = Player(
-            host, port, async_get_clientsession(hass), default_timeout=10
-        )
+        self._player = player
 
         self._init_callback = init_callback
-
-        if self.port is None:
-            self.port = DEFAULT_PORT
 
     @staticmethod
     def _try_get_index(string, search_string):
@@ -400,19 +464,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Return an unique ID."""
         assert self._sync_status is not None
         return format_unique_id(self._sync_status.mac, self.port)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return DeviceInfo."""
-        assert self._sync_status is not None
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=self._sync_status.brand,
-            model=self._sync_status.model_name,
-            name=self.name,
-            hw_version=self._sync_status.model,
-            configuration_url=f"http://{self.host}",
-        )
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""

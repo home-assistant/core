@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+import aiohttp
 from pyblu import Player, SyncStatus
 import voluptuous as vol
 
@@ -33,6 +34,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             async with Player(
@@ -40,20 +42,26 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as player:
                 try:
                     sync_status = await player.sync_status(timeout=1)
-                except TimeoutError:
-                    return self.async_abort(reason="cannot_connect")
+                except (TimeoutError, aiohttp.ClientConnectorError):
+                    errors["base"] = "cannot_connect"
+                else:
+                    await self.async_set_unique_id(
+                        format_unique_id(sync_status.mac, user_input[CONF_PORT])
+                    )
+                    self._abort_if_unique_id_configured(
+                        updates={
+                            CONF_HOST: user_input[CONF_HOST],
+                        }
+                    )
 
-            await self.async_set_unique_id(
-                format_unique_id(sync_status.mac, user_input[CONF_PORT])
-            )
-
-            return self.async_create_entry(
-                title=sync_status.name,
-                data=user_input,
-            )
+                    return self.async_create_entry(
+                        title=sync_status.name,
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, description="host"): str,
@@ -64,35 +72,50 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import `incomfort` config entry from configuration.yaml."""
-        return await self.async_step_user(import_data)
+        session = async_get_clientsession(self.hass)
+        async with Player(
+            import_data[CONF_HOST], import_data[CONF_PORT], session=session
+        ) as player:
+            try:
+                sync_status = await player.sync_status(timeout=1)
+            except (TimeoutError, aiohttp.ClientConnectorError):
+                return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(
+            format_unique_id(sync_status.mac, import_data[CONF_PORT])
+        )
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: import_data[CONF_HOST],
+            }
+        )
+
+        return self.async_create_entry(
+            title=sync_status.name,
+            data=import_data,
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        _LOGGER.debug(
-            "Discovered new player, %s %s %s %s",
-            discovery_info.name,
-            discovery_info.ip_address,
-            discovery_info.properties.get("deviceid"),
-            discovery_info.host,
-        )
-
         session = async_get_clientsession(self.hass)
         try:
             async with Player(discovery_info.host, session=session) as player:
                 sync_status = await player.sync_status(timeout=1)
-        except TimeoutError:
+        except (TimeoutError, aiohttp.ClientConnectorError):
             return self.async_abort(reason="cannot_connect")
 
-        config_entry = await self.async_set_unique_id(
-            format_unique_id(sync_status.mac, DEFAULT_PORT)
-        )
-        if config_entry is not None:
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(format_unique_id(sync_status.mac, DEFAULT_PORT))
 
         self._host = discovery_info.host
         self._sync_status = sync_status
+
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self._host,
+            }
+        )
 
         self.context.update(
             {

@@ -1,102 +1,59 @@
 """The bluesound component."""
 
-from pyblu import Player
+from dataclasses import dataclass
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_HOSTS,
-    CONF_PLATFORM,
-    CONF_PORT,
-    Platform,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+import aiohttp
+from pyblu import Player, SyncStatus
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, INTEGRATION_TITLE
-from .media_player import DATA_BLUESOUND, setup_services
+from .const import DOMAIN
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
-async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
-    """Import config entry from configuration.yaml."""
-    if not hass.config_entries.async_entries(DOMAIN):
-        # Start import flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        if result["type"] == FlowResultType.ABORT:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{result['reason']}",
-                breaks_in_ha_version="2025.1.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": INTEGRATION_TITLE,
-                },
-            )
-            return
 
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.1.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": INTEGRATION_TITLE,
-        },
-    )
+@dataclass
+class BluesoundData:
+    """Bluesound data class."""
+
+    player: Player
+    sync_status: SyncStatus
+
+
+type BluesoundConfigEntry = ConfigEntry[BluesoundData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound."""
-    setup_services(hass)
-
-    platform_config = config.get(Platform.MEDIA_PLAYER, {})
-    for platform_config_entry in platform_config:
-        if platform_config_entry[CONF_PLATFORM] != DOMAIN:
-            continue
-
-        hosts = platform_config_entry.get(CONF_HOSTS, [])
-        for host in hosts:
-            import_data = {
-                CONF_HOST: host[CONF_HOST],
-                CONF_PORT: host.get(CONF_PORT, 11000),
-            }
-            hass.async_create_task(_async_import(hass, import_data))
-
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: BluesoundConfigEntry
+) -> bool:
     """Set up the Bluesound entry."""
     host = config_entry.data.get(CONF_HOST)
     port = config_entry.data.get(CONF_PORT)
     try:
         session = async_get_clientsession(hass)
-        async with Player(host, port, session=session) as player:
-            await player.sync_status(timeout=1)
+        async with Player(host, port, session=session, default_timeout=10) as player:
+            sync_status = await player.sync_status(timeout=1)
     except TimeoutError as ex:
         raise ConfigEntryNotReady(f"Timeout while connecting to {host}:{port}") from ex
+    except aiohttp.ClientConnectorError as ex:
+        raise ConfigEntryNotReady(f"Error connecting to {host}:{port}") from ex
 
-    await hass.config_entries.async_forward_entry_setup(
-        config_entry, Platform.MEDIA_PLAYER
-    )
+    config_entry.runtime_data = BluesoundData(player, sync_status)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -104,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     player = None
-    for player in hass.data[DATA_BLUESOUND]:
+    for player in hass.data[DOMAIN]:
         if player.unique_id == config_entry.unique_id:
             break
 
@@ -112,7 +69,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         return False
 
     player.stop_polling()
-    hass.data[DATA_BLUESOUND].remove(player)
+    hass.data[DOMAIN].remove(player)
 
     return await hass.config_entries.async_unload_platforms(
         config_entry, Platform.MEDIA_PLAYER
