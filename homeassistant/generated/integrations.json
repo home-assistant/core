@@ -457,14 +457,8 @@
     },
     "artsound": {
       "name": "ArtSound",
-      "integrations": {
-        "artsound": {
-          "integration_type": "virtual",
-          "config_flow": false,
-          "supported_by": "linkplay",
-          "name": "ArtSound"
-        }
-      }
+      "integration_type": "virtual",
+      "supported_by": "linkplay"
     },
     "aruba": {
       "name": "Aruba",
