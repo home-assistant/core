@@ -40,7 +40,7 @@
     },
     "sensor": {
       "thermostat_coverage": {
-        "name": "Signal Percentage"
+        "name": "Signal percentage"
       }
     }
   }
