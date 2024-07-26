@@ -26,6 +26,13 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "entity": {
+    "select": {
+      "list_language": {
+        "name": "[%key:common::config_flow::data::language%]"
+      }
+    }
+  },
   "exceptions": {
     "todo_save_item_failed": {
       "message": "Failed to save item {name} to Bring! list"
@@ -53,6 +60,9 @@
     },
     "notify_request_failed": {
       "message": "Failed to send push notification for bring due to a connection error, try again later"
+    },
+    "set_language_request_failed": {
+      "message": "Unable to set language for bring list due to a connection error, try again later"
     }
   },
   "services": {

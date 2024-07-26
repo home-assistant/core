@@ -1,5 +1,10 @@
 {
   "entity": {
+    "select": {
+      "list_language": {
+        "default": "mdi:translate"
+      }
+    },
     "todo": {
       "shopping_list": {
         "default": "mdi:cart"
