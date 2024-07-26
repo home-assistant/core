@@ -39,6 +39,12 @@
       }
     },
     "sensor": {
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "free_memory": {
+        "name": "Free memory"
+      },
       "thermostat_coverage": {
         "name": "Signal percentage"
       }
