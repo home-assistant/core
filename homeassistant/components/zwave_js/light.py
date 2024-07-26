@@ -130,14 +130,17 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supported_color_modes: set[ColorMode] = set()
 
         # get additional (optional) values and set features
-        # If the command class is Basic, we must geenerate a name that includes
-        # the command class name to avoid ambiguity
-        self._target_brightness = self.get_zwave_value(
-            TARGET_VALUE_PROPERTY,
-            CommandClass.SWITCH_MULTILEVEL,
-            add_to_watched_value_ids=False,
-        )
-        if self.info.primary_value.command_class == CommandClass.BASIC:
+        if self.info.primary_value.command_class == CommandClass.SWITCH_BINARY:
+            # This is a non-dimmable light
+            self._target_brightness = self.get_zwave_value(
+                TARGET_VALUE_PROPERTY,
+                CommandClass.SWITCH_BINARY,
+                add_to_watched_value_ids=False,
+            )
+            self._supports_dimming = False
+        elif self.info.primary_value.command_class == CommandClass.BASIC:
+            # If the command class is Basic, we must geenerate a name that includes
+            # the command class name to avoid ambiguity
             self._attr_name = self.generate_name(
                 include_value_name=True, alternate_value_name="Basic"
             )
@@ -146,6 +149,16 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 CommandClass.BASIC,
                 add_to_watched_value_ids=False,
             )
+            # Assume Basic CC supports dimming
+            self._supports_dimming = True
+        else:
+            self._target_brightness = self.get_zwave_value(
+                TARGET_VALUE_PROPERTY,
+                CommandClass.SWITCH_MULTILEVEL,
+                add_to_watched_value_ids=False,
+            )
+            self._supports_dimming = True
+
         self._target_color = self.get_zwave_value(
             TARGET_COLOR_PROPERTY,
             CommandClass.SWITCH_COLOR,
@@ -193,6 +206,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """
         if self.info.primary_value.value is None:
             return None
+        if not self._supports_dimming:
+            return 255 if self.info.primary_value.value else 0
         return round((cast(int, self.info.primary_value.value) / 99) * 255)
 
     @property
@@ -361,9 +376,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 zwave_transition = {TRANSITION_DURATION_OPTION: "default"}
 
         # setting a value requires setting targetValue
-        await self._async_set_value(
-            self._target_brightness, zwave_brightness, zwave_transition
-        )
+        if self._supports_dimming:
+            await self._async_set_value(
+                self._target_brightness, zwave_brightness, zwave_transition
+            )
+        else:
+            await self._async_set_value(
+                self._target_brightness, zwave_brightness > 0, zwave_transition
+            )
         # We do an optimistic state update when setting to a previous value
         # to avoid waiting for the value to be updated from the device which is
         # typically delayed and causes a confusing UX.

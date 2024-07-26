@@ -238,6 +238,12 @@ SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_BINARY}, property={CURRENT_VALUE_PROPERTY}
 )
 
+COLOR_SWITCH_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_COLOR},
+    property={CURRENT_COLOR_PROPERTY},
+    property_key={None},
+)
+
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SOUND_SWITCH},
     property={TONE_ID_PROPERTY},
@@ -769,11 +775,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x001E},
         product_id={0x0001},
         product_type={0x0004},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
         absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
     ),
     # Logic Group ZDB5100
@@ -783,11 +785,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0234},
         product_id={0x0121},
         product_type={0x0003},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
@@ -1018,6 +1016,7 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
     ),
     # switch for Indicator CC
     ZWaveDiscoverySchema(
@@ -1114,6 +1113,11 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # Light without dimming support
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
     ),
     # light for Basic CC with target
     ZWaveDiscoverySchema(
