@@ -44,7 +44,10 @@ async def test_get_deconz_api_fails(
 ) -> None:
     """Failed setup."""
     config_entry.add_to_hass(hass)
-    with patch("pydeconz.DeconzSession.refresh_state", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.deconz.hub.api.DeconzSession.refresh_state",
+        side_effect=side_effect,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert config_entry.state is state
