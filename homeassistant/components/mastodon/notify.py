@@ -15,16 +15,10 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_NAME,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
@@ -43,6 +37,8 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     }
 )
 
+INTEGRATION_TITLE = "Mastodon"
+
 
 async def async_get_service(
     hass: HomeAssistant,
@@ -53,43 +49,45 @@ async def async_get_service(
 
     if not discovery_info:
         # Import config entry
-        client_id = config.get(CONF_CLIENT_ID)
-        client_secret = config.get(CONF_CLIENT_SECRET)
-        access_token = config.get(CONF_ACCESS_TOKEN)
-        base_url = config.get(CONF_BASE_URL, DEFAULT_URL)
-        name = config.get(CONF_NAME, "Mastodon")
 
         import_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={
-                CONF_CLIENT_ID: client_id,
-                CONF_CLIENT_SECRET: client_secret,
-                CONF_ACCESS_TOKEN: access_token,
-                CONF_NAME: name,
-                CONF_BASE_URL: base_url,
-            },
+            data=config,
         )
 
-        translation_key = "deprecated_yaml"
-        if import_result.get("type") == FlowResultType.ABORT:
-            translation_key = "import_aborted"
-            if import_result.get("reason") == "import_failed":
-                translation_key = "import_failed"
+        if (
+            import_result["type"] == FlowResultType.ABORT
+            and import_result["reason"] != "already_configured"
+        ):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{import_result["reason"]}",
+                breaks_in_ha_version="2025.2.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{import_result["reason"]}",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": INTEGRATION_TITLE,
+                },
+            )
+            return None
 
-        async_create_issue(
+        ir.async_create_issue(
             hass,
-            DOMAIN,
-            f"config_import_{DOMAIN}",
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
             breaks_in_ha_version="2025.2.0",
             is_fixable=False,
-            is_persistent=False,
             issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key=translation_key,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "Mastodon",
+                "integration_title": INTEGRATION_TITLE,
             },
         )
 

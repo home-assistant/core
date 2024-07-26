@@ -19,8 +19,8 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Mastodon gGmbH',
+    'model': '@trwnh@mastodon.social',
     'model_id': None,
     'name': 'Mastodon',
     'name_by_user': None,

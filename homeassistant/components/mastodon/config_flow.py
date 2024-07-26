@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mastodon.Mastodon import MastodonError
+from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -19,16 +19,13 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_BASE_URL, DEFAULT_NAME, DEFAULT_URL, DOMAIN, LOGGER
-from .utils import create_mastodon_instance
+from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
+from .utils import construct_mastodon_username, create_mastodon_client
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(
-            CONF_NAME,
-            default=DEFAULT_NAME,
-        ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
         vol.Required(
             CONF_BASE_URL,
             default=DEFAULT_URL,
@@ -52,32 +49,36 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     config_entry: ConfigEntry
 
-    async def check_connection(
+    def check_connection(
         self,
         base_url: str,
         client_id: str,
         client_secret: str,
         access_token: str,
-    ) -> tuple[dict[str, str], dict[str, Any] | None]:
+    ) -> tuple[
+        dict[str, str] | None,
+        dict[str, str] | None,
+        dict[str, str],
+    ]:
         """Check connection to the Mastodon instance."""
         try:
-            client = await self.hass.async_add_executor_job(
-                create_mastodon_instance,
+            client = create_mastodon_client(
                 base_url,
                 client_id,
                 client_secret,
                 access_token,
             )
-            account = await self.hass.async_add_executor_job(
-                client.account_verify_credentials
-            )
+            instance = client.instance()
+            account = client.account_verify_credentials()
 
-        except MastodonError:
-            return {"base": "credential_error"}, None
+        except MastodonNetworkError:
+            return None, None, {"base": "network_error"}
+        except MastodonUnauthorizedError:
+            return None, None, {"base": "unauthorized_error"}
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected error")
-            return {"base": "unknown"}, None
-        return {}, account
+            return None, None, {"base": "unknown"}
+        return instance, account, {}
 
     def show_user_form(
         self,
@@ -102,66 +103,66 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if not user_input:
-            return self.show_user_form()
+        errors: dict[str, str] | None = None
+        if user_input:
+            self._async_abort_entries_match(
+                {CONF_CLIENT_ID: user_input[CONF_CLIENT_ID]}
+            )
 
-        self._async_abort_entries_match({CONF_CLIENT_ID: user_input[CONF_CLIENT_ID]})
+            instance, account, errors = await self.hass.async_add_executor_job(
+                self.check_connection,
+                user_input[CONF_BASE_URL],
+                user_input[CONF_CLIENT_ID],
+                user_input[CONF_CLIENT_SECRET],
+                user_input[CONF_ACCESS_TOKEN],
+            )
 
-        errors, account = await self.check_connection(
-            user_input[CONF_BASE_URL],
-            user_input[CONF_CLIENT_ID],
-            user_input[CONF_CLIENT_SECRET],
-            user_input[CONF_ACCESS_TOKEN],
-        )
+            if not errors:
+                name = construct_mastodon_username(instance, account)
+                await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
+                return self.async_create_entry(
+                    title=name,
+                    data=user_input,
+                )
 
-        if errors:
-            return self.show_user_form(user_input, errors)
+        return self.show_user_form(user_input, errors)
 
-        await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
-        return self.async_create_entry(
-            title=user_input[CONF_NAME],
-            data=user_input,
-        )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
+        errors: dict[str, str] | None = None
+
         LOGGER.debug("Importing Mastodon from configuration.yaml")
 
-        name = import_config[CONF_NAME]
-        base_url = import_config[CONF_BASE_URL]
-        client_id = import_config[CONF_CLIENT_ID]
-        client_secret = import_config[CONF_CLIENT_SECRET]
-        access_token = import_config[CONF_ACCESS_TOKEN]
+        base_url = str(import_config.get(CONF_BASE_URL, DEFAULT_URL))
+        client_id = str(import_config.get(CONF_CLIENT_ID))
+        client_secret = str(import_config.get(CONF_CLIENT_SECRET))
+        access_token = str(import_config.get(CONF_ACCESS_TOKEN))
+        name = import_config.get(CONF_NAME, None)
 
-        self._async_abort_entries_match(
-            {
-                CONF_NAME: name,
-                CONF_BASE_URL: base_url,
-                CONF_CLIENT_ID: client_id,
-                CONF_CLIENT_SECRET: client_secret,
-                CONF_ACCESS_TOKEN: access_token,
-            }
+        instance, account, errors = await self.hass.async_add_executor_job(
+            self.check_connection,
+            base_url,
+            client_id,
+            client_secret,
+            access_token,
         )
 
-        errors, account = await self.check_connection(
-            base_url, client_id, client_secret, access_token
-        )
+        if not errors:
+            await self.async_set_unique_id(client_id)
+            self._abort_if_unique_id_configured()
 
-        if errors:
-            return self.async_abort(reason="import_failed")
+            if not name:
+                name = construct_mastodon_username(instance, account)
 
-        await self.async_set_unique_id(client_id)
-        self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_BASE_URL: base_url,
+                    CONF_CLIENT_ID: client_id,
+                    CONF_CLIENT_SECRET: client_secret,
+                    CONF_ACCESS_TOKEN: access_token,
+                },
+            )
 
-        return self.async_create_entry(
-            title=name,
-            data={
-                CONF_NAME: name,
-                CONF_BASE_URL: base_url,
-                CONF_CLIENT_ID: client_id,
-                CONF_CLIENT_SECRET: client_secret,
-                CONF_ACCESS_TOKEN: access_token,
-            },
-        )
+        reason = next(iter(errors.items()))[1]
+        return self.async_abort(reason=reason)

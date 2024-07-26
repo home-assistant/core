@@ -2,17 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from mastodon.Mastodon import MastodonError
+from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
 import pytest
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -39,17 +34,15 @@ async def test_full_flow(
             CONF_CLIENT_ID: "client_id",
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
-            CONF_NAME: "Mastodon",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Mastodon"
+    assert result["title"] == "@trwnh@mastodon.social"
     assert result["data"] == {
         CONF_BASE_URL: "https://mastodon.social",
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
         CONF_ACCESS_TOKEN: "access_token",
-        CONF_NAME: "Mastodon",
     }
     assert result["result"].unique_id == "client_id"
 
@@ -57,7 +50,8 @@ async def test_full_flow(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (MastodonError, "credential_error"),
+        (MastodonNetworkError, "network_error"),
+        (MastodonUnauthorizedError, "unauthorized_error"),
         (Exception, "unknown"),
     ],
 )
@@ -85,7 +79,6 @@ async def test_flow_errors(
             CONF_CLIENT_ID: "client_id",
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
-            CONF_NAME: "Mastodon",
         },
     )
 
@@ -101,7 +94,6 @@ async def test_flow_errors(
             CONF_CLIENT_ID: "client_id",
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
-            CONF_NAME: "Mastodon",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -130,7 +122,6 @@ async def test_duplicate(
             CONF_CLIENT_ID: "client_id",
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
-            CONF_NAME: "Mastodon",
         },
     )
 
@@ -152,7 +143,6 @@ async def test_import_flow(
             CONF_CLIENT_ID: "import_client_id",
             CONF_CLIENT_SECRET: "import_client_secret",
             CONF_ACCESS_TOKEN: "import_access_token",
-            CONF_NAME: "Mastodon Import",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -161,7 +151,8 @@ async def test_import_flow(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (MastodonError, "credential_error"),
+        (MastodonNetworkError, "network_error"),
+        (MastodonUnauthorizedError, "unauthorized_error"),
         (Exception, "unknown"),
     ],
 )
@@ -183,7 +174,6 @@ async def test_import_flow_abort(
             CONF_CLIENT_ID: "import_client_id",
             CONF_CLIENT_SECRET: "import_client_secret",
             CONF_ACCESS_TOKEN: "import_access_token",
-            CONF_NAME: "Mastodon Import",
         },
     )
     assert result["type"] is FlowResultType.ABORT

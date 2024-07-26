@@ -59,7 +59,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_CLIENT_ID: "client_id",
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
-            CONF_NAME: "Mastodon",
+            CONF_NAME: "trwnh",
         },
         entry_id="01J35M4AH9HYRC2V0G6RNVNWJH",
         unique_id="client_id",

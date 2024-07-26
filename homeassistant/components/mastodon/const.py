@@ -13,3 +13,6 @@ DEFAULT_URL: Final = "https://mastodon.social"
 DEFAULT_NAME: Final = "Mastodon"
 
 INSTANCE_VERSION: Final = "version"
+INSTANCE_URI: Final = "uri"
+INSTANCE_DOMAIN: Final = "domain"
+ACCOUNT_USERNAME: Final = "username"

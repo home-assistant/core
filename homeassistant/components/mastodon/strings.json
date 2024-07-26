@@ -18,21 +18,23 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "credential_error": "The credentials are incorrect."
+      "unauthorized_error": "The credentials are incorrect.",
+      "network_error": "The Mastodon instance was not found.",
+      "unknown": "Unknown error occured when connecting to the Mastodon instance."
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "Mastodon YAML notify configuration imported",
-      "description": "Configuring Mastodon notify using YAML is being removed.\nRemove the YAML notify configuration and restart Home Assistant."
+    "deprecated_yaml_import_issue_unauthorized_error": {
+      "title": "YAML import failed due to an authentication error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an authentication error while importing your existing configuration.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
     },
-    "import_aborted": {
-      "title": "Import aborted",
-      "description": "Configuring Mastodon using YAML is being removed.\nThe import was aborted, due to an existing config entry being the same as the data being imported in the YAML. Remove the YAML notify configuration and restart Home Assistant. Please use the UI to configure Mastodon."
+    "deprecated_yaml_import_issue_network_error": {
+      "title": "YAML import failed because the instance was not found",
+      "description": "Configuring {integration_title} using YAML is being removed but no instance was found while importing your existing configuration.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
     },
-    "import_failed": {
-      "title": "Failed to import",
-      "description": "Failed to import the configuration for Mastodon.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "YAML import failed with unknown error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
     }
   }
 }
