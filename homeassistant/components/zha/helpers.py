@@ -104,7 +104,7 @@ from homeassistant.const import (
     ATTR_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -495,7 +495,7 @@ class ZHAGatewayProxy(EventBase):
         self.hass = hass
         self.config_entry = config_entry
         self.gateway = gateway
-        self.device_proxies: dict[str, ZHADeviceProxy] = {}
+        self.device_proxies: dict[EUI64, ZHADeviceProxy] = {}
         self.group_proxies: dict[int, ZHAGroupProxy] = {}
         self._ha_entity_refs: collections.defaultdict[EUI64, list[EntityReference]] = (
             collections.defaultdict(list)
@@ -509,6 +509,10 @@ class ZHAGatewayProxy(EventBase):
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
         self._reload_task: asyncio.Task | None = None
+        self.hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._handle_entity_registry_updated,
+        )
 
     @property
     def ha_entity_refs(self) -> collections.defaultdict[EUI64, list[EntityReference]]:
@@ -531,6 +535,39 @@ class ZHAGatewayProxy(EventBase):
                 remove_future=remove_future,
             )
         )
+
+    async def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle when entity registry updated."""
+        entity_id = event.data["entity_id"]
+        entity_entry: er.RegistryEntry | None = er.async_get(self.hass).async_get(
+            entity_id
+        )
+        if (
+            entity_entry is None
+            or entity_entry.config_entry_id != self.config_entry.entry_id
+            or entity_entry.device_id is None
+        ):
+            return
+        device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
+            entity_entry.device_id
+        )
+        if device_entry is None:
+            return
+        ieee = EUI64.convert(list(list(device_entry.identifiers)[0])[1])
+        if ieee not in self.device_proxies:
+            return
+        zha_device_proxy = self.device_proxies[ieee]
+        if entity_entry.unique_id not in zha_device_proxy.device.platform_entities:
+            return
+        platform_entity = zha_device_proxy.device.platform_entities[
+            entity_entry.unique_id
+        ]
+        if entity_entry.disabled:
+            platform_entity.disable()
+        else:
+            platform_entity.enable()
 
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and entities."""
