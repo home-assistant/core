@@ -299,7 +299,7 @@ def async_register_services(
                         "type": "reminder_add",
                         "temp_id": str(uuid.uuid1()),
                         "uuid": str(uuid.uuid1()),
-                        "args": {"item_id": api_task.id, "due": reminder_due},
+                        "args": {"item_id": api_task.id, "type": "absolute", "due": reminder_due},
                     }
                 ]
             }
