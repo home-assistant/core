@@ -1154,7 +1154,7 @@ def async_add_entities(
     if not entities:
         return
 
-    entities_to_add = []
+    entities_to_add: list[ZHAEntity] = []
     for entity_data in entities:
         try:
             entities_to_add.append(entity_class(entity_data))
@@ -1166,6 +1166,9 @@ def async_add_entities(
                 "Error while adding entity from entity data: %s", entity_data
             )
     _async_add_entities(entities_to_add, update_before_add=False)
+    for entity in entities_to_add:
+        if not entity.enabled:
+            entity.entity_data.entity.disable()
     entities.clear()
 
 
