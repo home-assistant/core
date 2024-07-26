@@ -51,9 +51,12 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
+from . import (
+    SIGNAL_COMFOCONNECT_UPDATE_RECEIVED,
+    ComfoConnectBridge,
+    ComfoConnectConfigEntry,
+)
 
 ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
 ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
@@ -272,22 +275,17 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ComfoConnectConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ComfoConnect sensor platform."""
-    ccb = hass.data[DOMAIN]
+    ccb = entry.runtime_data
 
-    sensors = [
-        ComfoConnectSensor(ccb=ccb, description=description)
-        for description in SENSOR_TYPES
-        if description.key in config[CONF_RESOURCES]
-    ]
-
-    add_entities(sensors, True)
+    async_add_entities(
+        ComfoConnectSensor(ccb, description) for description in SENSOR_TYPES
+    )
 
 
 class ComfoConnectSensor(SensorEntity):
