@@ -4,7 +4,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "token": "[%key:common::config_flow::data::token%]",
+          "token": "Token",
           "pin": "[%key:common::config_flow::data::pin%]",
           "user_agent": "User agent"
         },
