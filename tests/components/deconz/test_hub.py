@@ -17,16 +17,18 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
 )
-from homeassistant.config_entries import SOURCE_SSDP, ConfigEntry
+from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import BRIDGE_ID
 
+from tests.common import MockConfigEntry
+
 
 async def test_device_registry_entry(
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -68,7 +70,7 @@ async def test_connection_status_signalling(
 
 
 async def test_update_address(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
     gateway = DeconzHub.get_hub(hass, config_entry_setup)
@@ -99,7 +101,7 @@ async def test_update_address(
 
 
 async def test_reset_after_successful_setup(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
     gateway = DeconzHub.get_hub(hass, config_entry_setup)
@@ -110,7 +112,9 @@ async def test_reset_after_successful_setup(
     assert result is True
 
 
-async def test_get_deconz_api(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def test_get_deconz_api(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Successful call."""
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
         assert await get_deconz_api(hass, config_entry)
@@ -127,7 +131,7 @@ async def test_get_deconz_api(hass: HomeAssistant, config_entry: ConfigEntry) ->
 )
 async def test_get_deconz_api_fails(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     side_effect: Exception,
     raised_exception: Exception,
 ) -> None:

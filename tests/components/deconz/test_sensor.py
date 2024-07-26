@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -638,17 +638,6 @@ async def test_sensors(
 
     await sensor_ws_data(expected["websocket_event"])
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(

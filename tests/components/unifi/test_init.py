@@ -24,7 +24,6 @@ from homeassistant.setup import async_setup_component
 from .conftest import DEFAULT_CONFIG_ENTRY_ID
 
 from tests.common import flush_store
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
@@ -35,7 +34,7 @@ async def test_setup_with_no_config(hass: HomeAssistant) -> None:
 
 
 async def test_setup_entry_fails_config_entry_not_ready(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
@@ -170,8 +169,6 @@ async def test_wireless_clients(
 )
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],

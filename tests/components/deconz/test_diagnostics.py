@@ -3,11 +3,11 @@
 from pydeconz.websocket import State
 from syrupy import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketStateType
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -15,7 +15,7 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     mock_websocket_state: WebsocketStateType,
     snapshot: SnapshotAssertion,
 ) -> None:

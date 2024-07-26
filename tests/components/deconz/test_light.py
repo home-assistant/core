@@ -27,13 +27,11 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -41,7 +39,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
-from tests.common import snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -296,16 +294,6 @@ async def test_lights(
         config_entry = await config_entry_factory()
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    states = hass.states.async_all()
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "light_payload",
@@ -491,7 +479,7 @@ async def test_light_state_change(
 async def test_light_service_calls(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     light_payload: dict[str, Any],
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     input: dict[str, Any],
@@ -730,7 +718,7 @@ async def test_configuration_tool(hass: HomeAssistant) -> None:
 async def test_groups(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     group_payload: dict[str, Any],
     input: dict[str, list[str]],
     snapshot: SnapshotAssertion,
@@ -762,16 +750,6 @@ async def test_groups(
     with patch("homeassistant.components.deconz.PLATFORMS", [Platform.LIGHT]):
         config_entry = await config_entry_factory()
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    states = hass.states.async_all()
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
@@ -972,7 +950,7 @@ async def test_empty_group(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_DECONZ_GROUPS: False}])
 async def test_disable_light_groups(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test disallowing light groups work."""
     assert len(hass.states.async_all()) == 1

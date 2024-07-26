@@ -14,7 +14,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigEntry
+from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +28,7 @@ from .const import (
     NAME,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 
@@ -36,7 +36,7 @@ from tests.typing import MqttMockHAClient
     "api_discovery_items", [({}), (API_DISCOVERY_BASIC_DEVICE_INFO)]
 )
 async def test_device_registry_entry(
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -83,7 +83,7 @@ async def test_device_support_mqtt_low_privilege(mqtt_mock: MqttMockHAClient) ->
 
 async def test_update_address(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     mock_requests: Callable[[str], None],
 ) -> None:
     """Test update address works."""
@@ -148,7 +148,7 @@ async def test_device_unavailable(
 
 @pytest.mark.usefixtures("mock_default_requests")
 async def test_device_not_accessible(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Failed setup schedules a retry of setup."""
     config_entry.add_to_hass(hass)
@@ -160,7 +160,7 @@ async def test_device_not_accessible(
 
 @pytest.mark.usefixtures("mock_default_requests")
 async def test_device_trigger_reauth_flow(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     config_entry.add_to_hass(hass)
@@ -178,7 +178,7 @@ async def test_device_trigger_reauth_flow(
 
 @pytest.mark.usefixtures("mock_default_requests")
 async def test_device_unknown_error(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Unknown errors are handled."""
     config_entry.add_to_hass(hass)
