@@ -455,6 +455,17 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "artsound": {
+      "name": "ArtSound",
+      "integrations": {
+        "artsound": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "linkplay",
+          "name": "ArtSound"
+        }
+      }
+    },
     "aruba": {
       "name": "Aruba",
       "integrations": {

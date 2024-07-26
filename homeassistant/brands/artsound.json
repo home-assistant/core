@@ -1,0 +1,5 @@
+{
+  "domain": "artsound",
+  "name": "ArtSound",
+  "integrations": ["artsound"]
+}
