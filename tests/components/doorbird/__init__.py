@@ -65,6 +65,7 @@ def get_mock_doorbird_api(
     type(doorbirdapi_mock).energize_relay = AsyncMock(return_value=True)
     type(doorbirdapi_mock).turn_light_on = AsyncMock(return_value=True)
     type(doorbirdapi_mock).delete_favorite = AsyncMock(return_value=True)
+    type(doorbirdapi_mock).get_image = AsyncMock(return_value=b"image")
     type(doorbirdapi_mock).doorbell_state = AsyncMock(
         side_effect=mock_unauthorized_exception()
     )
