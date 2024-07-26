@@ -98,8 +98,8 @@ async def test_setup_invalid(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        "It seems like you are using the nightly version of Mealie, nightly versions could have changes that stop this integration working"
-        in caplog.text
+        "It seems like you are using the nightly version of Mealie, nightly"
+        " versions could have changes that stop this integration working" in caplog.text
     )
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
