@@ -161,7 +161,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.5
+aioairzone-cloud==0.6.1
 
 # homeassistant.components.airzone
 aioairzone==0.8.1
@@ -533,7 +533,7 @@ boschshcpy==0.2.91
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==0.7.1
+bring-api==0.8.1
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -1232,7 +1232,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.5
 
 # homeassistant.components.opower
-opower==0.5.2
+opower==0.6.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2139,7 +2139,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.7.2
+tesla-fleet-api==0.7.3
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
