@@ -32,6 +32,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfInformation,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -68,7 +69,7 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         key=AZD_MEMORY_FREE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="free_memory",
     ),
