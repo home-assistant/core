@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 
 from deebot_client.command import Command
-from deebot_client.commands.json import SetVolume
-from deebot_client.events import Event, VolumeEvent
+from deebot_client.commands.json import SetCutDirection, SetVolume
+from deebot_client.events import CutDirectionEvent, Event, VolumeEvent
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -53,8 +53,23 @@ class NumberTestCase:
                 ),
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                NumberTestCase(
+                    "number.goat_g1_volume", VolumeEvent(3, 11), "3", 7, SetVolume(7)
+                ),
+                NumberTestCase(
+                    "number.goat_g1_cut_direction",
+                    CutDirectionEvent(45),
+                    "45",
+                    97,
+                    SetCutDirection(97),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_number_entities(
     hass: HomeAssistant,
@@ -107,8 +122,12 @@ async def test_number_entities(
             "yna5x1",
             ["number.ozmo_950_volume"],
         ),
+        (
+            "5xu9h3",
+            ["number.goat_g1_cut_direction", "number.goat_g1_volume"],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_disabled_by_default_number_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]
@@ -125,6 +144,7 @@ async def test_disabled_by_default_number_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(("device_fixture"), ["yna5x1"])
 async def test_volume_maximum(
     hass: HomeAssistant,
     controller: EcovacsController,
@@ -147,3 +167,27 @@ async def test_volume_maximum(
     assert (state := hass.states.get(entity_id))
     assert state.state == "10"
     assert state.attributes["max"] == 20
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(("device_fixture"), ["5xu9h3"])
+async def test_cut_direction_bounds(
+    hass: HomeAssistant,
+    controller: EcovacsController,
+) -> None:
+    """Test cut direction bounds."""
+    device = controller.devices[0]
+    event_bus = device.events
+    entity_id = "number.goat_g1_cut_direction"
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes["max"] == 180
+
+    event_bus.notify(CutDirectionEvent(45))
+    await block_till_done(hass, event_bus)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "45"
+
+    event_bus.notify(CutDirectionEvent(17))
+    await block_till_done(hass, event_bus)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "17"
