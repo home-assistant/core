@@ -47,7 +47,7 @@ async def test_get_deconz_api_fails(
     with patch("pydeconz.DeconzSession.refresh_state", side_effect=side_effect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    assert config_entry.state == state
+    assert config_entry.state is state
 
 
 async def test_setup_entry_fails_trigger_reauth_flow(
@@ -63,7 +63,7 @@ async def test_setup_entry_fails_trigger_reauth_flow(
     ):
         config_entry = await config_entry_factory()
         mock_flow_init.assert_called_once()
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_multiple_gateways(
