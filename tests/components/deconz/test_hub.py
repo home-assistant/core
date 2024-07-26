@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import pydeconz
 from pydeconz.websocket import State
 import pytest
 from syrupy import SnapshotAssertion
@@ -10,8 +9,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components import ssdp
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
-from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.deconz.hub import DeconzHub, get_deconz_api
+from homeassistant.components.deconz.hub import DeconzHub
 from homeassistant.components.ssdp import (
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
@@ -110,37 +108,3 @@ async def test_reset_after_successful_setup(
     await hass.async_block_till_done()
 
     assert result is True
-
-
-async def test_get_deconz_api(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Successful call."""
-    with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
-        assert await get_deconz_api(hass, config_entry)
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "raised_exception"),
-    [
-        (TimeoutError, CannotConnect),
-        (pydeconz.RequestError, CannotConnect),
-        (pydeconz.ResponseError, CannotConnect),
-        (pydeconz.Unauthorized, AuthenticationRequired),
-    ],
-)
-async def test_get_deconz_api_fails(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    side_effect: Exception,
-    raised_exception: Exception,
-) -> None:
-    """Failed call."""
-    with (
-        patch(
-            "pydeconz.DeconzSession.refresh_state",
-            side_effect=side_effect,
-        ),
-        pytest.raises(raised_exception),
-    ):
-        assert await get_deconz_api(hass, config_entry)
