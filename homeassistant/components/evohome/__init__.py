@@ -141,9 +141,9 @@ class EvoSession:
             client_v2._user_account = None  # noqa: SLF001
 
         await client_v2.login()
-        await self.save_auth_tokens()
 
-        self.client_v2 = client_v2
+        self.client_v2 = client_v2  # only update the attr if login() was successful
+        await self.save_auth_tokens()
 
         self.client_v1 = ev1.EvohomeClient(
             username,
