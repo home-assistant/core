@@ -149,7 +149,10 @@ async def async_setup_platform(
     # Get the Infos for configuration from config (YAML) or Discovery
     config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
     # Async check if the Receivers are there in the network
-    zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
+    try:
+        zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
+    except requests.exceptions.ConnectionError as ex:
+        raise PlatformNotReady(f"Issue while connecting to {config_info.name}") from ex
 
     entities = []
     for zctrl in zone_ctrls:
