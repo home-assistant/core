@@ -20,6 +20,7 @@ from typing import Any, Final, TypedDict, final
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+from strip_markdown import strip_markdown
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
@@ -77,6 +78,7 @@ __all__ = [
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_RATE",
     "ATTR_PREFERRED_SAMPLE_CHANNELS",
+    "ATTR_MARKDOWN",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
@@ -95,6 +97,7 @@ ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
+ATTR_MARKDOWN = "markdown"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
@@ -741,6 +744,10 @@ class SpeechManager:
             sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
         else:
             sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
+
+        # Strip markdown unless the engine can handle it
+        if ATTR_MARKDOWN not in supported_options:
+            message = strip_markdown(message)
 
         async def get_tts_data() -> str:
             """Handle data available."""

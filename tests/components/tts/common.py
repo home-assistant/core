@@ -127,6 +127,8 @@ async def retrieve_media(
 class BaseProvider:
     """Test speech API provider."""
 
+    _attr_supported_options = ["voice", "age"]
+
     def __init__(self, lang: str) -> None:
         """Initialize test provider."""
         self._lang = lang
@@ -154,7 +156,7 @@ class BaseProvider:
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
-        return ["voice", "age"]
+        return self._attr_supported_options
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]

@@ -54,6 +54,7 @@ pyudev==0.24.1
 PyYAML==6.0.1
 requests==2.32.3
 SQLAlchemy==2.0.31
+strip-markdown==1.3
 typing-extensions>=4.12.2,<5.0
 ulid-transform==0.10.1
 urllib3>=1.26.5,<2

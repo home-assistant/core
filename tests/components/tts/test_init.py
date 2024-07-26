@@ -1416,6 +1416,88 @@ async def test_support_options(hass: HomeAssistant, setup: str, engine_id: str) 
         await tts.async_support_options(hass, "non-existing")
 
 
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data", "engine_id"),
+    [
+        (
+            "mock_setup",
+            "test_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone *at the door*.",
+            },
+            "test",
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.test",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone *at the door*.",
+            },
+            "tts.test",
+        ),
+    ],
+    indirect=["setup"],
+)
+@pytest.mark.parametrize(
+    "markdown",
+    [(False,), (True,)],
+)
+async def test_strip_markdown(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+    engine_id: str,
+    markdown: bool,
+) -> None:
+    """Test markdown removal."""
+    engine_instance = tts.helper.get_engine_instance(hass, engine_id)
+    engine_instance.async_get_tts_audio = MagicMock(
+        side_effect=engine_instance.async_get_tts_audio
+    )
+
+    if markdown:
+        engine_instance._attr_supported_options.append("markdown")
+        message = "There is someone *at the door*."
+    else:
+        message = "There is someone at the door."
+
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    assert (
+        await tts.async_support_options(hass, engine_id, "en_US", {"markdown": True})
+        == markdown
+    )
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
+        "/api/tts_proxy/6efd8032e09a61e42cc739afee2ec4902996440c"
+        f"_en-us_-_{engine_id}.mp3"
+    )
+    await hass.async_block_till_done()
+
+    assert engine_instance.async_get_tts_audio.call_count == 1
+
+    try:
+        engine_instance.async_get_tts_audio.assert_called_once_with(
+            message, "en_US", {}
+        )
+    except AssertionError:
+        engine_instance.async_get_tts_audio.assert_called_once_with(
+            message=message, language="en_US", options={}
+        )
+
+
 async def test_legacy_fetching_in_async(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
