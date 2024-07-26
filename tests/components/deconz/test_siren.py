@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -31,9 +30,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_sirens(
     hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
     light_ws_data: WebsocketDataType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
