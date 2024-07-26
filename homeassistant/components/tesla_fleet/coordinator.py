@@ -1,7 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
 from datetime import datetime, timedelta
-import time
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
@@ -14,6 +13,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
+from tesla_fleet_api.ratecalculator import RateCalculator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -51,46 +51,6 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     return result
 
 
-class RateCalculator:
-    """Calculate the consumption and remaining rate of a rate limit."""
-
-    def __init__(self, limit, period=86400, min_wait=0, max_wait=None) -> None:
-        """Initialize the rate calculator."""
-        self.limit: int = limit
-        self.period: int = period
-        self.history: list[int] = []
-        self.start = time.time()
-        self.min_wait = min_wait
-        self.max_wait = max_wait if max_wait is not None else period
-
-    def constrain(self, value: float) -> float:
-        """Constrain a value between min and max."""
-        return max(self.min_wait, min(self.max_wait, value))
-
-    def consume(self) -> None:
-        """Consume a unit of the rate limit."""
-        return self.history.append(int(time.time()) + 1)
-
-    def calculate(self) -> float:
-        """Return the ideal delay to avoid rate limiting."""
-
-        count = len(self.history)
-        if count == 0:
-            return self.min_wait
-
-        now = int(time.time())
-
-        while self.history and self.history[0] < now - self.period:
-            self.history.pop(0)
-
-        remaining = self.limit - count
-
-        if remaining <= 0:
-            return self.constrain(self.history[abs(remaining)] + self.period - now)
-
-        return self.constrain(self.period / remaining / 5)
-
-
 class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the TeslaFleet API."""
 
@@ -113,7 +73,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = datetime.now()
-        self.rate = RateCalculator(200, 86400, VEHICLE_INTERVAL_SECONDS, 3600)
+        self.rate = RateCalculator(200, 86400, VEHICLE_INTERVAL_SECONDS, 3600, 5)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
