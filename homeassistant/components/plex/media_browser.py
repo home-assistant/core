@@ -132,13 +132,12 @@ def browse_media(  # noqa: C901
             "children": [],
         }
         for playlist in plex_server.playlists():
-            if playlist.type != "directory":
-                if playlist.playlistType != "audio" and platform == "sonos":
-                    continue
-                try:
-                    playlists_info["children"].append(item_payload(playlist))
-                except UnknownMediaType:
-                    continue
+            if playlist.type != "directory" and playlist.playlistType != "audio" and platform == "sonos":
+                continue
+            try:
+                playlists_info["children"].append(item_payload(playlist))
+            except UnknownMediaType:
+                continue
         response = BrowseMedia(**playlists_info)
         response.children_media_class = MediaClass.PLAYLIST
         return response
