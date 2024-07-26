@@ -17,7 +17,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -52,9 +51,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_power_plugs(
     hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:

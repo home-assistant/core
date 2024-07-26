@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -36,9 +35,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_lock_from_light(
     hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:
@@ -100,9 +99,9 @@ async def test_lock_from_light(
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_lock_from_sensor(
     hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
 ) -> None:
