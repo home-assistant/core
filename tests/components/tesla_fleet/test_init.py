@@ -1,5 +1,7 @@
 """Test the Tesla Fleet init."""
 
+from unittest.mock import AsyncMock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -126,8 +128,8 @@ async def test_vehicle_refresh_offline(
 async def test_vehicle_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_vehicle_data,
-    side_effect,
+    mock_vehicle_data: AsyncMock,
+    side_effect: TeslaFleetError,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh makes entity unavailable."""
