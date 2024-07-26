@@ -10,7 +10,6 @@ from homeassistant.components.deconz import (
 )
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .conftest import ConfigEntryFactoryType
@@ -18,7 +17,7 @@ from .conftest import ConfigEntryFactoryType
 from tests.common import MockConfigEntry
 
 
-async def setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def setup_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test that setup entry works."""
     with (
         patch.object(DeconzHub, "async_setup", return_value=True),
@@ -28,7 +27,7 @@ async def setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def test_setup_entry_successful(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test setup entry is successful."""
     assert hass.data[DECONZ_DOMAIN]
@@ -86,7 +85,7 @@ async def test_setup_entry_multiple_gateways(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test being able to unload an entry."""
     assert hass.data[DECONZ_DOMAIN]

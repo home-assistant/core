@@ -9,7 +9,6 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_LOCKED,
@@ -20,6 +19,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -43,7 +43,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 )
 async def test_lock_from_light(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:
@@ -118,7 +118,7 @@ async def test_lock_from_light(
 )
 async def test_lock_from_sensor(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
 ) -> None:

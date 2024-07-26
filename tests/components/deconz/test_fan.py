@@ -13,7 +13,6 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
@@ -24,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import WebsocketDataType
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
 from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -57,7 +56,7 @@ async def test_fans(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_factory: ConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:
