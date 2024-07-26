@@ -344,8 +344,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Check if source is line-in or optical and progress should be updated
         if self._source_change.id in (
-            BangOlufsenSource.LINE_IN,
-            BangOlufsenSource.SPDIF,
+            BangOlufsenSource.LINE_IN.id,
+            BangOlufsenSource.SPDIF.id,
         ):
             self._playback_progress = PlaybackProgress(progress=0)
 
@@ -381,7 +381,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def media_content_type(self) -> str:
         """Return the current media type."""
         # Hard to determine content type
-        if self.source == BangOlufsenSource.URI_STREAMER:
+        if self._source_change.id == BangOlufsenSource.URI_STREAMER.id:
             return MediaType.URL
         return MediaType.MUSIC
 
@@ -437,33 +437,31 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Try to fix some of the source_change chromecast weirdness.
         if hasattr(self._playback_metadata, "title"):
             # source_change is chromecast but line in is selected.
-            if self._playback_metadata.title == BangOlufsenSource.LINE_IN:
-                return BangOlufsenSource.LINE_IN
+            if self._playback_metadata.title == BangOlufsenSource.LINE_IN.name:
+                return BangOlufsenSource.LINE_IN.name
 
             # source_change is chromecast but bluetooth is selected.
-            if self._playback_metadata.title == BangOlufsenSource.BLUETOOTH:
-                return BangOlufsenSource.BLUETOOTH
+            if self._playback_metadata.title == BangOlufsenSource.BLUETOOTH.name:
+                return BangOlufsenSource.BLUETOOTH.name
 
             # source_change is line in, bluetooth or optical but stale metadata is sent through the WebSocket,
             # And the source has not changed.
             if self._source_change.id in (
-                BangOlufsenSource.BLUETOOTH,
-                BangOlufsenSource.LINE_IN,
-                BangOlufsenSource.SPDIF,
+                BangOlufsenSource.BLUETOOTH.id,
+                BangOlufsenSource.LINE_IN.id,
+                BangOlufsenSource.SPDIF.id,
             ):
-                return BangOlufsenSource.CHROMECAST
+                return BangOlufsenSource.CHROMECAST.name
 
         # source_change is chromecast and there is metadata but no artwork. Bluetooth does support metadata but not artwork
         # So i assume that it is bluetooth and not chromecast
         if (
             hasattr(self._playback_metadata, "art")
             and self._playback_metadata.art is not None
+            and len(self._playback_metadata.art) == 0
+            and self._source_change.id == BangOlufsenSource.CHROMECAST.id
         ):
-            if (
-                len(self._playback_metadata.art) == 0
-                and self._source_change.name == BangOlufsenSource.BLUETOOTH
-            ):
-                return BangOlufsenSource.BLUETOOTH
+            return BangOlufsenSource.BLUETOOTH.name
 
         return self._source_change.name
 
@@ -506,7 +504,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
-        if self.source == BangOlufsenSource.DEEZER:
+        if self._source_change.id == BangOlufsenSource.DEEZER.id:
             await self._client.seek_to_position(position_ms=int(position * 1000))
             # Try to prevent the playback progress from bouncing in the UI.
             self._attr_media_position_updated_at = utcnow()

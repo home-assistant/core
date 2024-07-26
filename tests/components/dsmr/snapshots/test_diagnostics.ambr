@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'CURRENT_ELECTRICITY_USAGE': dict({
+        'unit': 'W',
+        'value': 0.0,
+      }),
+      'ELECTRICITY_ACTIVE_TARIFF': dict({
+        'unit': '',
+        'value': '0001',
+      }),
+      'GAS_METER_READING': dict({
+        'datetime': '2019-03-03T19:43:33+00:00',
+        'unit': 'm³',
+        'value': 745.695,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'dsmr_version': '2.2',
+        'port': '/dev/ttyUSB0',
+        'serial_id': '1234',
+        'serial_id_gas': '5678',
+      }),
+      'unique_id': '/dev/ttyUSB0',
+    }),
+  })
+# ---

@@ -10,27 +10,17 @@ from mozart_api.models import Source, SourceArray, SourceTypeEnum
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 
 
-class BangOlufsenSource(StrEnum):
-    """Enum used for associating device source ids with friendly names. May not include all sources."""
+class BangOlufsenSource:
+    """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER = "Audio Streamer"
-    BLUETOOTH = "Bluetooth"
-    AIR_PLAY = "AirPlay"
-    CHROMECAST = "Chromecast built-in"
-    SPOTIFY = "Spotify Connect"
-    GENERATOR = "Tone Generator"
-    LINE_IN = "Line-In"
-    SPDIF = "Optical"
-    NET_RADIO = "B&O Radio"
-    LOCAL = "Local"
-    DLNA = "DLNA"
-    QPLAY = "QPlay"
-    WPL = "Wireless Powerlink"
-    PL = "Powerlink"
-    TV = "TV"
-    DEEZER = "Deezer"
-    BEOLINK = "Networklink"
-    TIDAL_CONNECT = "Tidal Connect"
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
+    BLUETOOTH: Final[Source] = Source(name="Bluetooth", id="bluetooth")
+    CHROMECAST: Final[Source] = Source(name="Chromecast built-in", id="chromeCast")
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
+    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
+    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {

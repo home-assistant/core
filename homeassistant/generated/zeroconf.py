@@ -589,6 +589,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",

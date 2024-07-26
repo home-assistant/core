@@ -43,7 +43,7 @@ class TadoHomeEntity(Entity):
         self.home_id = tado.home_id
         self._attr_device_info = DeviceInfo(
             configuration_url="https://app.tado.com",
-            identifiers={(DOMAIN, tado.home_id)},
+            identifiers={(DOMAIN, str(tado.home_id))},
             manufacturer=DEFAULT_NAME,
             model=TADO_HOME,
             name=tado.home_name,

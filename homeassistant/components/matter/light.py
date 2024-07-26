@@ -357,6 +357,16 @@ class MatterLight(MatterEntity, LightEntity):
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
+                    min_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_min_mireds = min_mireds
+                    max_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_max_mireds = max_mireds
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
