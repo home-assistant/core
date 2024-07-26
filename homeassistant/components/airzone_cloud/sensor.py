@@ -107,6 +107,7 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        icon="mdi:signal",
         key=AZD_THERMOSTAT_COVERAGE,
         name="Signal Percentage",
         native_unit_of_measurement=PERCENTAGE,
