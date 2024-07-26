@@ -66,7 +66,6 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
     def __init__(self, device: Light, hub: DeconzHub) -> None:
         """Set up fan."""
         super().__init__(device, hub)
-        _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
         if device.fan_speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = device.fan_speed
 
