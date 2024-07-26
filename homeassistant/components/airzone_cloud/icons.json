@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "thermostat_coverage": {
+        "default": "mdi:signal"
+      }
+    }
+  }
+}
