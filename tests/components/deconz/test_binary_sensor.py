@@ -14,14 +14,13 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
-from tests.common import snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 TEST_DATA = [
     (  # Alarm binary sensor
@@ -409,7 +408,9 @@ async def test_not_allow_clip_sensor(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
-async def test_allow_clip_sensor(hass: HomeAssistant, config_entry_setup) -> None:
+async def test_allow_clip_sensor(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
     """Test that CLIP sensors can be allowed."""
 
     assert len(hass.states.async_all()) == 3
@@ -470,7 +471,7 @@ async def test_add_new_binary_sensor(
 async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     deconz_payload: dict[str, Any],
     mock_requests: Callable[[str], None],
     sensor_ws_data: WebsocketDataType,
@@ -515,7 +516,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
 async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     deconz_payload: dict[str, Any],
     mock_requests: Callable[[str], None],
     sensor_ws_data: WebsocketDataType,

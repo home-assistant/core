@@ -5,7 +5,6 @@ from collections.abc import Callable
 import pytest
 
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -18,6 +17,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -34,7 +34,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 )
 async def test_sirens(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     light_ws_data: WebsocketDataType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:

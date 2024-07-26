@@ -17,7 +17,6 @@ from homeassistant.components.deconz.deconz_event import (
     CONF_DECONZ_RELATIVE_ROTARY_EVENT,
     RELATIVE_ROTARY_DECONZ_TO_EVENT,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_EVENT,
@@ -30,7 +29,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import WebsocketDataType
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.mark.parametrize(
@@ -78,7 +77,7 @@ from tests.common import async_capture_events
 async def test_deconz_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz events."""
@@ -246,7 +245,7 @@ async def test_deconz_events(
 async def test_deconz_alarm_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz alarm events."""
@@ -380,7 +379,7 @@ async def test_deconz_alarm_events(
 async def test_deconz_presence_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz presence events."""
@@ -468,7 +467,7 @@ async def test_deconz_presence_events(
 async def test_deconz_relative_rotary_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz relative rotary events."""
@@ -549,7 +548,7 @@ async def test_deconz_relative_rotary_events(
 async def test_deconz_events_bad_unique_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify no devices are created if unique id is bad or missing."""
     assert len(hass.states.async_all()) == 1
