@@ -13,6 +13,7 @@ from typing import Any, Final
 import evohomeasync as ev1
 from evohomeasync.schema import SZ_SESSION_ID
 import evohomeasync2 as evo
+from evohomeasync2 import EvohomeClient
 from evohomeasync2.schema.const import (
     SZ_AUTO_WITH_RESET,
     SZ_CAN_BE_TEMPORARY,
@@ -24,22 +25,20 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -51,6 +50,7 @@ from .const import (
     ATTR_SYSTEM_MODE,
     ATTR_ZONE_TEMP,
     CONF_LOCATION_IDX,
+    CONF_REFRESH_TOKEN,
     DOMAIN,
     REFRESH_TOKEN,
     SCAN_INTERVAL_DEFAULT,
@@ -60,7 +60,7 @@ from .const import (
     USER_DATA,
     EvoService,
 )
-from .coordinator import EvoBroker
+from .coordinator import EvoBroker, EvohomeDataUpdateCoordinator
 from .helpers import dt_aware_to_naive, dt_local_to_aware, handle_evo_exception
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,31 +103,22 @@ PLATFORMS = [Platform.CLIMATE, Platform.WATER_HEATER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up integration."""
-    sess = EvoSession(hass)
+    session = async_get_clientsession(hass)
 
-    try:
-        await sess.authenticate(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
-
-    except evo.AuthenticationFailed as err:
-        handle_evo_exception(err)
-        raise ConfigEntryError("Auth failed") from err
-
-    broker = EvoBroker(sess)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{DOMAIN}_coordinator",
-        update_interval=SCAN_INTERVAL_DEFAULT,
-        update_method=broker.async_update,
+    client = EvohomeClient(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        refresh_token=entry.data[CONF_REFRESH_TOKEN],
+        access_token=entry.data[CONF_ACCESS_TOKEN],
+        access_token_expires=entry.data[ACCESS_TOKEN_EXPIRES],
+        session=session,
     )
+
+    coordinator = EvohomeDataUpdateCoordinator(hass, client)
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN] = {"broker": broker, "coordinator": coordinator}
+    hass.data[DOMAIN] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -253,51 +244,7 @@ class EvoSession:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
 
-    sess = EvoSession(hass)
-
-    try:
-        await sess.authenticate(
-            config[DOMAIN][CONF_USERNAME],
-            config[DOMAIN][CONF_PASSWORD],
-        )
-
-    except evo.AuthenticationFailed as err:
-        handle_evo_exception(err)
-        return False
-
-    finally:
-        config[DOMAIN][CONF_PASSWORD] = "REDACTED"
-
-    broker = EvoBroker(sess)
-
-    if not broker.validate_location(
-        config[DOMAIN][CONF_LOCATION_IDX],
-    ):
-        return False
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{DOMAIN}_coordinator",
-        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        update_method=broker.async_update,
-    )
-
-    hass.data[DOMAIN] = {"broker": broker, "coordinator": coordinator}
-
-    # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
-    coordinator.async_add_listener(lambda: None)
-    await coordinator.async_refresh()  # get initial state
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
-    if broker.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
-        )
-
-    setup_service_functions(hass, broker)
+    # Should import the flow
 
     return True
 
