@@ -52,10 +52,9 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
         entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize the switch."""
-        self.current_switch_state: bool = False
-        self.last_switch_time: datetime = datetime.now()
-
         super().__init__(coordinator, ain, entity_description)
+        self.current_switch_state: bool = self.data.switch_state
+        self.last_switch_time: datetime = datetime.now()
 
     @property
     def is_on(self) -> bool:
