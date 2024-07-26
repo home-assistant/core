@@ -143,6 +143,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                         flag=roborock_map.mapFlag, name=map_name, rooms={}
                     )
                     update = True
+                elif (
+                    roborock_map.mapFlag in self.maps
+                    and self.maps[roborock_map.mapFlag].name != map_name
+                ):
+                    _LOGGER.warning(
+                        "A map's name has updated, please reload the integration"
+                    )
         if update:
             await self.roborock_storage.async_save_map_info(self.duid, self.maps)
 

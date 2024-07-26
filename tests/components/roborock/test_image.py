@@ -143,7 +143,7 @@ async def test_fail_to_save_image(
     """Test that we gracefully handle a oserror on saving an image."""
     # Reload the config entry so that the map is saved in storage and entities exist.
     with patch(
-        "homeassistant.components.roborock.roborock_storage.Path.open",
+        "homeassistant.components.roborock.roborock_storage.Path.write_bytes",
         side_effect=OSError,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -169,7 +169,7 @@ async def test_fail_to_load_image(
             "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
         ) as parse_map,
         patch(
-            "homeassistant.components.roborock.roborock_storage.Path.open",
+            "homeassistant.components.roborock.roborock_storage.Path.read_bytes",
             side_effect=OSError,
         ),
     ):

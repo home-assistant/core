@@ -57,6 +57,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
     _attr_has_entity_name = True
     image_last_updated: datetime
+    _attr_name: str
 
     def __init__(
         self,
@@ -72,7 +73,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """Initialize a Roborock map."""
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
-        self._attr_name: str = map_name
+        self._attr_name = map_name
         self.parser = RoborockMapDataParser(
             ColorsPalette(), Sizes(), drawables, ImageConfig(), []
         )

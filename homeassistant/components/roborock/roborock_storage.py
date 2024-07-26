@@ -13,7 +13,7 @@ from .models import RoborockMapInfo
 
 STORAGE_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
-MAP_PATH = Path(f"{DOMAIN}/maps")
+MAP_PATH = f"{DOMAIN}/maps"
 MAP_UPDATE_FREQUENCY = 3600  # Only save the map once every hour.
 
 
@@ -35,6 +35,7 @@ class RoborockStorage:
         self._entry_id = entry_id
         self._store: Store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{self._entry_id}")
         self._map_info: dict[str, dict[int, RoborockMapInfo]] = {}
+        self._path_prefix = Path(self._hass.config.path(MAP_PATH)) / self._entry_id
 
     def _should_update(self, map_entry: RoborockMapEntry | None) -> bool:
         return (
@@ -42,13 +43,10 @@ class RoborockStorage:
             or dt_util.utcnow().timestamp() - map_entry.time > MAP_UPDATE_FREQUENCY
         )
 
-    def _get_map_filename(self, map_name: str) -> Path:
-        return Path(self._hass.config.path(f"{MAP_PATH}/{self._entry_id}/{map_name}"))
-
     def exec_load_maps(self, map_names: list[str]) -> list[bytes | None]:
         """Load map content. Should be called in executor thread."""
         filenames: list[tuple[str, Path]] = [
-            (map_name, self._get_map_filename(map_name)) for map_name in map_names
+            (map_name, self._path_prefix / map_name) for map_name in map_names
         ]
 
         results: list[bytes | None] = []
@@ -77,8 +75,7 @@ class RoborockStorage:
         """Help other functions save the map. Should not be called separately."""
         filename.parent.mkdir(parents=True, exist_ok=True)
         _LOGGER.debug("Saving event map to disk store: %s", filename)
-        with filename.open("wb") as stored_map:
-            stored_map.write(content)
+        filename.write_bytes(content)
 
     async def async_save_map(self, map_name: str, content: bytes) -> None:
         """Write map if it should be updated."""
@@ -90,7 +87,7 @@ class RoborockStorage:
         def save_maps(maps: list[tuple[str, bytes]]) -> None:
             for map_name, content in maps:
                 map_entry = self._data.get(map_name)
-                filename = self._get_map_filename(map_name)
+                filename = self._path_prefix / map_name
                 self._data[map_name] = RoborockMapEntry(
                     map_name, dt_util.utcnow().timestamp()
                 )
@@ -108,9 +105,8 @@ class RoborockStorage:
         """Remove all maps associated with a config entry."""
 
         def remove_maps() -> None:
-            directory = Path(self._hass.config.path(f"{MAP_PATH}/{self._entry_id}"))
             try:
-                for filename in directory.iterdir():
+                for filename in self._path_prefix.iterdir():
                     _LOGGER.debug("Removing map from disk store: %s", filename)
                     filename.unlink()
             except OSError as err:
