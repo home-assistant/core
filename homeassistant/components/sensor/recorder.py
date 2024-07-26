@@ -37,7 +37,6 @@ from homeassistant.helpers.entity import entity_sources
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -763,7 +762,7 @@ def update_statistics_issues(
         instance, session, statistic_source=RECORDER_DOMAIN
     )
 
-    run_callback_threadsafe(hass.loop, _update_issues, hass, sensor_states, metadatas)
+    hass.loop.call_soon_threadsafe(_update_issues, hass, sensor_states, metadatas)
 
 
 def validate_statistics(
@@ -779,7 +778,7 @@ def validate_statistics(
     instance = get_instance(hass)
     entity_filter = instance.entity_filter
 
-    run_callback_threadsafe(hass.loop, _update_issues, hass, sensor_states, metadatas)
+    hass.loop.call_soon_threadsafe(_update_issues, hass, sensor_states, metadatas)
 
     for state in sensor_states:
         entity_id = state.entity_id
