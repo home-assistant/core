@@ -27,7 +27,7 @@ class SimpleFinEntity(CoordinatorEntity[SimpleFinDataUpdateCoordinator]):
         self.entity_description = description
         self._account_id = account.id
 
-        self._attr_unique_id = f"{description.key}_{account.id}"
+        self._attr_unique_id = f"account_{account.id}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, account.id)},
