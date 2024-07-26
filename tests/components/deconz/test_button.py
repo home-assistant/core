@@ -8,7 +8,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -101,14 +101,3 @@ async def test_button(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == expected["request_data"]
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

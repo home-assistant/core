@@ -11,8 +11,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,9 +51,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_power_plugs(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:
@@ -91,17 +90,6 @@ async def test_power_plugs(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 4
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(

@@ -12,6 +12,8 @@ from aioairzone_cloud.const import (
     AZD_AQ_PM_10,
     AZD_HUMIDITY,
     AZD_TEMP,
+    AZD_THERMOSTAT_BATTERY,
+    AZD_THERMOSTAT_COVERAGE,
     AZD_WEBSERVERS,
     AZD_WIFI_RSSI,
     AZD_ZONES,
@@ -97,6 +99,20 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         key=AZD_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.BATTERY,
+        key=AZD_THERMOSTAT_BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_THERMOSTAT_COVERAGE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="thermostat_coverage",
     ),
 )
 
