@@ -37,6 +37,11 @@
           "auto": "Auto"
         }
       }
+    },
+    "sensor": {
+      "thermostat_coverage": {
+        "name": "Signal percentage"
+      }
     }
   }
 }
