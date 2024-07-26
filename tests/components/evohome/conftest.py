@@ -16,11 +16,6 @@ from .const import ACCESS_TOKEN, REFRESH_TOKEN
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
-def location_status_fixture(loc_id: str) -> JsonObjectType:
-    """Load JSON for the status of a specific location."""
-    return load_json_object_fixture(f"status_{loc_id}.json", DOMAIN)
-
-
 def user_account_config_fixture() -> JsonObjectType:
     """Load JSON for the config of a user's account."""
     return load_json_object_fixture("user_account.json", DOMAIN)
@@ -29,6 +24,11 @@ def user_account_config_fixture() -> JsonObjectType:
 def user_locations_config_fixture() -> JsonObjectType:
     """Load JSON for the config of a user's installation (a list of locations)."""
     return load_json_array_fixture("user_locations.json", DOMAIN)
+
+
+def location_status_fixture(loc_id: str) -> JsonObjectType:
+    """Load JSON for the status of a specific location."""
+    return load_json_object_fixture(f"status_{loc_id}.json", DOMAIN)
 
 
 def dhw_schedule_fixture() -> JsonObjectType:
@@ -58,16 +58,10 @@ async def mock_get(self: Broker, url: str, **kwargs: Any) -> JsonObjectType:
         if "location" in url:  #                   location/{id}/status
             return location_status_fixture("2738909")
 
-    elif url.startswith("domesticHotWater"):
-        if "schedule" in url:  #                   domesticHotWater/{id}/schedule
+    elif "schedule" in url:
+        if url.startswith("domesticHotWater"):  #  domesticHotWater/{id}/schedule
             return dhw_schedule_fixture()
-        if "status" in url:  #                     domesticHotWater/{id}/status
-            return location_status_fixture("2738909")
-
-    elif url.startswith("temperatureZone"):
-        if "schedule" in url:  #                   temperatureZone/{id}/schedule
+        if url.startswith("temperatureZone"):  #   temperatureZone/{id}/schedule
             return zone_schedule_fixture()
-        if "status" in url:  #                     temperatureZone/{id}/status
-            return location_status_fixture("2738909")
 
     pytest.xfail(f"Unexpected URL: {url}")
