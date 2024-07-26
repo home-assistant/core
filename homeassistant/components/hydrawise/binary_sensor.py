@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from pydrawise import Zone
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -15,7 +16,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
@@ -102,7 +102,9 @@ async def async_setup_entry(
             if "rain sensor" in sensor.model.name.lower()
         )
         entities.extend(
-            HydrawiseBinarySensor(coordinator, description, controller, zone_id=zone.id)
+            HydrawiseZoneBinarySensor(
+                coordinator, description, controller, zone_id=zone.id
+            )
             for zone in controller.zones
             for description in ZONE_BINARY_SENSORS
         )
@@ -131,22 +133,26 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
             return True
         return super().available
 
+
+class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
+    """A binary sensor for a Hydrawise irrigation zone.
+
+    This is only used for irrigation zones, as they have special methods for
+    service actions that don't apply to other binary sensors.
+    """
+
+    zone: Zone
+
     async def start_watering(self, duration: int | None = None) -> None:
         """Start watering in the irrigation zone."""
-        if self.zone is None:
-            raise ServiceValidationError("Must be called on a zone")
         await self.coordinator.api.start_zone(
             self.zone, custom_run_duration=int((duration or 0) * 60)
         )
 
     async def suspend(self, until: datetime) -> None:
         """Suspend automatic watering in the irrigation zone."""
-        if self.zone is None:
-            raise ServiceValidationError("Must be called on a zone")
         await self.coordinator.api.suspend_zone(self.zone, until=until)
 
     async def resume(self) -> None:
         """Resume automatic watering in the irrigation zone."""
-        if self.zone is None:
-            raise ServiceValidationError("Must be called on a zone")
         await self.coordinator.api.resume_zone(self.zone)
