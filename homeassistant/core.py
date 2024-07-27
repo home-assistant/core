@@ -1667,11 +1667,10 @@ class EventBus:
         group: ListenGroup = ListenGroup.FIRST,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type."""
-        listen_group = (
-            self._first_listeners
-            if group is ListenGroup.FIRST
-            else self._last_listeners
-        )
+        if group is ListenGroup.FIRST:
+            listen_group = self._first_listeners
+        else:
+            listen_group = self._last_listeners
         listen_group[event_type].append(filterable_job)
         return functools.partial(
             self._async_remove_listener, listen_group, event_type, filterable_job
