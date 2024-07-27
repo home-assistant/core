@@ -75,7 +75,7 @@ def check_remote_service_call(
             or c.request.url.path.startswith(
                 VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
             )
-            or c.request.url.path.endswith(VEHICLE_POI_URL.rsplit("/", maxsplit=1))
+            or c.request.url.path.endswith(VEHICLE_POI_URL.rsplit("/", maxsplit=1)[-1])
         )
         assert (
             first_remote_service_call.request.url.path.endswith(remote_service) is True
