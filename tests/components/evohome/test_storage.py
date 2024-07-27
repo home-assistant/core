@@ -70,7 +70,7 @@ DOMAIN_STORAGE_BASE: Final = {
 async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> MagicMock:
     """Return the EvohomeClient instantiated via async_setup_component()."""
 
-    mock_client: EvohomeClient = None
+    mock_client: EvohomeClient | None = None
 
     def capture_client(*args: Any, **kwargs: Any):
         nonlocal mock_client
@@ -90,7 +90,7 @@ async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> Mag
         assert MockEvohomeClient.call_args.args[1] == test_config[CONF_PASSWORD]
 
         assert isinstance(MockEvohomeClient.call_args.kwargs["session"], ClientSession)
-        assert mock_client.account_info is not None
+        assert mock_client and mock_client.account_info is not None
 
         return MockEvohomeClient
 
