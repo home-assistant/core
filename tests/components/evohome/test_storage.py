@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Final
+from typing import Any, Final, NotRequired, TypedDict
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientSession
@@ -24,6 +24,23 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import mock_get
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
+
+
+class _SessionDataT(TypedDict):
+    sessionId: str
+
+
+class _TokenStoreT(TypedDict):
+    username: str
+    refresh_token: str
+    access_token: str
+    access_token_expires: str
+    user_data: NotRequired[_SessionDataT]
+
+
+class _EmptyStoreT(TypedDict):
+    pass
+
 
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
@@ -46,7 +63,7 @@ SZ_ACCESS_TOKEN_EXPIRES: Final = "access_token_expires"
 SZ_USER_DATA: Final = "user_data"
 
 
-TEST_DATA: Final[dict[str, dict]] = {
+TEST_DATA: Final[dict[str, _TokenStoreT]] = {
     "sans_session_id": {
         SZ_USERNAME: USERNAME_SAME,
         SZ_REFRESH_TOKEN: REFRESH_TOKEN,
@@ -63,7 +80,7 @@ TEST_DATA: Final[dict[str, dict]] = {
 }
 
 
-TEST_DATA_NULL: Final[dict[str, Any]] = {
+TEST_DATA_NULL: Final[dict[str, _EmptyStoreT | None]] = {
     "store_is_absent": None,
     "store_was_reset": {},
 }
@@ -89,18 +106,18 @@ async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> Mag
 
     with patch(
         "homeassistant.components.evohome.evo.EvohomeClient", side_effect=capture_client
-    ) as mock_client_class:
+    ) as mock_class:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
         await hass.async_block_till_done()
 
-        mock_client_class.assert_called_once()
-        assert mock_client_class.call_args.args[0] == test_config[CONF_USERNAME]
-        assert mock_client_class.call_args.args[1] == test_config[CONF_PASSWORD]
+        mock_class.assert_called_once()
+        assert mock_class.call_args.args[0] == test_config[CONF_USERNAME]
+        assert mock_class.call_args.args[1] == test_config[CONF_PASSWORD]
 
-        assert isinstance(mock_client_class.call_args.kwargs["session"], ClientSession)
+        assert isinstance(mock_class.call_args.kwargs["session"], ClientSession)
         assert mock_client and mock_client.account_info is not None
 
-        return mock_client_class
+        return mock_class
 
 
 @pytest.mark.parametrize("idx", TEST_DATA_NULL)
@@ -121,7 +138,7 @@ async def test_auth_tokens_null(
     assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client_class.call_args.kwarg
 
     # Confirm the expected tokens were cached to storage...
-    data = hass_storage[DOMAIN]["data"]
+    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
@@ -147,7 +164,7 @@ async def test_auth_tokens_same(
     ] == dt_aware_to_naive(ACCESS_TOKEN_EXP_DTM)
 
     # Confirm the expected tokens were cached to storage...
-    data = hass_storage[DOMAIN]["data"]
+    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -177,7 +194,7 @@ async def test_auth_tokens_past(
     # assert mock_client_class.call_args.kwargs[SZ_ACCESS_TOKEN_EXPIRES] == dt_aware_to_naive(ACCESS_TOKEN_EXP_DTM)
 
     # Confirm the expected tokens were cached to storage...
-    data = hass_storage[DOMAIN]["data"]
+    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -203,7 +220,7 @@ async def test_auth_tokens_diff(
     assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client_class.call_args.kwarg
 
     # Confirm the expected tokens were cached to storage...
-    data = hass_storage[DOMAIN]["data"]
+    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_DIFF
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
