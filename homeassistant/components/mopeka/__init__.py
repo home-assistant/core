@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from mopeka_iot_ble import MopekaIOTBluetoothDeviceData
-from mopeka_iot_ble.mopeka_types import MediumType
+from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -29,8 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bo
     """Set up Mopeka BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
-    data = MopekaIOTBluetoothDeviceData()
-    data.medium_type = MediumType(entry.data.get(MEDIUM_TYPE))
+    data = MopekaIOTBluetoothDeviceData(MediumType(entry.data.get(MEDIUM_TYPE)))
     coordinator = entry.runtime_data = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,

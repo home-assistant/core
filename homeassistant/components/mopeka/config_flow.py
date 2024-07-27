@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
-from mopeka_iot_ble.mopeka_types import MediumType
+from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
