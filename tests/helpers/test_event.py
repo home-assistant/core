@@ -4946,7 +4946,7 @@ async def test_async_track_state_change_event_runs_last(hass: HomeAssistant) -> 
 
     @ha.callback
     def state_changed(source: str, event: Event[EventStateChangedData]) -> None:
-        calls.append(source, event)
+        calls.append((source, event))
 
     async_track_state_change_event(
         hass, ["light.bowl"], partial(state_changed, "async_track_state_change_event")
@@ -4957,17 +4957,17 @@ async def test_async_track_state_change_event_runs_last(hass: HomeAssistant) -> 
     hass.bus.async_listen(
         ha.EVENT_STATE_CHANGED,
         partial(state_changed, "async_listen_last"),
-        order=ha.ListenGroup.LAST,
+        group=ha.ListenGroup.LAST,
     )
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[0][0] == "async_listen"
-    assert calls[0][1]["entity_id"] == "light.bowl"
+    assert calls[0][1].data["entity_id"] == "light.bowl"
 
     assert calls[1][0] == "async_track_state_change_event"
-    assert calls[1][1]["entity_id"] == "light.bowl"
+    assert calls[1][1].data["entity_id"] == "light.bowl"
 
     assert calls[2][0] == "async_listen_last"
-    assert calls[2][1]["entity_id"] == "light.bowl"
+    assert calls[2][1].data["entity_id"] == "light.bowl"
