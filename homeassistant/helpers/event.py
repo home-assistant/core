@@ -96,7 +96,12 @@ _StateEventDataT = TypeVar("_StateEventDataT", bound=EventStateEventData)
 
 
 class CallbackOrder(enum.Enum):
-    """Order to execute callbacks in."""
+    """Order to execute callbacks in.
+
+    If FIRST is used, the callback will be inserted at the beginning of the list.
+
+    If LAST is used, the callback will be appended to the end of the list.
+    """
 
     FIRST = "FIRST"
     LAST = "LAST"
