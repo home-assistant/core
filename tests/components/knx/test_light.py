@@ -7,7 +7,7 @@ from datetime import timedelta
 from xknx.core import XknxConnectionState
 from xknx.devices.light import Light as XknxLight
 
-from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS
+from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS, Platform
 from homeassistant.components.knx.schema import LightSchema
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,6 +21,7 @@ from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_fire_time_changed
@@ -1151,3 +1152,26 @@ async def test_light_rgbw_brightness(hass: HomeAssistant, knx: KNXTestKit) -> No
     knx.assert_state(
         "light.test", STATE_ON, brightness=50, rgbw_color=(100, 200, 55, 12)
     )
+
+
+async def test_light_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a switch."""
+    await knx.setup_integration({})
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "_light_color_mode_schema": "default",
+            "sync_state": True,
+        },
+    )
+    # created entity sends read-request to KNX bus
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+    state = hass.states.get("light.test")
+    assert state.state is STATE_ON

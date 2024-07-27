@@ -9,7 +9,11 @@ from typing import Generic
 from deebot_client.capabilities import CapabilitySet
 from deebot_client.events import CleanCountEvent, VolumeEvent
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -59,6 +63,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         native_min_value=1,
         native_max_value=4,
         native_step=1.0,
+        mode=NumberMode.BOX,
     ),
 )
 

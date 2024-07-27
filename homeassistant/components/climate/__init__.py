@@ -125,6 +125,11 @@ DEFAULT_MAX_HUMIDITY = 99
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
 
+# Can be removed in 2025.1 after deprecation period of the new feature flags
+CHECK_TURN_ON_OFF_FEATURE_FLAG = (
+    ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+)
+
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
@@ -378,6 +383,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         supported_features = self.supported_features
+        if supported_features & CHECK_TURN_ON_OFF_FEATURE_FLAG:
+            # The entity supports both turn_on and turn_off, the backwards compatibility
+            # checks are not needed
+            return
+
         if not supported_features & ClimateEntityFeature.TURN_OFF and (
             type(self).async_turn_off is not ClimateEntity.async_turn_off
             or type(self).turn_off is not ClimateEntity.turn_off

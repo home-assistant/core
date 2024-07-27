@@ -73,7 +73,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 }
             ),
-            cv.has_at_least_one_key("auth"),
+            cv.has_at_least_one_key(CONF_API_KEY, CONF_PASSWORD),
         )
     },
     extra=vol.ALLOW_EXTRA,

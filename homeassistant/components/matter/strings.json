@@ -73,12 +73,18 @@
           "event_type": {
             "state": {
               "switch_latched": "Switch latched",
-              "initial_press": "Initial press",
-              "long_press": "Long press",
-              "short_release": "Short release",
-              "long_release": "Long release",
-              "multi_press_ongoing": "Multi press ongoing",
-              "multi_press_complete": "Multi press complete"
+              "initial_press": "Pressed",
+              "long_press": "Held down",
+              "short_release": "Released after being pressed",
+              "long_release": "Released after being held down",
+              "multi_press_1": "Pressed once",
+              "multi_press_2": "Pressed twice",
+              "multi_press_3": "Pressed 3 times",
+              "multi_press_4": "Pressed 4 times",
+              "multi_press_5": "Pressed 5 times",
+              "multi_press_6": "Pressed 6 times",
+              "multi_press_7": "Pressed 7 times",
+              "multi_press_8": "Pressed 8 times"
             }
           }
         }
@@ -151,6 +157,9 @@
       },
       "hepa_filter_condition": {
         "name": "Hepa filter condition"
+      },
+      "switch_current_position": {
+        "name": "Current switch position"
       }
     },
     "switch": {

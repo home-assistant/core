@@ -149,6 +149,30 @@
           "inactive": "Inactive",
           "standby": "Standby"
         }
+      },
+      "front_left_current_pressure": {
+        "name": "Front left tire pressure"
+      },
+      "front_right_current_pressure": {
+        "name": "Front right tire pressure"
+      },
+      "rear_left_current_pressure": {
+        "name": "Rear left tire pressure"
+      },
+      "rear_right_current_pressure": {
+        "name": "Rear right tire pressure"
+      },
+      "front_left_target_pressure": {
+        "name": "Front left target pressure"
+      },
+      "front_right_target_pressure": {
+        "name": "Front right target pressure"
+      },
+      "rear_left_target_pressure": {
+        "name": "Rear left target pressure"
+      },
+      "rear_right_target_pressure": {
+        "name": "Rear right target pressure"
       }
     },
     "switch": {
@@ -167,6 +191,11 @@
         "north_america": "North America",
         "rest_of_world": "Rest of world"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_poi": {
+      "message": "Invalid data for point of interest: {poi_exception}"
     }
   }
 }
