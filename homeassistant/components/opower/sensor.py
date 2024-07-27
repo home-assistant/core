@@ -230,12 +230,12 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
     entity_description: OpowerEntityDescription
 
     def __init__(
-        self,
-        coordinator: OpowerCoordinator,
-        description: OpowerEntityDescription,
-        utility_account_id: str,
-        device: DeviceInfo,
-        device_id: str,
+            self,
+            coordinator: OpowerCoordinator,
+            description: OpowerEntityDescription,
+            utility_account_id: str,
+            device: DeviceInfo,
+            device_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -243,6 +243,11 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_device_info = device
         self.utility_account_id = utility_account_id
+
+        if description.device_class == SensorDeviceClass.MONETARY:
+            ha_currency = coordinator.hass.config.currency
+            if ha_currency:
+                self._attr_native_unit_of_measurement = ha_currency
 
     @property
     def native_value(self) -> StateType:
