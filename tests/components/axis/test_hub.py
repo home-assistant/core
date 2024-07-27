@@ -200,7 +200,10 @@ async def test_get_axis_api_errors(
 ) -> None:
     """Failed setup schedules a retry of setup."""
     config_entry.add_to_hass(hass)
-    with patch("axis.interfaces.vapix.Vapix.initialize", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.axis.hub.api.axis.interfaces.vapix.Vapix.initialize",
+        side_effect=side_effect,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert config_entry.state == state
