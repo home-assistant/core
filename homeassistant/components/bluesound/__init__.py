@@ -34,6 +34,8 @@ type BluesoundConfigEntry = ConfigEntry[BluesoundData]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = []
     setup_services(hass)
 
     return True

@@ -152,7 +152,7 @@ def _add_player(
 
         hass.data[DATA_BLUESOUND].append(bluesound_player)
         async_add_entities([bluesound_player])
-        _LOGGER.info("Added device with name: %s", bluesound_player.name)
+        _LOGGER.debug("Added device with name: %s", bluesound_player.name)
 
         if hass.is_running:
             _start_polling()
@@ -178,7 +178,10 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
-        if result["type"] == FlowResultType.ABORT:
+        if (
+            result["type"] == FlowResultType.ABORT
+            and result["reason"] == "cannot_connect"
+        ):
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -247,10 +250,8 @@ async def async_setup_entry(
     if DATA_BLUESOUND not in hass.data:
         hass.data[DATA_BLUESOUND] = []
 
-    host = config_entry.data.get(CONF_HOST)
-    port = config_entry.data.get(CONF_PORT)
-    assert isinstance(host, str)
-    assert isinstance(port, int)
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
 
     _add_player(
         hass,
