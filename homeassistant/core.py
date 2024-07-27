@@ -1675,12 +1675,6 @@ class EventBus:
         return self._async_listen_filterable_job(event_type, filterable_job, group)
 
     @callback
-    def _build_all_listeners(self) -> None:
-        """Rebuild the listeners dictionary."""
-        for event_type in set(chain(self._first_listeners, self._last_listeners)):
-            self._build_event_type_listeners(event_type)
-
-    @callback
     def _async_remove_all_listener(
         self, filterable_job: _FilterableJobType[Any]
     ) -> None:
@@ -1709,6 +1703,12 @@ class EventBus:
         return functools.partial(
             self._async_remove_listener, listen_group, event_type, filterable_job
         )
+
+    @callback
+    def _build_all_listeners(self) -> None:
+        """Rebuild the listeners dictionary."""
+        for event_type in set(chain(self._first_listeners, self._last_listeners)):
+            self._build_event_type_listeners(event_type)
 
     def _build_event_type_listeners(self, event_type: EventType[Any] | str) -> None:
         """Build the listeners list for a specific event type."""
