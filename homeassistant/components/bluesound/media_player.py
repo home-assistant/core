@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import Any, NamedTuple
+from typing import Any
 
 from aiohttp.client_exceptions import ClientError
 from pyblu import Input, Player, Preset, Status, SyncStatus
@@ -25,7 +26,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_HOSTS,
     CONF_NAME,
@@ -33,12 +33,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -49,20 +44,10 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 from . import BluesoundConfigEntry
-from .const import (
-    DOMAIN,
-    INTEGRATION_TITLE,
-    SERVICE_CLEAR_TIMER,
-    SERVICE_JOIN,
-    SERVICE_SET_TIMER,
-    SERVICE_UNJOIN,
-)
+from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN, INTEGRATION_TITLE
 from .utils import format_unique_id
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_BLUESOUND_GROUP = "bluesound_group"
-ATTR_MASTER = "master"
 
 DATA_BLUESOUND = DOMAIN
 DEFAULT_PORT = 11000
@@ -90,29 +75,6 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         )
     }
 )
-
-
-class ServiceMethodDetails(NamedTuple):
-    """Details for SERVICE_TO_METHOD mapping."""
-
-    method: str
-    schema: vol.Schema
-
-
-BS_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-BS_JOIN_SCHEMA = BS_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
-
-SERVICE_TO_METHOD = {
-    SERVICE_JOIN: ServiceMethodDetails(method="async_join", schema=BS_JOIN_SCHEMA),
-    SERVICE_UNJOIN: ServiceMethodDetails(method="async_unjoin", schema=BS_SCHEMA),
-    SERVICE_SET_TIMER: ServiceMethodDetails(
-        method="async_increase_timer", schema=BS_SCHEMA
-    ),
-    SERVICE_CLEAR_TIMER: ServiceMethodDetails(
-        method="async_clear_timer", schema=BS_SCHEMA
-    ),
-}
 
 
 def _add_player(
@@ -178,7 +140,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
                 hass,
                 DOMAIN,
                 f"deprecated_yaml_import_issue_{result['reason']}",
-                breaks_in_ha_version="2025.1.0",
+                breaks_in_ha_version="2025.2.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
@@ -194,7 +156,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.1.0",
+        breaks_in_ha_version="2025.2.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -230,35 +192,6 @@ async def async_setup_entry(
     )
 
 
-def setup_services(hass: HomeAssistant) -> None:
-    """Set up services for Bluesound component."""
-
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Map services to method of Bluesound devices."""
-        if not (method := SERVICE_TO_METHOD.get(service.service)):
-            return
-
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-        if entity_ids := service.data.get(ATTR_ENTITY_ID):
-            target_players = [
-                player
-                for player in hass.data[DATA_BLUESOUND]
-                if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DATA_BLUESOUND]
-
-        for player in target_players:
-            await getattr(player, method.method)(**params)
-
-    for service, method in SERVICE_TO_METHOD.items():
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=method.schema
-        )
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -266,8 +199,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None,
 ) -> None:
     """Trigger import flows."""
-    setup_services(hass)
-
     hosts = config.get(CONF_HOSTS, [])
     for host in hosts:
         import_data = {
@@ -289,7 +220,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         port: int,
         player: Player,
         sync_status: SyncStatus,
-        init_callback=None,
+        init_callback: Callable[[], None],
     ) -> None:
         """Initialize the media player."""
         self.host = host

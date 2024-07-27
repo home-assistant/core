@@ -84,11 +84,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             format_unique_id(sync_status.mac, import_data[CONF_PORT])
         )
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: import_data[CONF_HOST],
-            }
-        )
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=sync_status.name,
