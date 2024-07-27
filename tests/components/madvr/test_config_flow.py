@@ -184,8 +184,8 @@ async def test_reconfigure_flow(
 
     # unique id should remain unchanged with new device, should fail
     assert mock_config_entry.unique_id == MOCK_MAC
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "set_up_new_device"}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "set_up_new_device"
 
 
 async def test_reconfigure_flow_errors(

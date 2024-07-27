@@ -81,14 +81,8 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                             _LOGGER.debug(
                                 "MAC address changed from %s to %s", existing_mac, mac
                             )
-                            errors["base"] = "set_up_new_device"
-                            return self.async_show_form(
-                                step_id=step_id,
-                                data_schema=self.add_suggested_values_to_schema(
-                                    STEP_USER_DATA_SCHEMA, user_input
-                                ),
-                                errors=errors,
-                            )
+                            # abort
+                            return self.async_abort(reason="set_up_new_device")
 
                     if step_id == "reconfigure":
                         if TYPE_CHECKING:
