@@ -1574,12 +1574,12 @@ class EventBus:
                 "Bus:Handling %s", _event_repr(event_type, origin, event_data)
             )
 
-        event: Event[_DataT] | None = None
         if not (listeners := self._listeners.get(event_type)):
             if event_type in EVENTS_EXCLUDED_FROM_MATCH_ALL:
                 return
             listeners = self._match_all_listeners
 
+        event: Event[_DataT] | None = None
         for job, event_filter in listeners.copy():
             if event_filter is not None:
                 try:
