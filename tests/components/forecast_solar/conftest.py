@@ -1,11 +1,11 @@
 """Fixtures for Forecast.Solar integration tests."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from forecast_solar import models
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,

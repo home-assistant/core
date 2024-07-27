@@ -1,9 +1,9 @@
 """Test mailbox."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.asterisk_mbox import DOMAIN
 from homeassistant.core import HomeAssistant

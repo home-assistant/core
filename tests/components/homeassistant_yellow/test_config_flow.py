@@ -1,9 +1,9 @@
 """Test the Home Assistant Yellow config flow."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
 from homeassistant.components.homeassistant_yellow.const import DOMAIN

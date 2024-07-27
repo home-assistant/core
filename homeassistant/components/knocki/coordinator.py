@@ -3,7 +3,7 @@
 from knocki import Event, KnockiClient, KnockiConnectionError, Trigger
 
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -33,7 +33,7 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[int, Trigger]]):
         }
         removed_triggers = self._known_triggers - current_triggers
         for trigger in removed_triggers:
-            await self._delete_device(trigger)
+            self._async_delete_device(trigger)
         self._known_triggers = current_triggers
         return {trigger.details.trigger_id: trigger for trigger in triggers}
 
@@ -46,7 +46,8 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[int, Trigger]]):
             (event.payload.device_id, event.payload.details.trigger_id)
         )
 
-    async def _delete_device(self, trigger: tuple[str, int]) -> None:
+    @callback
+    def _async_delete_device(self, trigger: tuple[str, int]) -> None:
         """Delete a device from the coordinator."""
         device_id, trigger_id = trigger
         entity_registry = er.async_get(self.hass)

@@ -1,9 +1,9 @@
 """Tests for the flux_led integration."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

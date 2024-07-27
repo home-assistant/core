@@ -102,17 +102,31 @@ async def async_setup_entry(
     entry: AirzoneConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
+    """Add Airzone climate from a config_entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AirzoneClimate(
-            coordinator,
-            entry,
-            system_zone_id,
-            zone_data,
-        )
-        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
-    )
+
+    added_zones: set[str] = set()
+
+    def _async_entity_listener() -> None:
+        """Handle additions of climate."""
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            async_add_entities(
+                AirzoneClimate(
+                    coordinator,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+            )
+            added_zones.update(new_zones)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):

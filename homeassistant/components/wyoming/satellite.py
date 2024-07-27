@@ -1,6 +1,7 @@
 """Support for Wyoming satellite services."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 import io
 import logging
 import time
@@ -8,7 +9,6 @@ from typing import Final
 from uuid import uuid4
 import wave
 
-from typing_extensions import AsyncGenerator
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient

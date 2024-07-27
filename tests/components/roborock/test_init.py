@@ -176,3 +176,21 @@ async def test_not_supported_protocol(
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
     assert "because its protocol version random" in caplog.text
+
+
+async def test_not_supported_a01_device(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    mock_roborock_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we output a message on incorrect category."""
+    home_data_copy = deepcopy(HOME_DATA)
+    home_data_copy.products[2].category = "random"
+    with patch(
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        return_value=home_data_copy,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+    assert "The device you added is not yet supported" in caplog.text

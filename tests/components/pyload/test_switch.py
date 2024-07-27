@@ -1,6 +1,6 @@
 """Tests for the pyLoad Switches."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, call, patch
 
 from pyloadapi import CannotConnect, InvalidAuth
@@ -38,7 +38,7 @@ API_CALL = {
 
 
 @pytest.fixture(autouse=True)
-async def switch_only() -> AsyncGenerator[None, None]:
+def switch_only() -> Generator[None]:
     """Enable only the switch platform."""
     with patch(
         "homeassistant.components.pyload.PLATFORMS",

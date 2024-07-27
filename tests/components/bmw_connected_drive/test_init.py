@@ -85,7 +85,7 @@ async def test_migrate_options_from_data(hass: HomeAssistant) -> None:
                 "disabled_by": None,
             },
             f"{VIN}-charging_level_hv",
-            f"{VIN}-remaining_battery_percent",
+            f"{VIN}-fuel_and_battery.remaining_battery_percent",
         ),
         (
             {
@@ -96,7 +96,18 @@ async def test_migrate_options_from_data(hass: HomeAssistant) -> None:
                 "disabled_by": None,
             },
             f"{VIN}-remaining_range_total",
-            f"{VIN}-remaining_range_total",
+            f"{VIN}-fuel_and_battery.remaining_range_total",
+        ),
+        (
+            {
+                "domain": SENSOR_DOMAIN,
+                "platform": BMW_DOMAIN,
+                "unique_id": f"{VIN}-mileage",
+                "suggested_object_id": f"{VEHICLE_NAME} mileage",
+                "disabled_by": None,
+            },
+            f"{VIN}-mileage",
+            f"{VIN}-mileage",
         ),
     ],
 )
@@ -143,7 +154,7 @@ async def test_migrate_unique_ids(
                 "disabled_by": None,
             },
             f"{VIN}-charging_level_hv",
-            f"{VIN}-remaining_battery_percent",
+            f"{VIN}-fuel_and_battery.remaining_battery_percent",
         ),
     ],
 )
@@ -163,8 +174,8 @@ async def test_dont_migrate_unique_ids(
     existing_entity = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         BMW_DOMAIN,
-        unique_id=f"{VIN}-remaining_battery_percent",
-        suggested_object_id=f"{VEHICLE_NAME} remaining_battery_percent",
+        unique_id=f"{VIN}-fuel_and_battery.remaining_battery_percent",
+        suggested_object_id=f"{VEHICLE_NAME} fuel_and_battery.remaining_battery_percent",
         config_entry=mock_config_entry,
     )
 

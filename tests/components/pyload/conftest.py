@@ -1,7 +1,7 @@
 """Fixtures for pyLoad integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyloadapi.types import LoginResponse, StatusServerResponse
 import pytest
@@ -72,7 +72,7 @@ def pyload_config() -> ConfigType:
 
 
 @pytest.fixture
-def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
+def mock_pyloadapi() -> Generator[MagicMock]:
     """Mock PyLoadAPI."""
     with (
         patch(

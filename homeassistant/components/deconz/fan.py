@@ -56,12 +56,16 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
     TYPE = DOMAIN
     _default_on_speed = LightFanSpeed.PERCENT_50
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: Light, hub: DeconzHub) -> None:
         """Set up fan."""
         super().__init__(device, hub)
-        _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
         if device.fan_speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = device.fan_speed
 

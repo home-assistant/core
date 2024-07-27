@@ -40,7 +40,6 @@ class UpnpDataUpdateCoordinator(
 
     def register_entity(self, key: str, entity_id: str) -> Callable[[], None]:
         """Register an entity."""
-        # self._entities.append(entity)
         self._features_by_entity_id[key].add(entity_id)
 
         def unregister_entity() -> None:
@@ -59,7 +58,7 @@ class UpnpDataUpdateCoordinator(
             # Must be the first update, no entities attached/enabled yet.
             return None
 
-        return list(self._features_by_entity_id.keys())
+        return list(self._features_by_entity_id)
 
     async def _async_update_data(
         self,

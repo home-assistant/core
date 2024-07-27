@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
 from dataclasses import fields
 import datetime
@@ -13,7 +13,6 @@ from threading import Event
 from typing import Any, Self, cast
 
 import av
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -46,6 +45,14 @@ NEGATIVE_INF = float("-inf")
 
 class StreamWorkerError(Exception):
     """An exception thrown while processing a stream."""
+
+
+def redact_av_error_string(err: av.AVError) -> str:
+    """Return an error string with credentials redacted from the url."""
+    parts = [str(err.type), err.strerror]
+    if err.filename is not None:
+        parts.append(redact_credentials(err.filename))
+    return ", ".join(parts)
 
 
 class StreamEndedError(StreamWorkerError):
@@ -517,8 +524,7 @@ def stream_worker(
         container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
-            f"Error opening stream ({err.type}, {err.strerror})"
-            f" {redact_credentials(str(source))}"
+            f"Error opening stream ({redact_av_error_string(err)})"
         ) from err
     try:
         video_stream = container.streams.video[0]
@@ -593,7 +599,7 @@ def stream_worker(
     except av.AVError as ex:
         container.close()
         raise StreamWorkerError(
-            f"Error demuxing stream while finding first packet: {ex!s}"
+            f"Error demuxing stream while finding first packet ({redact_av_error_string(ex)})"
         ) from ex
 
     muxer = StreamMuxer(
@@ -618,7 +624,9 @@ def stream_worker(
             except StopIteration as ex:
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.AVError as ex:
-                raise StreamWorkerError(f"Error demuxing stream: {ex!s}") from ex
+                raise StreamWorkerError(
+                    f"Error demuxing stream ({redact_av_error_string(ex)})"
+                ) from ex
 
             muxer.mux_packet(packet)
 
