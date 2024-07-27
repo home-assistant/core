@@ -1759,7 +1759,7 @@ pysqueezebox==0.7.1
 pysuez==0.2.0
 
 # homeassistant.components.switchbee
-pyswitchbee==1.8.0
+pyswitchbee==1.8.3
 
 # homeassistant.components.tautulli
 pytautulli==23.1.1
