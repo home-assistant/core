@@ -14,15 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    discovery,
-)
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers import config_validation as cv, discovery
 
-from .const import CONF_BASE_URL, DEFAULT_NAME, DOMAIN, INSTANCE_VERSION
-from .utils import construct_mastodon_username, create_mastodon_client
+from .const import CONF_BASE_URL, DOMAIN
+from .utils import create_mastodon_client
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -31,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mastodon from a config entry."""
 
     try:
-        client, instance, account = await hass.async_add_executor_job(
+        client, _, _ = await hass.async_add_executor_job(
             setup_mastodon,
             entry,
         )
@@ -40,21 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Failed to connect") from ex
 
     assert entry.unique_id
-
-    name = "Mastodon"
-    if entry.title != DEFAULT_NAME:
-        name = f"Mastodon {entry.title}"
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        entry_type=DeviceEntryType.SERVICE,
-        manufacturer="Mastodon gGmbH",
-        model=construct_mastodon_username(instance, account),
-        sw_version=instance[INSTANCE_VERSION],
-        name=name,
-    )
 
     await discovery.async_load_platform(
         hass,

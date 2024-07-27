@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "base_url": "[%key:common::config_flow::data::url%]",
           "client_id": "Client Key",
           "client_secret": "Client Secret",

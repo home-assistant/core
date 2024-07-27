@@ -23,14 +23,16 @@ async def test_notify(
     """Test sending a message."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.services.has_service(NOTIFY_DOMAIN, "mastodon")
+    assert hass.services.has_service(NOTIFY_DOMAIN, "trwnh_mastodon_social")
 
-    response = await hass.services.async_call(
+    await hass.services.async_call(
         NOTIFY_DOMAIN,
-        "mastodon",
+        "trwnh_mastodon_social",
         {
             "message": "test toot",
         },
         blocking=True,
+        return_response=False,
     )
-    assert response is None
+
+    assert mock_mastodon_client.status_post.assert_called_once

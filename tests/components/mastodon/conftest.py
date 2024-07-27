@@ -3,18 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.smhi.common import AsyncMock
 
 
@@ -38,11 +32,9 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
         ) as mock_client,
     ):
         client = mock_client.return_value
-        client.instance.return_value = ORJSONDecoder(dict).decode(
-            load_fixture("instance.json", DOMAIN)
-        )
-        client.account_verify_credentials.return_value = ORJSONDecoder(dict).decode(
-            load_fixture("account_verify_credentials.json", DOMAIN)
+        client.instance.return_value = load_json_object_fixture("instance.json", DOMAIN)
+        client.account_verify_credentials.return_value = load_json_object_fixture(
+            "account_verify_credentials.json", DOMAIN
         )
         client.status_post.return_value = None
         yield client
@@ -53,13 +45,12 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Mastodon",
+        title="@trwnh@mastodon.social",
         data={
             CONF_BASE_URL: "https://mastodon.social",
             CONF_CLIENT_ID: "client_id",
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
-            CONF_NAME: "trwnh",
         },
         entry_id="01J35M4AH9HYRC2V0G6RNVNWJH",
         unique_id="client_id",
