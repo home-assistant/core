@@ -42,7 +42,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as player:
                 try:
                     sync_status = await player.sync_status(timeout=1)
-                except (TimeoutError, aiohttp.ClientConnectorError):
+                except (TimeoutError, aiohttp.ClientError):
                     errors["base"] = "cannot_connect"
                 else:
                     await self.async_set_unique_id(
@@ -78,7 +78,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         ) as player:
             try:
                 sync_status = await player.sync_status(timeout=1)
-            except (TimeoutError, aiohttp.ClientConnectorError):
+            except (TimeoutError, aiohttp.ClientError):
                 return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(
@@ -99,7 +99,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             async with Player(discovery_info.host, session=session) as player:
                 sync_status = await player.sync_status(timeout=1)
-        except (TimeoutError, aiohttp.ClientConnectorError):
+        except (TimeoutError, aiohttp.ClientError):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(format_unique_id(sync_status.mac, DEFAULT_PORT))

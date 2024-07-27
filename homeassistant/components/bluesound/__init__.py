@@ -24,17 +24,21 @@ from .const import (
     SERVICE_UNJOIN,
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 BS_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 BS_JOIN_SCHEMA = BS_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
 
+
 class ServiceMethodDetails(NamedTuple):
     """Details for SERVICE_TO_METHOD mapping."""
 
     method: str
     schema: vol.Schema
+
 
 SERVICE_TO_METHOD = {
     SERVICE_JOIN: ServiceMethodDetails(method="async_join", schema=BS_JOIN_SCHEMA),
@@ -47,6 +51,7 @@ SERVICE_TO_METHOD = {
     ),
 }
 
+
 @dataclass
 class BluesoundData:
     """Bluesound data class."""
@@ -56,6 +61,7 @@ class BluesoundData:
 
 
 type BluesoundConfigEntry = ConfigEntry[BluesoundData]
+
 
 def setup_services(hass: HomeAssistant) -> None:
     """Set up services for Bluesound component."""
@@ -70,9 +76,7 @@ def setup_services(hass: HomeAssistant) -> None:
         }
         if entity_ids := service.data.get(ATTR_ENTITY_ID):
             target_players = [
-                player
-                for player in hass.data[DOMAIN]
-                if player.entity_id in entity_ids
+                player for player in hass.data[DOMAIN] if player.entity_id in entity_ids
             ]
         else:
             target_players = hass.data[DOMAIN]
@@ -88,7 +92,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound."""
-    await setup_services(hass)
+    setup_services(hass)
 
     return True
 
@@ -104,8 +108,10 @@ async def async_setup_entry(
         try:
             sync_status = await player.sync_status(timeout=1)
         except TimeoutError as ex:
-            raise ConfigEntryNotReady(f"Timeout while connecting to {host}:{port}") from ex
-        except aiohttp.ClientConnectorError as ex:
+            raise ConfigEntryNotReady(
+                f"Timeout while connecting to {host}:{port}"
+            ) from ex
+        except aiohttp.ClientError as ex:
             raise ConfigEntryNotReady(f"Error connecting to {host}:{port}") from ex
 
     config_entry.runtime_data = BluesoundData(player, sync_status)
