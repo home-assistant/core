@@ -1677,18 +1677,8 @@ class EventBus:
     @callback
     def _rebuild_all_listeners(self) -> None:
         """Rebuild the listeners dictionary."""
-        match_all_listeners = self._match_all_listeners
         for this_event_type in set(chain(self._first_listeners, self._last_listeners)):
-            if this_event_type in EVENTS_EXCLUDED_FROM_MATCH_ALL:
-                event_match_all_listeners = EMPTY_LIST
-            else:
-                event_match_all_listeners = match_all_listeners
-
-            self._listeners[this_event_type] = (
-                event_match_all_listeners
-                + self._first_listeners.get(this_event_type, EMPTY_LIST)
-                + self._last_listeners.get(this_event_type, EMPTY_LIST)
-            )
+            self._rebuild_event_type_listeners(this_event_type)
 
     @callback
     def _async_remove_all_listener(
