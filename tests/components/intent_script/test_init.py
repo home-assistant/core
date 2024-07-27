@@ -3,11 +3,11 @@
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.intent_script import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, get_fixture_path
 

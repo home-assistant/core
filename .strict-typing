@@ -255,6 +255,7 @@ homeassistant.components.integration.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
 homeassistant.components.ios.*
+homeassistant.components.iotty.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.islamic_prayer_times.*
@@ -279,6 +280,7 @@ homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
 homeassistant.components.linear_garage_door.*
+homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
