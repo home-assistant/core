@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 import logging
 from typing import Any
 
 from elevenlabs.client import AsyncElevenLabs
 from elevenlabs.core import ApiError
-from elevenlabs.types import Model, Voice
+from elevenlabs.types import Model, Voice as ElevenLabsVoice
 
-from homeassistant.components import tts
-from homeassistant.components.tts import TextToSpeechEntity
+from homeassistant.components.tts import (
+    ATTR_VOICE,
+    TextToSpeechEntity,
+    TtsAudioType,
+    Voice,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -50,12 +53,13 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_options = [ATTR_VOICE]
 
     def __init__(
         self,
         client: AsyncElevenLabs,
         model: Model,
-        voices: list[Voice],
+        voices: list[ElevenLabsVoice],
         default_voice_id: str,
         entry_id: str,
     ) -> None:
@@ -64,7 +68,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         self._model = model
         self._default_voice_id = default_voice_id
         self._voices = sorted(
-            (tts.Voice(v.voice_id, v.name) for v in voices if v.name),
+            (Voice(v.voice_id, v.name) for v in voices if v.name),
             key=lambda v: v.name,
         )
         # Default voice first
@@ -78,32 +82,21 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             identifiers={(DOMAIN, entry_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_default_language = self.supported_languages[0]
+        self._attr_supported_languages = [
+            lang.language_id for lang in self._model.languages or []
+        ]
 
-    @cached_property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return self.supported_languages[0]
-
-    @cached_property
-    def supported_languages(self) -> list[str]:
-        """Return list of supported languages."""
-        return [lang.language_id for lang in self._model.languages or []]
-
-    @property
-    def supported_options(self) -> list[str]:
-        """Return a list of supported options."""
-        return [tts.ATTR_VOICE]
-
-    def async_get_supported_voices(self, language: str) -> list[tts.Voice]:
+    def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._voices
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
-    ) -> tts.TtsAudioType:
+    ) -> TtsAudioType:
         """Load tts audio file from the engine."""
         _LOGGER.debug("Getting TTS audio for %s", message)
-        voice_id = options[tts.ATTR_VOICE]
+        voice_id = options[ATTR_VOICE]
         try:
             audio = await self._client.generate(
                 text=message,
