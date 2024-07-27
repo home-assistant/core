@@ -1,9 +1,10 @@
 """The tests for evohome storage load & save."""
 
-from datetime import datetime
 from typing import Any, Final
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientSession
+from evohomeasync2 import EvohomeClient
 import pytest
 
 from homeassistant.components.evohome import (
@@ -12,7 +13,6 @@ from homeassistant.components.evohome import (
     DOMAIN,
     STORAGE_KEY,
     STORAGE_VER,
-    EvoBroker,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -21,137 +21,143 @@ import homeassistant.util.dt as dt_util
 from .conftest import mock_get
 from .const import (
     ACCESS_TOKEN,
-    ACCESS_TOKEN_EXPIRES_DTM,
-    ACCESS_TOKEN_EXPIRES_STR,
-    DIFF_EMAIL_ADDRESS,
+    ACCESS_TOKEN_EXP_DTM,
+    ACCESS_TOKEN_EXP_STR,
+    ACCESS_TOKEN_EXP_TZ,
     REFRESH_TOKEN,
-    SAME_EMAIL_ADDRESS,
     SESSION_ID,
+    USERNAME_DIFF,
+    USERNAME_SAME,
 )
 
 TEST_CONFIG: Final = {
-    CONF_USERNAME: SAME_EMAIL_ADDRESS,
+    CONF_USERNAME: USERNAME_SAME,
     CONF_PASSWORD: "password",
 }
 
 
 TEST_DATA: Final = {
     "sans_session_id": {
-        "username": SAME_EMAIL_ADDRESS,
+        CONF_USERNAME: USERNAME_SAME,
         "refresh_token": REFRESH_TOKEN,
         "access_token": ACCESS_TOKEN,
-        "access_token_expires": ACCESS_TOKEN_EXPIRES_STR,
+        "access_token_expires": ACCESS_TOKEN_EXP_STR,
     },
     "with_session_id": {
-        "username": SAME_EMAIL_ADDRESS,
+        CONF_USERNAME: USERNAME_SAME,
         "refresh_token": REFRESH_TOKEN,
         "access_token": ACCESS_TOKEN,
-        "access_token_expires": ACCESS_TOKEN_EXPIRES_STR,
+        "access_token_expires": ACCESS_TOKEN_EXP_STR,
         "user_data": {"sessionId": SESSION_ID},
     },
 }
 
 
-TEST_DATA_NULL: Final = {
+TEST_DATA_NULL: Final[dict[str, Any]] = {
     "store_is_absent": None,
     "store_was_reset": {},
 }
 
 
-@patch("evohomeasync2.broker.Broker.get", mock_get)
-@pytest.mark.parametrize("idx", TEST_DATA_NULL)
-async def test_load_auth_tokens_null(
-    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
-) -> None:
-    """Test restoring authentication tokens when matching account."""
-
-    hass_storage[DOMAIN] = {
-        "version": STORAGE_VER,
-        "minor_version": 1,
-        "key": STORAGE_KEY,
-        "data": TEST_DATA_NULL[idx],
-    }
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: TEST_CONFIG})
-    await hass.async_block_till_done()
-
-    evo_broker: EvoBroker = hass.data[DOMAIN]["broker"]
-
-    assert evo_broker.client.username == SAME_EMAIL_ADDRESS
-    assert evo_broker.client.refresh_token == f"new_{REFRESH_TOKEN}"
-    assert evo_broker.client.access_token == f"new_{ACCESS_TOKEN}"
-    assert evo_broker.client.access_token_expires > datetime.now()
+DOMAIN_STORAGE_BASE: Final = {
+    "version": STORAGE_VER,
+    "minor_version": 1,
+    "key": STORAGE_KEY,
+}
 
 
 @patch("evohomeasync2.broker.Broker.get", mock_get)
-@pytest.mark.parametrize("idx", TEST_DATA)
-async def test_load_auth_tokens_same(
-    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
-) -> None:
-    """Test restoring authentication tokens when matching account."""
+async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> MagicMock:
+    """Return the EvohomeClient instantiated via async_setup_component()."""
 
-    hass_storage[DOMAIN] = {
-        "version": STORAGE_VER,
-        "minor_version": 1,
-        "key": STORAGE_KEY,
-        "data": TEST_DATA[idx],
-    }
+    mock_client: EvohomeClient = None
 
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: TEST_CONFIG})
-    await hass.async_block_till_done()
+    def capture_client(*args: Any, **kwargs: Any):
+        nonlocal mock_client
+        mock_client = EvohomeClient(*args, **kwargs)
+        return mock_client
 
-    evo_broker: EvoBroker = hass.data[DOMAIN]["broker"]
+    dt_util.set_default_time_zone(ACCESS_TOKEN_EXP_TZ)
 
-    assert evo_broker.client.username == SAME_EMAIL_ADDRESS
-    assert evo_broker.client.refresh_token == REFRESH_TOKEN
-    assert evo_broker.client.access_token == ACCESS_TOKEN
-    assert evo_broker.client.access_token_expires == ACCESS_TOKEN_EXPIRES_DTM
-
-
-@patch("evohomeasync2.broker.Broker.get", mock_get)
-@pytest.mark.parametrize("idx", TEST_DATA)
-async def test_load_auth_tokens_diff(
-    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
-) -> None:
-    """Test restoring (invalid) authentication tokens when unmatched account."""
-
-    hass_storage[DOMAIN] = {
-        "version": STORAGE_VER,
-        "minor_version": 1,
-        "key": STORAGE_KEY,
-        "data": TEST_DATA[idx],
-    }
-
-    test_config = TEST_CONFIG.copy()
-    test_config[CONF_USERNAME] = DIFF_EMAIL_ADDRESS
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
-    await hass.async_block_till_done()
-
-    evo_broker: EvoBroker = hass.data[DOMAIN]["broker"]
-
-    assert evo_broker.client.username == DIFF_EMAIL_ADDRESS
-    assert evo_broker.client.refresh_token == f"new_{REFRESH_TOKEN}"
-    assert evo_broker.client.access_token == f"new_{ACCESS_TOKEN}"
-    assert evo_broker.client.access_token_expires > datetime.now()
-
-
-@patch("evohomeasync2.broker.Broker.get", mock_get)
-async def test_save_auth_tokens(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test saving authentication tokens."""
-
-    dt_util.set_default_time_zone(dt_util.UTC)
-
-    with (
-        patch("evohomeasync2.EvohomeClient.refresh_token", REFRESH_TOKEN),
-        patch("evohomeasync2.EvohomeClient.access_token", ACCESS_TOKEN),
-        patch(
-            "evohomeasync2.EvohomeClient.access_token_expires", ACCESS_TOKEN_EXPIRES_DTM
-        ),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: TEST_CONFIG})
+    with patch(
+        "homeassistant.components.evohome.evo.EvohomeClient", side_effect=capture_client
+    ) as MockEvohomeClient:
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
         await hass.async_block_till_done()
 
-    assert hass_storage[DOMAIN]["data"] == TEST_DATA["sans_session_id"]
+        MockEvohomeClient.assert_called_once()
+        assert MockEvohomeClient.call_args.args[0] == test_config[CONF_USERNAME]
+        assert MockEvohomeClient.call_args.args[1] == test_config[CONF_PASSWORD]
+
+        assert isinstance(MockEvohomeClient.call_args.kwargs["session"], ClientSession)
+        assert mock_client.account_info is not None
+
+        return MockEvohomeClient
+
+
+@pytest.mark.parametrize("idx", TEST_DATA_NULL)
+async def test_auth_tokens_null(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    idx: str,
+) -> None:
+    """Test loading/saving authentication tokens when no cached tokens."""
+
+    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA_NULL[idx]}
+
+    MockClient = await setup_evohome(hass, TEST_CONFIG)
+
+    # Confirm the client was instantiated with the correct kwargs...
+    assert "refresh_token" not in MockClient.call_args.kwargs
+    assert "access_token" not in MockClient.call_args.kwargs
+    assert "access_token_expires" not in MockClient.call_args.kwarg
+
+    # Confirm the expected tokens were cached to storage...
+    assert hass_storage[DOMAIN]["data"][CONF_USERNAME] == USERNAME_SAME
+    assert hass_storage[DOMAIN]["data"]["refresh_token"] == f"new_{REFRESH_TOKEN}"
+    assert hass_storage[DOMAIN]["data"]["access_token"] == f"new_{ACCESS_TOKEN}"
+    assert hass_storage[DOMAIN]["data"]["access_token_expires"] > str(dt_util.now())
+
+
+@pytest.mark.parametrize("idx", TEST_DATA)
+async def test_auth_tokens_same(
+    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
+) -> None:
+    """Test loading/saving authentication tokens when same username."""
+
+    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
+
+    MockClient = await setup_evohome(hass, TEST_CONFIG)
+
+    # Confirm the client was instantiated with the correct kwargs...
+    assert MockClient.call_args.kwargs["refresh_token"] == REFRESH_TOKEN
+    assert MockClient.call_args.kwargs["access_token"] == ACCESS_TOKEN
+    assert MockClient.call_args.kwargs["access_token_expires"] == ACCESS_TOKEN_EXP_DTM
+
+    # Confirm the expected tokens were cached to storage...
+    assert hass_storage[DOMAIN]["data"][CONF_USERNAME] == USERNAME_SAME
+    assert hass_storage[DOMAIN]["data"]["refresh_token"] == REFRESH_TOKEN
+    assert hass_storage[DOMAIN]["data"]["access_token"] == ACCESS_TOKEN
+    assert hass_storage[DOMAIN]["data"]["access_token_expires"] == ACCESS_TOKEN_EXP_STR
+
+
+@pytest.mark.parametrize("idx", TEST_DATA)
+async def test_auth_tokens_diff(
+    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
+) -> None:
+    """Test loading/saving authentication tokens when different username."""
+
+    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
+
+    MockClient = await setup_evohome(hass, TEST_CONFIG | {CONF_USERNAME: USERNAME_DIFF})
+
+    # Confirm the client was instantiated with the correct kwargs...
+    assert "refresh_token" not in MockClient.call_args.kwargs
+    assert "access_token" not in MockClient.call_args.kwargs
+    assert "access_token_expires" not in MockClient.call_args.kwarg
+
+    # Confirm the expected tokens were cached to storage...
+    assert hass_storage[DOMAIN]["data"][CONF_USERNAME] == USERNAME_DIFF
+    assert hass_storage[DOMAIN]["data"]["refresh_token"] == f"new_{REFRESH_TOKEN}"
+    assert hass_storage[DOMAIN]["data"]["access_token"] == f"new_{ACCESS_TOKEN}"
+    assert hass_storage[DOMAIN]["data"]["access_token_expires"] > str(dt_util.now())

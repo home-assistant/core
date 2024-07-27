@@ -9,7 +9,7 @@ from evohomeasync2.broker import Broker
 import pytest
 
 from homeassistant.components.evohome import DOMAIN
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN
 
@@ -21,7 +21,7 @@ def user_account_config_fixture() -> JsonObjectType:
     return load_json_object_fixture("user_account.json", DOMAIN)
 
 
-def user_locations_config_fixture() -> JsonObjectType:
+def user_locations_config_fixture() -> JsonArrayType:
     """Load JSON for the config of a user's installation (a list of locations)."""
     return load_json_array_fixture("user_locations.json", DOMAIN)
 
@@ -41,7 +41,9 @@ def zone_schedule_fixture() -> JsonObjectType:
     return load_json_object_fixture("schedule_zone.json", DOMAIN)
 
 
-async def mock_get(self: Broker, url: str, **kwargs: Any) -> JsonObjectType:
+async def mock_get(
+    self: Broker, url: str, **kwargs: Any
+) -> JsonArrayType | JsonObjectType:
     """Return the JSON for a HTTP get of a given URL."""
 
     if not self.refresh_token:
