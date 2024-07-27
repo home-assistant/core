@@ -115,9 +115,10 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
-                    vol.Required(DATA_MEDIUM_TYPE): vol.In(
-                        {medium.value: medium.name for medium in MediumType}
-                    ),
+                    vol.Required(
+                        USER_INPUT_MEDIUM_TYPE,
+                        default=MediumType.PROPANE.value,
+                    ): vol.In({medium.value: medium.name for medium in MediumType}),
                 }
             ),
         )
