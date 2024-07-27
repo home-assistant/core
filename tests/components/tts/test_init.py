@@ -1443,7 +1443,7 @@ async def test_support_options(hass: HomeAssistant, setup: str, engine_id: str) 
 )
 @pytest.mark.parametrize(
     "markdown",
-    [(False,), (True,)],
+    [False, True],
 )
 async def test_strip_markdown(
     hass: HomeAssistant,
