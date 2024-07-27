@@ -3577,6 +3577,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "mercury_nz": {
+      "name": "Mercury NZ Limited",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "message_bird": {
       "name": "MessageBird",
       "integration_type": "hub",
