@@ -32,7 +32,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable."
+      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable.",
+      "set_up_new_device": "A new device was detected. Please set it up as a new entity instead of reconfiguring."
     }
   },
   "entity": {

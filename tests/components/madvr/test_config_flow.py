@@ -144,8 +144,10 @@ async def test_reconfigure_flow(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
+    # define new host
     new_host = "192.168.1.100"
-    new_port = 44077
+    # make sure setting port works
+    new_port = 44078
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -159,55 +161,31 @@ async def test_reconfigure_flow(
     # Verify that the config entry was updated
     assert mock_config_entry.data[CONF_HOST] == new_host
     assert mock_config_entry.data[CONF_PORT] == new_port
-    # unique id should remain unchanged with new host
-    assert mock_config_entry.unique_id == MOCK_MAC
 
     # Verify that the connection was tested
     mock_madvr_client.open_connection.assert_called()
     mock_madvr_client.async_add_tasks.assert_called()
     mock_madvr_client.async_cancel_tasks.assert_called()
 
-
-async def test_reconfigure_new_mac_flow(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfigure flow where the mac has changed (new device)."""
-    mock_config_entry.add_to_hass(hass)
+    # test reconfigure with a new device (should fail)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {}
-    # assert the current unique id is the old mac
-    assert mock_config_entry.unique_id == MOCK_MAC
-
-    new_host = "192.168.1.100"
-    new_port = 44077
-    new_mac = MOCK_MAC_NEW
-
-    # modify test_connection so it returns new_mac which should set the unique ID
+    # modify test_connection so it returns new_mac
     with patch(
         "homeassistant.components.madvr.config_flow.test_connection",
-        new=AsyncMock(return_value=new_mac),
+        new=AsyncMock(return_value=MOCK_MAC_NEW),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: new_host, CONF_PORT: new_port},
         )
 
-    # should get the abort with success result
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    # Verify that the config entry was updated
-    assert mock_config_entry.data[CONF_HOST] == new_host
-    assert mock_config_entry.data[CONF_PORT] == new_port
-    assert mock_config_entry.unique_id == new_mac
+    # unique id should remain unchanged with new device, should fail
+    assert mock_config_entry.unique_id == MOCK_MAC
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "set_up_new_device"}
 
 
 async def test_reconfigure_flow_errors(
@@ -247,7 +225,7 @@ async def test_reconfigure_flow_errors(
     assert result["errors"] == {"base": "no_mac"}
 
     # Ensure errors are recoverable
-    mock_madvr_client.mac_address = MOCK_MAC_NEW
+    mock_madvr_client.mac_address = MOCK_MAC
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
