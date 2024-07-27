@@ -41,13 +41,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Webmin sensors based on a config entry."""
-    coordinator = entry.runtime_data
-
-    entities: list[Enigma2BinarySensor] = [
-        Enigma2BinarySensor(coordinator, description)
-        for description in BINARY_SENSOR_TYPES
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            Enigma2BinarySensor(entry.runtime_data, description)
+            for description in BINARY_SENSOR_TYPES
+        ]
+    )
 
 
 class Enigma2BinarySensor(

@@ -43,7 +43,7 @@
   "entity": {
     "binary_sensor": {
       "is_recording": {
-        "name": "Is recording"
+        "name": "Recording"
       }
     }
   },
