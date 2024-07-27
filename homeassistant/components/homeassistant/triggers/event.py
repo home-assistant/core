@@ -7,7 +7,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM, EVENT_STATE_REPORTED
+from homeassistant.const import (
+    CONF_EVENT_DATA,
+    CONF_PLATFORM,
+    EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
+)
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, template
@@ -155,19 +160,20 @@ async def async_attach_trigger(
                 # If event doesn't match, skip event
                 return
 
-        loop.call_soon(
-            hass.async_run_hass_job,
-            job,
-            {
-                "trigger": {
-                    **trigger_data,
-                    "platform": platform_type,
-                    "event": event,
-                    "description": f"event '{event.event_type}'",
-                }
-            },
-            event.context,
-        )
+        data = {
+            "trigger": {
+                **trigger_data,
+                "platform": platform_type,
+                "event": event,
+                "description": f"event '{event.event_type}'",
+            }
+        }
+        context = event.context
+
+        if event.event_type != EVENT_STATE_CHANGED:
+            hass.async_run_hass_job(job, data, context)
+            return
+        loop.call_soon(hass.async_run_hass_job, job, data, context)
 
     event_filter = filter_event if event_data_items or event_data_schema else None
     removes = [
