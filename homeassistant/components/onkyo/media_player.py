@@ -30,14 +30,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import OnkyoConfigEntry, receiver as rcver
 from .const import (
-    CONF_MAX_VOLUME,
-    CONF_MAX_VOLUME_DEFAULT,
     CONF_RECEIVER_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME_DEFAULT,
     CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
     CONF_VOLUME_RESOLUTION,
     DOMAIN,
+    OPTION_MAX_VOLUME,
+    OPTION_MAX_VOLUME_DEFAULT,
     ZONES,
 )
 
@@ -114,7 +114,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
+        vol.Optional(OPTION_MAX_VOLUME, default=OPTION_MAX_VOLUME_DEFAULT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
         vol.Optional(
@@ -256,13 +256,12 @@ async def async_setup_entry(
     receiver.entities = {}
 
     volume_resolution = entry.data[CONF_VOLUME_RESOLUTION]
-    max_volume = entry.options[CONF_MAX_VOLUME]
+    max_volume = entry.options[OPTION_MAX_VOLUME]
     sources = entry.options[CONF_SOURCES]
 
     def connect_callback(receiver: rcver.Receiver) -> None:
         if receiver.first_connect:
             # Add the main zone to entities, since it is always active.
-            _LOGGER.debug("Adding Main Zone on %s", receiver.name)
             main_entity = OnkyoMediaPlayer(
                 receiver, sources, "main", max_volume, volume_resolution
             )
@@ -284,7 +283,6 @@ async def async_setup_entry(
         elif zone in ZONES and value != "N/A":
             # When we receive the status for a zone, and the value is not "N/A",
             # then zone is available on the receiver, so we create the entity for it.
-            _LOGGER.debug("Discovered %s on %s", ZONES[zone], receiver.name)
             zone_entity = OnkyoMediaPlayer(
                 receiver, sources, zone, max_volume, volume_resolution
             )

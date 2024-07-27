@@ -9,9 +9,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -20,14 +17,32 @@ from homeassistant.helpers.selector import (
 from . import receiver as rcver
 from .const import (
     BRAND_NAME,
-    CONF_MAX_VOLUME,
-    CONF_MAX_VOLUME_DEFAULT,
     CONF_SOURCES,
     CONF_SOURCES_ALLOWED,
     CONF_SOURCES_DEFAULT,
     CONF_VOLUME_RESOLUTION,
     CONF_VOLUME_RESOLUTION_DEFAULT,
     DOMAIN,
+    OPTION_MAX_VOLUME,
+    OPTION_MAX_VOLUME_DEFAULT,
+)
+
+CONF_SCHEMA_CONFIGURE = vol.Schema(
+    {
+        vol.Required(
+            CONF_VOLUME_RESOLUTION,
+            default=CONF_VOLUME_RESOLUTION_DEFAULT,
+        ): vol.In([50, 80, 100, 200]),
+        vol.Required(
+            CONF_SOURCES, default=list(CONF_SOURCES_DEFAULT.keys())
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=CONF_SOURCES_ALLOWED,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +53,6 @@ class ReceiverConfig:
     """Onkyo Receiver configuration."""
 
     volume_resolution: int
-    maximum_volume: int
     sources: list[str]
 
 
@@ -56,10 +70,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: self._receiver_info.host,
                 CONF_VOLUME_RESOLUTION: config.volume_resolution,
-                CONF_MAX_VOLUME: config.maximum_volume,
-                CONF_SOURCES: config.sources,
             },
-            options=options,
+            options={
+                OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
+                CONF_SOURCES: dict(zip(config.sources, config.sources, strict=False)),
+            },
+            # options=options,
         )
 
     async def async_step_user(
@@ -151,7 +167,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._createOnkyoEntry(
                 ReceiverConfig(
                     user_input[CONF_VOLUME_RESOLUTION],
-                    user_input[CONF_MAX_VOLUME],
                     user_input[CONF_SOURCES],
                 )
             )
@@ -174,30 +189,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "name": f"{self._receiver_info.model_name} ({self._receiver_info.host})"
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT
-                    ): NumberSelector(
-                        NumberSelectorConfig(
-                            min=1, max=100, mode=NumberSelectorMode.BOX
-                        )
-                    ),
-                    vol.Required(
-                        CONF_VOLUME_RESOLUTION,
-                        default=CONF_VOLUME_RESOLUTION_DEFAULT,
-                    ): vol.In([50, 80, 100, 200]),
-                    vol.Required(
-                        CONF_SOURCES, default=list(CONF_SOURCES_DEFAULT.keys())
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=CONF_SOURCES_ALLOWED,
-                            multiple=True,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
+            data_schema=CONF_SCHEMA_CONFIGURE,
             # errors=errors,
         )
 
@@ -259,6 +251,17 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 # # SelectSelector(SelectSelectorConfig(options=list(['50', '80', '100', '200']), mode=SelectSelectorMode.LIST))
 #         options_schema = vol.Schema(
 #             {
+
+
+# vol.Required(
+#     CONF_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT
+# ): NumberSelector(
+#     NumberSelectorConfig(
+#         min=1, max=100, mode=NumberSelectorMode.BOX
+#     )
+# ),
+
+
 #                 vol.Required(
 #                     CONF_MAXIMUM_VOLUME, default=CONF_MAXIMUM_VOLUME_DEFAULT
 #                 ): NumberSelector(NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)),

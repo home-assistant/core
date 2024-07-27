@@ -9,10 +9,10 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.onkyo.const import (
-    CONF_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
     DOMAIN,
+    OPTION_MAX_VOLUME,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -336,7 +336,7 @@ async def test_import_success(
             data={
                 CONF_HOST: "127.0.0.1",
                 CONF_NAME: "Receiver test name",
-                CONF_MAX_VOLUME: 42,
+                OPTION_MAX_VOLUME: 42,
                 CONF_RECEIVER_MAX_VOLUME: 69,
                 CONF_SOURCES: {
                     "Key_one": "Value-A",
