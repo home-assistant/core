@@ -1475,9 +1475,7 @@ class EventBus:
         # event bus. This is done to avoid having to build the list of listeners every
         # time an event is fired.
         #
-        self._listeners: defaultdict[
-            EventType[Any] | str, list[_FilterableJobType[Any]]
-        ] = defaultdict(list)
+        self._listeners: dict[EventType[Any] | str, list[_FilterableJobType[Any]]] = {}
 
         self._first_listeners: defaultdict[
             EventType[Any] | str, list[_FilterableJobType[Any]]
@@ -1716,11 +1714,15 @@ class EventBus:
             event_match_all_listeners = EMPTY_LIST
         else:
             event_match_all_listeners = self._match_all_listeners
-        self._listeners[event_type] = (
+
+        if new_listeners := (
             event_match_all_listeners
             + self._first_listeners.get(event_type, EMPTY_LIST)
             + self._last_listeners.get(event_type, EMPTY_LIST)
-        )
+        ):
+            self._listeners[event_type] = new_listeners
+        else:
+            self._listeners.pop(event_type, None)
 
     def listen_once(
         self,
