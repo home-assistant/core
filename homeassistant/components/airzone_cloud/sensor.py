@@ -10,7 +10,9 @@ from aioairzone_cloud.const import (
     AZD_AQ_PM_1,
     AZD_AQ_PM_2P5,
     AZD_AQ_PM_10,
+    AZD_CPU_USAGE,
     AZD_HUMIDITY,
+    AZD_MEMORY_FREE,
     AZD_TEMP,
     AZD_THERMOSTAT_BATTERY,
     AZD_THERMOSTAT_COVERAGE,
@@ -30,6 +32,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfInformation,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -54,6 +57,22 @@ AIDOO_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 )
 
 WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_CPU_USAGE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="cpu_usage",
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_MEMORY_FREE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="free_memory",
+    ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
