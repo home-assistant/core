@@ -230,12 +230,12 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
     entity_description: OpowerEntityDescription
 
     def __init__(
-            self,
-            coordinator: OpowerCoordinator,
-            description: OpowerEntityDescription,
-            utility_account_id: str,
-            device: DeviceInfo,
-            device_id: str,
+        self,
+        coordinator: OpowerCoordinator,
+        description: OpowerEntityDescription,
+        utility_account_id: str,
+        device: DeviceInfo,
+        device_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
