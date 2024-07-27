@@ -60,8 +60,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
         http_s = "https" if self._host.api.use_https else "http"
         self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
+        self._dev_id = self._host.unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._host.unique_id)},
+            identifiers={(DOMAIN, self._dev_id)},
             connections={(CONNECTION_NETWORK_MAC, self._host.api.mac_address)},
             name=self._host.api.nvr_name,
             model=self._host.api.model,
@@ -127,7 +128,9 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
 
         if self._host.api.is_nvr:
             if self._host.api.supported(dev_ch, "UID"):
-                self._dev_id = f"{self._host.unique_id}_{self._host.api.camera_uid(dev_ch)}"
+                self._dev_id = (
+                    f"{self._host.unique_id}_{self._host.api.camera_uid(dev_ch)}"
+                )
             else:
                 self._dev_id = f"{self._host.unique_id}_ch{dev_ch}"
 
@@ -176,19 +179,17 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         if self._host.api.supported(chime.channel, "UID"):
             self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(chime.channel)}_{chime.dev_id}_{self.entity_description.key}"
         else:
-            self._attr_unique_id = (
-                f"{self._host.unique_id}_{chime.channel}_{chime.dev_id}_{self.entity_description.key}"
-            )
+            self._attr_unique_id = f"{self._host.unique_id}_{chime.channel}_{chime.dev_id}_{self.entity_description.key}"
 
         cam_dev_id = self._dev_id
         self._dev_id = f"{cam_dev_id}_{chime.dev_id}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, dev_id)},
+            identifiers={(DOMAIN, self._dev_id)},
             via_device=(DOMAIN, cam_dev_id),
             name=chime.name,
             model="Reolink Chime",
             manufacturer=self._host.api.manufacturer,
-            serial_number=chime.dev_id,
+            serial_number=str(chime.dev_id),
             configuration_url=self._conf_url,
         )

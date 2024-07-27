@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 from reolink_aio.enums import Chime
+from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -23,7 +23,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkChimeCoordinatorEntity,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -482,7 +486,9 @@ CHIME_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=4,
         value=lambda chime: chime.volume,
-        method=lambda api, chime, value: api.set_volume(chime.dev_id, volume=int(value)),
+        method=lambda api, chime, value: api.set_volume(
+            chime.dev_id, volume=int(value)
+        ),
     ),
 )
 
@@ -552,7 +558,7 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         self.async_write_ha_state()
 
 
-class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, ReolinkNumberEntity):
+class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
     """Base number entity class for Reolink IP cameras."""
 
     entity_description: ReolinkChimeNumberEntityDescription
@@ -565,7 +571,7 @@ class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, ReolinkNumberEntit
     ) -> None:
         """Initialize Reolink chime number entity."""
         self.entity_description = entity_description
-        super().__init__(reolink_data, channel)
+        super().__init__(reolink_data, chime)
 
         self._attr_mode = entity_description.mode
 
