@@ -14,12 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import discovery
 
 from .const import CONF_BASE_URL, DOMAIN
 from .utils import create_mastodon_client
-
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
