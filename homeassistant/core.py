@@ -1801,7 +1801,7 @@ class EventBus:
         try:
             listen_group[event_type].remove(filterable_job)
             # delete event_type list if empty
-            if not listen_group[event_type] and event_type != MATCH_ALL:
+            if not listen_group[event_type]:
                 listen_group.pop(event_type)
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
