@@ -137,6 +137,7 @@ async def async_attach_trigger(
         entity = event.data["entity_id"]
         from_s = event.data["old_state"]
         to_s = event.data["new_state"]
+        loop = hass.loop
 
         if from_s is None:
             old_value = None
@@ -169,7 +170,8 @@ async def async_attach_trigger(
         @callback
         def call_action() -> None:
             """Call action with right context."""
-            hass.async_run_hass_job(
+            loop.call_soon(
+                hass.async_run_hass_job,
                 job,
                 {
                     "trigger": {
