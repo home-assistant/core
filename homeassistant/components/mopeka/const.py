@@ -4,4 +4,5 @@ from typing import Final
 
 DOMAIN = "mopeka"
 
-MEDIUM_TYPE: Final = "medium_type"
+USER_INPUT_MEDIUM_TYPE: Final = "medium_type"
+DATA_MEDIUM_TYPE: Final = "data_medium_type"

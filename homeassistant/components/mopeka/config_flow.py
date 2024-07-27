@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN, MEDIUM_TYPE
+from .const import DATA_MEDIUM_TYPE, DOMAIN, USER_INPUT_MEDIUM_TYPE
 
 
 class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -69,16 +69,16 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.unique_id is not None
             return self.async_create_entry(
                 title=self._discovered_devices[self.unique_id],
-                data={MEDIUM_TYPE: user_input[MEDIUM_TYPE]},
+                data={DATA_MEDIUM_TYPE: user_input[USER_INPUT_MEDIUM_TYPE]},
             )
 
         return self.async_show_form(
-            step_id=MEDIUM_TYPE,
+            step_id="medium_type",
             data_schema=vol.Schema(
                 {
-                    vol.Required(MEDIUM_TYPE, default=MediumType.PROPANE.value): vol.In(
-                        {medium.value: medium.name for medium in MediumType}
-                    )
+                    vol.Required(
+                        USER_INPUT_MEDIUM_TYPE, default=MediumType.PROPANE.value
+                    ): vol.In({medium.value: medium.name for medium in MediumType})
                 }
             ),
         )
@@ -93,7 +93,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=self._discovered_devices[address],
-                data={MEDIUM_TYPE: user_input[MEDIUM_TYPE]},
+                data={DATA_MEDIUM_TYPE: user_input[USER_INPUT_MEDIUM_TYPE]},
             )
 
         current_addresses = self._async_current_ids()
@@ -115,7 +115,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
-                    vol.Required(MEDIUM_TYPE): vol.In(
+                    vol.Required(DATA_MEDIUM_TYPE): vol.In(
                         {medium.value: medium.name for medium in MediumType}
                     ),
                 }
