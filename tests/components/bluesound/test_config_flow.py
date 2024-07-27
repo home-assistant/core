@@ -41,8 +41,9 @@ async def test_user_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "player-name"
     assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 11000}
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_player_sync_status.mock_calls) == 1
+
+    mock_setup_entry.assert_called_once()
+    mock_player_sync_status.assert_called_once()
 
 
 async def test_user_flow_cannot_connect(
@@ -71,7 +72,7 @@ async def test_user_flow_cannot_connect(
         }
     )
 
-    assert len(mock_player_sync_status_client_connection_error.mock_calls) == 1
+    mock_player_sync_status_client_connection_error.assert_called_once()
 
 
 async def test_user_flow_aleady_configured(
@@ -103,7 +104,7 @@ async def test_user_flow_aleady_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert len(mock_player_sync_status.mock_calls) == 1
+    mock_player_sync_status.assert_called_once()
 
 
 async def test_import_flow_success(
@@ -122,8 +123,8 @@ async def test_import_flow_success(
     assert result["title"] == "player-name"
     assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 11000}
 
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_player_sync_status.mock_calls) == 1
+    mock_setup_entry.assert_called_once()
+    mock_player_sync_status.assert_called_once()
 
 
 async def test_import_flow_cannot_connect(
@@ -139,7 +140,7 @@ async def test_import_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    assert len(mock_player_sync_status_client_connection_error.mock_calls) == 1
+    mock_player_sync_status_client_connection_error.assert_called_once()
 
 
 async def test_import_flow_already_configured(
@@ -165,7 +166,7 @@ async def test_import_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert len(mock_player_sync_status.mock_calls) == 1
+    mock_player_sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_success(
@@ -189,8 +190,8 @@ async def test_zeroconf_flow_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    assert len(mock_setup_entry.mock_calls) == 0
-    assert len(mock_player_sync_status.mock_calls) == 1
+    mock_setup_entry.assert_not_called()
+    mock_player_sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_cannot_connect(
@@ -214,7 +215,7 @@ async def test_zeroconf_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    assert len(mock_player_sync_status_client_connection_error.mock_calls) == 1
+    mock_player_sync_status_client_connection_error.assert_called_once()
 
 
 async def test_zeroconf_flow_already_configured(
@@ -250,4 +251,4 @@ async def test_zeroconf_flow_already_configured(
 
     assert mock_entry.data[CONF_HOST] == "1.1.1.1"
 
-    assert len(mock_player_sync_status.mock_calls) == 1
+    mock_player_sync_status.assert_called_once()
