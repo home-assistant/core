@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 import contextlib
 from datetime import date, datetime, timedelta
+from functools import partial
 from unittest.mock import patch
 
 from astral import LocationInfo
@@ -4937,3 +4938,40 @@ async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(tracker_called) == 2
     unsub()
+
+
+async def test_async_track_state_change_event_runs_last(hass: HomeAssistant) -> None:
+    """Test async_track_state_change_event runs after other EVENT_STATE_CHANGED listeners."""
+    calls: list[tuple[str, Event[EventStateChangedData]]] = []
+
+    @ha.callback
+    def state_changed(source: str, event: Event[EventStateChangedData]) -> None:
+        calls.append(source, event)
+
+    unsub_single = async_track_state_change_event(
+        hass, ["light.bowl"], partial(state_changed, "async_track_state_change_event")
+    )
+    unsub_event_state_changed_first = hass.bus.async_listen(
+        ha.EVENT_STATE_CHANGED, partial(state_changed, "async_listen")
+    )
+    unsub_event_state_changed_last = hass.bus.async_listen(
+        ha.EVENT_STATE_CHANGED,
+        partial(state_changed, "async_listen_last"),
+        order=ha.ListenGroup.LAST,
+    )
+
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[0][0] == "async_listen"
+    assert calls[0][1]["entity_id"] == "light.bowl"
+
+    assert calls[1][0] == "async_track_state_change_event"
+    assert calls[1][1]["entity_id"] == "light.bowl"
+
+    assert calls[2][0] == "async_listen_last"
+    assert calls[2][1]["entity_id"] == "light.bowl"
+
+    unsub_single()
+    unsub_event_state_changed_first()
+    unsub_event_state_changed_last()

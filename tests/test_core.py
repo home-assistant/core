@@ -3576,3 +3576,44 @@ async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
         assert state.last_reported_timestamp != last_reported_timestamp
         last_reported = state.last_reported
         last_reported_timestamp = state.last_reported_timestamp
+
+
+async def test_match_all_always_runs_first(hass: HomeAssistant) -> None:
+    """Test MATCH_ALL events always runs first."""
+    all_events = []
+
+    @ha.callback
+    def capture_events(ev):
+        all_events.append(ev.event_type)
+
+    with pytest.raises(HomeAssistantError, match="Cannot add listener to group"):
+        hass.bus.async_listen(MATCH_ALL, capture_events, group=ha.ListenGroup.LAST)
+
+
+async def test_listen_group_order(hass: HomeAssistant) -> None:
+    """Test listen group order."""
+
+    events: list[str] = []
+
+    @ha.callback
+    def capture_events(order: str, event: ha.Event) -> None:
+        events.append(order)
+
+    hass.bus.async_listen(
+        "test", functools.partial(capture_events, "1"), group=ha.ListenGroup.FIRST
+    )
+    hass.bus.async_listen(
+        "test", functools.partial(capture_events, "2"), group=ha.ListenGroup.LAST
+    )
+    hass.bus.async_listen(
+        "test", functools.partial(capture_events, "3"), group=ha.ListenGroup.FIRST
+    )
+    hass.bus.async_listen(
+        "test", functools.partial(capture_events, "4"), group=ha.ListenGroup.LAST
+    )
+    hass.bus.async_listen(MATCH_ALL, functools.partial(capture_events, "all"))
+
+    hass.bus.async_fire("test")
+    await hass.async_block_till_done()
+
+    assert events == ["all", "1", "3", "2", "4"]

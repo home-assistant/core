@@ -25,6 +25,7 @@ import enum
 import functools
 from functools import cached_property
 import inspect
+from itertools import chain
 import logging
 import os
 import pathlib
@@ -1443,18 +1444,34 @@ def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> N
         raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE)
 
 
+class ListenGroup(enum.Enum):
+    """Represent the group order of listeners."""
+
+    FIRST = "FIRST"
+    LAST = "LAST"
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
-    __slots__ = ("_debug", "_hass", "_listeners", "_match_all_listeners")
+    __slots__ = (
+        "_debug",
+        "_hass",
+        "_first_listeners",
+        "_last_listeners",
+        "_match_all_listeners",
+    )
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: defaultdict[
+        self._first_listeners: defaultdict[
+            EventType[Any] | str, list[_FilterableJobType[Any]]
+        ] = defaultdict(list)
+        self._last_listeners: defaultdict[
             EventType[Any] | str, list[_FilterableJobType[Any]]
         ] = defaultdict(list)
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
-        self._listeners[MATCH_ALL] = self._match_all_listeners
+        self._first_listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
         self._async_logging_changed()
         self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
@@ -1470,7 +1487,12 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        return {key: len(listeners) for key, listeners in self._listeners.items()}
+        return {
+            key: len(listeners)
+            for key, listeners in chain(
+                self._first_listeners.items(), self._last_listeners.items()
+            )
+        }
 
     @property
     def listeners(self) -> dict[EventType[Any] | str, int]:
@@ -1535,14 +1557,15 @@ class EventBus:
                 "Bus:Handling %s", _event_repr(event_type, origin, event_data)
             )
 
-        listeners = self._listeners.get(event_type, EMPTY_LIST)
+        first_listeners = self._first_listeners.get(event_type, EMPTY_LIST)
+        last_listeners = self._last_listeners.get(event_type, EMPTY_LIST)
         if event_type not in EVENTS_EXCLUDED_FROM_MATCH_ALL:
             match_all_listeners = self._match_all_listeners
         else:
             match_all_listeners = EMPTY_LIST
 
         event: Event[_DataT] | None = None
-        for job, event_filter in listeners + match_all_listeners:
+        for job, event_filter in match_all_listeners + first_listeners + last_listeners:
             if event_filter is not None:
                 try:
                     if event_data is None or not event_filter(event_data):
@@ -1592,6 +1615,7 @@ class EventBus:
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
         run_immediately: bool | object = _SENTINEL,
+        group: ListenGroup = ListenGroup.FIRST,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1605,6 +1629,9 @@ class EventBus:
         If run_immediately is passed:
           - callbacks will be run right away instead of using call_soon.
           - coroutine functions will be scheduled eagerly.
+
+        group can be used to specify if the listener should be called in the
+        first group of listeners or the last group of listeners.
 
         This method must be run in the event loop.
         """
@@ -1626,18 +1653,28 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-        return self._async_listen_filterable_job(event_type, filterable_job)
+        elif event_type == MATCH_ALL and group is not ListenGroup.FIRST:
+            raise HomeAssistantError(
+                f"Cannot add listener to group {group} for event {event_type}"
+            )
+        return self._async_listen_filterable_job(event_type, filterable_job, group)
 
     @callback
     def _async_listen_filterable_job(
         self,
         event_type: EventType[_DataT] | str,
         filterable_job: _FilterableJobType[_DataT],
+        group: ListenGroup = ListenGroup.FIRST,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type."""
-        self._listeners[event_type].append(filterable_job)
+        listen_group = (
+            self._first_listeners
+            if group is ListenGroup.FIRST
+            else self._last_listeners
+        )
+        listen_group[event_type].append(filterable_job)
         return functools.partial(
-            self._async_remove_listener, event_type, filterable_job
+            self._async_remove_listener, listen_group, event_type, filterable_job
         )
 
     def listen_once(
@@ -1708,6 +1745,7 @@ class EventBus:
     @callback
     def _async_remove_listener(
         self,
+        listen_group: defaultdict[EventType[Any] | str, list[_FilterableJobType[Any]]],
         event_type: EventType[_DataT] | str,
         filterable_job: _FilterableJobType[_DataT],
     ) -> None:
@@ -1716,11 +1754,10 @@ class EventBus:
         This method must be run in the event loop.
         """
         try:
-            self._listeners[event_type].remove(filterable_job)
-
+            listen_group[event_type].remove(filterable_job)
             # delete event_type list if empty
-            if not self._listeners[event_type] and event_type != MATCH_ALL:
-                self._listeners.pop(event_type)
+            if not listen_group[event_type] and event_type != MATCH_ALL:
+                listen_group.pop(event_type)
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type

@@ -32,6 +32,7 @@ from homeassistant.core import (
     HassJob,
     HassJobType,
     HomeAssistant,
+    ListenGroup,
     State,
     callback,
     split_entity_id,
@@ -449,6 +450,7 @@ def _async_track_event(
             tracker.event_type,
             partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=partial(tracker.filter_callable, hass, callbacks),
+            group=ListenGroup.LAST,
         )
         event_data = _KeyedEventData(listener, callbacks)
         hass_data[tracker_key] = event_data
