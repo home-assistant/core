@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ListenOrder
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -125,6 +125,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except ClientResponseError as err:
             _LOGGER.error(err.message)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, splunk_event_listener)
+    hass.bus.async_listen(
+        EVENT_STATE_CHANGED, splunk_event_listener, order=ListenOrder.FIRST
+    )
 
     return True

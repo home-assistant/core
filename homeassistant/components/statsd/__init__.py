@@ -6,7 +6,7 @@ import statsd
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ListenOrder
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -89,6 +89,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)
 
-    hass.bus.listen(EVENT_STATE_CHANGED, statsd_event_listener)
+    hass.bus.listen(EVENT_STATE_CHANGED, statsd_event_listener, order=ListenOrder.FIRST)
 
     return True

@@ -141,7 +141,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         default_metric,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
+    hass.bus.listen(
+        EVENT_STATE_CHANGED,
+        metrics.handle_state_changed_event,
+        order=hacore.ListenOrder.FIRST,
+    )
     hass.bus.listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
         metrics.handle_entity_registry_updated,

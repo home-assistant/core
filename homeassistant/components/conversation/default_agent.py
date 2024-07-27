@@ -209,6 +209,7 @@ class DefaultAgent(ConversationEntity):
                 EVENT_STATE_CHANGED,
                 self._async_clear_slot_list,
                 event_filter=self._filter_state_changes,
+                order=core.ListenOrder.FIRST,
             ),
             async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
         ]

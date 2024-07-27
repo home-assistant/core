@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, ListenOrder, State, callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
@@ -521,7 +521,9 @@ class InfluxThread(threading.Thread):
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
-        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        hass.bus.listen(
+            EVENT_STATE_CHANGED, self._event_listener, order=ListenOrder.FIRST
+        )
 
     @callback
     def _event_listener(self, event):

@@ -11,7 +11,7 @@ from google.cloud.pubsub_v1 import PublisherClient
 import voluptuous as vol
 
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, ListenOrder
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.typing import ConfigType
@@ -74,7 +74,7 @@ def setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
         publisher.publish(topic_path, data=data)
 
-    hass.bus.listen(EVENT_STATE_CHANGED, send_to_pubsub)
+    hass.bus.listen(EVENT_STATE_CHANGED, send_to_pubsub, order=ListenOrder.FIRST)
 
     return True
 

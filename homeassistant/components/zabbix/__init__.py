@@ -25,7 +25,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    ListenOrder,
+    callback,
+)
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -191,7 +197,9 @@ class ZabbixThread(threading.Thread):
 
     def setup(self, hass: HomeAssistant) -> None:
         """Set up the thread and start it."""
-        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        hass.bus.listen(
+            EVENT_STATE_CHANGED, self._event_listener, order=ListenOrder.FIRST
+        )
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self._shutdown)
         self.start()
         _LOGGER.debug("Started publishing state changes to Zabbix")

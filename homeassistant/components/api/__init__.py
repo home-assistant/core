@@ -37,7 +37,7 @@ from homeassistant.const import (
     URL_API_TEMPLATE,
 )
 import homeassistant.core as ha
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, ListenOrder
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
@@ -402,6 +402,7 @@ class APIDomainServicesView(HomeAssistantView):
         cancel_listen = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_save_changed_entities,
+            order=ListenOrder.FIRST,
         )
 
         try:

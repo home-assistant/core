@@ -19,6 +19,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    ListenOrder,
     State,
     callback,
 )
@@ -342,6 +343,7 @@ async def async_enable_proactive_mode(
         EVENT_STATE_CHANGED,
         _async_entity_state_listener,
         event_filter=_async_entity_state_filter,
+        order=ListenOrder.FIRST,
     )
 
 

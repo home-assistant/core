@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ListenOrder
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -66,7 +66,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         send_data(name, json_body)
 
-    hass.bus.listen(EVENT_STATE_CHANGED, dweet_event_listener)
+    hass.bus.listen(EVENT_STATE_CHANGED, dweet_event_listener, order=ListenOrder.FIRST)
 
     return True
 

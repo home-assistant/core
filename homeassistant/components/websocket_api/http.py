@@ -199,6 +199,7 @@ class WebSocketHandler:
                 message = message.encode("utf-8")
 
         message_queue = self._message_queue
+        _WS_LOGGER.warning("Append message: %s", message)
         message_queue.append(message)
         if (queue_size_after_add := len(message_queue)) >= MAX_PENDING_MSG:
             self._logger.error(

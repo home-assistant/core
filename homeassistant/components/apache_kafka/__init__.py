@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, ListenOrder
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.typing import ConfigType
@@ -130,7 +130,9 @@ class KafkaManager:
 
     async def start(self) -> None:
         """Start the Kafka manager."""
-        self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)
+        self._hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self.write, order=ListenOrder.FIRST
+        )
         await self._producer.start()
 
     async def shutdown(self, _: Event) -> None:

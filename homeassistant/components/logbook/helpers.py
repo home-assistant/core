@@ -19,6 +19,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    ListenOrder,
     State,
     callback,
     is_callback,
@@ -210,6 +211,7 @@ def async_subscribe_events(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _forward_state_events_filtered,
+            order=ListenOrder.FIRST,
         )
     )
 

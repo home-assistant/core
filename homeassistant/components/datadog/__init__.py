@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ListenOrder
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -101,6 +101,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Sent metric %s: %s (tags: %s)", metric, value, tags)
 
     hass.bus.listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
-    hass.bus.listen(EVENT_STATE_CHANGED, state_changed_listener)
+    hass.bus.listen(
+        EVENT_STATE_CHANGED, state_changed_listener, order=ListenOrder.FIRST
+    )
 
     return True

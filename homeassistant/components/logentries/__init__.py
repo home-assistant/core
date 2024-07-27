@@ -7,7 +7,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_TOKEN, EVENT_STATE_CHANGED
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ListenOrder
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -52,6 +52,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error sending to Logentries")
 
-    hass.bus.listen(EVENT_STATE_CHANGED, logentries_event_listener)
+    hass.bus.listen(
+        EVENT_STATE_CHANGED, logentries_event_listener, order=ListenOrder.FIRST
+    )
 
     return True

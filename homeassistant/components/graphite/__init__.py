@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ListenOrder
 from homeassistant.helpers import state
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -98,7 +98,7 @@ class GraphiteFeeder(threading.Thread):
         _LOGGER.debug("Event processing thread started")
         self._hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         self._unsub_state_changed = self._hass.bus.listen(
-            EVENT_STATE_CHANGED, self.event_listener
+            EVENT_STATE_CHANGED, self.event_listener, order=ListenOrder.FIRST
         )
         self.start()
 

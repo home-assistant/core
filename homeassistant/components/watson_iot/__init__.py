@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ListenOrder, callback
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -166,7 +166,9 @@ class WatsonIOTThread(threading.Thread):
         self.event_to_json = event_to_json
         self.write_errors = 0
         self.shutdown = False
-        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        hass.bus.listen(
+            EVENT_STATE_CHANGED, self._event_listener, order=ListenOrder.FIRST
+        )
 
     @callback
     def _event_listener(self, event):

@@ -14,6 +14,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HassJob,
     HomeAssistant,
+    ListenOrder,
     callback,
 )
 from homeassistant.helpers.event import async_call_later
@@ -190,6 +191,7 @@ def async_enable_report_state(
             EVENT_STATE_CHANGED,
             _async_entity_state_listener,
             event_filter=_async_entity_state_filter,
+            order=ListenOrder.FIRST,
         )
 
     unsub = async_call_later(

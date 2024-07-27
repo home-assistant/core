@@ -23,6 +23,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    ListenOrder,
     ServiceResponse,
     State,
     callback,
@@ -167,7 +168,7 @@ def handle_subscribe_events(
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events
+        event_type, forward_events, order=ListenOrder.FIRST
     )
 
     connection.send_result(msg["id"])
@@ -384,6 +385,7 @@ def _forward_entity_changes(
         and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
     ):
         return
+    _LOGGER.error("Forwarding state change for %s", event)
     send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
 
 
@@ -413,6 +415,7 @@ def handle_subscribe_entities(
             connection.user,
             message_id_as_bytes,
         ),
+        order=ListenOrder.FIRST,
     )
     connection.send_result(msg["id"])
 

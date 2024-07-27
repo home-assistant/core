@@ -158,6 +158,13 @@ class ConfigSource(enum.StrEnum):
     YAML = "yaml"
 
 
+class ListenOrder(enum.Enum):
+    """Order to listen for events."""
+
+    FIRST = 0
+    LAST = 1
+
+
 class EventStateEventData(TypedDict):
     """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
@@ -1542,7 +1549,7 @@ class EventBus:
             match_all_listeners = EMPTY_LIST
 
         event: Event[_DataT] | None = None
-        for job, event_filter in listeners + match_all_listeners:
+        for job, event_filter in match_all_listeners + listeners:
             if event_filter is not None:
                 try:
                     if event_data is None or not event_filter(event_data):
@@ -1569,6 +1576,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
+        order: ListenOrder = ListenOrder.LAST,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1576,7 +1584,8 @@ class EventBus:
         as event_type.
         """
         async_remove_listener = run_callback_threadsafe(
-            self._hass.loop, self.async_listen, event_type, listener
+            self._hass.loop,
+            functools.partial(self.async_listen, event_type, listener, order=order),
         ).result()
 
         def remove_listener() -> None:
@@ -1592,6 +1601,7 @@ class EventBus:
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
         run_immediately: bool | object = _SENTINEL,
+        order: ListenOrder = ListenOrder.LAST,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1605,6 +1615,12 @@ class EventBus:
         If run_immediately is passed:
           - callbacks will be run right away instead of using call_soon.
           - coroutine functions will be scheduled eagerly.
+
+        order can be either ListenOrder.FIRST or ListenOrder.LAST. If
+        ListenOrder.FIRST is used, the listener will be inserted at the
+        beginning of the list of listeners for the event type. If
+        ListenOrder.LAST is used, the listener will be appended to the
+        list of listeners for the event type.
 
         This method must be run in the event loop.
         """
@@ -1626,16 +1642,21 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-        return self._async_listen_filterable_job(event_type, filterable_job)
+        return self._async_listen_filterable_job(event_type, filterable_job, order)
 
     @callback
     def _async_listen_filterable_job(
         self,
         event_type: EventType[_DataT] | str,
         filterable_job: _FilterableJobType[_DataT],
+        order: ListenOrder = ListenOrder.LAST,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type."""
-        self._listeners[event_type].append(filterable_job)
+        listeners = self._listeners[event_type]
+        if order is ListenOrder.FIRST:
+            listeners.insert(0, filterable_job)
+        else:
+            listeners.append(filterable_job)
         return functools.partial(
             self._async_remove_listener, event_type, filterable_job
         )
@@ -1644,6 +1665,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
+        order: ListenOrder = ListenOrder.LAST,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1653,7 +1675,10 @@ class EventBus:
         Returns function to unsubscribe the listener.
         """
         async_remove_listener = run_callback_threadsafe(
-            self._hass.loop, self.async_listen_once, event_type, listener
+            self._hass.loop,
+            functools.partial(
+                self.async_listen_once, event_type, listener, order=order
+            ),
         ).result()
 
         def remove_listener() -> None:
@@ -1668,6 +1693,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         run_immediately: bool | object = _SENTINEL,
+        order: ListenOrder = ListenOrder.LAST,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1675,6 +1701,12 @@ class EventBus:
         as event_type.
 
         Returns registered listener that can be used with remove_listener.
+
+        order can be either ListenOrder.FIRST or ListenOrder.LAST. If
+        ListenOrder.FIRST is used, the listener will be inserted at the
+        beginning of the list of listeners for the event type. If
+        ListenOrder.LAST is used, the listener will be appended to the
+        list of listeners for the event type.
 
         This method must be run in the event loop.
         """
@@ -1701,6 +1733,7 @@ class EventBus:
                 ),
                 None,
             ),
+            order,
         )
         one_time_listener.remove = remove
         return remove
@@ -1791,7 +1824,7 @@ class State:
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.state_info = state_info
-        self.domain, self.object_id = split_entity_id(self.entity_id)
+        self.domain, self.object_id = split_entity_id(entity_id)
         # The recorder or the websocket_api will always call the timestamps,
         # so we will set the timestamp values here to avoid the overhead of
         # the function call in the property we know will always be called.
