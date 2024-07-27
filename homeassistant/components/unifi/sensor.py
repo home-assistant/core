@@ -490,7 +490,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         Update native_value.
         """
         description = self.entity_description
-        obj = description.object_fn(self.hub.api, self._obj_id)
+        obj = description.object_fn(self.api, self._obj_id)
         # Update the value only if value is considered to have changed relative to its previous state
         if description.value_changed_fn(
             self.native_value, (value := description.value_fn(self.hub, obj))

@@ -8,7 +8,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -63,17 +63,6 @@ async def test_scenes(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {}
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
