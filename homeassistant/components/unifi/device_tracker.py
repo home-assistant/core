@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import Any
 
@@ -261,17 +262,17 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         """Return the primary ip address of the device."""
         return self.entity_description.ip_address_fn(self.api, self._obj_id)
 
-    @property
+    @cached_property
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._obj_id
 
-    @property
+    @cached_property
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.ROUTER
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._attr_unique_id
