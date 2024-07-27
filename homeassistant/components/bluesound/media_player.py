@@ -33,7 +33,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -88,30 +93,30 @@ def _add_player(
     """Add Bluesound players."""
 
     @callback
-    def _init_player(event=None):
+    def _init_bluesound_player(event: Event | None = None):
         """Start polling."""
-        hass.async_create_task(player.async_init())
+        hass.async_create_task(bluesound_player.async_init())
 
     @callback
-    def _start_polling(event=None):
+    def _start_polling(event: Event):
         """Start polling."""
-        player.start_polling()
+        bluesound_player.start_polling()
 
     @callback
-    def _stop_polling(event=None):
+    def _stop_polling(event: Event):
         """Stop polling."""
-        player.stop_polling()
+        bluesound_player.stop_polling()
 
     @callback
-    def _add_player_cb():
+    def _add_bluesound_player_cb():
         """Add player after first sync fetch."""
-        if player.id in [x.id for x in hass.data[DATA_BLUESOUND]]:
-            _LOGGER.warning("Player already added %s", player.id)
+        if bluesound_player.id in [x.id for x in hass.data[DATA_BLUESOUND]]:
+            _LOGGER.warning("Player already added %s", bluesound_player.id)
             return
 
-        hass.data[DATA_BLUESOUND].append(player)
-        async_add_entities([player])
-        _LOGGER.info("Added device with name: %s", player.name)
+        hass.data[DATA_BLUESOUND].append(bluesound_player)
+        async_add_entities([bluesound_player])
+        _LOGGER.info("Added device with name: %s", bluesound_player.name)
 
         if hass.is_running:
             _start_polling()
@@ -120,12 +125,14 @@ def _add_player(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
-    player = BluesoundPlayer(hass, host, port, player, sync_status, _add_player_cb)
+    bluesound_player = BluesoundPlayer(
+        hass, host, port, player, sync_status, _add_bluesound_player_cb
+    )
 
     if hass.is_running:
-        _init_player()
+        _init_bluesound_player()
     else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_bluesound_player)
 
 
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
