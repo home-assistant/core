@@ -1465,9 +1465,20 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
+        #
+        # Listeners are a pre-built dict of list of listeners for each event type with
+        # the match all listeners first. The order of listeners for an event type is:
+        #
+        # _match_all_listeners + _first_listeners[event_type] + _last_listeners[event_type]
+        #
+        # self._listeners is rebuilt every time a listener is added or removed from the
+        # event bus. This is done to avoid having to rebuild the list of listeners every
+        # time an event is fired.
+        #
         self._listeners: defaultdict[
             EventType[Any] | str, list[_FilterableJobType[Any]]
         ] = defaultdict(list)
+
         self._first_listeners: defaultdict[
             EventType[Any] | str, list[_FilterableJobType[Any]]
         ] = defaultdict(list)
@@ -1475,6 +1486,7 @@ class EventBus:
             EventType[Any] | str, list[_FilterableJobType[Any]]
         ] = defaultdict(list)
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
+
         self._hass = hass
         self._async_logging_changed()
         self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
@@ -1667,11 +1679,11 @@ class EventBus:
         """Rebuild the listeners dictionary."""
         match_all_listeners = self._match_all_listeners
         for this_event_type in set(chain(self._first_listeners, self._last_listeners)):
-            event_match_all_listeners = (
-                EMPTY_LIST
-                if this_event_type in EVENTS_EXCLUDED_FROM_MATCH_ALL
-                else match_all_listeners
-            )
+            if this_event_type in EVENTS_EXCLUDED_FROM_MATCH_ALL:
+                event_match_all_listeners = EMPTY_LIST
+            else:
+                event_match_all_listeners = match_all_listeners
+
             self._listeners[this_event_type] = (
                 event_match_all_listeners
                 + self._first_listeners.get(this_event_type, EMPTY_LIST)
@@ -1710,11 +1722,10 @@ class EventBus:
 
     def _rebuild_event_type_listeners(self, event_type: EventType[Any] | str) -> None:
         """Rebuild the listeners dictionary for a specific event type."""
-        event_match_all_listeners = (
-            EMPTY_LIST
-            if event_type in EVENTS_EXCLUDED_FROM_MATCH_ALL
-            else self._match_all_listeners
-        )
+        if event_type in EVENTS_EXCLUDED_FROM_MATCH_ALL:
+            event_match_all_listeners = EMPTY_LIST
+        else:
+            event_match_all_listeners = self._match_all_listeners
         self._listeners[event_type] = (
             event_match_all_listeners
             + self._first_listeners.get(event_type, EMPTY_LIST)
