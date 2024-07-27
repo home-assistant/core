@@ -126,8 +126,16 @@ def _discovery(config_info):
         for recv in rxv.find():
             zones.extend(recv.zone_controllers())
     else:
-        _LOGGER.debug("Config Zones Fallback")
-        zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
+        _LOGGER.debug("Config Zones")
+        zones = None
+        for recv in rxv.find():
+            if recv.ctrl_url == config_info.ctrl_url:
+                _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
+                zones = recv.zone_controllers()
+                break
+        if not zones:
+            _LOGGER.debug("Config Zones Fallback")
+            zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
 
     _LOGGER.debug("Returned _discover zones: %s", zones)
     return zones
@@ -153,7 +161,7 @@ async def async_setup_platform(
 
     entities = []
     for zctrl in zone_ctrls:
-        _LOGGER.info("Receiver zone: %s", zctrl.zone)
+        _LOGGER.debug("Receiver zone: %s", zctrl.zone)
         if config_info.zone_ignore and zctrl.zone in config_info.zone_ignore:
             _LOGGER.debug("Ignore receiver zone: %s %s", config_info.name, zctrl.zone)
             continue
@@ -220,7 +228,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # Since not all receivers will have a serial number and set a unique id
             # the default name of the integration may not be changed
             # to avoid a breaking change.
-            # Prefix as MusicCast could have used this
             self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
             _LOGGER.debug(
                 "Receiver zone: %s zone %s uid %s",
@@ -241,7 +248,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         try:
             self._play_status = self.zctrl.play_status()
         except requests.exceptions.ConnectionError:
-            _LOGGER.info("Receiver is offline: %s", self._name)
+            _LOGGER.debug("Receiver is offline: %s", self._name)
             self._attr_available = False
             return
 
@@ -287,11 +294,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
             for source in self.zctrl.inputs()
             if source not in self._source_ignore
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this media_player."""
-        return self._attr_unique_id or ""
 
     @property
     def name(self):
