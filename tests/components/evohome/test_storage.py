@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Final, NotRequired, TypedDict
 from unittest.mock import MagicMock, patch
 
@@ -34,7 +34,7 @@ class _TokenStoreT(TypedDict):
     username: str
     refresh_token: str
     access_token: str
-    access_token_expires: str
+    access_token_expires: str  # 2024-07-27T23:57:30+01:00
     user_data: NotRequired[_SessionDataT]
 
 
@@ -42,14 +42,17 @@ class _EmptyStoreT(TypedDict):
     pass
 
 
+def dt_pair(dt_dtm: datetime) -> tuple[datetime, str]:
+    """Return a datetime without milliseconds and its string representation."""
+    dt_str = dt_dtm.isoformat(timespec="seconds")  # e.g. 2024-07-28T00:57:29+01:00
+    return dt_util.parse_datetime(dt_str), dt_str  # type: ignore[return-value]
+
+
+# dt_util.set_default_time_zone(dt_util.UTC)
+ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(hours=1))
+
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
-
-dt_util.set_default_time_zone(dt_util.UTC)
-
-ACCESS_TOKEN_EXP_DTM: Final = dt_util.now() + timedelta(hours=1)  # is TZ-aware
-ACCESS_TOKEN_EXP_STR: Final = ACCESS_TOKEN_EXP_DTM.isoformat()
-
 
 TEST_CONFIG: Final = {
     CONF_USERNAME: USERNAME_SAME,
@@ -178,11 +181,12 @@ async def test_auth_tokens_past(
 ) -> None:
     """Test loading/saving authentication tokens that have expired."""
 
+    # dt_util.set_default_time_zone(dt_util.UTC)
+    dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
+
     # make this access token have expired in the past...
     test_data = TEST_DATA[idx].copy()
-    test_data[SZ_ACCESS_TOKEN_EXPIRES] = (
-        dt_util.now() - timedelta(hours=1)
-    ).isoformat()
+    test_data[SZ_ACCESS_TOKEN_EXPIRES] = dt_str
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
@@ -191,7 +195,9 @@ async def test_auth_tokens_past(
     # Confirm client was instantiated with the cached tokens...
     assert mock_client_class.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
     assert mock_client_class.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
-    # assert mock_client_class.call_args.kwargs[SZ_ACCESS_TOKEN_EXPIRES] == dt_aware_to_naive(ACCESS_TOKEN_EXP_DTM)
+    assert mock_client_class.call_args.kwargs[
+        SZ_ACCESS_TOKEN_EXPIRES
+    ] == dt_aware_to_naive(dt_dtm)
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
