@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from elevenlabs.client import AsyncElevenLabs
@@ -15,6 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.selector import (
@@ -25,7 +25,7 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_MODEL, CONF_VOICE, DEFAULT_MODEL, DOMAIN
 
-STEP_USER_DATA_SCHEMA_NO_AUTH = vol.Schema({vol.Required(CONF_API_KEY): str})
+USER_STEP_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,24 +58,19 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA_NO_AUTH
-            )
-        # Validate auth, get voices
-        try:
-            _, models = await get_voices_models(user_input[CONF_API_KEY])
-        except ApiError:
-            errors["base"] = "invalid_api_key"
-        if errors:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA_NO_AUTH, errors=errors
-            )
-
-        return self.async_create_entry(
-            title=f"{models[DEFAULT_MODEL]}", data=user_input
-        )
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                _, models = await get_voices_models(user_input[CONF_API_KEY])
+            except ApiError:
+                errors["base"] = "invalid_api_key"
+            else:
+                return self.async_create_entry(
+                    title=models[DEFAULT_MODEL],
+                    data=user_input,
+                    options={CONF_MODEL: DEFAULT_MODEL},
+                )
+        return self.async_show_form(step_id="user", data_schema=USER_STEP_SCHEMA)
 
     @staticmethod
     def async_get_options_flow(
@@ -85,17 +80,16 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         return ElevenLabsOptionsFlow(config_entry)
 
 
-class ElevenLabsOptionsFlow(OptionsFlow):
+class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
     """ElevenLabs options flow."""
-
-    # id -> name
-    voices: dict[str, str] = {}
-    models: dict[str, str] = {}
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        super().__init__(config_entry)
         self.api_key: str = self.config_entry.data[CONF_API_KEY]
+        # id -> name
+        self.voices: dict[str, str] = {}
+        self.models: dict[str, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -112,15 +106,13 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                 data=user_input,
             )
 
-        schema = self.elevenlabs_config_option_schema(self.config_entry.options)
+        schema = self.elevenlabs_config_option_schema()
         return self.async_show_form(
             step_id="init",
             data_schema=schema,
         )
 
-    def elevenlabs_config_option_schema(
-        self, options: MappingProxyType[str, Any]
-    ) -> vol.Schema:
+    def elevenlabs_config_option_schema(self) -> vol.Schema:
         """Elevenlabs options schema."""
         return self.add_suggested_values_to_schema(
             vol.Schema(
@@ -147,5 +139,5 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                     ),
                 }
             ),
-            options,
+            self.options,
         )

@@ -11,53 +11,53 @@ from elevenlabs.core import ApiError
 from elevenlabs.types import Model, Voice
 
 from homeassistant.components import tts
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.tts import TextToSpeechEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_MODEL, CONF_VOICE, DEFAULT_MODEL
+from . import EleventLabsConfigEntry
+from .const import CONF_VOICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_model_by_id(client: AsyncElevenLabs, model_id: str) -> Model | None:
-    """Get ElevenLabs model from their API by the model_id."""
-    models = await client.models.get_all()
-    for maybe_model in models:
-        if maybe_model.model_id == model_id:
-            return maybe_model
-    return None
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EleventLabsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
     client = config_entry.runtime_data.client
-    # Get model, fallback to default
-    model_id = config_entry.options.get(CONF_MODEL, DEFAULT_MODEL)
-    model = await get_model_by_id(client, model_id)
-    assert model is not None, "Model was not found in async_setup_entry"
     voices = (await client.voices.get_all()).voices
     default_voice_id = config_entry.options.get(CONF_VOICE, voices[0].voice_id)
     async_add_entities(
-        [ElevenLabsTTSEntity(config_entry, client, model, voices, default_voice_id)]
+        [
+            ElevenLabsTTSEntity(
+                client,
+                config_entry.runtime_data.model,
+                voices,
+                default_voice_id,
+                config_entry.entry_id,
+            )
+        ]
     )
 
 
-class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
+class ElevenLabsTTSEntity(TextToSpeechEntity):
     """The ElevenLabs API entity."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
         client: AsyncElevenLabs,
         model: Model,
         voices: list[Voice],
         default_voice_id: str,
+        entry_id: str,
     ) -> None:
         """Init ElevenLabs TTS service."""
         self._client = client
@@ -73,9 +73,11 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
         ]
         if voice_indices:
             self._voices.insert(0, self._voices.pop(voice_indices[0]))
-        self._attr_name = config_entry.title
-        self._attr_unique_id = config_entry.entry_id
-        self._config_entry = config_entry
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @cached_property
     def default_language(self) -> str:
