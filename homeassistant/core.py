@@ -1471,8 +1471,8 @@ class EventBus:
         #
         # _match_all_listeners + _first_listeners[event_type] + _last_listeners[event_type]
         #
-        # self._listeners is rebuilt every time a listener is added or removed from the
-        # event bus. This is done to avoid having to rebuild the list of listeners every
+        # self._listeners is built every time a listener is added or removed from the
+        # event bus. This is done to avoid having to build the list of listeners every
         # time an event is fired.
         #
         self._listeners: defaultdict[
@@ -1675,10 +1675,10 @@ class EventBus:
         return self._async_listen_filterable_job(event_type, filterable_job, group)
 
     @callback
-    def _rebuild_all_listeners(self) -> None:
+    def _build_all_listeners(self) -> None:
         """Rebuild the listeners dictionary."""
         for this_event_type in set(chain(self._first_listeners, self._last_listeners)):
-            self._rebuild_event_type_listeners(this_event_type)
+            self._build_event_type_listeners(this_event_type)
 
     @callback
     def _async_remove_all_listener(
@@ -1686,7 +1686,7 @@ class EventBus:
     ) -> None:
         """Remove a match_all listener."""
         self._match_all_listeners.remove(filterable_job)
-        self._rebuild_all_listeners()
+        self._build_all_listeners()
 
     @callback
     def _async_listen_filterable_job(
@@ -1698,20 +1698,20 @@ class EventBus:
         """Listen for all events or events of a specific type."""
         if event_type == MATCH_ALL:
             self._match_all_listeners.append(filterable_job)
-            self._rebuild_all_listeners()
+            self._build_all_listeners()
             return functools.partial(self._async_remove_all_listener, filterable_job)
         if group is ListenGroup.FIRST:
             listen_group = self._first_listeners
         else:
             listen_group = self._last_listeners
         listen_group[event_type].append(filterable_job)
-        self._rebuild_event_type_listeners(event_type)
+        self._build_event_type_listeners(event_type)
         return functools.partial(
             self._async_remove_listener, listen_group, event_type, filterable_job
         )
 
-    def _rebuild_event_type_listeners(self, event_type: EventType[Any] | str) -> None:
-        """Rebuild the listeners dictionary for a specific event type."""
+    def _build_event_type_listeners(self, event_type: EventType[Any] | str) -> None:
+        """Build the listeners list for a specific event type."""
         if event_type in EVENTS_EXCLUDED_FROM_MATCH_ALL:
             event_match_all_listeners = EMPTY_LIST
         else:
@@ -1809,7 +1809,7 @@ class EventBus:
             _LOGGER.exception(
                 "Unable to remove unknown job listener %s", filterable_job
             )
-        self._rebuild_event_type_listeners(event_type)
+        self._build_event_type_listeners(event_type)
 
 
 class CompressedState(TypedDict):
