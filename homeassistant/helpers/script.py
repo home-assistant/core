@@ -769,7 +769,7 @@ class _ScriptRun:
                     context=self._context,
                     return_response=return_response,
                 ),
-                eager_start=True,
+                eager_start=False,
             )
         )
         if response_variable:
@@ -786,12 +786,17 @@ class _ScriptRun:
         """Activate the scene specified in the action."""
         self._step_log("activate scene")
         trace_set_result(scene=self._action[CONF_SCENE])
-        await self._hass.services.async_call(
-            scene.DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self._action[CONF_SCENE]},
-            blocking=True,
-            context=self._context,
+        await self._async_run_long_action(
+            self._hass.async_create_task_internal(
+                self._hass.services.async_call(
+                    scene.DOMAIN,
+                    SERVICE_TURN_ON,
+                    {ATTR_ENTITY_ID: self._action[CONF_SCENE]},
+                    blocking=True,
+                    context=self._context,
+                ),
+                eager_start=False,
+            )
         )
 
     async def _async_event_step(self) -> None:
