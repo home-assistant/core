@@ -1706,7 +1706,7 @@ class EventBus:
 
     @callback
     def _build_all_listeners(self) -> None:
-        """Rebuild the listeners dictionary."""
+        """Build the listeners dictionary for each event_type."""
         for event_type in set(chain(self._first_listeners, self._last_listeners)):
             self._build_event_type_listeners(event_type)
 
