@@ -59,6 +59,7 @@ async def async_attach_trigger(
     """Listen for events based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     variables = trigger_info["variables"]
+    loop = hass.loop
 
     template.attach(hass, config[CONF_EVENT_TYPE])
     event_types = template.render_complex(
@@ -154,7 +155,8 @@ async def async_attach_trigger(
                 # If event doesn't match, skip event
                 return
 
-        hass.async_run_hass_job(
+        loop.call_soon(
+            hass.async_run_hass_job,
             job,
             {
                 "trigger": {
