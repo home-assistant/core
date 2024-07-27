@@ -1,5 +1,7 @@
 """The tests for evohome storage load & save."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 from typing import Any, Final
 from unittest.mock import MagicMock, patch
@@ -21,27 +23,21 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .conftest import mock_get
+from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
 
-USERNAME_DIFF: Final = "diff_user@email.com"
-USERNAME_SAME: Final = "same_user@email.com"
-
-REFRESH_TOKEN: Final = "jg68ZCKYdxEI3fF..."
-ACCESS_TOKEN: Final = "1dc7z657UKzbhKA..."
+USERNAME_DIFF: Final = f"not_{USERNAME}"
+USERNAME_SAME: Final = USERNAME
 
 dt_util.set_default_time_zone(dt_util.UTC)
 
 ACCESS_TOKEN_EXP_DTM: Final = dt_util.now() + timedelta(hours=1)  # is TZ-aware
-ACCESS_TOKEN_EXP_STR: Final = (
-    ACCESS_TOKEN_EXP_DTM.isoformat()
-)  # 2024-07-27T19:27:29+00:00
+ACCESS_TOKEN_EXP_STR: Final = ACCESS_TOKEN_EXP_DTM.isoformat()
 
-SESSION_ID: Final = "F7181186..."
 
 TEST_CONFIG: Final = {
     CONF_USERNAME: USERNAME_SAME,
     CONF_PASSWORD: "password",
 }
-
 
 SZ_USERNAME: Final = "username"
 SZ_REFRESH_TOKEN: Final = "refresh_token"

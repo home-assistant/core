@@ -1,4 +1,4 @@
-"""Fixtures and helpers for the evohome integration."""
+"""Fixtures and helpers for the evohome tests."""
 
 from __future__ import annotations
 
