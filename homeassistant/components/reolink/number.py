@@ -8,6 +8,7 @@ from typing import Any
 
 from reolink_aio.api import Host
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
+from reolink_aio.enums import Chime
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -37,6 +38,18 @@ class ReolinkNumberEntityDescription(
     method: Callable[[Host, int, float], Any]
     mode: NumberMode = NumberMode.AUTO
     value: Callable[[Host, int], float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChimeNumberEntityDescription(
+    NumberEntityDescription,
+    ReolinkChannelEntityDescription,
+):
+    """A class that describes number entities."""
+
+    method: Callable[[Host, Chime, float], Any]
+    mode: NumberMode = NumberMode.AUTO
+    value: Callable[[Chime], float | None]
 
 
 NUMBER_ENTITIES = (
@@ -459,6 +472,20 @@ NUMBER_ENTITIES = (
     ),
 )
 
+CHIME_NUMBER_ENTITIES = (
+    ReolinkChimeNumberEntityDescription(
+        key="volume",
+        cmd_key="DingDongOpt",
+        translation_key="volume",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=4,
+        value=lambda chime: chime.volume,
+        method=lambda api, chime, value: api.set_volume(chime.dev_id, volume=int(value)),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -468,12 +495,20 @@ async def async_setup_entry(
     """Set up a Reolink number entities."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
+    entities: list[ReolinkNumberEntity | ReolinkChimeNumberEntity] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
         for entity_description in NUMBER_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
+    ]
+    entities.extend(
+        [
+            ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
+            for entity_description in CHIME_NUMBER_ENTITIES
+            for chime in reolink_data.host.api.chime_list
+        ]
     )
+    async_add_entities(entities)
 
 
 class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
@@ -510,6 +545,39 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         """Update the current value."""
         try:
             await self.entity_description.method(self._host.api, self._channel, value)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
+        self.async_write_ha_state()
+
+
+class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, ReolinkNumberEntity):
+    """Base number entity class for Reolink IP cameras."""
+
+    entity_description: ReolinkChimeNumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeNumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink chime number entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
+
+        self._attr_mode = entity_description.mode
+
+    @property
+    def native_value(self) -> float | None:
+        """State of the number entity."""
+        return self.entity_description.value(self._chime)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        try:
+            await self.entity_description.method(self._host.api, self._chime, value)
         except InvalidParameterError as err:
             raise ServiceValidationError(err) from err
         except ReolinkError as err:
