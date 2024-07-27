@@ -48,7 +48,6 @@ def dt_pair(dt_dtm: datetime) -> tuple[datetime, str]:
     return dt_util.parse_datetime(dt_str), dt_str  # type: ignore[return-value]
 
 
-# dt_util.set_default_time_zone(dt_util.UTC)
 ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(hours=1))
 
 USERNAME_DIFF: Final = f"not_{USERNAME}"
@@ -181,7 +180,6 @@ async def test_auth_tokens_past(
 ) -> None:
     """Test loading/saving authentication tokens that have expired."""
 
-    # dt_util.set_default_time_zone(dt_util.UTC)
     dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
     # make this access token have expired in the past...
