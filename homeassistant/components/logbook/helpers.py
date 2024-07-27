@@ -25,7 +25,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import CallbackOrder, async_track_state_change_event
 from homeassistant.util.event_type import EventType
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
@@ -200,7 +200,10 @@ def async_subscribe_events(
     if entity_ids:
         subscriptions.append(
             async_track_state_change_event(
-                hass, entity_ids, _forward_state_events_filtered
+                hass,
+                entity_ids,
+                _forward_state_events_filtered,
+                order=CallbackOrder.FIRST,
             )
         )
         return
