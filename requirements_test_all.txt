@@ -490,7 +490,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.15.3
+bimmer-connected[china]==0.16.0
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
