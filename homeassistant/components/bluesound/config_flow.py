@@ -28,6 +28,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._host: str | None = None
+        self._port = DEFAULT_PORT
         self._sync_status: SyncStatus | None = None
 
     async def async_step_user(
@@ -95,14 +96,19 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        if discovery_info.port is not None:
+            self._port = discovery_info.port
+
         session = async_get_clientsession(self.hass)
         try:
-            async with Player(discovery_info.host, session=session) as player:
+            async with Player(
+                discovery_info.host, self._port, session=session
+            ) as player:
                 sync_status = await player.sync_status(timeout=1)
         except (TimeoutError, aiohttp.ClientError):
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(format_unique_id(sync_status.mac, DEFAULT_PORT))
+        await self.async_set_unique_id(format_unique_id(sync_status.mac, self._port))
 
         self._host = discovery_info.host
         self._sync_status = sync_status
@@ -131,7 +137,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._sync_status.name,
                 data={
                     CONF_HOST: self._host,
-                    CONF_PORT: DEFAULT_PORT,
+                    CONF_PORT: self._port,
                 },
             )
 

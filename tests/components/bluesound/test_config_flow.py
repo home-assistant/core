@@ -94,11 +94,14 @@ async def test_user_flow_aleady_configured(
         result["flow_id"],
         {
             CONF_HOST: "1.1.1.1",
+            CONF_PORT: 11000,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "1.1.1.1"
 
     mock_player_sync_status.sync_status.assert_called_once()
 

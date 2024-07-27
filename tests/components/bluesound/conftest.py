@@ -55,7 +55,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "1.1.1.1",
+            CONF_HOST: "1.1.1.2",
             CONF_PORT: 11000,
         },
         unique_id="00:11:22:33:44:55-11000",
