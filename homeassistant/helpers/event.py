@@ -115,7 +115,6 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
         ],
         bool,
     ]
-    run_immediately: bool = True
 
 
 @dataclass(slots=True, frozen=True)
@@ -330,6 +329,16 @@ def async_track_state_change_event(
 
 
 @callback
+def _async_dispatch_entity_id_event_soon(
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
+    event: Event[_StateEventDataT],
+) -> None:
+    """Dispatch to listeners."""
+    hass.loop.call_soon(_async_dispatch_entity_id_event, hass, callbacks, event)
+
+
+@callback
 def _async_dispatch_entity_id_event(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
@@ -362,9 +371,8 @@ def _async_state_filter(
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     key=_TRACK_STATE_CHANGE_DATA,
     event_type=EVENT_STATE_CHANGED,
-    dispatcher_callable=_async_dispatch_entity_id_event,
+    dispatcher_callable=_async_dispatch_entity_id_event_soon,
     filter_callable=_async_state_filter,
-    run_immediately=False,
 )
 
 
@@ -451,7 +459,6 @@ def _async_track_event(
             tracker.event_type,
             partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=partial(tracker.filter_callable, hass, callbacks),
-            run_immediately=tracker.run_immediately,
         )
         event_data = _KeyedEventData(listener, callbacks)
         hass_data[tracker_key] = event_data

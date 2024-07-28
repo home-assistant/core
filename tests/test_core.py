@@ -3441,7 +3441,7 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "method",
-    ["async_listen_once"],
+    ["async_listen", "async_listen_once"],
 )
 async def test_async_listen_with_run_immediately_deprecated(
     hass: HomeAssistant,

@@ -1405,7 +1405,6 @@ def _event_repr(
 _FilterableJobType = tuple[
     HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None],  # job
     Callable[[_DataT], bool] | None,  # event_filter
-    bool,  # run_immediately
 ]
 
 
@@ -1543,8 +1542,7 @@ class EventBus:
             match_all_listeners = EMPTY_LIST
 
         event: Event[_DataT] | None = None
-        hass = self._hass
-        for job, event_filter, run_immediately in listeners + match_all_listeners:
+        for job, event_filter in listeners + match_all_listeners:
             if event_filter is not None:
                 try:
                     if event_data is None or not event_filter(event_data):
@@ -1562,12 +1560,8 @@ class EventBus:
                     context,
                 )
 
-            if not run_immediately:
-                hass.loop.call_soon(self._hass.async_run_hass_job, job, event)
-                continue
-
             try:
-                hass.async_run_hass_job(job, event)
+                self._hass.async_run_hass_job(job, event)
             except Exception:
                 _LOGGER.exception("Error running job: %s", job)
 
@@ -1597,7 +1591,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool = True,
+        run_immediately: bool | object = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1614,13 +1608,19 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if run_immediately in (True, False):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report(
+                "calls `async_listen` with run_immediately, which is"
+                " deprecated and will be removed in Home Assistant 2025.5",
+                error_if_core=False,
+            )
+
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        filterable_job = (
-            HassJob(listener, f"listen {event_type}"),
-            event_filter,
-            run_immediately,
-        )
+        filterable_job = (HassJob(listener, f"listen {event_type}"), event_filter)
         if event_type == EVENT_STATE_REPORTED:
             if not event_filter:
                 raise HomeAssistantError(
@@ -1700,7 +1700,6 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                True,
             ),
         )
         one_time_listener.remove = remove
@@ -1721,7 +1720,7 @@ class EventBus:
 
             # delete event_type list if empty
             if not self._listeners[event_type] and event_type != MATCH_ALL:
-                del self._listeners[event_type]
+                self._listeners.pop(event_type)
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
