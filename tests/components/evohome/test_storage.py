@@ -128,7 +128,7 @@ async def test_auth_tokens_null(
     hass_storage: dict[str, Any],
     idx: str,
 ) -> None:
-    """Test loading/saving authentication tokens when no cached tokens."""
+    """Test loading/saving authentication tokens when no cached tokens in the store."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA_NULL[idx]}
 
@@ -178,7 +178,7 @@ async def test_auth_tokens_same(
 async def test_auth_tokens_past(
     hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
 ) -> None:
-    """Test loading/saving authentication tokens that have expired."""
+    """Test loading/saving authentication tokens with same username, but expired."""
 
     dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
@@ -210,7 +210,7 @@ async def test_auth_tokens_past(
 async def test_auth_tokens_diff(
     hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
 ) -> None:
-    """Test loading/saving authentication tokens when different username."""
+    """Test loading/saving authentication tokens when unmatched username."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
