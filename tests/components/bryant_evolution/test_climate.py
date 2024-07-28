@@ -47,11 +47,12 @@ async def test_setup_integration_success(
 async def test_set_temperature_mode_cool(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
+    mock_evolution_client_factory,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting the temperature in cool mode."""
     # Start with known initial conditions
-    client = mock_evolution_entry.runtime_data[(1, 1)]
+    client = await mock_evolution_client_factory(1, 1, "/dev/unused")
     client.read_hvac_mode.return_value = ("COOL", False)
     client.read_cooling_setpoint.return_value = 75
     await trigger_polling(hass, freezer)
@@ -77,12 +78,13 @@ async def test_set_temperature_mode_cool(
 async def test_set_temperature_mode_heat(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
+    mock_evolution_client_factory,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting the temperature in heat mode."""
 
     # Start with known initial conditions
-    client = mock_evolution_entry.runtime_data[(1, 1)]
+    client = await mock_evolution_client_factory(1, 1, "/dev/unused")
     client.read_hvac_mode.return_value = ("HEAT", False)
     client.read_heating_setpoint.return_value = 60
     await trigger_polling(hass, freezer)
@@ -104,12 +106,13 @@ async def test_set_temperature_mode_heat(
 async def test_set_temperature_mode_heat_cool(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
+    mock_evolution_client_factory,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting the temperature in heat_cool mode."""
 
     # Enter heat_cool with known setpoints
-    mock_client = mock_evolution_entry.runtime_data[(1, 1)]
+    mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
     mock_client.read_hvac_mode.return_value = ("AUTO", False)
     mock_client.read_cooling_setpoint.return_value = 90
     mock_client.read_heating_setpoint.return_value = 40
@@ -137,10 +140,12 @@ async def test_set_temperature_mode_heat_cool(
 
 
 async def test_set_fan_mode(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_evolution_entry: MockConfigEntry,
+    mock_evolution_client_factory,
 ) -> None:
     """Test that setting fan mode works."""
-    mock_client = mock_evolution_entry.runtime_data[(1, 1)]
+    mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
     fan_modes = ["auto", "low", "med", "high"]
     for mode in fan_modes:
         # Make the call, modifting the mock client to throw an exception on
@@ -158,26 +163,32 @@ async def test_set_fan_mode(
         mock_client.set_fan_mode.assert_called_with(mode)
 
 
+@pytest.mark.parametrize(
+    ("hvac_mode", "evolution_mode"),
+    [("heat_cool", "auto"), ("heat", "heat"), ("cool", "cool"), ("off", "off")],
+)
 async def test_set_hvac_mode(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_evolution_entry: MockConfigEntry,
+    mock_evolution_client_factory,
+    hvac_mode,
+    evolution_mode,
 ) -> None:
     """Test that setting HVAC mode works."""
-    mock_client = mock_evolution_entry.runtime_data[(1, 1)]
-    hvac_modes = ["heat_cool", "heat", "cool", "off"]
-    for mode in hvac_modes:
-        # Make the call, modifting the mock client to throw an exception on
-        # read to ensure that the update is visible iff we call
-        # async_update_ha_state.
-        data = {ATTR_HVAC_MODE: mode}
-        data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-        mock_client.read_hvac_mode.side_effect = Exception("fake failure")
-        await hass.services.async_call(
-            CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True
-        )
-        await hass.async_block_till_done()
-        evolution_mode = "auto" if mode == "heat_cool" else mode
-        assert hass.states.get("climate.system_1_zone_1").state == evolution_mode
-        mock_client.set_hvac_mode.assert_called_with(evolution_mode)
+    mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
+
+    # Make the call, modifting the mock client to throw an exception on
+    # read to ensure that the update is visible iff we call
+    # async_update_ha_state.
+    data = {ATTR_HVAC_MODE: hvac_mode}
+    data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
+    mock_client.read_hvac_mode.side_effect = Exception("fake failure")
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("climate.system_1_zone_1").state == evolution_mode
+    mock_client.set_hvac_mode.assert_called_with(evolution_mode)
 
 
 @pytest.mark.parametrize(
@@ -187,6 +198,7 @@ async def test_set_hvac_mode(
 async def test_read_hvac_action_heat_cool(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
+    mock_evolution_client_factory,
     freezer: FrozenDateTimeFactory,
     curr_temp: int,
     expected_action: HVACAction,
@@ -195,7 +207,7 @@ async def test_read_hvac_action_heat_cool(
     htsp = 68
     clsp = 72
 
-    mock_client = mock_evolution_entry.runtime_data[(1, 1)]
+    mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
     mock_client.read_heating_setpoint.return_value = htsp
     mock_client.read_cooling_setpoint.return_value = clsp
     is_active = curr_temp < htsp or curr_temp > clsp
@@ -219,6 +231,7 @@ async def test_read_hvac_action_heat_cool(
 async def test_read_hvac_action(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
+    mock_evolution_client_factory,
     freezer: FrozenDateTimeFactory,
     mode: str,
     active: bool,
@@ -231,7 +244,7 @@ async def test_read_hvac_action(
         == HVACAction.OFF
     )
     # Perturb the system and verify we see an action.
-    mock_client = mock_evolution_entry.runtime_data[(1, 1)]
+    mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
     mock_client.read_heating_setpoint.return_value = 75  # Needed if mode == heat
     mock_client.read_hvac_mode.return_value = (mode, active)
     await trigger_polling(hass, freezer)
