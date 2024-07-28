@@ -57,9 +57,9 @@ async def async_setup_entry(
         for device in controller.devices
         if device.capabilities.device_type is DeviceType.VACUUM
     ]
-    for device in controller.legacy_devices:
-        await hass.async_add_executor_job(device.connect_and_wait_until_ready)
-        vacuums.append(EcovacsLegacyVacuum(device))
+    vacuums.extend(
+        [EcovacsLegacyVacuum(device) for device in controller.legacy_devices]
+    )
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
 
@@ -150,6 +150,11 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
             return STATE_RETURNING
 
         return None
+
+    @property
+    def available(self) -> bool:
+        """Return True if the vacuum is available."""
+        return super().available and self.state is not None
 
     @property
     def battery_level(self) -> int | None:
