@@ -342,7 +342,9 @@ class MatrixBot:
     async def _get_auth_tokens(self) -> JsonObjectType:
         """Read sorted authentication tokens from disk."""
         try:
-            return load_json_object(self._session_filepath)
+            return await self.hass.async_add_executor_job(
+                load_json_object, self._session_filepath
+            )
         except HomeAssistantError as ex:
             _LOGGER.warning(
                 "Loading authentication tokens from file '%s' failed: %s",
