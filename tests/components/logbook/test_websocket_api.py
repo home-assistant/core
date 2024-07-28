@@ -3017,14 +3017,7 @@ async def test_live_stream_with_changed_state_change(
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
 
     recieved_rows = []
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    recieved_rows.extend(msg["event"]["events"])
-
-    await hass.async_block_till_done()
-
-    while len(recieved_rows) < 2:
+    while len(recieved_rows) < 3:
         msg = await asyncio.wait_for(websocket_client.receive_json(), 2.5)
         assert msg["id"] == 7
         assert msg["type"] == "event"
