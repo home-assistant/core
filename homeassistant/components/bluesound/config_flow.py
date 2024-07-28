@@ -65,14 +65,14 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, description="host"): str,
+                    vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=11000): int,
                 }
             ),
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import `incomfort` config entry from configuration.yaml."""
+        """Import bluesound config entry from configuration.yaml."""
         session = async_get_clientsession(self.hass)
         async with Player(
             import_data[CONF_HOST], import_data[CONF_PORT], session=session

@@ -2,8 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-import aiohttp
-from pyblu import SyncStatus
+from aiohttp import ClientConnectionError
 
 from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -16,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player_sync_status: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -42,7 +41,7 @@ async def test_user_flow_success(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, sync_status: SyncStatus, mock_player: AsyncMock
+    hass: HomeAssistant, mock_player: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -50,7 +49,7 @@ async def test_user_flow_cannot_connect(
         context={"source": SOURCE_USER},
     )
 
-    mock_player.sync_status.side_effect = aiohttp.ClientConnectionError
+    mock_player.sync_status.side_effect = ClientConnectionError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -63,7 +62,6 @@ async def test_user_flow_cannot_connect(
     assert result["step_id"] == "user"
 
     mock_player.sync_status.side_effect = None
-    mock_player.sync_status.return_value = sync_status
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -81,7 +79,7 @@ async def test_user_flow_cannot_connect(
 
 async def test_user_flow_aleady_configured(
     hass: HomeAssistant,
-    mock_player_sync_status: AsyncMock,
+    mock_player: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
@@ -103,11 +101,11 @@ async def test_user_flow_aleady_configured(
 
     assert mock_config_entry.data[CONF_HOST] == "1.1.1.1"
 
-    mock_player_sync_status.sync_status.assert_called_once()
+    mock_player.sync_status.assert_called_once()
 
 
 async def test_import_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player_sync_status: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -122,13 +120,14 @@ async def test_import_flow_success(
     assert result["result"].unique_id == "00:11:22:33:44:55-11000"
 
     mock_setup_entry.assert_called_once()
-    mock_player_sync_status.sync_status.assert_called_once()
+    mock_player.sync_status.assert_called_once()
 
 
 async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, mock_player_sync_status_client_connection_error: AsyncMock
+    hass: HomeAssistant, mock_player: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
+    mock_player.sync_status.side_effect = ClientConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -138,12 +137,12 @@ async def test_import_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    mock_player_sync_status_client_connection_error.sync_status.assert_called_once()
+    mock_player.sync_status.assert_called_once()
 
 
 async def test_import_flow_already_configured(
     hass: HomeAssistant,
-    mock_player_sync_status: AsyncMock,
+    mock_player: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
@@ -156,11 +155,11 @@ async def test_import_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    mock_player_sync_status.sync_status.assert_called_once()
+    mock_player.sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player_sync_status: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -181,7 +180,7 @@ async def test_zeroconf_flow_success(
     assert result["step_id"] == "confirm"
 
     mock_setup_entry.assert_not_called()
-    mock_player_sync_status.sync_status.assert_called_once()
+    mock_player.sync_status.assert_called_once()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -196,9 +195,10 @@ async def test_zeroconf_flow_success(
 
 
 async def test_zeroconf_flow_cannot_connect(
-    hass: HomeAssistant, mock_player_sync_status_client_connection_error: AsyncMock
+    hass: HomeAssistant, mock_player: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
+    mock_player.sync_status.side_effect = ClientConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -216,12 +216,12 @@ async def test_zeroconf_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    mock_player_sync_status_client_connection_error.sync_status.assert_called_once()
+    mock_player.sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_already_configured(
     hass: HomeAssistant,
-    mock_player_sync_status: AsyncMock,
+    mock_player: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured and update the host."""
@@ -244,4 +244,4 @@ async def test_zeroconf_flow_already_configured(
 
     assert mock_config_entry.data[CONF_HOST] == "1.1.1.1"
 
-    mock_player_sync_status.sync_status.assert_called_once()
+    mock_player.sync_status.assert_called_once()

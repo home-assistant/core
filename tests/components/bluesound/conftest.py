@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientConnectionError
 from pyblu import SyncStatus
 import pytest
 
@@ -66,24 +65,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_player_sync_status(
-    sync_status: SyncStatus, mock_player: AsyncMock
-) -> AsyncMock:
-    """Mock the sync status of a player."""
-    mock_player.sync_status.return_value = sync_status
-    return mock_player
-
-
-@pytest.fixture
-def mock_player_sync_status_client_connection_error(
-    mock_player: AsyncMock,
-) -> AsyncMock:
-    """Mock the sync status of a player with a group."""
-    mock_player.sync_status.side_effect = ClientConnectionError
-    return mock_player
-
-
-@pytest.fixture
 def mock_player() -> Generator[AsyncMock]:
     """Mock the player."""
     with (
@@ -98,4 +79,25 @@ def mock_player() -> Generator[AsyncMock]:
         player = mock_player.return_value
         player.__aenter__.return_value = player
         player.status.return_value = None
+        player.sync_status.return_value = SyncStatus(
+            etag="etag",
+            id="1.1.1.1:11000",
+            mac="00:11:22:33:44:55",
+            name="player-name",
+            image="invalid_url",
+            initialized=True,
+            brand="brand",
+            model="model",
+            model_name="model-name",
+            volume_db=0.5,
+            volume=50,
+            group=None,
+            master=None,
+            slaves=None,
+            zone=None,
+            zone_master=None,
+            zone_slave=None,
+            mute_volume_db=None,
+            mute_volume=None,
+        )
         yield player

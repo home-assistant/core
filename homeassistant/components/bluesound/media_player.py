@@ -247,9 +247,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Bluesound entry."""
-    if DATA_BLUESOUND not in hass.data:
-        hass.data[DATA_BLUESOUND] = []
-
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
 
