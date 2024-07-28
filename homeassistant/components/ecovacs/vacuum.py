@@ -26,14 +26,13 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
 from . import EcovacsConfigEntry
 from .const import DOMAIN
-from .entity import EcovacsEntity
+from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,12 +71,10 @@ async def async_setup_entry(
     )
 
 
-class EcovacsLegacyVacuum(StateVacuumEntity):
+class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
     """Legacy Ecovacs vacuums."""
 
     _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
-    _attr_has_entity_name = True
-    _attr_should_poll = False
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.RETURN_HOME
@@ -90,30 +87,24 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         | VacuumEntityFeature.FAN_SPEED
     )
 
-    def __init__(self, device: sucks.VacBot) -> None:
-        """Initialize the Ecovacs Vacuum."""
-        self.device = device
-        vacuum = self.device.vacuum
-
-        self.error: str | None = None
-        self._attr_unique_id = vacuum["did"]
-
-        if (name := vacuum.get("nick")) is None:
-            name = vacuum.get("name", vacuum["did"])
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, vacuum["did"])},
-            model=vacuum.get("deviceName"),
-            name=name,
-            serial_number=vacuum["did"],
-        )
-
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
-        self.device.statusEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.batteryEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.lifespanEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.errorEvents.subscribe(self.on_error)
+        self._event_listeners.append(
+            self.device.statusEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.batteryEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.lifespanEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(self.device.errorEvents.subscribe(self.on_error))
 
     def on_error(self, error: str) -> None:
         """Handle an error event from the robot.
