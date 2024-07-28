@@ -5,8 +5,12 @@ from __future__ import annotations
 from math import ceil
 from typing import Any
 
-from TISControlProtocol.BytesHelper import build_packet, int_to_8_bit_binary
+from TISControlProtocol.BytesHelper import int_to_8_bit_binary
 from TISControlProtocol.mock_api import TISApi
+from TISControlProtocol.Protocols.udp.ProtocolHandler import (
+    TISPacket,
+    TISProtocolHandler,
+)
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import MATCH_ALL, STATE_OFF, STATE_ON, Platform
@@ -14,6 +18,8 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TISConfigEntry
+
+protocol_handler = TISProtocolHandler()
 
 
 async def async_setup_entry(
@@ -65,26 +71,10 @@ class TISSwitch(SwitchEntity):
         self.gateway = gateway
         self.channel_number = int(channel_number)
         self.listener = None
-        self.on_packet = build_packet(
-            operation_code=[0x00, 0x31],
-            ip_address=self.api.host,
-            destination_mac="FF:FF:FF:FF:FF:FF",
-            device_id=self.device_id,
-            additional_packets=[self.channel_number, 0x64, 0x00, 0x00],
-        )
-        self.off_packet = build_packet(
-            operation_code=[0x00, 0x31],
-            ip_address=self.api.host,
-            destination_mac="FF:FF:FF:FF:FF:FF",
-            device_id=self.device_id,
-            additional_packets=[self.channel_number, 0x00, 0x00, 0x00],
-        )
-        self.update_packet = build_packet(
-            operation_code=[0x00, 0x33],
-            ip_address=self.api.host,
-            destination_mac="FF:FF:FF:FF:FF:FF",
-            device_id=self.device_id,
-            additional_packets=[],
+        self.on_packet: TISPacket = protocol_handler.generate_control_on_packet(self)
+        self.off_packet: TISPacket = protocol_handler.generate_control_off_packet(self)
+        self.update_packet: TISPacket = protocol_handler.generate_control_update_packet(
+            self
         )
 
     async def async_added_to_hass(self) -> None:
@@ -130,10 +120,7 @@ class TISSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         ack_status = await self.api.protocol.sender.send_packet_with_ack(
-            self.gateway,
             self.on_packet,
-            {"device_id": self.device_id, "operation_code": [0x00, 0x31]},
-            self.channel_number,
         )
         if ack_status:
             self._attr_state = STATE_ON
@@ -142,10 +129,7 @@ class TISSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         ack_status = await self.api.protocol.sender.send_packet_with_ack(
-            self.gateway,
-            self.off_packet,
-            {"device_id": self.device_id, "operation_code": [0x00, 0x31]},
-            self.channel_number,
+            self.off_packet
         )
         if ack_status:
             self._attr_state = STATE_OFF
