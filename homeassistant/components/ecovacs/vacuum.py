@@ -168,6 +168,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         data: dict[str, Any] = {}
         data[ATTR_ERROR] = self.error
 
+        # these attributes are deprecated and can be removed in 2025.2
         for key, val in self.device.components.items():
             attr_name = ATTR_COMPONENT_PREFIX + key
             data[attr_name] = int(val * 100)
