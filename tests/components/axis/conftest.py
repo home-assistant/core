@@ -85,7 +85,6 @@ def fixture_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="config_entry")
 def fixture_config_entry(
-    hass: HomeAssistant,
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
     config_entry_version: int,
