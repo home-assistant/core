@@ -118,6 +118,27 @@ def mock_mqtt_client(mock_authenticator: Mock) -> Generator[Mock]:
 
 
 @pytest.fixture
+def mock_vacbot(device_fixture: str) -> Generator[Mock]:
+    """Mock the legacy VacBot."""
+    with patch(
+        "homeassistant.components.ecovacs.controller.VacBot",
+        autospec=True,
+    ) as mock:
+        vacbot = mock.return_value
+        vacbot.vacuum = load_json_object_fixture(
+            f"devices/{device_fixture}/device.json", DOMAIN
+        )
+        vacbot.statusEvents = Mock()
+        vacbot.batteryEvents = Mock()
+        vacbot.lifespanEvents = Mock()
+        vacbot.errorEvents = Mock()
+        vacbot.battery_status = None
+        vacbot.fan_speed = None
+        vacbot.components = {}
+        yield vacbot
+
+
+@pytest.fixture
 def mock_device_execute() -> Generator[AsyncMock]:
     """Mock the device execute function."""
     with patch.object(

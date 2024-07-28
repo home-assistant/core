@@ -1357,7 +1357,7 @@ pyControl4==1.1.0
 pyDuotecno==2024.5.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.3
+pyElectra==1.2.4
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
