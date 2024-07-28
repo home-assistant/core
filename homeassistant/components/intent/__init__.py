@@ -24,6 +24,8 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
+from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     SERVICE_CLOSE_VALVE,
@@ -31,9 +33,6 @@ from homeassistant.components.valve import (
     SERVICE_SET_VALVE_POSITION,
     ValveDeviceClass,
 )
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TOGGLE,

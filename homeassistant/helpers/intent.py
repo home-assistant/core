@@ -7,7 +7,7 @@ import asyncio
 from collections.abc import Callable, Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass, field
-from enum import Enum, auto, StrEnum
+from enum import Enum, StrEnum, auto
 from functools import cached_property
 from itertools import groupby
 import logging
