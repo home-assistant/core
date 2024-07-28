@@ -42,6 +42,13 @@ class _EmptyStoreT(TypedDict):
     pass
 
 
+SZ_USERNAME: Final = "username"
+SZ_REFRESH_TOKEN: Final = "refresh_token"
+SZ_ACCESS_TOKEN: Final = "access_token"
+SZ_ACCESS_TOKEN_EXPIRES: Final = "access_token_expires"
+SZ_USER_DATA: Final = "user_data"
+
+
 def dt_pair(dt_dtm: datetime) -> tuple[datetime, str]:
     """Return a datetime without milliseconds and its string representation."""
     dt_str = dt_dtm.isoformat(timespec="seconds")  # e.g. 2024-07-28T00:57:29+01:00
@@ -57,13 +64,6 @@ TEST_CONFIG: Final = {
     CONF_USERNAME: USERNAME_SAME,
     CONF_PASSWORD: "password",
 }
-
-SZ_USERNAME: Final = "username"
-SZ_REFRESH_TOKEN: Final = "refresh_token"
-SZ_ACCESS_TOKEN: Final = "access_token"
-SZ_ACCESS_TOKEN_EXPIRES: Final = "access_token_expires"
-SZ_USER_DATA: Final = "user_data"
-
 
 TEST_DATA: Final[dict[str, _TokenStoreT]] = {
     "sans_session_id": {
@@ -81,12 +81,10 @@ TEST_DATA: Final[dict[str, _TokenStoreT]] = {
     },
 }
 
-
 TEST_DATA_NULL: Final[dict[str, _EmptyStoreT | None]] = {
     "store_is_absent": None,
     "store_was_reset": {},
 }
-
 
 DOMAIN_STORAGE_BASE: Final = {
     "version": STORAGE_VER,
@@ -152,7 +150,7 @@ async def test_auth_tokens_null(
 async def test_auth_tokens_same(
     hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
 ) -> None:
-    """Test loading/saving authentication tokens when same username."""
+    """Test loading/saving authentication tokens when matching username."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
@@ -178,7 +176,7 @@ async def test_auth_tokens_same(
 async def test_auth_tokens_past(
     hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
 ) -> None:
-    """Test loading/saving authentication tokens with same username, but expired."""
+    """Test loading/saving authentication tokens with matching username, but expired."""
 
     dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
