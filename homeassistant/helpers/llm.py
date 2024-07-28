@@ -677,7 +677,11 @@ class ScriptTool(Tool):
 
                 self.parameters = vol.Schema(schema)
 
-                aliases = entity_entry.aliases
+                aliases: list[str] = []
+                if entity_entry.name:
+                    aliases.append(entity_entry.name)
+                if entity_entry.aliases:
+                    aliases.extend(entity_entry.aliases)
                 if aliases:
                     if self.description:
                         self.description = (

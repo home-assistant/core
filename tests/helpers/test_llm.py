@@ -683,7 +683,7 @@ async def test_script_tool(
     async_expose_entity(hass, "conversation", "script.test_script", True)
 
     entity_registry.async_update_entity(
-        "script.test_script", aliases={"my test script"}
+        "script.test_script", name="script name", aliases={"script alias"}
     )
 
     area = area_registry.async_create("Living room")
@@ -698,7 +698,10 @@ async def test_script_tool(
 
     tool = tools[0]
     assert tool.name == "test_script"
-    assert tool.description == "This is a test script. Aliases: ['my test script']"
+    assert (
+        tool.description
+        == "This is a test script. Aliases: ['script name', 'script alias']"
+    )
     schema = {
         vol.Required("beer", description="Number of beers"): cv.string,
         vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
@@ -712,7 +715,7 @@ async def test_script_tool(
 
     assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
         "test_script": (
-            "This is a test script. Aliases: ['my test script']",
+            "This is a test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
         )
     }
@@ -784,13 +787,16 @@ async def test_script_tool(
 
     tool = tools[0]
     assert tool.name == "test_script"
-    assert tool.description == "This is a new test script. Aliases: ['my test script']"
+    assert (
+        tool.description
+        == "This is a new test script. Aliases: ['script name', 'script alias']"
+    )
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
         "test_script": (
-            "This is a new test script. Aliases: ['my test script']",
+            "This is a new test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
         )
     }
