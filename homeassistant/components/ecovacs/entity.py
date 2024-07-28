@@ -132,7 +132,7 @@ class EcovacsLegacyEntity(Entity):
     def __init__(self, device: VacBot) -> None:
         """Initialize the legacy Ecovacs entity."""
         self.device = device
-        vacuum = self.device.vacuum
+        vacuum = device.vacuum
 
         self.error: str | None = None
         self._attr_unique_id = vacuum["did"]
