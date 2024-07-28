@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -189,7 +189,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         control_fn=async_block_client_control_fn,
         device_info_fn=async_client_device_info_fn,
-        event_is_on=CLIENT_UNBLOCKED,
+        event_is_on=set(CLIENT_UNBLOCKED),
         event_to_subscribe=CLIENT_BLOCKED + CLIENT_UNBLOCKED,
         is_on_fn=lambda hub, client: not client.blocked,
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -342,7 +342,7 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
             return
 
         description = self.entity_description
-        obj = description.object_fn(self.hub.api, self._obj_id)
+        obj = description.object_fn(self.api, self._obj_id)
         if (is_on := description.is_on_fn(self.hub, obj)) != self.is_on:
             self._attr_is_on = is_on
 
@@ -353,8 +353,9 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
             return
 
         description = self.entity_description
-        assert isinstance(description.event_to_subscribe, tuple)
-        assert isinstance(description.event_is_on, tuple)
+        if TYPE_CHECKING:
+            assert description.event_to_subscribe is not None
+            assert description.event_is_on is not None
 
         if event.key in description.event_to_subscribe:
             self._attr_is_on = event.key in description.event_is_on
@@ -367,7 +368,7 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
 
         if self.entity_description.custom_subscribe is not None:
             self.async_on_remove(
-                self.entity_description.custom_subscribe(self.hub.api)(
+                self.entity_description.custom_subscribe(self.api)(
                     self.async_signalling_callback, ItemEvent.CHANGED
                 ),
             )

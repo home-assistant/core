@@ -13,7 +13,8 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import ATTR_DURATION, GeniusHubConfigEntry, GeniusZone
+from . import ATTR_DURATION, GeniusHubConfigEntry
+from .entity import GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
 

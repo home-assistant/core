@@ -197,7 +197,8 @@ build.json @home-assistant/supervisor
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
-/homeassistant/components/bluesound/ @thrawnarn
+/homeassistant/components/bluesound/ @thrawnarn @LouisChrist
+/tests/components/bluesound/ @thrawnarn @LouisChrist
 /homeassistant/components/bluetooth/ @bdraco
 /tests/components/bluetooth/ @bdraco
 /homeassistant/components/bluetooth_adapters/ @bdraco
@@ -384,6 +385,7 @@ build.json @home-assistant/supervisor
 /tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin @alexandrecuer
+/tests/components/emoncms/ @borpin @alexandrecuer
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85
@@ -794,6 +796,8 @@ build.json @home-assistant/supervisor
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linear_garage_door/ @IceBotYT
 /tests/components/linear_garage_door/ @IceBotYT
+/homeassistant/components/linkplay/ @Velleman
+/tests/components/linkplay/ @Velleman
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
@@ -836,7 +840,8 @@ build.json @home-assistant/supervisor
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
 /tests/components/madvr/ @iloveicedgreentea
-/homeassistant/components/mastodon/ @fabaff
+/homeassistant/components/mastodon/ @fabaff @andrew-codechimp
+/tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter

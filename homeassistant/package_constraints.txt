@@ -3,14 +3,13 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.9.5
+aiohttp==3.10.0b1
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.1.2
-async-upnp-client==0.39.0
+async-upnp-client==0.40.0
 atomicwrites-homeassistant==1.4.1
 attrs==23.2.0
 awesomeversion==24.6.0

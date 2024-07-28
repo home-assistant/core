@@ -155,7 +155,16 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serialized["via_device_id"] = ANY
         if serialized["primary_config_entry"] is not None:
             serialized["primary_config_entry"] = ANY
-        return serialized
+        return cls._remove_created_and_modified_at(serialized)
+
+    @classmethod
+    def _remove_created_and_modified_at(
+        cls, data: SerializableData
+    ) -> SerializableData:
+        """Remove created_at and modified_at from the data."""
+        data.pop("created_at", None)
+        data.pop("modified_at", None)
+        return data
 
     @classmethod
     def _serializable_entity_registry_entry(
@@ -172,7 +181,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             }
         )
         serialized.pop("categories")
-        return serialized
+        return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
