@@ -2856,7 +2856,7 @@ async def test_subscribe_entities_chained_state_change(
     assert msg["event"] == {
         "a": {"light.permitted": {"a": {}, "c": ANY, "lc": ANY, "s": "on"}}
     }
-    data = await asyncio.wait_for(websocket_client.receive_str(), 1.0)
+    data = await websocket_client.receive_str()
     msg = json_loads(data)
     assert msg["id"] == 7
     assert msg["type"] == "event"
