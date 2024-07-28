@@ -1405,6 +1405,9 @@ pybalboa==1.0.2
 # homeassistant.components.blackbird
 pyblackbird==0.6
 
+# homeassistant.components.bluesound
+pyblu==0.4.0
+
 # homeassistant.components.neato
 pybotvac==0.0.25
 
