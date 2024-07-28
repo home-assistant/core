@@ -2989,7 +2989,7 @@ async def test_live_stream_with_changed_state_change(
 
     hass.states.async_set("binary_sensor.is_light", "ignored")
     hass.states.async_set("binary_sensor.is_light", "init")
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     @callback
     def auto_off_listener(event):
