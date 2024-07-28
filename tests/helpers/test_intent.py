@@ -765,7 +765,7 @@ async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> N
         )
 
     # Still fails even if we provide the domain
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.InvalidSlotInfo):
         await intent.async_handle(
             hass,
             "test",

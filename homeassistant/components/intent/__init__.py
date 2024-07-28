@@ -71,9 +71,13 @@ __all__ = [
     "DOMAIN",
 ]
 
-ONOFF_DEVICE_CLASSES={
-    CoverDeviceClass, ValveDeviceClass, SwitchDeviceClass, MediaPlayerDeviceClass,
+ONOFF_DEVICE_CLASSES = {
+    CoverDeviceClass,
+    ValveDeviceClass,
+    SwitchDeviceClass,
+    MediaPlayerDeviceClass,
 }
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""

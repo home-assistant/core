@@ -21,7 +21,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             "Opening {}",
             description="Opens a cover",
             platforms={DOMAIN},
-            device_classes={CoverDeviceClass}
+            device_classes={CoverDeviceClass},
         ),
     )
     intent.async_register(
@@ -33,6 +33,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             "Closing {}",
             description="Closes a cover",
             platforms={DOMAIN},
-            device_classes={CoverDeviceClass}
+            device_classes={CoverDeviceClass},
         ),
     )

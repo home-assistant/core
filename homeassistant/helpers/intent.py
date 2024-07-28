@@ -820,7 +820,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_states: set[str] | None = None,
         description: str | None = None,
         platforms: set[str] | None = None,
-        device_classes: set[StrEnum] | None = None,
+        device_classes: set[type[StrEnum]] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -853,26 +853,33 @@ class DynamicServiceIntentHandler(IntentHandler):
     @cached_property
     def slot_schema(self) -> dict:
         """Return a slot schema."""
+        domain_validator = vol.In(self.required_domains) if self.required_domains else cv.string
         slot_schema = {
             vol.Any("name", "area", "floor"): non_empty_string,
-            vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional("preferred_area_id"): cv.string,
-            vol.Optional("preferred_floor_id"): cv.string,
+            vol.Optional("domain"): vol.All(cv.ensure_list, [domain_validator]),
         }
         if self.device_classes:
-            # The traditional way to do this is with vol.Coerce, but we build a
-            # flatlist to give this a simple description when exposed as an API.
-            all_device_classes = [
-                enum_value.value
-                for device_class in self.device_classes
-                for enum_value in device_class
-            ]
-            slot_schema.update({
-                vol.Optional("device_class"): vol.All(
-                    cv.ensure_list,
-                    [vol.Any(*all_device_classes)],
-                )
+            # The typical way to match enums is with vol.Coerce, but we instead
+            # build a flattened list of strings to make the API simpler to describe
+            # programmatically since slot schema is an input to LLMs
+            flattened_device_classes = vol.In({
+                device_class.value
+                for device_class_enum in self.device_classes
+                for device_class in device_class_enum
             })
+            slot_schema.update(
+                {
+                    vol.Optional("device_class"): vol.All(
+                        cv.ensure_list,
+                        [flattened_device_classes],
+                    )
+                }
+            )
+
+        slot_schema.update({
+            vol.Optional("preferred_area_id"): cv.string,
+            vol.Optional("preferred_floor_id"): cv.string,
+        })
 
         if self.required_slots:
             slot_schema.update(
@@ -925,9 +932,6 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         if "domain" in slots:
             domains = set(slots["domain"]["value"])
-            if self.required_domains:
-                # Must be a subset of intent's required domain(s)
-                domains.intersection_update(self.required_domains)
 
         if "device_class" in slots:
             device_classes = set(slots["device_class"]["value"])
@@ -1135,7 +1139,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_states: set[str] | None = None,
         description: str | None = None,
         platforms: set[str] | None = None,
-        device_classes: set[StrEnum] | None = None,
+        device_classes: set[type[StrEnum]] | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
