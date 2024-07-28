@@ -859,9 +859,8 @@ class DynamicServiceIntentHandler(IntentHandler):
             vol.Optional("domain"): vol.All(cv.ensure_list, [domain_validator]),
         }
         if self.device_classes:
-            # The typical way to match enums is with vol.Coerce, but we instead
-            # build a flattened list of strings to make the API simpler to describe
-            # programmatically since slot schema is an input to LLMs
+            # The typical way to match enums is with vol.Coerce, but we build a
+            # flat list to make the API simpler to describe programmatically
             flattened_device_classes = vol.In({
                 device_class.value
                 for device_class_enum in self.device_classes
