@@ -386,8 +386,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if self._ac_device:
-            if self._current_tado_hvac_mode == CONST_MODE_OFF:
-                return CONST_FAN_AUTO
+            if self._current_tado_hvac_mode in [
+                CONST_MODE_OFF,
+                CONST_MODE_SMART_SCHEDULE,
+            ]:
+                return FAN_AUTO
             if self._current_tado_capabilities[self._current_tado_hvac_mode].get(
                 "fanSpeeds"
             ):
@@ -620,13 +623,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                     self._device_id
                 ][TEMP_OFFSET][offset_key]
 
-        _LOGGER.info(
-            "Current fan speed and fan level : %s ; %s",
-            self._tado_zone_data.current_fan_speed,
-            self._tado_zone_data.current_fan_level,
-        )
-
-        if self._current_tado_hvac_mode != CONST_MODE_OFF:
+        self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
+        self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
+        if self._current_tado_hvac_mode not in [
+            CONST_MODE_OFF,
+            CONST_MODE_SMART_SCHEDULE,
+        ]:
             if self._current_tado_capabilities[self._current_tado_hvac_mode].get(
                 "fanLevel"
             ):
@@ -636,9 +638,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 "fanSpeeds"
             ):
                 self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
-
-        self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
-        self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
         self._current_tado_vertical_swing = (
             self._tado_zone_data.current_vertical_swing_mode
