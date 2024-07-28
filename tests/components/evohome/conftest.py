@@ -50,7 +50,7 @@ async def mock_get(
     if self.refresh_token is None:
         self.refresh_token = f"new_{REFRESH_TOKEN}"
 
-    if self.access_token_expires is None or self.access_token_expires < datetime.now():
+    if self.access_token is None or self.access_token_expires < datetime.now():
         self.access_token = f"new_{ACCESS_TOKEN}"
         self.access_token_expires = datetime.now() + timedelta(minutes=30)
 
