@@ -7,7 +7,7 @@ import asyncio
 from collections.abc import Callable, Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum, auto, StrEnum
 from functools import cached_property
 from itertools import groupby
 import logging
@@ -820,6 +820,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_states: set[str] | None = None,
         description: str | None = None,
         platforms: set[str] | None = None,
+        device_classes: set[StrEnum] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -829,6 +830,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.required_states = required_states
         self.description = description
         self.platforms = platforms
+        self.device_classes = device_classes
 
         self.required_slots: _IntentSlotsType = {}
         if required_slots:
@@ -854,10 +856,23 @@ class DynamicServiceIntentHandler(IntentHandler):
         slot_schema = {
             vol.Any("name", "area", "floor"): non_empty_string,
             vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional("preferred_area_id"): cv.string,
             vol.Optional("preferred_floor_id"): cv.string,
         }
+        if self.device_classes:
+            # The traditional way to do this is with vol.Coerce, but we build a
+            # flatlist to give this a simple description when exposed as an API.
+            all_device_classes = [
+                enum_value.value
+                for device_class in self.device_classes
+                for enum_value in device_class
+            ]
+            slot_schema.update({
+                vol.Optional("device_class"): vol.All(
+                    cv.ensure_list,
+                    [vol.Any(*all_device_classes)],
+                )
+            })
 
         if self.required_slots:
             slot_schema.update(
@@ -1120,6 +1135,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_states: set[str] | None = None,
         description: str | None = None,
         platforms: set[str] | None = None,
+        device_classes: set[StrEnum] | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
@@ -1132,6 +1148,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
             required_states=required_states,
             description=description,
             platforms=platforms,
+            device_classes=device_classes,
         )
         self.domain = domain
         self.service = service
