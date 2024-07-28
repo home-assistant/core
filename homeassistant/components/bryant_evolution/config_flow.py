@@ -26,9 +26,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def _enumerate_sz(tty: str) -> list[tuple[int, int]]:
     """Return (system, zone) tuples for each system+zone accessible through tty."""
     return [
-        (1, x.zone_id) for x in await BryantEvolutionLocalClient.enumerate_zones(1, tty)
-    ] + [
-        (2, x.zone_id) for x in await BryantEvolutionLocalClient.enumerate_zones(2, tty)
+        (system_id, zone.zone_id)
+        for zone in await BryantEvolutionLocalClient.enumerate_zones(system_id, tty)
+        for system_id in (1, 2)
     ]
 
 
