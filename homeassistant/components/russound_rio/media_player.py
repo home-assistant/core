@@ -116,6 +116,7 @@ class RussoundZoneDevice(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -211,21 +212,29 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
-        await self._zone.send_event("ZoneOff")
+        await self._zone.zone_off()
 
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
-        await self._zone.send_event("ZoneOn")
+        await self._zone.zone_on()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        await self._zone.send_event("KeyPress", "Volume", rvol)
+        await self._zone.set_volume(rvol)
 
     async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
         for source_id, src in self._sources.items():
             if src.name.lower() != source.lower():
                 continue
-            await self._zone.send_event("SelectSource", source_id)
+            await self._zone.select_source(source_id)
             break
+
+    async def async_volume_up(self) -> None:
+        """Step the volume up."""
+        await self._zone.volume_up()
+
+    async def async_volume_down(self) -> None:
+        """Step the volume down."""
+        await self._zone.volume_down()
