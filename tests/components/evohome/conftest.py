@@ -47,11 +47,12 @@ async def mock_get(
     """Return the JSON for a HTTP get of a given URL."""
 
     # a proxy for the behaviour of the real web API
-    if not self.refresh_token:
+    if self.refresh_token is None:
         self.refresh_token = f"new_{REFRESH_TOKEN}"
-    self.access_token = f"new_{ACCESS_TOKEN}"
 
-    self.access_token_expires = datetime.now() + timedelta(minutes=30)
+    if self.access_token_expires is None or self.access_token_expires < datetime.now():
+        self.access_token = f"new_{ACCESS_TOKEN}"
+        self.access_token_expires = datetime.now() + timedelta(minutes=30)
 
     # assume a valid GET, and return the JSON for that web API
     if url == "userAccount":  #                    userAccount

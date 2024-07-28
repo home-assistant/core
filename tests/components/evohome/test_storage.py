@@ -145,7 +145,7 @@ async def test_auth_tokens_null(
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
-    assert data[SZ_ACCESS_TOKEN_EXPIRES] > dt_util.now().isoformat()
+    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) > dt_util.now()
 
 
 @pytest.mark.parametrize("idx", TEST_DATA)
@@ -170,8 +170,8 @@ async def test_auth_tokens_same(
 
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
-    assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
-    assert data[SZ_ACCESS_TOKEN_EXPIRES] > dt_util.now().isoformat()
+    assert data[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) == ACCESS_TOKEN_EXP_DTM
 
 
 @pytest.mark.parametrize("idx", TEST_DATA)
@@ -203,7 +203,7 @@ async def test_auth_tokens_past(
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
-    assert data[SZ_ACCESS_TOKEN_EXPIRES] > dt_util.now().isoformat()
+    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) > dt_util.now()
 
 
 @pytest.mark.parametrize("idx", TEST_DATA)
@@ -229,4 +229,4 @@ async def test_auth_tokens_diff(
     assert data[SZ_USERNAME] == USERNAME_DIFF
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
-    assert data[SZ_ACCESS_TOKEN_EXPIRES] > dt_util.now().isoformat()
+    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) > dt_util.now()
