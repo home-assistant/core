@@ -26,6 +26,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -75,6 +76,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
     """Legacy Ecovacs vacuums."""
 
     _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
@@ -95,7 +97,16 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
 
         self.error: str | None = None
         self._attr_unique_id = vacuum["did"]
-        self._attr_name = vacuum.get("nick", vacuum["did"])
+
+        if (name := vacuum.get("nick")) is None:
+            name = vacuum.get("name", vacuum["did"])
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vacuum["did"])},
+            model=vacuum.get("deviceName"),
+            name=name,
+            serial_number=vacuum["did"],
+        )
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
