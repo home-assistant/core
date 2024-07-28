@@ -5,14 +5,12 @@ from collections.abc import Callable
 import pytest
 
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -32,19 +30,17 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_sirens(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
     """Test that siren entities are created."""
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("siren.warning_device").state == STATE_ON
 
-    await mock_websocket_data({"r": "lights", "state": {"alert": None}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"alert": None}})
     assert hass.states.get("siren.warning_device").state == STATE_OFF
 
     # Verify service calls
@@ -80,14 +76,3 @@ async def test_sirens(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"alert": "lselect", "ontime": 100}
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 1
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

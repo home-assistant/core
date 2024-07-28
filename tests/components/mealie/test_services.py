@@ -18,6 +18,8 @@ from homeassistant.components.mealie.const import (
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
+    ATTR_NOTE_TEXT,
+    ATTR_NOTE_TITLE,
     ATTR_RECIPE_ID,
     ATTR_START_DATE,
     ATTR_URL,
@@ -27,6 +29,7 @@ from homeassistant.components.mealie.services import (
     SERVICE_GET_MEALPLAN,
     SERVICE_GET_RECIPE,
     SERVICE_IMPORT_RECIPE,
+    SERVICE_SET_MEALPLAN,
     SERVICE_SET_RANDOM_MEALPLAN,
 )
 from homeassistant.const import ATTR_DATE
@@ -232,6 +235,71 @@ async def test_service_set_random_mealplan(
 
 
 @pytest.mark.parametrize(
+    ("payload", "kwargs"),
+    [
+        (
+            {
+                ATTR_RECIPE_ID: "recipe_id",
+            },
+            {"recipe_id": "recipe_id", "note_title": None, "note_text": None},
+        ),
+        (
+            {
+                ATTR_NOTE_TITLE: "Note Title",
+                ATTR_NOTE_TEXT: "Note Text",
+            },
+            {"recipe_id": None, "note_title": "Note Title", "note_text": "Note Text"},
+        ),
+    ],
+)
+async def test_service_set_mealplan(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    payload: dict[str, str],
+    kwargs: dict[str, str],
+) -> None:
+    """Test the set_mealplan service."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_MEALPLAN,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_DATE: "2023-10-21",
+            ATTR_ENTRY_TYPE: "lunch",
+        }
+        | payload,
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+    mock_mealie_client.set_mealplan.assert_called_with(
+        date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
+    )
+
+    mock_mealie_client.random_mealplan.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_MEALPLAN,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_DATE: "2023-10-21",
+            ATTR_ENTRY_TYPE: "lunch",
+        }
+        | payload,
+        blocking=True,
+        return_response=False,
+    )
+    mock_mealie_client.set_mealplan.assert_called_with(
+        date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
+    )
+
+
+@pytest.mark.parametrize(
     ("service", "payload", "function", "exception", "raised_exception", "message"),
     [
         (
@@ -282,6 +350,18 @@ async def test_service_set_random_mealplan(
             HomeAssistantError,
             "Error connecting to Mealie instance",
         ),
+        (
+            SERVICE_SET_MEALPLAN,
+            {
+                ATTR_DATE: "2023-10-21",
+                ATTR_ENTRY_TYPE: "lunch",
+                ATTR_RECIPE_ID: "recipe_id",
+            },
+            "set_mealplan",
+            MealieConnectionError,
+            HomeAssistantError,
+            "Error connecting to Mealie instance",
+        ),
     ],
 )
 async def test_services_connection_error(
@@ -320,6 +400,14 @@ async def test_services_connection_error(
         (
             SERVICE_SET_RANDOM_MEALPLAN,
             {ATTR_DATE: "2023-10-21", ATTR_ENTRY_TYPE: "lunch"},
+        ),
+        (
+            SERVICE_SET_MEALPLAN,
+            {
+                ATTR_DATE: "2023-10-21",
+                ATTR_ENTRY_TYPE: "lunch",
+                ATTR_RECIPE_ID: "recipe_id",
+            },
         ),
     ],
 )

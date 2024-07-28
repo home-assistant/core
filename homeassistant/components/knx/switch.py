@@ -28,6 +28,7 @@ from . import KNXModule
 from .const import (
     CONF_INVERT,
     CONF_RESPOND_TO_READ,
+    CONF_SYNC_STATE,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -141,6 +142,7 @@ class KnxUiSwitch(_KnxSwitch):
                     *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
                 ],
                 respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
+                sync_state=config[DOMAIN][CONF_SYNC_STATE],
                 invert=config[DOMAIN][CONF_INVERT],
             )
         )

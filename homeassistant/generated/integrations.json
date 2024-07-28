@@ -3268,6 +3268,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "linkplay": {
+      "name": "LinkPlay",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "linksys_smart": {
       "name": "Linksys Smart Wi-Fi",
       "integration_type": "hub",
@@ -3489,8 +3495,8 @@
     },
     "mastodon": {
       "name": "Mastodon",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "matrix": {
@@ -3570,6 +3576,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "mercury_nz": {
+      "name": "Mercury NZ Limited",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "message_bird": {
       "name": "MessageBird",

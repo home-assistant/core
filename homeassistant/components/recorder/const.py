@@ -13,13 +13,9 @@ from homeassistant.const import (
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
 )
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
-from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .core import Recorder  # noqa: F401
-
-
-DATA_INSTANCE: HassKey[Recorder] = HassKey("recorder_instance")
 
 
 SQLITE_URL_PREFIX = "sqlite://"
@@ -70,7 +66,7 @@ INTEGRATION_PLATFORM_COMPILE_STATISTICS = "compile_statistics"
 INTEGRATION_PLATFORM_VALIDATE_STATISTICS = "validate_statistics"
 INTEGRATION_PLATFORM_LIST_STATISTIC_IDS = "list_statistic_ids"
 
-INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD = {
+INTEGRATION_PLATFORMS_RUN_IN_RECORDER_THREAD = {
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
