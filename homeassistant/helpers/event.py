@@ -334,7 +334,7 @@ def _async_dispatch_entity_id_event_soon(
     callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
     event: Event[_StateEventDataT],
 ) -> None:
-    """Dispatch to listeners."""
+    """Dispatch to listeners soon to ensure one event loop runs before dispatch."""
     hass.loop.call_soon(_async_dispatch_entity_id_event, hass, callbacks, event)
 
 
