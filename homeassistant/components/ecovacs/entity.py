@@ -142,6 +142,7 @@ class EcovacsLegacyEntity(Entity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vacuum["did"])},
+            manufacturer="Ecovacs",
             model=f"{vacuum['product_category']} {vacuum['model']}",
             name=name,
             serial_number=vacuum["did"],
