@@ -31,7 +31,9 @@ async def test_open_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> 
     """Test HassOpenCover intent."""
     await cover_intent.async_setup_intents(hass)
 
-    hass.states.async_set(f"{DOMAIN}.garage_door", STATE_CLOSED, attributes={"device_class": "garage"})
+    hass.states.async_set(
+        f"{DOMAIN}.garage_door", STATE_CLOSED, attributes={"device_class": "garage"}
+    )
     calls = async_mock_service(hass, DOMAIN, SERVICE_OPEN_COVER)
 
     response = await intent.async_handle(
@@ -58,7 +60,9 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     """Test HassCloseCover intent."""
     await cover_intent.async_setup_intents(hass)
 
-    hass.states.async_set(f"{DOMAIN}.garage_door", STATE_OPEN, attributes={"device_class": "garage"})
+    hass.states.async_set(
+        f"{DOMAIN}.garage_door", STATE_OPEN, attributes={"device_class": "garage"}
+    )
     calls = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_COVER)
 
     response = await intent.async_handle(
@@ -90,7 +94,9 @@ async def test_set_cover_position(hass: HomeAssistant, slots: dict[str, Any]) ->
 
     entity_id = f"{DOMAIN}.test_cover"
     hass.states.async_set(
-        entity_id, STATE_CLOSED, attributes={ATTR_CURRENT_POSITION: 0, "device_class": "shade"}
+        entity_id,
+        STATE_CLOSED,
+        attributes={ATTR_CURRENT_POSITION: 0, "device_class": "shade"},
     )
     calls = async_mock_service(hass, DOMAIN, SERVICE_SET_COVER_POSITION)
 

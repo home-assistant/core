@@ -131,9 +131,9 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 asyncio.set_event_loop_policy = lambda policy: None
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
-    """Register custom pytest options."""
-    parser.addoption("--dburl", action="store", default="sqlite://")
+# def pytest_addoption(parser: pytest.Parser) -> None:
+#     """Register custom pytest options."""
+#     parser.addoption("--dburl", action="store", default="sqlite://")
 
 
 def pytest_configure(config: pytest.Config) -> None:

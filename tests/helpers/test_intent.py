@@ -777,7 +777,10 @@ async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> N
 async def test_service_handler_empty_strings(hass: HomeAssistant) -> None:
     """Test that passing empty strings for filters fails in ServiceIntentHandler."""
     handler = intent.ServiceIntentHandler(
-        "TestType", "light", "turn_on", "Turned {} on",
+        "TestType",
+        "light",
+        "turn_on",
+        "Turned {} on",
     )
     intent.async_register(hass, handler)
 
@@ -816,7 +819,9 @@ async def test_service_handler_no_filter(hass: HomeAssistant) -> None:
         )
 
 
-async def test_service_handler_device_classes(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_service_handler_device_classes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that passing empty strings for filters fails in ServiceIntentHandler."""
 
     # Register a fake service and a switch intent handler
@@ -832,13 +837,18 @@ async def test_service_handler_device_classes(hass: HomeAssistant, entity_regist
     hass.services.async_register("switch", "turn_on", mock_service)
 
     handler = intent.ServiceIntentHandler(
-        "TestType", "switch", "turn_on", "Turned {} on",
+        "TestType",
+        "switch",
+        "turn_on",
+        "Turned {} on",
         device_classes={switch.SwitchDeviceClass},
     )
     intent.async_register(hass, handler)
 
     # Create a switch enttiy and match by device class
-    hass.states.async_set("switch.bedroom", "off", attributes={"device_class": "outlet"})
+    hass.states.async_set(
+        "switch.bedroom", "off", attributes={"device_class": "outlet"}
+    )
     hass.states.async_set("switch.living_room", "off")
 
     await intent.async_handle(
@@ -848,7 +858,7 @@ async def test_service_handler_device_classes(hass: HomeAssistant, entity_regist
         slots={"device_class": {"value": "outlet"}},
     )
     await call_done.wait()
-    assert [ call.data.get("entity_id") for call in calls ] == ['switch.bedroom']
+    assert [call.data.get("entity_id") for call in calls] == ["switch.bedroom"]
     calls.clear()
 
     # Validate which device classes are allowed
