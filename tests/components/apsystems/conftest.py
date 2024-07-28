@@ -52,6 +52,9 @@ def mock_apsystems() -> Generator[MagicMock]:
             e2=6.0,
             te2=7.0,
         )
+        mock_api.get_device_power_status.return_value = ReturnOutputData(
+            normal=0,
+        )
         yield mock_api
 
 
