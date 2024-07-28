@@ -115,6 +115,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
         ],
         bool,
     ]
+    run_immediately: bool = True
 
 
 @dataclass(slots=True, frozen=True)
@@ -363,6 +364,7 @@ _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_filter,
+    run_immediately=False,
 )
 
 
@@ -449,6 +451,7 @@ def _async_track_event(
             tracker.event_type,
             partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=partial(tracker.filter_callable, hass, callbacks),
+            run_immediately=tracker.run_immediately,
         )
         event_data = _KeyedEventData(listener, callbacks)
         hass_data[tracker_key] = event_data
