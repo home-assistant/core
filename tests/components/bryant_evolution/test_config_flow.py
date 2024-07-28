@@ -138,7 +138,7 @@ async def test_reconfigure(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": hass.config_entries.async_entries()[0].entry_id,
+            "entry_id": mock_evolution_entry.entry_id,
         },
     )
     with (
