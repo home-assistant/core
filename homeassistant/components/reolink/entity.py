@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from reolink_aio.api import DUAL_LENS_MODELS, Host
-from reolink_aio.enums import Chime
+from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

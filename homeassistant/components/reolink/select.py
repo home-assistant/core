@@ -8,6 +8,8 @@ import logging
 from typing import Any
 
 from reolink_aio.api import (
+    Chime,
+    ChimeToneEnum,
     DayNightEnum,
     HDREnum,
     Host,
@@ -26,7 +28,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkChimeCoordinatorEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,9 +49,28 @@ class ReolinkSelectEntityDescription(
     value: Callable[[Host, int], str] | None = None
 
 
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChimeSelectEntityDescription(
+    SelectEntityDescription,
+    ReolinkChannelEntityDescription,
+):
+    """A class that describes select entities for a chime."""
+
+    get_options: list[str] | Callable[[Chime], list[str]]
+    method: Callable[[Chime, str], Any]
+    value: Callable[[Chime], str] | None = None
+
+
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
     """Get the quick reply file id from the message string."""
     return [k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+
+
+def _get_chime_play_list() -> list[str]:
+    """Get the list of options for the chime play ringtone entity."""
+    play_list = [method.name for method in ChimeToneEnum]
+    play_list.remove("off")
+    return play_list
 
 
 SELECT_ENTITIES = (
@@ -132,6 +157,42 @@ SELECT_ENTITIES = (
     ),
 )
 
+CHIME_SELECT_ENTITIES = (
+    ReolinkChimeSelectEntityDescription(
+        key="play_tone",
+        translation_key="play_tone",
+        get_options=_get_chime_play_list(),
+        method=lambda chime, name: chime.play(ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="motion_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="motion_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        value=lambda chime: ChimeToneEnum(chime.tone("md")).name,
+        method=lambda chime, name: chime.set_tone("md", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="people_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="people_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        value=lambda chime: ChimeToneEnum(chime.tone("people")).name,
+        method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="visitor_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="visitor_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        value=lambda chime: ChimeToneEnum(chime.tone("visitor")).name,
+        method=lambda chime, name: chime.set_tone("visitor", ChimeToneEnum[name].value),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -141,12 +202,20 @@ async def async_setup_entry(
     """Set up a Reolink select entities."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
+    entities: list[ReolinkSelectEntity | ReolinkChimeSelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
+    ]
+    entities.extend(
+        [
+            ReolinkChimeSelectEntity(reolink_data, chime, entity_description)
+            for entity_description in CHIME_SELECT_ENTITIES
+            for chime in reolink_data.host.api.chime_list
+        ]
     )
+    async_add_entities(entities)
 
 
 class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
@@ -191,6 +260,55 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         """Change the selected option."""
         try:
             await self.entity_description.method(self._host.api, self._channel, option)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
+        self.async_write_ha_state()
+
+
+class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
+    """Base select entity class for Reolink IP cameras."""
+
+    entity_description: ReolinkChimeSelectEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeSelectEntityDescription,
+    ) -> None:
+        """Initialize Reolink select entity for a chime."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+        self._log_error = True
+
+        if callable(entity_description.get_options):
+            self._attr_options = entity_description.get_options(chime)
+        else:
+            self._attr_options = entity_description.get_options
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current option."""
+        if self.entity_description.value is None:
+            return None
+
+        try:
+            option = self.entity_description.value(self._chime)
+        except ValueError:
+            if self._log_error:
+                _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
+                self._log_error = False
+            return None
+
+        self._log_error = True
+        return option
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        try:
+            await self.entity_description.method(self._chime, option)
         except InvalidParameterError as err:
             raise ServiceValidationError(err) from err
         except ReolinkError as err:

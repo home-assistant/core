@@ -6,8 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import Host
-from reolink_aio.enums import Chime
+from reolink_aio.api import Chime, Host
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.number import (
@@ -49,9 +48,9 @@ class ReolinkChimeNumberEntityDescription(
     NumberEntityDescription,
     ReolinkChannelEntityDescription,
 ):
-    """A class that describes number entities."""
+    """A class that describes number entities for a chime."""
 
-    method: Callable[[Host, Chime, float], Any]
+    method: Callable[[Chime, float], Any]
     mode: NumberMode = NumberMode.AUTO
     value: Callable[[Chime], float | None]
 
@@ -486,9 +485,7 @@ CHIME_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=4,
         value=lambda chime: chime.volume,
-        method=lambda api, chime, value: api.set_volume(
-            chime.dev_id, volume=int(value)
-        ),
+        method=lambda chime, value: chime.set_option(volume=int(value)),
     ),
 )
 
@@ -583,7 +580,7 @@ class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         try:
-            await self.entity_description.method(self._host.api, self._chime, value)
+            await self.entity_description.method(self._chime, value)
         except InvalidParameterError as err:
             raise ServiceValidationError(err) from err
         except ReolinkError as err:
