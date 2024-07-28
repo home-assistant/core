@@ -151,7 +151,6 @@ async def test_set_fan_mode(
         await hass.services.async_call(
             CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True
         )
-        await hass.async_block_till_done()
         assert (
             hass.states.get("climate.system_1_zone_1").attributes[ATTR_FAN_MODE] == mode
         )
