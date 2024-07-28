@@ -143,11 +143,6 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         return None
 
     @property
-    def available(self) -> bool:
-        """Return True if the vacuum is available."""
-        return super().available and self.state is not None
-
-    @property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
         if self.device.battery_status is not None:
