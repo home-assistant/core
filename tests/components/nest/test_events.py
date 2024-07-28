@@ -53,7 +53,7 @@ def device_traits() -> list[str]:
 
 @pytest.fixture(autouse=True)
 def device(
-    device_type: str, device_traits: dict[str, Any], create_device: CreateDevice
+    device_type: str, device_traits: list[str], create_device: CreateDevice
 ) -> None:
     """Fixture to create a device under test."""
     return create_device.create(
@@ -70,7 +70,7 @@ def event_view(d: Mapping[str, Any]) -> Mapping[str, Any]:
     return {key: value for key, value in d.items() if key in EVENT_KEYS}
 
 
-def create_device_traits(event_traits=[]):
+def create_device_traits(event_traits: list[str]) -> dict[str, Any]:
     """Create fake traits for a device."""
     result = {
         "sdm.devices.traits.Info": {

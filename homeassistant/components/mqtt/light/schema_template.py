@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
 import homeassistant.util.color as color_util
 
 from .. import subscription
@@ -120,7 +120,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _topics: dict[str, str | None]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_TEMPLATE
 

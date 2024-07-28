@@ -4,7 +4,15 @@ from __future__ import annotations
 
 import asyncio
 from collections import UserDict
-from collections.abc import Callable, Coroutine, Hashable, Iterable, Mapping, ValuesView
+from collections.abc import (
+    Callable,
+    Coroutine,
+    Generator,
+    Hashable,
+    Iterable,
+    Mapping,
+    ValuesView,
+)
 from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
@@ -16,7 +24,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Generic, Self, cast
 
 from async_interrupt import interrupt
-from typing_extensions import Generator, TypeVar
+from typing_extensions import TypeVar
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
@@ -1170,18 +1178,13 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-def _report_non_locked_platform_forwards(entry: ConfigEntry) -> None:
-    """Report non awaited and non-locked platform forwards."""
+def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
+    """Report non awaited platform forwards."""
     report(
-        f"calls async_forward_entry_setup after the entry for "
-        f"integration, {entry.domain} with title: {entry.title} "
-        f"and entry_id: {entry.entry_id}, has been set up, "
-        "without holding the setup lock that prevents the config "
-        "entry from being set up multiple times. "
-        "Instead await hass.config_entries.async_forward_entry_setup "
-        "during setup of the config entry or call "
-        "hass.config_entries.async_late_forward_entry_setups "
-        "in a tracked task. "
+        f"calls {what} for integration {entry.domain} with "
+        f"title: {entry.title} and entry_id: {entry.entry_id}, "
+        f"during setup without awaiting {what}, which can cause "
+        "the setup lock to be released before the setup is done. "
         "This will stop working in Home Assistant 2025.1",
         error_if_integration=False,
         error_if_core=False,
@@ -1817,9 +1820,9 @@ class ConfigEntries:
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be set up because it is already loaded"
-                f" in the {entry.state} state"
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot be set up because it is in state "
+                f"{entry.state}, but needs to be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
         # Setup Component if not set up yet
@@ -1849,9 +1852,9 @@ class ConfigEntries:
 
         if not entry.state.recoverable:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be unloaded because it is not in a"
-                f" recoverable state ({entry.state})"
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot be unloaded because it is in the non"
+                f" recoverable state {entry.state}"
             )
 
         if _lock:
@@ -2041,9 +2044,6 @@ class ConfigEntries:
         before the entry is set up. This ensures that the config entry cannot
         be unloaded before all platforms are loaded.
 
-        If platforms must be loaded late (after the config entry is setup),
-        use async_late_forward_entry_setup instead.
-
         This method is more efficient than async_forward_entry_setup as
         it can load multiple platforms at once and does not require a separate
         import executor job for each platform.
@@ -2052,14 +2052,33 @@ class ConfigEntries:
         if not integration.platforms_are_loaded(platforms):
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
-        if non_locked_platform_forwards := not entry.setup_lock.locked():
-            _report_non_locked_platform_forwards(entry)
+
+        if not entry.setup_lock.locked():
+            async with entry.setup_lock:
+                if entry.state is not ConfigEntryState.LOADED:
+                    raise OperationNotAllowed(
+                        f"The config entry '{entry.title}' ({entry.domain}) with "
+                        f"entry_id '{entry.entry_id}' cannot forward setup for "
+                        f"{platforms} because it is in state {entry.state}, but needs "
+                        f"to be in the {ConfigEntryState.LOADED} state"
+                    )
+                await self._async_forward_entry_setups_locked(entry, platforms)
+        else:
+            await self._async_forward_entry_setups_locked(entry, platforms)
+            # If the lock was held when we stated, and it was released during
+            # the platform setup, it means they did not await the setup call.
+            if not entry.setup_lock.locked():
+                _report_non_awaited_platform_forwards(
+                    entry, "async_forward_entry_setups"
+                )
+
+    async def _async_forward_entry_setups_locked(
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
+    ) -> None:
         await asyncio.gather(
             *(
                 create_eager_task(
-                    self._async_forward_entry_setup(
-                        entry, platform, False, non_locked_platform_forwards
-                    ),
+                    self._async_forward_entry_setup(entry, platform, False),
                     name=(
                         f"config entry forward setup {entry.title} "
                         f"{entry.domain} {entry.entry_id} {platform}"
@@ -2069,25 +2088,6 @@ class ConfigEntries:
                 for platform in platforms
             )
         )
-
-    async def async_late_forward_entry_setups(
-        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
-    ) -> None:
-        """Forward the setup of an entry to platforms after setup.
-
-        If platforms must be loaded late (after the config entry is setup),
-        use this method instead of async_forward_entry_setups as it holds
-        the setup lock until the platforms are loaded to ensure that the
-        config entry cannot be unloaded while platforms are loaded.
-        """
-        async with entry.setup_lock:
-            if entry.state is not ConfigEntryState.LOADED:
-                raise OperationNotAllowed(
-                    f"The config entry {entry.title} ({entry.domain}) with entry_id"
-                    f" {entry.entry_id} cannot forward setup for {platforms} "
-                    f"because it is not loaded in the {entry.state} state"
-                )
-            await self.async_forward_entry_setups(entry, platforms)
 
     async def async_forward_entry_setup(
         self, entry: ConfigEntry, domain: Platform | str
@@ -2103,32 +2103,38 @@ class ConfigEntries:
         Instead, await async_forward_entry_setups as it can load
         multiple platforms at once and is more efficient since it
         does not require a separate import executor job for each platform.
-
-        If platforms must be loaded late (after the config entry is setup),
-        use async_late_forward_entry_setup instead.
         """
-        if non_locked_platform_forwards := not entry.setup_lock.locked():
-            _report_non_locked_platform_forwards(entry)
-        else:
-            report(
-                "calls async_forward_entry_setup for "
-                f"integration, {entry.domain} with title: {entry.title} "
-                f"and entry_id: {entry.entry_id}, which is deprecated and "
-                "will stop working in Home Assistant 2025.6, "
-                "await async_forward_entry_setups instead",
-                error_if_core=False,
-                error_if_integration=False,
-            )
-        return await self._async_forward_entry_setup(
-            entry, domain, True, non_locked_platform_forwards
+        report(
+            "calls async_forward_entry_setup for "
+            f"integration, {entry.domain} with title: {entry.title} "
+            f"and entry_id: {entry.entry_id}, which is deprecated and "
+            "will stop working in Home Assistant 2025.6, "
+            "await async_forward_entry_setups instead",
+            error_if_core=False,
+            error_if_integration=False,
         )
+        if not entry.setup_lock.locked():
+            async with entry.setup_lock:
+                if entry.state is not ConfigEntryState.LOADED:
+                    raise OperationNotAllowed(
+                        f"The config entry '{entry.title}' ({entry.domain}) with "
+                        f"entry_id '{entry.entry_id}' cannot forward setup for "
+                        f"{domain} because it is in state {entry.state}, but needs "
+                        f"to be in the {ConfigEntryState.LOADED} state"
+                    )
+                return await self._async_forward_entry_setup(entry, domain, True)
+        result = await self._async_forward_entry_setup(entry, domain, True)
+        # If the lock was held when we stated, and it was released during
+        # the platform setup, it means they did not await the setup call.
+        if not entry.setup_lock.locked():
+            _report_non_awaited_platform_forwards(entry, "async_forward_entry_setup")
+        return result
 
     async def _async_forward_entry_setup(
         self,
         entry: ConfigEntry,
         domain: Platform | str,
         preload_platform: bool,
-        non_locked_platform_forwards: bool,
     ) -> bool:
         """Forward the setup of an entry to a different component."""
         # Setup Component if not set up yet
@@ -2152,12 +2158,6 @@ class ConfigEntries:
 
         integration = loader.async_get_loaded_integration(self.hass, domain)
         await entry.async_setup(self.hass, integration=integration)
-
-        # Check again after setup to make sure the lock
-        # is still there because it could have been released
-        # unless we already reported it.
-        if not non_locked_platform_forwards and not entry.setup_lock.locked():
-            _report_non_locked_platform_forwards(entry)
         return True
 
     async def async_unload_platforms(
@@ -2221,7 +2221,7 @@ class ConfigEntries:
         # The component was not loaded.
         if entry.domain not in self.hass.config.components:
             return False
-        return entry.state == ConfigEntryState.LOADED
+        return entry.state is ConfigEntryState.LOADED
 
 
 @callback

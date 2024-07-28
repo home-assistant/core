@@ -54,6 +54,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "backflush_enabled": {
+        "name": "Backflush active"
+      },
       "brew_active": {
         "name": "Brewing active"
       },
@@ -139,6 +142,9 @@
       }
     },
     "switch": {
+      "auto_on_off": {
+        "name": "Auto on/off ({id})"
+      },
       "steam_boiler": {
         "name": "Steam boiler"
       }

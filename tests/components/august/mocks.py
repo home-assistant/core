@@ -58,6 +58,10 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
+def _timetoken():
+    return str(time.time_ns())[:-2]
+
+
 @patch("yalexs.manager.gateway.ApiAsync")
 @patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
@@ -213,7 +217,7 @@ async def _create_august_api_with_devices(
 async def _mock_setup_august_with_api_side_effects(
     hass, api_call_side_effects, pubnub, brand=Brand.AUGUST
 ):
-    api_instance = MagicMock(name="Api")
+    api_instance = MagicMock(name="Api", brand=brand)
 
     if api_call_side_effects["get_lock_detail"]:
         type(api_instance).async_get_lock_detail = AsyncMock(

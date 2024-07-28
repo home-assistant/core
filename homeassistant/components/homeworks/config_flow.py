@@ -14,17 +14,11 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    async_get_hass,
-    callback,
-)
+from homeassistant.core import async_get_hass, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
-    issue_registry as ir,
     selector,
 )
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -35,6 +29,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
 from . import DEFAULT_FADE_RATE, calculate_unique_id
@@ -68,7 +63,7 @@ CONTROLLER_EDIT = {
     ),
 }
 
-LIGHT_EDIT = {
+LIGHT_EDIT: VolDictType = {
     vol.Optional(CONF_RATE, default=DEFAULT_FADE_RATE): selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=0,
@@ -79,7 +74,7 @@ LIGHT_EDIT = {
     ),
 }
 
-BUTTON_EDIT = {
+BUTTON_EDIT: VolDictType = {
     vol.Optional(CONF_LED, default=False): selector.BooleanSelector(),
     vol.Optional(CONF_RELEASE_DELAY, default=0): selector.NumberSelector(
         selector.NumberSelectorConfig(
@@ -146,24 +141,6 @@ async def _try_connection(user_input: dict[str, Any]) -> None:
     except Exception as err:
         _LOGGER.exception("Caught unexpected exception")
         raise SchemaFlowError("unknown_error") from err
-
-
-def _create_import_issue(hass: HomeAssistant) -> None:
-    """Create a repair issue asking the user to remove YAML."""
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.6.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Lutron Homeworks",
-        },
-    )
 
 
 def _validate_address(handler: SchemaCommonFlowHandler, addr: str) -> None:
@@ -546,100 +523,6 @@ OPTIONS_FLOW = {
 
 class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Lutron Homeworks."""
-
-    import_config: dict[str, Any]
-
-    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
-        """Start importing configuration from yaml."""
-        self.import_config = {
-            CONF_HOST: config[CONF_HOST],
-            CONF_PORT: config[CONF_PORT],
-            CONF_DIMMERS: [
-                {
-                    CONF_ADDR: light[CONF_ADDR],
-                    CONF_NAME: light[CONF_NAME],
-                    CONF_RATE: light[CONF_RATE],
-                }
-                for light in config[CONF_DIMMERS]
-            ],
-            CONF_KEYPADS: [
-                {
-                    CONF_ADDR: keypad[CONF_ADDR],
-                    CONF_BUTTONS: [],
-                    CONF_NAME: keypad[CONF_NAME],
-                }
-                for keypad in config[CONF_KEYPADS]
-            ],
-        }
-        return await self.async_step_import_controller_name()
-
-    async def async_step_import_controller_name(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask user to set a name of the controller."""
-        errors = {}
-        try:
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: self.import_config[CONF_HOST],
-                    CONF_PORT: self.import_config[CONF_PORT],
-                }
-            )
-        except AbortFlow:
-            _create_import_issue(self.hass)
-            raise
-
-        if user_input:
-            try:
-                user_input[CONF_CONTROLLER_ID] = slugify(user_input[CONF_NAME])
-                self._async_abort_entries_match(
-                    {CONF_CONTROLLER_ID: user_input[CONF_CONTROLLER_ID]}
-                )
-            except AbortFlow:
-                errors["base"] = "duplicated_controller_id"
-            else:
-                self.import_config |= user_input
-                return await self.async_step_import_finish()
-
-        return self.async_show_form(
-            step_id="import_controller_name",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME, description={"suggested_value": "Lutron Homeworks"}
-                    ): selector.TextSelector(),
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_import_finish(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask user to remove YAML configuration."""
-
-        if user_input is not None:
-            entity_registry = er.async_get(self.hass)
-            config = self.import_config
-            for light in config[CONF_DIMMERS]:
-                addr = light[CONF_ADDR]
-                if entity_id := entity_registry.async_get_entity_id(
-                    LIGHT_DOMAIN, DOMAIN, f"homeworks.{addr}"
-                ):
-                    entity_registry.async_update_entity(
-                        entity_id,
-                        new_unique_id=calculate_unique_id(
-                            config[CONF_CONTROLLER_ID], addr, 0
-                        ),
-                    )
-            name = config.pop(CONF_NAME)
-            return self.async_create_entry(
-                title=name,
-                data={},
-                options=config,
-            )
-
-        return self.async_show_form(step_id="import_finish", data_schema=vol.Schema({}))
 
     async def _validate_edit_controller(
         self, user_input: dict[str, Any]

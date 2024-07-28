@@ -6,12 +6,11 @@ from datetime import datetime, timedelta
 from lmcloud.models import LaMarzoccoWakeUpSleepEntry
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import LaMarzoccoConfigEntry
 from .coordinator import LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity
 
@@ -30,12 +29,12 @@ DAY_OF_WEEK = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: LaMarzoccoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, wake_up_sleep_entry)
         for wake_up_sleep_entry in coordinator.device.config.wake_up_sleep_entries.values()

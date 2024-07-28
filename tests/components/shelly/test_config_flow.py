@@ -1114,6 +1114,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test zeroconf discovery does not triggers refresh for sleeping device."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
         domain="shelly",
@@ -1125,7 +1126,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     await hass.async_block_till_done()
 
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
     assert len(mock_rpc_device.initialize.mock_calls) == 1

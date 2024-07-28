@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -155,7 +156,9 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             state = STATE_ALARM_ARMED_AWAY
         elif self._info["status"]["armed_stay"]:
             state = STATE_ALARM_ARMED_HOME
-        elif self._info["status"]["exit_delay"] or self._info["status"]["entry_delay"]:
+        elif self._info["status"]["exit_delay"]:
+            state = STATE_ALARM_ARMING
+        elif self._info["status"]["entry_delay"]:
             state = STATE_ALARM_PENDING
         elif self._info["status"]["alpha"]:
             state = STATE_ALARM_DISARMED

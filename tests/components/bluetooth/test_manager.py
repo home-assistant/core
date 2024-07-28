@@ -1,5 +1,6 @@
 """Tests for the Bluetooth integration manager."""
 
+from collections.abc import Generator
 from datetime import timedelta
 import time
 from typing import Any
@@ -7,9 +8,10 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+
+# pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (

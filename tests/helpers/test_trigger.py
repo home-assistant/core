@@ -287,7 +287,9 @@ async def test_async_initialize_triggers(
         unsub()
 
 
-async def test_pluggable_action(hass: HomeAssistant, service_calls: list[ServiceCall]):
+async def test_pluggable_action(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test normal behavior of pluggable actions."""
     update_1 = MagicMock()
     update_2 = MagicMock()

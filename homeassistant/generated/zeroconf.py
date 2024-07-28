@@ -404,6 +404,12 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_czc._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "czc*",
+        },
+    ],
     "_daap._tcp.local.": [
         {
             "domain": "forked_daapd",
@@ -581,6 +587,11 @@ ZEROCONF = {
         {
             "domain": "overkiz",
             "name": "gateway*",
+        },
+    ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
         },
     ],
     "_lookin._tcp.local.": [

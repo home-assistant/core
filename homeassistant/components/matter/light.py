@@ -56,6 +56,12 @@ TRANSITION_BLOCKLIST = (
     (5010, 769, "3.0", "1.0.0"),
     (4999, 25057, "1.0", "27.0"),
     (4448, 36866, "V1", "V1.0.0.5"),
+    (5009, 514, "1.0", "1.0.0"),
+    (4107, 8475, "v1.0", "v1.0"),
+    (4107, 8550, "v1.0", "v1.0"),
+    (4107, 8551, "v1.0", "v1.0"),
+    (4107, 8656, "v1.0", "v1.0"),
+    (4107, 8571, "v1.0", "v1.0"),
 )
 
 
@@ -351,6 +357,16 @@ class MatterLight(MatterEntity, LightEntity):
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
+                    min_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_min_mireds = min_mireds
+                    max_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_max_mireds = max_mireds
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
@@ -420,7 +436,9 @@ class MatterLight(MatterEntity, LightEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(key="MatterLight", name=None),
+        entity_description=LightEntityDescription(
+            key="MatterLight", translation_key="light"
+        ),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         optional_attributes=(
@@ -438,13 +456,15 @@ DISCOVERY_SCHEMAS = [
             device_types.DimmablePlugInUnit,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
+            device_types.DimmerSwitch,
+            device_types.ColorDimmerSwitch,
         ),
     ),
     # Additional schema to match (HS Color) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterHSColorLightFallback", name=None
+            key="MatterHSColorLightFallback", translation_key="light"
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -464,7 +484,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterXYColorLightFallback", name=None
+            key="MatterXYColorLightFallback", translation_key="light"
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -484,7 +504,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterColorTemperatureLightFallback", name=None
+            key="MatterColorTemperatureLightFallback", translation_key="light"
         ),
         entity_class=MatterLight,
         required_attributes=(

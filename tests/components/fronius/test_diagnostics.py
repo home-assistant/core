@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the KNX integration."""
+"""Tests for the diagnostics data provided by the Fronius integration."""
 
 from syrupy import SnapshotAssertion
 

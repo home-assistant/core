@@ -362,6 +362,7 @@ async def test_call_rate_delay_throttle_enabled(hass: HomeAssistant) -> None:
     delay = 5.0
 
     limit = pilight.CallRateDelayThrottle(hass, delay)
+    # pylint: disable-next=unnecessary-lambda
     action = limit.limited(lambda x: runs.append(x))
 
     for i in range(3):
@@ -385,6 +386,7 @@ def test_call_rate_delay_throttle_disabled(hass: HomeAssistant) -> None:
     runs = []
 
     limit = pilight.CallRateDelayThrottle(hass, 0.0)
+    # pylint: disable-next=unnecessary-lambda
     action = limit.limited(lambda x: runs.append(x))
 
     for i in range(3):

@@ -46,7 +46,7 @@ async def test_onoff(hass: HomeAssistant, mock_remote) -> None:
     await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_ON, data)
     await hass.async_block_till_done()
 
-    power = getattr(Keys.power, "value", Keys.power)
+    power = getattr(Keys.POWER, "value", Keys.POWER)
     assert mock_remote.send_key.call_args_list == [call(power), call(power)]
 
 

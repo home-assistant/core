@@ -9,7 +9,10 @@ from fixerio import Fixerio
 from fixerio.exceptions import FixerioException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_TARGET
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -27,7 +30,7 @@ DEFAULT_NAME = "Exchange rate"
 
 SCAN_INTERVAL = timedelta(days=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_TARGET): cv.string,

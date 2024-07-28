@@ -14,13 +14,14 @@ from aiohttp.web_request import FileField
 from PIL import Image, ImageOps, UnidentifiedImageError
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.static import CACHE_HEADERS
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -31,11 +32,11 @@ STORAGE_VERSION = 1
 VALID_SIZES = {256, 512}
 MAX_SIZE = 1024 * 1024 * 10
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required("file"): FileField,
 }
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional("name"): vol.All(str, vol.Length(min=1)),
 }
 
@@ -47,13 +48,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     image_dir = pathlib.Path(hass.config.path("image"))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
-    collection.DictStorageCollectionWebsocket(
+    ImageUploadStorageCollectionWebsocket(
         storage_collection,
         "image",
         "image",
         CREATE_FIELDS,
         UPDATE_FIELDS,
-    ).async_setup(hass, create_create=False)
+    ).async_setup(hass)
 
     hass.http.register_view(ImageUploadView)
     hass.http.register_view(ImageServeView(image_dir, storage_collection))
@@ -149,6 +150,19 @@ class ImageStorageCollection(collection.DictStorageCollection):
             return
 
         await self.hass.async_add_executor_job(shutil.rmtree, self.image_dir / item_id)
+
+
+class ImageUploadStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
+    """Class to expose storage collection management over websocket."""
+
+    async def ws_create_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Create an item.
+
+        Not supported, images are uploaded via the ImageUploadView.
+        """
+        raise NotImplementedError
 
 
 class ImageUploadView(HomeAssistantView):

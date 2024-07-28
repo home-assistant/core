@@ -468,6 +468,10 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._humidity_key: str | None = None
+        # Check if there is a corresponding humidity key for the thermostat ID
+        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
+            self._humidity_key = humidity_key
 
     @property
     def target_temperature(self) -> float | None:
@@ -478,6 +482,14 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         return cast(float, self.status["current_C"])
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return current humidity."""
+        if self._humidity_key is None:
+            return None
+
+        return cast(float, self.coordinator.device.status[self._humidity_key]["rh"])
 
     @property
     def hvac_mode(self) -> HVACMode:

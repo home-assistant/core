@@ -33,7 +33,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -568,7 +568,9 @@ async def test_get_significant_states_only(
         )
 
 
-def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and

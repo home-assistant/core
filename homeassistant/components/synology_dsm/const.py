@@ -46,6 +46,8 @@ DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"
 
+SHARED_SUFFIX = "_shared"
+
 # Signals
 SIGNAL_CAMERA_SOURCE_CHANGED = "synology_dsm.camera_stream_source_changed"
 

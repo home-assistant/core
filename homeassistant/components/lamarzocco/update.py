@@ -11,13 +11,12 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -51,12 +50,12 @@ ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: LaMarzoccoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create update entities."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         LaMarzoccoUpdateEntity(coordinator, description)
         for description in ENTITIES
@@ -83,6 +82,11 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         return self.coordinator.device.firmware[
             self.entity_description.component
         ].latest_version
+
+    @property
+    def release_url(self) -> str | None:
+        """Return the release notes URL."""
+        return "https://support-iot.lamarzocco.com/firmware-updates/"
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

@@ -7,11 +7,10 @@ from typing import Any
 from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -36,12 +35,12 @@ ENTITIES: tuple[LaMarzoccoButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: LaMarzoccoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button entities."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         LaMarzoccoButtonEntity(coordinator, description)
         for description in ENTITIES
@@ -57,3 +56,4 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press button."""
         await self.entity_description.press_fn(self.coordinator.device)
+        await self.coordinator.async_request_refresh()

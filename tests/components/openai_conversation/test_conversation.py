@@ -27,6 +27,33 @@ from homeassistant.util import ulid
 from tests.common import MockConfigEntry
 
 
+async def test_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test entity properties."""
+    state = hass.states.get("conversation.openai")
+    assert state
+    assert state.attributes["supported_features"] == 0
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_LLM_HASS_API: "assist",
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    state = hass.states.get("conversation.openai")
+    assert state
+    assert (
+        state.attributes["supported_features"]
+        == conversation.ConversationEntityFeature.CONTROL
+    )
+
+
 async def test_error_handling(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
@@ -429,7 +456,7 @@ async def test_assist_api_tools_conversion(
     mock_init_component,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
-    for component in [
+    for component in (
         "intent",
         "todo",
         "light",
@@ -440,7 +467,7 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "cover",
         "weather",
-    ]:
+    ):
         assert await async_setup_component(hass, component, {})
 
     agent_id = mock_config_entry_with_assist.entry_id

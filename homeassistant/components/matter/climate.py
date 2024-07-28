@@ -60,6 +60,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support dry mode.
     (0x0001, 0x0108),
+    (0x0001, 0x010A),
     (0x1209, 0x8007),
 }
 
@@ -68,6 +69,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support fan-only mode.
     (0x0001, 0x0108),
+    (0x0001, 0x010A),
     (0x1209, 0x8007),
 }
 
@@ -225,6 +227,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+        if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
+            # special case: the appliance has a dedicated Power switch on the OnOff cluster
+            # if the mains power is off - treat it as if the HVAC mode is off
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = None
+            return
+
         # update hvac_mode from SystemMode
         system_mode_value = int(
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.SystemMode)
@@ -265,19 +274,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 case _:
                     self._attr_hvac_action = HVACAction.OFF
-        # update target_temperature
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            self._attr_target_temperature = None
-        elif self._attr_hvac_mode == HVACMode.COOL:
-            self._attr_target_temperature = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-            )
-        else:
-            self._attr_target_temperature = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-            )
         # update target temperature high/low
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
+        supports_range = (
+            self._attr_supported_features
+            & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+        if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
+            self._attr_target_temperature = None
             self._attr_target_temperature_high = self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
             )
@@ -287,6 +290,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
         else:
             self._attr_target_temperature_high = None
             self._attr_target_temperature_low = None
+            # update target_temperature
+            if self._attr_hvac_mode == HVACMode.COOL:
+                self._attr_target_temperature = self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
+            else:
+                self._attr_target_temperature = self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                )
+
         # update min_temp
         if self._attr_hvac_mode == HVACMode.COOL:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
@@ -321,7 +334,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.CLIMATE,
         entity_description=ClimateEntityDescription(
             key="MatterThermostat",
-            name=None,
+            translation_key="thermostat",
         ),
         entity_class=MatterClimate,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
@@ -337,6 +350,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),

@@ -64,8 +64,11 @@
       'error_datetime': None,
       'error_datetime_naive': None,
       'error_key': None,
+      'inactive_reason': 'NONE',
+      'is_error_confirmable': False,
       'mode': 'MAIN_AREA',
       'state': 'RESTRICTED',
+      'work_area_id': 123456,
     }),
     'planner': dict({
       'next_start_datetime': '2023-06-05T19:00:00+00:00',

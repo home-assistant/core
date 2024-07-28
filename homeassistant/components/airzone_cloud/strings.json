@@ -18,8 +18,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "air_demand": {
+        "name": "Air demand"
+      },
       "air_quality_active": {
         "name": "Air Quality active"
+      },
+      "floor_demand": {
+        "name": "Floor demand"
       }
     },
     "select": {
@@ -30,6 +36,17 @@
           "on": "On",
           "auto": "Auto"
         }
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "free_memory": {
+        "name": "Free memory"
+      },
+      "thermostat_coverage": {
+        "name": "Signal percentage"
       }
     }
   }

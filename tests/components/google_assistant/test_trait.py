@@ -60,6 +60,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ALARM_ARMED_AWAY,
@@ -75,12 +76,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    EVENT_CALL_SERVICE,
-    HomeAssistant,
-    State,
-)
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -1763,7 +1759,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
                     ],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
@@ -1905,7 +1901,8 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
-                | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+                | AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_AWAY,
             },
         ),
         PIN_CONFIG,
@@ -1914,10 +1911,19 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         "availableArmLevels": {
             "levels": [
                 {
-                    "level_name": "armed_custom_bypass",
+                    "level_name": "armed_home",
                     "level_values": [
                         {
-                            "level_synonym": ["armed custom bypass", "custom"],
+                            "level_synonym": ["armed home", "home"],
+                            "lang": "en",
+                        }
+                    ],
+                },
+                {
+                    "level_name": "armed_away",
+                    "level_values": [
+                        {
+                            "level_synonym": ["armed away", "away"],
                             "lang": "en",
                         }
                     ],
@@ -1927,12 +1933,12 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
                     "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
     assert trt.query_attributes() == {
-        "currentArmLevel": "armed_custom_bypass",
+        "currentArmLevel": "armed_home",
         "isArmed": False,
     }
 
@@ -3986,7 +3992,7 @@ async def test_sensorstate(
         ),
     }
 
-    for sensor_type in sensor_types:
+    for sensor_type, item in sensor_types.items():
         assert helpers.get_google_type(sensor.DOMAIN, None) is not None
         assert trait.SensorStateTrait.supported(sensor.DOMAIN, None, sensor_type, None)
 
@@ -4002,8 +4008,8 @@ async def test_sensorstate(
             BASIC_CONFIG,
         )
 
-        name = sensor_types[sensor_type][0]
-        unit = sensor_types[sensor_type][1]
+        name = item[0]
+        unit = item[1]
 
         if sensor_type == sensor.SensorDeviceClass.AQI:
             assert trt.sync_attributes() == {

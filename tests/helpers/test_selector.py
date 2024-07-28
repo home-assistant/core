@@ -55,6 +55,8 @@ def _test_selector(
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    assert selector_instance == selector.selector(config)
+    assert selector_instance != 5
     # We do not allow enums in the config, as they cannot serialize
     assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 

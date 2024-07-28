@@ -483,7 +483,7 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.home_nearest_device")
     assert state.state == "test1, test2"
 
-    for device in ["test1", "test2"]:
+    for device in ("test1", "test2"):
         entity_base_name = f"sensor.home_{device}"
         state = hass.states.get(f"{entity_base_name}_distance")
         assert state.state == "0"

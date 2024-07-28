@@ -49,11 +49,6 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         self._attr_unique_id = heater.serial_no
 
     @property
-    def icon(self) -> str:
-        """Return the icon of the water_heater device."""
-        return "mdi:thermometer-lines"
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}

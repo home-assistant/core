@@ -20,7 +20,7 @@ from homeassistant.components.device_tracker import (
     SourceType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import GPSType
+from homeassistant.helpers.typing import ConfigType, GPSType
 from homeassistant.loader import bind_hass
 
 from tests.common import MockPlatform, mock_platform
@@ -143,7 +143,9 @@ def mock_legacy_device_tracker_setup(
 ) -> None:
     """Mock legacy device tracker platform setup."""
 
-    async def _async_get_scanner(hass, config) -> MockScanner:
+    async def _async_get_scanner(
+        hass: HomeAssistant, config: ConfigType
+    ) -> MockScanner:
         """Return the test scanner."""
         return legacy_device_scanner
 

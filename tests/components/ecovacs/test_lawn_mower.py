@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import MowerCapabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import Charge, CleanV2
 from deebot_client.events import StateEvent
@@ -56,7 +55,7 @@ async def test_lawn_mower(
     assert entity_entry == snapshot(name=f"{entity_id}-entity_entry")
     assert entity_entry.device_id
 
-    device = next(controller.devices(MowerCapabilities))
+    device = controller.devices[0]
 
     assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
@@ -104,7 +103,7 @@ async def test_mover_services(
     tests: list[MowerTestCase],
 ) -> None:
     """Test mover services."""
-    device = next(controller.devices(MowerCapabilities))
+    device = controller.devices[0]
 
     for test in tests:
         device._execute_command.reset_mock()

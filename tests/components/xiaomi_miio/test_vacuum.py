@@ -1,12 +1,12 @@
 """The tests for the Xiaomi vacuum platform."""
 
+from collections.abc import Generator
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -56,8 +56,6 @@ from homeassistant.util import dt as dt_util
 from . import TEST_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-# pylint: disable=consider-using-tuple
 
 # calls made when device status is requested
 STATUS_CALLS = [
@@ -423,7 +421,7 @@ async def test_xiaomi_vacuum_services(
                 "segments": ["1", "2"],
             },
             "segment_clean",
-            mock.call(segments=[int(i) for i in ["1", "2"]]),
+            mock.call(segments=[int(i) for i in ("1", "2")]),
         ),
         (
             SERVICE_CLEAN_SEGMENT,
@@ -495,7 +493,7 @@ async def test_xiaomi_vacuum_fanspeeds(
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
     fanspeeds = state.attributes.get(ATTR_FAN_SPEED_LIST)
-    for speed in ["Silent", "Standard", "Medium", "Turbo"]:
+    for speed in ("Silent", "Standard", "Medium", "Turbo"):
         assert speed in fanspeeds
 
     # Set speed service:

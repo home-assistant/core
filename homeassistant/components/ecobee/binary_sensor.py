@@ -42,7 +42,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
     def __init__(self, data, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
         self.data = data
-        self.sensor_name = sensor_name.rstrip()
+        self.sensor_name = sensor_name
         self.index = sensor_index
 
     @property

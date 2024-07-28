@@ -99,8 +99,7 @@ class Blueprint:
         inputs = {}
         for key, value in self.data[CONF_BLUEPRINT][CONF_INPUT].items():
             if value and CONF_INPUT in value:
-                for key, value in value[CONF_INPUT].items():
-                    inputs[key] = value
+                inputs.update(dict(value[CONF_INPUT]))
             else:
                 inputs[key] = value
         return inputs

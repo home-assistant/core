@@ -28,6 +28,7 @@ from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRA
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
+from .providers.homeassistant import HassAuthProvider
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
@@ -53,7 +54,7 @@ async def auth_manager_from_config(
 ) -> AuthManager:
     """Initialize an auth manager from config.
 
-    CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
+    CORE_CONFIG_SCHEMA will make sure no duplicated auth providers or
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
@@ -72,6 +73,13 @@ async def auth_manager_from_config(
     for provider in providers:
         key = (provider.type, provider.id)
         provider_hash[key] = provider
+
+        if isinstance(provider, HassAuthProvider):
+            # Can be removed in 2026.7 with the legacy mode of homeassistant auth provider
+            # We need to initialize the provider to create the repair if needed as otherwise
+            # the provider will be initialized on first use, which could be rare as users
+            # don't frequently change auth settings
+            await provider.async_initialize()
 
     if module_configs:
         modules = await asyncio.gather(
@@ -355,15 +363,15 @@ class AuthManager:
         local_only: bool | None = None,
     ) -> None:
         """Update a user."""
-        kwargs: dict[str, Any] = {}
-
-        for attr_name, value in (
-            ("name", name),
-            ("group_ids", group_ids),
-            ("local_only", local_only),
-        ):
-            if value is not None:
-                kwargs[attr_name] = value
+        kwargs: dict[str, Any] = {
+            attr_name: value
+            for attr_name, value in (
+                ("name", name),
+                ("group_ids", group_ids),
+                ("local_only", local_only),
+            )
+            if value is not None
+        }
         await self._store.async_update_user(user, **kwargs)
 
         if is_active is not None:
@@ -373,6 +381,13 @@ class AuthManager:
                 await self.async_deactivate_user(user)
 
         self.hass.bus.async_fire(EVENT_USER_UPDATED, {"user_id": user.id})
+
+    @callback
+    def async_update_user_credentials_data(
+        self, credentials: models.Credentials, data: dict[str, Any]
+    ) -> None:
+        """Update credentials data."""
+        self._store.async_update_user_credentials_data(credentials, data=data)
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""
