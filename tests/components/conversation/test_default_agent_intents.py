@@ -131,7 +131,9 @@ async def test_cover_device_class(
     await cover_intent.async_setup_intents(hass)
 
     entity_id = f"{cover.DOMAIN}.front"
-    hass.states.async_set(entity_id, STATE_CLOSED, attributes={"device_class": "garage"})
+    hass.states.async_set(
+        entity_id, STATE_CLOSED, attributes={"device_class": "garage"}
+    )
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
 
     # Open service
