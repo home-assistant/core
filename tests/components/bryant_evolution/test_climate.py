@@ -60,7 +60,7 @@ async def test_set_temperature_mode_cool(
     # Make the call, modifting the mock client to throw an exception on
     # read to ensure that the update is visible iff we call
     # async_update_ha_state.
-    data = {"temperature": 70}
+    data = {ATTR_TEMPERATURE: 70}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     client.read_cooling_setpoint.side_effect = Exception("fake failure")
     await hass.services.async_call(
