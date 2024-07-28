@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "followers_count": {
+        "default": "mdi:counter"
+      },
+      "following_count": {
+        "default": "mdi:counter"
+      },
+      "statuses_count": {
+        "default": "mdi:counter"
+      }
+    }
+  }
+}
