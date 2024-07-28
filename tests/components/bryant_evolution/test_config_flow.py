@@ -39,7 +39,6 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
                 CONF_FILENAME: "test_form_success",
             },
         )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY, result
     assert result["title"] == "SAM at test_form_success"
