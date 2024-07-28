@@ -137,12 +137,12 @@ class EcovacsLegacyEntity(Entity):
         self.error: str | None = None
         self._attr_unique_id = vacuum["did"]
 
-        if (name := vacuum.get("nick")) is None:
+        if (name := vacuum.get("deviceName")) is None:
             name = vacuum.get("name", vacuum["did"])
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vacuum["did"])},
-            model=vacuum.get("deviceName"),
+            model=f"{vacuum['product_category']} {vacuum['model']}",
             name=name,
             serial_number=vacuum["did"],
         )
