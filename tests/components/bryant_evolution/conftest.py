@@ -60,6 +60,7 @@ async def mock_evolution_entry(
     """Configure and return a Bryant evolution integration."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     entry = MockConfigEntry(
+        entry_id="01J3XJZSTEF6G5V0QJX6HBC94T",  # For determinism in snapshot tests
         domain=DOMAIN,
         data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ZONE: [(1, 1)]},
     )
