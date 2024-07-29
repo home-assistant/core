@@ -1,4 +1,4 @@
-"""Tests for the Linear Garage Door integration."""
+"""Tests for the Nice G.O. integration."""
 
 from unittest.mock import patch
 
