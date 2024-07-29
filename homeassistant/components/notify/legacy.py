@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import (
@@ -155,19 +154,6 @@ def async_setup_legacy(
     ]
 
 
-@callback
-def check_templates_warn(hass: HomeAssistant, tpl: Template) -> None:
-    """Warn user that passing templates to notify service is deprecated."""
-    if tpl.is_static or hass.data.get("notify_template_warned"):
-        return
-
-    hass.data["notify_template_warned"] = True
-    LOGGER.warning(
-        "Passing templates to notify service is deprecated and will be removed in"
-        " 2021.12. Automations and scripts handle templates automatically"
-    )
-
-
 @bind_hass
 async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
     """Register notify services for an integration."""
@@ -255,19 +241,17 @@ class BaseNotificationService:
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         kwargs = {}
-        message: Template = service.data[ATTR_MESSAGE]
-        title: Template | None
+        message: str = service.data[ATTR_MESSAGE]
+        title: str | None
         if title := service.data.get(ATTR_TITLE):
-            check_templates_warn(self.hass, title)
-            kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
+            kwargs[ATTR_TITLE] = title
 
         if self.registered_targets.get(service.service) is not None:
             kwargs[ATTR_TARGET] = [self.registered_targets[service.service]]
         elif service.data.get(ATTR_TARGET) is not None:
             kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
-        check_templates_warn(self.hass, message)
-        kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
+        kwargs[ATTR_MESSAGE] = message
         kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
 
         await self.async_send_message(**kwargs)
