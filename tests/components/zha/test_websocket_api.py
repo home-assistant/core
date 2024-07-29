@@ -440,9 +440,16 @@ async def test_list_groupable_devices(
     assert len(device_endpoints) == 0
 
 
-async def test_add_group(zha_client) -> None:
+async def test_add_group(hass: HomeAssistant, zha_client) -> None:
     """Test adding and getting a new ZHA zigbee group."""
-    await zha_client.send_json({ID: 12, TYPE: "zha/group/add", GROUP_NAME: "new_group"})
+    await zha_client.send_json(
+        {
+            ID: 12,
+            TYPE: "zha/group/add",
+            GROUP_NAME: "new_group",
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 12
@@ -450,8 +457,17 @@ async def test_add_group(zha_client) -> None:
 
     added_group = msg["result"]
 
+    groupable_device = get_zha_gateway_proxy(hass).device_proxies[
+        EUI64.convert(IEEE_GROUPABLE_DEVICE)
+    ]
+
     assert added_group["name"] == "new_group"
-    assert added_group["members"] == []
+    assert len(added_group["members"]) == 1
+    assert added_group["members"][0]["device"]["ieee"] == IEEE_GROUPABLE_DEVICE
+    assert (
+        added_group["members"][0]["device"]["device_reg_id"]
+        == groupable_device.device_id
+    )
 
     await zha_client.send_json({ID: 13, TYPE: "zha/groups"})
 
@@ -497,6 +513,82 @@ async def test_remove_group(zha_client) -> None:
 
     groups = msg["result"]
     assert len(groups) == 0
+
+
+async def test_add_group_member(hass: HomeAssistant, zha_client) -> None:
+    """Test adding a ZHA zigbee group member."""
+    await zha_client.send_json(
+        {
+            ID: 12,
+            TYPE: "zha/group/add",
+            GROUP_NAME: "new_group",
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 12
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+
+    assert len(added_group["members"]) == 0
+
+    await zha_client.send_json(
+        {
+            ID: 13,
+            TYPE: "zha/group/members/add",
+            GROUP_ID: added_group["group_id"],
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 13
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+
+    assert len(added_group["members"]) == 1
+    assert added_group["name"] == "new_group"
+    assert added_group["members"][0]["device"]["ieee"] == IEEE_GROUPABLE_DEVICE
+
+
+async def test_remove_group_member(hass: HomeAssistant, zha_client) -> None:
+    """Test removing a ZHA zigbee group member."""
+    await zha_client.send_json(
+        {
+            ID: 12,
+            TYPE: "zha/group/add",
+            GROUP_NAME: "new_group",
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 12
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+
+    assert added_group["name"] == "new_group"
+    assert len(added_group["members"]) == 1
+    assert added_group["members"][0]["device"]["ieee"] == IEEE_GROUPABLE_DEVICE
+
+    await zha_client.send_json(
+        {
+            ID: 13,
+            TYPE: "zha/group/members/remove",
+            GROUP_ID: added_group["group_id"],
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 13
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+    assert len(added_group["members"]) == 0
 
 
 @pytest.fixture

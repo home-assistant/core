@@ -37,7 +37,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -137,9 +136,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
     }
 
 
-async def test_flow_works_negative_discovery(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -535,9 +532,8 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_ssdp_aborts_if_host_already_exists(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> None:
     """Test we abort if the host is already configured."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
@@ -557,9 +553,8 @@ async def test_form_ssdp_aborts_if_host_already_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_form_ssdp_aborts_if_serial_already_exists(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) -> None:
     """Test we abort if the serial is already configured."""
 
     result = await hass.config_entries.flow.async_init(

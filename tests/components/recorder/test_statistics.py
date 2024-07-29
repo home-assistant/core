@@ -24,6 +24,7 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_metadata_with_session,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
@@ -43,6 +44,7 @@ from .common import (
     async_record_states,
     async_wait_recording_done,
     do_adhoc_statistics,
+    get_start_time,
     statistics_during_period,
 )
 
@@ -293,14 +295,17 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, session, start, _end):
+        instance = recorder.get_instance(_hass)
         return statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
                 sensor_stats("sensor.test2", start),
                 sensor_stats("sensor.test3", start),
             ],
-            get_metadata(
-                _hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"}
+            get_metadata_with_session(
+                instance,
+                session,
+                statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"},
             ),
         )
 
@@ -338,7 +343,7 @@ async def test_compile_periodic_statistics_exception(
     """Test exception handling when compiling periodic statistics."""
     await async_setup_component(hass, "sensor", {})
 
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     do_adhoc_statistics(hass, start=now)
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     await async_wait_recording_done(hass)

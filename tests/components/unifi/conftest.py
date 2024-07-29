@@ -295,7 +295,7 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> ConfigEntry:
     """Fixture providing a set up instance of UniFi network integration."""
     return await config_entry_factory()

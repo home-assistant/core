@@ -1,6 +1,6 @@
 {
   "domain": "dsmr",
-  "name": "DSMR Slimme Meter",
+  "name": "DSMR Smart Meter",
   "codeowners": ["@Robbie1221", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dsmr",
