@@ -827,7 +827,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "tplink",
-        "hostname": "l5*",
+        "hostname": "l[59]*",
         "macaddress": "5CE931*",
     },
     {
@@ -837,8 +837,13 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "tplink",
-        "hostname": "l5*",
+        "hostname": "l[59]*",
         "macaddress": "5C628B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "14EBB6*",
     },
     {
         "domain": "tplink",

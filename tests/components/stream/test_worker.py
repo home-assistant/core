@@ -83,7 +83,7 @@ def filename(tmp_path: Path) -> str:
 
 
 @pytest.fixture(autouse=True)
-def mock_stream_settings(hass):
+def mock_stream_settings(hass: HomeAssistant) -> None:
     """Set the stream settings data in hass before each test."""
     hass.data[DOMAIN] = {
         ATTR_SETTINGS: StreamSettings(
@@ -772,12 +772,15 @@ async def test_worker_log(
 
     with patch("av.open") as av_open:
         # pylint: disable-next=c-extension-no-member
-        av_open.side_effect = av.error.InvalidDataError(-2, "error")
+        av_open.side_effect = av.error.InvalidDataError(
+            code=-2, message="Invalid data", filename=stream_url
+        )
         with pytest.raises(StreamWorkerError) as err:
             run_worker(hass, stream, stream_url)
         await hass.async_block_till_done()
     assert (
-        str(err.value) == f"Error opening stream (ERRORTYPE_-2, error) {redacted_url}"
+        str(err.value)
+        == f"Error opening stream (ERRORTYPE_-2, Invalid data, {redacted_url})"
     )
     assert stream_url not in caplog.text
 

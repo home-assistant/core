@@ -7,12 +7,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config import script
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 
 from tests.typing import ClientSessionGenerator

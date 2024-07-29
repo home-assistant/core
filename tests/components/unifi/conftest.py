@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any
@@ -12,7 +12,6 @@ from unittest.mock import AsyncMock, patch
 from aiounifi.models.message import MessageKey
 import orjson
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
@@ -296,7 +295,7 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> ConfigEntry:
     """Fixture providing a set up instance of UniFi network integration."""
     return await config_entry_factory()

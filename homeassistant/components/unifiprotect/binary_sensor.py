@@ -8,11 +8,9 @@ import dataclasses
 from uiprotect.data import (
     NVR,
     Camera,
-    Light,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     Sensor,
     SmartDetectObjectType,
 )
@@ -27,11 +25,12 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
+    ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
@@ -284,7 +283,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         name="Tracking: person",
         icon="mdi:walk",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="is_ptz",
+        ufp_required_field="feature_flags.is_ptz",
         ufp_value="is_person_tracking_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -623,31 +622,22 @@ _MOUNTABLE_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription
 }
 
 
-class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
+class ProtectDeviceBinarySensor(
+    ProtectIsOnEntity, ProtectDeviceEntity, BinarySensorEntity
+):
     """A UniFi Protect Device Binary Sensor."""
 
-    device: Camera | Light | Sensor
     entity_description: ProtectBinaryEntityDescription
-    _state_attrs: tuple[str, ...] = ("_attr_available", "_attr_is_on")
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device)
 
 
 class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     """A UniFi Protect Device Binary Sensor that can change device class at runtime."""
 
     device: Sensor
-    _state_attrs: tuple[str, ...] = (
-        "_attr_available",
-        "_attr_is_on",
-        "_attr_device_class",
-    )
+    _state_attrs = ("_attr_available", "_attr_is_on", "_attr_device_class")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # UP Sense can be any of the 3 contact sensor device classes
         self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
@@ -673,7 +663,6 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         self._disk = disk
         # backwards compat with old unique IDs
         index = self._disk.slot - 1
-
         description = dataclasses.replace(
             description,
             key=f"{description.key}_{index}",
@@ -682,7 +671,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         slot = self._disk.slot
         self._attr_available = False
@@ -712,7 +701,7 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
         prev_event = self._event

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import logging
 
-from typing_extensions import Generator
 from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     StateType,
 )
 
@@ -28,7 +27,7 @@ from .const import (
     ATTR_WIDTH,
     DOMAIN,
 )
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 from .utils import get_camera_base_name
 
@@ -216,7 +215,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._attr_supported_features = _EMPTY_CAMERA_FEATURES
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
         channel = updated_device.channels[self.channel.id]

@@ -461,115 +461,6 @@ async def test_bandwidth_sensors(
 
 @pytest.mark.parametrize(
     "config_entry_options",
-    [
-        {
-            CONF_ALLOW_BANDWIDTH_SENSORS: False,
-            CONF_ALLOW_UPTIME_SENSORS: True,
-            CONF_TRACK_CLIENTS: False,
-            CONF_TRACK_DEVICES: False,
-        }
-    ],
-)
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "mac": "00:00:00:00:00:01",
-                "name": "client1",
-                "oui": "Producer",
-                "uptime": 0,
-            }
-        ]
-    ],
-)
-@pytest.mark.parametrize(
-    ("initial_uptime", "event_uptime", "small_variation_uptime", "new_uptime"),
-    [
-        # Uptime listed in epoch time should never change
-        (1609462800, 1609462800, 1609462800, 1612141200),
-        # Uptime counted in seconds increases with every event
-        (60, 240, 480, 60),
-    ],
-)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_uptime_sensors(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-    mock_websocket_message,
-    config_entry_options: MappingProxyType[str, Any],
-    config_entry_factory: Callable[[], ConfigEntry],
-    client_payload: list[dict[str, Any]],
-    initial_uptime,
-    event_uptime,
-    small_variation_uptime,
-    new_uptime,
-) -> None:
-    """Verify that uptime sensors are working as expected."""
-    uptime_client = client_payload[0]
-    uptime_client["uptime"] = initial_uptime
-    freezer.move_to(datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC))
-    config_entry = await config_entry_factory()
-
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
-    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
-    assert (
-        entity_registry.async_get("sensor.client1_uptime").entity_category
-        is EntityCategory.DIAGNOSTIC
-    )
-
-    # Verify normal new event doesn't change uptime
-    # 4 minutes have passed
-    uptime_client["uptime"] = event_uptime
-    now = datetime(2021, 1, 1, 1, 4, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        mock_websocket_message(message=MessageKey.CLIENT, data=uptime_client)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
-
-    # Verify small variation of uptime (<120 seconds) is ignored
-    # 15 seconds variation after 8 minutes
-    uptime_client["uptime"] = small_variation_uptime
-    now = datetime(2021, 1, 1, 1, 8, 15, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        mock_websocket_message(message=MessageKey.CLIENT, data=uptime_client)
-
-    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
-
-    # Verify new event change uptime
-    # 1 month has passed
-    uptime_client["uptime"] = new_uptime
-    now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        mock_websocket_message(message=MessageKey.CLIENT, data=uptime_client)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.client1_uptime").state == "2021-02-01T01:00:00+00:00"
-
-    # Disable option
-    options = deepcopy(config_entry_options)
-    options[CONF_ALLOW_UPTIME_SENSORS] = False
-    hass.config_entries.async_update_entry(config_entry, options=options)
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
-    assert hass.states.get("sensor.client1_uptime") is None
-
-    # Enable option
-    options = deepcopy(config_entry_options)
-    options[CONF_ALLOW_UPTIME_SENSORS] = True
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.config_entries.async_update_entry(config_entry, options=options)
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
-    assert hass.states.get("sensor.client1_uptime")
-
-
-@pytest.mark.parametrize(
-    "config_entry_options",
     [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
 )
 @pytest.mark.parametrize(
@@ -849,9 +740,9 @@ async def test_outlet_power_readings(
     device_payload: list[dict[str, Any]],
     entity_id: str,
     expected_unique_id: str,
-    expected_value: any,
+    expected_value: Any,
     changed_data: dict | None,
-    expected_update_value: any,
+    expected_update_value: Any,
 ) -> None:
     """Test the outlet power reporting on PDU devices."""
     assert len(hass.states.async_all()) == 13
@@ -874,81 +765,6 @@ async def test_outlet_power_readings(
 
         sensor_data = hass.states.get(f"sensor.{entity_id}")
         assert sensor_data.state == expected_update_value
-
-
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "fan_level": 0,
-                "ip": "10.0.1.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "uptime": 60,
-                "version": "4.0.42.10433",
-            }
-        ]
-    ],
-)
-async def test_device_uptime(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_websocket_message,
-    config_entry_factory: Callable[[], ConfigEntry],
-    device_payload: list[dict[str, Any]],
-) -> None:
-    """Verify that uptime sensors are working as expected."""
-    now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        await config_entry_factory()
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
-    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
-
-    assert (
-        entity_registry.async_get("sensor.device_uptime").entity_category
-        is EntityCategory.DIAGNOSTIC
-    )
-
-    # Verify normal new event doesn't change uptime
-    # 4 minutes have passed
-    device = device_payload[0]
-    device["uptime"] = 240
-    now = datetime(2021, 1, 1, 1, 4, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        mock_websocket_message(message=MessageKey.DEVICE, data=device)
-
-    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
-
-    # Verify small variation of uptime (<120 seconds) is ignored
-    # 15 seconds variation after 8 minutes
-    device = device_payload[0]
-    device["uptime"] = 480
-    now = datetime(2021, 1, 1, 1, 8, 15, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        mock_websocket_message(message=MessageKey.DEVICE, data=device)
-
-    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
-
-    # Verify new event change uptime
-    # 1 month has passed
-
-    device["uptime"] = 60
-    now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        mock_websocket_message(message=MessageKey.DEVICE, data=device)
-
-    assert hass.states.get("sensor.device_uptime").state == "2021-02-01T01:00:00+00:00"
 
 
 @pytest.mark.parametrize(
@@ -1425,3 +1241,186 @@ async def test_sensor_sources(
     assert state.attributes.get(ATTR_STATE_CLASS) == snapshot
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == snapshot
     assert state.state == snapshot
+
+
+async def _test_uptime_entity(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message,
+    config_entry_factory: Callable[[], ConfigEntry],
+    payload: dict[str, Any],
+    entity_id: str,
+    message_key: MessageKey,
+    initial_uptime: int,
+    event_uptime: int,
+    small_variation_uptime: int,
+    new_uptime: int,
+) -> None:
+    """Verify that uptime entities are working as expected."""
+    payload["uptime"] = initial_uptime
+    freezer.move_to(datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC))
+    config_entry = await config_entry_factory()
+
+    assert hass.states.get(entity_id).state == "2021-01-01T01:00:00+00:00"
+
+    # Verify normal new event doesn't change uptime
+    # 4 minutes have passed
+
+    payload["uptime"] = event_uptime
+    now = datetime(2021, 1, 1, 1, 4, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_websocket_message(message=message_key, data=payload)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "2021-01-01T01:00:00+00:00"
+
+    # Verify small variation of uptime (<120 seconds) is ignored
+    # 15 seconds variation after 8 minutes
+
+    payload["uptime"] = small_variation_uptime
+    now = datetime(2021, 1, 1, 1, 8, 15, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_websocket_message(message=message_key, data=payload)
+
+    assert hass.states.get(entity_id).state == "2021-01-01T01:00:00+00:00"
+
+    # Verify new event change uptime
+    # 1 month has passed
+
+    payload["uptime"] = new_uptime
+    now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_websocket_message(message=message_key, data=payload)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "2021-02-01T01:00:00+00:00"
+
+    return config_entry
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_UPTIME_SENSORS: True}])
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "mac": "00:00:00:00:00:01",
+                "name": "client1",
+                "oui": "Producer",
+                "uptime": 0,
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    ("initial_uptime", "event_uptime", "small_variation_uptime", "new_uptime"),
+    [
+        # Uptime listed in epoch time should never change
+        (1609462800, 1609462800, 1609462800, 1612141200),
+        # Uptime counted in seconds increases with every event
+        (60, 240, 480, 60),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_uptime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message,
+    config_entry_options: MappingProxyType[str, Any],
+    config_entry_factory: Callable[[], ConfigEntry],
+    client_payload: list[dict[str, Any]],
+    initial_uptime,
+    event_uptime,
+    small_variation_uptime,
+    new_uptime,
+) -> None:
+    """Verify that client uptime sensors are working as expected."""
+    config_entry = await _test_uptime_entity(
+        hass,
+        freezer,
+        mock_websocket_message,
+        config_entry_factory,
+        payload=client_payload[0],
+        entity_id="sensor.client1_uptime",
+        message_key=MessageKey.CLIENT,
+        initial_uptime=initial_uptime,
+        event_uptime=event_uptime,
+        small_variation_uptime=small_variation_uptime,
+        new_uptime=new_uptime,
+    )
+
+    assert (
+        entity_registry.async_get("sensor.client1_uptime").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    # Disable option
+    options = deepcopy(config_entry_options)
+    options[CONF_ALLOW_UPTIME_SENSORS] = False
+    hass.config_entries.async_update_entry(config_entry, options=options)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.client1_uptime") is None
+
+    # Enable option
+    options = deepcopy(config_entry_options)
+    options[CONF_ALLOW_UPTIME_SENSORS] = True
+    hass.config_entries.async_update_entry(config_entry, options=options)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.client1_uptime")
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "has_fan": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+async def test_device_uptime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message,
+    config_entry_factory: Callable[[], ConfigEntry],
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that device uptime sensors are working as expected."""
+    await _test_uptime_entity(
+        hass,
+        freezer,
+        mock_websocket_message,
+        config_entry_factory,
+        payload=device_payload[0],
+        entity_id="sensor.device_uptime",
+        message_key=MessageKey.DEVICE,
+        initial_uptime=60,
+        event_uptime=240,
+        small_variation_uptime=480,
+        new_uptime=60,
+    )
+
+    assert (
+        entity_registry.async_get("sensor.device_uptime").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )

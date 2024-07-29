@@ -9,6 +9,7 @@ from typing import Any
 
 from reolink_aio.api import (
     DayNightEnum,
+    HDREnum,
     Host,
     SpotlightModeEnum,
     StatusLedEnum,
@@ -117,6 +118,17 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: (
             api.set_status_led(ch, StatusLedEnum[name].value, doorbell=True)
         ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="hdr",
+        cmd_key="GetIsp",
+        translation_key="hdr",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in HDREnum],
+        supported=lambda api, ch: api.supported(ch, "HDR"),
+        value=lambda api, ch: HDREnum(api.HDR_state(ch)).name,
+        method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
     ),
 )
 

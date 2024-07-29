@@ -1,9 +1,9 @@
 """The tests for local file camera component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,

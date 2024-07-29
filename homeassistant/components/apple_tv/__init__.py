@@ -60,6 +60,7 @@ AUTH_EXCEPTIONS = (
     exceptions.NoCredentialsError,
 )
 CONNECTION_TIMEOUT_EXCEPTIONS = (
+    OSError,
     asyncio.CancelledError,
     TimeoutError,
     exceptions.ConnectionLostError,

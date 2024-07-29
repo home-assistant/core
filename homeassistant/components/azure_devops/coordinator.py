@@ -78,8 +78,9 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
         )
         if not self.client.authorized:
             raise ConfigEntryAuthFailed(
-                "Could not authorize with Azure DevOps. You will need to update your"
-                " token"
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={"title": self.title},
             )
 
         return True

@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from datetime import timedelta
 from functools import cached_property
 import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components import dhcp
@@ -22,7 +23,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -46,6 +52,7 @@ from .common import (
     async_capture_events,
     async_fire_time_changed,
     async_get_persistent_notifications,
+    flush_store,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -526,13 +533,13 @@ async def test_remove_entry_cancels_reauth(
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
-    assert issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
     await manager.async_remove(entry.entry_id)
 
     flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 0
-    assert not issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
 
 async def test_remove_entry_handles_callback_error(
@@ -907,6 +914,7 @@ async def test_saving_and_loading(
         assert orig.as_dict() == loaded.as_dict()
 
 
+@freeze_time("2024-02-14 12:00:00")
 async def test_as_dict(snapshot: SnapshotAssertion) -> None:
     """Test ConfigEntry.as_dict."""
 
@@ -1189,14 +1197,14 @@ async def test_reauth_issue(
 
     assert len(issue_registry.issues) == 1
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
-    issue = issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
     assert issue == ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
         created=ANY,
         data={"flow_id": flows[0]["flow_id"]},
         dismissed_version=None,
-        domain=HA_DOMAIN,
+        domain=HOMEASSISTANT_DOMAIN,
         is_fixable=False,
         is_persistent=False,
         issue_domain="test",
@@ -1246,8 +1254,11 @@ async def test_loading_default_config(hass: HomeAssistant) -> None:
     assert len(manager.async_entries()) == 0
 
 
-async def test_updating_entry_data(manager: config_entries.ConfigEntries) -> None:
+async def test_updating_entry_data(
+    manager: config_entries.ConfigEntries, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that we can update an entry data."""
+    created = dt_util.utcnow()
     entry = MockConfigEntry(
         domain="test",
         data={"first": True},
@@ -1255,17 +1266,32 @@ async def test_updating_entry_data(manager: config_entries.ConfigEntries) -> Non
     )
     entry.add_to_manager(manager)
 
+    assert len(manager.async_entries()) == 1
+    assert manager.async_entries()[0] == entry
+    assert entry.created_at == created
+    assert entry.modified_at == created
+
+    freezer.tick()
+
     assert manager.async_update_entry(entry) is False
     assert entry.data == {"first": True}
+    assert entry.modified_at == created
+    assert manager.async_entries()[0].modified_at == created
+
+    freezer.tick()
+    modified = dt_util.utcnow()
 
     assert manager.async_update_entry(entry, data={"second": True}) is True
     assert entry.data == {"second": True}
+    assert entry.modified_at == modified
+    assert manager.async_entries()[0].modified_at == modified
 
 
 async def test_updating_entry_system_options(
-    manager: config_entries.ConfigEntries,
+    manager: config_entries.ConfigEntries, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test that we can update an entry data."""
+    created = dt_util.utcnow()
     entry = MockConfigEntry(
         domain="test",
         data={"first": True},
@@ -1276,6 +1302,11 @@ async def test_updating_entry_system_options(
 
     assert entry.pref_disable_new_entities is True
     assert entry.pref_disable_polling is False
+    assert entry.created_at == created
+    assert entry.modified_at == created
+
+    freezer.tick()
+    modified = dt_util.utcnow()
 
     manager.async_update_entry(
         entry, pref_disable_new_entities=False, pref_disable_polling=True
@@ -1283,6 +1314,8 @@ async def test_updating_entry_system_options(
 
     assert entry.pref_disable_new_entities is False
     assert entry.pref_disable_polling is True
+    assert entry.created_at == created
+    assert entry.modified_at == modified
 
 
 async def test_update_entry_options_and_trigger_listener(
@@ -5098,7 +5131,7 @@ async def test_hashable_non_string_unique_id(
             {
                 "type": data_entry_flow.FlowResultType.ABORT,
                 "reason": "single_instance_allowed",
-                "translation_domain": HA_DOMAIN,
+                "translation_domain": HOMEASSISTANT_DOMAIN,
             },
         ),
     ],
@@ -5296,7 +5329,7 @@ async def test_avoid_adding_second_config_entry_on_single_config_entry(
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "single_instance_allowed"
-        assert result["translation_domain"] == HA_DOMAIN
+        assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_in_progress_get_canceled_when_entry_is_created(
@@ -5903,3 +5936,67 @@ async def test_config_entry_late_platform_setup(
         "entry_id test2 cannot forward setup for light because it is "
         "not loaded in the ConfigEntryState.NOT_LOADED state"
     ) not in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_2(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.2."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "data": {
+            "entries": [
+                {
+                    "data": {},
+                    "disabled_by": None,
+                    "domain": "sun",
+                    "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
+                    "minor_version": 1,
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "import",
+                    "title": "Sun",
+                    "unique_id": None,
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    # Test data was loaded
+    entries = manager.async_entries()
+    assert len(entries) == 1
+
+    # Check we store migrated data
+    await flush_store(manager._store)
+    assert hass_storage[config_entries.STORAGE_KEY] == {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "key": config_entries.STORAGE_KEY,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {},
+                    "disabled_by": None,
+                    "domain": "sun",
+                    "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "import",
+                    "title": "Sun",
+                    "unique_id": None,
+                    "version": 1,
+                },
+            ]
+        },
+    }

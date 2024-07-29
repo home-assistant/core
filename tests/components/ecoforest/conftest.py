@@ -1,10 +1,10 @@
 """Common fixtures for the Ecoforest tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyecoforest.models.device import Alarm, Device, OperationMode, State
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ecoforest import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME

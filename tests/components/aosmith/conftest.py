@@ -1,5 +1,6 @@
 """Common fixtures for the A. O. Smith tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from py_aosmith import AOSmithAPIClient
@@ -14,7 +15,6 @@ from py_aosmith.models import (
     SupportedOperationModeInfo,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.aosmith.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

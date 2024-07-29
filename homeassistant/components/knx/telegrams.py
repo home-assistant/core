@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable
 from typing import Final, TypedDict
 
 from xknx import XKNX
@@ -12,7 +11,7 @@ from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
@@ -68,7 +67,6 @@ class Telegrams:
         self._history_store = Store[list[TelegramDict]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
-        self._jobs: list[HassJob[[TelegramDict], None]] = []
         self._xknx_telegram_cb_handle = (
             xknx.telegram_queue.register_telegram_received_cb(
                 telegram_received_cb=self._xknx_telegram_cb,
@@ -100,24 +98,6 @@ class Telegrams:
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
         async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
-        for job in self._jobs:
-            self.hass.async_run_hass_job(job, telegram_dict)
-
-    @callback
-    def async_listen_telegram(
-        self,
-        action: Callable[[TelegramDict], None],
-        name: str = "KNX telegram listener",
-    ) -> CALLBACK_TYPE:
-        """Register callback to listen for telegrams."""
-        job = HassJob(action, name=name)
-        self._jobs.append(job)
-
-        def remove_listener() -> None:
-            """Remove the listener."""
-            self._jobs.remove(job)
-
-        return remove_listener
 
     def telegram_to_dict(self, telegram: Telegram) -> TelegramDict:
         """Convert a Telegram to a dict."""

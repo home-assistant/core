@@ -1,10 +1,10 @@
 """Fixtures for tests."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 from requests_mock import Mocker
-from typing_extensions import Generator
 
 from homeassistant.components.ecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
 

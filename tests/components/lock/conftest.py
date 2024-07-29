@@ -1,10 +1,10 @@
 """Fixtures for the lock entity platform tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,

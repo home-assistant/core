@@ -1,5 +1,6 @@
 """Test UniFi Network config flow."""
 
+from collections.abc import Callable
 import socket
 from unittest.mock import PropertyMock, patch
 
@@ -36,7 +37,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -136,9 +136,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
     }
 
 
-async def test_flow_works_negative_discovery(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -338,6 +336,44 @@ async def test_reauth_flow_update_configuration(
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
 
 
+async def test_reauth_flow_update_configuration_on_not_loaded_entry(
+    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+) -> None:
+    """Verify reauth flow can update hub configuration on a not loaded entry."""
+    with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
+        config_entry = await config_entry_factory()
+
+    result = await hass.config_entries.flow.async_init(
+        UNIFI_DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "new_name",
+            CONF_PASSWORD: "new_pass",
+            CONF_PORT: 1234,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_USERNAME] == "new_name"
+    assert config_entry.data[CONF_PASSWORD] == "new_pass"
+
+
 @pytest.mark.parametrize("client_payload", [CLIENTS])
 @pytest.mark.parametrize("device_payload", [DEVICES])
 @pytest.mark.parametrize("wlan_payload", [WLANS])
@@ -496,9 +532,8 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_ssdp_aborts_if_host_already_exists(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> None:
     """Test we abort if the host is already configured."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
@@ -518,9 +553,8 @@ async def test_form_ssdp_aborts_if_host_already_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_form_ssdp_aborts_if_serial_already_exists(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) -> None:
     """Test we abort if the serial is already configured."""
 
     result = await hass.config_entries.flow.async_init(

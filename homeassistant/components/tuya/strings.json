@@ -641,6 +641,9 @@
       "filter_reset": {
         "name": "Filter reset"
       },
+      "pump": {
+        "name": "Pump"
+      },
       "water_pump_reset": {
         "name": "Water pump reset"
       },

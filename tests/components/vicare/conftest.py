@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.core import HomeAssistant
