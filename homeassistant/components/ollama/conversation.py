@@ -88,11 +88,7 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
     small local tool use models. This will repair invalid json arguments and
     omit unnecessary arguments with empty values that will fail intent parsing.
     """
-    return {
-        k: _fix_invalid_arguments(v)
-        for k, v in arguments.items()
-        if v
-    }
+    return {k: _fix_invalid_arguments(v) for k, v in arguments.items() if v}
 
 
 class OllamaConversationEntity(
