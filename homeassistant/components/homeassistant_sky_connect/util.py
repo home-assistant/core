@@ -23,7 +23,7 @@ from .const import (
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
-    ZHOMEASSISTANT_DOMAIN,
+    ZHA_DOMAIN,
     ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
     ZIGBEE_FLASHER_ADDON_NAME,
     ZIGBEE_FLASHER_ADDON_SLUG,
@@ -92,7 +92,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
     """Guess the firmware type based on installed addons and other integrations."""
     device_guesses: defaultdict[str | None, list[FirmwareGuess]] = defaultdict(list)
 
-    for zha_config_entry in hass.config_entries.async_entries(ZHOMEASSISTANT_DOMAIN):
+    for zha_config_entry in hass.config_entries.async_entries(ZHA_DOMAIN):
         zha_path = get_zha_device_path(zha_config_entry)
 
         if zha_path is not None:

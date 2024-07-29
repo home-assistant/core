@@ -453,7 +453,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     ) -> ConfigFlowResult:
         """Configure the Silicon Labs Multiprotocol add-on."""
         # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha import DOMAIN as ZHOMEASSISTANT_DOMAIN
+        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.zha.radio_manager import (
@@ -480,7 +480,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         multipan_channel = DEFAULT_CHANNEL
 
         # Initiate ZHA migration
-        zha_entries = self.hass.config_entries.async_entries(ZHOMEASSISTANT_DOMAIN)
+        zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
 
         if zha_entries:
             zha_migration_mgr = ZhaMultiPANMigrationHelper(self.hass, zha_entries[0])
@@ -749,14 +749,14 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     ) -> ConfigFlowResult:
         """Perform initial backup and reconfigure ZHA."""
         # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha import DOMAIN as ZHOMEASSISTANT_DOMAIN
+        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.zha.radio_manager import (
             ZhaMultiPANMigrationHelper,
         )
 
-        zha_entries = self.hass.config_entries.async_entries(ZHOMEASSISTANT_DOMAIN)
+        zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
         new_settings = await self._async_serial_port_settings()
 
         _LOGGER.debug("Using new ZHA settings: %s", new_settings)

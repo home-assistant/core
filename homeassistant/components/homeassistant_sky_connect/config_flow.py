@@ -32,7 +32,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import DOCS_WEB_FLASHER_URL, DOMAIN, ZHOMEASSISTANT_DOMAIN, HardwareVariant
+from .const import DOCS_WEB_FLASHER_URL, DOMAIN, ZHA_DOMAIN, HardwareVariant
 from .util import (
     get_hardware_variant,
     get_otbr_addon_manager,
@@ -352,7 +352,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         if user_input is not None:
             await self.hass.config_entries.flow.async_init(
-                ZHOMEASSISTANT_DOMAIN,
+                ZHA_DOMAIN,
                 context={"source": "hardware"},
                 data={
                     "name": self._hw_variant.full_name,
@@ -671,7 +671,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         assert self._usb_info is not None
 
         for zha_entry in self.hass.config_entries.async_entries(
-            ZHOMEASSISTANT_DOMAIN,
+            ZHA_DOMAIN,
             include_ignore=False,
             include_disabled=True,
         ):
