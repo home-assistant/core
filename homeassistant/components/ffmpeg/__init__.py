@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import asyncio
 from functools import cached_property
+from http import HTTPStatus
+import logging
 import re
 
+from aiohttp import web
+from aiohttp.abc import AbstractStreamWriter, BaseRequest
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
 import voluptuous as vol
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONTENT_TYPE_MULTIPART,
@@ -28,7 +33,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.signal_type import SignalType
 
-DOMAIN = "ffmpeg"
+from .const import DOMAIN
 
 SERVICE_START = "start"
 SERVICE_STOP = "stop"
@@ -65,6 +70,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_FFMPEG_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the FFmpeg component."""
@@ -97,6 +104,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, SERVICE_RESTART, async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
     )
+
+    hass.http.register_view(FFmpegProxyView(manager))
 
     hass.data[DATA_FFMPEG] = manager
     return True
@@ -259,3 +268,133 @@ class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):
             self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_handle)
+
+
+class FFmpegConvertResponse(web.StreamResponse):
+    """HTTP streaming response that uses ffmpeg to convert audio from a URL."""
+
+    def __init__(
+        self,
+        manager: FFmpegManager,
+        url: str,
+        fmt: str,
+        rate: int | None,
+        channels: int | None,
+        chunk_size: int = 2048,
+    ) -> None:
+        """Initialize response.
+
+        Parameters
+        ----------
+        manager: FFmpegManager
+            ffmpeg manager
+        url: str
+            URL of source audio stream
+        fmt: str
+            Target format of audio (flac, mp3, wav, etc.)
+        rate: int, optional
+            Target sample rate in hertz (None = same as source)
+        channels: int, optional
+            Target number of channels (None = same as source)
+        chunk_size: int
+            Number of bytes to read from ffmpeg process at a time
+
+        """
+        super().__init__(status=200)
+        self.manager = manager
+        self.url = url
+        self.fmt = fmt
+        self.rate = rate
+        self.channels = channels
+        self.chunk_size = chunk_size
+
+    async def prepare(self, request: BaseRequest) -> AbstractStreamWriter | None:
+        """Stream url through ffmpeg conversion and out to HTTP client."""
+        writer = await super().prepare(request)
+        assert writer is not None
+
+        command_args = ["-i", self.url, "-f", self.fmt]
+
+        if self.rate is not None:
+            # Sample rate
+            command_args.extend(["-ar", str(self.rate)])
+
+        if self.channels is not None:
+            # Number of channels
+            command_args.extend(["-ac", str(self.channels)])
+
+        # Output to stdout
+        command_args.append("pipe:")
+
+        proc = await asyncio.create_subprocess_exec(
+            self.manager.binary,
+            *command_args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        assert proc.stdout is not None
+        assert proc.stderr is not None
+        try:
+            # Pull audio chunks from ffmpeg and pass them to the HTTP client
+            while chunk := await proc.stdout.read(self.chunk_size):
+                await writer.write(chunk)
+
+            # Try to gracefully stop
+            proc.terminate()
+            await proc.wait()
+        finally:
+            await writer.write_eof()
+
+            if proc.returncode != 0:
+                # Process did not exit successfully
+                stderr_text = ""
+                while line := await proc.stderr.readline():
+                    stderr_text += line.decode()
+                _LOGGER.error(stderr_text)
+
+        return writer
+
+
+class FFmpegProxyView(HomeAssistantView):
+    """FFmpeg web view to convert audio and stream back to client."""
+
+    requires_auth = False
+    url = "/api/ffmpeg_proxy"
+    name = "api:ffmpeg_proxy"
+
+    def __init__(self, manager: FFmpegManager) -> None:
+        """Initialize an ffmpeg view."""
+        self.manager = manager
+
+    async def get(self, request: web.Request) -> web.StreamResponse:
+        """Start a get request."""
+
+        query = request.query
+        url = query.get("url")
+        fmt = query.get("format")
+
+        if (not url) or (not fmt):
+            return web.Response(
+                body="url and format are required", status=HTTPStatus.BAD_REQUEST
+            )
+
+        try:
+            if rate_str := query.get("rate"):
+                rate = int(rate_str)
+            else:
+                rate = None
+
+            if channels_str := query.get("channels"):
+                channels = int(channels_str)
+            else:
+                channels = None
+        except ValueError:
+            return web.Response(
+                body="Invalid rate or channels value", status=HTTPStatus.BAD_REQUEST
+            )
+
+        # Stream converted audio back to client
+        return FFmpegConvertResponse(
+            self.manager, url=url, fmt=fmt, rate=rate, channels=channels
+        )

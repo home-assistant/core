@@ -1,6 +1,13 @@
 """The tests for Home Assistant ffmpeg."""
 
+from http import HTTPStatus
+import io
+import tempfile
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+from urllib.request import pathname2url
+import wave
+
+import mutagen
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import (
@@ -19,6 +26,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
+from tests.typing import ClientSessionGenerator
 
 
 @callback
@@ -294,3 +302,36 @@ async def test_ffmpeg_using_official_image(
 
     manager = get_ffmpeg_manager(hass)
     assert "ffmpeg" in manager.ffmpeg_stream_content_type
+
+
+async def test_proxy_view(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test proxy HTTP view for converting audio."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    client = await hass_client()
+
+    with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as temp_file:
+        with wave.open(temp_file.name, "wb") as wav_file:
+            wav_file.setframerate(16000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(16000 * 2))  # 1s
+
+        temp_file.seek(0)
+        wav_url = pathname2url(temp_file.name)
+        url = f"/api/ffmpeg_proxy?url={wav_url}&format=mp3&rate=22050&channels=2"
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+
+        mp3_data = await req.content.read()
+
+    # Verify conversion
+    with io.BytesIO(mp3_data) as mp3_io:
+        mp3_file = mutagen.File(mp3_io)
+        assert mp3_file.info.sample_rate == 22050
+        assert mp3_file.info.channels == 2
+
+        # About a second, but not exact
+        assert round(mp3_file.info.length, 0) == 1

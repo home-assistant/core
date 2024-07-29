@@ -1,7 +1,9 @@
 {
   "domain": "ffmpeg",
   "name": "FFmpeg",
+  "after_dependencies": ["media_source"],
   "codeowners": [],
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/ffmpeg",
   "requirements": ["ha-ffmpeg==3.2.0"]
 }
