@@ -124,16 +124,16 @@ async def async_setup_entry(
         assert device.device
         update_sw_version(device_registry, device)
         try:
-            return await device.device.async_get_led_setting()
+            return await device.device.async_get_led_setting()  # type: ignore[no-any-return]
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
-    async def async_update_uptime() -> int:
+    async def async_update_last_restart() -> int:
         """Fetch data from API endpoint."""
         assert device.device
         update_sw_version(device_registry, device)
         try:
-            return await device.device.async_uptime()
+            return await device.device.async_uptime()  # type: ignore[no-any-return]
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
         except DevicePasswordProtected as err:
@@ -146,7 +146,7 @@ async def async_setup_entry(
         assert device.device
         update_sw_version(device_registry, device)
         try:
-            return await device.device.async_get_wifi_connected_station()
+            return await device.device.async_get_wifi_connected_station()  # type: ignore[no-any-return]
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -155,7 +155,7 @@ async def async_setup_entry(
         assert device.device
         update_sw_version(device_registry, device)
         try:
-            return await device.device.async_get_wifi_neighbor_access_points()
+            return await device.device.async_get_wifi_neighbor_access_points()  # type: ignore[no-any-return]
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -185,7 +185,7 @@ async def async_setup_entry(
             hass,
             _LOGGER,
             name=LAST_RESTART,
-            update_method=async_update_uptime,
+            update_method=async_update_last_restart,
             update_interval=SHORT_UPDATE_INTERVAL,
         )
     if device.device and "update" in device.device.features:
