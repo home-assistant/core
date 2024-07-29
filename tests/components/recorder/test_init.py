@@ -1699,7 +1699,9 @@ async def test_database_corruption_while_running(
     hass.states.async_set("test.lost", "on", {})
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
 
     await async_wait_recording_done(hass)
     with patch.object(
@@ -2567,7 +2569,13 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
     assert instance.engine is None
 
 
-async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("func_to_patch", "expected_setup_result"),
+    [("migrate_schema_non_live", False), ("migrate_schema_live", False)],
+)
+async def test_clean_shutdown_when_schema_migration_fails(
+    hass: HomeAssistant, func_to_patch: str, expected_setup_result: bool
+) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with (
         patch.object(
@@ -2578,13 +2586,13 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
         patch.object(
             migration,
-            "migrate_schema",
+            func_to_patch,
             side_effect=Exception,
         ),
     ):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
-        assert await async_setup_component(
+        setup_result = await async_setup_component(
             hass,
             recorder.DOMAIN,
             {
@@ -2595,6 +2603,7 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
                 }
             },
         )
+        assert setup_result == expected_setup_result
         await hass.async_block_till_done()
 
     instance = recorder.get_instance(hass)

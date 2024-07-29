@@ -223,6 +223,7 @@ class OpenAIConversationEntity(
         ]
 
         LOGGER.debug("Prompt: %s", messages)
+        LOGGER.debug("Tools: %s", tools)
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
         )

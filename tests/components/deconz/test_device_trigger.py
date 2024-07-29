@@ -18,7 +18,6 @@ from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
@@ -35,7 +34,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import WebsocketDataType
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -47,25 +46,23 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "alert": "none",
-                    "battery": 60,
-                    "group": "10",
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "1b355c0b6d2af28febd7ca9165881952",
-                "manufacturername": "IKEA of Sweden",
-                "mode": 1,
-                "modelid": "TRADFRI on/off switch",
-                "name": "TRÅDFRI on/off switch ",
-                "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
-                "swversion": "1.4.018",
-                "type": "ZHASwitch",
-                "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
-            }
+            "config": {
+                "alert": "none",
+                "battery": 60,
+                "group": "10",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "1b355c0b6d2af28febd7ca9165881952",
+            "manufacturername": "IKEA of Sweden",
+            "mode": 1,
+            "modelid": "TRADFRI on/off switch",
+            "name": "TRÅDFRI on/off switch ",
+            "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
+            "swversion": "1.4.018",
+            "type": "ZHASwitch",
+            "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
         }
     ],
 )
@@ -153,32 +150,30 @@ async def test_get_triggers(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "battery": 95,
-                    "enrolled": 1,
-                    "on": True,
-                    "pending": [],
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
-                "lastseen": "2021-07-25T18:07Z",
-                "manufacturername": "lk",
-                "modelid": "ZB-KeypadGeneric-D0002",
-                "name": "Keypad",
-                "state": {
-                    "action": "armed_stay",
-                    "lastupdated": "2021-07-25T18:02:51.172",
-                    "lowbattery": False,
-                    "panel": "exit_delay",
-                    "seconds_remaining": 55,
-                    "tampered": False,
-                },
-                "swversion": "3.13",
-                "type": "ZHAAncillaryControl",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+            "config": {
+                "battery": 95,
+                "enrolled": 1,
+                "on": True,
+                "pending": [],
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "5aaa1c6bae8501f59929539c6e8f44d6",
+            "lastseen": "2021-07-25T18:07Z",
+            "manufacturername": "lk",
+            "modelid": "ZB-KeypadGeneric-D0002",
+            "name": "Keypad",
+            "state": {
+                "action": "armed_stay",
+                "lastupdated": "2021-07-25T18:02:51.172",
+                "lowbattery": False,
+                "panel": "exit_delay",
+                "seconds_remaining": 55,
+                "tampered": False,
+            },
+            "swversion": "3.13",
+            "type": "ZHAAncillaryControl",
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
         }
     ],
 )
@@ -250,24 +245,22 @@ async def test_get_triggers_for_alarm_event(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "alert": "none",
-                    "group": "10",
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "1b355c0b6d2af28febd7ca9165881952",
-                "manufacturername": "IKEA of Sweden",
-                "mode": 1,
-                "modelid": "Unsupported model",
-                "name": "TRÅDFRI on/off switch ",
-                "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
-                "swversion": "1.4.018",
-                "type": "ZHASwitch",
-                "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
-            }
+            "config": {
+                "alert": "none",
+                "group": "10",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "1b355c0b6d2af28febd7ca9165881952",
+            "manufacturername": "IKEA of Sweden",
+            "mode": 1,
+            "modelid": "Unsupported model",
+            "name": "TRÅDFRI on/off switch ",
+            "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
+            "swversion": "1.4.018",
+            "type": "ZHASwitch",
+            "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
         }
     ],
 )
@@ -293,25 +286,23 @@ async def test_get_triggers_manage_unsupported_remotes(
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "alert": "none",
-                    "battery": 60,
-                    "group": "10",
-                    "on": True,
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "1b355c0b6d2af28febd7ca9165881952",
-                "manufacturername": "IKEA of Sweden",
-                "mode": 1,
-                "modelid": "TRADFRI on/off switch",
-                "name": "TRÅDFRI on/off switch ",
-                "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
-                "swversion": "1.4.018",
-                "type": "ZHASwitch",
-                "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
-            }
+            "config": {
+                "alert": "none",
+                "battery": 60,
+                "group": "10",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "1b355c0b6d2af28febd7ca9165881952",
+            "manufacturername": "IKEA of Sweden",
+            "mode": 1,
+            "modelid": "TRADFRI on/off switch",
+            "name": "TRÅDFRI on/off switch ",
+            "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
+            "swversion": "1.4.018",
+            "type": "ZHASwitch",
+            "uniqueid": "d0:cf:5e:ff:fe:71:a4:3a-01-1000",
         }
     ],
 )
@@ -320,7 +311,7 @@ async def test_functional_device_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
-    mock_websocket_data: WebsocketDataType,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test proper matching and attachment of device trigger automation."""
     device = device_registry.async_get_device(
@@ -351,14 +342,7 @@ async def test_functional_device_trigger(
 
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"buttonevent": 1002},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"buttonevent": 1002}})
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_button_press"
 
@@ -396,7 +380,7 @@ async def test_validate_trigger_unknown_device(hass: HomeAssistant) -> None:
 async def test_validate_trigger_unsupported_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test unsupported device doesn't return a trigger config."""
     device = device_registry.async_get_or_create(
@@ -436,7 +420,7 @@ async def test_validate_trigger_unsupported_device(
 async def test_validate_trigger_unsupported_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test unsupported trigger does not return a trigger config."""
     device = device_registry.async_get_or_create(
@@ -478,7 +462,7 @@ async def test_validate_trigger_unsupported_trigger(
 async def test_attach_trigger_no_matching_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test no matching event for device doesn't return a trigger config."""
     device = device_registry.async_get_or_create(

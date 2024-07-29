@@ -30,12 +30,12 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
-    entity,
     entity_registry as er,
     floor_registry as fr,
     intent,
@@ -79,8 +79,8 @@ async def init_components(hass: HomeAssistant) -> None:
     [
         {"hidden_by": er.RegistryEntryHider.USER},
         {"hidden_by": er.RegistryEntryHider.INTEGRATION},
-        {"entity_category": entity.EntityCategory.CONFIG},
-        {"entity_category": entity.EntityCategory.DIAGNOSTIC},
+        {"entity_category": EntityCategory.CONFIG},
+        {"entity_category": EntityCategory.DIAGNOSTIC},
     ],
 )
 @pytest.mark.usefixtures("init_components")
@@ -1558,6 +1558,31 @@ async def test_intent_entity_renamed(
     assert data == snapshot
     assert data["response"]["response_type"] == "action_done"
 
+
+async def test_intent_entity_remove_custom_name(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that removing a custom name allows targeting the entity by its auto-generated name again."""
+    context = Context()
+    entity = MockLight("kitchen light", STATE_ON)
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    # Should fail with auto-generated name
+    entity_registry.async_update_entity("light.kitchen", name="renamed light")
     result = await conversation.async_converse(
         hass, "turn on kitchen light", None, context
     )
@@ -1578,6 +1603,7 @@ async def test_intent_entity_renamed(
 
     assert data == snapshot
     assert data["response"]["response_type"] == "action_done"
+    assert len(calls) == 1
 
     result = await conversation.async_converse(
         hass, "turn on renamed light", None, context
@@ -1586,6 +1612,42 @@ async def test_intent_entity_renamed(
     data = result.as_dict()
     assert data == snapshot
     assert data["response"]["response_type"] == "error"
+
+
+async def test_intent_entity_fail_if_unexposed(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that an entity is not usable if unexposed."""
+    context = Context()
+    entity = MockLight("kitchen light", STATE_ON)
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    # Unexpose the entity
+    expose_entity(hass, "light.kitchen", False)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await conversation.async_converse(
+        hass, "turn on kitchen light", None, context
+    )
+
+    data = result.as_dict()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+    assert len(calls) == 0
 
 
 async def test_intent_entity_exposed(
@@ -1611,52 +1673,12 @@ async def test_intent_entity_exposed(
         {LIGHT_DOMAIN: [{"platform": "test"}]},
     )
     await hass.async_block_till_done()
-    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
-    await hass.async_block_till_done()
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
-    result = await conversation.async_converse(
-        hass, "turn on kitchen light", None, context
-    )
 
-    assert len(calls) == 1
-    data = result.as_dict()
-
-    assert data == snapshot
-    assert data["response"]["response_type"] == "action_done"
-
-    calls.clear()
-    result = await conversation.async_converse(
-        hass, "turn on my cool light", None, context
-    )
-
-    assert len(calls) == 1
-    data = result.as_dict()
-
-    assert data == snapshot
-    assert data["response"]["response_type"] == "action_done"
-
-    # Unexpose the entity
+    # Unexpose, then expose the entity
     expose_entity(hass, "light.kitchen", False)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    result = await conversation.async_converse(
-        hass, "turn on kitchen light", None, context
-    )
-
-    data = result.as_dict()
-    assert data == snapshot
-    assert data["response"]["response_type"] == "error"
-
-    result = await conversation.async_converse(
-        hass, "turn on my cool light", None, context
-    )
-
-    data = result.as_dict()
-    assert data == snapshot
-    assert data["response"]["response_type"] == "error"
-
-    # Now expose the entity
+    await hass.async_block_till_done()
     expose_entity(hass, "light.kitchen", True)
     await hass.async_block_till_done()
 
@@ -1665,17 +1687,9 @@ async def test_intent_entity_exposed(
     )
 
     data = result.as_dict()
-
     assert data == snapshot
     assert data["response"]["response_type"] == "action_done"
-
-    result = await conversation.async_converse(
-        hass, "turn on my cool light", None, context
-    )
-
-    data = result.as_dict()
-    assert data == snapshot
-    assert data["response"]["response_type"] == "action_done"
+    assert len(calls) == 1
 
 
 async def test_intent_conversion_not_expose_new(
