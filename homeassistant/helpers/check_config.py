@@ -22,7 +22,7 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     load_yaml_config_file,
     merge_packages_config,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -157,10 +157,10 @@ async def async_check_ha_config_file(  # noqa: C901
         return result.add_error(f"Error loading {config_path}: {err}")
 
     # Extract and validate core [homeassistant] config
-    core_config = config.pop(HA_DOMAIN, {})
+    core_config = config.pop(HOMEASSISTANT_DOMAIN, {})
     try:
         core_config = CORE_CONFIG_SCHEMA(core_config)
-        result[HA_DOMAIN] = core_config
+        result[HOMEASSISTANT_DOMAIN] = core_config
 
         # Merge packages
         await merge_packages_config(
@@ -168,8 +168,8 @@ async def async_check_ha_config_file(  # noqa: C901
         )
     except vol.Invalid as err:
         result.add_error(
-            format_schema_error(hass, err, HA_DOMAIN, core_config),
-            HA_DOMAIN,
+            format_schema_error(hass, err, HOMEASSISTANT_DOMAIN, core_config),
+            HOMEASSISTANT_DOMAIN,
             core_config,
         )
         core_config = {}

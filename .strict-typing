@@ -120,6 +120,7 @@ homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
+homeassistant.components.bryant_evolution.*
 homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*

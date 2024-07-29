@@ -118,7 +118,7 @@ class APICoreStateView(HomeAssistantView):
         Home Assistant core is running. Its primary use case is for supervisor
         to check if Home Assistant is running.
         """
-        hass: HomeAssistant = request.app[KEY_HASS]
+        hass = request.app[KEY_HASS]
         migration = recorder.async_migration_in_progress(hass)
         live = recorder.async_migration_is_live(hass)
         recorder_state = {"migration_in_progress": migration, "migration_is_live": live}

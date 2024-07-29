@@ -3229,6 +3229,7 @@ async def test_two_automations_call_restart_script_same_time(
 
     hass.states.async_set("binary_sensor.presence", "on")
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(events) == 2
     cancel()
 

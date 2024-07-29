@@ -850,16 +850,17 @@ async def test_invalid_discovery_prefix(
     assert mock_reload_after_entry_update.call_count == 0
 
 
-def get_default(schema: vol.Schema, key: str) -> Any:
+def get_default(schema: vol.Schema, key: str) -> Any | None:
     """Get default value for key in voluptuous schema."""
     for schema_key in schema:
         if schema_key == key:
             if schema_key.default == vol.UNDEFINED:
                 return None
             return schema_key.default()
+    return None
 
 
-def get_suggested(schema: vol.Schema, key: str) -> Any:
+def get_suggested(schema: vol.Schema, key: str) -> Any | None:
     """Get suggested value for key in voluptuous schema."""
     for schema_key in schema:
         if schema_key == key:
@@ -869,6 +870,7 @@ def get_suggested(schema: vol.Schema, key: str) -> Any:
             ):
                 return None
             return schema_key.description["suggested_value"]
+    return None
 
 
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
