@@ -23,11 +23,7 @@ OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
     OverkizCommandParam.COOLING: HVACMode.COOL,
 }
 
-HVAC_MODES_TO_OVERKIZ: dict[HVACMode, str] = {
-    HVACMode.OFF: OverkizCommandParam.STOP,
-    HVACMode.HEAT: OverkizCommandParam.HEATING,
-    HVACMode.COOL: OverkizCommandParam.COOLING,
-}
+HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
 
 class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
