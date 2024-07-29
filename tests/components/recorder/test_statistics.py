@@ -2528,7 +2528,9 @@ async def test_recorder_platform_with_statistics(
     recorder_platform.validate_statistics.assert_not_called()
 
     # Test compile statistics + update statistics issues
-    zero = get_start_time(dt_util.utcnow()).replace(minute=50)
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
     do_adhoc_statistics(hass, start=zero)
     await async_wait_recording_done(hass)
 
@@ -2628,7 +2630,9 @@ async def test_recorder_platform_with_partial_statistics_support(
         getattr(recorder_platform, meth).assert_not_called()
 
     # Test compile statistics + update statistics issues
-    zero = get_start_time(dt_util.utcnow()).replace(minute=50)
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
     do_adhoc_statistics(hass, start=zero)
     await async_wait_recording_done(hass)
 
