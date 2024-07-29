@@ -206,6 +206,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self._supports_dimming:
             # Dimming is supported and the brightness is encoded in the primary value
             return round((cast(int, self.info.primary_value.value) / 99) * 255)
+        if not self.info.primary_value.value:
+            # Not dimmable and turned off
+            return 0
         # Brightness is encoded in the color channels
         color_values = [v.value for v in self._get_color_values() if v is not None]
         # Normally they are chosen so at least one of them is 255,
@@ -269,22 +272,22 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # If dimming is not supported, the brightness needs to be encoded in the color channels
         # Try to read the existing values to be able to scale them
-        if brightness is None and (
-            hs_color is not None or color_temp is not None or rgbw is not None
-        ):
-            brightness = self.brightness
-
-        if brightness is not None and not self._supports_dimming:
-            if hs_color is None and self._color_mode == ColorMode.HS:
-                hs_color = self._hs_color
-            elif color_temp is None and self._color_mode == ColorMode.COLOR_TEMP:
-                color_temp = self._color_temp
-            elif rgbw is None and self._color_mode == ColorMode.RGBW:
-                rgbw = self._rgbw_color
-
         scale: float | None = None
-        if not self._supports_dimming and brightness is not None:
-            scale = brightness / 255
+        if not self._supports_dimming:
+            if brightness is not None:
+                # If brightness gets set, preserve the color and mix it with the new brightness
+                scale = brightness / 255
+                if hs_color is None and self._color_mode == ColorMode.HS:
+                    hs_color = self._hs_color
+                elif color_temp is None and self._color_mode == ColorMode.COLOR_TEMP:
+                    color_temp = self._color_temp
+                elif rgbw is None and self._color_mode == ColorMode.RGBW:
+                    rgbw = self._rgbw_color
+            elif hs_color is not None or color_temp is not None or rgbw is not None:
+                # If color gets set, preserve the current brightness
+                current_brightness = self.brightness
+                if current_brightness is not None:
+                    scale = current_brightness / 255
 
         # RGB/HS color
         if hs_color is not None and self._supports_color:

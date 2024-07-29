@@ -20,7 +20,6 @@ from homeassistant.components.light import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
@@ -37,7 +36,6 @@ from .common import (
     ZEN_31_ENTITY,
 )
 
-HSM200_V1_ENTITY = "light.hsm200"
 ZDB5100_ENTITY = "light.matrix_office"
 
 
@@ -510,192 +508,15 @@ async def test_light_none_color_value(
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
 
 
-async def test_black_is_off(
-    hass: HomeAssistant, client, express_controls_ezmultipli, integration
-) -> None:
-    """Test the black is off light entity."""
-    node = express_controls_ezmultipli
-    state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_ON
-
-    # Attempt to turn on the light and ensure it defaults to white
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
-        blocking=True,
-    )
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {
-        "commandClass": 51,
-        "endpoint": 0,
-        "property": "targetColor",
-    }
-    assert args["value"] == {"red": 255, "green": 255, "blue": 255}
-
-    client.async_send_command.reset_mock()
-
-    # Force the light to turn off
-    event = Event(
-        type="value updated",
-        data={
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Color Switch",
-                "commandClass": 51,
-                "endpoint": 0,
-                "property": "currentColor",
-                "newValue": {
-                    "red": 0,
-                    "green": 0,
-                    "blue": 0,
-                },
-                "prevValue": {
-                    "red": 0,
-                    "green": 255,
-                    "blue": 0,
-                },
-                "propertyName": "currentColor",
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-    state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_OFF
-
-    # Force the light to turn on
-    event = Event(
-        type="value updated",
-        data={
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Color Switch",
-                "commandClass": 51,
-                "endpoint": 0,
-                "property": "currentColor",
-                "newValue": {
-                    "red": 0,
-                    "green": 255,
-                    "blue": 0,
-                },
-                "prevValue": {
-                    "red": 0,
-                    "green": 0,
-                    "blue": 0,
-                },
-                "propertyName": "currentColor",
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-    state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_ON
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
-        blocking=True,
-    )
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {
-        "commandClass": 51,
-        "endpoint": 0,
-        "property": "targetColor",
-    }
-    assert args["value"] == {"red": 0, "green": 0, "blue": 0}
-
-    client.async_send_command.reset_mock()
-
-    # Assert that the last color is restored
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
-        blocking=True,
-    )
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {
-        "commandClass": 51,
-        "endpoint": 0,
-        "property": "targetColor",
-    }
-    assert args["value"] == {"red": 0, "green": 255, "blue": 0}
-
-    client.async_send_command.reset_mock()
-
-    # Force the light to turn on
-    event = Event(
-        type="value updated",
-        data={
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Color Switch",
-                "commandClass": 51,
-                "endpoint": 0,
-                "property": "currentColor",
-                "newValue": None,
-                "prevValue": {
-                    "red": 0,
-                    "green": 255,
-                    "blue": 0,
-                },
-                "propertyName": "currentColor",
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-    state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_UNKNOWN
-
-    client.async_send_command.reset_mock()
-
-    # Assert that call fails if attribute is added to service call
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_RGBW_COLOR: (255, 76, 255, 0)},
-        blocking=True,
-    )
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {
-        "commandClass": 51,
-        "endpoint": 0,
-        "property": "targetColor",
-    }
-    assert args["value"] == {"red": 255, "green": 76, "blue": 255}
-
-
-async def test_black_is_off_zdb5100(
+async def test_light_on_off_color(
     hass: HomeAssistant, client, logic_group_zdb5100, integration
 ) -> None:
-    """Test the black is off light entity."""
+    """Test the light entity for lights without dimming support."""
     node = logic_group_zdb5100
     state = hass.states.get(ZDB5100_ENTITY)
     assert state.state == STATE_OFF
 
-    # Attempt to turn on the light and ensure it defaults to white
+    # Turn on the light. It should only toggle the binary switch
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -707,13 +528,11 @@ async def test_black_is_off_zdb5100(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
-        "commandClass": 51,
+        "commandClass": 37,
         "endpoint": 1,
-        "property": "targetColor",
+        "property": "targetValue",
     }
-    assert args["value"] == {"red": 255, "green": 255, "blue": 255}
-
-    client.async_send_command.reset_mock()
+    assert args["value"] is True
 
     # Force the light to turn off
     event = Event(
@@ -746,7 +565,29 @@ async def test_black_is_off_zdb5100(
     state = hass.states.get(ZDB5100_ENTITY)
     assert state.state == STATE_OFF
 
-    # Force the light to turn on
+    # Force the light to turn on with a color
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 1,
+                "property": "currentColor",
+                "propertyKey": 3,  # green
+                "newValue": 255,
+                "prevValue": 0,
+                "propertyName": "currentColor",
+                "propertyKeyName": "green",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
     event = Event(
         type="value updated",
         data={
@@ -774,36 +615,40 @@ async def test_black_is_off_zdb5100(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Binary Switch",
+                "commandClass": 37,
+                "endpoint": 1,
+                "property": "currentValue",
+                "newValue": True,
+                "prevValue": False,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
     state = hass.states.get(ZDB5100_ENTITY)
     assert state.state == STATE_ON
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY},
-        blocking=True,
-    )
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {
-        "commandClass": 51,
-        "endpoint": 1,
-        "property": "targetColor",
-    }
-    assert args["value"] == {"red": 0, "green": 0, "blue": 0}
-
     client.async_send_command.reset_mock()
 
-    # Assert that the last color is restored
+    # Set the brightness to 128. This should be encoded in the color value
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+        {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
@@ -812,11 +657,25 @@ async def test_black_is_off_zdb5100(
         "endpoint": 1,
         "property": "targetColor",
     }
-    assert args["value"] == {"red": 0, "green": 255, "blue": 0}
+    assert args["value"] == {
+        "red": 0,
+        "green": 128,
+        "blue": 0,
+    }
+
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 37,
+        "endpoint": 1,
+        "property": "targetValue",
+    }
+    assert args["value"] is True
 
     client.async_send_command.reset_mock()
 
-    # Force the light to turn on
+    # Turn the light on and set it to green (50% brightness)
     event = Event(
         type="value updated",
         data={
@@ -828,10 +687,36 @@ async def test_black_is_off_zdb5100(
                 "commandClass": 51,
                 "endpoint": 1,
                 "property": "currentColor",
-                "newValue": None,
+                "propertyKey": 3,  # green
+                "newValue": 128,
+                "prevValue": 0,
+                "propertyName": "currentColor",
+                "propertyKeyName": "green",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 1,
+                "property": "currentColor",
+                "newValue": {
+                    "red": 0,
+                    "green": 128,
+                    "blue": 0,
+                },
                 "prevValue": {
                     "red": 0,
-                    "green": 255,
+                    "green": 0,
                     "blue": 0,
                 },
                 "propertyName": "currentColor",
@@ -840,19 +725,35 @@ async def test_black_is_off_zdb5100(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    state = hass.states.get(ZDB5100_ENTITY)
-    assert state.state == STATE_UNKNOWN
 
-    client.async_send_command.reset_mock()
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Binary Switch",
+                "commandClass": 37,
+                "endpoint": 1,
+                "property": "currentValue",
+                "newValue": True,
+                "prevValue": False,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
 
-    # Assert that call fails if attribute is added to service call
+    # Set the color to red. This should preserve the previous brightness value
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_RGBW_COLOR: (255, 76, 255, 0)},
+        {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_RGBW_COLOR: (255, 0, 0, 0)},
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
@@ -861,7 +762,169 @@ async def test_black_is_off_zdb5100(
         "endpoint": 1,
         "property": "targetColor",
     }
-    assert args["value"] == {"red": 255, "green": 76, "blue": 255}
+    assert args["value"] == {
+        "red": 128,
+        "green": 0,
+        "blue": 0,
+    }
+
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 37,
+        "endpoint": 1,
+        "property": "targetValue",
+    }
+    assert args["value"] is True
+
+    # # Force the light to turn off
+    # event = Event(
+    #     type="value updated",
+    #     data={
+    #         "source": "node",
+    #         "event": "value updated",
+    #         "nodeId": node.node_id,
+    #         "args": {
+    #             "commandClassName": "Color Switch",
+    #             "commandClass": 51,
+    #             "endpoint": 1,
+    #             "property": "currentColor",
+    #             "newValue": {
+    #                 "red": 0,
+    #                 "green": 0,
+    #                 "blue": 0,
+    #             },
+    #             "prevValue": {
+    #                 "red": 0,
+    #                 "green": 255,
+    #                 "blue": 0,
+    #             },
+    #             "propertyName": "currentColor",
+    #         },
+    #     },
+    # )
+    # node.receive_event(event)
+    # await hass.async_block_till_done()
+    # state = hass.states.get(ZDB5100_ENTITY)
+    # assert state.state == STATE_OFF
+
+    # # Force the light to turn on
+    # event = Event(
+    #     type="value updated",
+    #     data={
+    #         "source": "node",
+    #         "event": "value updated",
+    #         "nodeId": node.node_id,
+    #         "args": {
+    #             "commandClassName": "Color Switch",
+    #             "commandClass": 51,
+    #             "endpoint": 1,
+    #             "property": "currentColor",
+    #             "newValue": {
+    #                 "red": 0,
+    #                 "green": 255,
+    #                 "blue": 0,
+    #             },
+    #             "prevValue": {
+    #                 "red": 0,
+    #                 "green": 0,
+    #                 "blue": 0,
+    #             },
+    #             "propertyName": "currentColor",
+    #         },
+    #     },
+    # )
+    # node.receive_event(event)
+    # await hass.async_block_till_done()
+    # state = hass.states.get(ZDB5100_ENTITY)
+    # assert state.state == STATE_ON
+
+    # await hass.services.async_call(
+    #     LIGHT_DOMAIN,
+    #     SERVICE_TURN_OFF,
+    #     {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+    #     blocking=True,
+    # )
+    # assert len(client.async_send_command.call_args_list) == 1
+    # args = client.async_send_command.call_args_list[0][0][0]
+    # assert args["command"] == "node.set_value"
+    # assert args["nodeId"] == node.node_id
+    # assert args["valueId"] == {
+    #     "commandClass": 51,
+    #     "endpoint": 1,
+    #     "property": "targetColor",
+    # }
+    # assert args["value"] == {"red": 0, "green": 0, "blue": 0}
+
+    # client.async_send_command.reset_mock()
+
+    # # Assert that the last color is restored
+    # await hass.services.async_call(
+    #     LIGHT_DOMAIN,
+    #     SERVICE_TURN_ON,
+    #     {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+    #     blocking=True,
+    # )
+    # assert len(client.async_send_command.call_args_list) == 1
+    # args = client.async_send_command.call_args_list[0][0][0]
+    # assert args["command"] == "node.set_value"
+    # assert args["nodeId"] == node.node_id
+    # assert args["valueId"] == {
+    #     "commandClass": 51,
+    #     "endpoint": 1,
+    #     "property": "targetColor",
+    # }
+    # assert args["value"] == {"red": 0, "green": 255, "blue": 0}
+
+    # client.async_send_command.reset_mock()
+
+    # # Force the light to turn on
+    # event = Event(
+    #     type="value updated",
+    #     data={
+    #         "source": "node",
+    #         "event": "value updated",
+    #         "nodeId": node.node_id,
+    #         "args": {
+    #             "commandClassName": "Color Switch",
+    #             "commandClass": 51,
+    #             "endpoint": 1,
+    #             "property": "currentColor",
+    #             "newValue": None,
+    #             "prevValue": {
+    #                 "red": 0,
+    #                 "green": 255,
+    #                 "blue": 0,
+    #             },
+    #             "propertyName": "currentColor",
+    #         },
+    #     },
+    # )
+    # node.receive_event(event)
+    # await hass.async_block_till_done()
+    # state = hass.states.get(ZDB5100_ENTITY)
+    # assert state.state == STATE_UNKNOWN
+
+    # client.async_send_command.reset_mock()
+
+    # # Assert that call fails if attribute is added to service call
+    # await hass.services.async_call(
+    #     LIGHT_DOMAIN,
+    #     SERVICE_TURN_ON,
+    #     {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_RGBW_COLOR: (255, 76, 255, 0)},
+    #     blocking=True,
+    # )
+    # assert len(client.async_send_command.call_args_list) == 1
+    # args = client.async_send_command.call_args_list[0][0][0]
+    # assert args["command"] == "node.set_value"
+    # assert args["nodeId"] == node.node_id
+    # assert args["valueId"] == {
+    #     "commandClass": 51,
+    #     "endpoint": 1,
+    #     "property": "targetColor",
+    # }
+    # assert args["value"] == {"red": 255, "green": 76, "blue": 255}
 
 
 async def test_basic_cc_light(
