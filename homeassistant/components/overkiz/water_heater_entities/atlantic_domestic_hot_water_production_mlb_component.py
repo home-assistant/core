@@ -158,7 +158,17 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             )
 
     async def async_turn_away_mode_on(self) -> None:
-        """Turn away mode on. This requires the start date and the end date to be also set."""
+        """Turn away mode on.
+
+        This requires the start date and the end date to be also set.
+        The API accepts setting dates in the format of the core:DateTimeState state for the DHW
+        {'day': 11, 'hour': 21, 'minute': 12, 'month': 7, 'second': 53, 'weekday': 3, 'year': 2024})
+        The dict is then passed as a away mode start date, and then as an end date, but with the year incremented by 1,
+        so the away mode is getting turned on for the next year.
+        The weekday number seems to have no effect so the calculation of the future date's weekday number is redundant,
+        but possible via homeassistant dt_util to form both start and end dates dictionaries from scratch
+        based on datetime.now() and datetime.timedelta into the future.
+        """
         now_date = cast(
             dict,
             self.executor.select_state(OverkizState.CORE_DATETIME),

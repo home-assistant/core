@@ -84,7 +84,11 @@ class OverkizExecutor:
     async def async_execute_command(
         self, command_name: str, *args: Any, refresh_afterwards: bool = True
     ) -> None:
-        """Execute device command in async context."""
+        """Execute device command in async context.
+
+        :param refresh_afterwards: Whether to refresh the device state after the command is executed.
+        If several commands are executed, it will be refreshed only once.
+        """
         parameters = [arg for arg in args if arg is not None]
         # Set the execution duration to 0 seconds for RTS devices on supported commands
         # Default execution duration is 30 seconds and will block consecutive commands
