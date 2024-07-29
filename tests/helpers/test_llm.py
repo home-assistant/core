@@ -22,7 +22,6 @@ from homeassistant.helpers import (
     selector,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
 
 from tests.common import MockConfigEntry
 
@@ -511,64 +510,119 @@ async def test_assist_api_prompt(
     assert exposed_entities == {
         "light.1": {
             "areas": "Test Area 2",
+            "domain": "light",
             "names": "1",
             "state": "unavailable",
         },
         entry1.entity_id: {
             "names": "Kitchen",
+            "domain": "light",
             "state": "on",
             "attributes": {"temperature": "0.9", "humidity": "65"},
         },
         entry2.entity_id: {
             "areas": "Test Area, Alternative name",
             "names": "Living Room",
+            "domain": "light",
             "state": "on",
         },
         "light.test_device": {
             "areas": "Test Area, Alternative name",
             "names": "Test Device",
+            "domain": "light",
             "state": "unavailable",
         },
         "light.test_device_2": {
             "areas": "Test Area 2",
             "names": "Test Device 2",
+            "domain": "light",
             "state": "unavailable",
         },
         "light.test_device_3": {
             "areas": "Test Area 2",
             "names": "Test Device 3",
+            "domain": "light",
             "state": "unavailable",
         },
         "light.test_device_4": {
             "areas": "Test Area 2",
             "names": "Test Device 4",
+            "domain": "light",
             "state": "unavailable",
         },
         "light.test_service": {
             "areas": "Test Area, Alternative name",
             "names": "Test Service",
+            "domain": "light",
             "state": "unavailable",
         },
         "light.test_service_2": {
             "areas": "Test Area, Alternative name",
             "names": "Test Service",
+            "domain": "light",
             "state": "unavailable",
         },
         "light.test_service_3": {
             "areas": "Test Area, Alternative name",
             "names": "Test Service",
+            "domain": "light",
             "state": "unavailable",
         },
         "light.unnamed_device": {
             "areas": "Test Area 2",
             "names": "Unnamed Device",
+            "domain": "light",
             "state": "unavailable",
         },
     }
-    exposed_entities_prompt = (
-        "An overview of the areas and the devices in this smart home:\n"
-        + yaml.dump(exposed_entities)
-    )
+    exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+- names: Kitchen
+  domain: light
+  state: 'on'
+  attributes:
+    temperature: '0.9'
+    humidity: '65'
+- names: Living Room
+  domain: light
+  state: 'on'
+  areas: Test Area, Alternative name
+- names: Test Device
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Device 2
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: Test Device 3
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: Test Device 4
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: Unnamed Device
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: '1'
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+"""
     first_part_prompt = (
         "When controlling Home Assistant always call the intent tools. "
         "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "

@@ -363,7 +363,7 @@ class AssistAPI(API):
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml.dump(exposed_entities))
+            prompt.append(yaml.dump(list(exposed_entities.values())))
 
         return "\n".join(prompt)
 
@@ -477,6 +477,7 @@ def _get_exposed_entities(
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
+            "domain": state.domain,
             "state": state.state,
         }
 
