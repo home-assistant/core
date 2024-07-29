@@ -49,8 +49,8 @@ _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Energy conversion constants
-_KWH_TO_JOULES: Final = 3.6e6  # 1 kWh = 3.6 MJ
-_KWH_TO_CALORIES: Final = _KWH_TO_JOULES / 4.184  # 1 cal = 4.184 J
+_WH_TO_J: Final = 3600  # 1 Wh = 3600 J
+_CAL_TO_J: Final = 4.184  # 1 cal = 4.184 J
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
@@ -221,27 +221,19 @@ class EnergyConverter(BaseUnitConverter):
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfEnergy.WATT_HOUR: 1 * 1000,
-        UnitOfEnergy.KILO_WATT_HOUR: 1,
-        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
-        UnitOfEnergy.MEGA_JOULE: 3.6,
-        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
-        UnitOfEnergy.CALORIE: _KWH_TO_CALORIES,
-        UnitOfEnergy.KILO_CALORIE: _KWH_TO_CALORIES * 1e-3,
-        UnitOfEnergy.MEGA_CALORIE: _KWH_TO_CALORIES * 1e-6,
-        UnitOfEnergy.GIGA_CALORIE: _KWH_TO_CALORIES * 1e-9,
+        UnitOfEnergy.JOULE: 1,
+        UnitOfEnergy.KILO_JOULE: 1 / 1e3,
+        UnitOfEnergy.MEGA_JOULE: 1 / 1e6,
+        UnitOfEnergy.GIGA_JOULE: 1 / 1e9,
+        UnitOfEnergy.WATT_HOUR: 1 / _WH_TO_J,
+        UnitOfEnergy.KILO_WATT_HOUR: 1 / _WH_TO_J / 1e3,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1 / _WH_TO_J / 1e6,
+        UnitOfEnergy.CALORIE: 1 / _CAL_TO_J,
+        UnitOfEnergy.KILO_CALORIE: 1 / _CAL_TO_J / 1e3,
+        UnitOfEnergy.MEGA_CALORIE: 1 / _CAL_TO_J / 1e6,
+        UnitOfEnergy.GIGA_CALORIE: 1 / _CAL_TO_J / 1e9,
     }
-    VALID_UNITS = {
-        UnitOfEnergy.WATT_HOUR,
-        UnitOfEnergy.KILO_WATT_HOUR,
-        UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.MEGA_JOULE,
-        UnitOfEnergy.GIGA_JOULE,
-        UnitOfEnergy.CALORIE,
-        UnitOfEnergy.KILO_CALORIE,
-        UnitOfEnergy.MEGA_CALORIE,
-        UnitOfEnergy.GIGA_CALORIE,
-    }
+    VALID_UNITS = set(UnitOfEnergy)
 
 
 class InformationConverter(BaseUnitConverter):
