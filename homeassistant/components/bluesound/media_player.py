@@ -480,7 +480,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._last_status_update = None
             self._status = None
             self.async_write_ha_state()
-            _LOGGER.info(
+            _LOGGER.error(
                 "Client connection error, marking %s as offline",
                 self._bluesound_device_name,
             )
