@@ -285,6 +285,8 @@ class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -318,8 +320,6 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._init_callback = init_callback
 
-        self._attr_has_entity_name = True
-        self._attr_name = None
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
         # there should always be one player with the default port per mac
         if port is DEFAULT_PORT:
