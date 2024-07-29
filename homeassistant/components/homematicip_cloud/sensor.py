@@ -8,6 +8,7 @@ from typing import Any
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
     AsyncEnergySensorsInterface,
+    AsyncFloorTerminalBlock12,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
     AsyncHeatingThermostatCompact,
@@ -30,7 +31,11 @@ from homematicip.aio.device import (
     AsyncWeatherSensorPro,
 )
 from homematicip.base.enums import FunctionalChannelType, ValveState
-from homematicip.base.functionalChannels import FunctionalChannel
+from homematicip.base.functionalChannels import (
+    DeviceBaseFloorHeatingChannel,
+    FloorTerminalBlockMechanicChannel,
+    FunctionalChannel,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -85,7 +90,7 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -183,8 +188,109 @@ async def async_setup_entry(
                     if ch.currentPowerConsumption is not None:
                         entities.append(HmipEsiLedCurrentPowerConsumption(hap, device))
                     entities.append(HmipEsiLedEnergyCounterHighTariff(hap, device))
+        if isinstance(device, AsyncFloorTerminalBlock12):
+            for channel in device.functionalChannels:
+                if isinstance(channel, FloorTerminalBlockMechanicChannel):
+                    if getattr(channel, "valvePosition", None) is not None:
+                        entities.append(
+                            HomematicipFloorTerminalBlockMechanicChannelValve(
+                                hap, device, channel=channel.index
+                            )
+                        )
+                elif isinstance(channel, DeviceBaseFloorHeatingChannel):
+                    entities.append(
+                        HomematicipMinimumFloorHeatingValvePosition(
+                            hap, device, channel=channel.index
+                        )
+                    )
 
     async_add_entities(entities)
+
+
+class HomematicipMinimumFloorHeatingValvePosition(
+    HomematicipGenericEntity, SensorEntity
+):
+    """Representation of the HomematicIP floor terminal block minimum valve position."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, hap: HomematicipHAP, device, channel, is_multi_channel=True
+    ) -> None:
+        """Initialize floor terminal block 12 device."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            post="minimum valve position",
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the floor terminal block minimum Valve Position."""
+        if hasattr(
+            self._device.functionalChannels[self._channel],
+            "minimumFloorHeatingValvePosition",
+        ):
+            return round(
+                self._device.functionalChannels[
+                    self._channel
+                ].minimumFloorHeatingValvePosition
+                * 100
+            )
+        return None
+
+
+class HomematicipFloorTerminalBlockMechanicChannelValve(
+    HomematicipGenericEntity, SensorEntity
+):
+    """Representation of the HomematicIP floor terminal block."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, hap: HomematicipHAP, device, channel, is_multi_channel=True
+    ) -> None:
+        """Initialize floor terminal block 12 device."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            post="Valve Position",
+        )
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        if super().icon:
+            return super().icon
+        if (
+            self._device.functionalChannels[self._channel].valveState
+            != ValveState.ADAPTION_DONE
+        ):
+            return "mdi:alert"
+        return "mdi:heating-coil"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the floor terminal block mechanical channel valve position."""
+        if hasattr(
+            self._device.functionalChannels[self._channel],
+            "valveState",
+        ):
+            if (
+                self._device.functionalChannels[self._channel].valveState
+                != ValveState.ADAPTION_DONE
+            ):
+                return None
+            return round(
+                self._device.functionalChannels[self._channel].valvePosition * 100
+            )
+        return None
 
 
 class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):

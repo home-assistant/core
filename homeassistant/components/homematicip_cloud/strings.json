@@ -125,6 +125,24 @@
         }
       }
     },
+    "set_minimum_floor_heating_valve_position": {
+      "name": "Set minimum Floor Heating Valve Position",
+      "description": "Sets the minimum Floor Heating Valve Position.",
+      "fields": {
+        "entity_id": {
+          "name": "FALMOT-C12 Entiy",
+          "description": "The ID of a FALMOT-C12 Channel Entity. Use 'all' keyword to switch the profile for all devices."
+        },
+        "valve_position": {
+          "name": "Minimum Valve Position",
+          "description": "The minimum Vale Postion (must be between 0.0 and 1.0)."
+        },
+        "accesspoint_id": {
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
+        }
+      }
+    },
     "reset_energy_counter": {
       "name": "Reset energy counter",
       "description": "Resets the energy counter of a measuring entity.",
