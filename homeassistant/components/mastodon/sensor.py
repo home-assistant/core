@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -9,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     ACCOUNT_FOLLOWERS_COUNT,
@@ -18,21 +23,29 @@ from .const import (
 from .coordinator import MastodonConfigEntry, MastodonCoordinator
 from .entity import MastodonEntity
 
+
+@dataclass(frozen=True, kw_only=True)
+class MastodonSensorEntityDescription(SensorEntityDescription):
+    """Describes Mastodon sensor entity."""
+
+    value_fn: Callable[[dict[str, Any]], StateType]
+
+
 ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
+    MastodonSensorEntityDescription(
         key=ACCOUNT_FOLLOWERS_COUNT,
-        translation_key="followers_count",
         state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.get(ACCOUNT_FOLLOWERS_COUNT),
     ),
-    SensorEntityDescription(
+    MastodonSensorEntityDescription(
         key=ACCOUNT_FOLLOWING_COUNT,
-        translation_key="following_count",
         state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.get(ACCOUNT_FOLLOWING_COUNT),
     ),
-    SensorEntityDescription(
+    MastodonSensorEntityDescription(
         key=ACCOUNT_STATUSES_COUNT,
-        translation_key="statuses_count",
         state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.get(ACCOUNT_STATUSES_COUNT),
     ),
 )
 
@@ -48,8 +61,8 @@ async def async_setup_entry(
     async_add_entities(
         MastodonSensorEntity(
             entity_description=entity_description,
-            data=entry,
             coordinator=coordinator,
+            data=entry,
         )
         for entity_description in ENTITY_DESCRIPTIONS
     )
@@ -58,16 +71,20 @@ async def async_setup_entry(
 class MastodonSensorEntity(MastodonEntity, SensorEntity):
     """A sensor entity."""
 
+    entity_description: MastodonSensorEntityDescription
+
     def __init__(
         self,
         coordinator: MastodonCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: MastodonSensorEntityDescription,
         data: MastodonConfigEntry,
     ) -> None:
         """Initialize the sensor class."""
         super().__init__(coordinator, entity_description, data)
+        self.entity_description = entity_description
+        self._attr_translation_key = entity_description.key
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        return self.entity_description.value_fn(self.coordinator.data)
