@@ -197,7 +197,8 @@ build.json @home-assistant/supervisor
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
-/homeassistant/components/bluesound/ @thrawnarn
+/homeassistant/components/bluesound/ @thrawnarn @LouisChrist
+/tests/components/bluesound/ @thrawnarn @LouisChrist
 /homeassistant/components/bluetooth/ @bdraco
 /tests/components/bluetooth/ @bdraco
 /homeassistant/components/bluetooth_adapters/ @bdraco
@@ -220,6 +221,8 @@ build.json @home-assistant/supervisor
 /tests/components/brottsplatskartan/ @gjohansson-ST
 /homeassistant/components/brunt/ @eavanvalkenburg
 /tests/components/brunt/ @eavanvalkenburg
+/homeassistant/components/bryant_evolution/ @danielsmyers
+/tests/components/bryant_evolution/ @danielsmyers
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
 /homeassistant/components/bt_smarthub/ @typhoon2099
@@ -384,6 +387,7 @@ build.json @home-assistant/supervisor
 /tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin @alexandrecuer
+/tests/components/emoncms/ @borpin @alexandrecuer
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85
@@ -505,6 +509,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/generic_hygrostat/ @Shulyaka
 /tests/components/generic_hygrostat/ @Shulyaka
 /homeassistant/components/geniushub/ @manzanotti
+/tests/components/geniushub/ @manzanotti
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
 /homeassistant/components/geo_location/ @home-assistant/core
@@ -695,6 +700,8 @@ build.json @home-assistant/supervisor
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
 /tests/components/iotawatt/ @gtdiehl @jyavenard
+/homeassistant/components/iotty/ @pburgio
+/tests/components/iotty/ @pburgio
 /homeassistant/components/iperf3/ @rohankapoorcom
 /homeassistant/components/ipma/ @dgomes
 /tests/components/ipma/ @dgomes
@@ -703,6 +710,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
+/homeassistant/components/iron_os/ @tr4nt0r
+/tests/components/iron_os/ @tr4nt0r
 /homeassistant/components/isal/ @bdraco
 /tests/components/isal/ @bdraco
 /homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
@@ -743,8 +752,8 @@ build.json @home-assistant/supervisor
 /tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
-/homeassistant/components/knocki/ @joostlek @jgatto1
-/tests/components/knocki/ @joostlek @jgatto1
+/homeassistant/components/knocki/ @joostlek @jgatto1 @JakeBosh
+/tests/components/knocki/ @joostlek @jgatto1 @JakeBosh
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
@@ -791,6 +800,8 @@ build.json @home-assistant/supervisor
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linear_garage_door/ @IceBotYT
 /tests/components/linear_garage_door/ @IceBotYT
+/homeassistant/components/linkplay/ @Velleman
+/tests/components/linkplay/ @Velleman
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
@@ -833,7 +844,8 @@ build.json @home-assistant/supervisor
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
 /tests/components/madvr/ @iloveicedgreentea
-/homeassistant/components/mastodon/ @fabaff
+/homeassistant/components/mastodon/ @fabaff @andrew-codechimp
+/tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
@@ -884,8 +896,6 @@ build.json @home-assistant/supervisor
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus/ @janiversen
-/tests/components/modbus/ @janiversen
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
@@ -1434,6 +1444,8 @@ build.json @home-assistant/supervisor
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/template/ @PhracturedBlue @tetienne @home-assistant/core
 /tests/components/template/ @PhracturedBlue @tetienne @home-assistant/core
+/homeassistant/components/tesla_fleet/ @Bre77
+/tests/components/tesla_fleet/ @Bre77
 /homeassistant/components/tesla_wall_connector/ @einarhauks
 /tests/components/tesla_wall_connector/ @einarhauks
 /homeassistant/components/teslemetry/ @Bre77

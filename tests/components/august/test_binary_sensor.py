@@ -94,7 +94,7 @@ async def test_create_doorbell(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_k98gidt45gul_name_online.state == STATE_ON
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
-        "binary_sensor.k98gidt45gul_name_occupancy"
+        "binary_sensor.k98gidt45gul_name_doorbell_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
     binary_sensor_k98gidt45gul_name_motion = hass.states.get(
@@ -121,7 +121,7 @@ async def test_create_doorbell_offline(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_tmt100_name_online.state == STATE_OFF
     binary_sensor_tmt100_name_ding = hass.states.get(
-        "binary_sensor.tmt100_name_occupancy"
+        "binary_sensor.tmt100_name_doorbell_ding"
     )
     assert binary_sensor_tmt100_name_ding.state == STATE_UNAVAILABLE
 
@@ -143,7 +143,7 @@ async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_k98gidt45gul_name_online.state == STATE_ON
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
-        "binary_sensor.k98gidt45gul_name_occupancy"
+        "binary_sensor.k98gidt45gul_name_doorbell_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
@@ -173,7 +173,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_k98gidt45gul_name_motion.state == STATE_OFF
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
-        "binary_sensor.k98gidt45gul_name_occupancy"
+        "binary_sensor.k98gidt45gul_name_doorbell_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
 
@@ -241,7 +241,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     assert binary_sensor_k98gidt45gul_name_motion.state == STATE_ON
 
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
-        "binary_sensor.k98gidt45gul_name_occupancy"
+        "binary_sensor.k98gidt45gul_name_doorbell_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
 
@@ -272,7 +272,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
-        "binary_sensor.k98gidt45gul_name_occupancy"
+        "binary_sensor.k98gidt45gul_name_doorbell_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_ON
     new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
@@ -285,7 +285,7 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
-        "binary_sensor.k98gidt45gul_name_occupancy"
+        "binary_sensor.k98gidt45gul_name_doorbell_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
 
@@ -403,6 +403,6 @@ async def test_create_lock_with_doorbell(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [lock_one])
 
     ding_sensor = hass.states.get(
-        "binary_sensor.a6697750d607098bae8d6baa11ef8063_name_occupancy"
+        "binary_sensor.a6697750d607098bae8d6baa11ef8063_name_doorbell_ding"
     )
     assert ding_sensor.state == STATE_OFF

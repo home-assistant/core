@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .exceptions import ReolinkException, UserNotAdmin
+from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await host.async_init()
-    except (UserNotAdmin, CredentialsInvalidError) as err:
+    except (UserNotAdmin, CredentialsInvalidError, PasswordIncompatible) as err:
         await host.stop()
         raise ConfigEntryAuthFailed(err) from err
     except (

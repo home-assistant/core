@@ -289,7 +289,7 @@ async def test_services_handle_unloaded_config_entry(
     aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    clients_all_payload,
+    clients_all_payload: dict[str, Any],
 ) -> None:
     """Verify no call is made if config entry is unloaded."""
     await hass.config_entries.async_unload(config_entry_setup.entry_id)
