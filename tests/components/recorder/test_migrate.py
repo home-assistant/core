@@ -71,6 +71,10 @@ async def test_schema_update_calls(
             "homeassistant.components.recorder.migration._apply_update",
             wraps=migration._apply_update,
         ) as update,
+        patch(
+            "homeassistant.components.recorder.migration._migrate_schema",
+            wraps=migration._migrate_schema,
+        ) as migrate_schema,
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
@@ -79,12 +83,15 @@ async def test_schema_update_calls(
     instance = recorder.get_instance(hass)
     engine = instance.engine
     session_maker = instance.get_session
-    update.assert_has_calls(
-        [
-            call(instance, hass, engine, session_maker, version + 1, 0)
-            for version in range(db_schema.SCHEMA_VERSION)
-        ]
-    )
+    assert update.mock_calls == [
+        call(instance, hass, engine, session_maker, version + 1, 0)
+        for version in range(db_schema.SCHEMA_VERSION)
+    ]
+    status = migration.SchemaValidationStatus(0, True, set(), 0)
+    assert migrate_schema.mock_calls == [
+        call(instance, hass, engine, session_maker, status, 0),
+        call(instance, hass, engine, session_maker, status, db_schema.SCHEMA_VERSION),
+    ]
 
 
 async def test_migration_in_progress(
@@ -160,7 +167,7 @@ async def test_database_migration_failed(
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
-async def test_database_migration_encounters_corruption(
+async def test_live_database_migration_encounters_corruption(
     hass: HomeAssistant,
     recorder_db_url: str,
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -184,12 +191,17 @@ async def test_database_migration_encounters_corruption(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
+            "homeassistant.components.recorder.migration.migrate_schema_live",
             side_effect=sqlite3_exception,
         ),
         patch(
             "homeassistant.components.recorder.core.move_away_broken_database"
         ) as move_away,
+        patch(
+            "homeassistant.components.recorder.core.Recorder._setup_run",
+            autospec=True,
+            wraps=recorder.Recorder._setup_run,
+        ) as setup_run,
     ):
         await async_setup_recorder_instance(hass)
         hass.states.async_set("my.entity", "on", {})
@@ -197,11 +209,83 @@ async def test_database_migration_encounters_corruption(
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    assert move_away.called
+    move_away.assert_called_once()
+    setup_run.assert_called_once()
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_non_live_database_migration_encounters_corruption(
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test we move away the database if its corrupt.
+
+    This test is specific for SQLite, wiping the database on error only happens
+    with SQLite.
+    """
+
+    assert recorder.util.async_migration_in_progress(hass) is False
+
+    sqlite3_exception = DatabaseError("statement", {}, [])
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
+
+    with (
+        patch(
+            "homeassistant.components.recorder.migration._schema_is_current",
+            side_effect=[False],
+        ),
+        patch(
+            "homeassistant.components.recorder.migration.migrate_schema_live",
+        ) as migrate_schema_live,
+        patch(
+            "homeassistant.components.recorder.migration.migrate_schema_non_live",
+            side_effect=sqlite3_exception,
+        ),
+        patch(
+            "homeassistant.components.recorder.core.move_away_broken_database"
+        ) as move_away,
+        patch(
+            "homeassistant.components.recorder.core.Recorder._setup_run",
+            autospec=True,
+            wraps=recorder.Recorder._setup_run,
+        ) as setup_run,
+    ):
+        await async_setup_recorder_instance(hass)
+        hass.states.async_set("my.entity", "on", {})
+        hass.states.async_set("my.entity", "off", {})
+        await async_wait_recording_done(hass)
+
+    assert recorder.util.async_migration_in_progress(hass) is False
+    move_away.assert_called_once()
+    migrate_schema_live.assert_not_called()
+    setup_run.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    (
+        "live_migration",
+        "func_to_patch",
+        "expected_setup_result",
+        "expected_pn_create",
+        "expected_pn_dismiss",
+    ),
+    [
+        (True, "migrate_schema_live", True, 2, 1),
+        (False, "migrate_schema_non_live", False, 1, 0),
+    ],
+)
 async def test_database_migration_encounters_corruption_not_sqlite(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    live_migration: bool,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    expected_pn_create: int,
+    expected_pn_dismiss: int,
 ) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -212,7 +296,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
+            f"homeassistant.components.recorder.migration.{func_to_patch}",
             side_effect=DatabaseError("statement", {}, []),
         ),
         patch(
@@ -226,8 +310,14 @@ async def test_database_migration_encounters_corruption_not_sqlite(
             "homeassistant.components.persistent_notification.dismiss",
             side_effect=pn.dismiss,
         ) as mock_dismiss,
+        patch(
+            "homeassistant.components.recorder.core.migration.live_migration",
+            return_value=live_migration,
+        ),
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, expected_setup_result=expected_setup_result
+        )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
@@ -236,8 +326,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(
 
     assert recorder.util.async_migration_in_progress(hass) is False
     assert not move_away.called
-    assert len(mock_create.mock_calls) == 2
-    assert len(mock_dismiss.mock_calls) == 1
+    assert len(mock_create.mock_calls) == expected_pn_create
+    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
 
 
 async def test_events_during_migration_are_queued(

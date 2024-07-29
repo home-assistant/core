@@ -14,13 +14,7 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
-    PRESET_ACTIVITY,
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_HOME,
     PRESET_NONE,
-    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -64,36 +58,31 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
-from . import CONF_HEATER, DOMAIN, PLATFORMS
+from .const import (
+    CONF_AC_MODE,
+    CONF_COLD_TOLERANCE,
+    CONF_HEATER,
+    CONF_HOT_TOLERANCE,
+    CONF_MIN_DUR,
+    CONF_PRESETS,
+    CONF_SENSOR,
+    DEFAULT_TOLERANCE,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = "Generic Thermostat"
-CONF_SENSOR = "target_sensor"
+
+CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
+CONF_KEEP_ALIVE = "keep_alive"
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
-CONF_TARGET_TEMP = "target_temp"
-CONF_AC_MODE = "ac_mode"
-CONF_MIN_DUR = "min_cycle_duration"
-CONF_COLD_TOLERANCE = "cold_tolerance"
-CONF_HOT_TOLERANCE = "hot_tolerance"
-CONF_KEEP_ALIVE = "keep_alive"
-CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_PRECISION = "precision"
+CONF_TARGET_TEMP = "target_temp"
 CONF_TEMP_STEP = "target_temp_step"
 
-CONF_PRESETS = {
-    p: f"{p}_temp"
-    for p in (
-        PRESET_AWAY,
-        PRESET_COMFORT,
-        PRESET_ECO,
-        PRESET_HOME,
-        PRESET_SLEEP,
-        PRESET_ACTIVITY,
-    )
-}
 
 PRESETS_SCHEMA: VolDictType = {
     vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()
