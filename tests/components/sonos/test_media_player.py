@@ -12,8 +12,8 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    RepeatMode,
 )
-from homeassistant.components.media_player.const import RepeatMode
 from homeassistant.components.sonos.const import (
     DOMAIN as SONOS_DOMAIN,
     SOURCE_LINEIN,
@@ -26,13 +26,13 @@ from homeassistant.components.sonos.media_player import (
     VOLUME_INCREMENT,
 )
 from homeassistant.const import (
+    SERVICE_REPEAT_SET,
+    SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_IDLE,
 )
-
-from homeassistant.const import SERVICE_REPEAT_SET, SERVICE_SHUFFLE_SET, STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
@@ -736,6 +736,8 @@ async def test_shuffle_get(
     state = hass.states.get("media_player.zone_a")
     assert state.attributes["shuffle"] is True
 
+    # The integration keeps a copy of the last event to check for
+    # changes, so we create a new event.
     no_media_event = SonosMockEvent(
         soco, soco.avTransport, no_media_event.variables.copy()
     )
