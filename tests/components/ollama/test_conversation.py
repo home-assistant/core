@@ -121,6 +121,7 @@ async def test_template_variables(
     ("tool_args", "expected_tool_args"),
     [
         ({"param1": "test_value"}, {"param1": "test_value"}),
+        ({"param1": 2}, {"param1": 2}),
         (
             {"param1": "test_value", "floor": ""},
             {"param1": "test_value"},  # Omit empty arguments
@@ -131,7 +132,7 @@ async def test_template_variables(
         ),
         (
             {"domain": "['light']"},
-            {"domain": "['light']"},  # Preserve invalid single quote json
+            {"domain": "['light']"},  # Preserve invalid json that can't be parsed
         ),
     ],
 )
