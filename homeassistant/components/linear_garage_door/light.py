@@ -3,22 +3,21 @@
 from typing import Any
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import NiceGOUpdateCoordinator
+from . import NiceGOConfigEntry
 from .entity import LinearEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NiceGOConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Nice G.O. cover."""
 
-    coordinator: NiceGOUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         LinearLightEntity(coordinator, device_id, device_data.name, "light")
