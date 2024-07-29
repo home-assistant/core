@@ -300,7 +300,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._hass = hass
         self.port = port
         self._polling_task = None  # The actual polling task.
-        self._name = sync_status.name
         self._id = None
         self._last_status_update = None
         self._sync_status: SyncStatus | None = None
@@ -356,12 +355,10 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._sync_status = sync_status
 
-        if not self._name:
-            self._name = sync_status.name if sync_status.name else self.host
         if not self._id:
             self._id = sync_status.id
         if not self._bluesound_device_name:
-            self._bluesound_device_name = self._name
+            self._bluesound_device_name = sync_status.name
 
         if sync_status.master is not None:
             self._is_master = False
@@ -483,7 +480,10 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._last_status_update = None
             self._status = None
             self.async_write_ha_state()
-            _LOGGER.info("Client connection error, marking %s as offline", self._name)
+            _LOGGER.info(
+                "Client connection error, marking %s as offline",
+                self._bluesound_device_name,
+            )
             raise
 
     async def async_trigger_sync_on_all(self):
