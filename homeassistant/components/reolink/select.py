@@ -56,7 +56,7 @@ class ReolinkChimeSelectEntityDescription(
 ):
     """A class that describes select entities for a chime."""
 
-    get_options: list[str] | Callable[[Chime], list[str]]
+    get_options: list[str]
     method: Callable[[Chime, str], Any]
     value: Callable[[Chime], str] | None = None
 
@@ -64,13 +64,6 @@ class ReolinkChimeSelectEntityDescription(
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
     """Get the quick reply file id from the message string."""
     return [k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
-
-
-def _get_chime_play_list() -> list[str]:
-    """Get the list of options for the chime play ringtone entity."""
-    play_list = [method.name for method in ChimeToneEnum]
-    play_list.remove("off")
-    return play_list
 
 
 SELECT_ENTITIES = (
@@ -161,7 +154,7 @@ CHIME_SELECT_ENTITIES = (
     ReolinkChimeSelectEntityDescription(
         key="play_tone",
         translation_key="play_tone",
-        get_options=_get_chime_play_list(),
+        get_options=[method.name for method in ChimeToneEnum][1:],
         method=lambda chime, name: chime.play(ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -282,11 +275,7 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         self.entity_description = entity_description
         super().__init__(reolink_data, chime)
         self._log_error = True
-
-        if callable(entity_description.get_options):
-            self._attr_options = entity_description.get_options(chime)
-        else:
-            self._attr_options = entity_description.get_options
+        self._attr_options = entity_description.get_options
 
     @property
     def current_option(self) -> str | None:

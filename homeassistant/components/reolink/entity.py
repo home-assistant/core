@@ -175,13 +175,11 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
 
         self._chime = chime
 
-        if self._host.api.supported(chime.channel, "UID"):
-            self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(chime.channel)}_{chime.dev_id}_{self.entity_description.key}"
-        else:
-            self._attr_unique_id = f"{self._host.unique_id}_{chime.channel}_{chime.dev_id}_{self.entity_description.key}"
-
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_chime{chime.dev_id}_{self.entity_description.key}"
+        )
         cam_dev_id = self._dev_id
-        self._dev_id = f"{cam_dev_id}_{chime.dev_id}"
+        self._dev_id = f"{self._host.unique_id}_chime{chime.dev_id}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
