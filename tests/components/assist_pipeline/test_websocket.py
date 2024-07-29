@@ -259,12 +259,7 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
             "type": "assist_pipeline/run",
             "start_stage": "wake_word",
             "end_stage": "tts",
-            "input": {
-                "sample_rate": 16000,
-                "timeout": 0,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "timeout": 0, "no_vad": True},
         }
     )
 
@@ -1876,11 +1871,7 @@ async def test_wake_word_cooldown_same_id(
             "type": "assist_pipeline/run",
             "start_stage": "wake_word",
             "end_stage": "tts",
-            "input": {
-                "sample_rate": 16000,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "no_vad": True},
         }
     )
 
@@ -1889,11 +1880,7 @@ async def test_wake_word_cooldown_same_id(
             "type": "assist_pipeline/run",
             "start_stage": "wake_word",
             "end_stage": "tts",
-            "input": {
-                "sample_rate": 16000,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "no_vad": True},
         }
     )
 
@@ -1967,11 +1954,7 @@ async def test_wake_word_cooldown_different_ids(
                 "type": "assist_pipeline/run",
                 "start_stage": "wake_word",
                 "end_stage": "tts",
-                "input": {
-                    "sample_rate": 16000,
-                    "no_vad": True,
-                    "no_chunking": True,
-                },
+                "input": {"sample_rate": 16000, "no_vad": True},
             }
         )
 
@@ -1980,11 +1963,7 @@ async def test_wake_word_cooldown_different_ids(
                 "type": "assist_pipeline/run",
                 "start_stage": "wake_word",
                 "end_stage": "tts",
-                "input": {
-                    "sample_rate": 16000,
-                    "no_vad": True,
-                    "no_chunking": True,
-                },
+                "input": {"sample_rate": 16000, "no_vad": True},
             }
         )
 
@@ -2094,11 +2073,7 @@ async def test_wake_word_cooldown_different_entities(
             "pipeline": pipeline_id_1,
             "start_stage": "wake_word",
             "end_stage": "tts",
-            "input": {
-                "sample_rate": 16000,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "no_vad": True},
         }
     )
 
@@ -2109,11 +2084,7 @@ async def test_wake_word_cooldown_different_entities(
             "pipeline": pipeline_id_2,
             "start_stage": "wake_word",
             "end_stage": "tts",
-            "input": {
-                "sample_rate": 16000,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "no_vad": True},
         }
     )
 
@@ -2210,11 +2181,7 @@ async def test_device_capture(
             "type": "assist_pipeline/run",
             "start_stage": "stt",
             "end_stage": "stt",
-            "input": {
-                "sample_rate": 16000,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "no_vad": True},
             "device_id": satellite_device.id,
         }
     )
@@ -2315,11 +2282,7 @@ async def test_device_capture_override(
             "type": "assist_pipeline/run",
             "start_stage": "stt",
             "end_stage": "stt",
-            "input": {
-                "sample_rate": 16000,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "no_vad": True},
             "device_id": satellite_device.id,
         }
     )
@@ -2464,11 +2427,7 @@ async def test_device_capture_queue_full(
             "type": "assist_pipeline/run",
             "start_stage": "stt",
             "end_stage": "stt",
-            "input": {
-                "sample_rate": 16000,
-                "no_vad": True,
-                "no_chunking": True,
-            },
+            "input": {"sample_rate": 16000, "no_vad": True},
             "device_id": satellite_device.id,
         }
     )

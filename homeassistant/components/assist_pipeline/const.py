@@ -15,3 +15,8 @@ DATA_LAST_WAKE_UP = f"{DOMAIN}.last_wake_up"
 WAKE_WORD_COOLDOWN = 2  # seconds
 
 EVENT_RECORDING = f"{DOMAIN}_recording"
+
+SAMPLE_RATE = 16000  # hertz
+SAMPLE_WIDTH = 2  # bytes
+SAMPLE_CHANNELS = 1  # mono
+SAMPLES_PER_CHUNK = 240  # 20 ms @ 16Khz
