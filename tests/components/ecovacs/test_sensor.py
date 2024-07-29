@@ -167,8 +167,11 @@ async def test_legacy_sensors(
 ) -> None:
     """Test that sensor entity snapshots match."""
     mock_vacbot.components = {"main_brush": 0.8, "side_brush": 0.6, "filter": 0.4}
-    hass.bus.async_fire("ecovacs_legacy_lifespan_event")
+    mock_vacbot.lifespanEvents.notify("dummy_data")
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    states = hass.states.async_entity_ids()
+    assert snapshot(name="states") == states
 
     for entity_id in hass.states.async_entity_ids():
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"

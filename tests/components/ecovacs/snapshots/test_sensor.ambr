@@ -140,6 +140,13 @@
     'state': '60',
   })
 # ---
+# name: test_legacy_sensors[123][states]
+  list([
+    'sensor.e1234567890000000003_main_brush_lifespan',
+    'sensor.e1234567890000000003_side_brush_lifespan',
+    'sensor.e1234567890000000003_filter_lifespan',
+  ])
+# ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
