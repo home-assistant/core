@@ -35,7 +35,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, integration_platform, intent
 from homeassistant.helpers.typing import ConfigType
 
@@ -82,7 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         OnOffIntentHandler(
             intent.INTENT_TURN_ON,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
             description="Turns on/opens a device or entity",
         ),
@@ -91,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         OnOffIntentHandler(
             intent.INTENT_TURN_OFF,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
             description="Turns off/closes a device or entity",
         ),
@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         intent.ServiceIntentHandler(
             intent.INTENT_TOGGLE,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             SERVICE_TOGGLE,
             description="Toggles a device or entity",
         ),

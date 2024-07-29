@@ -47,6 +47,14 @@ def doorbird_schedule() -> list[DoorBirdScheduleEntry]:
 
 
 @pytest.fixture(scope="session")
+def doorbird_schedule_wrong_param() -> list[DoorBirdScheduleEntry]:
+    """Return a loaded DoorBird schedule fixture with an incorrect param."""
+    return DoorBirdScheduleEntry.parse_all(
+        load_json_value_fixture("schedule_wrong_param.json", "doorbird")
+    )
+
+
+@pytest.fixture(scope="session")
 def doorbird_favorites() -> dict[str, dict[str, Any]]:
     """Return a loaded DoorBird favorites fixture."""
     return load_json_value_fixture("favorites.json", "doorbird")
@@ -90,18 +98,21 @@ async def doorbird_mocker(
     async def _async_mock(
         entry: MockConfigEntry | None = None,
         api: DoorBird | None = None,
+        change_schedule: tuple[bool, int] | None = None,
         info: dict[str, Any] | None = None,
         info_side_effect: Exception | None = None,
         schedule: list[DoorBirdScheduleEntry] | None = None,
         favorites: dict[str, dict[str, Any]] | None = None,
         favorites_side_effect: Exception | None = None,
+        options: dict[str, Any] | None = None,
     ) -> MockDoorbirdEntry:
         """Create a MockDoorbirdEntry from defaults or specific values."""
         entry = entry or MockConfigEntry(
             domain=DOMAIN,
             unique_id="1CCAE3AAAAAA",
             data=VALID_CONFIG,
-            options={CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]},
+            options=options
+            or {CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]},
         )
         api = api or get_mock_doorbird_api(
             info=info or doorbird_info,
@@ -109,6 +120,7 @@ async def doorbird_mocker(
             schedule=schedule or doorbird_schedule,
             favorites=favorites or doorbird_favorites,
             favorites_side_effect=favorites_side_effect,
+            change_schedule=change_schedule,
         )
         entry.add_to_hass(hass)
         with patch_doorbird_api_entry_points(api):

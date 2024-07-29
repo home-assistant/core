@@ -243,7 +243,7 @@ aioharmony==0.2.10
 aiohomekit==3.2.1
 
 # homeassistant.components.hue
-aiohue==4.7.1
+aiohue==4.7.2
 
 # homeassistant.components.imap
 aioimaplib==1.1.0
@@ -490,7 +490,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.15.3
+bimmer-connected[china]==0.16.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
@@ -710,6 +710,9 @@ eternalegypt==0.0.16
 
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
+
+# homeassistant.components.bryant_evolution
+evolutionhttp==0.0.18
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -1612,6 +1615,9 @@ pymonoprice==0.4
 # homeassistant.components.mysensors
 pymysensors==0.24.0
 
+# homeassistant.components.iron_os
+pynecil==0.2.0
+
 # homeassistant.components.netgear
 pynetgear==0.10.10
 
@@ -1657,7 +1663,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.12
+pyoverkiz==1.13.14
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
