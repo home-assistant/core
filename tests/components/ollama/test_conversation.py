@@ -123,15 +123,17 @@ async def test_template_variables(
         ({"param1": "test_value"}, {"param1": "test_value"}),
         (
             {"param1": "test_value", "floor": ""},
-            {"param1": "test_value"}),  # Omit empty arguments
+            {"param1": "test_value"},  # Omit empty arguments
+        ),
         (
             {"domain": '["light"]'},
-            {"domain": ["light"]}),  # Repair invalid json arguments
+            {"domain": ["light"]},  # Repair invalid json arguments
+        ),
         (
             {"domain": "['light']"},
             {"domain": "['light']"},  # Preserve invalid single quote json
         ),
-    ]
+    ],
 )
 @patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
 async def test_function_call(
