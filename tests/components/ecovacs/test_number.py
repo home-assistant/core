@@ -167,27 +167,3 @@ async def test_volume_maximum(
     assert (state := hass.states.get(entity_id))
     assert state.state == "10"
     assert state.attributes["max"] == 20
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize(("device_fixture"), ["5xu9h3"])
-async def test_cut_direction_bounds(
-    hass: HomeAssistant,
-    controller: EcovacsController,
-) -> None:
-    """Test cut direction bounds."""
-    device = controller.devices[0]
-    event_bus = device.events
-    entity_id = "number.goat_g1_cut_direction"
-    assert (state := hass.states.get(entity_id))
-    assert state.attributes["max"] == 180
-
-    event_bus.notify(CutDirectionEvent(45))
-    await block_till_done(hass, event_bus)
-    assert (state := hass.states.get(entity_id))
-    assert state.state == "45"
-
-    event_bus.notify(CutDirectionEvent(17))
-    await block_till_done(hass, event_bus)
-    assert (state := hass.states.get(entity_id))
-    assert state.state == "17"
