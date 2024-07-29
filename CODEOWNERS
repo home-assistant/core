@@ -221,6 +221,8 @@ build.json @home-assistant/supervisor
 /tests/components/brottsplatskartan/ @gjohansson-ST
 /homeassistant/components/brunt/ @eavanvalkenburg
 /tests/components/brunt/ @eavanvalkenburg
+/homeassistant/components/bryant_evolution/ @danielsmyers
+/tests/components/bryant_evolution/ @danielsmyers
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
 /homeassistant/components/bt_smarthub/ @typhoon2099
