@@ -21,7 +21,7 @@ from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
-from aiounifi.models.device import Device
+from aiounifi.models.device import Device, TypedDeviceUptimeStatsWanMonitor
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
@@ -200,7 +200,7 @@ def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str:
 
 
 @callback
-def async_device_wan_monitor_latency_supported_fn(
+def async_device_wan_latency_supported_fn(
     wan: Literal["WAN", "WAN2"],
     monitor_target: str,
     hub: UnifiHub,
@@ -208,25 +208,35 @@ def async_device_wan_monitor_latency_supported_fn(
 ) -> bool:
     """Determine if an device have a latency monitor."""
 
-    device = hub.api.devices[obj_id]
-
-    if device is None or device.uptime_stats is None:
+    if (device := hub.api.devices[obj_id]) and device.uptime_stats is None:
         return False
 
-    return (
-        async_device_wan_monitor_latency_value_fn(wan, monitor_target, hub, device)
-        is not None
-    )
+    return async_device_wan_latency_target(wan, monitor_target, device) is not None
 
 
 @callback
-def async_device_wan_monitor_latency_value_fn(
+def async_device_wan_latency_value_fn(
     wan: Literal["WAN", "WAN2"],
     monitor_target: str,
     hub: UnifiHub,
-    device: Device | None,
+    device: Device,
 ) -> int | None:
     """Retrieve the monitor target from WAN monitors."""
+
+    target = async_device_wan_latency_target(
+        wan=wan, monitor_target=monitor_target, device=device
+    )
+
+    if target is None:
+        return None
+
+    return target.get("latency_average", 0)
+
+
+def async_device_wan_latency_target(
+    wan: Literal["WAN", "WAN2"], monitor_target: str, device: Device | None
+) -> TypedDeviceUptimeStatsWanMonitor | None:
+    """Return the target of the WAN latency monitor."""
 
     if device is None or device.uptime_stats is None:
         return None
@@ -236,7 +246,7 @@ def async_device_wan_monitor_latency_value_fn(
     if uptime_stats_wan := uptime_stats.get(wan):
         for item in uptime_stats_wan["monitors"]:
             if monitor_target in item["target"]:
-                return item.get("latency_average", 0)
+                return item
 
     return None
 
@@ -260,13 +270,11 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
             name_fn=lambda _: f"{name} {wan} latency",
             object_fn=lambda api, obj_id: api.devices[obj_id],
             supported_fn=partial(
-                async_device_wan_monitor_latency_supported_fn, wan, monitor_target
+                async_device_wan_latency_supported_fn, wan, monitor_target
             ),
             unique_id_fn=lambda hub,
             obj_id: f"{name.lower}_{wan.lower}_latency-{obj_id}",
-            value_fn=partial(
-                async_device_wan_monitor_latency_value_fn, wan, monitor_target
-            ),
+            value_fn=partial(async_device_wan_latency_value_fn, wan, monitor_target),
         )
 
     wans: tuple[Literal["WAN"], Literal["WAN2"]] = ("WAN", "WAN2")
