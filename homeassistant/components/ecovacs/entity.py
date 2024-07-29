@@ -10,6 +10,7 @@ from deebot_client.capabilities import Capabilities
 from deebot_client.device import Device
 from deebot_client.events import AvailabilityEvent
 from deebot_client.events.base import Event
+from sucks import EventListener, VacBot
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -120,3 +121,36 @@ class EcovacsCapabilityEntityDescription(
     """Ecovacs entity description."""
 
     capability_fn: Callable[[Capabilities], CapabilityEntity | None]
+
+
+class EcovacsLegacyEntity(Entity):
+    """Ecovacs legacy bot entity."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, device: VacBot) -> None:
+        """Initialize the legacy Ecovacs entity."""
+        self.device = device
+        vacuum = device.vacuum
+
+        self.error: str | None = None
+        self._attr_unique_id = vacuum["did"]
+
+        if (name := vacuum.get("nick")) is None:
+            name = vacuum["did"]
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vacuum["did"])},
+            manufacturer="Ecovacs",
+            model=vacuum.get("deviceName"),
+            name=name,
+            serial_number=vacuum["did"],
+        )
+
+        self._event_listeners: list[EventListener] = []
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove event listeners on entity remove."""
+        for listener in self._event_listeners:
+            listener.unsubscribe()

@@ -240,7 +240,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.0
+aiohomekit==3.2.1
 
 # homeassistant.components.hue
 aiohue==4.7.1
@@ -1114,7 +1114,7 @@ moehlenhoff-alpha2==1.3.1
 monzopy==1.3.0
 
 # homeassistant.components.mopeka
-mopeka-iot-ble==0.7.0
+mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.23
@@ -1357,7 +1357,7 @@ pyControl4==1.1.0
 pyDuotecno==2024.5.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.3
+pyElectra==1.2.4
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1404,6 +1404,9 @@ pybalboa==1.0.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.6
+
+# homeassistant.components.bluesound
+pyblu==0.4.0
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -1759,7 +1762,7 @@ pysqueezebox==0.7.1
 pysuez==0.2.0
 
 # homeassistant.components.switchbee
-pyswitchbee==1.8.0
+pyswitchbee==1.8.3
 
 # homeassistant.components.tautulli
 pytautulli==23.1.1
@@ -1950,7 +1953,7 @@ renault-api==0.2.5
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.5
+reolink-aio==0.9.6
 
 # homeassistant.components.rflink
 rflink==0.0.66
