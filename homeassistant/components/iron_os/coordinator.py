@@ -5,7 +5,13 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pynecil import CommunicationError, DeviceInfoResponse, LiveDataResponse, Pynecil
+from pynecil import (
+    CommunicationError,
+    DeviceInfoResponse,
+    LiveDataResponse,
+    Pynecil,
+    SettingsDataResponse,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -22,6 +28,7 @@ class IronOSCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     """IronOS coordinator."""
 
     device_info: DeviceInfoResponse
+    settings: SettingsDataResponse = SettingsDataResponse()
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
