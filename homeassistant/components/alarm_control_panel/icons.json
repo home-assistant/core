@@ -3,7 +3,7 @@
     "_": {
       "default": "mdi:shield",
       "state": {
-        "armed_away": "mdi:shield-lock",
+        "armed_away": "mdi:exit-run",
         "armed_custom_bypass": "mdi:security",
         "armed_home": "mdi:shield-home",
         "armed_night": "mdi:shield-moon",
