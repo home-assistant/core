@@ -39,7 +39,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
-# Setup patching if dt_util time functions before any other Home Assistant imports
+# Setup patching of recorder functions before any other Home Assistant imports
+from . import patch_recorder  # noqa: F401, isort:skip
+
+# Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
 
 from homeassistant import core as ha, loader, runner
@@ -1396,6 +1399,7 @@ async def _async_init_recorder_component(
     db_url: str | None = None,
     *,
     expected_setup_result: bool,
+    wait_setup: bool,
 ) -> None:
     """Initialize the recorder asynchronously."""
     # pylint: disable-next=import-outside-toplevel
@@ -1413,14 +1417,27 @@ async def _async_init_recorder_component(
         setup_task = asyncio.ensure_future(
             async_setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         )
-        # Wait for recorder integration to setup
-        setup_result = await setup_task
-        assert setup_result == expected_setup_result
-        assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
+        if wait_setup:
+            # Wait for recorder integration to setup
+            setup_result = await setup_task
+            assert setup_result == expected_setup_result
+            assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
+        else:
+            # Wait for recorder to connect to the database
+            await recorder_helper.async_wait_recorder(hass)
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
         config[recorder.CONF_DB_URL],
     )
+
+
+class ThreadSession(threading.local):
+    """Keep track of session per thread."""
+
+    has_session = False
+
+
+thread_session = ThreadSession()
 
 
 @pytest.fixture
@@ -1443,6 +1460,39 @@ async def async_test_recorder(
 
     # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
+
+    # pylint: disable-next=import-outside-toplevel
+    from .patch_recorder import real_session_scope
+
+    if TYPE_CHECKING:
+        # pylint: disable-next=import-outside-toplevel
+        from sqlalchemy.orm.session import Session
+
+    @contextmanager
+    def debug_session_scope(
+        *,
+        hass: HomeAssistant | None = None,
+        session: Session | None = None,
+        exception_filter: Callable[[Exception], bool] | None = None,
+        read_only: bool = False,
+    ) -> Generator[Session]:
+        """Wrap session_scope to bark if we create nested sessions."""
+        if thread_session.has_session:
+            raise RuntimeError(
+                f"Thread '{threading.current_thread().name}' already has an "
+                "active session"
+            )
+        thread_session.has_session = True
+        try:
+            with real_session_scope(
+                hass=hass,
+                session=session,
+                exception_filter=exception_filter,
+                read_only=read_only,
+            ) as ses:
+                yield ses
+        finally:
+            thread_session.has_session = False
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
@@ -1475,9 +1525,9 @@ async def async_test_recorder(
         migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
     )
     legacy_event_id_foreign_key_exists = (
-        recorder.Recorder._legacy_event_id_foreign_key_exists
+        migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
         if enable_migrate_event_ids
-        else None
+        else lambda _: None
     )
     with (
         patch(
@@ -1516,13 +1566,19 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._legacy_event_id_foreign_key_exists",
+            "homeassistant.components.recorder.migration.EventIDPostMigration._legacy_event_id_foreign_key_exists",
             side_effect=legacy_event_id_foreign_key_exists,
             autospec=True,
         ),
         patch(
             "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
             side_effect=compile_missing,
+            autospec=True,
+        ),
+        patch.object(
+            patch_recorder,
+            "real_session_scope",
+            side_effect=debug_session_scope,
             autospec=True,
         ),
     ):
@@ -1534,6 +1590,7 @@ async def async_test_recorder(
             *,
             expected_setup_result: bool = True,
             wait_recorder: bool = True,
+            wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Setup and return recorder instance."""  # noqa: D401
             await _async_init_recorder_component(
@@ -1541,6 +1598,7 @@ async def async_test_recorder(
                 config,
                 recorder_db_url,
                 expected_setup_result=expected_setup_result,
+                wait_setup=wait_recorder_setup,
             )
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
@@ -1570,6 +1628,7 @@ async def async_setup_recorder_instance(
             *,
             expected_setup_result: bool = True,
             wait_recorder: bool = True,
+            wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Set up and return recorder instance."""
 
@@ -1579,6 +1638,7 @@ async def async_setup_recorder_instance(
                     config,
                     expected_setup_result=expected_setup_result,
                     wait_recorder=wait_recorder,
+                    wait_recorder_setup=wait_recorder_setup,
                 )
             )
 

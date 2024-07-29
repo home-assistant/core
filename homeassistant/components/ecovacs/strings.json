@@ -65,7 +65,7 @@
         "name": "Reset unit care lifespan"
       },
       "reset_lifespan_side_brush": {
-        "name": "Reset side brushes lifespan"
+        "name": "Reset side brush lifespan"
       }
     },
     "event": {
@@ -117,7 +117,7 @@
         "name": "Lens brush lifespan"
       },
       "lifespan_side_brush": {
-        "name": "Side brushes lifespan"
+        "name": "Side brush lifespan"
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"

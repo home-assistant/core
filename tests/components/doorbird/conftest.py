@@ -9,7 +9,12 @@ from unittest.mock import MagicMock, patch
 from doorbirdpy import DoorBird, DoorBirdScheduleEntry
 import pytest
 
-from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
+from homeassistant.components.doorbird.const import (
+    CONF_EVENTS,
+    DEFAULT_DOORBELL_EVENT,
+    DEFAULT_MOTION_EVENT,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 
 from . import VALID_CONFIG, get_mock_doorbird_api
@@ -39,6 +44,20 @@ def doorbird_schedule() -> list[DoorBirdScheduleEntry]:
     return DoorBirdScheduleEntry.parse_all(
         load_json_value_fixture("schedule.json", "doorbird")
     )
+
+
+@pytest.fixture(scope="session")
+def doorbird_schedule_wrong_param() -> list[DoorBirdScheduleEntry]:
+    """Return a loaded DoorBird schedule fixture with an incorrect param."""
+    return DoorBirdScheduleEntry.parse_all(
+        load_json_value_fixture("schedule_wrong_param.json", "doorbird")
+    )
+
+
+@pytest.fixture(scope="session")
+def doorbird_favorites() -> dict[str, dict[str, Any]]:
+    """Return a loaded DoorBird favorites fixture."""
+    return load_json_value_fixture("favorites.json", "doorbird")
 
 
 @pytest.fixture
@@ -72,27 +91,36 @@ async def doorbird_mocker(
     hass: HomeAssistant,
     doorbird_info: dict[str, Any],
     doorbird_schedule: dict[str, Any],
+    doorbird_favorites: dict[str, dict[str, Any]],
 ) -> DoorbirdMockerType:
     """Create a MockDoorbirdEntry."""
 
     async def _async_mock(
         entry: MockConfigEntry | None = None,
         api: DoorBird | None = None,
+        change_schedule: tuple[bool, int] | None = None,
         info: dict[str, Any] | None = None,
         info_side_effect: Exception | None = None,
         schedule: list[DoorBirdScheduleEntry] | None = None,
+        favorites: dict[str, dict[str, Any]] | None = None,
+        favorites_side_effect: Exception | None = None,
+        options: dict[str, Any] | None = None,
     ) -> MockDoorbirdEntry:
         """Create a MockDoorbirdEntry from defaults or specific values."""
         entry = entry or MockConfigEntry(
             domain=DOMAIN,
             unique_id="1CCAE3AAAAAA",
             data=VALID_CONFIG,
-            options={CONF_EVENTS: ["event1", "event2", "event3"]},
+            options=options
+            or {CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]},
         )
         api = api or get_mock_doorbird_api(
             info=info or doorbird_info,
             info_side_effect=info_side_effect,
             schedule=schedule or doorbird_schedule,
+            favorites=favorites or doorbird_favorites,
+            favorites_side_effect=favorites_side_effect,
+            change_schedule=change_schedule,
         )
         entry.add_to_hass(hass)
         with patch_doorbird_api_entry_points(api):
