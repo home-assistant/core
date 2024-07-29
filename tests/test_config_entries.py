@@ -22,7 +22,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -526,13 +531,13 @@ async def test_remove_entry_cancels_reauth(
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
-    assert issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
     await manager.async_remove(entry.entry_id)
 
     flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 0
-    assert not issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
 
 async def test_remove_entry_handles_callback_error(
@@ -1189,14 +1194,14 @@ async def test_reauth_issue(
 
     assert len(issue_registry.issues) == 1
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
-    issue = issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
     assert issue == ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
         created=ANY,
         data={"flow_id": flows[0]["flow_id"]},
         dismissed_version=None,
-        domain=HA_DOMAIN,
+        domain=HOMEASSISTANT_DOMAIN,
         is_fixable=False,
         is_persistent=False,
         issue_domain="test",
@@ -5098,7 +5103,7 @@ async def test_hashable_non_string_unique_id(
             {
                 "type": data_entry_flow.FlowResultType.ABORT,
                 "reason": "single_instance_allowed",
-                "translation_domain": HA_DOMAIN,
+                "translation_domain": HOMEASSISTANT_DOMAIN,
             },
         ),
     ],
@@ -5296,7 +5301,7 @@ async def test_avoid_adding_second_config_entry_on_single_config_entry(
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "single_instance_allowed"
-        assert result["translation_domain"] == HA_DOMAIN
+        assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_in_progress_get_canceled_when_entry_is_created(
