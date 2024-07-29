@@ -319,6 +319,8 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._init_callback = init_callback
 
+        self._attr_has_entity_name = True
+        self._attr_name = None
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
         # there should always be one player with the default port per mac
         if port is DEFAULT_PORT:
@@ -637,11 +639,6 @@ class BluesoundPlayer(MediaPlayerEntity):
     def id(self) -> str | None:
         """Get id of device."""
         return self._id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the device."""
-        return self._name
 
     @property
     def bluesound_device_name(self) -> str | None:
