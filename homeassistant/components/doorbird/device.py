@@ -103,9 +103,8 @@ class ConfiguredDoorBird:
     async def async_register_events(self) -> None:
         """Register events on device."""
         if not self.door_station_events:
-            # User may not have permission to get the favorites
+            # The config entry might not have any events configured yet
             return
-
         http_fav = await self._async_register_events()
         event_config = await self._async_get_event_config(http_fav)
         _LOGGER.debug("%s: Event config: %s", self.name, event_config)
