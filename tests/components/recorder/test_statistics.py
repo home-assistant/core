@@ -2515,10 +2515,7 @@ async def test_recorder_platform_with_statistics(
         validate_statistics=Mock(wraps=_mock_validate_statistics),
     )
 
-    await _setup_mock_domain(
-        hass,
-        recorder_platform,
-    )
+    await _setup_mock_domain(hass, recorder_platform)
 
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2566,9 +2563,7 @@ async def test_recorder_platform_without_statistics(
     recorder_data = hass.data["recorder"]
     assert recorder_data.recorder_platforms == {}
 
-    await _setup_mock_domain(
-        hass,
-    )
+    await _setup_mock_domain(hass)
 
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2616,10 +2611,7 @@ async def test_recorder_platform_with_partial_statistics_support(
         **kwargs,
     )
 
-    await _setup_mock_domain(
-        hass,
-        recorder_platform,
-    )
+    await _setup_mock_domain(hass, recorder_platform)
 
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
