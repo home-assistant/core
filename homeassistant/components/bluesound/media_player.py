@@ -391,7 +391,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 await self.async_update_status()
 
         except (TimeoutError, ClientError):
-            _LOGGER.info("Node %s:%s is offline, retrying later", self.name, self.port)
+            _LOGGER.error("Node %s:%s is offline, retrying later", self.name, self.port)
             await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
 
@@ -418,7 +418,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
             await self.force_update_sync_status(self._init_callback)
         except (TimeoutError, ClientError):
-            _LOGGER.info("Node %s:%s is offline, retrying later", self.host, self.port)
+            _LOGGER.error("Node %s:%s is offline, retrying later", self.host, self.port)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION
             )
