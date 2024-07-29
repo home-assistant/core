@@ -234,11 +234,11 @@ def async_device_wan_latency_value_fn(
 
 
 def async_device_wan_latency_target(
-    wan: Literal["WAN", "WAN2"], monitor_target: str, device: Device | None
+    wan: Literal["WAN", "WAN2"], monitor_target: str, device: Device
 ) -> TypedDeviceUptimeStatsWanMonitor | None:
     """Return the target of the WAN latency monitor."""
 
-    if device is None or device.uptime_stats is None:
+    if device.uptime_stats is None:
         return None
 
     uptime_stats = device.uptime_stats
