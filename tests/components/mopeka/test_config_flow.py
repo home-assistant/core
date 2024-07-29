@@ -28,7 +28,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == CONF_MEDIUM_TYPE
+    assert result2["step_id"] == "medium_type"
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], user_input={CONF_MEDIUM_TYPE: "propane"}
