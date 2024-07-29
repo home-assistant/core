@@ -821,7 +821,6 @@ ignore = [
     "PLE0605",
 
     # temporarily disabled
-    "RET503",
     "TRY301"
 ]
 
