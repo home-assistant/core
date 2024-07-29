@@ -1,83 +1,215 @@
-"""DataUpdateCoordinator for Linear."""
+"""DataUpdateCoordinator for Nice G.O."""
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
+import json
 import logging
 from typing import Any
 
-from linear_garage_door import Linear
-from linear_garage_door.errors import InvalidLoginError
+from nice_go import (
+    BARRIER_STATUS,
+    ApiError,
+    AuthFailedError,
+    BarrierState,
+    ConnectionState,
+    NiceGOApi,
+)
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import (
+    CONF_REFRESH_TOKEN,
+    CONF_REFRESH_TOKEN_CREATION_TIME,
+    DOMAIN,
+    REFRESH_TOKEN_EXPIRY_TIME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class LinearDevice:
-    """Linear device dataclass."""
+class NiceGODevice:
+    """Nice G.O. device dataclass."""
 
+    id: str
     name: str
-    subdevices: dict[str, dict[str, str]]
+    barrier_status: str
+    light_status: bool
+    fw_version: str
+    connected: bool
 
 
-class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
-    """DataUpdateCoordinator for Linear."""
+class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
+    """DataUpdateCoordinator for Nice G.O."""
 
     _devices: list[dict[str, Any]] | None = None
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize DataUpdateCoordinator for Linear."""
+        """Initialize DataUpdateCoordinator for Nice G.O."""
         super().__init__(
             hass,
             _LOGGER,
-            name="Linear Garage Door",
+            name="Nice G.O.",
             update_interval=timedelta(seconds=60),
         )
-        self.site_id = self.config_entry.data["site_id"]
 
-    async def _async_update_data(self) -> dict[str, LinearDevice]:
-        """Get the data for Linear."""
+        self.refresh_token = self.config_entry.data[CONF_REFRESH_TOKEN]
+        self.refresh_token_creation_time = self.config_entry.data[
+            CONF_REFRESH_TOKEN_CREATION_TIME
+        ]
+        self.email = self.config_entry.data[CONF_EMAIL]
+        self.password = self.config_entry.data[CONF_PASSWORD]
+        self.api = NiceGOApi()
+        self.ws_connected = False
+        self.organization_id: str = ""
 
-        async def update_data(linear: Linear) -> dict[str, Any]:
-            if not self._devices:
-                self._devices = await linear.get_devices(self.site_id)
+    async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
+        """Parse barrier data."""
 
-            data = {}
-
-            for device in self._devices:
-                device_id = str(device["id"])
-                state = await linear.get_device_state(device_id)
-                data[device_id] = LinearDevice(device["name"], state)
-            return data
-
-        return await self.execute(update_data)
-
-    async def execute[_T](self, func: Callable[[Linear], Awaitable[_T]]) -> _T:
-        """Execute an API call."""
-        linear = Linear()
-        try:
-            await linear.login(
-                email=self.config_entry.data["email"],
-                password=self.config_entry.data["password"],
-                device_id=self.config_entry.data["device_id"],
-                client_session=async_get_clientsession(self.hass),
+        device_id = barrier_state.deviceId
+        name = barrier_state.reported["displayName"]
+        if barrier_state.reported["migrationStatus"] == "NOT_STARTED":
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"firmware_update_required_{device_id}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="firmware_update_required",
+                translation_placeholders={"device_name": name},
             )
-        except InvalidLoginError as err:
-            if (
-                str(err)
-                == "Login error: Login provided is invalid, please check the email and password"
-            ):
-                raise ConfigEntryAuthFailed from err
-            raise ConfigEntryNotReady from err
-        result = await func(linear)
-        await linear.close()
-        return result
+            return None
+        ir.async_delete_issue(
+            self.hass, DOMAIN, f"firmware_update_required_{device_id}"
+        )
+        barrier_status_raw = [
+            int(x) for x in barrier_state.reported["barrierStatus"].split(",")
+        ]
+
+        if BARRIER_STATUS[int(barrier_status_raw[2])] == "STATIONARY":
+            barrier_status = "open" if barrier_status_raw[0] == 1 else "closed"
+        else:
+            barrier_status = BARRIER_STATUS[int(barrier_status_raw[2])].lower()
+
+        light_status = barrier_state.reported["lightStatus"].split(",")[0] == "1"
+        fw_version = barrier_state.reported["deviceFwVersion"]
+        if barrier_state.connectionState:
+            connected = barrier_state.connectionState.connected
+        else:
+            connected = False
+
+        return NiceGODevice(
+            id=device_id,
+            name=name,
+            barrier_status=barrier_status,
+            light_status=light_status,
+            fw_version=fw_version,
+            connected=connected,
+        )
+
+    async def _async_update_data(self) -> dict[str, NiceGODevice]:
+        """Fetch data from Nice G.O. API."""
+        async with asyncio.timeout(10):
+            if self.api.id_token:
+                # Already authenticated, returning the same data to avoid overwriting data from the websocket
+                return self.data
+            expiry_time = (
+                self.refresh_token_creation_time
+                + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
+            )
+            try:
+                if datetime.now().timestamp() >= expiry_time:
+                    await self._update_refresh_token()
+                else:
+                    await self.api.authenticate_refresh(
+                        self.refresh_token, async_get_clientsession(self.hass)
+                    )
+                _LOGGER.debug("Authenticated with Nice G.O. API")
+
+                barriers = await self.api.get_all_barriers()
+                parsed_barriers = [
+                    await self._parse_barrier(barrier.state) for barrier in barriers
+                ]
+
+                # Parse the barriers and save them in a dictionary
+                devices = {
+                    barrier.id: barrier for barrier in parsed_barriers if barrier
+                }
+                self.organization_id = await barriers[0].get_attr("organization")
+            except AuthFailedError as e:
+                raise ConfigEntryAuthFailed from e
+            except ApiError as e:
+                raise UpdateFailed from e
+            else:
+                return devices
+
+    async def _update_refresh_token(self) -> None:
+        """Update the refresh token with Nice G.O. API."""
+        _LOGGER.debug("Updating the refresh token with Nice G.O. API")
+        try:
+            refresh_token = await self.api.authenticate(
+                self.email, self.password, async_get_clientsession(self.hass)
+            )
+        except AuthFailedError as e:
+            raise ConfigEntryAuthFailed from e
+        except ApiError as e:
+            raise UpdateFailed from e
+
+        self.refresh_token = refresh_token
+        data = {
+            **self.config_entry.data,
+            CONF_REFRESH_TOKEN: refresh_token,
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+        }
+        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+
+    async def client_listen(self) -> None:
+        """Listen to the websocket for updates."""
+        try:
+            self.api.event(self.on_connected)
+            self.api.event(self.on_data)
+            await self.api.connect(reconnect=True)
+        except ApiError as e:
+            raise ConfigEntryNotReady from e
+
+        if not self.hass.is_stopping:
+            await asyncio.sleep(5)
+            await self.client_listen()
+
+    async def on_data(self, data: dict[str, Any]) -> None:
+        """Handle incoming data from the websocket."""
+        raw_data = data["data"]["devicesStatesUpdateFeed"]["item"]
+        parsed_data = await self._parse_barrier(
+            BarrierState(
+                deviceId=raw_data["deviceId"],
+                desired=json.loads(raw_data["desired"]),
+                reported=json.loads(raw_data["reported"]),
+                connectionState=ConnectionState(
+                    connected=raw_data["connectionState"]["connected"],
+                    updatedTimestamp=raw_data["connectionState"]["updatedTimestamp"],
+                ),
+                version=raw_data["version"],
+                timestamp=raw_data["timestamp"],
+            )
+        )
+        if parsed_data is None:
+            return
+
+        data_copy = self.data.copy()
+        data_copy[parsed_data.id] = parsed_data
+
+        self.async_set_updated_data(data_copy)
+
+    async def on_connected(self) -> None:
+        """Handle the websocket connection."""
+        await self.api.subscribe(self.organization_id)

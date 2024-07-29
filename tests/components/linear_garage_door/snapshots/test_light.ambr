@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -32,18 +32,17 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'light',
-    'unique_id': 'test1-Light',
+    'unique_id': '1-light',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_data[light.test_garage_1_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'color_mode': <ColorMode.ONOFF: 'onoff'>,
       'friendly_name': 'Test Garage 1 Light',
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),
@@ -62,7 +61,7 @@
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -88,18 +87,17 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'light',
-    'unique_id': 'test2-Light',
+    'unique_id': '2-light',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_data[light.test_garage_2_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
       'color_mode': None,
       'friendly_name': 'Test Garage 2 Light',
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),

@@ -2,65 +2,29 @@
 # name: test_entry_diagnostics
   dict({
     'coordinator_data': dict({
-      'test1': dict({
+      '1': dict({
+        'barrier_status': 'closed',
+        'connected': True,
+        'fw_version': '1.2.3.4.5.6',
+        'id': '1',
+        'light_status': True,
         'name': 'Test Garage 1',
-        'subdevices': dict({
-          'GDO': dict({
-            'Open_B': 'true',
-            'Open_P': '100',
-          }),
-          'Light': dict({
-            'On_B': 'true',
-            'On_P': '100',
-          }),
-        }),
       }),
-      'test2': dict({
+      '2': dict({
+        'barrier_status': 'open',
+        'connected': True,
+        'fw_version': '1.2.3.4.5.6',
+        'id': '2',
+        'light_status': False,
         'name': 'Test Garage 2',
-        'subdevices': dict({
-          'GDO': dict({
-            'Open_B': 'false',
-            'Open_P': '0',
-          }),
-          'Light': dict({
-            'On_B': 'false',
-            'On_P': '0',
-          }),
-        }),
-      }),
-      'test3': dict({
-        'name': 'Test Garage 3',
-        'subdevices': dict({
-          'GDO': dict({
-            'Open_B': 'false',
-            'Opening_P': '0',
-          }),
-          'Light': dict({
-            'On_B': 'false',
-            'On_P': '0',
-          }),
-        }),
-      }),
-      'test4': dict({
-        'name': 'Test Garage 4',
-        'subdevices': dict({
-          'GDO': dict({
-            'Open_B': 'true',
-            'Opening_P': '100',
-          }),
-          'Light': dict({
-            'On_B': 'true',
-            'On_P': '100',
-          }),
-        }),
       }),
     }),
     'entry': dict({
       'data': dict({
-        'device_id': 'test-uuid',
         'email': '**REDACTED**',
         'password': '**REDACTED**',
-        'site_id': 'test-site-id',
+        'refresh_token': '**REDACTED**',
+        'refresh_token_creation_time': 1722184160.738171,
       }),
       'disabled_by': None,
       'domain': 'linear_garage_door',
@@ -71,9 +35,9 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'title': 'test-site-name',
+      'title': '**REDACTED**',
       'unique_id': None,
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

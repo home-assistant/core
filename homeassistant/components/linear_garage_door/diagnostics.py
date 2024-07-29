@@ -1,4 +1,4 @@
-"""Diagnostics support for Linear Garage Door."""
+"""Diagnostics support for Nice G.O.."""
 
 from __future__ import annotations
 
@@ -10,17 +10,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import LinearUpdateCoordinator
+from .const import CONF_REFRESH_TOKEN
+from .coordinator import NiceGOUpdateCoordinator
 
-TO_REDACT = {CONF_PASSWORD, CONF_EMAIL}
+TO_REDACT = {CONF_PASSWORD, CONF_EMAIL, CONF_REFRESH_TOKEN, "title"}
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NiceGOUpdateCoordinator = entry.runtime_data
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
