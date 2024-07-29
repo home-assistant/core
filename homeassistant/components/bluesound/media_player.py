@@ -315,6 +315,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._init_callback = init_callback
 
+        self._attr_unique_id = format_unique_id(sync_status.mac, port)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, format_unique_id(sync_status.mac, port))},
             name=sync_status.name,
@@ -466,12 +467,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self.async_write_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        assert self._sync_status is not None
-        return format_unique_id(self._sync_status.mac, self.port)
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
