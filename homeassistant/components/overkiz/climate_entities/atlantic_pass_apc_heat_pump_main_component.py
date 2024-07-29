@@ -1,4 +1,4 @@
-"""Support for Atlantic Pass APC Heat Pump."""
+"""Support for Atlantic Pass APC Heat Pump Main Component."""
 
 from __future__ import annotations
 
