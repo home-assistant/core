@@ -1,6 +1,7 @@
 """Test pi_hole component."""
 
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components import pi_hole
 from homeassistant.core import HomeAssistant
@@ -28,4 +29,6 @@ async def test_diagnostics(
 
     await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props("created_at", "modified_at")
+    )
