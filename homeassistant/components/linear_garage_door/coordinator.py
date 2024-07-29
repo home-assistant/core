@@ -18,7 +18,6 @@ from nice_go import (
     NiceGOApi,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -26,6 +25,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import NiceGOConfigEntry
 from .const import (
     CONF_REFRESH_TOKEN,
     CONF_REFRESH_TOKEN_CREATION_TIME,
@@ -52,7 +52,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
     """DataUpdateCoordinator for Nice G.O."""
 
     _devices: list[dict[str, Any]] | None = None
-    config_entry: ConfigEntry
+    config_entry: NiceGOConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize DataUpdateCoordinator for Nice G.O."""

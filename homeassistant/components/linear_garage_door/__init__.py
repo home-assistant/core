@@ -25,8 +25,10 @@ from .coordinator import NiceGOUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.LIGHT]
 
+type NiceGOConfigEntry = ConfigEntry[NiceGOUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bool:
     """Set up Nice G.O. from a config entry."""
 
     coordinator = NiceGOUpdateCoordinator(hass)
@@ -45,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.api.close()
@@ -53,7 +55,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
