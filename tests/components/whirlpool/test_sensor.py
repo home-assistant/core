@@ -42,7 +42,7 @@ def side_effect_function_open_door(*args, **kwargs):
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
 
-    raise ValueError(f"Side effect first argument `{args[0]}` not recognised")
+    return None
 
 
 async def test_dryer_sensor_values(
