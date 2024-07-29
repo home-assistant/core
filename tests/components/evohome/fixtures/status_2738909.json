@@ -9,33 +9,44 @@
           "zones": [
             {
               "zoneId": "3432521",
+              "name": "Dead Zone",
               "temperatureStatus": { "isAvailable": false },
-              "activeFaults": [],
               "setpointStatus": {
-                "targetHeatTemperature": 5.0,
-                "setpointMode": "PermanentOverride"
+                "targetHeatTemperature": 17.0,
+                "setpointMode": "FollowSchedule"
               },
-              "name": "Dead Zone"
+              "activeFaults": []
             },
             {
               "zoneId": "3432576",
+              "name": "Main Room",
               "temperatureStatus": { "temperature": 19.0, "isAvailable": true },
-              "activeFaults": [],
               "setpointStatus": {
                 "targetHeatTemperature": 17.0,
-                "setpointMode": "FollowSchedule"
+                "setpointMode": "PermanentOverride"
               },
-              "name": "Main Room"
+              "activeFaults": [
+                {
+                  "faultType": "TempZoneActuatorCommunicationLost",
+                  "since": "2022-03-02T15:56:01"
+                }
+              ]
             },
             {
               "zoneId": "3432577",
+              "name": "Front Room",
               "temperatureStatus": { "temperature": 19.0, "isAvailable": true },
-              "activeFaults": [],
               "setpointStatus": {
-                "targetHeatTemperature": 17.0,
-                "setpointMode": "FollowSchedule"
+                "targetHeatTemperature": 21.0,
+                "setpointMode": "TemporaryOverride",
+                "until": "2022-03-07T19:00:00Z"
               },
-              "name": "Front Room"
+              "activeFaults": [
+                {
+                  "faultType": "TempZoneActuatorLowBattery",
+                  "since": "2022-03-02T04:50:20"
+                }
+              ]
             },
             {
               "zoneId": "3432578",
@@ -85,7 +96,7 @@
                 "targetHeatTemperature": 16.5,
                 "setpointMode": "FollowSchedule"
               },
-              "name": "Bathroom Up"
+              "name": ""
             },
             {
               "zoneId": "3450733",

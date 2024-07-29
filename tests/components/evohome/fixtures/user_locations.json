@@ -220,7 +220,7 @@
               },
               {
                 "zoneId": "3449740",
-                "modelType": "HeatingZone",
+                "modelType": "Unknown",
                 "setpointCapabilities": {
                   "maxHeatSetpoint": 35.0,
                   "minHeatSetpoint": 5.0,
@@ -241,12 +241,12 @@
                   "timingResolution": "00:10:00",
                   "setpointValueResolution": 0.5
                 },
-                "name": "Bathroom Up",
-                "zoneType": "RadiatorZone"
+                "name": "",
+                "zoneType": "Unknown"
               },
               {
                 "zoneId": "3450733",
-                "modelType": "HeatingZone",
+                "modelType": "xx",
                 "setpointCapabilities": {
                   "maxHeatSetpoint": 35.0,
                   "minHeatSetpoint": 5.0,
@@ -268,7 +268,7 @@
                   "setpointValueResolution": 0.5
                 },
                 "name": "Spare Room",
-                "zoneType": "RadiatorZone"
+                "zoneType": "xx"
               }
             ],
             "dhw": {
