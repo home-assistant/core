@@ -143,7 +143,8 @@ def mocked_requests(*args, **kwargs):
             },
             200,
         )
-    raise ValueError("UNKNOWN ROUTE")
+    _LOGGER.debug("UNKNOWN ROUTE")
+    return None
 
 
 @patch(
