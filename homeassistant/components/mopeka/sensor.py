@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from mopeka_iot_ble import SensorUpdate
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -140,3 +142,9 @@ class MopekaBluetoothSensorEntity(
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the Mopeka Bluetooth sensor entity."""
+        super().__init__(*args, **kwargs)
+        self._medium_type: str | None = None
+        self.processor.entity_data.get(self.entity_key)

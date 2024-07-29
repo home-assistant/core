@@ -24,10 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 type MopekaConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mopeka BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
+
     data = MopekaIOTBluetoothDeviceData(MediumType(entry.data.get(DATA_MEDIUM_TYPE)))
     coordinator = entry.runtime_data = PassiveBluetoothProcessorCoordinator(
         hass,
@@ -39,7 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bool:

@@ -7,12 +7,14 @@ from typing import Any
 from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import callback
 
 from .const import DATA_MEDIUM_TYPE, DOMAIN, USER_INPUT_MEDIUM_TYPE
 
@@ -27,6 +29,14 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, str] = {}
+
+    @callback
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> MopekaOptionsFlow:
+        """Return the options flow for this handler."""
+        return MopekaOptionsFlow(config_entry)
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -119,6 +129,43 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
                         USER_INPUT_MEDIUM_TYPE,
                         default=MediumType.PROPANE.value,
                     ): vol.In({medium.value: medium.name for medium in MediumType}),
+                }
+            ),
+        )
+
+
+class MopekaOptionsFlow(config_entries.OptionsFlow):
+    """Handle options for the Mopeka component."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            new_data = {
+                **self.config_entry.data,
+                DATA_MEDIUM_TYPE: user_input[DATA_MEDIUM_TYPE],
+            }
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=new_data
+            )
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        DATA_MEDIUM_TYPE,
+                        default=self.config_entry.data.get(
+                            DATA_MEDIUM_TYPE, MediumType.PROPANE.value
+                        ),
+                    ): vol.In({m.value: m.name for m in MediumType}),
                 }
             ),
         )
