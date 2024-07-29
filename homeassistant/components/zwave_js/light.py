@@ -136,7 +136,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             )
             self._supports_dimming = False
         elif self.info.primary_value.command_class == CommandClass.BASIC:
-            # If the command class is Basic, we must geenerate a name that includes
+            # If the command class is Basic, we must generate a name that includes
             # the command class name to avoid ambiguity
             self._attr_name = self.generate_name(
                 include_value_name=True, alternate_value_name="Basic"
