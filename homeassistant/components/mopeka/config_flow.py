@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 
-from .const import DATA_MEDIUM_TYPE, DOMAIN, USER_INPUT_MEDIUM_TYPE
+from .const import CONF_MEDIUM_TYPE, DOMAIN
 
 
 class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -79,7 +79,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.unique_id is not None
             return self.async_create_entry(
                 title=self._discovered_devices[self.unique_id],
-                data={DATA_MEDIUM_TYPE: user_input[USER_INPUT_MEDIUM_TYPE]},
+                data={CONF_MEDIUM_TYPE: user_input[CONF_MEDIUM_TYPE]},
             )
 
         return self.async_show_form(
@@ -87,7 +87,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        USER_INPUT_MEDIUM_TYPE, default=MediumType.PROPANE.value
+                        CONF_MEDIUM_TYPE, default=MediumType.PROPANE.value
                     ): vol.In({medium.value: medium.name for medium in MediumType})
                 }
             ),
@@ -103,7 +103,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=self._discovered_devices[address],
-                data={DATA_MEDIUM_TYPE: user_input[USER_INPUT_MEDIUM_TYPE]},
+                data={CONF_MEDIUM_TYPE: user_input[CONF_MEDIUM_TYPE]},
             )
 
         current_addresses = self._async_current_ids()
@@ -126,7 +126,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
                     vol.Required(
-                        USER_INPUT_MEDIUM_TYPE,
+                        CONF_MEDIUM_TYPE,
                         default=MediumType.PROPANE.value,
                     ): vol.In({medium.value: medium.name for medium in MediumType}),
                 }
@@ -148,7 +148,7 @@ class MopekaOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             new_data = {
                 **self.config_entry.data,
-                DATA_MEDIUM_TYPE: user_input[DATA_MEDIUM_TYPE],
+                CONF_MEDIUM_TYPE: user_input[CONF_MEDIUM_TYPE],
             }
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data=new_data
@@ -161,9 +161,9 @@ class MopekaOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        DATA_MEDIUM_TYPE,
+                        CONF_MEDIUM_TYPE,
                         default=self.config_entry.data.get(
-                            DATA_MEDIUM_TYPE, MediumType.PROPANE.value
+                            CONF_MEDIUM_TYPE, MediumType.PROPANE.value
                         ),
                     ): vol.In({m.value: m.name for m in MediumType}),
                 }

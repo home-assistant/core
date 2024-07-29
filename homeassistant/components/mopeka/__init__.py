@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_MEDIUM_TYPE
+from .const import CONF_MEDIUM_TYPE
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address = entry.unique_id
     assert address is not None
 
-    data = MopekaIOTBluetoothDeviceData(MediumType(entry.data.get(DATA_MEDIUM_TYPE)))
+    data = MopekaIOTBluetoothDeviceData(MediumType(entry.data.get(CONF_MEDIUM_TYPE)))
     coordinator = entry.runtime_data = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
