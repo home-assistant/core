@@ -28,7 +28,7 @@ class IronOSCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     """IronOS coordinator."""
 
     device_info: DeviceInfoResponse
-    settings: SettingsDataResponse = SettingsDataResponse()
+    settings: SettingsDataResponse = {}
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
