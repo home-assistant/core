@@ -683,6 +683,10 @@ class UnitOfEnergy(StrEnum):
     MEGA_JOULE = "MJ"
     MEGA_WATT_HOUR = "MWh"
     WATT_HOUR = "Wh"
+    CALORIE = "cal"
+    KILO_CALORIE = "kcal"
+    MEGA_CALORIE = "Mcal"
+    GIGA_CALORIE = "Gcal"
 
 
 _DEPRECATED_ENERGY_KILO_WATT_HOUR: Final = DeprecatedConstantEnum(
