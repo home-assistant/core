@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
@@ -40,7 +40,7 @@ class IntegrationNotFoundFlow(RepairsFlow):
     ) -> FlowResult:
         """Handle the ignore step of a fix flow."""
         ir.async_get(self.hass).async_ignore(
-            DOMAIN, f"integration_not_found.{self.domain}", True
+            HOMEASSISTANT_DOMAIN, f"integration_not_found.{self.domain}", True
         )
         return self.async_abort(
             reason="issue_ignored",
