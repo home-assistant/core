@@ -23,7 +23,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RussoundConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, MP_FEATURES_BY_FLAG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,8 +115,8 @@ class RussoundZoneDevice(MediaPlayerEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
     _attr_supported_features = (
-        MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.VOLUME_SET
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -143,6 +143,9 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 DOMAIN,
                 self._controller.parent_controller.mac_address,
             )
+        for flag, feature in MP_FEATURES_BY_FLAG.items():
+            if flag in zone.instance.supported_features:
+                self._attr_supported_features |= feature
 
     def _callback_handler(self, device_str, *args):
         if (
@@ -209,21 +212,29 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
-        await self._zone.send_event("ZoneOff")
+        await self._zone.zone_off()
 
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
-        await self._zone.send_event("ZoneOn")
+        await self._zone.zone_on()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        await self._zone.send_event("KeyPress", "Volume", rvol)
+        await self._zone.set_volume(rvol)
 
     async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
         for source_id, src in self._sources.items():
             if src.name.lower() != source.lower():
                 continue
-            await self._zone.send_event("SelectSource", source_id)
+            await self._zone.select_source(source_id)
             break
+
+    async def async_volume_up(self) -> None:
+        """Step the volume up."""
+        await self._zone.volume_up()
+
+    async def async_volume_down(self) -> None:
+        """Step the volume down."""
+        await self._zone.volume_down()

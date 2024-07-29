@@ -129,12 +129,15 @@ async def test_devices_in_dr(
         assert device_entry == snapshot(name=device.device_info["did"])
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_vacbot", "init_integration"
+)
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
         ("yna5x1", 26),
         ("5xu9h3", 24),
+        ("123", 1),
     ],
 )
 async def test_all_entities_loaded(

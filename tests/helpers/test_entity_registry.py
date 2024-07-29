@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.dt import utc_from_timestamp
 
 from tests.common import (
     ANY,
@@ -442,6 +443,8 @@ async def test_filter_on_load(
     assert entry_with_name.name == "registry override"
     assert entry_without_name.name is None
     assert not entry_with_name.disabled
+    assert entry_with_name.created_at == utc_from_timestamp(0)
+    assert entry_with_name.modified_at == utc_from_timestamp(0)
 
     entry_disabled_hass = registry.async_get_or_create(
         "test", "super_platform", "disabled-hass"

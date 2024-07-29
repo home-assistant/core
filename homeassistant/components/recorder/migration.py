@@ -120,6 +120,13 @@ if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
+
+MIGRATION_NOTE_OFFLINE = (
+    "Note: this may take several hours on large databases and slow machines. "
+    "Home Assistant will not start until the upgrade is completed. Please be patient "
+    "and do not turn off or restart Home Assistant while the upgrade is in progress!"
+)
+
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
 
@@ -276,9 +283,12 @@ def _migrate_schema(
 
     if current_version < end_version:
         _LOGGER.warning(
-            "Database is about to upgrade from schema version: %s to: %s",
+            "The database is about to upgrade from schema version %s to %s%s",
             current_version,
             end_version,
+            f". {MIGRATION_NOTE_OFFLINE}"
+            if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
+            else "",
         )
         schema_status = dataclass_replace(schema_status, current_version=end_version)
 
@@ -362,7 +372,7 @@ def _create_index(
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
         "Adding index `%s` to table `%s`. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
+        "minutes on large databases and slow machines. Please "
         "be patient!",
         index_name,
         table_name,
@@ -411,7 +421,7 @@ def _drop_index(
     """
     _LOGGER.warning(
         "Dropping index `%s` from table `%s`. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
+        "minutes on large databases and slow machines. Please "
         "be patient!",
         index_name,
         table_name,
@@ -462,7 +472,7 @@ def _add_columns(
     _LOGGER.warning(
         (
             "Adding columns %s to table %s. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
+            "minutes on large databases and slow machines. Please "
             "be patient!"
         ),
         ", ".join(column.split(" ")[0] for column in columns_def),
@@ -524,7 +534,7 @@ def _modify_columns(
     _LOGGER.warning(
         (
             "Modifying columns %s in table %s. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
+            "minutes on large databases and slow machines. Please "
             "be patient!"
         ),
         ", ".join(column.split(" ")[0] for column in columns_def),
@@ -1554,7 +1564,7 @@ def _correct_table_character_set_and_collation(
     _LOGGER.warning(
         "Updating character set and collation of table %s to utf8mb4. "
         "Note: this can take several minutes on large databases and slow "
-        "computers. Please be patient!",
+        "machines. Please be patient!",
         table,
     )
     with (
@@ -2010,7 +2020,7 @@ class MigrationTask(RecorderTask):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(MigrationTask(self.migrator))
         else:
-            self.migrator.migration_done(instance)
+            self.migrator.migration_done(instance, None)
 
 
 @dataclass(slots=True)
@@ -2046,14 +2056,14 @@ class BaseRunTimeMigration(ABC):
         if self.needs_migrate(instance, session):
             instance.queue_task(self.task(self))
         else:
-            self.migration_done(instance)
+            self.migration_done(instance, session)
 
     @staticmethod
     @abstractmethod
     def migrate_data(instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
 
-    def migration_done(self, instance: Recorder) -> None:
+    def migration_done(self, instance: Recorder, session: Session | None) -> None:
         """Will be called after migrate returns True or if migration is not needed."""
 
     @abstractmethod
@@ -2274,7 +2284,7 @@ class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
         _LOGGER.debug("Migrating event_types done=%s", is_done)
         return is_done
 
-    def migration_done(self, instance: Recorder) -> None:
+    def migration_done(self, instance: Recorder, session: Session | None) -> None:
         """Will be called after migrate returns True."""
         _LOGGER.debug("Activating event_types manager as all data is migrated")
         instance.event_type_manager.active = True
@@ -2367,7 +2377,7 @@ class EntityIDMigration(BaseRunTimeMigrationWithQuery):
         _LOGGER.debug("Migrating entity_ids done=%s", is_done)
         return is_done
 
-    def migration_done(self, instance: Recorder) -> None:
+    def migration_done(self, instance: Recorder, _session: Session | None) -> None:
         """Will be called after migrate returns True."""
         # The migration has finished, now we start the post migration
         # to remove the old entity_id data from the states table
@@ -2375,9 +2385,14 @@ class EntityIDMigration(BaseRunTimeMigrationWithQuery):
         # so we set active to True
         _LOGGER.debug("Activating states_meta manager as all data is migrated")
         instance.states_meta_manager.active = True
+        session_generator = (
+            contextlib.nullcontext(_session)
+            if _session
+            else session_scope(session=instance.get_session())
+        )
         with (
             contextlib.suppress(SQLAlchemyError),
-            session_scope(session=instance.get_session()) as session,
+            session_generator as session,
         ):
             # If ix_states_entity_id_last_updated_ts still exists
             # on the states table it means the entity id migration

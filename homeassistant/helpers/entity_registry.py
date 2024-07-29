@@ -1286,7 +1286,7 @@ class EntityRegistry(BaseRegistry):
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
-                    created_at=entity["created_at"],
+                    created_at=datetime.fromisoformat(entity["created_at"]),
                     device_class=entity["device_class"],
                     device_id=entity["device_id"],
                     disabled_by=RegistryEntryDisabler(entity["disabled_by"])
@@ -1303,7 +1303,7 @@ class EntityRegistry(BaseRegistry):
                     id=entity["id"],
                     has_entity_name=entity["has_entity_name"],
                     labels=set(entity["labels"]),
-                    modified_at=entity["modified_at"],
+                    modified_at=datetime.fromisoformat(entity["modified_at"]),
                     name=entity["name"],
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
@@ -1335,10 +1335,10 @@ class EntityRegistry(BaseRegistry):
                 )
                 deleted_entities[key] = DeletedRegistryEntry(
                     config_entry_id=entity["config_entry_id"],
-                    created_at=entity["created_at"],
+                    created_at=datetime.fromisoformat(entity["created_at"]),
                     entity_id=entity["entity_id"],
                     id=entity["id"],
-                    modified_at=entity["modified_at"],
+                    modified_at=datetime.fromisoformat(entity["modified_at"]),
                     orphaned_timestamp=entity["orphaned_timestamp"],
                     platform=entity["platform"],
                     unique_id=entity["unique_id"],

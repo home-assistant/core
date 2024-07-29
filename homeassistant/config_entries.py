@@ -32,7 +32,7 @@ from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import (
     CALLBACK_TYPE,
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     Event,
     HassJob,
@@ -1067,7 +1067,7 @@ class ConfigEntry(Generic[_DataT]):
         issue_id = f"config_entry_reauth_{self.domain}_{self.entry_id}"
         ir.async_create_issue(
             hass,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             issue_id,
             data={"flow_id": result["flow_id"]},
             is_fixable=False,
@@ -1272,7 +1272,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 flow_id=flow_id,
                 handler=handler,
                 reason="single_instance_allowed",
-                translation_domain=HA_DOMAIN,
+                translation_domain=HOMEASSISTANT_DOMAIN,
             )
 
         loop = self.hass.loop
@@ -1361,7 +1361,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 entry := self.config_entries.async_get_entry(entry_id)
             ) is not None:
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
+                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
@@ -1378,7 +1378,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 flow_id=flow.flow_id,
                 handler=flow.handler,
                 reason="single_instance_allowed",
-                translation_domain=HA_DOMAIN,
+                translation_domain=HOMEASSISTANT_DOMAIN,
             )
 
         # Check if config entry exists with unique ID. Unload it.
@@ -1779,7 +1779,7 @@ class ConfigEntries:
             if "flow_id" in progress_flow:
                 self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
+                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         # After we have fully removed an "ignore" config entry we can try and rediscover
         # it so that a user is able to immediately start configuring it. We do this by
