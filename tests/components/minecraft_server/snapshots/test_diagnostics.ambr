@@ -2,6 +2,7 @@
 # name: test_config_entry_diagnostics[bedrock_mock_config_entry-BedrockServer-status_response1]
   dict({
     'config_entry': dict({
+      'entry_id': '01234567890123456789012345678901',
       'unique_id': None,
       'version': 3,
     }),
@@ -29,6 +30,7 @@
 # name: test_config_entry_diagnostics[java_mock_config_entry-JavaServer-status_response0]
   dict({
     'config_entry': dict({
+      'entry_id': '01234567890123456789012345678901',
       'unique_id': None,
       'version': 3,
     }),

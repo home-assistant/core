@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -22,4 +22,6 @@ async def test_diagnostics(
     """Test generating diagnostics for a config entry."""
     entry = load_config_entry[0]
 
-    await snapshot_get_diagnostics_for_config_entry(hass, hass_client, entry, snapshot)
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert diag == snapshot

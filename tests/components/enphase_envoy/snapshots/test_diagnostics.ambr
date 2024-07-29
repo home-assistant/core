@@ -11,6 +11,7 @@
       }),
       'disabled_by': None,
       'domain': 'enphase_envoy',
+      'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
       'minor_version': 1,
       'options': dict({
       }),
@@ -441,6 +442,7 @@
       }),
       'disabled_by': None,
       'domain': 'enphase_envoy',
+      'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
       'minor_version': 1,
       'options': dict({
         'diagnostics_include_fixtures': True,
@@ -912,6 +914,7 @@
       }),
       'disabled_by': None,
       'domain': 'enphase_envoy',
+      'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
       'minor_version': 1,
       'options': dict({
         'diagnostics_include_fixtures': True,

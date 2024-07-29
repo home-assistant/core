@@ -20,8 +20,8 @@ from .conftest import (
 
 from tests.common import load_fixture
 from tests.components.diagnostics import (
+    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
-    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -36,8 +36,9 @@ async def test_config_entry_diagnostics(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
     )
 
 

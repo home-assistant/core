@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures(
@@ -39,6 +39,7 @@ async def test_entry_diagnostics(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
     )

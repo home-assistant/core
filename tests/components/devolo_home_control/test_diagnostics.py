@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockBinarySensor
 
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -34,6 +35,5 @@ async def test_entry_diagnostics(
 
         assert entry.state is ConfigEntryState.LOADED
 
-        await snapshot_get_diagnostics_for_config_entry(
-            hass, hass_client, entry, snapshot
-        )
+        result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+        assert result == snapshot(exclude=props("created_at", "modified_at"))

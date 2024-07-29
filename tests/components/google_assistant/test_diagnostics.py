@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant import setup
 from homeassistant.components import google_assistant as ga, switch
@@ -13,7 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
 
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -47,6 +48,6 @@ async def test_diagnostics(
     await hass.async_block_till_done()
 
     config_entry = hass.config_entries.async_entries("google_assistant")[0]
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=props("entry_id", "created_at", "modified_at"))

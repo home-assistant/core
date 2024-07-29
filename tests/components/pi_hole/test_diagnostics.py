@@ -1,6 +1,7 @@
 """Test pi_hole component."""
 
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components import pi_hole
 from homeassistant.core import HomeAssistant
@@ -8,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from . import CONFIG_DATA_DEFAULTS, _create_mocked_hole, _patch_init_hole
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -28,4 +29,6 @@ async def test_diagnostics(
 
     await hass.async_block_till_done()
 
-    await snapshot_get_diagnostics_for_config_entry(hass, hass_client, entry, snapshot)
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props("created_at", "modified_at")
+    )

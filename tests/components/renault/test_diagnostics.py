@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.components.diagnostics import (
+    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
-    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -29,8 +29,9 @@ async def test_entry_diagnostics(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
     )
 
 

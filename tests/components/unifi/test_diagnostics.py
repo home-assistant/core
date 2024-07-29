@@ -2,6 +2,7 @@
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -11,7 +12,7 @@ from homeassistant.components.unifi.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 CLIENT_DATA = [
@@ -125,6 +126,6 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry_setup, snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_setup
+    ) == snapshot(exclude=props("created_at", "modified_at"))

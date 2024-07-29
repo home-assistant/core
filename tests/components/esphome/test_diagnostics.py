@@ -5,6 +5,7 @@ from unittest.mock import ANY
 
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
@@ -12,10 +13,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import MockESPHomeDevice
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    snapshot_get_diagnostics_for_config_entry,
-)
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -28,9 +26,9 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration, snapshot
-    )
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
 async def test_diagnostics_with_bluetooth(

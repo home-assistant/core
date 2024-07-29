@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import TEST_EVENT, ApiResult, ComponentSetup
 
 from tests.common import CLIENT_ID, MockConfigEntry, MockUser
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -109,9 +109,7 @@ async def test_diagnostics(
     new_token = await generate_new_hass_access_token(
         hass, hass_admin_user, hass_admin_credential
     )
-    await snapshot_get_diagnostics_for_config_entry(
-        hass,
-        _get_test_client_generator(hass, aiohttp_client, new_token),
-        config_entry,
-        snapshot,
+    data = await get_diagnostics_for_config_entry(
+        hass, _get_test_client_generator(hass, aiohttp_client, new_token), config_entry
     )
+    assert data == snapshot

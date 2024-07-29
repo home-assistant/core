@@ -23,6 +23,7 @@
       }),
       'disabled_by': None,
       'domain': 'devolo_home_network',
+      'entry_id': '123456',
       'minor_version': 1,
       'options': dict({
       }),

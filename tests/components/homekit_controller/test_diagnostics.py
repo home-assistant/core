@@ -10,8 +10,8 @@ from homeassistant.helpers import device_registry as dr
 from .common import setup_accessories_from_file, setup_test_accessories
 
 from tests.components.diagnostics import (
+    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
-    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -25,11 +25,10 @@ async def test_config_entry(
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, _ = await setup_test_accessories(hass, accessories)
 
-    await snapshot_get_diagnostics_for_config_entry(
-        hass,
-        hass_client,
-        config_entry,
-        snapshot(exclude=props("last_changed", "last_reported", "last_updated")),
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
+    assert diag == snapshot(
+        exclude=props("last_changed", "last_reported", "last_updated")
     )
 
 

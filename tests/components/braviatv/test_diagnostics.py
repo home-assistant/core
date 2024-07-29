@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 BRAVIA_SYSTEM_INFO = {
@@ -69,6 +70,6 @@ async def test_entry_diagnostics(
         patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
-        await snapshot_get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry, snapshot
-        )
+        result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
+    assert result == snapshot(exclude=props("created_at", "modified_at"))

@@ -27,6 +27,7 @@
       }),
       'disabled_by': None,
       'domain': 'tankerkoenig',
+      'entry_id': '8036b4412f2fae6bb9dbab7fe8e37f87',
       'minor_version': 1,
       'options': dict({
         'show_on_map': True,

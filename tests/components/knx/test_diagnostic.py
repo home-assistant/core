@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import KNXTestKit
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -44,8 +44,9 @@ async def test_diagnostics(
 
     # Overwrite the version for this test since we don't want to change this with every library bump
     knx.xknx.version = "0.0.0"
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
     )
 
 
@@ -64,8 +65,9 @@ async def test_diagnostic_config_error(
     # Overwrite the version for this test since we don't want to change this with every library bump
     knx.xknx.version = "0.0.0"
     # the snapshot will contain 'configuration_error' key with the voluptuous error message
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
     )
 
 
@@ -98,8 +100,9 @@ async def test_diagnostic_redact(
 
     # Overwrite the version for this test since we don't want to change this with every library bump
     knx.xknx.version = "0.0.0"
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
     )
 
 
@@ -117,6 +120,7 @@ async def test_diagnostics_project(
     await knx.setup_integration({})
     knx.xknx.version = "0.0.0"
     # snapshot will contain project specific fields in `project_info`
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
     )

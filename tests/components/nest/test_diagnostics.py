@@ -17,7 +17,6 @@ from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
-    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -78,8 +77,9 @@ async def test_entry_diagnostics(
     assert config_entry.state is ConfigEntryState.LOADED
 
     # Test that only non identifiable device information is returned
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
     )
 
 
@@ -138,6 +138,7 @@ async def test_camera_diagnostics(
     assert config_entry.state is ConfigEntryState.LOADED
 
     # Test that only non identifiable device information is returned
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
     )

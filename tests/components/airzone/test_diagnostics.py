@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aioairzone.const import RAW_HVAC, RAW_VERSION, RAW_WEBSERVER
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -15,7 +16,7 @@ from .util import (
     async_init_integration,
 )
 
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -36,6 +37,5 @@ async def test_config_entry_diagnostics(
             RAW_WEBSERVER: HVAC_WEBSERVER_MOCK,
         },
     ):
-        await snapshot_get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry, snapshot
-        )
+        result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        assert result == snapshot(exclude=props("created_at", "modified_at"))

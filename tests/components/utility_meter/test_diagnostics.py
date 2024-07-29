@@ -4,6 +4,7 @@ from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.auth.models import Credentials
 from homeassistant.components.utility_meter.const import DOMAIN
@@ -16,7 +17,7 @@ from tests.common import (
     MockUser,
     mock_restore_cache_with_extra_data,
 )
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -43,11 +44,6 @@ def _get_test_client_generator(
         )
 
     return auth_client
-
-
-def limit_diagnostic_attrs(prop, path) -> bool:
-    """Mark attributes to exclude from diagnostic snapshot."""
-    return prop in {"entry_id"}
 
 
 @freeze_time("2024-04-06 00:00:00+00:00")
@@ -121,9 +117,8 @@ async def test_diagnostics(
         hass, hass_admin_user, hass_admin_credential
     )
 
-    await snapshot_get_diagnostics_for_config_entry(
-        hass,
-        _get_test_client_generator(hass, aiohttp_client, new_token),
-        config_entry,
-        snapshot(exclude=limit_diagnostic_attrs),
+    diag = await get_diagnostics_for_config_entry(
+        hass, _get_test_client_generator(hass, aiohttp_client, new_token), config_entry
     )
+
+    assert diag == snapshot(exclude=props("entry_id", "created_at", "modified_at"))

@@ -3,6 +3,7 @@
   dict({
     'entry': dict({
       'data': dict({
+        'client_device_id': 'entry-id',
         'password': '**REDACTED**',
         'url': 'https://example.com',
         'username': 'test-username',

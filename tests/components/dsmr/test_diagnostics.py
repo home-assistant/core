@@ -15,7 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
@@ -78,6 +78,5 @@ async def test_diagnostics(
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, mock_entry, snapshot
-    )
+    result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
+    assert result == snapshot

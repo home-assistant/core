@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 
 from tests.common import MockConfigEntry
-from tests.components.diagnostics import snapshot_get_diagnostics_for_config_entry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 # Fields to exclude from snapshot as they change each run
@@ -45,9 +45,9 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     await setup_integration(hass, config_entry)
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry, snapshot(exclude=limit_diagnostic_attrs)
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=limit_diagnostic_attrs)
 
 
 @pytest.fixture(name="config_entry_options")
@@ -72,12 +72,9 @@ async def test_entry_diagnostics_with_fixtures(
 ) -> None:
     """Test config entry diagnostics."""
     await setup_integration(hass, config_entry_options)
-    await snapshot_get_diagnostics_for_config_entry(
-        hass,
-        hass_client,
-        config_entry_options,
-        snapshot(exclude=limit_diagnostic_attrs),
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    ) == snapshot(exclude=limit_diagnostic_attrs)
 
 
 async def test_entry_diagnostics_with_fixtures_with_error(
@@ -90,9 +87,6 @@ async def test_entry_diagnostics_with_fixtures_with_error(
     """Test config entry diagnostics."""
     await setup_integration(hass, config_entry_options)
     mock_envoy.request.side_effect = EnvoyError("Test")
-    await snapshot_get_diagnostics_for_config_entry(
-        hass,
-        hass_client,
-        config_entry_options,
-        snapshot(exclude=limit_diagnostic_attrs),
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    ) == snapshot(exclude=limit_diagnostic_attrs)

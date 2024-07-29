@@ -12,8 +12,8 @@ from homeassistant.helpers import device_registry as dr
 from . import setup_mocked_integration
 
 from tests.components.diagnostics import (
+    get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
-    snapshot_get_diagnostics_for_config_entry,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -30,9 +30,11 @@ async def test_config_entry_diagnostics(
 
     mock_config_entry = await setup_mocked_integration(hass)
 
-    await snapshot_get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry, snapshot
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
     )
+
+    assert diagnostics == snapshot
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
