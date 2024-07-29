@@ -44,7 +44,11 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -316,13 +320,25 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._init_callback = init_callback
 
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, format_unique_id(sync_status.mac, port))},
-            name=sync_status.name,
-            manufacturer=sync_status.brand,
-            model=sync_status.model_name,
-            model_id=sync_status.model,
-        )
+        # there should always be one player with the default port per mac
+        if port is DEFAULT_PORT:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, format_mac(sync_status.mac))},
+                connections={(CONNECTION_NETWORK_MAC, format_mac(sync_status.mac))},
+                name=sync_status.name,
+                manufacturer=sync_status.brand,
+                model=sync_status.model_name,
+                model_id=sync_status.model,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, format_unique_id(sync_status.mac, port))},
+                name=sync_status.name,
+                manufacturer=sync_status.brand,
+                model=sync_status.model_name,
+                model_id=sync_status.model,
+                via_device=(DOMAIN, format_mac(sync_status.mac)),
+            )
 
     @staticmethod
     def _try_get_index(string, search_string):
