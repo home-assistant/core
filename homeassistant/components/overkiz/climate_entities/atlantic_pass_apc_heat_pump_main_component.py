@@ -60,16 +60,9 @@ class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
         """Set new target hvac mode: stop, cooling, heating."""
         # They are mainly managed by the Zone Control device
         # However, we can turn off or put the heat pump in cooling/ heating mode.
-        if hvac_mode == HVACMode.OFF:
-            on_off_target_command_param = OverkizCommandParam.STOP
-        elif hvac_mode == HVACMode.COOL:
-            on_off_target_command_param = OverkizCommandParam.COOLING
-        elif hvac_mode == HVACMode.HEAT:
-            on_off_target_command_param = OverkizCommandParam.HEATING
-
         await self.executor.async_execute_command(
             OverkizCommand.SET_PASS_APC_OPERATING_MODE,
-            on_off_target_command_param,
+            HVAC_MODES_TO_OVERKIZ[hvac_mode],
         )
 
         # Wait for 2 seconds to ensure the HVAC mode change is properly applied and system stabilizes.
