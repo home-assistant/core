@@ -29,7 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address = entry.unique_id
     assert address is not None
 
-    data = MopekaIOTBluetoothDeviceData(MediumType(entry.data.get(CONF_MEDIUM_TYPE)))
+    # Default sensors configured prior to the intorudction of MediumType
+    medium_type_str = entry.data.get(CONF_MEDIUM_TYPE, MediumType.PROPANE.value)
+    data = MopekaIOTBluetoothDeviceData(MediumType(medium_type_str))
     coordinator = entry.runtime_data = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
