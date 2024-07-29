@@ -17,8 +17,6 @@ DEFAULT_BRAND = Brand.YALE_HOME
 
 MANUFACTURER = "Yale Home Inc."
 
-DEFAULT_AUGUST_CONFIG_FILE = ".yale.conf"
-
 DEFAULT_NAME = "Yale"
 DOMAIN = "yale"
 
