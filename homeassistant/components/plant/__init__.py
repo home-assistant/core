@@ -43,24 +43,29 @@ from .const import (
     CONF_CHECK_DAYS,
     CONF_MAX_BRIGHTNESS,
     CONF_MAX_CONDUCTIVITY,
+    CONF_MAX_HUMIDITY,
     CONF_MAX_MOISTURE,
     CONF_MAX_TEMPERATURE,
     CONF_MIN_BATTERY_LEVEL,
     CONF_MIN_BRIGHTNESS,
     CONF_MIN_CONDUCTIVITY,
+    CONF_MIN_HUMIDITY,
     CONF_MIN_MOISTURE,
     CONF_MIN_TEMPERATURE,
     DEFAULT_CHECK_DAYS,
     DEFAULT_MAX_CONDUCTIVITY,
+    DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_MOISTURE,
     DEFAULT_MIN_BATTERY_LEVEL,
     DEFAULT_MIN_CONDUCTIVITY,
+    DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_MOISTURE,
     DOMAIN,
     PROBLEM_NONE,
     READING_BATTERY,
     READING_BRIGHTNESS,
     READING_CONDUCTIVITY,
+    READING_HUMIDITY,
     READING_MOISTURE,
     READING_TEMPERATURE,
 )
@@ -69,6 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
 CONF_SENSOR_MOISTURE = READING_MOISTURE
+CONF_SENSOR_HUMIDITY = READING_HUMIDITY
 CONF_SENSOR_CONDUCTIVITY = READING_CONDUCTIVITY
 CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
@@ -78,6 +84,7 @@ SCHEMA_SENSORS = vol.Schema(
     {
         vol.Optional(CONF_SENSOR_BATTERY_LEVEL): cv.entity_id,
         vol.Optional(CONF_SENSOR_MOISTURE): cv.entity_id,
+        vol.Optional(CONF_SENSOR_HUMIDITY): cv.entity_id,
         vol.Optional(CONF_SENSOR_CONDUCTIVITY): cv.entity_id,
         vol.Optional(CONF_SENSOR_TEMPERATURE): cv.entity_id,
         vol.Optional(CONF_SENSOR_BRIGHTNESS): cv.entity_id,
@@ -94,6 +101,8 @@ PLANT_SCHEMA = vol.Schema(
         vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
         vol.Optional(CONF_MIN_MOISTURE, default=DEFAULT_MIN_MOISTURE): cv.positive_int,
         vol.Optional(CONF_MAX_MOISTURE, default=DEFAULT_MAX_MOISTURE): cv.positive_int,
+        vol.Optional(CONF_MIN_HUMIDITY, default=DEFAULT_MIN_HUMIDITY): cv.positive_int,
+        vol.Optional(CONF_MAX_HUMIDITY, default=DEFAULT_MAX_HUMIDITY): cv.positive_int,
         vol.Optional(
             CONF_MIN_CONDUCTIVITY, default=DEFAULT_MIN_CONDUCTIVITY
         ): cv.positive_int,
@@ -147,6 +156,11 @@ class Plant(Entity):
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },
+        READING_HUMIDITY: {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            "min": CONF_MIN_HUMIDITY,
+            "max": CONF_MAX_HUMIDITY,
+        },
         READING_CONDUCTIVITY: {
             ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS,
             "min": CONF_MIN_CONDUCTIVITY,
@@ -172,6 +186,7 @@ class Plant(Entity):
         self._name = name
         self._battery = None
         self._moisture = None
+        self._humidity = None
         self._conductivity = None
         self._temperature = None
         self._brightness = None
@@ -203,6 +218,10 @@ class Plant(Entity):
             if value != STATE_UNAVAILABLE:
                 value = int(float(value))
             self._moisture = value
+        elif reading == READING_HUMIDITY:
+            if value != STATE_UNAVAILABLE:
+                value = int(float(value))
+            self._humidity = value
         elif reading == READING_BATTERY:
             if value != STATE_UNAVAILABLE:
                 value = int(float(value))
