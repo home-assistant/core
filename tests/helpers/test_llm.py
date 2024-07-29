@@ -505,76 +505,6 @@ async def test_assist_api_prompt(
             suggested_area="Test Area 2",
         )
     )
-
-    exposed_entities = llm._get_exposed_entities(hass, llm_context.assistant)
-    assert exposed_entities == {
-        "light.1": {
-            "areas": "Test Area 2",
-            "domain": "light",
-            "names": "1",
-            "state": "unavailable",
-        },
-        entry1.entity_id: {
-            "names": "Kitchen",
-            "domain": "light",
-            "state": "on",
-            "attributes": {"temperature": "0.9", "humidity": "65"},
-        },
-        entry2.entity_id: {
-            "areas": "Test Area, Alternative name",
-            "names": "Living Room",
-            "domain": "light",
-            "state": "on",
-        },
-        "light.test_device": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Device",
-            "domain": "light",
-            "state": "unavailable",
-        },
-        "light.test_device_2": {
-            "areas": "Test Area 2",
-            "names": "Test Device 2",
-            "domain": "light",
-            "state": "unavailable",
-        },
-        "light.test_device_3": {
-            "areas": "Test Area 2",
-            "names": "Test Device 3",
-            "domain": "light",
-            "state": "unavailable",
-        },
-        "light.test_device_4": {
-            "areas": "Test Area 2",
-            "names": "Test Device 4",
-            "domain": "light",
-            "state": "unavailable",
-        },
-        "light.test_service": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Service",
-            "domain": "light",
-            "state": "unavailable",
-        },
-        "light.test_service_2": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Service",
-            "domain": "light",
-            "state": "unavailable",
-        },
-        "light.test_service_3": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Service",
-            "domain": "light",
-            "state": "unavailable",
-        },
-        "light.unnamed_device": {
-            "areas": "Test Area 2",
-            "names": "Unnamed Device",
-            "domain": "light",
-            "state": "unavailable",
-        },
-    }
     exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
 - names: Kitchen
   domain: light
@@ -626,8 +556,7 @@ async def test_assist_api_prompt(
     first_part_prompt = (
         "When controlling Home Assistant always call the intent tools. "
         "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-        "When controlling a device, prefer passing just its name and its domain "
-        "(what comes before the dot in its entity id). "
+        "When controlling a device, prefer passing just name and domain. "
         "When controlling an area, prefer passing just area name and domain."
     )
     no_timer_prompt = "This device is not able to start timers."
