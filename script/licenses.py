@@ -187,9 +187,6 @@ TODO = {
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "pyElectra": AwesomeVersion(
-        "1.2.3"
-    ),  # No License https://github.com/jafar-atili/pyElectra/issues/3
     "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
     "uvcclient": AwesomeVersion(
         "0.11.0"

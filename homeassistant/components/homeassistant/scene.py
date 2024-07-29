@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     ServiceCall,
     State,
@@ -92,7 +92,7 @@ STATES_SCHEMA = vol.All(dict, _convert_states)
 
 PLATFORM_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): HA_DOMAIN,
+        vol.Required(CONF_PLATFORM): HOMEASSISTANT_DOMAIN,
         vol.Required(STATES): vol.All(
             cv.ensure_list,
             [
@@ -206,7 +206,7 @@ async def async_setup_platform(
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
         for p_type, p_config in conf_util.config_per_platform(conf, SCENE_DOMAIN):
-            if p_type != HA_DOMAIN:
+            if p_type != HOMEASSISTANT_DOMAIN:
                 continue
 
             _process_scenes_config(hass, async_add_entities, p_config)
