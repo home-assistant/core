@@ -324,8 +324,7 @@ class AssistAPI(API):
             (
                 "When controlling Home Assistant always call the intent tools. "
                 "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-                "When controlling a device, prefer passing just its name and its domain "
-                "(what comes before the dot in its entity id). "
+                "When controlling a device, prefer passing just name and domain. "
                 "When controlling an area, prefer passing just area name and domain."
             )
         ]
