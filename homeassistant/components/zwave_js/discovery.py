@@ -768,25 +768,6 @@ DISCOVERY_SCHEMAS = [
             },
         ),
     ),
-    # HomeSeer HSM-200 v1
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x001E},
-        product_id={0x0001},
-        product_type={0x0004},
-        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
-        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
-    ),
-    # Logic Group ZDB5100
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x0234},
-        product_id={0x0121},
-        product_type={0x0003},
-        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
-    ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     # Door Lock CC
@@ -1012,7 +993,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    # binary switches
+    # binary switches without color support
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
@@ -1110,14 +1091,17 @@ DISCOVERY_SCHEMAS = [
     # catch any device with multilevel CC as light
     # NOTE: keep this at the bottom of the discovery scheme,
     # to handle all others that need the multilevel CC first
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-    ),
-    # Light without dimming support
+    #
+    # Non-dimmable colored light - the version without color
+    # support is handled by the binary switch schema above
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        required_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # light for Basic CC with target
     ZWaveDiscoverySchema(
