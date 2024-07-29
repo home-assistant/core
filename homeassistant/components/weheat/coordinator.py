@@ -14,6 +14,7 @@ from weheat.exceptions import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -75,6 +76,8 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.error(f"The actions was not allowed by the backend: {e}")
         except UnauthorizedException as e:
             LOGGER.error(f"The user was not authorized to access this information: {e}")
+            # also make the user re-authenticate
+            raise ConfigEntryAuthFailed("Unauthorized access to the Weheat API") from e
         except BadRequestException as e:
             LOGGER.error(
                 f"The weheat integration made a bad request to the backend: {e}"

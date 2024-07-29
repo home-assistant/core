@@ -11,17 +11,18 @@ from homeassistant.const import UnitOfPower
 
 DOMAIN = "weheat"
 
+HEAT_PUMP_INFO = "heat_pump_info"
+
 OAUTH2_AUTHORIZE = (
     "https://auth.early.weheat.nl/auth/realms/Weheat/protocol/openid-connect/auth/"
 )
 OAUTH2_TOKEN = (
     "https://auth.early.weheat.nl/auth/realms/Weheat/protocol/openid-connect/token/"
 )
-
 API_URL = "https://api.early.weheat.nl"
 
-UPDATE_INTERVAL = 10
 
+UPDATE_INTERVAL = 30
 
 LOGGER: Logger = getLogger(__package__)
 

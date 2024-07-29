@@ -1,14 +1,16 @@
 """Config flow for Weheat."""
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import voluptuous as vol
 from weheat.abstractions import HeatPumpDiscovery
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import API_URL, DOMAIN
+from .const import API_URL, DOMAIN, HEAT_PUMP_INFO
 
 
 class OAuth2FlowHandler(
@@ -18,12 +20,9 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    def __init__(self):
-        """Initialize the Weheat OAuth2 flow."""
-        super().__init__()
-
-        self._auth_data = None
-        self._discovered_pumps = None
+    reauth_entry: ConfigEntry | None = None
+    _auth_data: dict = {}
+    _discovered_pumps: list[HeatPumpDiscovery.HeatPumpInfo] = []
 
     @property
     def logger(self) -> logging.Logger:
@@ -32,6 +31,20 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Override the create entry method to change to the step to find the heat pumps."""
+        if self.reauth_entry:
+            # on a reauth, preserve the heat pump info
+            config_entry = self.hass.config_entries.async_get_entry(
+                self.reauth_entry.entry_id
+            )
+            preserved_data: dict = {}
+            if config_entry is not None:
+                preserved_data = config_entry.data.get(HEAT_PUMP_INFO) or {}
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry, data=(data | {HEAT_PUMP_INFO: preserved_data})
+            )
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
         self._auth_data = data
 
         return await self.async_step_find_devices()
@@ -56,14 +69,14 @@ class OAuth2FlowHandler(
                 # just select this pump since it is the only one
                 info = {
                     "uuid": self._discovered_pumps[0].uuid,
-                    "heat_pump_info": self._discovered_pumps[0],
+                    HEAT_PUMP_INFO: self._discovered_pumps[0],
                 }
 
                 await self.async_set_unique_id(info["uuid"])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title="Weheat heatpump", data=(self._auth_data | info)
+                    title="Weheat heatpump", data=dict(self._auth_data | info)
                 )
 
             # show list of pumps
@@ -79,10 +92,27 @@ class OAuth2FlowHandler(
         await self.async_set_unique_id(info["uuid"])
         self._abort_if_unique_id_configured()
 
-        info["heat_pump_info"] = next(
+        info[HEAT_PUMP_INFO] = next(
             (hp for hp in self._discovered_pumps if hp.uuid == info["uuid"]), None
         )
 
         return self.async_create_entry(
             title="Weheat heatpump", data=(self._auth_data | info)
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
