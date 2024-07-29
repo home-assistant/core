@@ -15,6 +15,7 @@ from collections.abc import (
 )
 from contextvars import ContextVar
 from copy import deepcopy
+from datetime import datetime
 from enum import Enum, StrEnum
 import functools
 from functools import cached_property
@@ -69,6 +70,7 @@ from .setup import (
 from .util import ulid as ulid_util
 from .util.async_ import create_eager_task
 from .util.decorator import Registry
+from .util.dt import utc_from_timestamp, utcnow
 from .util.enum import try_parse_enum
 
 if TYPE_CHECKING:
@@ -118,7 +120,7 @@ HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 SAVE_DELAY = 1
 
@@ -303,15 +305,19 @@ class ConfigEntry(Generic[_DataT]):
     _background_tasks: set[asyncio.Future[Any]]
     _integration_for_domain: loader.Integration | None
     _tries: int
+    created_at: datetime
+    modified_at: datetime
 
     def __init__(
         self,
         *,
+        created_at: datetime | None = None,
         data: Mapping[str, Any],
         disabled_by: ConfigEntryDisabler | None = None,
         domain: str,
         entry_id: str | None = None,
         minor_version: int,
+        modified_at: datetime | None = None,
         options: Mapping[str, Any] | None,
         pref_disable_new_entities: bool | None = None,
         pref_disable_polling: bool | None = None,
@@ -415,6 +421,8 @@ class ConfigEntry(Generic[_DataT]):
 
         _setter(self, "_integration_for_domain", None)
         _setter(self, "_tries", 0)
+        _setter(self, "created_at", created_at or utcnow())
+        _setter(self, "modified_at", modified_at or utcnow())
 
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
@@ -483,8 +491,10 @@ class ConfigEntry(Generic[_DataT]):
     def as_json_fragment(self) -> json_fragment:
         """Return JSON fragment of a config entry."""
         json_repr = {
+            "created_at": self.created_at.timestamp(),
             "entry_id": self.entry_id,
             "domain": self.domain,
+            "modified_at": self.modified_at.timestamp(),
             "title": self.title,
             "source": self.source,
             "state": self.state.value,
@@ -831,6 +841,10 @@ class ConfigEntry(Generic[_DataT]):
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
+        old_modified_at = self.modified_at
+        object.__setattr__(self, "modified_at", utcnow())
+        self.clear_cache()
+
         if self.source == SOURCE_IGNORE:
             return
 
@@ -862,6 +876,8 @@ class ConfigEntry(Generic[_DataT]):
                 self.title,
                 integration.domain,
             )
+            # Restore modified_at
+            object.__setattr__(self, "modified_at", old_modified_at)
 
     @callback
     def _async_set_state(
@@ -950,11 +966,13 @@ class ConfigEntry(Generic[_DataT]):
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
         return {
+            "created_at": self.created_at.isoformat(),
             "data": dict(self.data),
             "disabled_by": self.disabled_by,
             "domain": self.domain,
             "entry_id": self.entry_id,
             "minor_version": self.minor_version,
+            "modified_at": self.modified_at.isoformat(),
             "options": dict(self.options),
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
@@ -1599,25 +1617,34 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         data = old_data
-        if old_major_version == 1 and old_minor_version < 2:
-            # Version 1.2 implements migration and freezes the available keys
-            for entry in data["entries"]:
-                # Populate keys which were introduced before version 1.2
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                # Version 1.2 implements migration and freezes the available keys
+                for entry in data["entries"]:
+                    # Populate keys which were introduced before version 1.2
 
-                pref_disable_new_entities = entry.get("pref_disable_new_entities")
-                if pref_disable_new_entities is None and "system_options" in entry:
-                    pref_disable_new_entities = entry.get("system_options", {}).get(
-                        "disable_new_entities"
+                    pref_disable_new_entities = entry.get("pref_disable_new_entities")
+                    if pref_disable_new_entities is None and "system_options" in entry:
+                        pref_disable_new_entities = entry.get("system_options", {}).get(
+                            "disable_new_entities"
+                        )
+
+                    entry.setdefault("disabled_by", entry.get("disabled_by"))
+                    entry.setdefault("minor_version", entry.get("minor_version", 1))
+                    entry.setdefault("options", entry.get("options", {}))
+                    entry.setdefault(
+                        "pref_disable_new_entities", pref_disable_new_entities
                     )
+                    entry.setdefault(
+                        "pref_disable_polling", entry.get("pref_disable_polling")
+                    )
+                    entry.setdefault("unique_id", entry.get("unique_id"))
 
-                entry.setdefault("disabled_by", entry.get("disabled_by"))
-                entry.setdefault("minor_version", entry.get("minor_version", 1))
-                entry.setdefault("options", entry.get("options", {}))
-                entry.setdefault("pref_disable_new_entities", pref_disable_new_entities)
-                entry.setdefault(
-                    "pref_disable_polling", entry.get("pref_disable_polling")
-                )
-                entry.setdefault("unique_id", entry.get("unique_id"))
+            if old_minor_version < 3:
+                # Version 1.3 adds the created_at and modified_at fields
+                created_at = utc_from_timestamp(0).isoformat()
+                for entry in data["entries"]:
+                    entry["created_at"] = entry["modified_at"] = created_at
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1793,11 +1820,13 @@ class ConfigEntries:
             entry_id = entry["entry_id"]
 
             config_entry = ConfigEntry(
+                created_at=datetime.fromisoformat(entry["created_at"]),
                 data=entry["data"],
                 disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
                 domain=entry["domain"],
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
+                modified_at=datetime.fromisoformat(entry["modified_at"]),
                 options=entry["options"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
@@ -2013,6 +2042,8 @@ class ConfigEntries:
 
         if not changed:
             return False
+
+        _setter(entry, "modified_at", utcnow())
 
         for listener in entry.update_listeners:
             self.hass.async_create_task(
