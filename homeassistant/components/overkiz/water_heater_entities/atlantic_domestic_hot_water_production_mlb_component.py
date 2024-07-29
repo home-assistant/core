@@ -161,7 +161,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         """Turn away mode on. This requires the start date and the end date to be also set."""
         now_date = cast(
             dict,
-            self.executor.select_state("core:DateTimeState"),
+            self.executor.select_state(OverkizState.CORE_DATETIME),
         )
         await self.executor.async_execute_command(
             OverkizCommand.SET_ABSENCE_MODE,
@@ -169,11 +169,11 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             refresh_afterwards=False,
         )
         await self.executor.async_execute_command(
-            "setAbsenceStartDate", now_date, refresh_afterwards=False
+            OverkizCommand.SET_ABSENCE_START_DATE, now_date, refresh_afterwards=False
         )
         now_date["year"] = now_date["year"] + 1
         await self.executor.async_execute_command(
-            "setAbsenceEndDate", now_date, refresh_afterwards=False
+            OverkizCommand.SET_ABSENCE_END_DATE, now_date, refresh_afterwards=False
         )
 
         await self.coordinator.async_refresh()
