@@ -67,6 +67,7 @@ from .const import (  # noqa: F401
     ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
+    ATTR_MIN_TEMP_RANGE,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_SWING_MODE,
@@ -248,6 +249,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "target_temperature_step",
     "target_temperature_high",
     "target_temperature_low",
+    "min_temperature_range",
     "preset_mode",
     "preset_modes",
     "is_aux_heat",
@@ -302,6 +304,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
+    _attr_min_temperature_range: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
@@ -544,6 +547,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
+            if hasattr(self, "min_temperature_range"):
+                data[ATTR_MIN_TEMP_RANGE] = self.min_temperature_range
 
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
@@ -633,6 +638,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
         """
         return self._attr_target_temperature_low
+
+    @cached_property
+    def min_temperature_range(self) -> float | None:
+        """Return the minimum setpoint deadband when using a temperature range.
+
+        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
+        """
+        return self._attr_min_temperature_range
 
     @cached_property
     def preset_mode(self) -> str | None:
@@ -922,6 +935,35 @@ async def async_service_temperature_set(
             )
         else:
             kwargs[value] = temp
+
+    if (
+        (min_temp_range := entity.min_temperature_range)
+        and (low_temp := kwargs.get(ATTR_TARGET_TEMP_LOW))
+        and (high_temp := kwargs.get(ATTR_TARGET_TEMP_HIGH))
+        and high_temp - low_temp < min_temp_range
+    ):
+        # Ensure there is a minimum gap from the new temp.
+        new_high_temp = high_temp
+        new_low_temp = low_temp
+        if (
+            entity.target_temperature_high
+            and abs(high_temp - entity.target_temperature_high) < 0.01
+        ):
+            new_high_temp = low_temp + min_temp_range
+        else:
+            new_low_temp = high_temp - min_temp_range
+
+        if new_high_temp > (max_temp := entity.max_temp):
+            diff = new_high_temp - max_temp
+            new_high_temp -= diff
+            new_low_temp -= diff
+        elif new_low_temp < (min_temp := entity.min_temp):
+            diff = min_temp - new_low_temp
+            new_high_temp += diff
+            new_low_temp += diff
+
+        kwargs[ATTR_TARGET_TEMP_HIGH] = new_high_temp
+        kwargs[ATTR_TARGET_TEMP_LOW] = new_low_temp
 
     await entity.async_set_temperature(**kwargs)
 
