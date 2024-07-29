@@ -163,11 +163,16 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         This requires the start date and the end date to be also set.
         The API accepts setting dates in the format of the core:DateTimeState state for the DHW
         {'day': 11, 'hour': 21, 'minute': 12, 'month': 7, 'second': 53, 'weekday': 3, 'year': 2024})
-        The dict is then passed as a away mode start date, and then as an end date, but with the year incremented by 1,
+        The dict is then passed as an away mode start date, and then as an end date, but with the year incremented by 1,
         so the away mode is getting turned on for the next year.
         The weekday number seems to have no effect so the calculation of the future date's weekday number is redundant,
         but possible via homeassistant dt_util to form both start and end dates dictionaries from scratch
         based on datetime.now() and datetime.timedelta into the future.
+        If you execute `setAbsenceStartDate`, `setAbsenceEndDate` and `setAbsenceMode`,
+        the API answers with "too many requests", as there's a polling update after each command execution,
+        and the device becomes unavailable until the API is available again.
+        With `refresh_afterwards=False` on the first commands, and `refresh_afterwards=True` only the last command,
+        the API is not choking and the transition is smooth without the unavailability state.
         """
         now_date = cast(
             dict,
