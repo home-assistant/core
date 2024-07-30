@@ -422,13 +422,13 @@ def test_service_schema(hass: HomeAssistant) -> None:
         {},
         None,
         {
-            "service": "homeassistant.turn_on",
+            "action": "homeassistant.turn_on",
             "service_template": "homeassistant.turn_on",
         },
         {"data": {"entity_id": "light.kitchen"}},
-        {"service": "homeassistant.turn_on", "data": None},
+        {"action": "homeassistant.turn_on", "data": None},
         {
-            "service": "homeassistant.turn_on",
+            "action": "homeassistant.turn_on",
             "data_template": {"brightness": "{{ no_end"},
         },
     )
@@ -437,26 +437,26 @@ def test_service_schema(hass: HomeAssistant) -> None:
             cv.SERVICE_SCHEMA(value)
 
     options = (
-        {"service": "homeassistant.turn_on"},
-        {"service": "homeassistant.turn_on", "entity_id": "light.kitchen"},
-        {"service": "light.turn_on", "entity_id": "all"},
+        {"action": "homeassistant.turn_on"},
+        {"action": "homeassistant.turn_on", "entity_id": "light.kitchen"},
+        {"action": "light.turn_on", "entity_id": "all"},
         {
-            "service": "homeassistant.turn_on",
+            "action": "homeassistant.turn_on",
             "entity_id": ["light.kitchen", "light.ceiling"],
         },
         {
-            "service": "light.turn_on",
+            "action": "light.turn_on",
             "entity_id": "all",
             "alias": "turn on kitchen lights",
         },
-        {"service": "scene.turn_on", "metadata": {}},
+        {"action": "scene.turn_on", "metadata": {}},
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
 
     # Check metadata is removed from the validated output
-    assert cv.SERVICE_SCHEMA({"service": "scene.turn_on", "metadata": {}}) == {
-        "service": "scene.turn_on"
+    assert cv.SERVICE_SCHEMA({"action": "scene.turn_on", "metadata": {}}) == {
+        "action": "scene.turn_on"
     }
 
 
