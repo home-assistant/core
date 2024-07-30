@@ -20,6 +20,7 @@ from homeassistant.components.light import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
@@ -769,6 +770,46 @@ async def test_light_on_off_color(
     }
 
     args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 37,
+        "endpoint": 1,
+        "property": "targetValue",
+    }
+    assert args["value"] is True
+
+    client.async_send_command.reset_mock()
+
+    # Turn the device off. This should only affect the binary switch, not the color
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 37,
+        "endpoint": 1,
+        "property": "targetValue",
+    }
+    assert args["value"] is False
+
+    client.async_send_command.reset_mock()
+
+    # Turn the device on again. This should only affect the binary switch, not the color
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
