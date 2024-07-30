@@ -26,7 +26,7 @@ async def test_user_step(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -37,10 +37,11 @@ async def test_user_step(
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{DEFAULT_MODEL}"
+    assert result["title"] == "ElevenLabs"
     assert result["data"] == {
         "api_key": "api_key",
     }
+    assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
 
     mock_setup_entry.assert_called_once()
     mock_async_client.assert_called_once_with(api_key="api_key")
@@ -55,7 +56,7 @@ async def test_invalid_api_key(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -64,7 +65,7 @@ async def test_invalid_api_key(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is not None
+    assert result["errors"]
 
     mock_setup_entry.assert_not_called()
 

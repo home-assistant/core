@@ -20,8 +20,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EleventLabsConfigEntry
-from .const import CONF_VOICE, DOMAIN
+from . import EleventLabsConfigEntry, get_model_by_id
+from .const import CONF_MODEL, CONF_VOICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,12 +34,15 @@ async def async_setup_entry(
     """Set up ElevenLabs tts platform via config entry."""
     client = config_entry.runtime_data.client
     voices = (await client.voices.get_all()).voices
-    default_voice_id = config_entry.options.get(CONF_VOICE, voices[0].voice_id)
+    default_voice_id = config_entry.options[CONF_VOICE]
+    model_id = config_entry.options[CONF_MODEL]
+    model = await get_model_by_id(client, model_id)
+    assert model is not None, "Model not found"
     async_add_entities(
         [
             ElevenLabsTTSEntity(
                 client,
-                config_entry.runtime_data.model,
+                model,
                 voices,
                 default_voice_id,
                 config_entry.entry_id,
@@ -64,6 +67,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         entry_id: str,
     ) -> None:
         """Init ElevenLabs TTS service."""
+        _LOGGER.error("Got this far")
         self._client = client
         self._model = model
         self._default_voice_id = default_voice_id
@@ -80,22 +84,28 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
+            manufacturer="ElevenLabs",
+            model=model.name,
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_default_language = self.supported_languages[0]
         self._attr_supported_languages = [
             lang.language_id for lang in self._model.languages or []
         ]
+        self._attr_default_language = self.supported_languages[0]
+        _LOGGER.error("Got this far 3")
 
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
+        _LOGGER.error("Got this far 4")
         return self._voices
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        _LOGGER.debug("Getting TTS audio for %s", message)
+        _LOGGER.error("Getting TTS audio for %s", message)
+        _LOGGER.error("Got this far 2")
+        _LOGGER.error("Options: %s", options)
         voice_id = options[ATTR_VOICE]
         try:
             audio = await self._client.generate(
