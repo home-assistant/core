@@ -168,10 +168,10 @@ class MatterLock(MatterEntity, LockEntity):
 
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
-        if lock_state is clusters.DoorLock.Enums.DlLockState.kUnlatched:
+        if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
             self._attr_is_open = True
-        if lock_state is clusters.DoorLock.Enums.DlLockState.kLocked:
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
             self._attr_is_open = False
         elif lock_state in (

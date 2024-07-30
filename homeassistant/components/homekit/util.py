@@ -106,7 +106,7 @@ from .const import (
     VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -366,7 +366,8 @@ def async_show_setup_message(
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry_id]
+    entry = cast(HomeKitConfigEntry, hass.config_entries.async_get_entry(entry_id))
+    entry_data = entry.runtime_data
 
     entry_data.pairing_qr = buffer.getvalue()
     entry_data.pairing_qr_secret = pairing_secret

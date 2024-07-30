@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -36,7 +37,7 @@ async def test_entry_diagnostics(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))

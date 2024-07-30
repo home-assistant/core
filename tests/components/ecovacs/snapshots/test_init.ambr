@@ -21,7 +21,7 @@
     }),
     'manufacturer': 'Ecovacs',
     'model': 'DEEBOT OZMO 950 Series',
-    'model_id': None,
+    'model_id': 'yna5xi',
     'name': 'Ozmo 950',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

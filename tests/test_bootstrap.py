@@ -436,9 +436,6 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
         MockModule(
             domain="recorder",
             async_setup=gen_domain_setup("recorder"),
-            partial_manifest={
-                "after_dependencies": ["http"],
-            },
         ),
     )
 
