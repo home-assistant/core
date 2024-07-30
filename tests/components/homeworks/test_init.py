@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY, MagicMock
 
+from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED
 import pytest
 
@@ -41,7 +42,9 @@ async def test_config_entry_not_ready(
     mock_homeworks: MagicMock,
 ) -> None:
     """Test the Homeworks configuration entry not ready."""
-    mock_homeworks.side_effect = ConnectionError
+    mock_homeworks.return_value.connect.side_effect = (
+        hw_exceptions.HomeworksConnectionFailed
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -187,4 +190,4 @@ async def test_cleanup_on_ha_shutdown(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    mock_controller.close.assert_called_once_with()
+    mock_controller.stop.assert_called_once_with()
