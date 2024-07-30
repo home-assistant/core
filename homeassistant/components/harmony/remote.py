@@ -19,7 +19,6 @@ from homeassistant.components.remote import (
     RemoteEntity,
     RemoteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -34,13 +33,12 @@ from .const import (
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
     DOMAIN,
-    HARMONY_DATA,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from .data import HarmonyData
+from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
 
@@ -57,11 +55,12 @@ HARMONY_CHANGE_CHANNEL_SCHEMA: VolDictType = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HarmonyConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Harmony config entry."""
-
-    data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
+    data = entry.runtime_data
 
     _LOGGER.debug("HarmonyData : %s", data)
 

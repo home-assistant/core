@@ -458,12 +458,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         if (
             hasattr(self._playback_metadata, "art")
             and self._playback_metadata.art is not None
+            and len(self._playback_metadata.art) == 0
+            and self._source_change.id == BangOlufsenSource.CHROMECAST.id
         ):
-            if (
-                len(self._playback_metadata.art) == 0
-                and self._source_change.id == BangOlufsenSource.BLUETOOTH.id
-            ):
-                return BangOlufsenSource.BLUETOOTH.name
+            return BangOlufsenSource.BLUETOOTH.name
 
         return self._source_change.name
 

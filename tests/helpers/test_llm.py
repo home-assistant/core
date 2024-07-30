@@ -22,7 +22,6 @@ from homeassistant.helpers import (
     selector,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
 
 from tests.common import MockConfigEntry
 
@@ -506,74 +505,58 @@ async def test_assist_api_prompt(
             suggested_area="Test Area 2",
         )
     )
-
-    exposed_entities = llm._get_exposed_entities(hass, llm_context.assistant)
-    assert exposed_entities == {
-        "light.1": {
-            "areas": "Test Area 2",
-            "names": "1",
-            "state": "unavailable",
-        },
-        entry1.entity_id: {
-            "names": "Kitchen",
-            "state": "on",
-            "attributes": {"temperature": "0.9", "humidity": "65"},
-        },
-        entry2.entity_id: {
-            "areas": "Test Area, Alternative name",
-            "names": "Living Room",
-            "state": "on",
-        },
-        "light.test_device": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Device",
-            "state": "unavailable",
-        },
-        "light.test_device_2": {
-            "areas": "Test Area 2",
-            "names": "Test Device 2",
-            "state": "unavailable",
-        },
-        "light.test_device_3": {
-            "areas": "Test Area 2",
-            "names": "Test Device 3",
-            "state": "unavailable",
-        },
-        "light.test_device_4": {
-            "areas": "Test Area 2",
-            "names": "Test Device 4",
-            "state": "unavailable",
-        },
-        "light.test_service": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Service",
-            "state": "unavailable",
-        },
-        "light.test_service_2": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Service",
-            "state": "unavailable",
-        },
-        "light.test_service_3": {
-            "areas": "Test Area, Alternative name",
-            "names": "Test Service",
-            "state": "unavailable",
-        },
-        "light.unnamed_device": {
-            "areas": "Test Area 2",
-            "names": "Unnamed Device",
-            "state": "unavailable",
-        },
-    }
-    exposed_entities_prompt = (
-        "An overview of the areas and the devices in this smart home:\n"
-        + yaml.dump(exposed_entities)
-    )
+    exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+- names: Kitchen
+  domain: light
+  state: 'on'
+  attributes:
+    temperature: '0.9'
+    humidity: '65'
+- names: Living Room
+  domain: light
+  state: 'on'
+  areas: Test Area, Alternative name
+- names: Test Device
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Device 2
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: Test Device 3
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: Test Device 4
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: Unnamed Device
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+- names: '1'
+  domain: light
+  state: unavailable
+  areas: Test Area 2
+"""
     first_part_prompt = (
         "When controlling Home Assistant always call the intent tools. "
         "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-        "When controlling a device, prefer passing just its name and its domain "
-        "(what comes before the dot in its entity id). "
+        "When controlling a device, prefer passing just name and domain. "
         "When controlling an area, prefer passing just area name and domain."
     )
     no_timer_prompt = "This device is not able to start timers."
@@ -778,6 +761,46 @@ async def test_script_tool(
     assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
         "test_script": ("This is a new test script", vol.Schema(schema))
     }
+
+
+async def test_script_tool_name(hass: HomeAssistant) -> None:
+    """Test that script tool name is not started with a digit."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "123456": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers", "required": True},
+                    },
+                },
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.123456", True)
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    assert len(tools) == 1
+
+    tool = tools[0]
+    assert tool.name == "_123456"
 
 
 async def test_selector_serializer(

@@ -33,6 +33,9 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         assert self.config_entry.unique_id
         self.mac = self.config_entry.unique_id
         self.client = client
+        # this does not use poll/refresh, so we need to set this to not None on init
+        self.data = {}
+        # this passes a callback to the client to push new data to the coordinator
         self.client.set_update_callback(self.handle_push_data)
         _LOGGER.debug("MadVRCoordinator initialized with mac: %s", self.mac)
 

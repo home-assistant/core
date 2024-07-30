@@ -32,7 +32,7 @@ from homeassistant.util import slugify
 
 from . import EcovacsConfigEntry
 from .const import DOMAIN
-from .entity import EcovacsEntity
+from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,9 +56,9 @@ async def async_setup_entry(
         for device in controller.devices
         if device.capabilities.device_type is DeviceType.VACUUM
     ]
-    for device in controller.legacy_devices:
-        await hass.async_add_executor_job(device.connect_and_wait_until_ready)
-        vacuums.append(EcovacsLegacyVacuum(device))
+    vacuums.extend(
+        [EcovacsLegacyVacuum(device) for device in controller.legacy_devices]
+    )
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
 
@@ -71,11 +71,10 @@ async def async_setup_entry(
     )
 
 
-class EcovacsLegacyVacuum(StateVacuumEntity):
+class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
     """Legacy Ecovacs vacuums."""
 
     _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
-    _attr_should_poll = False
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.RETURN_HOME
@@ -88,21 +87,24 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         | VacuumEntityFeature.FAN_SPEED
     )
 
-    def __init__(self, device: sucks.VacBot) -> None:
-        """Initialize the Ecovacs Vacuum."""
-        self.device = device
-        vacuum = self.device.vacuum
-
-        self.error: str | None = None
-        self._attr_unique_id = vacuum["did"]
-        self._attr_name = vacuum.get("nick", vacuum["did"])
-
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
-        self.device.statusEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.batteryEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.lifespanEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.errorEvents.subscribe(self.on_error)
+        self._event_listeners.append(
+            self.device.statusEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.batteryEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.lifespanEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(self.device.errorEvents.subscribe(self.on_error))
 
     def on_error(self, error: str) -> None:
         """Handle an error event from the robot.
@@ -139,6 +141,11 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
             return STATE_RETURNING
 
         return None
+
+    @property
+    def available(self) -> bool:
+        """Return True if the vacuum is available."""
+        return super().available and self.state is not None
 
     @property
     def battery_level(self) -> int | None:

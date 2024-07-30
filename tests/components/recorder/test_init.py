@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta
 import sqlite3
+import sys
 import threading
 from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
@@ -1698,7 +1699,9 @@ async def test_database_corruption_while_running(
     hass.states.async_set("test.lost", "on", {})
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
 
     await async_wait_recording_done(hass)
     with patch.object(
@@ -1883,7 +1886,9 @@ async def test_database_lock_and_overflow(
     with (
         patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
         patch.object(recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01),
-        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
+        patch.object(
+            recorder.core, "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG", sys.maxsize
+        ),
     ):
         await async_setup_recorder_instance(hass, config)
         await hass.async_block_till_done()
@@ -1943,26 +1948,43 @@ async def test_database_lock_and_overflow_checks_available_memory(
                 )
             )
 
-    await async_setup_recorder_instance(hass, config)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.recorder.core.QUEUE_CHECK_INTERVAL",
+        timedelta(seconds=1),
+    ):
+        await async_setup_recorder_instance(hass, config)
+        await hass.async_block_till_done()
     event_type = "EVENT_TEST"
     event_types = (event_type,)
     await async_wait_recording_done(hass)
+    min_available_memory = 256 * 1024**2
+
+    out_of_ram = False
+
+    def _get_available_memory(*args: Any, **kwargs: Any) -> int:
+        nonlocal out_of_ram
+        return min_available_memory / 2 if out_of_ram else min_available_memory
 
     with (
         patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
-        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 1),
+        patch.object(
+            recorder.core,
+            "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG",
+            min_available_memory,
+        ),
         patch.object(recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01),
         patch.object(
             recorder.core.Recorder,
             "_available_memory",
-            return_value=recorder.core.ESTIMATED_QUEUE_ITEM_SIZE * 4,
+            side_effect=_get_available_memory,
         ),
     ):
         instance = get_instance(hass)
 
-        await instance.lock_database()
+        assert await instance.lock_database()
 
+        db_events = await instance.async_add_executor_job(_get_db_events)
+        assert len(db_events) == 0
         # Record up to the extended limit (which takes into account the available memory)
         for _ in range(2):
             event_data = {"test_attr": 5, "test_attr_10": "nice"}
@@ -1979,6 +2001,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
 
         assert "Database queue backlog reached more than" not in caplog.text
 
+        out_of_ram = True
         # Record beyond the extended limit (which takes into account the available memory)
         for _ in range(20):
             event_data = {"test_attr": 5, "test_attr_10": "nice"}
@@ -2546,7 +2569,13 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
     assert instance.engine is None
 
 
-async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("func_to_patch", "expected_setup_result"),
+    [("migrate_schema_non_live", False), ("migrate_schema_live", False)],
+)
+async def test_clean_shutdown_when_schema_migration_fails(
+    hass: HomeAssistant, func_to_patch: str, expected_setup_result: bool
+) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with (
         patch.object(
@@ -2557,13 +2586,13 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
         patch.object(
             migration,
-            "migrate_schema",
+            func_to_patch,
             side_effect=Exception,
         ),
     ):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
-        assert await async_setup_component(
+        setup_result = await async_setup_component(
             hass,
             recorder.DOMAIN,
             {
@@ -2574,6 +2603,7 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
                 }
             },
         )
+        assert setup_result == expected_setup_result
         await hass.async_block_till_done()
 
     instance = recorder.get_instance(hass)
@@ -2700,3 +2730,20 @@ async def test_all_tables_use_default_table_args(hass: HomeAssistant) -> None:
     """Test that all tables use the default table args."""
     for table in db_schema.Base.metadata.tables.values():
         assert table.kwargs.items() >= db_schema._DEFAULT_TABLE_ARGS.items()
+
+
+async def test_empty_entity_id(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the recorder can handle an empty entity_id."""
+    await async_setup_recorder_instance(
+        hass,
+        {
+            "exclude": {"domains": "hidden_domain"},
+        },
+    )
+    hass.bus.async_fire("hello", {"entity_id": ""})
+    await async_wait_recording_done(hass)
+    assert "Invalid entity ID" not in caplog.text
