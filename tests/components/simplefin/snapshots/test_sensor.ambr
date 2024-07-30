@@ -97,7 +97,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T14:55:19+00:00',
+    'state': '2024-01-16T13:55:19+00:00',
   })
 # ---
 # name: test_all_entities[sensor.investments_my_checking_balance-entry]
@@ -198,7 +198,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T14:55:19+00:00',
+    'state': '2024-01-16T13:55:19+00:00',
   })
 # ---
 # name: test_all_entities[sensor.investments_nerdcorp_series_b_balance-entry]
@@ -299,7 +299,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T14:55:19+00:00',
+    'state': '2024-01-16T13:55:19+00:00',
   })
 # ---
 # name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_balance-entry]
@@ -400,7 +400,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T19:16:42+00:00',
+    'state': '2024-01-16T18:16:42+00:00',
   })
 # ---
 # name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_balance-entry]
@@ -501,7 +501,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T19:16:42+00:00',
+    'state': '2024-01-16T18:16:42+00:00',
   })
 # ---
 # name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_balance-entry]
@@ -602,7 +602,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T19:16:42+00:00',
+    'state': '2024-01-16T18:16:42+00:00',
   })
 # ---
 # name: test_all_entities[sensor.the_bank_of_go_prime_savings_balance-entry]
@@ -703,7 +703,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T19:14:21+00:00',
+    'state': '2024-01-16T18:14:21+00:00',
   })
 # ---
 # name: test_all_entities[sensor.the_bank_of_go_the_bank_balance-entry]
@@ -804,6 +804,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-16T15:04:03+00:00',
+    'state': '2024-01-16T14:04:03+00:00',
   })
 # ---
