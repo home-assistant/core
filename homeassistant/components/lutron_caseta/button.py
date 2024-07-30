@@ -25,6 +25,8 @@ async def async_setup_entry(
 class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
     """Representation of a Lutron pico and keypad button."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         data: LutronCasetaData,
@@ -32,8 +34,8 @@ class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
     ) -> None:
         """Init a button entity."""
         super().__init__(button_device.device, data)
-        self._attr_entity_registry_enabled_default = button_device.has_device_name
-        self._attr_name = button_device.full_name
+        self._attr_entity_registry_enabled_default = button_device.user_defined_name
+        self._attr_name = button_device.button_name
         self._attr_device_info = button_device.parent_device_info
 
     async def async_press(self) -> None:

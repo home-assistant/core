@@ -222,34 +222,41 @@ def _async_build_button_devices(
         parent_device_info = parent_keypad["device_info"]
         parent_name = parent_device_info["name"]
 
-        has_device_name = True
-        if not (device_name := device.get("device_name")):
+        button_key: str | None = None
+        button_name: str
+        device_name = cast(str | None, device.get("device_name"))
+        user_defined_name = bool(device_name)
+        if device_name:
+            button_name = device_name
+        else:
             # device name (button name) is missing, probably a caseta pico
             # try to get the name using the button number from the triggers
             # disable the button by default
-            has_device_name = False
             keypad_device = all_devices[device["parent_device"]]
             button_numbers = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
                 keypad_device["type"],
                 {},
             )
-            device_name = (
-                button_numbers.get(
-                    int(device["button_number"]),
-                    f"button {device['button_number']}",
-                )
-                .replace("_", " ")
-                .title()
+            button_key = button_numbers.get(int(device["button_number"]))
+            button_name = (
+                button_key
+                or f"button {device['button_number']}".replace("_", " ").title()
             )
 
         # Append the child device name to the end of the parent keypad
         # name to create the entity name
-        full_name = f"{parent_name} {device_name}"
+        full_name = f"{parent_name} {button_name}"
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
         buttons.append(
             LutronCasetaButtonDevice(
-                button_id, device, full_name, has_device_name, parent_device_info
+                button_id,
+                device,
+                button_key,
+                button_name,
+                full_name,
+                user_defined_name,
+                parent_device_info,
             ),
         )
 

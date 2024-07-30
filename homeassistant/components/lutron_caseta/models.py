@@ -41,8 +41,10 @@ class LutronCasetaButtonDevice:
 
     button_id: int
     device: dict
+    button_key: str | None
+    button_name: str
     full_name: str
-    has_device_name: bool
+    user_defined_name: bool
     parent_device_info: DeviceInfo
 
 

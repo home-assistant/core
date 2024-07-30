@@ -39,6 +39,7 @@ class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = [ACTION_PRESS, ACTION_RELEASE]
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -48,7 +49,8 @@ class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
     ) -> None:
         """Init a button event entity."""
         super().__init__(button_device.device, data)
-        self._attr_name = button_device.full_name
+        self._attr_name = button_device.button_name
+        self._attr_translation_key = button_device.button_key
         self._attr_device_info = button_device.parent_device_info
         self._button_id = button_device.button_id
         self._entry_id = entry_id
