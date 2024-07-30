@@ -842,13 +842,22 @@ async def test_selector_serializer(
     assert selector_serializer(
         selector.ColorTempSelector({"min_mireds": 100, "max_mireds": 1000})
     ) == {"type": "number", "minimum": 100, "maximum": 1000}
+    assert selector_serializer(selector.ConditionSelector()) == {
+        "type": "array",
+        "items": {"nullable": True, "type": "string"},
+    }
     assert selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
     assert selector_serializer(selector.ConstantSelector({"value": "test"})) == {
-        "enum": ["test"]
+        "type": "string",
+        "enum": ["test"],
     }
-    assert selector_serializer(selector.ConstantSelector({"value": 1})) == {"enum": [1]}
+    assert selector_serializer(selector.ConstantSelector({"value": 1})) == {
+        "type": "integer",
+        "enum": [1],
+    }
     assert selector_serializer(selector.ConstantSelector({"value": True})) == {
-        "enum": [True]
+        "type": "boolean",
+        "enum": [True],
     }
     assert selector_serializer(selector.QrCodeSelector({"data": "test"})) == {
         "type": "string"
@@ -875,6 +884,17 @@ async def test_selector_serializer(
     assert selector_serializer(selector.DeviceSelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.DurationSelector()) == {
+        "type": "object",
+        "properties": {
+            "days": {"type": "number"},
+            "hours": {"type": "number"},
+            "minutes": {"type": "number"},
+            "seconds": {"type": "number"},
+            "milliseconds": {"type": "number"},
+        },
+        "required": [],
     }
     assert selector_serializer(selector.EntitySelector()) == {
         "type": "string",
@@ -929,7 +949,10 @@ async def test_selector_serializer(
         "minimum": 30,
         "maximum": 100,
     }
-    assert selector_serializer(selector.ObjectSelector()) == {"type": "object"}
+    assert selector_serializer(selector.ObjectSelector()) == {
+        "type": "object",
+        "additionalProperties": True,
+    }
     assert selector_serializer(
         selector.SelectSelector(
             {
@@ -951,6 +974,48 @@ async def test_selector_serializer(
     assert selector_serializer(
         selector.StateSelector({"entity_id": "sensor.test"})
     ) == {"type": "string"}
+    target_schema = selector_serializer(selector.TargetSelector())
+    target_schema["properties"]["entity_id"]["anyOf"][0][
+        "enum"
+    ].sort()  # Order is not deterministic
+    assert target_schema == {
+        "type": "object",
+        "properties": {
+            "area_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+            "device_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+            "entity_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["all", "none"], "format": "lower"},
+                    {"type": "string", "nullable": True},
+                    {"type": "array", "items": {"type": "string"}},
+                ]
+            },
+            "floor_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+            "label_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+        },
+        "required": [],
+    }
+
     assert selector_serializer(selector.TemplateSelector()) == {
         "type": "string",
         "format": "jinja2",
