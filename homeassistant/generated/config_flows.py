@@ -373,6 +373,7 @@ FLOWS = {
         "myuplink",
         "nam",
         "nanoleaf",
+        "nasweb",
         "neato",
         "nest",
         "netatmo",
