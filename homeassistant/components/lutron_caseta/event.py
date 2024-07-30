@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import logging
 
-from pylutron_caseta import BUTTON_STATUS_PRESSED, BUTTON_STATUS_RELEASED
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDevice
-from .const import DOMAIN
+from .const import ACTION_PRESS, ACTION_RELEASE, DOMAIN
 from .models import (
     LutronCasetaButtonDevice,
     LutronCasetaButtonEventData,
@@ -40,7 +38,7 @@ class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
     """Representation of a Lutron pico and keypad button event."""
 
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = [BUTTON_STATUS_PRESSED, BUTTON_STATUS_RELEASED]
+    _attr_event_types = [ACTION_PRESS, ACTION_RELEASE]
 
     def __init__(
         self,
@@ -71,10 +69,6 @@ class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to button events."""
-        _LOGGER.warning(
-            "Subscribing to button %s",
-            f"{DOMAIN}_{self._entry_id}_button_{self._button_id}",
-        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

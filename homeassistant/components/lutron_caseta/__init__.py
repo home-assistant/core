@@ -529,7 +529,6 @@ def _async_subscribe_keypad_events(
             action=action,
         )
         signal = f"{DOMAIN}_{config_entry_id}_button_{button_id}"
-        _LOGGER.warning("Sending signal: %s - %s", signal, data)
         async_dispatcher_send(hass, signal, data)
         hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, data)
 
