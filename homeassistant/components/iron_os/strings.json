@@ -17,6 +17,11 @@
     }
   },
   "entity": {
+    "number": {
+      "setpoint_temperature": {
+        "name": "Setpoint temperature"
+      }
+    },
     "sensor": {
       "live_temperature": {
         "name": "Tip temperature"
@@ -79,6 +84,9 @@
     },
     "setup_device_connection_error_exception": {
       "message": "Connection to device {name} failed, try again later"
+    },
+    "submit_setting_failed": {
+      "message": "Failed to submit setting to device, try again later"
     }
   }
 }
