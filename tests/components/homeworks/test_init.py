@@ -187,4 +187,4 @@ async def test_cleanup_on_ha_shutdown(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    mock_controller.stop.assert_called_once_with()
+    mock_controller.close.assert_called_once_with()
