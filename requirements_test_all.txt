@@ -240,7 +240,7 @@ aioharmony==0.2.10
 aiohomekit==3.1.5
 
 # homeassistant.components.hue
-aiohue==4.7.1
+aiohue==4.7.2
 
 # homeassistant.components.imap
 aioimaplib==1.1.0
@@ -255,7 +255,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.5
+aiolifx==1.0.6
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -359,7 +359,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.6
+aiotractive==0.6.0
 
 # homeassistant.components.unifi
 aiounifi==79
@@ -590,7 +590,7 @@ dbus-fast==2.22.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==8.1.1
+deebot-client==8.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1924,7 +1924,7 @@ renault-api==0.2.4
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.4
+reolink-aio==0.9.5
 
 # homeassistant.components.rflink
 rflink==0.0.66
