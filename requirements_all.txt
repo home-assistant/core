@@ -780,7 +780,7 @@ ecoaliface==0.4.0
 electrickiwi-api==0.8.5
 
 # homeassistant.components.elevenlabs
-elevenlabs==1.1.2
+elevenlabs==1.6.1
 
 # homeassistant.components.elgato
 elgato==5.1.2
