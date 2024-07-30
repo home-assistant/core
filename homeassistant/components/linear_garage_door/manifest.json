@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/linear_garage_door",
   "iot_class": "cloud_push",
-  "requirements": ["nice-go==0.1.3"]
+  "requirements": ["nice-go==0.1.5"]
 }
