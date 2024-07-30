@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
@@ -57,6 +57,8 @@ class MatterFan(MatterEntity, FanEntity):
     """Representation of a Matter fan."""
 
     _last_known_preset_mode: str | None = None
+    _last_known_percentage: int = 0
+    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_turn_on(
         self,
@@ -65,14 +67,27 @@ class MatterFan(MatterEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
+        if percentage is None and preset_mode is None:
+            # turn_on without explicit percentage or preset_mode given
+            # try to handle this with the last known value
+            if self._last_known_percentage != 0:
+                percentage = self._last_known_percentage
+            elif self._last_known_preset_mode is not None:
+                preset_mode = self._last_known_preset_mode
+            elif self._attr_preset_modes:
+                # fallback: default to first supported preset
+                preset_mode = self._attr_preset_modes[0]
+            else:
+                # this really should not be possible but handle it anyways
+                percentage = 50
+
+        # prefer setting fan speed by percentage
         if percentage is not None:
-            # handle setting fan speed by percentage
             await self.async_set_percentage(percentage)
             return
         # handle setting fan mode by preset
-        if preset_mode is None:
-            # no preset given, try to handle this with the last known value
-            preset_mode = self._last_known_preset_mode or PRESET_AUTO
+        if TYPE_CHECKING:
+            assert preset_mode is not None
         await self.async_set_preset_mode(preset_mode)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -235,6 +250,8 @@ class MatterFan(MatterEntity, FanEntity):
         # keep track of the last known mode for turn_on commands without preset
         if self._attr_preset_mode is not None:
             self._last_known_preset_mode = self._attr_preset_mode
+        if current_percent:
+            self._last_known_percentage = current_percent
 
     @callback
     def _calculate_features(
@@ -275,8 +292,10 @@ class MatterFan(MatterEntity, FanEntity):
             preset_modes = [PRESET_LOW, PRESET_MEDIUM, PRESET_HIGH]
         elif fan_mode_seq == FanModeSequenceEnum.kOffLowMedHighAuto:
             preset_modes = [PRESET_LOW, PRESET_MEDIUM, PRESET_HIGH, PRESET_AUTO]
-        elif fan_mode_seq == FanModeSequenceEnum.kOffOnAuto:
-            preset_modes = [PRESET_AUTO]
+        elif fan_mode_seq == FanModeSequenceEnum.kOffHighAuto:
+            preset_modes = [PRESET_HIGH, PRESET_AUTO]
+        elif fan_mode_seq == FanModeSequenceEnum.kOffHigh:
+            preset_modes = [PRESET_HIGH]
         # treat Matter Wind feature as additional preset(s)
         if feature_map & FanControlFeature.kWind:
             wind_support = int(
@@ -293,6 +312,10 @@ class MatterFan(MatterEntity, FanEntity):
         self._attr_preset_modes = preset_modes
         if feature_map & FanControlFeature.kAirflowDirection:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities

@@ -87,8 +87,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
-                    "created_at": self.created_at.isoformat(),
-                    "modified_at": self.modified_at.isoformat(),
+                    "created_at": self.created_at.timestamp(),
+                    "modified_at": self.modified_at.timestamp(),
                 }
             )
         )
@@ -133,10 +133,9 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
 
             if old_minor_version < 7:
                 # Version 1.7 adds created_at and modiefied_at
+                created_at = utc_from_timestamp(0).isoformat()
                 for area in old_data["areas"]:
-                    area["created_at"] = area["modified_at"] = utc_from_timestamp(
-                        0
-                    ).isoformat()
+                    area["created_at"] = area["modified_at"] = created_at
 
         if old_major_version > 1:
             raise NotImplementedError
