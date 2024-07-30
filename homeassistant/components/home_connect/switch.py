@@ -1,16 +1,19 @@
 """Provides a switch for Home Connect."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from typing import Any
 
 from homeconnect.api import HomeConnectError
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .api import ConfigEntryAuth
 from .const import (
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
@@ -19,10 +22,53 @@ from .const import (
     BSH_POWER_ON,
     BSH_POWER_STATE,
     DOMAIN,
+    REFRIGERATION_DISPENSER,
+    REFRIGERATION_SUPERMODEFREEZER,
+    REFRIGERATION_SUPERMODEREFRIGERATOR,
 )
-from .entity import HomeConnectEntity
+from .entity import HomeConnectDevice, HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class HomeConnectSwitchEntityDescription(SwitchEntityDescription):
+    """Switch entity description."""
+
+    on_key: str | None = None
+    value_fn: Callable[[dict], bool] = lambda _: True
+    exist_fn: Callable[[HomeConnectDevice], bool] = lambda _: False
+
+
+SWITCHES: tuple[HomeConnectSwitchEntityDescription, ...] = (
+    HomeConnectSwitchEntityDescription(
+        key="Supermode Freezer",
+        on_key=REFRIGERATION_SUPERMODEFREEZER,
+        value_fn=lambda status: status.get(REFRIGERATION_SUPERMODEFREEZER, {}).get(
+            ATTR_VALUE, False
+        ),
+        exist_fn=lambda device: REFRIGERATION_SUPERMODEFREEZER
+        in device.appliance.status,
+    ),
+    HomeConnectSwitchEntityDescription(
+        key="Supermode Refrigerator",
+        on_key=REFRIGERATION_SUPERMODEREFRIGERATOR,
+        value_fn=lambda status: status.get(REFRIGERATION_SUPERMODEREFRIGERATOR, {}).get(
+            ATTR_VALUE, False
+        ),
+        exist_fn=lambda device: REFRIGERATION_SUPERMODEREFRIGERATOR
+        in device.appliance.status,
+    ),
+    HomeConnectSwitchEntityDescription(
+        key="Dispenser Enabled",
+        on_key=REFRIGERATION_DISPENSER,
+        translation_key="refrigeration_dispenser",
+        value_fn=lambda status: status.get(REFRIGERATION_DISPENSER, {}).get(
+            ATTR_VALUE, False
+        ),
+        exist_fn=lambda device: REFRIGERATION_DISPENSER in device.appliance.status,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -35,16 +81,80 @@ async def async_setup_entry(
     def get_entities():
         """Get a list of entities."""
         entities = []
-        hc_api = hass.data[DOMAIN][config_entry.entry_id]
+        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
             entity_list = [HomeConnectProgramSwitch(**d) for d in entity_dicts]
             entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
             entity_list += [HomeConnectChildLockSwitch(device_dict[CONF_DEVICE])]
+            # Auto-discover entities
+            entities += [
+                HomeConnectSwitch(
+                    device=device_dict[CONF_DEVICE], entity_description=description
+                )
+                for description in SWITCHES
+                if description.exist_fn(device_dict[CONF_DEVICE])
+            ]
             entities += entity_list
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
+
+
+class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
+    """Generic switch class for Home Connect Binary Settings."""
+
+    def __init__(
+        self,
+        device: HomeConnectDevice,
+        entity_description: HomeConnectSwitchEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description: HomeConnectSwitchEntityDescription = entity_description
+        super().__init__(device=device, desc=self.entity_description.key)
+        self._key = self.entity_description.on_key
+        self._attr_available = False
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on setting."""
+
+        _LOGGER.debug("Turning on %s", self._key)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, self._key, True
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn on: %s", err)
+            self._attr_available = False
+            return
+
+        self._attr_available = True
+        self.async_entity_update()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off setting."""
+
+        _LOGGER.debug("Turning off %s", self._key)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, self._key, False
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn off: %s", err)
+            self._attr_available = False
+            return
+
+        self._attr_available = True
+        self.async_entity_update()
+
+    async def async_update(self) -> None:
+        """Update the switch's status."""
+
+        self._attr_is_on = self.entity_description.value_fn(
+            self.device.appliance.status
+        )
+        self._attr_available = True
+        _LOGGER.debug("Updated %s, new state: %s", self._key, self._attr_is_on)
 
 
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
