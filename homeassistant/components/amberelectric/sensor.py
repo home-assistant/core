@@ -182,15 +182,26 @@ class AmberForecastSensor(AmberSensor):
                 datum["range_max"] = format_cents_to_dollars(interval.range.max)
 
             if interval.advanced_price is not None:
-                datum["advanced_price_low"] = format_cents_to_dollars(
-                    interval.advanced_price.low
-                )
-                datum["advanced_price_predicted"] = format_cents_to_dollars(
-                    interval.advanced_price.predicted
-                )
-                datum["advanced_price_high"] = format_cents_to_dollars(
-                    interval.advanced_price.high
-                )
+                if interval.channel_type == ChannelType.FEEDIN:
+                    datum["advanced_price_low"] = -format_cents_to_dollars(
+                        interval.advanced_price.low
+                    )
+                    datum["advanced_price_predicted"] = -format_cents_to_dollars(
+                        interval.advanced_price.predicted
+                    )
+                    datum["advanced_price_high"] = -format_cents_to_dollars(
+                        interval.advanced_price.high
+                    )
+                else:
+                    datum["advanced_price_low"] = format_cents_to_dollars(
+                        interval.advanced_price.low
+                    )
+                    datum["advanced_price_predicted"] = format_cents_to_dollars(
+                        interval.advanced_price.predicted
+                    )
+                    datum["advanced_price_high"] = format_cents_to_dollars(
+                        interval.advanced_price.high
+                    )
 
             data["forecasts"].append(datum)
 
@@ -254,6 +265,42 @@ class AmberAdvancedForecastSensor(AmberSensor):
                     interval.advanced_price.predicted
                 )
                 data["high"] = format_cents_to_dollars(interval.advanced_price.high)
+
+        forecasts = self.coordinator.data["forecasts"].get(self.channel_type)
+        if forecasts:
+            data["forecasts"] = []
+
+            for forecast in forecasts:
+                datum = {}
+                datum["duration"] = forecast.duration
+                datum["date"] = forecast.var_date.isoformat()
+                datum["nem_date"] = forecast.nem_time.isoformat()
+                datum["start_time"] = forecast.start_time.isoformat()
+                datum["end_time"] = forecast.end_time.isoformat()
+
+                if forecast.advanced_price is not None:
+                    if interval.channel_type == ChannelType.FEEDIN:
+                        datum["low"] = -format_cents_to_dollars(
+                            interval.advanced_price.low
+                        )
+                        datum["predicted"] = -format_cents_to_dollars(
+                            interval.advanced_price.predicted
+                        )
+                        datum["high"] = -format_cents_to_dollars(
+                            interval.advanced_price.high
+                        )
+                    else:
+                        datum["low"] = format_cents_to_dollars(
+                            interval.advanced_price.low
+                        )
+                        datum["predicted"] = format_cents_to_dollars(
+                            interval.advanced_price.predicted
+                        )
+                        datum["high"] = format_cents_to_dollars(
+                            interval.advanced_price.high
+                        )
+
+            data["forecasts"].append(datum)
 
         return data
 
