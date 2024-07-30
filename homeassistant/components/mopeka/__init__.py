@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 type MopekaConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bool:
     """Set up Mopeka BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
