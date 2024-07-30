@@ -300,7 +300,7 @@ class AmberAdvancedForecastSensor(AmberSensor):
                             interval.advanced_price.high
                         )
 
-            data["forecasts"].append(datum)
+                data["forecasts"].append(datum)
 
         return data
 
