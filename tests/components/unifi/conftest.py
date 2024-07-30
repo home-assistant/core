@@ -160,6 +160,7 @@ def fixture_request(
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
+    traffic_rule_payload: list[dict[str, Any]],
     site_payload: list[dict[str, Any]],
     system_information_payload: list[dict[str, Any]],
     wlan_payload: list[dict[str, Any]],
@@ -170,9 +171,16 @@ def fixture_request(
         url = f"https://{host}:{DEFAULT_PORT}"
 
         def mock_get_request(path: str, payload: list[dict[str, Any]]) -> None:
+            # APIV2 request respoonses have `meta` and `data` automatically appended
+            json = {}
+            if path.startswith("/v2"):
+                json = payload
+            else:
+                json = {"meta": {"rc": "OK"}, "data": payload}
+
             aioclient_mock.get(
                 f"{url}{path}",
-                json={"meta": {"rc": "OK"}, "data": payload},
+                json=json,
                 headers={"content-type": CONTENT_TYPE_JSON},
             )
 
@@ -182,6 +190,7 @@ def fixture_request(
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
+
         mock_get_request("/api/self/sites", site_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sta", client_payload)
         mock_get_request(f"/api/s/{site_id}/rest/user", clients_all_payload)
@@ -191,6 +200,7 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
+        mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
 
     return __mock_requests
 
@@ -260,6 +270,12 @@ def fixture_system_information_data() -> list[dict[str, Any]]:
             "version": "7.4.162",
         }
     ]
+
+
+@pytest.fixture(name="traffic_rule_payload")
+def traffic_rule_payload_data() -> list[dict[str, Any]]:
+    """Traffic rule data."""
+    return []
 
 
 @pytest.fixture(name="wlan_payload")

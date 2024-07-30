@@ -774,6 +774,37 @@ PORT_FORWARD_PLEX = {
     "src": "any",
 }
 
+TRAFFIC_RULE = {
+    "_id": "6452cd9b859d5b11aa002ea1",
+    "action": "BLOCK",
+    "app_category_ids": [],
+    "app_ids": [],
+    "bandwidth_limit": {
+        "download_limit_kbps": 1024,
+        "enabled": False,
+        "upload_limit_kbps": 1024,
+    },
+    "description": "Test Traffic Rule",
+    "name": "Test Traffic Rule",
+    "domains": [],
+    "enabled": True,
+    "ip_addresses": [],
+    "ip_ranges": [],
+    "matching_target": "INTERNET",
+    "network_ids": [],
+    "regions": [],
+    "schedule": {
+        "date_end": "2023-05-10",
+        "date_start": "2023-05-03",
+        "mode": "ALWAYS",
+        "repeat_on_days": [],
+        "time_all_day": False,
+        "time_range_end": "12:00",
+        "time_range_start": "09:00",
+    },
+    "target_devices": [{"client_mac": CLIENT_1["mac"], "type": "CLIENT"}],
+}
+
 
 @pytest.mark.parametrize("client_payload", [[CONTROLLER_HOST]])
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])
@@ -1070,6 +1101,64 @@ async def test_dpi_switches_add_second_app(
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
+
+@pytest.mark.parametrize(("traffic_rule_payload"), [([TRAFFIC_RULE])])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_traffic_rules(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_websocket_message,
+    config_entry_setup: ConfigEntry,
+    traffic_rule_payload: list[dict[str, Any]],
+) -> None:
+    """Test control of UniFi traffic rules."""
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    # Validate state object
+    switch_1 = hass.states.get("switch.unifi_network_test_traffic_rule")
+    assert switch_1.state == STATE_ON
+    assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
+
+    traffic_rule = deepcopy(traffic_rule_payload[0])
+
+    # Disable traffic rule
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}/trafficrules/{traffic_rule['_id']}",
+    )
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.unifi_network_test_traffic_rule"},
+        blocking=True,
+    )
+    # Updating the value for traffic rules will make another call to retrieve the values
+    assert aioclient_mock.call_count == call_count + 2
+    expected_disable_call = deepcopy(traffic_rule)
+    expected_disable_call["enabled"] = False
+
+    assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+
+    call_count = aioclient_mock.call_count
+
+    # Enable traffic rule
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.unifi_network_test_traffic_rule"},
+        blocking=True,
+    )
+
+    expected_enable_call = deepcopy(traffic_rule)
+    expected_enable_call["enabled"] = True
+
+    assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
 @pytest.mark.parametrize(

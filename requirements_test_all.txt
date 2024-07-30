@@ -180,7 +180,7 @@ aioapcaccess==0.4.2
 aioaquacell==0.2.0
 
 # homeassistant.components.aseko_pool_live
-aioaseko==0.1.1
+aioaseko==0.2.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
@@ -640,7 +640,7 @@ dremel3dpy==2.1.1
 dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
-dsmr-parser==1.3.1
+dsmr-parser==1.4.2
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
@@ -1012,7 +1012,7 @@ kegtron-ble==0.4.0
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.1.20.105944
+knx-frontend==2024.7.25.204106
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2220,7 +2220,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.21
+universal-silabs-flasher==0.0.22
 
 # homeassistant.components.upb
 upb-lib==0.5.8
@@ -2360,7 +2360,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.23
+zha==0.0.24
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0
