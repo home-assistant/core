@@ -6,12 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from pynecil import (
-    CharSetting,
-    CommunicationError,
-    LiveDataResponse,
-    SettingsDataResponse,
-)
+from pynecil import CharSetting, CommunicationError, LiveDataResponse
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -33,7 +28,7 @@ from .entity import IronOSBaseEntity
 class IronOSNumberEntityDescription(NumberEntityDescription):
     """Describes IronOS number entity."""
 
-    value_fn: Callable[[LiveDataResponse, SettingsDataResponse], float | int | None]
+    value_fn: Callable[[LiveDataResponse], float | int | None]
     max_value_fn: Callable[[LiveDataResponse], float | int]
     set_key: CharSetting
 
@@ -50,7 +45,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         translation_key=PinecilNumber.SETPOINT_TEMP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
-        value_fn=lambda data, _: data.setpoint_temp,
+        value_fn=lambda data: data.setpoint_temp,
         set_key=CharSetting.SETPOINT_TEMP,
         mode=NumberMode.BOX,
         native_min_value=MIN_TEMP,
@@ -93,9 +88,7 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return sensor state."""
-        return self.entity_description.value_fn(
-            self.coordinator.data, self.coordinator.settings
-        )
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def native_max_value(self) -> float:
