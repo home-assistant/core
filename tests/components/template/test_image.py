@@ -540,6 +540,7 @@ async def test_trigger_image_custom_entity_picture(
     )
 
 
+@respx.mock
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
