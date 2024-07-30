@@ -18,7 +18,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util  # noqa: E402
 
 from . import SimpleFinConfigEntry
 from .entity import SimpleFinEntity
