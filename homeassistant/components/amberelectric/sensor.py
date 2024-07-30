@@ -105,15 +105,27 @@ class AmberPriceSensor(AmberSensor):
             data["range_max"] = format_cents_to_dollars(interval.range.max)
 
         if interval.advanced_price is not None:
-            data["advanced_price_low"] = -1 * format_cents_to_dollars(
-                interval.advanced_price.low
-            )
-            data["advanced_price_predicted"] = -1 * format_cents_to_dollars(
-                interval.advanced_price.predicted
-            )
-            data["advanced_price_high"] = -1 * format_cents_to_dollars(
-                interval.advanced_price.high
-            )
+            if interval.channel_type == ChannelType.FEEDIN:
+                data["advanced_price_low"] = -1 * format_cents_to_dollars(
+                    interval.advanced_price.low
+                )
+                data["advanced_price_predicted"] = -1 * format_cents_to_dollars(
+                    interval.advanced_price.predicted
+                )
+                data["advanced_price_high"] = -1 * format_cents_to_dollars(
+                    interval.advanced_price.high
+                )
+
+            else:
+                data["advanced_price_low"] = format_cents_to_dollars(
+                    interval.advanced_price.low
+                )
+                data["advanced_price_predicted"] = format_cents_to_dollars(
+                    interval.advanced_price.predicted
+                )
+                data["advanced_price_high"] = format_cents_to_dollars(
+                    interval.advanced_price.high
+                )
 
         return data
 
@@ -170,13 +182,13 @@ class AmberForecastSensor(AmberSensor):
                 datum["range_max"] = format_cents_to_dollars(interval.range.max)
 
             if interval.advanced_price is not None:
-                data["advanced_price_low"] = format_cents_to_dollars(
+                datum["advanced_price_low"] = format_cents_to_dollars(
                     interval.advanced_price.low
                 )
-                data["advanced_price_predicted"] = format_cents_to_dollars(
+                datum["advanced_price_predicted"] = format_cents_to_dollars(
                     interval.advanced_price.predicted
                 )
-                data["advanced_price_high"] = format_cents_to_dollars(
+                datum["advanced_price_high"] = format_cents_to_dollars(
                     interval.advanced_price.high
                 )
 
