@@ -428,12 +428,12 @@ class MQTT:
         await self.async_init_client()
 
     @property
-    def subscriptions(self) -> list[Subscription]:
+    def subscriptions(self) -> set[Subscription]:
         """Return the tracked subscriptions."""
-        return [
+        return {
             *chain.from_iterable(self._simple_subscriptions.values()),
             *self._wildcard_subscriptions,
-        ]
+        }
 
     def cleanup(self) -> None:
         """Clean up listeners."""
@@ -736,7 +736,7 @@ class MQTT:
 
     @callback
     def async_restore_tracked_subscriptions(
-        self, subscriptions: list[Subscription]
+        self, subscriptions: set[Subscription]
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
