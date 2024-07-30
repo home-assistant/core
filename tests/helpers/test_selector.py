@@ -739,6 +739,7 @@ def test_attribute_selector_schema(
             (
                 {"seconds": 10},
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
+                {"milliseconds": 500},
             ),
             (None, {}),
         ),
