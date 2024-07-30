@@ -12,7 +12,7 @@
       "bluetooth_confirm": {
         "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]",
         "data": {
-          "medium_type": "Medium Type"
+          "medium_type": "[%key:component::mopeka::config::step::user::data::medium_type%]"
         }
       }
     },
@@ -28,7 +28,7 @@
       "init": {
         "title": "Configure Mopeka",
         "data": {
-          "medium_type": "Medium Type"
+          "medium_type": "[%key:component::mopeka::config::step::user::data::medium_type%]"
         }
       }
     }
