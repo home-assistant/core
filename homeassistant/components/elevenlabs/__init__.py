@@ -32,6 +32,7 @@ class ElevenLabsData:
     """ElevenLabs data type."""
 
     client: AsyncElevenLabs
+    model: Model
 
 
 type EleventLabsConfigEntry = ConfigEntry[ElevenLabsData]
@@ -50,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EleventLabsConfigEntry) 
     if model is None or (not model.languages):
         raise ConfigEntryError("Model could not be resolved")
 
-    entry.runtime_data = ElevenLabsData(client=client)
+    entry.runtime_data = ElevenLabsData(client=client, model=model)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

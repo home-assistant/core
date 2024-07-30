@@ -61,12 +61,12 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                voices, models = await get_voices_models(user_input[CONF_API_KEY])
+                voices, _ = await get_voices_models(user_input[CONF_API_KEY])
             except ApiError:
                 errors["base"] = "invalid_api_key"
             else:
                 return self.async_create_entry(
-                    title=models[DEFAULT_MODEL],
+                    title="ElevenLabs",
                     data=user_input,
                     options={CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: list(voices)[0]},
                 )
@@ -104,7 +104,7 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{self.models[user_input[CONF_MODEL]]}",
+                title="ElevenLabs",
                 data=user_input,
             )
 
