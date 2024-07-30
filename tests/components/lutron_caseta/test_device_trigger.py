@@ -7,16 +7,14 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.lutron_caseta import (
+from homeassistant.components.lutron_caseta.const import (
     ATTR_ACTION,
     ATTR_AREA_NAME,
+    ATTR_BUTTON_TYPE,
     ATTR_DEVICE_NAME,
+    ATTR_LEAP_BUTTON_NUMBER,
     ATTR_SERIAL,
     ATTR_TYPE,
-)
-from homeassistant.components.lutron_caseta.const import (
-    ATTR_BUTTON_TYPE,
-    ATTR_LEAP_BUTTON_NUMBER,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,

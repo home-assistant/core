@@ -1,5 +1,7 @@
 """Lutron Caseta constants."""
 
+from typing import Final
+
 DOMAIN = "lutron_caseta"
 
 CONF_KEYFILE = "keyfile"
@@ -19,14 +21,14 @@ DEVICE_TYPE_SPECTRUM_TUNE = "SpectrumTune"
 
 MANUFACTURER = "Lutron Electronics Co., Inc"
 
-ATTR_SERIAL = "serial"
-ATTR_TYPE = "type"
-ATTR_BUTTON_TYPE = "button_type"
-ATTR_LEAP_BUTTON_NUMBER = "leap_button_number"
-ATTR_BUTTON_NUMBER = "button_number"  # LIP button number
-ATTR_DEVICE_NAME = "device_name"
-ATTR_AREA_NAME = "area_name"
-ATTR_ACTION = "action"
+ATTR_SERIAL: Final = "serial"
+ATTR_TYPE: Final = "type"
+ATTR_BUTTON_TYPE: Final = "button_type"
+ATTR_LEAP_BUTTON_NUMBER: Final = "leap_button_number"
+ATTR_BUTTON_NUMBER: Final = "button_number"  # LIP button number
+ATTR_DEVICE_NAME: Final = "device_name"
+ATTR_AREA_NAME: Final = "area_name"
+ATTR_ACTION: Final = "action"
 
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
