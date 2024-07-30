@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-import typing
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,8 +16,16 @@ from homeassistant.components.homeassistant_yellow.helpers import (
 )
 from homeassistant.core import HomeAssistant
 
-if typing.TYPE_CHECKING:
-    import gpiod
+if TYPE_CHECKING:
+    from gpiod.line import Value
+else:
+    import enum
+
+    class Value(enum.Enum):
+        """Mock `gpiod.line.Value`."""
+
+        INACTIVE = 0
+        ACTIVE = 1
 
 
 @contextlib.contextmanager
@@ -26,24 +34,30 @@ def mock_gpio_pin_states(pin_states: dict[int, list[bool]]):
 
     read_count = 0
 
-    def mock_get_lines(pins: list[int]):
-        def mock_get_values() -> list[gpiod.line.Value]:
+    def mock_request_lines(path: str, consumer: str, config: dict[int, Any]):
+        def mock_get_values() -> list[Value]:
             nonlocal read_count
 
-            values = [pin_states[pin][read_count] for pin in pins]
+            values = [
+                Value.ACTIVE if pin_states[pin][read_count] else Value.INACTIVE
+                for pin, _ in config.items()
+            ]
             read_count += 1
 
             return values
 
         mock = MagicMock()
-        mock.get_values.side_effect = mock_get_values
+        mock.__enter__.return_value.get_values.side_effect = mock_get_values
 
         return mock
 
     mock_gpiod = MagicMock()
-    mock_gpiod.chip.return_value.get_lines = MagicMock(side_effect=mock_get_lines)
+    mock_gpiod.request_lines.side_effect = mock_request_lines
+    mock_gpiod.line.Value = Value
 
-    with patch.dict("sys.modules", gpiod=mock_gpiod):
+    with patch.dict(
+        "sys.modules", {"gpiod": mock_gpiod, "gpiod.line": mock_gpiod.line}
+    ):
         yield
 
 
