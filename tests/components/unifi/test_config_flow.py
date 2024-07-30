@@ -1,6 +1,5 @@
 """Test UniFi Network config flow."""
 
-from collections.abc import Callable
 import socket
 from unittest.mock import PropertyMock, patch
 
@@ -25,7 +24,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -35,6 +34,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import ConfigEntryFactoryType
 
 from tests.common import MockConfigEntry
 
@@ -296,7 +297,7 @@ async def test_flow_fails_hub_unavailable(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_flow_update_configuration(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Verify reauth flow can update hub configuration."""
     config_entry = config_entry_setup
@@ -337,7 +338,7 @@ async def test_reauth_flow_update_configuration(
 
 
 async def test_reauth_flow_update_configuration_on_not_loaded_entry(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Verify reauth flow can update hub configuration on a not loaded entry."""
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
@@ -379,7 +380,7 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
 @pytest.mark.parametrize("wlan_payload", [WLANS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 async def test_advanced_option_flow(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test advanced config flow options."""
     config_entry = config_entry_setup
@@ -463,7 +464,7 @@ async def test_advanced_option_flow(
 
 @pytest.mark.parametrize("client_payload", [CLIENTS])
 async def test_simple_option_flow(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test simple config flow options."""
     config_entry = config_entry_setup

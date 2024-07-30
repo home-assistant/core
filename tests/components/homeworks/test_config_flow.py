@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY, MagicMock
 
+from pyhomeworks import exceptions as hw_exceptions
 import pytest
 from pytest_unordered import unordered
 
@@ -55,7 +56,7 @@ async def test_user_flow(
     }
     mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY)
     mock_controller.close.assert_called_once_with()
-    mock_controller.join.assert_called_once_with()
+    mock_controller.join.assert_not_called()
 
 
 async def test_user_flow_already_exists(
@@ -96,7 +97,10 @@ async def test_user_flow_already_exists(
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
-    [(ConnectionError, "connection_error"), (Exception, "unknown_error")],
+    [
+        (hw_exceptions.HomeworksConnectionFailed, "connection_error"),
+        (Exception, "unknown_error"),
+    ],
 )
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
