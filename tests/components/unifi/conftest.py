@@ -51,9 +51,7 @@ CONTROLLER_HOST = {
     "uptime": 1562600160,
 }
 
-type ConfigEntryFactoryType = Callable[
-    [MockConfigEntry], Coroutine[Any, Any, MockConfigEntry]
-]
+type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 
 
 class WebsocketMessageMock(Protocol):
