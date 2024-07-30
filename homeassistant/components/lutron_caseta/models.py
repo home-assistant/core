@@ -51,7 +51,7 @@ class LutronCasetaButtonEventData(TypedDict):
 
     serial: str
     type: str
-    button_number: int
+    button_number: int | None
     leap_button_number: int
     device_name: str
     device_id: str
