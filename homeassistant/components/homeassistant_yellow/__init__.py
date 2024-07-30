@@ -40,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             domain=DOMAIN,
             issue_id=ISSUE_CM4_UNSEATED,
             is_fixable=False,
-            is_persistent=True,
             learn_more_url="https://yellow.home-assistant.io/guides/remove-cm4/",
             severity=ir.IssueSeverity.ERROR,
             translation_key=ISSUE_CM4_UNSEATED,

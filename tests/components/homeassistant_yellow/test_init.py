@@ -416,7 +416,7 @@ async def test_unseated_repair(hass: HomeAssistant) -> None:
 
         issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CM4_UNSEATED)
         assert issue.is_fixable is False
-        assert issue.is_persistent is True
+        assert issue.is_persistent is False
         assert (
             issue.learn_more_url
             == "https://yellow.home-assistant.io/guides/remove-cm4/"
