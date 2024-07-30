@@ -298,18 +298,14 @@ async def async_setup_entry(
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkNVRSwitchEntity(reolink_data, entity_description)
-            for entity_description in NVR_SWITCH_ENTITIES
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkNVRSwitchEntity(reolink_data, entity_description)
+        for entity_description in NVR_SWITCH_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
     )
     entities.extend(
-        [
-            ReolinkChimeSwitchEntity(reolink_data, chime, entity_description)
-            for entity_description in CHIME_SWITCH_ENTITIES
-            for chime in reolink_data.host.api.chime_list
-        ]
+        ReolinkChimeSwitchEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_SWITCH_ENTITIES
+        for chime in reolink_data.host.api.chime_list
     )
 
     # Can be removed in HA 2025.2.0

@@ -505,11 +505,9 @@ async def async_setup_entry(
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
-            for entity_description in CHIME_NUMBER_ENTITIES
-            for chime in reolink_data.host.api.chime_list
-        ]
+        ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_NUMBER_ENTITIES
+        for chime in reolink_data.host.api.chime_list
     )
     async_add_entities(entities)
 
