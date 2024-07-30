@@ -1424,3 +1424,227 @@ async def test_device_uptime(
         entity_registry.async_get("sensor.device_uptime").entity_category
         is EntityCategory.DIAGNOSTIC
     )
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "uptime_stats": {
+                    "WAN": {
+                        "availability": 100.0,
+                        "latency_average": 39,
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 56,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 53,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 30,
+                                "target": "1.1.1.1",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
+                    "WAN2": {
+                        "monitors": [
+                            {
+                                "availability": 0.0,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 0.0,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
+                        ],
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity_id", "state", "updated_state", "index_to_update"),
+    [
+        # Microsoft
+        ("microsoft_wan", "56", "20", 0),
+        # Google
+        ("google_wan", "53", "90", 1),
+        # Cloudflare
+        ("cloudflare_wan", "30", "80", 2),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message,
+    device_payload: list[dict[str, Any]],
+    entity_id: str,
+    state: str,
+    updated_state: str,
+    index_to_update: int,
+) -> None:
+    """Verify that wan latency sensors are working as expected."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get(f"sensor.mock_name_{entity_id}_latency")
+    assert latency_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert latency_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    # Enable entity
+    entity_registry.async_update_entity(
+        entity_id=f"sensor.mock_name_{entity_id}_latency", disabled_by=None
+    )
+
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+
+    # Verify sensor attributes and state
+    latency_entry = hass.states.get(f"sensor.mock_name_{entity_id}_latency")
+    assert latency_entry.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
+    assert (
+        latency_entry.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    )
+    assert latency_entry.state == state
+
+    # Verify state update
+    device = device_payload[0]
+    device["uptime_stats"]["WAN"]["monitors"][index_to_update]["latency_average"] = (
+        updated_state
+    )
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert (
+        hass.states.get(f"sensor.mock_name_{entity_id}_latency").state == updated_state
+    )
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "uptime_stats": {
+                    "WAN": {
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 30,
+                                "target": "1.2.3.4",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
+                    "WAN2": {
+                        "monitors": [
+                            {
+                                "availability": 0.0,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 0.0,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
+                        ],
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_with_no_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify that wan latency sensors is not created if there is no data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
+    assert latency_entry is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_with_no_uptime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify that wan latency sensors is not created if there is no data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
+    assert latency_entry is None
