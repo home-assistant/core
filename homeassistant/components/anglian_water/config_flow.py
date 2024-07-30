@@ -26,6 +26,9 @@ AW_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
         ),
+        vol.Optional(CONF_DEVICE_ID): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
+        ),
     }
 )
 
