@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -17,8 +15,6 @@ from .models import (
     LutronCasetaConfigEntry,
     LutronCasetaData,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -55,16 +51,13 @@ class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
         self._button_id = button_device.button_id
         self._entry_id = entry_id
 
-    async def async_press(self) -> None:
-        """Send a button press event."""
-        await self._smartbridge.tap_button(self.device_id)
-
     @property
     def serial(self):
         """Buttons shouldn't have serial numbers, Return None."""
         return None
 
-    def _handle_button_event(self, data: LutronCasetaButtonEventData) -> None:
+    @callback
+    def _async_handle_button_event(self, data: LutronCasetaButtonEventData) -> None:
         """Handle a button event."""
         self._trigger_event(data["action"])
         self.async_write_ha_state()
@@ -75,7 +68,7 @@ class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{DOMAIN}_{self._entry_id}_button_{self._button_id}",
-                self._handle_button_event,
+                self._async_handle_button_event,
             )
         )
         await super().async_added_to_hass()
