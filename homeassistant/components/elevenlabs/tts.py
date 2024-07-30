@@ -46,6 +46,7 @@ async def async_setup_entry(
                 voices,
                 default_voice_id,
                 config_entry.entry_id,
+                config_entry.title,
             )
         ]
     )
@@ -54,8 +55,6 @@ async def async_setup_entry(
 class ElevenLabsTTSEntity(TextToSpeechEntity):
     """The ElevenLabs API entity."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_supported_options = [ATTR_VOICE]
 
     def __init__(
@@ -65,6 +64,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         voices: list[ElevenLabsVoice],
         default_voice_id: str,
         entry_id: str,
+        title: str,
     ) -> None:
         """Init ElevenLabs TTS service."""
         _LOGGER.error("Got this far")
@@ -82,6 +82,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         if voice_indices:
             self._voices.insert(0, self._voices.pop(voice_indices[0]))
         self._attr_unique_id = entry_id
+        self._attr_name = title
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             manufacturer="ElevenLabs",
