@@ -55,7 +55,7 @@ def generate_current_interval(
             spike_status=SpikeStatus.NONE,
             descriptor=PriceDescriptor.EXTREMELYLOW,
             estimate=True,
-            advancedPrice=AdvancedPrice(low=10, high=20),
+            advancedPrice=AdvancedPrice(low=10, predicted=15, high=20),
         )
     )
 
@@ -80,7 +80,7 @@ def generate_forecast_interval(
             spike_status=SpikeStatus.NONE,
             descriptor=PriceDescriptor.VERYLOW,
             estimate=True,
-            advancedPrice=AdvancedPrice(low=10, high=20),
+            advancedPrice=AdvancedPrice(low=10, predicted=15, high=20),
         )
     )
 
