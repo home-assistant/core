@@ -6,6 +6,11 @@ from homeassistant.components.input_number import (
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
+from homeassistant.components.input_text import (
+    ATTR_VALUE as INPUT_TEXT_ATTR_VALUE,
+    DOMAIN as INPUT_TEXT_DOMAIN,
+    SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
+)
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
@@ -14,7 +19,12 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ICON,
+    CONF_ENTITY_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 
@@ -29,6 +39,8 @@ _MINIMUM_INPUT_NUMBER = "input_number.minimum"
 _MAXIMUM_INPUT_NUMBER = "input_number.maximum"
 # Represent for number's step
 _STEP_INPUT_NUMBER = "input_number.step"
+# TODO comment
+_UNIT_OF_MEASUREMENT_INPUT_TEXT = "input_text.unit_of_measurement"
 
 # Config for `_VALUE_INPUT_NUMBER`
 _VALUE_INPUT_NUMBER_CONFIG = {
@@ -63,7 +75,7 @@ async def test_missing_optional_config(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, 4, 1, 0.0, 100.0)
+    _verify(hass, 4, 1, 0.0, 100.0, None)
 
 
 async def test_missing_required_keys(hass: HomeAssistant) -> None:
@@ -115,6 +127,7 @@ async def test_all_optional_config(hass: HomeAssistant) -> None:
                         "min": "{{ 3 }}",
                         "max": "{{ 5 }}",
                         "step": "{{ 1 }}",
+                        "unit_of_measurement": "{{ 'beer' }}",
                     }
                 }
             },
@@ -124,7 +137,7 @@ async def test_all_optional_config(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, 4, 1, 3, 5)
+    _verify(hass, 4, 1, 3, 5, "beer")
 
 
 async def test_templates_with_entities(
@@ -163,6 +176,19 @@ async def test_templates_with_entities(
             },
         )
 
+    with assert_setup_component(1, "input_text"):
+        assert await setup.async_setup_component(
+            hass,
+            "input_text",
+            {
+                "input_text": {
+                    "unit_of_measurement": {
+                        "name": "Unit Of Measurement",
+                    },
+                }
+            },
+        )
+
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
@@ -175,6 +201,7 @@ async def test_templates_with_entities(
                         "step": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
                         "min": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
                         "max": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
+                        "unit_of_measurement": f"{{{{ states('{_UNIT_OF_MEASUREMENT_INPUT_TEXT}') }}}}",
                         "set_value": [
                             {
                                 "service": "input_number.set_value",
@@ -203,6 +230,7 @@ async def test_templates_with_entities(
     hass.states.async_set(_STEP_INPUT_NUMBER, 1)
     hass.states.async_set(_MINIMUM_INPUT_NUMBER, 3)
     hass.states.async_set(_MAXIMUM_INPUT_NUMBER, 5)
+    hass.states.async_set(_UNIT_OF_MEASUREMENT_INPUT_TEXT, "beer")
 
     await hass.async_block_till_done()
     await hass.async_start()
@@ -212,7 +240,7 @@ async def test_templates_with_entities(
     assert entry
     assert entry.unique_id == "b-a"
 
-    _verify(hass, 4, 1, 3, 5)
+    _verify(hass, 4, 1, 3, 5, "beer")
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -221,7 +249,7 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 1, 3, 5)
+    _verify(hass, 5, 1, 3, 5, "beer")
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -230,7 +258,7 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 2, 3, 5)
+    _verify(hass, 5, 2, 3, 5, "beer")
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -239,7 +267,7 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 2, 2, 5)
+    _verify(hass, 5, 2, 2, 5, "beer")
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -248,7 +276,19 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 2, 2, 6)
+    _verify(hass, 5, 2, 2, 6, "beer")
+
+    await hass.services.async_call(
+        INPUT_TEXT_DOMAIN,
+        INPUT_TEXT_SERVICE_SET_VALUE,
+        {
+            CONF_ENTITY_ID: _UNIT_OF_MEASUREMENT_INPUT_TEXT,
+            INPUT_TEXT_ATTR_VALUE: "wine",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    _verify(hass, 5, 2, 2, 6, "wine")
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -256,7 +296,7 @@ async def test_templates_with_entities(
         {CONF_ENTITY_ID: _TEST_NUMBER, NUMBER_ATTR_VALUE: 2},
         blocking=True,
     )
-    _verify(hass, 2, 2, 2, 6)
+    _verify(hass, 2, 2, 2, 6, "wine")
 
     # Check this variable can be used in set_value script
     assert len(calls) == 1
@@ -286,6 +326,7 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
                             "min": "{{ trigger.event.data.min_beers }}",
                             "max": "{{ trigger.event.data.max_beers }}",
                             "step": "{{ trigger.event.data.step }}",
+                            "unit_of_measurement": "{{ trigger.event.data.unit_of_measurement }}",
                             "set_value": {"event": "test_number_event"},
                             "optimistic": True,
                         },
@@ -305,11 +346,18 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
     assert state.attributes["min"] == 0.0
     assert state.attributes["max"] == 100.0
     assert state.attributes["step"] == 1.0
+    assert state.attributes["unit_of_measurement"] == "None"
 
     context = Context()
     hass.bus.async_fire(
         "test_event",
-        {"beers_drank": 3, "min_beers": 1.0, "max_beers": 5.0, "step": 0.5},
+        {
+            "beers_drank": 3,
+            "min_beers": 1.0,
+            "max_beers": 5.0,
+            "step": 0.5,
+            "unit_of_measurement": "beer",
+        },
         context=context,
     )
     await hass.async_block_till_done()
@@ -320,6 +368,7 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
     assert state.attributes["min"] == 1.0
     assert state.attributes["max"] == 5.0
     assert state.attributes["step"] == 0.5
+    assert state.attributes["unit_of_measurement"] == "beer"
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -337,6 +386,7 @@ def _verify(
     expected_step,
     expected_minimum,
     expected_maximum,
+    expected_unit_of_measurement,
 ):
     """Verify number's state."""
     state = hass.states.get(_TEST_NUMBER)
@@ -345,6 +395,7 @@ def _verify(
     assert attributes.get(ATTR_STEP) == float(expected_step)
     assert attributes.get(ATTR_MAX) == float(expected_maximum)
     assert attributes.get(ATTR_MIN) == float(expected_minimum)
+    assert attributes.get(CONF_UNIT_OF_MEASUREMENT) == expected_unit_of_measurement
 
 
 async def test_icon_template(hass: HomeAssistant) -> None:
