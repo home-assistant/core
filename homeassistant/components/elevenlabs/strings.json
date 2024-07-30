@@ -20,6 +20,10 @@
         "data": {
           "voice": "Voice",
           "model": "Model"
+        },
+        "data_description": {
+          "voice": "Voice to use for the TTS.",
+          "model": "ElevenLabs model to use. Please note that not all models support all languages equally well."
         }
       }
     }
