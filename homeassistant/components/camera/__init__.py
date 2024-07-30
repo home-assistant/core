@@ -345,15 +345,85 @@ async def async_get_still_stream(
     return response
 
 
+def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
+    """Get camera component from entity_id."""
+    if (component := hass.data.get(DOMAIN)) is None:
+        raise HomeAssistantError("Camera integration not set up")
+
+    if (camera := component.get_entity(entity_id)) is None:
+        raise HomeAssistantError("Camera not found")
+
+    if not camera.is_on:
+        raise HomeAssistantError("Camera is off")
+
+    return cast(Camera, camera)
+
+
+# An RtspToWebRtcProvider accepts these inputs:
+#     stream_source: The RTSP url
+#     offer_sdp: The WebRTC SDP offer
+#     stream_id: A unique id for the stream, used to update an existing source
+# The output is the SDP answer, or None if the source or offer is not eligible.
+# The Callable may throw HomeAssistantError on failure.
+type RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
+
+
+def async_register_rtsp_to_web_rtc_provider(
+    hass: HomeAssistant,
+    domain: str,
+    provider: RtspToWebRtcProviderType,
+) -> Callable[[], None]:
+    """Register an RTSP to WebRTC provider.
+
+    The first provider to satisfy the offer will be used.
+    """
+    if DOMAIN not in hass.data:
+        raise ValueError("Unexpected state, camera not loaded")
+
+    def remove_provider() -> None:
+        if domain in hass.data[DATA_RTSP_TO_WEB_RTC]:
+            del hass.data[DATA_RTSP_TO_WEB_RTC]
+        hass.async_create_task(_async_refresh_providers(hass))
+
+    hass.data.setdefault(DATA_RTSP_TO_WEB_RTC, {})
+    hass.data[DATA_RTSP_TO_WEB_RTC][domain] = provider
+    hass.async_create_task(_async_refresh_providers(hass))
+    return remove_provider
+
+
+async def _async_refresh_providers(hass: HomeAssistant) -> None:
+    """Check all cameras for any state changes for registered providers."""
+
+    component: EntityComponent[Camera] = hass.data[DOMAIN]
+    await asyncio.gather(
+        *(camera.async_refresh_providers() for camera in component.entities)
+    )
+
+
+def _async_get_rtsp_to_web_rtc_providers(
+    hass: HomeAssistant,
+) -> Iterable[RtspToWebRtcProviderType]:
+    """Return registered RTSP to WebRTC providers."""
+    providers: dict[str, RtspToWebRtcProviderType] = hass.data.get(
+        DATA_RTSP_TO_WEB_RTC, {}
+    )
+    return providers.values()
+
+
+async def init_camera_prefs(hass: HomeAssistant) -> CameraPreferences:
+    """Initialize camera preferences."""
+    prefs = CameraPreferences(hass)
+    await prefs.async_load()
+    hass.data[DATA_CAMERA_PREFS] = prefs
+    return prefs
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the camera component."""
     component = hass.data[DATA_COMPONENT] = EntityComponent[Camera](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-
-    prefs = CameraPreferences(hass)
-    await prefs.async_load()
-    hass.data[DATA_CAMERA_PREFS] = prefs
+    prefs = await init_camera_prefs(hass)
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))

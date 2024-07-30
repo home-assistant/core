@@ -25,8 +25,8 @@ from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
     DynamicStreamSettings,
     _async_get_image,
+    init_camera_prefs,
 )
-from homeassistant.components.camera.prefs import CameraPreferences
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
@@ -322,9 +322,7 @@ async def register_stream_preview(hass: HomeAssistant, config) -> str:
     # Need to load the camera prefs early to avoid errors generating the stream
     # if the user does not already have the stream component loaded.
     if hass.data.get(DATA_CAMERA_PREFS) is None:
-        prefs = CameraPreferences(hass)
-        await prefs.async_load()
-        hass.data[DATA_CAMERA_PREFS] = prefs
+        await init_camera_prefs(hass)
 
     # Create a camera but don't add it to the hass object.
     cam = GenericCamera(hass, config, "stream_preview", "Camera Preview Stream")
