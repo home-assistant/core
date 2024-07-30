@@ -57,8 +57,8 @@ from .models import (
     LUTRON_KEYPAD_SERIAL,
     LUTRON_KEYPAD_TYPE,
     LutronButton,
+    LutronCasetaButtonActionData,
     LutronCasetaButtonDevice,
-    LutronCasetaButtonEventData,
     LutronCasetaConfigEntry,
     LutronCasetaData,
     LutronKeypad,
@@ -91,7 +91,6 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
-    Platform.EVENT,
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
@@ -524,7 +523,7 @@ def _async_subscribe_keypad_events(
             keypad_type, leap_to_keypad_button_names[keypad_device_id]
         )[leap_button_number]
 
-        data = LutronCasetaButtonEventData(
+        data = LutronCasetaButtonActionData(
             serial=keypad[LUTRON_KEYPAD_SERIAL],
             type=keypad_type,
             button_number=lip_button_number,

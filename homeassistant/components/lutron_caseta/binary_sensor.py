@@ -7,13 +7,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_SUGGESTED_AREA
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_name_from_id
-from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
-from .models import LutronCasetaConfigEntry
+from .const import ACTION_PRESS, CONFIG_URL, DOMAIN, MANUFACTURER, UNASSIGNED_AREA
+from .models import (
+    LutronCasetaButtonActionData,
+    LutronCasetaButtonDevice,
+    LutronCasetaConfigEntry,
+    LutronCasetaData,
+)
 
 
 async def async_setup_entry(
@@ -29,10 +35,15 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     occupancy_groups = bridge.occupancy_groups
-    async_add_entities(
+    entities: list[BinarySensorEntity] = [
         LutronOccupancySensor(occupancy_group, data)
         for occupancy_group in occupancy_groups.values()
+    ]
+    entities.extend(
+        LutronCasetaButtonBinarySensor(data, button_device, config_entry.entry_id)
+        for button_device in data.button_devices
     )
+    async_add_entities(entities)
 
 
 class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
@@ -84,3 +95,50 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id}
+
+
+class LutronCasetaButtonBinarySensor(LutronCasetaDevice, BinarySensorEntity):
+    """Representation of a Lutron pico and keypad button action.
+
+    Lutron buttons send a press and a release action which means
+    they have a duration to the press action. Because they have
+    a duration, they are represented as binary sensors and not events.
+    """
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        data: LutronCasetaData,
+        button_device: LutronCasetaButtonDevice,
+        entry_id: str,
+    ) -> None:
+        """Init a button binary_sensor entity."""
+        super().__init__(button_device.device, data)
+        self._attr_name = button_device.button_name
+        self._attr_translation_key = button_device.button_key
+        self._attr_device_info = button_device.parent_device_info
+        self._button_id = button_device.button_id
+        self._entry_id = entry_id
+
+    @property
+    def serial(self):
+        """Buttons shouldn't have serial numbers, Return None."""
+        return None
+
+    @callback
+    def _async_handle_button_action(self, data: LutronCasetaButtonActionData) -> None:
+        """Handle a button event."""
+        self._attr_is_on = data["action"] == ACTION_PRESS
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to button actions."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._entry_id}_button_{self._button_id}",
+                self._async_handle_button_action,
+            )
+        )
+        await super().async_added_to_hass()
