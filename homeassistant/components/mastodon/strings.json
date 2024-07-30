@@ -38,13 +38,13 @@
   },
   "entity": {
     "sensor": {
-      "followers_count": {
+      "followers": {
         "name": "Followers"
       },
-      "following_count": {
+      "following": {
         "name": "Following"
       },
-      "statuses_count": {
+      "statuses": {
         "name": "Statuses"
       }
     }
