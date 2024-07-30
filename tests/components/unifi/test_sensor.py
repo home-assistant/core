@@ -1570,8 +1570,6 @@ async def test_wan_monitor_latency(
                 "port_overrides": [],
                 "uptime_stats": {
                     "WAN": {
-                        "availability": 100.0,
-                        "latency_average": 39,
                         "monitors": [
                             {
                                 "availability": 100.0,
@@ -1631,7 +1629,6 @@ async def test_wan_monitor_latency_with_no_entries(
                 "model": "US16P150",
                 "name": "mock-name",
                 "port_overrides": [],
-                "uptime_stats": None,
                 "state": 1,
                 "type": "usw",
                 "version": "4.0.42.10433",

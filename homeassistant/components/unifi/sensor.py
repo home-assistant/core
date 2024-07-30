@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -207,11 +207,9 @@ def async_device_wan_latency_supported_fn(
     obj_id: str,
 ) -> bool:
     """Determine if an device have a latency monitor."""
-
-    if (device := hub.api.devices[obj_id]) and device.uptime_stats is None:
-        return False
-
-    return async_device_wan_latency_target(wan, monitor_target, device) is not None
+    if (device := hub.api.devices[obj_id]) and device.uptime_stats:
+        return _device_wan_latency_monitor(wan, monitor_target, device) is not None
+    return False
 
 
 @callback
@@ -222,32 +220,24 @@ def async_device_wan_latency_value_fn(
     device: Device,
 ) -> int | None:
     """Retrieve the monitor target from WAN monitors."""
+    target = _device_wan_latency_monitor(wan, monitor_target, device)
 
-    target = async_device_wan_latency_target(
-        wan=wan, monitor_target=monitor_target, device=device
-    )
-
-    if target is None:
-        return None
+    if TYPE_CHECKING:
+        # Checked by async_device_wan_latency_supported_fn
+        assert target
 
     return target.get("latency_average", 0)
 
 
-def async_device_wan_latency_target(
+@callback
+def _device_wan_latency_monitor(
     wan: Literal["WAN", "WAN2"], monitor_target: str, device: Device
 ) -> TypedDeviceUptimeStatsWanMonitor | None:
     """Return the target of the WAN latency monitor."""
-
-    if device.uptime_stats is None:
-        return None
-
-    uptime_stats = device.uptime_stats
-
-    if uptime_stats_wan := uptime_stats.get(wan):
-        for item in uptime_stats_wan["monitors"]:
-            if monitor_target in item["target"]:
-                return item
-
+    if device.uptime_stats and (uptime_stats_wan := device.uptime_stats.get(wan)):
+        for monitor in uptime_stats_wan["monitors"]:
+            if monitor_target in monitor["target"]:
+                return monitor
     return None
 
 
