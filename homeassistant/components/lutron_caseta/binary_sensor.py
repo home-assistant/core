@@ -106,6 +106,7 @@ class LutronCasetaButtonBinarySensor(LutronCasetaDevice, BinarySensorEntity):
     """
 
     _attr_has_entity_name = True
+    _attr_is_on = False
 
     def __init__(
         self,
