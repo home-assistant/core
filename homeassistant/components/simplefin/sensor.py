@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from simplefin4py import Account
 
@@ -18,6 +18,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util  # noqa: E402
 
 from . import SimpleFinConfigEntry
 from .entity import SimpleFinEntity
@@ -47,7 +48,7 @@ SIMPLEFIN_SENSORS: tuple[SimpleFinSensorEntityDescription, ...] = (
         translation_key="age",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda account: account.balance_date.replace(tzinfo=UTC),
+        value_fn=lambda account: dt_util.as_utc(account.balance_date),
     ),
 )
 
