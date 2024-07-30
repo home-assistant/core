@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Any
 
 from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
@@ -16,7 +17,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 
-from .const import BASE_SCHEMA, CONF_MEDIUM_TYPE, DOMAIN
+from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN, MediumType
 
 
 class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -37,6 +38,25 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> MopekaOptionsFlow:
         """Return the options flow for this handler."""
         return MopekaOptionsFlow(config_entry)
+
+    @staticmethod
+    def format_medium_type(medium_type: Enum) -> str:
+        """Format the medium type for human reading."""
+        return medium_type.name.replace("_", " ").title()
+
+    @property
+    def base_schema(self) -> vol.Schema:
+        """Return the base schema with formatted medium types."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_MEDIUM_TYPE, default=DEFAULT_MEDIUM_TYPE): vol.In(
+                    {
+                        medium.value: self.format_medium_type(medium)
+                        for medium in MediumType
+                    }
+                )
+            }
+        )
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -73,11 +93,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=placeholders,
-            data_schema=vol.Schema(
-                {
-                    **BASE_SCHEMA,
-                }
-            ),
+            data_schema=self.base_schema,
         )
 
     async def async_step_user(
@@ -112,7 +128,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
-                    **BASE_SCHEMA,
+                    **self.base_schema.schema,
                 }
             ),
         )
@@ -141,6 +157,5 @@ class MopekaOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data={})
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(BASE_SCHEMA),
+            step_id="init", data_schema=MopekaConfigFlow().base_schema
         )
