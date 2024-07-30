@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pylutron_caseta import BUTTON_STATUS_PRESSED, BUTTON_STATUS_RELEASED
+
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -34,6 +36,7 @@ class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
     """Representation of a Lutron pico and keypad button event."""
 
     _attr_device_class = EventDeviceClass.BUTTON
+    _attr_event_types = [BUTTON_STATUS_PRESSED, BUTTON_STATUS_RELEASED]
 
     def __init__(
         self,
