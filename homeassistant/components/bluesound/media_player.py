@@ -44,6 +44,11 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -280,6 +285,8 @@ class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -295,7 +302,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._hass = hass
         self.port = port
         self._polling_task = None  # The actual polling task.
-        self._name = sync_status.name
         self._id = None
         self._last_status_update = None
         self._sync_status: SyncStatus | None = None
@@ -314,6 +320,27 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._init_callback = init_callback
 
+        self._attr_unique_id = format_unique_id(sync_status.mac, port)
+        # there should always be one player with the default port per mac
+        if port is DEFAULT_PORT:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, format_mac(sync_status.mac))},
+                connections={(CONNECTION_NETWORK_MAC, format_mac(sync_status.mac))},
+                name=sync_status.name,
+                manufacturer=sync_status.brand,
+                model=sync_status.model_name,
+                model_id=sync_status.model,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, format_unique_id(sync_status.mac, port))},
+                name=sync_status.name,
+                manufacturer=sync_status.brand,
+                model=sync_status.model_name,
+                model_id=sync_status.model,
+                via_device=(DOMAIN, format_mac(sync_status.mac)),
+            )
+
     @staticmethod
     def _try_get_index(string, search_string):
         """Get the index."""
@@ -328,12 +355,10 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._sync_status = sync_status
 
-        if not self._name:
-            self._name = sync_status.name if sync_status.name else self.host
         if not self._id:
             self._id = sync_status.id
         if not self._bluesound_device_name:
-            self._bluesound_device_name = self._name
+            self._bluesound_device_name = sync_status.name
 
         if sync_status.master is not None:
             self._is_master = False
@@ -366,7 +391,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 await self.async_update_status()
 
         except (TimeoutError, ClientError):
-            _LOGGER.info("Node %s:%s is offline, retrying later", self.name, self.port)
+            _LOGGER.error("Node %s:%s is offline, retrying later", self.name, self.port)
             await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
 
@@ -393,7 +418,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
             await self.force_update_sync_status(self._init_callback)
         except (TimeoutError, ClientError):
-            _LOGGER.info("Node %s:%s is offline, retrying later", self.host, self.port)
+            _LOGGER.error("Node %s:%s is offline, retrying later", self.host, self.port)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION
             )
@@ -455,14 +480,11 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._last_status_update = None
             self._status = None
             self.async_write_ha_state()
-            _LOGGER.info("Client connection error, marking %s as offline", self._name)
+            _LOGGER.error(
+                "Client connection error, marking %s as offline",
+                self._bluesound_device_name,
+            )
             raise
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        assert self._sync_status is not None
-        return format_unique_id(self._sync_status.mac, self.port)
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
@@ -617,11 +639,6 @@ class BluesoundPlayer(MediaPlayerEntity):
     def id(self) -> str | None:
         """Get id of device."""
         return self._id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the device."""
-        return self._name
 
     @property
     def bluesound_device_name(self) -> str | None:

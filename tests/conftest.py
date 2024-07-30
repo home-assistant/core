@@ -34,6 +34,7 @@ import multidict
 import pytest
 import pytest_socket
 import requests_mock
+import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import block_async_io
@@ -397,6 +398,13 @@ def verify_cleanup(
     finally:
         # Restore the default time zone to not break subsequent tests
         dt_util.DEFAULT_TIME_ZONE = datetime.UTC
+
+    try:
+        # Verify respx.mock has been cleaned up
+        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+    finally:
+        # Clear mock routes not break subsequent tests
+        respx.mock.clear()
 
 
 @pytest.fixture(autouse=True)
