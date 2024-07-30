@@ -200,7 +200,7 @@ async def test_fetch_blueprint_from_generic_url(
         "https://example.org/path/someblueprint.yaml",
         text=Path(
             hass.config.path("blueprints/automation/test_event_service.yaml")
-        ).read_text(),
+        ).read_text(encoding="utf8"),
     )
 
     url = "https://example.org/path/someblueprint.yaml"
