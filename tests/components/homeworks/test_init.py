@@ -181,7 +181,7 @@ async def test_cleanup_on_ha_shutdown(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY, None)
+    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY)
     mock_controller.stop.assert_not_called()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
