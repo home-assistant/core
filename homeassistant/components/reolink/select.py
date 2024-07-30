@@ -58,7 +58,7 @@ class ReolinkChimeSelectEntityDescription(
 
     get_options: list[str]
     method: Callable[[Chime, str], Any]
-    value: Callable[[Chime], str] | None = None
+    value: Callable[[Chime], str]
 
 
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
