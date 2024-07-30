@@ -48,7 +48,7 @@ SIMPLEFIN_SENSORS: tuple[SimpleFinSensorEntityDescription, ...] = (
         translation_key="age",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda account: dt_util.as_utc(account.balance_date),
+        value_fn=lambda account: account.balance_date,
     ),
 )
 
