@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 from simplefin4py import Account
 
@@ -47,7 +47,7 @@ SIMPLEFIN_SENSORS: tuple[SimpleFinSensorEntityDescription, ...] = (
         translation_key="age",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda account: account.last_update_utc,
+        value_fn=lambda account: account.balance_date.replace(tzinfo=UTC),
     ),
 )
 
