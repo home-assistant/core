@@ -171,16 +171,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        data: HomeworksData = hass.data[DOMAIN].pop(entry.entry_id)
+        for keypad in data.keypads.values():
+            keypad.unsubscribe()
 
-    data: HomeworksData = hass.data[DOMAIN].pop(entry.entry_id)
-    for keypad in data.keypads.values():
-        keypad.unsubscribe()
+        await hass.async_add_executor_job(data.controller.close)
 
-    await hass.async_add_executor_job(data.controller.close)
-
-    return True
+    return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
