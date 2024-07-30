@@ -35,6 +35,7 @@ TEST_NVR_NAME = "test_reolink_name"
 TEST_NVR_NAME2 = "test2_reolink_name"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
+TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
 
 
@@ -83,6 +84,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.sw_version = "v1.0.0.0.0.0000"
         host_mock.manufacturer = "Reolink"
         host_mock.model = TEST_HOST_MODEL
+        host_mock.item_number = TEST_ITEM_NUMBER
         host_mock.camera_model.return_value = TEST_CAM_MODEL
         host_mock.camera_name.return_value = TEST_NVR_NAME
         host_mock.camera_hardware_version.return_value = "IPC_00001"

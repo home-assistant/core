@@ -1629,7 +1629,7 @@ async def test_serviceregistry_call_non_existing_with_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test non-existing with blocking."""
-    with pytest.raises(ha.ServiceNotFound):
+    with pytest.raises(ServiceNotFound):
         await hass.services.async_call("test_domain", "i_do_not_exist", blocking=True)
 
 
@@ -1715,7 +1715,7 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     assert exc.value.domain == "test_do_not"
     assert exc.value.service == "exist"
 
-    assert str(exc.value) == "Service test_do_not.exist not found"
+    assert str(exc.value) == "Action test_do_not.exist not found"
 
 
 async def test_serviceregistry_async_service_raise_exception(
@@ -1806,7 +1806,7 @@ async def test_services_call_return_response_requires_blocking(
             return_response=True,
         )
     assert str(exc.value) == (
-        "A non blocking service call with argument blocking=False "
+        "A non blocking action call with argument blocking=False "
         "can't be used together with argument return_response=True"
     )
 
@@ -1852,7 +1852,7 @@ async def test_serviceregistry_return_response_invalid(
     ("supports_response", "return_response", "expected_error"),
     [
         (SupportsResponse.NONE, True, "does not return responses"),
-        (SupportsResponse.ONLY, False, "call requires responses"),
+        (SupportsResponse.ONLY, False, "action requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
@@ -2529,14 +2529,14 @@ async def test_reserving_states(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bedroom", "on")
     assert hass.states.async_available("light.bedroom") is False
 
-    with pytest.raises(ha.HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         hass.states.async_reserve("light.bedroom")
 
     hass.states.async_remove("light.bedroom")
     assert hass.states.async_available("light.bedroom") is True
     hass.states.async_set("light.bedroom", "on")
 
-    with pytest.raises(ha.HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         hass.states.async_reserve("light.bedroom")
 
     assert hass.states.async_available("light.bedroom") is False
@@ -2840,7 +2840,7 @@ async def test_state_change_events_context_id_match_state_time(
     hass: HomeAssistant,
 ) -> None:
     """Test last_updated, timed_fired, and the ulid all have the same time."""
-    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
     hass.states.async_set("light.bedroom", "on")
     await hass.async_block_till_done()
     state: State = hass.states.get("light.bedroom")
@@ -2859,7 +2859,7 @@ async def test_state_change_events_match_time_with_limits_of_precision(
     a bit better than the precision of datetime.now() which is used for last_updated
     on some platforms.
     """
-    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
     hass.states.async_set("light.bedroom", "on")
     await hass.async_block_till_done()
     state: State = hass.states.get("light.bedroom")
@@ -3231,7 +3231,7 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     evt = threading.Event()
     loop = asyncio.get_running_loop()
 
-    def executor_func() -> None:
+    def executor_func() -> threading.Event:
         evt.set()
         return evt
 

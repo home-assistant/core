@@ -6,6 +6,7 @@ from calendar import timegm
 from datetime import datetime
 from logging import getLogger
 from time import gmtime, struct_time
+from typing import TYPE_CHECKING
 from urllib.error import URLError
 
 import feedparser
@@ -120,9 +121,12 @@ class FeedReaderCoordinator(
             len(self._feed.entries),
             self.url,
         )
-        if not isinstance(self._feed.entries, list):
+        if not self._feed.entries:
             self._log_no_entries()
             return None
+
+        if TYPE_CHECKING:
+            assert isinstance(self._feed.entries, list)
 
         self._filter_entries()
         self._publish_new_entries()

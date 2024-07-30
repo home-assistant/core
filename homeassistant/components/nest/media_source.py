@@ -227,9 +227,10 @@ class NestEventMediaStore(EventMediaStore):
         filename = self.get_media_filename(media_key)
 
         def remove_media(filename: str) -> None:
-            if os.path.exists(filename):
-                _LOGGER.debug("Removing event media from disk store: %s", filename)
-                os.remove(filename)
+            if not os.path.exists(filename):
+                return None
+            _LOGGER.debug("Removing event media from disk store: %s", filename)
+            os.remove(filename)
 
         try:
             await self._hass.async_add_executor_job(remove_media, filename)
