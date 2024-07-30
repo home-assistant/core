@@ -916,7 +916,7 @@ holidays==0.53
 home-assistant-frontend==20240719.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.7.10
+home-assistant-intents==2024.7.29
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1517,7 +1517,7 @@ pyhiveapi==0.5.16
 pyhomematic==0.1.77
 
 # homeassistant.components.homeworks
-pyhomeworks==0.0.6
+pyhomeworks==1.1.0
 
 # homeassistant.components.ialarm
 pyialarm==2.2.0

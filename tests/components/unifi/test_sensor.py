@@ -1,6 +1,5 @@
 """UniFi Network sensor platform tests."""
 
-from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from types import MappingProxyType
@@ -29,7 +28,7 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -42,7 +41,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 DEVICE_1 = {
     "board_rev": 2,
@@ -362,9 +367,9 @@ async def test_no_clients(hass: HomeAssistant) -> None:
 )
 async def test_bandwidth_sensors(
     hass: HomeAssistant,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     config_entry_options: MappingProxyType[str, Any],
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that bandwidth sensors are working as expected."""
@@ -491,7 +496,9 @@ async def test_bandwidth_sensors(
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_sensors(
-    hass: HomeAssistant, mock_websocket_message, client_payload: list[dict[str, Any]]
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify removing of clients work as expected."""
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
@@ -520,8 +527,8 @@ async def test_remove_sensors(
 async def test_poe_port_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
-    mock_websocket_state,
+    mock_websocket_message: WebsocketMessageMock,
+    mock_websocket_state: WebsocketStateManager,
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
@@ -594,9 +601,9 @@ async def test_poe_port_switches(
 async def test_wlan_client_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
-    mock_websocket_state,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
+    mock_websocket_state: WebsocketStateManager,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
@@ -736,7 +743,7 @@ async def test_wlan_client_sensors(
 async def test_outlet_power_readings(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
     entity_id: str,
     expected_unique_id: str,
@@ -798,7 +805,7 @@ async def test_outlet_power_readings(
 async def test_device_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that temperature sensors are working as expected."""
@@ -847,7 +854,7 @@ async def test_device_temperature(
 async def test_device_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that state sensors are working as expected."""
@@ -884,7 +891,7 @@ async def test_device_state(
 async def test_device_system_stats(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
@@ -979,9 +986,9 @@ async def test_device_system_stats(
 async def test_bandwidth_port_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that port bandwidth sensors are working as expected."""
@@ -1096,9 +1103,9 @@ async def test_bandwidth_port_sensors(
 async def test_device_client_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory,
-    mock_websocket_message,
-    client_payload,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
+    client_payload: dict[str, Any],
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
     client_payload += [
@@ -1246,8 +1253,8 @@ async def test_sensor_sources(
 async def _test_uptime_entity(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_websocket_message,
-    config_entry_factory: Callable[[], ConfigEntry],
+    mock_websocket_message: WebsocketMessageMock,
+    config_entry_factory: ConfigEntryFactoryType,
     payload: dict[str, Any],
     entity_id: str,
     message_key: MessageKey,
@@ -1326,9 +1333,9 @@ async def test_client_uptime(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_websocket_message,
     config_entry_options: MappingProxyType[str, Any],
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
     client_payload: list[dict[str, Any]],
     initial_uptime,
     event_uptime,
@@ -1401,8 +1408,8 @@ async def test_device_uptime(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_websocket_message,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device uptime sensors are working as expected."""
@@ -1502,7 +1509,7 @@ async def test_device_uptime(
 async def test_wan_monitor_latency(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
     entity_id: str,
     state: str,
