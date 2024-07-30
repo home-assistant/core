@@ -281,23 +281,23 @@ class AmberAdvancedForecastSensor(AmberSensor):
                 if forecast.advanced_price is not None:
                     if interval.channel_type == ChannelType.FEEDIN:
                         datum["low"] = -format_cents_to_dollars(
-                            interval.advanced_price.low
+                            forecast.advanced_price.low
                         )
                         datum["predicted"] = -format_cents_to_dollars(
-                            interval.advanced_price.predicted
+                            forecast.advanced_price.predicted
                         )
                         datum["high"] = -format_cents_to_dollars(
-                            interval.advanced_price.high
+                            forecast.advanced_price.high
                         )
                     else:
                         datum["low"] = format_cents_to_dollars(
-                            interval.advanced_price.low
+                            forecast.advanced_price.low
                         )
                         datum["predicted"] = format_cents_to_dollars(
-                            interval.advanced_price.predicted
+                            forecast.advanced_price.predicted
                         )
                         datum["high"] = format_cents_to_dollars(
-                            interval.advanced_price.high
+                            forecast.advanced_price.high
                         )
 
                 data["forecasts"].append(datum)
