@@ -213,6 +213,7 @@ async def test_fetch_blueprint_from_generic_url(
 
 def test_generic_importer_last() -> None:
     """Test that generic importer is always the last one."""
-    for i, func in enumerate(importer.FETCH_FUNCTIONS):
-        if func is importer.fetch_blueprint_from_generic_url:
-            assert i == (len(importer.FETCH_FUNCTIONS) - 1)
+    assert (
+        importer.FETCH_FUNCTIONS.count(importer.fetch_blueprint_from_generic_url) == 1
+    )
+    assert importer.FETCH_FUNCTIONS[-1] = importer.fetch_blueprint_from_generic_url
