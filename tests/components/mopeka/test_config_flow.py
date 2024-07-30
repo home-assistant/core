@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.components.mopeka.const import CONF_MEDIUM_TYPE, DOMAIN, MediumType
 from homeassistant.core import HomeAssistant
@@ -221,6 +223,11 @@ async def test_async_step_reconfigure_options(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
+    schema: vol.Schema = result["data_schema"]
+    medium_type_key = next(
+        iter(key for key in schema.schema if key == CONF_MEDIUM_TYPE)
+    )
+    assert medium_type_key.default() == MediumType.AIR.value
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],

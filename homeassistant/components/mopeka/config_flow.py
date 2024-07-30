@@ -20,6 +20,27 @@ from homeassistant.core import callback
 from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN, MediumType
 
 
+def format_medium_type(medium_type: Enum) -> str:
+    """Format the medium type for human reading."""
+    return medium_type.name.replace("_", " ").title()
+
+
+MEDIUM_TYPES_BY_NAME = {
+    medium.value: format_medium_type(medium) for medium in MediumType
+}
+
+
+def async_generate_schema(medium_type: str | None = None) -> vol.Schema:
+    """Return the base schema with formatted medium types."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_MEDIUM_TYPE, default=medium_type or DEFAULT_MEDIUM_TYPE
+            ): vol.In(MEDIUM_TYPES_BY_NAME)
+        }
+    )
+
+
 class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for mopeka."""
 
@@ -38,25 +59,6 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> MopekaOptionsFlow:
         """Return the options flow for this handler."""
         return MopekaOptionsFlow(config_entry)
-
-    @staticmethod
-    def format_medium_type(medium_type: Enum) -> str:
-        """Format the medium type for human reading."""
-        return medium_type.name.replace("_", " ").title()
-
-    @property
-    def base_schema(self) -> vol.Schema:
-        """Return the base schema with formatted medium types."""
-        return vol.Schema(
-            {
-                vol.Required(CONF_MEDIUM_TYPE, default=DEFAULT_MEDIUM_TYPE): vol.In(
-                    {
-                        medium.value: self.format_medium_type(medium)
-                        for medium in MediumType
-                    }
-                )
-            }
-        )
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -93,7 +95,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=placeholders,
-            data_schema=self.base_schema,
+            data_schema=async_generate_schema(),
         )
 
     async def async_step_user(
@@ -128,7 +130,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
-                    **self.base_schema.schema,
+                    **async_generate_schema().schema,
                 }
             ),
         )
@@ -157,5 +159,8 @@ class MopekaOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data={})
 
         return self.async_show_form(
-            step_id="init", data_schema=MopekaConfigFlow().base_schema
+            step_id="init",
+            data_schema=async_generate_schema(
+                self.config_entry.data.get(CONF_MEDIUM_TYPE)
+            ),
         )
