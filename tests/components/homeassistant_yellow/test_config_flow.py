@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
+from homeassistant.components.homeassistant_hardware.util import ApplicationType
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -66,12 +67,12 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant Yellow"
-    assert result["data"] == {}
+    assert result["data"] == {"firmware": "ezsp"}
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {}
+    assert config_entry.data == {"firmware": "ezsp"}
     assert config_entry.options == {}
     assert config_entry.title == "Home Assistant Yellow"
 
@@ -83,10 +84,12 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={},
+        data={"firmware": ApplicationType.EZSP},
         domain=DOMAIN,
         options={},
         title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -121,10 +124,12 @@ async def test_option_flow_led_settings(
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={},
+        data={"firmware": ApplicationType.EZSP},
         domain=DOMAIN,
         options={},
         title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -167,10 +172,12 @@ async def test_option_flow_led_settings_unchanged(
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={},
+        data={"firmware": ApplicationType.EZSP},
         domain=DOMAIN,
         options={},
         title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -199,10 +206,12 @@ async def test_option_flow_led_settings_fail_1(hass: HomeAssistant) -> None:
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={},
+        data={"firmware": ApplicationType.EZSP},
         domain=DOMAIN,
         options={},
         title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -231,10 +240,12 @@ async def test_option_flow_led_settings_fail_2(
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={},
+        data={"firmware": ApplicationType.EZSP},
         domain=DOMAIN,
         options={},
         title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 

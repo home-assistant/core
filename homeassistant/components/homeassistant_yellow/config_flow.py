@@ -117,15 +117,19 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
 
     _hw_settings: dict[str, bool] | None = None
 
-    async def async_step_on_supervisor(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle logic when on Supervisor host."""
-        return await self.async_step_main_menu()
+    @abstractmethod
+    async def async_step_init(self, _: None = None) -> ConfigFlowResult:
+        """Start the options flow."""
 
     @abstractmethod
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
+
+    async def async_step_on_supervisor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle logic when on Supervisor host."""
+        return await self.async_step_init()
 
     async def async_step_hardware_settings(
         self, user_input: dict[str, Any] | None = None
@@ -188,6 +192,12 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
     silabs_multiprotocol_addon.OptionsFlowHandler, BaseHomeAssistantYellowOptionsFlow
 ):
     """Handle a multi-PAN options flow for Home Assistant Yellow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options flow."""
+        return await self.async_step_main_menu()
 
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
@@ -261,6 +271,12 @@ class HomeAssistantYellowOptionsFlowHandler(
 
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options flow."""
+        return await self.async_step_main_menu()
 
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
