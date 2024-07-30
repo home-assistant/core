@@ -272,9 +272,6 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        if self.entity_description.value is None:
-            return None
-
         try:
             option = self.entity_description.value(self._chime)
         except ValueError:
