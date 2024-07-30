@@ -116,8 +116,11 @@ class LutronCasetaButtonBinarySensor(LutronCasetaDevice, BinarySensorEntity):
     ) -> None:
         """Init a button binary_sensor entity."""
         super().__init__(button_device.device, data)
-        self._attr_name = button_device.button_name
-        self._attr_translation_key = button_device.button_key
+        if translation_key := button_device.button_key:
+            self._attr_translation_key = translation_key
+        else:
+            # User defined name
+            self._attr_name = button_device.button_name
         self._attr_device_info = button_device.parent_device_info
         self._button_id = button_device.button_id
         self._entry_id = entry_id
