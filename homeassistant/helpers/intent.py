@@ -854,7 +854,7 @@ class DynamicServiceIntentHandler(IntentHandler):
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         domain_validator = (
-            vol.In(self.required_domains) if self.required_domains else cv.string
+            vol.In(list(self.required_domains)) if self.required_domains else cv.string
         )
         slot_schema = {
             vol.Any("name", "area", "floor"): non_empty_string,
@@ -864,11 +864,11 @@ class DynamicServiceIntentHandler(IntentHandler):
             # The typical way to match enums is with vol.Coerce, but we build a
             # flat list to make the API simpler to describe programmatically
             flattened_device_classes = vol.In(
-                {
+                [
                     device_class.value
                     for device_class_enum in self.device_classes
                     for device_class in device_class_enum
-                }
+                ]
             )
             slot_schema.update(
                 {
