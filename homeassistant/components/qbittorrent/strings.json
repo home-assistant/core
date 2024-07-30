@@ -47,6 +47,11 @@
       "all_torrents": {
         "name": "All torrents"
       }
+    },
+    "switch": {
+      "alternative_speed": {
+        "name": "Alternative speed"
+      }
     }
   },
   "services": {

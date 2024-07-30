@@ -46,7 +46,10 @@ def main_zone_fixture():
 def device_fixture(main_zone):
     """Mock the yamaha device."""
     device = FakeYamahaDevice("http://receiver", "Receiver", zones=[main_zone])
-    with patch("rxv.RXV", return_value=device):
+    with (
+        patch("rxv.RXV", return_value=device),
+        patch("rxv.find", return_value=[device]),
+    ):
         yield device
 
 
