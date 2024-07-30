@@ -152,12 +152,6 @@ SELECT_ENTITIES = (
 
 CHIME_SELECT_ENTITIES = (
     ReolinkChimeSelectEntityDescription(
-        key="play_tone",
-        translation_key="play_tone",
-        get_options=[method.name for method in ChimeToneEnum][1:],
-        method=lambda chime, name: chime.play(ChimeToneEnum[name].value),
-    ),
-    ReolinkChimeSelectEntityDescription(
         key="motion_tone",
         cmd_key="GetDingDongCfg",
         translation_key="motion_tone",

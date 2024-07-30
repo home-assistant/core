@@ -492,9 +492,10 @@
           "auto": "Auto"
         }
       },
-      "play_tone": {
-        "name": "Play ringtone",
+      "motion_tone": {
+        "name": "Motion ringtone",
         "state": {
+          "off": "[%key:common::state::off%]",
           "citybird": "City bird",
           "originaltune": "Original tune",
           "pianokey": "Piano key",
@@ -507,52 +508,36 @@
           "waybackhome": "Way back home"
         }
       },
-      "motion_tone": {
-        "name": "Motion ringtone",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "citybird": "[%key:component::reolink::entity::select::play_tone::state::citybird%]",
-          "originaltune": "[%key:component::reolink::entity::select::play_tone::state::originaltune%]",
-          "pianokey": "[%key:component::reolink::entity::select::play_tone::state::pianokey%]",
-          "loop": "[%key:component::reolink::entity::select::play_tone::state::loop%]",
-          "attraction": "[%key:component::reolink::entity::select::play_tone::state::attraction%]",
-          "hophop": "[%key:component::reolink::entity::select::play_tone::state::hophop%]",
-          "goodday": "[%key:component::reolink::entity::select::play_tone::state::goodday%]",
-          "operetta": "[%key:component::reolink::entity::select::play_tone::state::operetta%]",
-          "moonlight": "[%key:component::reolink::entity::select::play_tone::state::moonlight%]",
-          "waybackhome": "[%key:component::reolink::entity::select::play_tone::state::waybackhome%]"
-        }
-      },
       "people_tone": {
         "name": "Person ringtone",
         "state": {
           "off": "[%key:common::state::off%]",
-          "citybird": "[%key:component::reolink::entity::select::play_tone::state::citybird%]",
-          "originaltune": "[%key:component::reolink::entity::select::play_tone::state::originaltune%]",
-          "pianokey": "[%key:component::reolink::entity::select::play_tone::state::pianokey%]",
-          "loop": "[%key:component::reolink::entity::select::play_tone::state::loop%]",
-          "attraction": "[%key:component::reolink::entity::select::play_tone::state::attraction%]",
-          "hophop": "[%key:component::reolink::entity::select::play_tone::state::hophop%]",
-          "goodday": "[%key:component::reolink::entity::select::play_tone::state::goodday%]",
-          "operetta": "[%key:component::reolink::entity::select::play_tone::state::operetta%]",
-          "moonlight": "[%key:component::reolink::entity::select::play_tone::state::moonlight%]",
-          "waybackhome": "[%key:component::reolink::entity::select::play_tone::state::waybackhome%]"
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       },
       "visitor_tone": {
         "name": "Visitor ringtone",
         "state": {
           "off": "[%key:common::state::off%]",
-          "citybird": "[%key:component::reolink::entity::select::play_tone::state::citybird%]",
-          "originaltune": "[%key:component::reolink::entity::select::play_tone::state::originaltune%]",
-          "pianokey": "[%key:component::reolink::entity::select::play_tone::state::pianokey%]",
-          "loop": "[%key:component::reolink::entity::select::play_tone::state::loop%]",
-          "attraction": "[%key:component::reolink::entity::select::play_tone::state::attraction%]",
-          "hophop": "[%key:component::reolink::entity::select::play_tone::state::hophop%]",
-          "goodday": "[%key:component::reolink::entity::select::play_tone::state::goodday%]",
-          "operetta": "[%key:component::reolink::entity::select::play_tone::state::operetta%]",
-          "moonlight": "[%key:component::reolink::entity::select::play_tone::state::moonlight%]",
-          "waybackhome": "[%key:component::reolink::entity::select::play_tone::state::waybackhome%]"
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       }
     },

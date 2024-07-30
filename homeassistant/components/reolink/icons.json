@@ -207,9 +207,6 @@
       "hdr": {
         "default": "mdi:hdr"
       },
-      "play_tone": {
-        "default": "mdi:music"
-      },
       "motion_tone": {
         "default": "mdi:music-note"
       },
