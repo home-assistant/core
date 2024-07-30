@@ -528,7 +528,9 @@ def _async_subscribe_keypad_events(
             button_type=button_type,
             action=action,
         )
-        async_dispatcher_send(f"{DOMAIN}_{config_entry_id}_button_{button_id}", data)
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{config_entry_id}_button_{button_id}", data
+        )
         hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, data)
 
     for button_id in keypad_buttons:

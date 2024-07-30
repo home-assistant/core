@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.event import EventEntity
+from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,13 +25,15 @@ async def async_setup_entry(
     """Set up Lutron pico and keypad buttons."""
     data = config_entry.runtime_data
     async_add_entities(
-        LutronCasetaButtonEvent(data, config_entry.entry_id, button_device)
+        LutronCasetaButtonEvent(data, button_device, config_entry.entry_id)
         for button_device in data.button_devices
     )
 
 
 class LutronCasetaButtonEvent(LutronCasetaDevice, EventEntity):
     """Representation of a Lutron pico and keypad button event."""
+
+    _attr_device_class = EventDeviceClass.BUTTON
 
     def __init__(
         self,
