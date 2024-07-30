@@ -12,11 +12,12 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     guess_firmware_type,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import discovery_flow
 
-from .const import RADIO_DEVICE
+from .const import RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,21 +33,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The hassio integration has not yet fetched data from the supervisor
         raise ConfigEntryNotReady
 
-    board: str | None
-    if (board := os_info.get("board")) is None or board != "yellow":
+    if os_info.get("board") != "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
 
-    firmware_guess = await guess_firmware_type(hass, RADIO_DEVICE)
+    firmware = ApplicationType(entry.data["firmware"])
 
-    if firmware_guess.firmware_type == ApplicationType.CPC:
+    if firmware == ApplicationType.CPC:
         try:
             await check_multi_pan_addon(hass)
         except HomeAssistantError as err:
             raise ConfigEntryNotReady from err
         else:
             return True
+
+    if firmware == ApplicationType.EZSP:
+        discovery_flow.async_create_flow(
+            hass,
+            "zha",
+            context={"source": SOURCE_HARDWARE},
+            data=ZHA_HW_DISCOVERY_DATA,
+        )
 
     return True
 
@@ -60,7 +68,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     """Migrate old entry."""
 
     _LOGGER.debug(
-        "Migrating from version %s:%s", config_entry.version, config_entry.minor_version
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
     if config_entry.version == 1:
