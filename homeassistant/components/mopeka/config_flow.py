@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData as DeviceData
+from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 
-from .const import CONF_MEDIUM_TYPE, DOMAIN
+from .const import BASE_SCHEMA, CONF_MEDIUM_TYPE, DOMAIN
 
 
 class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -84,13 +84,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="medium_type",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MEDIUM_TYPE, default=MediumType.PROPANE.value
-                    ): vol.In({medium.value: medium.name for medium in MediumType})
-                }
-            ),
+            data_schema=vol.Schema(BASE_SCHEMA),
         )
 
     async def async_step_user(
@@ -125,10 +119,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
-                    vol.Required(
-                        CONF_MEDIUM_TYPE,
-                        default=MediumType.PROPANE.value,
-                    ): vol.In({medium.value: medium.name for medium in MediumType}),
+                    **BASE_SCHEMA,  # Use the base schema here
                 }
             ),
         )
@@ -158,14 +149,5 @@ class MopekaOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MEDIUM_TYPE,
-                        default=self.config_entry.data.get(
-                            CONF_MEDIUM_TYPE, MediumType.PROPANE.value
-                        ),
-                    ): vol.In({m.value: m.name for m in MediumType}),
-                }
-            ),
+            data_schema=vol.Schema(BASE_SCHEMA),
         )
