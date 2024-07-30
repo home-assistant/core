@@ -93,8 +93,6 @@ class UnifiHub:
 
         self.config.entry.add_update_listener(self.async_config_entry_updated)
 
-        # self.api.events.subscribe(lambda event: self.entity_loader.load_entities())
-
     @property
     def device_info(self) -> DeviceInfo:
         """UniFi Network device info."""

@@ -1121,12 +1121,12 @@ async def test_traffic_rules(
     assert switch_1.state == STATE_ON
     assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
 
-    device_1 = deepcopy(traffic_rule_payload[0])
+    traffic_rule = deepcopy(traffic_rule_payload[0])
 
     # Disable traffic rule
     aioclient_mock.put(
         f"https://{config_entry_setup.data[CONF_HOST]}:1234"
-        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}/trafficrules/{device_1['_id']}",
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}/trafficrules/{traffic_rule['_id']}",
     )
 
     call_count = aioclient_mock.call_count
@@ -1139,7 +1139,7 @@ async def test_traffic_rules(
     )
     # Updating the value for traffic rules will make another call to retrieve the values
     assert aioclient_mock.call_count == call_count + 2
-    expected_disable_call = deepcopy(device_1)
+    expected_disable_call = deepcopy(traffic_rule)
     expected_disable_call["enabled"] = False
 
     assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
@@ -1154,7 +1154,7 @@ async def test_traffic_rules(
         blocking=True,
     )
 
-    expected_enable_call = deepcopy(device_1)
+    expected_enable_call = deepcopy(traffic_rule)
     expected_enable_call["enabled"] = True
 
     assert aioclient_mock.call_count == call_count + 2
