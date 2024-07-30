@@ -157,6 +157,7 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_id
     )
+    triggers = [trigger for trigger in triggers if trigger[CONF_DOMAIN] == DOMAIN]
 
     assert triggers == unordered(expected_triggers)
 
