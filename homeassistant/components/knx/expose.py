@@ -6,7 +6,7 @@ from collections.abc import Callable
 import logging
 
 from xknx import XKNX
-from xknx.devices import DateTime, ExposeSensor
+from xknx.devices import DateDevice, DateTimeDevice, ExposeSensor, TimeDevice
 from xknx.dpt import DPTNumeric, DPTString
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueSensor
@@ -196,10 +196,17 @@ class KNXExposeTime:
         """Initialize of Expose class."""
         self.xknx = xknx
         expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
-        self.device: DateTime = DateTime(
+        xknx_device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
+        match expose_type:
+            case ExposeSchema.CONF_DATE:
+                xknx_device_cls = DateDevice
+            case ExposeSchema.CONF_DATETIME:
+                xknx_device_cls = DateTimeDevice
+            case ExposeSchema.CONF_TIME:
+                xknx_device_cls = TimeDevice
+        self.device = xknx_device_cls(
             self.xknx,
             name=expose_type.capitalize(),
-            broadcast_type=expose_type.upper(),
             localtime=True,
             group_address=config[KNX_ADDRESS],
         )

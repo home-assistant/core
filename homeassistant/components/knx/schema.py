@@ -535,11 +535,10 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    EXPOSE_TIME_TYPES: Final = [
-        "time",
-        "date",
-        "datetime",
-    ]
+    CONF_TIME = "time"
+    CONF_DATE = "date"
+    CONF_DATETIME = "datetime"
+    EXPOSE_TIME_TYPES: Final = [CONF_TIME, CONF_DATE, CONF_DATETIME]
 
     EXPOSE_TIME_SCHEMA = vol.Schema(
         {
