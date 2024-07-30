@@ -206,6 +206,22 @@ class AmberPriceDescriptorSensor(AmberSensor):
         return self.coordinator.data[self.entity_description.key][self.channel_type]  # type: ignore[no-any-return]
 
 
+class AmberAdvancedForecastSensor(AmberSensor):
+    """Sensor to show the advanced forecast."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current advanced price in $/kWh."""
+        interval = self.coordinator.data["current"].get(self.channel_type)
+        per_kwh = interval.per_kwh
+        if interval.advanced_price is not None:
+            per_kwh = interval.advanced_price.predicted
+
+        if interval.channel_type == ChannelType.FEEDIN:
+            return format_cents_to_dollars(per_kwh) * -1
+        return format_cents_to_dollars(per_kwh)
+
+
 class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     """Sensor to show single grid specific values."""
 
@@ -261,6 +277,18 @@ async def async_setup_entry(
         )
         entities.append(
             AmberPriceDescriptorSensor(coordinator, description, channel_type)
+        )
+
+    for channel_type in current:
+        description = SensorEntityDescription(
+            key="advanced",
+            name=f"{entry.title} - {friendly_channel_type(channel_type)} Advanced Price",
+            native_unit_of_measurement=UNIT,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key=channel_type,
+        )
+        entities.append(
+            AmberAdvancedForecastSensor(coordinator, description, channel_type)
         )
 
     for channel_type in forecasts:
