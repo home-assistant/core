@@ -1,4 +1,5 @@
 """Support for monitoring the qBittorrent API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,8 +22,8 @@ class QBittorrentSwitchEntityDescription(SwitchEntityDescription):
     """Describes qBittorren switch."""
 
     is_on_func: Callable[[QBittorrentDataCoordinator], bool]
-    turn_on_fn: Callable[["QBittorrentDataCoordinator"], None]
-    turn_off_fn: Callable[["QBittorrentDataCoordinator"], None]
+    turn_on_fn: Callable[[QBittorrentDataCoordinator], None]
+    turn_off_fn: Callable[[QBittorrentDataCoordinator], None]
     toggle_func: Callable[[QBittorrentDataCoordinator], None]
 
 
