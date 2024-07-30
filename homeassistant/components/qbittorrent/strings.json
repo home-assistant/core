@@ -26,7 +26,7 @@
       "upload_speed": {
         "name": "Upload speed"
       },
-      "current_status": {
+      "transmission_status": {
         "name": "Status",
         "state": {
           "idle": "[%key:common::state::idle%]",
