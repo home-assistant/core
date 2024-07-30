@@ -111,5 +111,35 @@
         }
       ]
     }
+  },
+  "FridgeFreezer": {
+    "data": {
+      "settings": [
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Dispenser.Enabled",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        }
+      ]
+    }
   }
 }
