@@ -744,8 +744,8 @@ def test_attribute_selector_schema(
             (None, {}),
         ),
         (
-            {"enable_day": True},
-            ({"seconds": 10}, {"days": 10}),
+            {"enable_day": True, "enable_millisecond": True},
+            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
             (None, {}),
         ),
         (
