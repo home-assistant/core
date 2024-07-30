@@ -221,6 +221,42 @@ class AmberAdvancedForecastSensor(AmberSensor):
             return format_cents_to_dollars(per_kwh) * -1
         return format_cents_to_dollars(per_kwh)
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return additional pieces of information about the advanced price."""
+
+        interval = self.coordinator.data["current"][self.channel_type]
+
+        data: dict[str, Any] = {}
+        if interval is None:
+            return data
+
+        data["duration"] = interval.duration
+        data["date"] = interval.var_date.isoformat()
+        data["nem_date"] = interval.nem_time.isoformat()
+        data["start_time"] = interval.start_time.isoformat()
+        data["end_time"] = interval.end_time.isoformat()
+        data["channel_type"] = interval.channel_type.value
+
+        if interval.advanced_price is not None:
+            if interval.channel_type == ChannelType.FEEDIN:
+                data["low"] = -1 * format_cents_to_dollars(interval.advanced_price.low)
+                data["predicted"] = -1 * format_cents_to_dollars(
+                    interval.advanced_price.predicted
+                )
+                data["high"] = -1 * format_cents_to_dollars(
+                    interval.advanced_price.high
+                )
+
+            else:
+                data["low"] = format_cents_to_dollars(interval.advanced_price.low)
+                data["predicted"] = format_cents_to_dollars(
+                    interval.advanced_price.predicted
+                )
+                data["high"] = format_cents_to_dollars(interval.advanced_price.high)
+
+        return data
+
 
 class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     """Sensor to show single grid specific values."""
