@@ -108,9 +108,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supports_color = False
         self._supports_rgbw = False
         self._supports_color_temp = False
+        self._color_mode: str | None = None
         self._hs_color: tuple[float, float] | None = None
         self._rgbw_color: tuple[int, int, int, int] | None = None
-        self._color_mode: str | None = None
         self._color_temp: int | None = None
         self._min_mireds = 153  # 6500K as a safe default
         self._max_mireds = 370  # 2700K as a safe default
@@ -125,16 +125,26 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             value_property_key=ColorComponent.COLD_WHITE,
         )
         self._supported_color_modes: set[ColorMode] = set()
+        self._last_on_color: dict[ColorComponent, int] | None = None
+        self._last_brightness: int | None = None
 
         # get additional (optional) values and set features
         if self.info.primary_value.command_class == CommandClass.SWITCH_BINARY:
-            # This is a non-dimmable light
+            # This light can not be dimmed separately from the color channels
             self._target_brightness = self.get_zwave_value(
                 TARGET_VALUE_PROPERTY,
                 CommandClass.SWITCH_BINARY,
                 add_to_watched_value_ids=False,
             )
             self._supports_dimming = False
+        elif self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL:
+            # This light can be dimmed separately from the color channels
+            self._target_brightness = self.get_zwave_value(
+                TARGET_VALUE_PROPERTY,
+                CommandClass.SWITCH_MULTILEVEL,
+                add_to_watched_value_ids=False,
+            )
+            self._supports_dimming = True
         elif self.info.primary_value.command_class == CommandClass.BASIC:
             # If the command class is Basic, we must generate a name that includes
             # the command class name to avoid ambiguity
@@ -149,12 +159,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # Assume Basic CC supports dimming
             self._supports_dimming = True
         else:
-            self._target_brightness = self.get_zwave_value(
-                TARGET_VALUE_PROPERTY,
-                CommandClass.SWITCH_MULTILEVEL,
-                add_to_watched_value_ids=False,
-            )
-            self._supports_dimming = True
+            self._target_brightness = None
+            self._supports_dimming = False
 
         self._target_color = self.get_zwave_value(
             TARGET_COLOR_PROPERTY,
@@ -206,7 +212,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self._supports_dimming:
             # Dimming is supported and the brightness is encoded in the primary value
             return round((cast(int, self.info.primary_value.value) / 99) * 255)
-        if not self.info.primary_value.value:
+        if self.info.primary_value.value is False:
             # Not dimmable and turned off
             return 0
         # Brightness is encoded in the color channels
@@ -266,6 +272,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         transition = kwargs.get(ATTR_TRANSITION)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
+        last_color: dict[ColorComponent, int] | None = None
         hs_color = kwargs.get(ATTR_HS_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
@@ -277,20 +284,50 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             if brightness is not None:
                 # If brightness gets set, preserve the color and mix it with the new brightness
                 scale = brightness / 255
-                if hs_color is None and self._color_mode == ColorMode.HS:
+                if (
+                    hs_color is None
+                    and color_temp is None
+                    and rgbw is None
+                    and self._last_on_color is not None
+                ):
+                    # Changed brightness from 0 to >0
+                    last_color = self._last_on_color
+                    old_brightness = max(self._last_on_color.values())
+                    scale = brightness / old_brightness
+                elif hs_color is None and self._color_mode == ColorMode.HS:
                     hs_color = self._hs_color
                 elif color_temp is None and self._color_mode == ColorMode.COLOR_TEMP:
                     color_temp = self._color_temp
                 elif rgbw is None and self._color_mode == ColorMode.RGBW:
                     rgbw = self._rgbw_color
             elif hs_color is not None or color_temp is not None or rgbw is not None:
-                # If color gets set, preserve the current brightness
+                # If color gets set, preserve the current brightness if it is separate from the color
                 current_brightness = self.brightness
-                if current_brightness is not None:
+                if current_brightness == 0 and not self._target_brightness:
+                    # Turned on a light without separate brightness using the color controls
+                    if self._last_brightness is not None:
+                        scale = self._last_brightness / 255
+                elif current_brightness is not None:
                     scale = current_brightness / 255
+            elif self._last_on_color is not None:
+                # Turned on without setting brightness
+                last_color = self._last_on_color
+                if not self._target_brightness and self._last_brightness is not None:
+                    scale = self._last_brightness / 255
+            else:
+                # Turned on a color-only light for the first time. Make it white!
+                last_color = {
+                    ColorComponent.RED: 255,
+                    ColorComponent.GREEN: 255,
+                    ColorComponent.BLUE: 255,
+                }
+
+        # Mix brightness into last non-off color
+        if last_color is not None:
+            await self._async_set_colors(last_color, transition, scale)
 
         # RGB/HS color
-        if hs_color is not None and self._supports_color:
+        elif hs_color is not None and self._supports_color:
             red, green, blue = color_util.color_hs_to_RGB(*hs_color)
             colors = {
                 ColorComponent.RED: red,
@@ -350,7 +387,22 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
+        if self._target_brightness is not None:
+            await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
+        elif self._target_color is not None:
+            # Remember last color and brightness to restore it when turning on
+            self._last_brightness = self.brightness
+            # turn off all color channels
+            await self._async_set_colors(
+                {
+                    ColorComponent.RED: 0,
+                    ColorComponent.GREEN: 0,
+                    ColorComponent.BLUE: 0,
+                    ColorComponent.WARM_WHITE: 0,
+                    ColorComponent.COLD_WHITE: 0,
+                },
+                kwargs.get(ATTR_TRANSITION),
+            )
 
     async def _async_set_colors(
         self,
@@ -383,6 +435,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             color_name = MULTI_COLOR_MAP[color]
             scaled_value = round(value * scale) if scale is not None else value
             colors_dict[color_name] = scaled_value
+        # Remember the last non-zero color
+        if max(colors.values()) > 0:
+            self._last_on_color = colors
         # set updated color object
         await self._async_set_value(combined_color_val, colors_dict, zwave_transition)
 
