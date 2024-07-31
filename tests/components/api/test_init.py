@@ -3,6 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ServerDisconnectedError, web
