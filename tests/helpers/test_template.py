@@ -6588,12 +6588,13 @@ async def test_merge_response_parameters(hass: HomeAssistant) -> None:
     tpl = template.Template(_template, hass)
     assert tpl.async_render() == ["Dr. Appt", "Basketball vs. Rockets", "Bake a cake"]
 
-    # Only fetch single keys which exists does not raise
+    # Fetch single keys which does not exist should raise
     _template = (
         "{{ merge_response(" + str(service_response) + ",'start','not_existing') }}"
     )
     tpl = template.Template(_template, hass)
-    assert tpl.async_render() == []
+    with pytest.raises(TemplateError):
+        assert tpl.async_render()
 
     # Sorting by non existing keys should raise
     _template = (
@@ -6602,3 +6603,17 @@ async def test_merge_response_parameters(hass: HomeAssistant) -> None:
     tpl = template.Template(_template, hass)
     with pytest.raises(TemplateError):
         tpl.async_render()
+
+
+async def test_merge_response_empty(hass: HomeAssistant) -> None:
+    """Test the merge_response function/filter with empty response should raise."""
+
+    service_response = {
+        "calendar.sports": {"events": []},
+        "calendar.local_furry_events": {"events": []},
+        "calendar.yap_house_schedules": {"events": []},
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    tpl = template.Template(_template, hass)
+    with pytest.raises(TemplateError):
+        assert tpl.async_render()

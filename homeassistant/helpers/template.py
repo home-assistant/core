@@ -2129,6 +2129,7 @@ def merge_response(
     {
         "entity_id": {str: Any},
     }
+    If response is a list, it will extend the list with the items.
     Returns empty list by default.
     """
     response_items: list[Any] = []
@@ -2153,6 +2154,8 @@ def merge_response(
             _dict[single_key] for _dict in _dict_list if single_key in _dict
         ]
 
+    if not response_items:
+        raise ValueError("No response items found")
     return response_items
 
 
