@@ -1466,9 +1466,9 @@ class HumiditySettingTrait(_Trait):
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.SensorDeviceClass.HUMIDITY:
-                current_humidity = self.state.state
-                if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                    response["humidityAmbientPercent"] = round(float(current_humidity))
+                humidity_state = self.state.state
+                if humidity_state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                    response["humidityAmbientPercent"] = round(float(humidity_state))
 
         elif domain == humidifier.DOMAIN:
             target_humidity: int | None = attrs.get(humidifier.ATTR_HUMIDITY)
