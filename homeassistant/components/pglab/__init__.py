@@ -38,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
 
         @callback
         def discovery_message_received(msg: ReceiveMessage) -> None:
+            """Handle PGLab discovery messages."""
             callback_func(msg.topic, msg.payload)
 
         topics = {
