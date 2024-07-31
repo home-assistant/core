@@ -1153,6 +1153,119 @@ async def test_light_color_only(
 
     client.async_send_command.reset_mock()
 
+    # Force the light to turn on (red, 50% brightness)
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "propertyKey": 2,  # red
+                "newValue": 128,
+                "prevValue": 0,
+                "propertyName": "currentColor",
+                "propertyKeyName": "red",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "propertyKey": 3,  # green
+                "newValue": 0,
+                "prevValue": 128,
+                "propertyName": "currentColor",
+                "propertyKeyName": "green",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "propertyKey": 4,  # blue
+                "newValue": 0,
+                "prevValue": 0,
+                "propertyName": "currentColor",
+                "propertyKeyName": "blue",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "newValue": {
+                    "red": 128,
+                    "green": 0,
+                    "blue": 0,
+                },
+                "prevValue": None,
+                "propertyName": "currentColor",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(HSM200_V1_ENTITY)
+    assert state.state == STATE_ON
+
+    # Assert that the color is preserved when changing brightness
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_BRIGHTNESS: 69},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 0,
+        "property": "targetColor",
+    }
+    assert args["value"] == {"red": 69, "green": 0, "blue": 0}
+
+    client.async_send_command.reset_mock()
+
     # Clear the color value to trigger an unknown state
     event = Event(
         type="value updated",
