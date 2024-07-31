@@ -283,6 +283,15 @@ async def test_removing_disconnected_cams(
             False,
         ),
         (
+            f"{TEST_MAC}_chime123456789_play_ringtone",
+            f"{TEST_UID}_chime123456789_play_ringtone",
+            f"{TEST_MAC}_chime123456789",
+            f"{TEST_UID}_chime123456789",
+            Platform.SELECT,
+            True,
+            False,
+        ),
+        (
             f"{TEST_MAC}_0_record_audio",
             f"{TEST_MAC}_{TEST_UID_CAM}_record_audio",
             f"{TEST_MAC}_ch0",
