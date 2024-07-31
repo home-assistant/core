@@ -2007,6 +2007,9 @@ pymelcloud==2.5.9
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
+# homeassistant.components.assist_pipeline
+pymicro-vad==1.0.0
+
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
 
@@ -2895,9 +2898,6 @@ weatherflow4py==0.2.21
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
-
-# homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
