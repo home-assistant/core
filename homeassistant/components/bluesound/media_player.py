@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import CancelledError
-from collections.abc import Callable
+from asyncio import CancelledError, Task
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
@@ -31,15 +30,11 @@ from homeassistant.const import (
     CONF_HOSTS,
     CONF_NAME,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
-    Event,
     HomeAssistant,
     ServiceCall,
-    callback,
 )
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
@@ -50,7 +45,6 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -121,59 +115,6 @@ SERVICE_TO_METHOD = {
         method="async_clear_timer", schema=BS_SCHEMA
     ),
 }
-
-
-def _add_player(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    host: str,
-    port: int,
-    player: Player,
-    sync_status: SyncStatus,
-):
-    """Add Bluesound players."""
-
-    @callback
-    def _init_bluesound_player(event: Event | None = None):
-        """Start polling."""
-        hass.async_create_task(bluesound_player.async_init())
-
-    @callback
-    def _start_polling(event: Event | None = None):
-        """Start polling."""
-        bluesound_player.start_polling()
-
-    @callback
-    def _stop_polling(event: Event | None = None):
-        """Stop polling."""
-        bluesound_player.stop_polling()
-
-    @callback
-    def _add_bluesound_player_cb():
-        """Add player after first sync fetch."""
-        if bluesound_player.id in [x.id for x in hass.data[DATA_BLUESOUND]]:
-            _LOGGER.warning("Player already added %s", bluesound_player.id)
-            return
-
-        hass.data[DATA_BLUESOUND].append(bluesound_player)
-        async_add_entities([bluesound_player])
-        _LOGGER.debug("Added device with name: %s", bluesound_player.name)
-
-        if hass.is_running:
-            _start_polling()
-        else:
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_polling)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
-
-    bluesound_player = BluesoundPlayer(
-        hass, host, port, player, sync_status, _add_bluesound_player_cb
-    )
-
-    if hass.is_running:
-        _init_bluesound_player()
-    else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_bluesound_player)
 
 
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
@@ -252,17 +193,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Bluesound entry."""
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-
-    _add_player(
-        hass,
-        async_add_entities,
-        host,
-        port,
+    bluesound_player = BluesoundPlayer(
+        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_PORT],
         config_entry.runtime_data.player,
         config_entry.runtime_data.sync_status,
     )
+
+    hass.data[DATA_BLUESOUND].append(bluesound_player)
+    async_add_entities([bluesound_player])
 
 
 async def async_setup_platform(
@@ -290,35 +229,29 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         host: str,
         port: int,
         player: Player,
         sync_status: SyncStatus,
-        init_callback: Callable[[], None],
     ) -> None:
         """Initialize the media player."""
         self.host = host
-        self._hass = hass
         self.port = port
-        self._polling_task = None  # The actual polling task.
-        self._id = None
+        self._polling_task: Task[None] | None = None  # The actual polling task.
+        self._id = sync_status.id
         self._last_status_update = None
-        self._sync_status: SyncStatus | None = None
+        self._sync_status = sync_status
         self._status: Status | None = None
         self._inputs: list[Input] = []
         self._presets: list[Preset] = []
         self._is_online = False
-        self._retry_remove = None
         self._muted = False
         self._master: BluesoundPlayer | None = None
         self._is_master = False
         self._group_name = None
         self._group_list: list[str] = []
-        self._bluesound_device_name = None
+        self._bluesound_device_name = sync_status.name
         self._player = player
-
-        self._init_callback = init_callback
 
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
         # there should always be one player with the default port per mac
@@ -349,23 +282,18 @@ class BluesoundPlayer(MediaPlayerEntity):
         except ValueError:
             return -1
 
-    async def force_update_sync_status(self, on_updated_cb=None) -> bool:
+    async def force_update_sync_status(self) -> bool:
         """Update the internal status."""
         sync_status = await self._player.sync_status()
 
         self._sync_status = sync_status
-
-        if not self._id:
-            self._id = sync_status.id
-        if not self._bluesound_device_name:
-            self._bluesound_device_name = sync_status.name
 
         if sync_status.master is not None:
             self._is_master = False
             master_id = f"{sync_status.master.ip}:{sync_status.master.port}"
             master_device = [
                 device
-                for device in self._hass.data[DATA_BLUESOUND]
+                for device in self.hass.data[DATA_BLUESOUND]
                 if device.id == master_id
             ]
 
@@ -380,8 +308,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             slaves = self._sync_status.slaves
             self._is_master = slaves is not None
 
-        if on_updated_cb:
-            on_updated_cb()
         return True
 
     async def _start_poll_command(self):
@@ -401,32 +327,21 @@ class BluesoundPlayer(MediaPlayerEntity):
             _LOGGER.exception("Unexpected error in %s:%s", self.name, self.port)
             raise
 
-    def start_polling(self):
+    async def async_added_to_hass(self) -> None:
         """Start the polling task."""
-        self._polling_task = self._hass.async_create_task(self._start_poll_command())
+        await super().async_added_to_hass()
 
-    def stop_polling(self):
+        self._polling_task = self.hass.async_create_task(self._start_poll_command())
+
+    async def async_will_remove_from_hass(self) -> None:
         """Stop the polling task."""
-        self._polling_task.cancel()
+        await super().async_will_remove_from_hass()
 
-    async def async_init(self, triggered=None):
-        """Initialize the player async."""
-        try:
-            if self._retry_remove is not None:
-                self._retry_remove()
-                self._retry_remove = None
+        assert self._polling_task is not None
+        if self._polling_task.cancel():
+            await self._polling_task
 
-            await self.force_update_sync_status(self._init_callback)
-        except (TimeoutError, ClientError):
-            _LOGGER.error("Node %s:%s is offline, retrying later", self.host, self.port)
-            self._retry_remove = async_track_time_interval(
-                self._hass, self.async_init, NODE_RETRY_INITIATION
-            )
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected when initiating error in %s:%s", self.host, self.port
-            )
-            raise
+        self.hass.data[DATA_BLUESOUND].remove(self)
 
     async def async_update(self) -> None:
         """Update internal status of the entity."""
@@ -490,13 +405,13 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Trigger sync status update on all devices."""
         _LOGGER.debug("Trigger sync status on all devices")
 
-        for player in self._hass.data[DATA_BLUESOUND]:
+        for player in self.hass.data[DATA_BLUESOUND]:
             await player.force_update_sync_status()
 
     @Throttle(SYNC_STATUS_INTERVAL)
-    async def async_update_sync_status(self, on_updated_cb=None):
+    async def async_update_sync_status(self):
         """Update sync status."""
-        await self.force_update_sync_status(on_updated_cb)
+        await self.force_update_sync_status()
 
     @Throttle(UPDATE_CAPTURE_INTERVAL)
     async def async_update_captures(self) -> list[Input] | None:
@@ -615,7 +530,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         if self._status is not None:
             volume = self._status.volume
-        if self.is_grouped and self._sync_status is not None:
+        if self.is_grouped:
             volume = self._sync_status.volume
 
         if volume is None:
@@ -630,7 +545,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         if self._status is not None:
             mute = self._status.mute
-        if self.is_grouped and self._sync_status is not None:
+        if self.is_grouped:
             mute = self._sync_status.mute_volume is not None
 
         return mute
@@ -778,7 +693,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         device_group = self._group_name.split("+")
 
         sorted_entities = sorted(
-            self._hass.data[DATA_BLUESOUND],
+            self.hass.data[DATA_BLUESOUND],
             key=lambda entity: entity.is_master,
             reverse=True,
         )
