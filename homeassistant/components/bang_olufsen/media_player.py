@@ -959,12 +959,15 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         jids = []
         # Get JID for each group member
         for group_member in group_members:
-            jid = self._get_beolink_jid(group_member)
-
-            # Invalid entity
-            if jid is None:
-                _LOGGER.warning("Error adding %s to group", group_member)
-                continue
+            # Check if an invalid entity
+            if (jid := self._get_beolink_jid(group_member)) is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_beolink_jid",
+                    translation_placeholders={
+                        "group_member": group_member,
+                    },
+                )
 
             jids.append(jid)
 

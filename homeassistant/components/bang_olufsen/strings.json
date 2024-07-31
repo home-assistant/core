@@ -84,6 +84,9 @@
     },
     "play_media_error": {
       "message": "An error occurred while attempting to play {media_type}: {error_message}."
+    },
+    "missing_beolink_jid": {
+      "message": "Group member: {group_member} is missing a Beolink JID. Is the media_player a Bang & Olufsen device?"
     }
   }
 }
