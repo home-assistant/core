@@ -294,7 +294,7 @@ class _Trait(ABC):
         self.state = state
         self.config = config
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
         raise NotImplementedError
 
@@ -302,7 +302,7 @@ class _Trait(ABC):
         """Add options for the sync request."""
         return {}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
 
@@ -337,11 +337,11 @@ class BrightnessTrait(_Trait):
 
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return brightness attributes for a sync request."""
         return {}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return brightness query attributes."""
         domain = self.state.domain
         response = {}
@@ -388,7 +388,7 @@ class CameraStreamTrait(_Trait):
 
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return stream attributes for a sync request."""
         return {
             "cameraStreamSupportedProtocols": ["hls"],
@@ -396,7 +396,7 @@ class CameraStreamTrait(_Trait):
             "cameraStreamNeedDrmEncryption": False,
         }
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return camera stream attributes."""
         return self.stream_info or {}
 
@@ -426,7 +426,7 @@ class ObjectDetection(_Trait):
             domain == event.DOMAIN and device_class == event.EventDeviceClass.DOORBELL
         )
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return ObjectDetection attributes for a sync request."""
         return {}
 
@@ -434,7 +434,7 @@ class ObjectDetection(_Trait):
         """Add options for the sync request."""
         return {"notificationSupportedByAgent": True}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return ObjectDetection query attributes."""
         return {}
 
@@ -498,13 +498,13 @@ class OnOffTrait(_Trait):
             humidifier.DOMAIN,
         )
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return OnOff attributes for a sync request."""
         if self.state.attributes.get(ATTR_ASSUMED_STATE, False):
             return {"commandOnlyOnOff": True}
         return {}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return OnOff query attributes."""
         return {"on": self.state.state not in (STATE_OFF, STATE_UNKNOWN)}
 
@@ -548,11 +548,11 @@ class ColorSettingTrait(_Trait):
             color_modes
         )
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
         color_modes = attrs.get(light.ATTR_SUPPORTED_COLOR_MODES)
-        response = {}
+        response: dict[str, Any] = {}
 
         if light.color_supported(color_modes):
             response["colorModel"] = "hsv"
@@ -571,11 +571,11 @@ class ColorSettingTrait(_Trait):
 
         return response
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return color temperature query attributes."""
         color_mode = self.state.attributes.get(light.ATTR_COLOR_MODE)
 
-        color = {}
+        color: dict[str, Any] = {}
 
         if light.color_supported([color_mode]):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
@@ -684,12 +684,12 @@ class SceneTrait(_Trait):
             script.DOMAIN,
         )
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return scene attributes for a sync request."""
         # None of the supported domains can support sceneReversible
         return {}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return scene query attributes."""
         return {}
 
@@ -728,11 +728,11 @@ class DockTrait(_Trait):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return dock attributes for a sync request."""
         return {}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return dock query attributes."""
         return {"isDocked": self.state.state == vacuum.STATE_DOCKED}
 
@@ -762,11 +762,11 @@ class LocatorTrait(_Trait):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN and features & VacuumEntityFeature.LOCATE
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return locator attributes for a sync request."""
         return {}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return locator query attributes."""
         return {}
 
@@ -802,14 +802,14 @@ class EnergyStorageTrait(_Trait):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN and features & VacuumEntityFeature.BATTERY
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return EnergyStorage attributes for a sync request."""
         return {
             "isRechargeable": True,
             "queryOnlyEnergyStorage": True,
         }
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return EnergyStorage query attributes."""
         battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
         if battery_level is None:
@@ -866,7 +866,7 @@ class StartStopTrait(_Trait):
 
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return StartStop attributes for a sync request."""
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
@@ -880,7 +880,7 @@ class StartStopTrait(_Trait):
 
         raise NotImplementedError(f"Unsupported domain {domain}")
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return StartStop query attributes."""
         domain = self.state.domain
         state = self.state.state
@@ -1012,7 +1012,7 @@ class TemperatureControlTrait(_Trait):
             and device_class == sensor.SensorDeviceClass.TEMPERATURE
         )
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return temperature attributes for a sync request."""
         response = {}
         domain = self.state.domain
@@ -1048,7 +1048,7 @@ class TemperatureControlTrait(_Trait):
 
         return response
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return temperature states."""
         response = {}
         domain = self.state.domain
@@ -1174,7 +1174,7 @@ class TemperatureSettingTrait(_Trait):
 
         return modes
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return temperature point and modes attributes for a sync request."""
         response = {}
         attrs = self.state.attributes
@@ -1217,9 +1217,9 @@ class TemperatureSettingTrait(_Trait):
 
         return response
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return temperature point and modes query attributes."""
-        response = {}
+        response: dict[str, Any] = {}
         attrs = self.state.attributes
         unit = self.hass.config.units.temperature_unit
 
@@ -1432,9 +1432,9 @@ class HumiditySettingTrait(_Trait):
             and device_class == sensor.SensorDeviceClass.HUMIDITY
         )
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return humidity attributes for a sync request."""
-        response = {}
+        response: dict[str, Any] = {}
         attrs = self.state.attributes
         domain = self.state.domain
 
@@ -1455,7 +1455,7 @@ class HumiditySettingTrait(_Trait):
 
         return response
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return humidity query attributes."""
         response = {}
         attrs = self.state.attributes
@@ -1518,11 +1518,11 @@ class LockUnlockTrait(_Trait):
         """Return if the trait might ask for 2FA."""
         return True
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return LockUnlock attributes for a sync request."""
         return {}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return LockUnlock query attributes."""
         if self.state.state == STATE_JAMMED:
             return {"isJammed": True}
@@ -1604,7 +1604,7 @@ class ArmDisArmTrait(_Trait):
 
         return states[0]
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return ArmDisarm attributes for a sync request."""
         response = {}
         levels = []
@@ -1624,7 +1624,7 @@ class ArmDisArmTrait(_Trait):
         response["availableArmLevels"] = {"levels": levels, "ordered": True}
         return response
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return ArmDisarm query attributes."""
         armed_state = self.state.attributes.get("next_state", self.state.state)
 
@@ -1721,11 +1721,11 @@ class FanSpeedTrait(_Trait):
             return features & ClimateEntityFeature.FAN_MODE
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return speed point and modes attributes for a sync request."""
         domain = self.state.domain
         speeds = []
-        result = {}
+        result: dict[str, Any] = {}
 
         if domain == fan.DOMAIN:
             reversible = bool(
@@ -1770,7 +1770,7 @@ class FanSpeedTrait(_Trait):
 
         return result
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return speed point and modes query attributes."""
 
         attrs = self.state.attributes
@@ -1916,7 +1916,7 @@ class ModesTrait(_Trait):
             )
         return mode
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return mode attributes for a sync request."""
         modes = []
 
@@ -1940,10 +1940,10 @@ class ModesTrait(_Trait):
 
         return {"availableModes": modes}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return current modes."""
         attrs = self.state.attributes
-        response = {}
+        response: dict[str, Any] = {}
         mode_settings = {}
 
         if self.state.domain == fan.DOMAIN:
@@ -2104,7 +2104,7 @@ class InputSelectorTrait(_Trait):
 
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return mode attributes for a sync request."""
         attrs = self.state.attributes
         sourcelist: list[str] = attrs.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
@@ -2115,7 +2115,7 @@ class InputSelectorTrait(_Trait):
 
         return {"availableInputs": inputs, "orderedInputs": True}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return current modes."""
         attrs = self.state.attributes
         return {"currentInput": attrs.get(media_player.ATTR_INPUT_SOURCE, "")}
@@ -2185,7 +2185,7 @@ class OpenCloseTrait(_Trait):
         """Return if the trait might ask for 2FA."""
         return domain == cover.DOMAIN and device_class in OpenCloseTrait.COVER_2FA
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return opening direction."""
         response = {}
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -2221,10 +2221,10 @@ class OpenCloseTrait(_Trait):
 
         return response
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return state query attributes."""
         domain = self.state.domain
-        response = {}
+        response: dict[str, Any] = {}
 
         # When it's an assumed state, we will return empty state
         # This shouldn't happen because we set `commandOnlyOpenClose`
@@ -2330,7 +2330,7 @@ class VolumeTrait(_Trait):
 
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return volume attributes for a sync request."""
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         return {
@@ -2347,7 +2347,7 @@ class VolumeTrait(_Trait):
             "levelStepSize": 10,
         }
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return volume query attributes."""
         response = {}
 
@@ -2510,7 +2510,7 @@ class TransportControlTrait(_Trait):
 
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return opening direction."""
         response = {}
 
@@ -2525,7 +2525,7 @@ class TransportControlTrait(_Trait):
 
         return response
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
         return {}
 
@@ -2624,11 +2624,11 @@ class MediaStateTrait(_Trait):
         """Test if state is supported."""
         return domain == media_player.DOMAIN
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
         return {"supportActivityState": True, "supportPlaybackState": True}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
         return {
             "activityState": self.activity_lookup.get(self.state.state, "INACTIVE"),
@@ -2658,11 +2658,11 @@ class ChannelTrait(_Trait):
 
         return False
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
         return {"availableChannels": [], "commandOnlyChannels": True}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return channel query attributes."""
         return {}
 
@@ -2735,7 +2735,7 @@ class SensorStateTrait(_Trait):
         """Test if state is supported."""
         return domain == sensor.DOMAIN and device_class in cls.sensor_types
 
-    def sync_attributes(self):
+    def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
         data = self.sensor_types.get(device_class)
@@ -2763,7 +2763,7 @@ class SensorStateTrait(_Trait):
 
         return {"sensorStatesSupported": [sensor_state]}
 
-    def query_attributes(self):
+    def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
         data = self.sensor_types.get(device_class)
