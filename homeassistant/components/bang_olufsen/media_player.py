@@ -204,10 +204,11 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._state: str = MediaPlayerState.IDLE
         self._video_sources: dict[str, str] = {}
 
-        # Beolink
+        # Beolink compatible sources
         self._beolink_sources: dict[str, bool] = {}
         self._remote_leader: BeolinkLeader | None = None
-        self._beolink_attribute: dict[str, dict] = {}
+        # Extra state attributes for showing Beolink: peer(s), listener(s), leader and self
+        self._beolink_attributes: dict[str, dict[str, dict[str, str]]] = {}
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -482,12 +483,13 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     async def _async_update_beolink(self) -> None:
         """Update the current Beolink leader, listeners, peers and self."""
 
-        self._beolink_attribute = {}
+        self._beolink_attributes = {}
 
         # Add Beolink self
         assert self.device_entry
+        assert self.device_entry.name
 
-        self._beolink_attribute = {
+        self._beolink_attributes = {
             "beolink": {"self": {self.device_entry.name: self._beolink_jid}}
         }
 
@@ -495,9 +497,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         peers = await self._client.get_beolink_peers()
 
         if len(peers) > 0:
-            self._beolink_attribute["beolink"]["peers"] = {}
+            self._beolink_attributes["beolink"]["peers"] = {}
             for peer in peers:
-                self._beolink_attribute["beolink"]["peers"][peer.friendly_name] = (
+                self._beolink_attributes["beolink"]["peers"][peer.friendly_name] = (
                     peer.jid
                 )
 
@@ -527,7 +529,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 cast(str, self._get_entity_id_from_jid(self._beolink_jid))
             )
 
-            self._beolink_attribute["beolink"]["leader"] = {
+            self._beolink_attributes["beolink"]["leader"] = {
                 self._remote_leader.friendly_name: self._remote_leader.jid,
             }
 
@@ -555,7 +557,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                             )
                             break
 
-                self._beolink_attribute["beolink"]["listeners"] = (
+                self._beolink_attributes["beolink"]["listeners"] = (
                     beolink_listeners_attribute
                 )
 
@@ -709,8 +711,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         attributes: dict[str, Any] = {}
 
         # Add Beolink attributes
-        if self._beolink_attribute:
-            attributes.update(self._beolink_attribute)
+        if self._beolink_attributes:
+            attributes.update(self._beolink_attributes)
 
         return attributes
 
