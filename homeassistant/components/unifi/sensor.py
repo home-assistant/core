@@ -286,7 +286,7 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
 @callback
 def async_device_temperatures_value_fn(
     temperature_name: str, hub: UnifiHub, device: Device
-) -> float | None:
+) -> float:
     """Retrieve the temperature of the device."""
     temperature = _device_temperature(temperature_name=temperature_name, device=device)
 
