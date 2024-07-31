@@ -225,7 +225,8 @@ class OpenAIConversationEntity(
         LOGGER.debug("Prompt: %s", messages)
         LOGGER.debug("Tools: %s", tools)
         trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {"messages": messages, "tools": llm_api.tools if llm_api else None},
         )
 
         client = self.entry.runtime_data

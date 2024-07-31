@@ -427,19 +427,21 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self.zctrl.surround_program = sound_mode
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             return self._play_status.artist
+        return None
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album of current playing media."""
         if self._play_status is not None:
             return self._play_status.album
+        return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
         if self._is_playback_supported:
@@ -447,7 +449,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             song = self._play_status.song
@@ -459,3 +461,4 @@ class YamahaDeviceZone(MediaPlayerEntity):
                 return f"{station}: {song}"
 
             return song or station
+        return None

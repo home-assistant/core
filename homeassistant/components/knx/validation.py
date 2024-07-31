@@ -30,9 +30,10 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
     return dpt_value_validator
 
 
+dpt_base_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 string_type_validator = dpt_subclass_validator(DPTString)
+sensor_type_validator = vol.Any(numeric_type_validator, string_type_validator)
 
 
 def ga_validator(value: Any) -> str | int:

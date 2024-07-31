@@ -143,11 +143,6 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         return None
 
     @property
-    def available(self) -> bool:
-        """Return True if the vacuum is available."""
-        return super().available and self.state is not None
-
-    @property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
         if self.device.battery_status is not None:
@@ -173,6 +168,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         data: dict[str, Any] = {}
         data[ATTR_ERROR] = self.error
 
+        # these attributes are deprecated and can be removed in 2025.2
         for key, val in self.device.components.items():
             attr_name = ATTR_COMPONENT_PREFIX + key
             data[attr_name] = int(val * 100)
