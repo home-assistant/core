@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from lektricowifi import DeviceConnectionError, lektricowifi
 
@@ -14,7 +15,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -37,13 +38,13 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.device = lektricowifi.Device(
             self.config_entry.data[CONF_HOST],
-            session=async_get_clientsession(hass),
+            asyncClient=get_async_client(hass),
         )
         self.serial_number: str = self.config_entry.data[ATTR_SERIAL_NUMBER]
         self.board_revision: str = self.config_entry.data[ATTR_HW_VERSION]
         self.device_type: str = self.config_entry.data[CONF_TYPE]
 
-    async def _async_update_data(self) -> lektricowifi.Info:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Async Update device state."""
         try:
             return await self.device.device_info(self.device_type)
