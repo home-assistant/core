@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from datetime import date as dt_date
-import time
-from typing import Final
 
 from xknx import XKNX
-from xknx.devices import DateTime as XknxDateTime
+from xknx.devices import DateDevice as XknxDateDevice
+from xknx.dpt.dpt_11 import KNXDate as XKNXDate
 
 from homeassistant import config_entries
 from homeassistant.components.date import DateEntity
@@ -33,8 +32,6 @@ from .const import (
 )
 from .knx_entity import KnxEntity
 
-_DATE_TRANSLATION_FORMAT: Final = "%Y-%m-%d"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -45,15 +42,14 @@ async def async_setup_entry(
     xknx: XKNX = hass.data[DOMAIN].xknx
     config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.DATE]
 
-    async_add_entities(KNXDate(xknx, entity_config) for entity_config in config)
+    async_add_entities(KNXDateEntity(xknx, entity_config) for entity_config in config)
 
 
-def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateTime:
+def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateDevice:
     """Return a XKNX DateTime object to be used within XKNX."""
-    return XknxDateTime(
+    return XknxDateDevice(
         xknx,
         name=config[CONF_NAME],
-        broadcast_type="DATE",
         localtime=False,
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS),
@@ -62,10 +58,10 @@ def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateTime:
     )
 
 
-class KNXDate(KnxEntity, DateEntity, RestoreEntity):
+class KNXDateEntity(KnxEntity, DateEntity, RestoreEntity):
     """Representation of a KNX date."""
 
-    _device: XknxDateTime
+    _device: XknxDateDevice
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize a KNX time."""
@@ -81,21 +77,15 @@ class KNXDate(KnxEntity, DateEntity, RestoreEntity):
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            self._device.remote_value.value = time.strptime(
-                last_state.state, _DATE_TRANSLATION_FORMAT
+            self._device.remote_value.value = XKNXDate.from_date(
+                dt_date.fromisoformat(last_state.state)
             )
 
     @property
     def native_value(self) -> dt_date | None:
         """Return the latest value."""
-        if (time_struct := self._device.remote_value.value) is None:
-            return None
-        return dt_date(
-            year=time_struct.tm_year,
-            month=time_struct.tm_mon,
-            day=time_struct.tm_mday,
-        )
+        return self._device.value
 
     async def async_set_value(self, value: dt_date) -> None:
         """Change the value."""
-        await self._device.set(value.timetuple())
+        await self._device.set(value)
