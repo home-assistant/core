@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Any, Final, NotRequired, TypedDict
+from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientSession
+from evohomeasync2 import EvohomeClient
 import pytest
 
 from homeassistant.components.evohome import (
@@ -16,9 +19,10 @@ from homeassistant.components.evohome import (
     dt_aware_to_naive,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import evo_client
+from .conftest import mock_get
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
 
 
@@ -89,6 +93,36 @@ DOMAIN_STORAGE_BASE: Final = {
 }
 
 
+@patch("evohomeasync2.broker.Broker.get", mock_get)
+async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> MagicMock:
+    """Set up the evohome integration and return its client.
+
+    The class is mocked here to check the client was instantiated with the correct args.
+    """
+
+    mock_client: EvohomeClient | None = None
+
+    def capture_client(*args: Any, **kwargs: Any):
+        nonlocal mock_client
+        mock_client = EvohomeClient(*args, **kwargs)
+        return mock_client
+
+    with patch(
+        "homeassistant.components.evohome.evo.EvohomeClient", side_effect=capture_client
+    ) as mock_class:
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
+        await hass.async_block_till_done()
+
+        mock_class.assert_called_once()
+        assert mock_class.call_args.args[0] == test_config[CONF_USERNAME]
+        assert mock_class.call_args.args[1] == test_config[CONF_PASSWORD]
+
+        assert isinstance(mock_class.call_args.kwargs["session"], ClientSession)
+        assert mock_client and mock_client.account_info is not None
+
+        return mock_class
+
+
 @pytest.mark.parametrize("idx", TEST_DATA_NULL)
 async def test_auth_tokens_null(
     hass: HomeAssistant,
@@ -99,7 +133,7 @@ async def test_auth_tokens_null(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA_NULL[idx]}
 
-    mock_client_class = await evo_client(hass, TEST_CONFIG)
+    mock_client_class = await setup_evohome(hass, TEST_CONFIG)
 
     # Confirm client was instantiated without tokens, as cache was empty...
     assert SZ_REFRESH_TOKEN not in mock_client_class.call_args.kwargs
@@ -123,7 +157,7 @@ async def test_auth_tokens_same(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
-    mock_client_class = await evo_client(hass, TEST_CONFIG)
+    mock_client_class = await setup_evohome(hass, TEST_CONFIG)
 
     # Confirm client was instantiated with the cached tokens...
     assert mock_client_class.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -155,7 +189,7 @@ async def test_auth_tokens_past(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
-    mock_client_class = await evo_client(hass, TEST_CONFIG)
+    mock_client_class = await setup_evohome(hass, TEST_CONFIG)
 
     # Confirm client was instantiated with the cached tokens...
     assert mock_client_class.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -181,7 +215,7 @@ async def test_auth_tokens_diff(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
-    mock_client_class = await evo_client(
+    mock_client_class = await setup_evohome(
         hass, TEST_CONFIG | {CONF_USERNAME: USERNAME_DIFF}
     )
 
