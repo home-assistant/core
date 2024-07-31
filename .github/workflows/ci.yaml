@@ -904,6 +904,7 @@ jobs:
             cov_params+=(--cov-report=xml)
           fi
 
+          echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
