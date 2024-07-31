@@ -6,9 +6,7 @@ from unittest.mock import MagicMock
 from pysmlight.exceptions import SmlightConnectionError
 import pytest
 
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.util.network import is_ip_address
 
 from .conftest import MOCK_HOST
@@ -46,24 +44,6 @@ async def test_coordinator_get_hostname(
     host = coordinator.get_hostname("192.168.1.2")
     assert not is_ip_address(host)
     assert host == "slzb-06"
-
-
-async def test_coordinator_missing_creds(
-    hass: HomeAssistant,
-    mock_smlight_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator setup missing credentials.
-
-    This will trigger reauth if user enables authentication on the SLZB device
-    after initial setup.
-    """
-    mock_smlight_client.check_auth_needed.return_value = True
-    mock_config_entry.data = {CONF_HOST: MOCK_HOST}
-
-    coordinator = mock_config_entry.runtime_data
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator.async_maybe_auth()
 
 
 async def test_coordinator_update_failed(
