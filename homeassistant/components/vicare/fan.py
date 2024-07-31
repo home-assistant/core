@@ -51,7 +51,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ViCareFan(device.config, device.api, "ventilation")
+            ViCareFan(device.config, device.api)
             for device in device_list
             if isinstance(device.api, PyViCareVentilationDevice)
         ]
@@ -78,11 +78,9 @@ class ViCareFan(ViCareEntity, FanEntity):
         self,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        translation_key: str,
     ) -> None:
         """Initialize the fan entity."""
-        super().__init__(device_config, device, translation_key)
-        self._attr_translation_key = translation_key
+        super().__init__(device_config, device, self._attr_translation_key)
 
     def update(self) -> None:
         """Update state of fan."""
