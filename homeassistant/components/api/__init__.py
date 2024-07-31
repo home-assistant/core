@@ -388,9 +388,7 @@ class APIDomainServicesView(HomeAssistantView):
 
         context = self.context(request)
 
-        user_has_requested_response = "return_response" in request.query
-
-        if user_has_requested_response:
+        if response_requested := "return_response" in request.query:
             if (
                 hass.services.supports_response(domain, service)
                 is ha.SupportsResponse.NONE
@@ -431,7 +429,7 @@ class APIDomainServicesView(HomeAssistantView):
                     data,  # type: ignore[arg-type]
                     blocking=True,
                     context=context,
-                    return_response=user_has_requested_response,
+                    return_response=response_requested,
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
@@ -439,7 +437,7 @@ class APIDomainServicesView(HomeAssistantView):
         finally:
             cancel_listen()
 
-        if user_has_requested_response:
+        if response_requested:
             return self.json(
                 {"changed_states": changed_states, "service_response": response}
             )
