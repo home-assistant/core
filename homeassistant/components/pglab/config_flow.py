@@ -9,8 +9,6 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import DISCOVERY_TOPIC, DOMAIN
 
-CONF_DISCOVERY_PREFIX = "discovery_prefix"
-
 
 class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -49,7 +47,7 @@ class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="PG LAB Electronics",
                 data={
-                    CONF_DISCOVERY_PREFIX: DISCOVERY_TOPIC,
+                    "discovery_prefix": DISCOVERY_TOPIC,
                 },
             )
 
