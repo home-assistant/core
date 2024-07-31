@@ -113,6 +113,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
 
+ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
 MAX_RECONNECT_WAIT = 300  # seconds
@@ -154,18 +155,23 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# Service call validation schema
+# The use of a topic_template and payload_template in an mqtt publish action call
+# have been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
+
+# Publish action call validation schema
 MQTT_PUBLISH_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Required(ATTR_TOPIC): valid_publish_topic,
+            vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
+            vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
             vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
             vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
             vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
             vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         },
         required=True,
-    )
+    ),
+    cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
 )
 
 
@@ -248,7 +254,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mqtt_data.client.async_restore_tracked_subscriptions(
                 mqtt_data.subscriptions_to_restore
             )
-            mqtt_data.subscriptions_to_restore = []
+            mqtt_data.subscriptions_to_restore = set()
         mqtt_data.reload_dispatchers.append(
             entry.add_update_listener(_async_config_entry_updated)
         )
@@ -287,12 +293,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
         msg_topic: str | None = call.data.get(ATTR_TOPIC)
+        msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
         payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
+        if msg_topic_template is not None:
+            # The use of a topic_template in an mqtt publish action call
+            # has been deprecated with HA Core 2024.8.0
+            # and will be removed with HA Core 2025.2.0
+            rendered_topic: Any = MqttCommandTemplate(
+                template.Template(msg_topic_template),
+                hass=hass,
+            ).async_render()
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"topic_template_deprecation_{rendered_topic}",
+                breaks_in_ha_version="2025.2.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="topic_template_deprecation",
+                translation_placeholders={
+                    "topic_template": msg_topic_template,
+                    "topic": rendered_topic,
+                },
+            )
+            try:
+                msg_topic = valid_publish_topic(rendered_topic)
+            except vol.Invalid as err:
+                err_str = str(err)
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_publish_topic",
+                    translation_placeholders={
+                        "error": err_str,
+                        "topic": str(rendered_topic),
+                        "topic_template": str(msg_topic_template),
+                    },
+                ) from err
 
         if payload_template is not None:
+            # The use of a payload_template in an mqtt publish action call
+            # has been deprecated with HA Core 2024.8.0
+            # and will be removed with HA Core 2025.2.0
+            if TYPE_CHECKING:
+                assert msg_topic is not None
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"payload_template_deprecation_{msg_topic}",
+                breaks_in_ha_version="2025.2.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="payload_template_deprecation",
+                translation_placeholders={
+                    "topic": msg_topic,
+                    "payload_template": payload_template,
+                },
+            )
             payload = MqttCommandTemplate(
                 template.Template(payload_template), hass=hass
             ).async_render()

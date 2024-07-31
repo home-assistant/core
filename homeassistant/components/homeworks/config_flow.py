@@ -6,6 +6,7 @@ from functools import partial
 import logging
 from typing import Any
 
+from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import Homeworks
 import voluptuous as vol
 
@@ -88,7 +89,7 @@ BUTTON_EDIT: VolDictType = {
 }
 
 
-validate_addr = cv.matches_regex(r"\[(?:\d\d:)?\d\d:\d\d:\d\d\]")
+validate_addr = cv.matches_regex(r"\[(?:\d\d:){2,4}\d\d\]")
 
 
 async def validate_add_controller(
@@ -128,18 +129,18 @@ async def _try_connection(user_input: dict[str, Any]) -> None:
             "Trying to connect to %s:%s", user_input[CONF_HOST], user_input[CONF_PORT]
         )
         controller = Homeworks(host, port, lambda msg_types, values: None)
+        controller.connect()
         controller.close()
-        controller.join()
 
     hass = async_get_hass()
     try:
         await hass.async_add_executor_job(
             _try_connect, user_input[CONF_HOST], user_input[CONF_PORT]
         )
-    except ConnectionError as err:
+    except hw_exceptions.HomeworksConnectionFailed as err:
         raise SchemaFlowError("connection_error") from err
     except Exception as err:
-        _LOGGER.exception("Caught unexpected exception")
+        _LOGGER.exception("Caught unexpected exception %s")
         raise SchemaFlowError("unknown_error") from err
 
 

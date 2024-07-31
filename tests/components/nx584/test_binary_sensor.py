@@ -216,8 +216,8 @@ def test_nx584_watcher_run_with_zone_events() -> None:
         """Return nothing twice, then some events."""
         if empty_me:
             empty_me.pop()
-        else:
-            return fake_events
+            return None
+        return fake_events
 
     client = mock.MagicMock()
     fake_events = [

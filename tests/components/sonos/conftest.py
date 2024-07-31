@@ -453,6 +453,7 @@ def mock_get_music_library_information(
                 "object.container.album.musicAlbum",
             )
         ]
+    return []
 
 
 @pytest.fixture(name="music_library_browse_categories")

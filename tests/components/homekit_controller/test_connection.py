@@ -1,8 +1,13 @@
 """Tests for HKDevice."""
 
+from collections.abc import Callable
 import dataclasses
+from unittest import mock
 
 from aiohomekit.controller import TransportType
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
+from aiohomekit.testing import FakeController
 import pytest
 
 from homeassistant.components.homekit_controller.const import (
@@ -12,11 +17,17 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
 )
 from homeassistant.components.thread import async_add_dataset, dataset_store
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import setup_accessories_from_file, setup_platform, setup_test_accessories
+from .common import (
+    setup_accessories_from_file,
+    setup_platform,
+    setup_test_accessories,
+    setup_test_component,
+)
 
 from tests.common import MockConfigEntry
 
@@ -331,3 +342,56 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
         )
 
     assert config_entry.data["Connection"] == "BLE"
+
+
+async def test_skip_polling_all_watchable_accessory_mode(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we skip polling if available and all chars are watchable accessory mode."""
+
+    def _create_accessory(accessory):
+        service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
+
+        on_char = service.add_char(CharacteristicsTypes.ON)
+        on_char.value = 0
+
+        brightness = service.add_char(CharacteristicsTypes.BRIGHTNESS)
+        brightness.value = 0
+
+        return service
+
+    helper = await setup_test_component(hass, get_next_aid(), _create_accessory)
+
+    with mock.patch.object(
+        helper.pairing,
+        "get_characteristics",
+        wraps=helper.pairing.get_characteristics,
+    ) as mock_get_characteristics:
+        # Initial state is that the light is off
+        state = await helper.poll_and_get_state()
+        assert state.state == STATE_OFF
+        assert mock_get_characteristics.call_count == 0
+
+        # Test device goes offline
+        helper.pairing.available = False
+        with mock.patch.object(
+            FakeController,
+            "async_reachable",
+            return_value=False,
+        ):
+            state = await helper.poll_and_get_state()
+            assert state.state == STATE_UNAVAILABLE
+            # Tries twice before declaring unavailable
+            assert mock_get_characteristics.call_count == 2
+
+        # Test device comes back online
+        helper.pairing.available = True
+        state = await helper.poll_and_get_state()
+        assert state.state == STATE_OFF
+        assert mock_get_characteristics.call_count == 3
+
+        # Next poll should not happen because its a single
+        # accessory, available, and all chars are watchable
+        state = await helper.poll_and_get_state()
+        assert state.state == STATE_OFF
+        assert mock_get_characteristics.call_count == 3

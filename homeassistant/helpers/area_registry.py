@@ -46,8 +46,8 @@ class _AreaStoreData(TypedDict):
     labels: list[str]
     name: str
     picture: str | None
-    created_at: datetime
-    modified_at: datetime
+    created_at: str
+    modified_at: str
 
 
 class AreasRegistryStoreData(TypedDict):
@@ -87,8 +87,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
-                    "created_at": self.created_at,
-                    "modified_at": self.modified_at,
+                    "created_at": self.created_at.timestamp(),
+                    "modified_at": self.modified_at.timestamp(),
                 }
             )
         )
@@ -133,8 +133,9 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
 
             if old_minor_version < 7:
                 # Version 1.7 adds created_at and modiefied_at
+                created_at = utc_from_timestamp(0).isoformat()
                 for area in old_data["areas"]:
-                    area["created_at"] = area["modified_at"] = utc_from_timestamp(0)
+                    area["created_at"] = area["modified_at"] = created_at
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -374,8 +375,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     name=area["name"],
                     normalized_name=normalized_name,
                     picture=area["picture"],
-                    created_at=area["created_at"],
-                    modified_at=area["modified_at"],
+                    created_at=datetime.fromisoformat(area["created_at"]),
+                    modified_at=datetime.fromisoformat(area["modified_at"]),
                 )
 
         self.areas = areas
@@ -394,8 +395,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     "labels": list(entry.labels),
                     "name": entry.name,
                     "picture": entry.picture,
-                    "created_at": entry.created_at,
-                    "modified_at": entry.modified_at,
+                    "created_at": entry.created_at.isoformat(),
+                    "modified_at": entry.modified_at.isoformat(),
                 }
                 for entry in self.areas.values()
             ]

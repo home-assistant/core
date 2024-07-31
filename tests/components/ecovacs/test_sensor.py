@@ -64,7 +64,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.ozmo_950_wi_fi_ssid",
                 "sensor.ozmo_950_main_brush_lifespan",
                 "sensor.ozmo_950_filter_lifespan",
-                "sensor.ozmo_950_side_brushes_lifespan",
+                "sensor.ozmo_950_side_brush_lifespan",
                 "sensor.ozmo_950_error",
             ],
         ),

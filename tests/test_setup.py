@@ -10,7 +10,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries, loader, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
-from homeassistant.core import DOMAIN, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery, translation
 from homeassistant.helpers.dispatcher import (
@@ -243,7 +248,9 @@ async def test_component_not_found(
     """setup_component should not crash if component doesn't exist."""
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
     assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(DOMAIN, "integration_not_found.non_existing")
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "integration_not_found.non_existing"
+    )
     assert issue
     assert issue.translation_key == "integration_not_found"
 
