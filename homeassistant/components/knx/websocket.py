@@ -156,6 +156,7 @@ async def ws_project_file_process(
         await knx.project.process_project_file(
             file_id=msg["file_id"],
             password=msg["password"],
+            xknx=knx.xknx,
         )
     except (ValueError, XknxProjectException) as err:
         # ValueError could raise from file_upload integration
