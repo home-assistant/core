@@ -7,6 +7,7 @@ from typing import Final, TypedDict
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt.dpt import DPTComplexData, DPTEnumData
 from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
@@ -93,7 +94,7 @@ class Telegrams:
         if self.recent_telegrams:
             await self._history_store.async_save(list(self.recent_telegrams))
 
-    async def _xknx_telegram_cb(self, telegram: Telegram) -> None:
+    def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
@@ -156,6 +157,11 @@ def decode_telegram_payload(
         value = transcoder.from_knx(payload)
     except XKNXException:
         value = "Error decoding value"
+
+    if isinstance(value, DPTComplexData):
+        value = value.as_dict()
+    elif isinstance(value, DPTEnumData):
+        value = value.name.lower()
 
     return DecodedTelegramPayload(
         dpt_main=transcoder.dpt_main_number,
