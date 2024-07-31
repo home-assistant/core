@@ -89,7 +89,7 @@ BUTTON_EDIT: VolDictType = {
 }
 
 
-validate_addr = cv.matches_regex(r"\[(?:\d\d:)?\d\d:\d\d:\d\d\]")
+validate_addr = cv.matches_regex(r"\[(?:\d\d:){2,4}\d\d\]")
 
 
 async def validate_add_controller(

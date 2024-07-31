@@ -436,7 +436,14 @@ async def test_options_add_remove_light_flow(
     )
 
 
-@pytest.mark.parametrize("keypad_address", ["[02:08:03:01]", "[02:08:03]"])
+@pytest.mark.parametrize(
+    "keypad_address",
+    [
+        "[02:08:03]",
+        "[02:08:03:01]",
+        "[02:08:03:01:00]",
+    ],
+)
 async def test_options_add_remove_keypad_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
