@@ -29,5 +29,5 @@ class SmEntity(CoordinatorEntity[SmDataUpdateCoordinator]):
             manufacturer=ATTR_MANUFACTURER,
             model=coordinator.data.info.model,
             name=coordinator.hostname,
-            sw_version=f"core: {coordinator.data.info.sw_version} / zb: {coordinator.data.info.zb_version}",
+            sw_version=f"core: {coordinator.data.info.sw_version} / zigbee: {coordinator.data.info.zb_version}",
         )

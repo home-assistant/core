@@ -85,7 +85,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zb: -1',
+    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
     'via_device_id': None,
   })
 # ---
@@ -168,7 +168,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zb: -1',
+    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
     'via_device_id': None,
   })
 # ---
@@ -252,7 +252,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zb: -1',
+    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
     'via_device_id': None,
   })
 # ---
@@ -336,7 +336,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zb: -1',
+    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
     'via_device_id': None,
   })
 # ---
@@ -426,7 +426,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zb: -1',
+    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
     'via_device_id': None,
   })
 # ---
@@ -509,7 +509,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zb: -1',
+    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
     'via_device_id': None,
   })
 # ---

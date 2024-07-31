@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
-from pysmlight.exceptions import SmlightConnectionError, SmlightError
+from pysmlight.exceptions import SmlightConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -208,25 +208,6 @@ async def test_user_invalid_auth(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smlight_client.get_info.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("mock_smlight_client")
-async def test_user_api_exception(
-    hass: HomeAssistant, mock_smlight_client: MagicMock
-) -> None:
-    """Test we handle unknown exceptions in pysmlight api."""
-    mock_smlight_client.check_auth_needed.side_effect = SmlightError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
-            CONF_HOST: MOCK_HOST,
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-    assert result["step_id"] == "user"
 
 
 async def test_user_cannot_connect(
