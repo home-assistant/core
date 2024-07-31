@@ -33,7 +33,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -204,8 +204,7 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    @callback
-    def _add_legacy_entities(_: Any) -> None:
+    async def _add_legacy_entities() -> None:
         entities = []
         for device in controller.legacy_devices:
             for description in LEGACY_LIFESPAN_SENSORS:
@@ -221,15 +220,8 @@ async def async_setup_entry(
         if entities:
             async_add_entities(entities)
 
-    for device in controller.legacy_devices:
-        config_entry.async_on_unload(
-            device.lifespanEvents.subscribe(_add_legacy_entities).unsubscribe
-        )
-
-    hass.bus.async_listen("ecovacs_legacy_lifespan_event", _add_legacy_entities)
-
     def _fire_ecovacs_legacy_lifespan_event(_: Any) -> None:
-        hass.bus.fire("ecovacs_legacy_lifespan_event")
+        hass.create_task(_add_legacy_entities())
 
     for device in controller.legacy_devices:
         config_entry.async_on_unload(
