@@ -17,7 +17,7 @@ from homeassistant.components.reolink import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -143,13 +143,13 @@ async def test_credential_error_three(
 
     issue_id = f"config_entry_reauth_{const.DOMAIN}_{config_entry.entry_id}"
     for _ in range(NUM_CRED_ERRORS):
-        assert (HA_DOMAIN, issue_id) not in issue_registry.issues
+        assert (HOMEASSISTANT_DOMAIN, issue_id) not in issue_registry.issues
         async_fire_time_changed(
             hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
         )
         await hass.async_block_till_done()
 
-    assert (HA_DOMAIN, issue_id) in issue_registry.issues
+    assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues
 
 
 async def test_entry_reloading(

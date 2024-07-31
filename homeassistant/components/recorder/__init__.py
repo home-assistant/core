@@ -33,7 +33,7 @@ from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DOMAIN,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
-    INTEGRATION_PLATFORMS_RUN_IN_RECORDER_THREAD,
+    INTEGRATION_PLATFORM_METHODS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -189,10 +189,7 @@ async def _async_setup_integration_platform(
         """Process a recorder platform."""
         # If the platform has a compile_statistics method, we need to
         # add it to the recorder queue to be processed.
-        if any(
-            hasattr(platform, _attr)
-            for _attr in INTEGRATION_PLATFORMS_RUN_IN_RECORDER_THREAD
-        ):
+        if any(hasattr(platform, _attr) for _attr in INTEGRATION_PLATFORM_METHODS):
             instance.queue_task(AddRecorderPlatformTask(domain, platform))
 
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)

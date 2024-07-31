@@ -2,12 +2,14 @@
 
 from unittest.mock import ANY, MagicMock
 
+from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED
 import pytest
 
 from homeassistant.components.homeworks import EVENT_BUTTON_PRESS, EVENT_BUTTON_RELEASE
 from homeassistant.components.homeworks.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -40,7 +42,9 @@ async def test_config_entry_not_ready(
     mock_homeworks: MagicMock,
 ) -> None:
     """Test the Homeworks configuration entry not ready."""
-    mock_homeworks.side_effect = ConnectionError
+    mock_homeworks.return_value.connect.side_effect = (
+        hw_exceptions.HomeworksConnectionFailed
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -165,3 +169,25 @@ async def test_send_command(
             blocking=True,
         )
     assert len(mock_controller._send.mock_calls) == 0
+
+
+async def test_cleanup_on_ha_shutdown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homeworks: MagicMock,
+) -> None:
+    """Test cleanup when HA shuts down."""
+    mock_controller = MagicMock()
+    mock_homeworks.return_value = mock_controller
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY)
+    mock_controller.stop.assert_not_called()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_controller.stop.assert_called_once_with()

@@ -142,9 +142,10 @@ class TelnetSwitch(SwitchEntity):
         response = self._telnet_command(self._command_state)
         if response and self._value_template:
             rendered = self._value_template.render_with_possible_json_value(response)
-            self._attr_is_on = rendered == "True"
         else:
             _LOGGER.warning("Empty response for command: %s", self._command_state)
+            return None
+        self._attr_is_on = rendered == "True"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
