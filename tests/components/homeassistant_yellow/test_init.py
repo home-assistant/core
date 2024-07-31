@@ -19,16 +19,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
-@pytest.fixture(autouse=True)
-def mock_async_validate_hardware_consistent():
-    """Mock validate hardware state."""
-    with patch(
-        "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
-        return_value=True,
-    ):
-        yield
-
-
 @pytest.mark.parametrize(
     ("onboarded", "num_entries", "num_flows"), [(False, 1, 0), (True, 0, 1)]
 )
