@@ -9,7 +9,7 @@ from pysmlight.web import Api2, Info, Sensors
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -76,9 +76,8 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
                         self.config_entry.data[CONF_PASSWORD],
                     )
                 except SmlightAuthError as err:
-                    raise ConfigEntryAuthFailed from err
-            else:
-                raise ConfigEntryAuthFailed
+                    LOGGER.error("Failed to authenticate: %s", err)
+                    raise ConfigEntryError from err
 
     async def _async_update_data(self) -> SmData:
         """Fetch data from the SMLIGHT device."""
