@@ -50,7 +50,8 @@ PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 async def call_c4_api_retry(func, *func_args):
     """Call C4 API function and retry on failure."""
-    for i in range(API_RETRY_TIMES):
+    # It looks like RUFF doesn't analyse the exit correctly, so we need to add a noqa comment
+    for i in range(API_RETRY_TIMES):  # noqa: RET503
         try:
             return await func(*func_args)
         except client_exceptions.ClientError as exception:
