@@ -36,14 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
         """Subscribe to MQTT topics using the Home Assistant MQTT client."""
 
         @callback
-        def discovery_message_received(msg: ReceiveMessage) -> None:
-            """Handle PGLab discovery messages."""
+        def mqtt_message_received(msg: ReceiveMessage) -> None:
+            """Handle PGLab mqtt messages."""
             callback_func(msg.topic, msg.payload)
 
         topics = {
             "pglab_subscribe_topic": {
                 "topic": topic,
-                "msg_callback": discovery_message_received,
+                "msg_callback": mqtt_message_received,
             }
         }
 
