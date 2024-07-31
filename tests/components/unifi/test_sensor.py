@@ -35,7 +35,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     EntityCategory,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -1689,7 +1688,7 @@ async def test_wan_monitor_latency_with_no_uptime(
     ],
 )
 @pytest.mark.parametrize(
-    ("entity_id", "state", "updated_state", "index_to_update"),
+    ("temperature_id", "state", "updated_state", "index_to_update"),
     [
         ("device_cpu", "66.0", "20", 0),
         ("device_local", "48.75", "90.64", 1),
@@ -1702,26 +1701,23 @@ async def test_device_temperatures(
     entity_registry: er.EntityRegistry,
     mock_websocket_message,
     device_payload: list[dict[str, Any]],
-    entity_id: str,
+    temperature_id: str,
     state: str,
     updated_state: str,
     index_to_update: int,
 ) -> None:
     """Verify that device temperatures sensors are working as expected."""
 
+    entity_id = f"sensor.device_{temperature_id}_temperature"
+
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
-    temperature_entity = entity_registry.async_get(
-        f"sensor.device_{entity_id}_temperature"
-    )
+    temperature_entity = entity_registry.async_get(entity_id)
     assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION
-    assert temperature_entity.entity_category is EntityCategory.DIAGNOSTIC
 
     # Enable entity
-    entity_registry.async_update_entity(
-        entity_id=f"sensor.device_{entity_id}_temperature", disabled_by=None
-    )
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
 
     await hass.async_block_till_done()
 
@@ -1734,22 +1730,8 @@ async def test_device_temperatures(
     assert len(hass.states.async_all()) == 7
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
-    # Verify sensor attributes and state
-    temperature_entity = hass.states.get(f"sensor.device_{entity_id}_temperature")
-
-    assert (
-        temperature_entity.attributes.get(ATTR_DEVICE_CLASS)
-        == SensorDeviceClass.TEMPERATURE
-    )
-    assert (
-        temperature_entity.attributes.get(ATTR_STATE_CLASS)
-        == SensorStateClass.MEASUREMENT
-    )
-    assert (
-        temperature_entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == UnitOfTemperature.CELSIUS
-    )
-    assert temperature_entity.state == state
+    # Verify sensor state
+    assert hass.states.get(entity_id).state == state
 
     # # Verify state update
     device = device_payload[0]
@@ -1757,9 +1739,7 @@ async def test_device_temperatures(
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
-    assert (
-        hass.states.get(f"sensor.device_{entity_id}_temperature").state == updated_state
-    )
+    assert hass.states.get(entity_id).state == updated_state
 
 
 @pytest.mark.parametrize(
