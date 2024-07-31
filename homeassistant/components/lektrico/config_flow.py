@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
@@ -106,17 +106,16 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _get_lektrico_device_settings_and_treat_unique_id(self) -> None:
         """Get device's serial number from a Lektrico device."""
-        session = async_get_clientsession(self.hass)
         device = Device(
             _host=self._host,
-            session=session,
+            asyncClient=get_async_client(self.hass),
         )
 
         settings = await device.device_config()
-        self._serial_number = str(settings.serial_number)
-        self._device_type = settings.type
-        self._board_revision = settings.board_revision
-        self._name = f"{settings.type}_{self._serial_number}"
+        self._serial_number = str(settings["serial_number"])
+        self._device_type = settings["type"]
+        self._board_revision = settings["board_revision"]
+        self._name = f"{settings["type"]}_{self._serial_number}"
 
         # Check if already configured
         # Set unique id
