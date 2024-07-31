@@ -6,6 +6,7 @@ import enum
 import logging
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+from typing import Any
 from unittest.mock import Mock, patch
 import uuid
 
@@ -416,27 +417,22 @@ def test_service() -> None:
     schema("homeassistant.turn_on")
 
 
-def test_service_schema(hass: HomeAssistant) -> None:
-    """Test service_schema validation."""
-    options = (
-        {},
-        None,
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"service": "homeassistant.turn_on"},
+        {"service": "homeassistant.turn_on", "entity_id": "light.kitchen"},
+        {"service": "light.turn_on", "entity_id": "all"},
         {
-            "action": "homeassistant.turn_on",
-            "service_template": "homeassistant.turn_on",
+            "service": "homeassistant.turn_on",
+            "entity_id": ["light.kitchen", "light.ceiling"],
         },
-        {"data": {"entity_id": "light.kitchen"}},
-        {"action": "homeassistant.turn_on", "data": None},
         {
-            "action": "homeassistant.turn_on",
-            "data_template": {"brightness": "{{ no_end"},
+            "service": "light.turn_on",
+            "entity_id": "all",
+            "alias": "turn on kitchen lights",
         },
-    )
-    for value in options:
-        with pytest.raises(vol.MultipleInvalid):
-            cv.SERVICE_SCHEMA(value)
-
-    options = (
+        {"service": "scene.turn_on", "metadata": {}},
         {"action": "homeassistant.turn_on"},
         {"action": "homeassistant.turn_on", "entity_id": "light.kitchen"},
         {"action": "light.turn_on", "entity_id": "all"},
@@ -450,14 +446,57 @@ def test_service_schema(hass: HomeAssistant) -> None:
             "alias": "turn on kitchen lights",
         },
         {"action": "scene.turn_on", "metadata": {}},
-    )
-    for value in options:
-        cv.SERVICE_SCHEMA(value)
+    ],
+)
+def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
+    """Test service_schema validation."""
+    validated = cv.SERVICE_SCHEMA(config)
 
-    # Check metadata is removed from the validated output
-    assert cv.SERVICE_SCHEMA({"action": "scene.turn_on", "metadata": {}}) == {
-        "action": "scene.turn_on"
-    }
+    # Ensure metadata is removed from the validated output
+    assert "metadata" not in validated
+
+    # Ensure service is migrated to action
+    assert "service" not in validated
+    assert "action" in validated
+    assert validated["action"] == config.get("service", config["action"])
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {},
+        None,
+        {"data": {"entity_id": "light.kitchen"}},
+        {
+            "service": "homeassistant.turn_on",
+            "service_template": "homeassistant.turn_on",
+        },
+        {"service": "homeassistant.turn_on", "data": None},
+        {
+            "service": "homeassistant.turn_on",
+            "data_template": {"brightness": "{{ no_end"},
+        },
+        {
+            "service": "homeassistant.turn_on",
+            "action": "homeassistant.turn_on",
+        },
+        {
+            "action": "homeassistant.turn_on",
+            "service_template": "homeassistant.turn_on",
+        },
+        {"action": "homeassistant.turn_on", "data": None},
+        {
+            "action": "homeassistant.turn_on",
+            "data_template": {"brightness": "{{ no_end"},
+        },
+    ],
+)
+def test_invalid_service_schema(
+    hass: HomeAssistant, config: dict[str, Any] | None
+) -> None:
+    """Test service_schema validation fails."""
+    with pytest.raises(vol.MultipleInvalid):
+        cv.SERVICE_SCHEMA(config)
 
 
 def test_entity_service_schema() -> None:
