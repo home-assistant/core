@@ -27,14 +27,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_OFF_ACTION = "turn_off"
-
-DEFAULT_NAME = "Wake on LAN"
-DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
@@ -48,10 +43,10 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a wake on lan switch."""
@@ -62,7 +57,7 @@ def setup_platform(
     name: str = config[CONF_NAME]
     off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
 
-    add_entities(
+    async_add_entities(
         [
             WolSwitch(
                 hass,

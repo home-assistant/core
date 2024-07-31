@@ -4,7 +4,7 @@ import datetime
 import importlib
 import sqlite3
 import sys
-from unittest.mock import Mock, PropertyMock, call, patch
+from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
 from sqlalchemy import create_engine, text
@@ -71,6 +71,10 @@ async def test_schema_update_calls(
             "homeassistant.components.recorder.migration._apply_update",
             wraps=migration._apply_update,
         ) as update,
+        patch(
+            "homeassistant.components.recorder.migration._migrate_schema",
+            wraps=migration._migrate_schema,
+        ) as migrate_schema,
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
@@ -79,12 +83,28 @@ async def test_schema_update_calls(
     instance = recorder.get_instance(hass)
     engine = instance.engine
     session_maker = instance.get_session
-    update.assert_has_calls(
-        [
-            call(instance, hass, engine, session_maker, version + 1, 0)
-            for version in range(db_schema.SCHEMA_VERSION)
-        ]
-    )
+    assert update.mock_calls == [
+        call(instance, hass, engine, session_maker, version + 1, 0)
+        for version in range(db_schema.SCHEMA_VERSION)
+    ]
+    assert migrate_schema.mock_calls == [
+        call(
+            instance,
+            hass,
+            engine,
+            session_maker,
+            migration.SchemaValidationStatus(0, True, set(), 0),
+            42,
+        ),
+        call(
+            instance,
+            hass,
+            engine,
+            session_maker,
+            migration.SchemaValidationStatus(42, True, set(), 0),
+            db_schema.SCHEMA_VERSION,
+        ),
+    ]
 
 
 async def test_migration_in_progress(
@@ -110,7 +130,9 @@ async def test_migration_in_progress(
             new=create_engine_test,
         ),
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, wait_recorder_setup=False
+        )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
 
@@ -122,8 +144,25 @@ async def test_migration_in_progress(
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
+@pytest.mark.parametrize(
+    (
+        "func_to_patch",
+        "expected_setup_result",
+        "expected_pn_create",
+        "expected_pn_dismiss",
+    ),
+    [
+        ("migrate_schema_non_live", False, 1, 0),
+        ("migrate_schema_live", True, 2, 1),
+    ],
+)
 async def test_database_migration_failed(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    expected_pn_create: int,
+    expected_pn_dismiss: int,
 ) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -134,7 +173,7 @@ async def test_database_migration_failed(
             new=create_engine_test,
         ),
         patch(
-            "homeassistant.components.recorder.migration._apply_update",
+            f"homeassistant.components.recorder.migration.{func_to_patch}",
             side_effect=ValueError,
         ),
         patch(
@@ -146,7 +185,9 @@ async def test_database_migration_failed(
             side_effect=pn.dismiss,
         ) as mock_dismiss,
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, expected_setup_result=expected_setup_result
+        )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
@@ -154,13 +195,13 @@ async def test_database_migration_failed(
         await hass.async_block_till_done()
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    assert len(mock_create.mock_calls) == 2
-    assert len(mock_dismiss.mock_calls) == 1
+    assert len(mock_create.mock_calls) == expected_pn_create
+    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
-async def test_database_migration_encounters_corruption(
+async def test_live_database_migration_encounters_corruption(
     hass: HomeAssistant,
     recorder_db_url: str,
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -174,7 +215,9 @@ async def test_database_migration_encounters_corruption(
     assert recorder.util.async_migration_in_progress(hass) is False
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
 
     with (
         patch(
@@ -182,12 +225,17 @@ async def test_database_migration_encounters_corruption(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
+            "homeassistant.components.recorder.migration.migrate_schema_live",
             side_effect=sqlite3_exception,
         ),
         patch(
             "homeassistant.components.recorder.core.move_away_broken_database"
         ) as move_away,
+        patch(
+            "homeassistant.components.recorder.core.Recorder._setup_run",
+            autospec=True,
+            wraps=recorder.Recorder._setup_run,
+        ) as setup_run,
     ):
         await async_setup_recorder_instance(hass)
         hass.states.async_set("my.entity", "on", {})
@@ -195,11 +243,83 @@ async def test_database_migration_encounters_corruption(
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    assert move_away.called
+    move_away.assert_called_once()
+    setup_run.assert_called_once()
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_non_live_database_migration_encounters_corruption(
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test we move away the database if its corrupt.
+
+    This test is specific for SQLite, wiping the database on error only happens
+    with SQLite.
+    """
+
+    assert recorder.util.async_migration_in_progress(hass) is False
+
+    sqlite3_exception = DatabaseError("statement", {}, [])
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError(
+        "database disk image is malformed"
+    )
+
+    with (
+        patch(
+            "homeassistant.components.recorder.migration._schema_is_current",
+            side_effect=[False],
+        ),
+        patch(
+            "homeassistant.components.recorder.migration.migrate_schema_live",
+        ) as migrate_schema_live,
+        patch(
+            "homeassistant.components.recorder.migration.migrate_schema_non_live",
+            side_effect=sqlite3_exception,
+        ),
+        patch(
+            "homeassistant.components.recorder.core.move_away_broken_database"
+        ) as move_away,
+        patch(
+            "homeassistant.components.recorder.core.Recorder._setup_run",
+            autospec=True,
+            wraps=recorder.Recorder._setup_run,
+        ) as setup_run,
+    ):
+        await async_setup_recorder_instance(hass)
+        hass.states.async_set("my.entity", "on", {})
+        hass.states.async_set("my.entity", "off", {})
+        await async_wait_recording_done(hass)
+
+    assert recorder.util.async_migration_in_progress(hass) is False
+    move_away.assert_called_once()
+    migrate_schema_live.assert_not_called()
+    setup_run.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    (
+        "live_migration",
+        "func_to_patch",
+        "expected_setup_result",
+        "expected_pn_create",
+        "expected_pn_dismiss",
+    ),
+    [
+        (True, "migrate_schema_live", True, 2, 1),
+        (False, "migrate_schema_non_live", False, 1, 0),
+    ],
+)
 async def test_database_migration_encounters_corruption_not_sqlite(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    live_migration: bool,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    expected_pn_create: int,
+    expected_pn_dismiss: int,
 ) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -210,7 +330,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(
             side_effect=[False],
         ),
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
+            f"homeassistant.components.recorder.migration.{func_to_patch}",
             side_effect=DatabaseError("statement", {}, []),
         ),
         patch(
@@ -224,8 +344,14 @@ async def test_database_migration_encounters_corruption_not_sqlite(
             "homeassistant.components.persistent_notification.dismiss",
             side_effect=pn.dismiss,
         ) as mock_dismiss,
+        patch(
+            "homeassistant.components.recorder.core.migration.live_migration",
+            return_value=live_migration,
+        ),
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, expected_setup_result=expected_setup_result
+        )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
@@ -234,8 +360,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(
 
     assert recorder.util.async_migration_in_progress(hass) is False
     assert not move_away.called
-    assert len(mock_create.mock_calls) == 2
-    assert len(mock_dismiss.mock_calls) == 1
+    assert len(mock_create.mock_calls) == expected_pn_create
+    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
 
 
 async def test_events_during_migration_are_queued(
@@ -254,7 +380,7 @@ async def test_events_during_migration_are_queued(
         ),
     ):
         await async_setup_recorder_instance(
-            hass, {"commit_interval": 0}, wait_recorder=False
+            hass, {"commit_interval": 0}, wait_recorder=False, wait_recorder_setup=False
         )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
@@ -297,7 +423,7 @@ async def test_events_during_migration_queue_exhausted(
         ),
     ):
         await async_setup_recorder_instance(
-            hass, {"commit_interval": 0}, wait_recorder=False
+            hass, {"commit_interval": 0}, wait_recorder=False, wait_recorder_setup=False
         )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
@@ -329,7 +455,15 @@ async def test_events_during_migration_queue_exhausted(
 
 @pytest.mark.parametrize(
     ("start_version", "live"),
-    [(0, True), (16, True), (18, True), (22, True), (25, True), (43, True)],
+    [
+        (0, False),
+        (9, False),
+        (16, False),
+        (18, False),
+        (22, False),
+        (25, False),
+        (43, True),
+    ],
 )
 async def test_schema_migrate(
     hass: HomeAssistant,
@@ -408,7 +542,9 @@ async def test_schema_migrate(
             "homeassistant.components.recorder.Recorder._pre_process_startup_events",
         ),
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, wait_recorder_setup=live
+        )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
         await recorder_helper.async_wait_recorder(hass)
@@ -682,6 +818,127 @@ def test_rebuild_sqlite_states_table_extra_columns(
     with session_scope(session=session_maker()) as session:
         assert session.query(States).count() == 1
         assert session.query(States).first().state == "on"
+
+    engine.dispose()
+
+
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
+    """Test we can drop and then restore foreign keys.
+
+    This is not supported on SQLite
+    """
+
+    constraints_to_recreate = (
+        ("events", "data_id"),
+        ("states", "event_id"),  # This won't be found
+        ("states", "old_state_id"),
+    )
+
+    db_engine = recorder_db_url.partition("://")[0]
+
+    expected_dropped_constraints = {
+        "mysql": [
+            (
+                "events",
+                "data_id",
+                {
+                    "constrained_columns": ["data_id"],
+                    "name": ANY,
+                    "options": {},
+                    "referred_columns": ["data_id"],
+                    "referred_schema": None,
+                    "referred_table": "event_data",
+                },
+            ),
+            (
+                "states",
+                "old_state_id",
+                {
+                    "constrained_columns": ["old_state_id"],
+                    "name": ANY,
+                    "options": {},
+                    "referred_columns": ["state_id"],
+                    "referred_schema": None,
+                    "referred_table": "states",
+                },
+            ),
+        ],
+        "postgresql": [
+            (
+                "events",
+                "data_id",
+                {
+                    "comment": None,
+                    "constrained_columns": ["data_id"],
+                    "name": "events_data_id_fkey",
+                    "options": {},
+                    "referred_columns": ["data_id"],
+                    "referred_schema": None,
+                    "referred_table": "event_data",
+                },
+            ),
+            (
+                "states",
+                "old_state_id",
+                {
+                    "comment": None,
+                    "constrained_columns": ["old_state_id"],
+                    "name": "states_old_state_id_fkey",
+                    "options": {},
+                    "referred_columns": ["state_id"],
+                    "referred_schema": None,
+                    "referred_table": "states",
+                },
+            ),
+        ],
+    }
+
+    engine = create_engine(recorder_db_url)
+    db_schema.Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        dropped_constraints_1 = [
+            dropped_constraint
+            for table, column in constraints_to_recreate
+            for dropped_constraint in migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+    assert dropped_constraints_1 == expected_dropped_constraints[db_engine]
+
+    # Check we don't find the constrained columns again (they are removed)
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        dropped_constraints_2 = [
+            dropped_constraint
+            for table, column in constraints_to_recreate
+            for dropped_constraint in migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+    assert dropped_constraints_2 == []
+
+    # Restore the constraints
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        migration._restore_foreign_key_constraints(
+            session_maker, engine, dropped_constraints_1
+        )
+
+    # Check we do find the constrained columns again (they are restored)
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        dropped_constraints_3 = [
+            dropped_constraint
+            for table, column in constraints_to_recreate
+            for dropped_constraint in migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+    assert dropped_constraints_3 == expected_dropped_constraints[db_engine]
 
     engine.dispose()
 

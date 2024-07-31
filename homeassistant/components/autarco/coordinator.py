@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from autarco import AccountSite, Autarco, Solar
+from autarco import AccountSite, Autarco, Inverter, Solar
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -17,6 +17,7 @@ class AutarcoData(NamedTuple):
     """Class for defining data in dict."""
 
     solar: Solar
+    inverters: dict[str, Inverter]
 
 
 class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
@@ -44,4 +45,5 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
         """Fetch data from Autarco API."""
         return AutarcoData(
             solar=await self.client.get_solar(self.site.public_key),
+            inverters=await self.client.get_inverters(self.site.public_key),
         )

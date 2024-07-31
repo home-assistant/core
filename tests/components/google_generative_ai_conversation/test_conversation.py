@@ -185,7 +185,9 @@ async def test_function_call(
         {
             vol.Optional("param1", description="Test parameters"): [
                 vol.All(str, vol.Lower)
-            ]
+            ],
+            vol.Optional("param2"): vol.Any(float, int),
+            vol.Optional("param3"): dict,
         }
     )
 

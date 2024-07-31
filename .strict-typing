@@ -21,6 +21,7 @@ homeassistant.helpers.entity_platform
 homeassistant.helpers.entity_values
 homeassistant.helpers.event
 homeassistant.helpers.reload
+homeassistant.helpers.script
 homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
@@ -119,6 +120,7 @@ homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
+homeassistant.components.bryant_evolution.*
 homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
@@ -254,6 +256,7 @@ homeassistant.components.integration.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
 homeassistant.components.ios.*
+homeassistant.components.iotty.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.islamic_prayer_times.*
@@ -278,6 +281,7 @@ homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
 homeassistant.components.linear_garage_door.*
+homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
@@ -384,6 +388,7 @@ homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.scrape.*
+homeassistant.components.script.*
 homeassistant.components.search.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*

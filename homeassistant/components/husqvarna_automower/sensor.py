@@ -5,8 +5,10 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
 from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons
+from aioautomower.utils import naive_to_aware
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +20,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -324,7 +327,10 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.planner.next_start_datetime,
+        value_fn=lambda data: naive_to_aware(
+            data.planner.next_start_datetime_naive,
+            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
+        ),
     ),
     AutomowerSensorEntityDescription(
         key="error",

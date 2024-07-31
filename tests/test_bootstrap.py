@@ -15,14 +15,17 @@ import pytest
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEBUG, SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import (
+    BASE_PLATFORMS,
+    CONF_DEBUG,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
+)
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
-from homeassistant.setup import BASE_PLATFORMS
 
 from .common import (
     MockConfigEntry,
@@ -433,9 +436,6 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
         MockModule(
             domain="recorder",
             async_setup=gen_domain_setup("recorder"),
-            partial_manifest={
-                "after_dependencies": ["http"],
-            },
         ),
     )
 
@@ -1324,6 +1324,34 @@ async def test_bootstrap_dependencies(
         f"Dependency {integration} will wait for dependencies dict_keys(['mqtt'])"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_dependency_not_found(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup when an integration has missing dependencies."""
+    mock_integration(
+        hass,
+        MockModule("good_integration", dependencies=[]),
+    )
+    # Simulate an integration with missing dependencies. While a core integration
+    # can't have missing dependencies thanks to checks by hassfest, there's no such
+    # guarantee for custom integrations.
+    mock_integration(
+        hass,
+        MockModule("bad_integration", dependencies=["hahaha_crash_and_burn"]),
+    )
+
+    assert await bootstrap.async_from_config_dict(
+        {"good_integration": {}, "bad_integration": {}}, hass
+    )
+
+    assert "good_integration" in hass.config.components
+    assert "bad_integration" not in hass.config.components
+
+    assert "Unable to resolve dependencies for bad_integration" in caplog.text
 
 
 async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:

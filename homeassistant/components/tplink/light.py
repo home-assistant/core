@@ -392,11 +392,11 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
                 kwargs[ATTR_EFFECT], brightness=brightness, transition=transition
             )
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if self.effect:
+            if self.effect and self.effect != EFFECT_OFF:
                 # If there is an effect in progress
                 # we have to clear the effect
                 # before we can set a color temp
-                await self._light_module.set_hsv(0, 0, brightness)
+                await self._effect_module.set_effect(LightEffect.LIGHT_EFFECTS_OFF)
             await self._async_set_color_temp(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], brightness, transition
             )

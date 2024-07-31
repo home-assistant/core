@@ -910,7 +910,7 @@
     'state': '80',
   })
 # ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -922,7 +922,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -934,7 +934,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Side brushes lifespan',
+    'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -943,14 +943,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Side brushes lifespan',
+      'friendly_name': 'Ozmo 950 Side brush lifespan',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

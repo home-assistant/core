@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -38,6 +38,7 @@ async def test_full_flow(
     assert result["data"] == {
         CONF_HOST: "demo.mealie.io",
         CONF_API_TOKEN: "token",
+        CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == "bf1c62fe-4941-4332-9886-e54e88dbdba0"
 
@@ -90,7 +91,6 @@ async def test_flow_errors(
         ("v1.0.0beta-5"),
         ("v1.0.0-RC2"),
         ("v0.1.0"),
-        ("something"),
     ],
 )
 async def test_flow_version_error(
@@ -264,13 +264,18 @@ async def test_reconfigure_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "http://test:9090", CONF_API_TOKEN: "token2"},
+        {
+            CONF_HOST: "http://test:9090",
+            CONF_API_TOKEN: "token2",
+            CONF_VERIFY_SSL: False,
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_API_TOKEN] == "token2"
     assert mock_config_entry.data[CONF_HOST] == "http://test:9090"
+    assert mock_config_entry.data[CONF_VERIFY_SSL] is False
 
 
 async def test_reconfigure_flow_wrong_account(
