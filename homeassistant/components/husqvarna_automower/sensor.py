@@ -222,10 +222,7 @@ def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
     if TYPE_CHECKING:
         # Sensor does not get created if it is None
         assert data.work_areas is not None
-    work_areas = {}
-    for work_area_id in data.work_areas:
-        work_areas[work_area_id] = data.work_areas[work_area_id].name
-    return {ATTR_WORK_AREA_ID_ASSIGNMENT: work_areas}
+    return {ATTR_WORK_AREA_ID_ASSIGNMENT: data.work_area_dict}
 
 
 @dataclass(frozen=True, kw_only=True)
