@@ -31,10 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
         """Publish an MQTT message using the Home Assistant MQTT client."""
         await mqtt.async_publish(hass, topic, payload, qos, retain)
 
-    # Define the call back for PGLab module to subscribe to a MQTT message.
     async def mqtt_subscribe(
         sub_state: PyPGLabSubState, topic: str, callback_func: PyPGLaSubscribeCallBack
     ) -> PyPGLabSubState:
+        """Subscribe to MQTT topics using the Home Assistant MQTT client."""
+
         @callback
         def discovery_message_received(msg: ReceiveMessage) -> None:
             callback_func(msg.topic, msg.payload)
