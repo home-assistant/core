@@ -28,7 +28,7 @@ from homeassistant.util.percentage import (
 
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import VentilationMode, VentilationProgram, ViCareDevice
+from .types import VentilationMode, VentilationProgram
 
 _LOGGER = logging.getLogger(__name__)
 
