@@ -204,6 +204,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # no exposure registered
     hass.states.async_set(test_entity, STATE_ON, {})
+    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # register exposure
@@ -214,6 +215,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     hass.states.async_set(test_entity, STATE_OFF, {})
+    await hass.async_block_till_done()
     await knx.assert_write(test_address, False)
 
     # register exposure
@@ -224,6 +226,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     hass.states.async_set(test_entity, STATE_ON, {})
+    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # register exposure for attribute with default
@@ -241,14 +244,17 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     # no attribute on first change wouldn't work because no attribute change since last test
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 30})
+    await hass.async_block_till_done()
     await knx.assert_write(test_address, (30,))
     hass.states.async_set(test_entity, STATE_OFF, {})
+    await hass.async_block_till_done()
     await knx.assert_write(test_address, (0,))
     # don't send same value sequentially
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25})
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25})
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25, "unrelated": 2})
     hass.states.async_set(test_entity, STATE_OFF, {test_attribute: 25})
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     await knx.assert_telegram_count(1)
     await knx.assert_write(test_address, (25,))

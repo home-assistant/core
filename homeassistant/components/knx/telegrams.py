@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections import deque
-from enum import Enum
 from typing import Final, TypedDict
 
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTComplexData
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt.dpt import DPTComplexData, DPTEnumData
 from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
@@ -160,7 +160,7 @@ def decode_telegram_payload(
 
     if isinstance(value, DPTComplexData):
         value = value.as_dict()
-    elif isinstance(value, Enum):
+    elif isinstance(value, DPTEnumData):
         value = value.name.lower()
 
     return DecodedTelegramPayload(
