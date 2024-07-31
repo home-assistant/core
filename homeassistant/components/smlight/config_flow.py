@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
+from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from pysmlight.models import Info
 from pysmlight.web import Api2
 import voluptuous as vol
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -49,28 +49,33 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.host = user_input[CONF_HOST]
             self.client = Api2(self.host, session=async_get_clientsession(self.hass))
-            result = await self.async_check_auth_required(user_input)
-            if result.get("flow_id"):
-                return result
-            errors = result
+            try:
+                if not await self._async_check_auth_required(user_input):
+                    return await self._async_complete_entry(user_input)
+            except SmlightConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmlightAuthError:
+                return await self.async_step_auth(user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_auth(
-        self,
-        user_input: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle authentication to SLZB-06 device."""
+        errors: dict[str, str] = {}
         self.context["confirm_only"] = False
 
-        if user_input is not None and errors is None:
-            result = await self.async_check_auth_required(user_input)
-            if result.get("flow_id"):
-                return result
-            errors = result
+        if user_input is not None:
+            try:
+                if not await self._async_check_auth_required(user_input):
+                    return await self._async_complete_entry(user_input)
+            except SmlightConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmlightAuthError:
+                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="auth", data_schema=STEP_AUTH_DATA_SCHEMA, errors=errors
@@ -105,10 +110,13 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input[CONF_HOST] = self.host
-            result = await self.async_check_auth_required(user_input)
-            if result.get("flow_id"):
-                return result
-            errors = result
+            try:
+                if not await self._async_check_auth_required(user_input):
+                    return await self._async_complete_entry(user_input)
+            except SmlightConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmlightAuthError:
+                return await self.async_step_auth(user_input)
 
         self._set_confirm_only()
 
@@ -118,37 +126,23 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_check_auth_required(self, user_input: dict[str, Any]):
-        """Check if auth required and redirect to auth step."""
-        errors: dict[str, str] = {}
-        info: Info
-        step_id = None
-        if self.cur_step:
-            step_id = self.cur_step.get("step_id")
-        try:
-            if await self.client.check_auth_needed():
-                if user_input.get(CONF_USERNAME) and user_input.get(CONF_PASSWORD):
-                    await self.client.authenticate(
-                        user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                    )
-                else:
-                    raise SmlightAuthError
-            info = await self.client.get_info()
-            await self.async_set_unique_id(format_mac(info.MAC))
+    async def _async_check_auth_required(self, user_input: dict[str, Any]) -> bool:
+        """Check if auth required and attempt to authenticate."""
+        if await self.client.check_auth_needed():
+            if user_input.get(CONF_USERNAME) and user_input.get(CONF_PASSWORD):
+                return not await self.client.authenticate(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+            raise SmlightAuthError
+        return False
 
-        except SmlightConnectionError:
-            errors["base"] = "cannot_connect"
-        except SmlightAuthError:
-            if step_id == "auth":
-                errors["base"] = "invalid_auth"
-            else:
-                return await self.async_step_auth()
-        except SmlightError:
-            LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            self._abort_if_unique_id_configured()
-            if user_input.get(CONF_HOST) is None:
-                user_input[CONF_HOST] = self.host
-            return self.async_create_entry(title=info.model, data=user_input)
-        return errors
+    async def _async_complete_entry(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
+        info = await self.client.get_info()
+        await self.async_set_unique_id(format_mac(info.MAC))
+        self._abort_if_unique_id_configured()
+
+        if user_input.get(CONF_HOST) is None:
+            user_input[CONF_HOST] = self.host
+        return self.async_create_entry(title=info.model, data=user_input)

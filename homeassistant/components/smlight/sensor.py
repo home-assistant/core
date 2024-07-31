@@ -31,7 +31,7 @@ class SmSensorEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT sensor entities."""
 
     entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
-    value_fn: Callable[[Sensors], float | None] = lambda _: None
+    value_fn: Callable[[Sensors], float | None]
 
 
 SENSORS = [
