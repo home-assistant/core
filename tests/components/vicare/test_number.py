@@ -20,10 +20,9 @@ async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
-    # mock_vicare_gas_boiler: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the ViCare number entity."""
+    """Test all entities."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
         patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
