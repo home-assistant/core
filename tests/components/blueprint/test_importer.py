@@ -216,4 +216,4 @@ def test_generic_importer_last() -> None:
     assert (
         importer.FETCH_FUNCTIONS.count(importer.fetch_blueprint_from_generic_url) == 1
     )
-    assert importer.FETCH_FUNCTIONS[-1] = importer.fetch_blueprint_from_generic_url
+    assert importer.FETCH_FUNCTIONS[-1] == importer.fetch_blueprint_from_generic_url
