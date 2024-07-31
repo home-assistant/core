@@ -5,7 +5,7 @@ from __future__ import annotations
 from pypglab.mqtt import (
     Client as PyPGLabMqttClient,
     Sub_State as PyPGLabSubState,
-    Subcribe_CallBack as PyPGLaSubscribeCallBack,
+    Subcribe_CallBack as PyPGLabSubscribeCallBack,
 )
 
 from homeassistant.components import mqtt
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
         await mqtt.async_publish(hass, topic, payload, qos, retain)
 
     async def mqtt_subscribe(
-        sub_state: PyPGLabSubState, topic: str, callback_func: PyPGLaSubscribeCallBack
+        sub_state: PyPGLabSubState, topic: str, callback_func: PyPGLabSubscribeCallBack
     ) -> PyPGLabSubState:
         """Subscribe to MQTT topics using the Home Assistant MQTT client."""
 
