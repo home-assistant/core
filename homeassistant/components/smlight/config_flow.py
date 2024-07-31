@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-from pysmlight.models import Info
 from pysmlight.web import Api2
 import voluptuous as vol
 
@@ -38,7 +37,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.client: Api2
         self.host: str | None = None
-        self._title: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -48,7 +46,9 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.host = user_input[CONF_HOST]
+            assert self.host is not None
             self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+
             try:
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
@@ -95,7 +95,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.properties.get("mac")
         # fallback for legacy firmware
         if mac is None:
-            info: Info = await self.client.get_info()
+            info = await self.client.get_info()
             mac = info.MAC
         await self.async_set_unique_id(format_mac(mac))
         self._abort_if_unique_id_configured()
@@ -145,4 +145,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input.get(CONF_HOST) is None:
             user_input[CONF_HOST] = self.host
+
+        assert info.model is not None
         return self.async_create_entry(title=info.model, data=user_input)
