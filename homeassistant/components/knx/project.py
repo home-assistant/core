@@ -106,7 +106,7 @@ class KNXProject:
             self.loaded = True
 
     async def process_project_file(
-        self, file_id: str, password: str, xknx: XKNX
+        self, xknx: XKNX, file_id: str, password: str
     ) -> None:
         """Process an uploaded project file."""
 
