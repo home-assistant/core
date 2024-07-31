@@ -398,7 +398,7 @@ class APIDomainServicesView(HomeAssistantView):
                     HTTPStatus.BAD_REQUEST,
                 )
         elif (
-            hass.services.supports_response(domain, service) == ha.SupportsResponse.ONLY
+            hass.services.supports_response(domain, service) is ha.SupportsResponse.ONLY
         ):
             return self.json_message(
                 "Service call requires responses but caller did not ask for responses. "
