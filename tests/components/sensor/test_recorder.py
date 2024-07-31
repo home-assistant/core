@@ -2471,7 +2471,7 @@ async def test_list_statistic_ids(
 )
 async def test_list_statistic_ids_unsupported(
     hass: HomeAssistant,
-    energy_attributes,
+    energy_attributes: dict[str, Any],
 ) -> None:
     """Test listing future statistic ids for unsupported sensor."""
     await async_setup_component(hass, "sensor", {})
