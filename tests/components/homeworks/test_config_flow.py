@@ -52,7 +52,7 @@ async def test_user_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Main controller"
-    assert result["data"] == {}
+    assert result["data"] == {"password": None, "username": None}
     assert result["options"] == {
         "controller_id": "main_controller",
         "dimmers": [],
@@ -88,15 +88,13 @@ async def test_user_flow_credentials(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Main controller"
-    assert result["data"] == {}
+    assert result["data"] == {"password": "hunter2", "username": "username"}
     assert result["options"] == {
         "controller_id": "main_controller",
         "dimmers": [],
         "host": "192.168.0.1",
         "keypads": [],
-        "password": "hunter2",
         "port": 1234,
-        "username": "username",
     }
     mock_homeworks.assert_called_once_with(
         "192.168.0.1", 1234, ANY, "username", "hunter2"
@@ -127,14 +125,13 @@ async def test_user_flow_credentials_user_only(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Main controller"
-    assert result["data"] == {}
+    assert result["data"] == {"password": None, "username": "username"}
     assert result["options"] == {
         "controller_id": "main_controller",
         "dimmers": [],
         "host": "192.168.0.1",
         "keypads": [],
         "port": 1234,
-        "username": "username",
     }
     mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY, "username", None)
     mock_controller.close.assert_called_once_with()

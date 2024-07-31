@@ -27,7 +27,7 @@ from homeassistant.const import (
 
 from tests.common import MockConfigEntry
 
-CONFIG_ENTRY_DATA = {
+CONFIG_ENTRY_OPTIONS = {
     CONF_CONTROLLER_ID: "main_controller",
     CONF_HOST: "192.168.0.1",
     CONF_PORT: 1234,
@@ -73,8 +73,8 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="Lutron Homeworks",
         domain=DOMAIN,
-        data={},
-        options=CONFIG_ENTRY_DATA,
+        data={CONF_PASSWORD: None, CONF_USERNAME: None},
+        options=CONFIG_ENTRY_OPTIONS,
     )
 
 
@@ -84,9 +84,8 @@ def mock_config_entry_username_password() -> MockConfigEntry:
     return MockConfigEntry(
         title="Lutron Homeworks",
         domain=DOMAIN,
-        data={},
-        options=CONFIG_ENTRY_DATA
-        | {CONF_PASSWORD: "hunter2", CONF_USERNAME: "username"},
+        data={CONF_PASSWORD: "hunter2", CONF_USERNAME: "username"},
+        options=CONFIG_ENTRY_OPTIONS,
     )
 
 

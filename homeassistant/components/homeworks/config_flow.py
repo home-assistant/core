@@ -600,12 +600,19 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             except SchemaFlowError as err:
                 errors["base"] = str(err)
             else:
+                password = user_input.pop(CONF_PASSWORD, None)
+                username = user_input.pop(CONF_USERNAME, None)
+                new_data = entry.data | {
+                    CONF_PASSWORD: password,
+                    CONF_USERNAME: username,
+                }
                 new_options = entry.options | {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                 }
                 return self.async_update_reload_and_abort(
                     entry,
+                    data=new_data,
                     options=new_options,
                     reason="reconfigure_successful",
                     reload_even_if_entry_is_unchanged=False,
@@ -634,8 +641,14 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
                 )
                 name = user_input.pop(CONF_NAME)
+                password = user_input.pop(CONF_PASSWORD, None)
+                username = user_input.pop(CONF_USERNAME, None)
                 user_input |= {CONF_DIMMERS: [], CONF_KEYPADS: []}
-                return self.async_create_entry(title=name, data={}, options=user_input)
+                return self.async_create_entry(
+                    title=name,
+                    data={CONF_PASSWORD: password, CONF_USERNAME: username},
+                    options=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",

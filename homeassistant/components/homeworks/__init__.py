@@ -156,8 +156,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config[CONF_HOST],
         config[CONF_PORT],
         hw_callback,
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
+        entry.data.get(CONF_USERNAME),
+        entry.data.get(CONF_PASSWORD),
     )
     try:
         await hass.async_add_executor_job(controller.connect)
