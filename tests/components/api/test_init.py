@@ -355,15 +355,33 @@ async def test_api_call_service_with_data(
     assert state["attributes"] == {"data": 1}
 
 
+SERVICE_DICT = {"changed_states": [], "service_response": {"foo": "bar"}}
+RESP_REQUIRED = {
+    "message": (
+        "Service call requires responses but caller did not ask for "
+        "responses. Add ?return_response to query parameters."
+    )
+}
+RESP_UNSUPPORTED = {
+    "message": "Service does not support responses. Remove return_response from request."
+}
+
+
 @pytest.mark.parametrize(
-    ("supports_response", "requested_response", "expected_success"),
+    (
+        "supports_response",
+        "requested_response",
+        "expected_number_of_service_calls",
+        "expected_status",
+        "expected_response",
+    ),
     [
-        (ha.SupportsResponse.ONLY, True, True),
-        (ha.SupportsResponse.ONLY, False, False),
-        (ha.SupportsResponse.OPTIONAL, True, True),
-        (ha.SupportsResponse.OPTIONAL, False, True),
-        (ha.SupportsResponse.NONE, True, False),
-        (ha.SupportsResponse.NONE, False, True),
+        (ha.SupportsResponse.ONLY, True, 1, HTTPStatus.OK, SERVICE_DICT),
+        (ha.SupportsResponse.ONLY, False, 0, HTTPStatus.BAD_REQUEST, RESP_REQUIRED),
+        (ha.SupportsResponse.OPTIONAL, True, 1, HTTPStatus.OK, SERVICE_DICT),
+        (ha.SupportsResponse.OPTIONAL, False, 1, HTTPStatus.OK, []),
+        (ha.SupportsResponse.NONE, True, 0, HTTPStatus.BAD_REQUEST, RESP_UNSUPPORTED),
+        (ha.SupportsResponse.NONE, False, 1, HTTPStatus.OK, []),
     ],
 )
 async def test_api_call_service_returns_response_requested_response(
@@ -371,7 +389,9 @@ async def test_api_call_service_returns_response_requested_response(
     mock_api_client: TestClient,
     supports_response: ha.SupportsResponse,
     requested_response: bool,
-    expected_success: bool,
+    expected_number_of_service_calls: int,
+    expected_status: int,
+    expected_response: Any,
 ) -> None:
     """Test if the API allows us to call a service."""
     test_value = []
@@ -380,18 +400,20 @@ async def test_api_call_service_returns_response_requested_response(
     def listener(service_call):
         """Record that our service got called."""
         test_value.append(1)
-        return {}
+        return {"foo": "bar"}
 
     hass.services.async_register(
         "test_domain", "test_service", listener, supports_response=supports_response
     )
 
-    await mock_api_client.post(
+    resp = await mock_api_client.post(
         "/api/services/test_domain/test_service"
         + ("?return_response" if requested_response else "")
     )
+    assert resp.status == expected_status
     await hass.async_block_till_done()
-    assert len(test_value) == (1 if expected_success else 0)
+    assert len(test_value) == expected_number_of_service_calls
+    assert await resp.json() == expected_response
 
 
 async def test_api_call_service_client_closed(
