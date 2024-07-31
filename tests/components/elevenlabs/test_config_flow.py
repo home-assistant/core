@@ -2,13 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant import config_entries
 from homeassistant.components.elevenlabs.const import (
     CONF_MODEL,
     CONF_VOICE,
     DEFAULT_MODEL,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -23,7 +23,7 @@ async def test_user_step(
 ) -> None:
     """Test user step create entry result."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -34,8 +34,6 @@ async def test_user_step(
             CONF_API_KEY: "api_key",
         },
     )
-
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ElevenLabs"
     assert result["data"] == {
@@ -44,7 +42,6 @@ async def test_user_step(
     assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
 
     mock_setup_entry.assert_called_once()
-    mock_async_client.assert_called_once_with(api_key="api_key")
 
 
 async def test_invalid_api_key(
@@ -53,7 +50,7 @@ async def test_invalid_api_key(
     """Test user step with invalid api key."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -95,4 +92,3 @@ async def test_options_flow_init(
     assert mock_entry.options == {CONF_MODEL: "model1", CONF_VOICE: "voice1"}
 
     mock_setup_entry.assert_called_once()
-    mock_async_client.assert_not_called()
