@@ -51,7 +51,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_power",
         translation_key="charge_power",
-        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -119,7 +118,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="ssid",
         translation_key="ssid",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda evse_data: evse_data.SSID,
         entity_registry_enabled_default=False,
@@ -127,7 +125,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="ip_address",
         translation_key="ip_address",
-        icon="mdi:ip",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda evse_data: evse_data.IP,
         entity_registry_enabled_default=False,
@@ -135,7 +132,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="signal_status",
         translation_key="signal_status",
-        icon="mdi:signal",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda evse_data: evse_data.signal_status,
