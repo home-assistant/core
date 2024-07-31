@@ -767,6 +767,14 @@ async def test_rendering_template_admin(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+async def test_api_call_service_not_found(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if the API fails 400 if unknown service."""
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+
 async def test_api_call_service_bad_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:

@@ -387,6 +387,8 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
+        if not hass.services.has_service(domain, service):
+            raise HTTPBadRequest from ServiceNotFound(domain, service)
 
         if response_requested := "return_response" in request.query:
             if (
