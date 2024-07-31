@@ -404,7 +404,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self._attr_source_list = list(self._sources.values())
 
-        self.async_write_ha_state()
+        # HASS won't necessarily be running the first time this method is run
+        if self.hass.is_running:
+            self.async_write_ha_state()
 
     @callback
     async def _async_update_playback_metadata(
