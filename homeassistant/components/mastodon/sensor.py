@@ -34,7 +34,7 @@ class MastodonSensorEntityDescription(SensorEntityDescription):
 ENTITY_DESCRIPTIONS = (
     MastodonSensorEntityDescription(
         key="followers",
-        native_unit_of_measurement="followers",
+        native_unit_of_measurement="accounts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_FOLLOWERS_COUNT),
     ),
@@ -46,7 +46,7 @@ ENTITY_DESCRIPTIONS = (
     ),
     MastodonSensorEntityDescription(
         key="statuses",
-        native_unit_of_measurement="statuses",
+        native_unit_of_measurement="toots",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_STATUSES_COUNT),
     ),
