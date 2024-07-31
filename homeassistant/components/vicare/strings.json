@@ -65,6 +65,21 @@
         "name": "Heating"
       }
     },
+    "fan": {
+      "ventilation": {
+        "name": "Ventilation",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "permanent": "permanent",
+              "ventilation": "schedule",
+              "sensor_driven": "sensor",
+              "sensor_override": "schedule with sensor-override"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "heating_curve_shift": {
         "name": "Heating curve shift"
