@@ -291,7 +291,7 @@ def async_device_temperatures_value_fn(
     temperature = _device_temperature(temperature_name=temperature_name, device=device)
 
     if TYPE_CHECKING:
-        # Checked by async_device_wan_latency_supported_fn
+        # Checked by async_device_temperatures_supported_fn
         assert temperature
 
     return temperature.get("value", 0)
