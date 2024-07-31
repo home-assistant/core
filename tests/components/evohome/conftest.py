@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 from typing import Any, Final
 from unittest.mock import MagicMock, patch
@@ -84,9 +83,13 @@ async def mock_get(
     pytest.xfail(f"Unexpected URL: {url}")
 
 
-async def _setup_evohome(
-    hass: HomeAssistant, test_config: dict[str, str]
-) -> tuple[HomeAssistant, MagicMock]:
+@patch("evohomeasync2.broker.Broker.get", mock_get)
+async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> MagicMock:
+    """Set up the evohome integration and return its client.
+
+    The class is mocked here to check the client was instantiated with the correct args.
+    """
+
     mock_client: EvohomeClient | None = None
 
     def capture_client(*args: Any, **kwargs: Any):
@@ -94,13 +97,9 @@ async def _setup_evohome(
         mock_client = EvohomeClient(*args, **kwargs)
         return mock_client
 
-    with (
-        patch(
-            "homeassistant.components.evohome.evo.EvohomeClient",
-            side_effect=capture_client,
-        ) as mock_class,
-        patch("evohomeasync2.broker.Broker.get", mock_get),
-    ):
+    with patch(
+        "homeassistant.components.evohome.evo.EvohomeClient", side_effect=capture_client
+    ) as mock_class:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
         await hass.async_block_till_done()
 
@@ -111,19 +110,4 @@ async def _setup_evohome(
         assert isinstance(mock_class.call_args.kwargs["session"], ClientSession)
         assert mock_client and mock_client.account_info is not None
 
-        return hass, mock_class
-
-
-async def evo_client(hass: HomeAssistant, test_config: dict[str, str]) -> MagicMock:
-    """Return the EvohomeClient instantiated via the Evohome integration."""
-
-    return (await _setup_evohome(hass, test_config))[1]
-
-
-@pytest.fixture
-async def evo_hass(hass: HomeAssistant) -> AsyncGenerator[HomeAssistant]:
-    """Return an instance of Home Assistant with an Evohome integration."""
-
-    hass, _ = await _setup_evohome(hass, TEST_CONFIG)
-
-    yield hass  # noqa: PT022
+        return mock_class
