@@ -110,7 +110,7 @@
         "name": "IP address"
       },
       "signal_status": {
-        "name": "Signal Status"
+        "name": "Signal status"
       }
     },
     "switch": {
