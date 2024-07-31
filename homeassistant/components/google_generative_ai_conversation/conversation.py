@@ -286,6 +286,7 @@ class GoogleGenerativeAIConversationEntity(
                 if supports_system_instruction
                 else messages[2:],
                 "prompt": prompt,
+                "tools": [*llm_api.tools] if llm_api else None,
             },
         )
 
