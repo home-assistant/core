@@ -75,8 +75,8 @@ class DiscoverDeviceInfo:
         self._hash = pglab_device.hash
         self._entities: list[tuple[str, str]] = []
 
-    def add_entity_id(self, entity: Entity) -> None:
-        """Add the entity id."""
+    def add_entity(self, entity: Entity) -> None:
+        """Add an entity."""
 
         # PGLabEntity always have unique IDs
         if TYPE_CHECKING:
@@ -274,7 +274,7 @@ class PGLabDiscovery:
             raise PGLabDiscoveryError("Unknown device, device_id not discovered")
 
         discovery_info = self._discovered[device_id]
-        discovery_info.add_entity_id(entity)
+        discovery_info.add_entity(entity)
 
 
 async def create_discovery(
