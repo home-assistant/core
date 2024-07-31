@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     EntityCategory,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -1655,3 +1656,144 @@ async def test_wan_monitor_latency_with_no_uptime(
 
     latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
     assert latency_entry is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "has_fan": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+                "temperatures": [
+                    {"name": "CPU", "type": "cpu", "value": 66.0},
+                    {"name": "Local", "type": "board", "value": 48.75},
+                    {"name": "PHY", "type": "board", "value": 50.25},
+                ],
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity_id", "state", "updated_state", "index_to_update"),
+    [
+        ("device_cpu", "66.0", "20", 0),
+        ("device_local", "48.75", "90.64", 1),
+        ("device_phy", "50.25", "80", 2),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_temperatures(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message,
+    device_payload: list[dict[str, Any]],
+    entity_id: str,
+    state: str,
+    updated_state: str,
+    index_to_update: int,
+) -> None:
+    """Verify that device temperatures sensors are working as expected."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    temperature_entity = entity_registry.async_get(
+        f"sensor.device_{entity_id}_temperature"
+    )
+    assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert temperature_entity.entity_category is EntityCategory.DIAGNOSTIC
+
+    # Enable entity
+    entity_registry.async_update_entity(
+        entity_id=f"sensor.device_{entity_id}_temperature", disabled_by=None
+    )
+
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+
+    # Verify sensor attributes and state
+    temperature_entity = hass.states.get(f"sensor.device_{entity_id}_temperature")
+
+    assert (
+        temperature_entity.attributes.get(ATTR_DEVICE_CLASS)
+        == SensorDeviceClass.TEMPERATURE
+    )
+    assert (
+        temperature_entity.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.MEASUREMENT
+    )
+    assert (
+        temperature_entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.CELSIUS
+    )
+    assert temperature_entity.state == state
+
+    # # Verify state update
+    device = device_payload[0]
+    device["temperatures"][index_to_update]["value"] = updated_state
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert (
+        hass.states.get(f"sensor.device_{entity_id}_temperature").state == updated_state
+    )
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_with_no_temperature(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify that device temperature sensors is not created if there is no data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    temperature_entity = entity_registry.async_get(
+        "sensor.device_device_cpu_temperature"
+    )
+
+    assert temperature_entity is None

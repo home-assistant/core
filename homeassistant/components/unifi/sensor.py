@@ -21,7 +21,11 @@ from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
-from aiounifi.models.device import Device, TypedDeviceUptimeStatsWanMonitor
+from aiounifi.models.device import (
+    Device,
+    TypedDeviceTemperature,
+    TypedDeviceUptimeStatsWanMonitor,
+)
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
@@ -275,6 +279,75 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
             ("Microsoft", "microsoft"),
             ("Google", "google"),
             ("Cloudflare", "1.1.1.1"),
+        )
+    )
+
+
+@callback
+def async_device_temperatures_value_fn(
+    temperature_name: str, hub: UnifiHub, device: Device
+) -> float | None:
+    """Retrieve the temperature of the device."""
+    temperature = _device_temperature(temperature_name=temperature_name, device=device)
+
+    if TYPE_CHECKING:
+        # Checked by async_device_wan_latency_supported_fn
+        assert temperature
+
+    return temperature.get("value", 0)
+
+
+@callback
+def async_device_temperatures_supported_fn(
+    temperature_name: str, hub: UnifiHub, obj_id: str
+) -> bool:
+    """Determine if an device have a temperatures."""
+    if device := hub.api.devices[obj_id]:
+        return _device_temperature(temperature_name, device) is not None
+    return False
+
+
+@callback
+def _device_temperature(
+    temperature_name: str, device: Device
+) -> TypedDeviceTemperature | None:
+    """Return the temperature of the device."""
+    if device.temperatures:
+        for device_temperature in device.temperatures:
+            if temperature_name in device_temperature["name"]:
+                return device_temperature
+    return None
+
+
+def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
+    """Create device temperature sensors."""
+
+    def make_device_temperature_entity_description(
+        name: str,
+    ) -> UnifiSensorEntityDescription:
+        return UnifiSensorEntityDescription[Devices, Device](
+            key=f"Device {name} temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_registry_enabled_default=False,
+            api_handler_fn=lambda api: api.devices,
+            available_fn=async_device_available_fn,
+            device_info_fn=async_device_device_info_fn,
+            name_fn=lambda device: f"{device.name} {name} Temperature",
+            object_fn=lambda api, obj_id: api.devices[obj_id],
+            supported_fn=partial(async_device_temperatures_supported_fn, name),
+            unique_id_fn=lambda hub, obj_id: f"{name.lower}_temperature-{obj_id}",
+            value_fn=partial(async_device_temperatures_value_fn, name),
+        )
+
+    return tuple(
+        make_device_temperature_entity_description(name)
+        for name in (
+            "CPU",
+            "Local",
+            "PHY",
         )
     )
 
@@ -544,6 +617,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 )
 
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors()
+ENTITY_DESCRIPTIONS += make_device_temperatur_sensors()
 
 
 async def async_setup_entry(
