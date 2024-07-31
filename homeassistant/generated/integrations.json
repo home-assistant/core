@@ -6994,6 +6994,12 @@
           "config_flow": false,
           "supported_by": "august",
           "name": "Yale Home"
+        },
+        "yale": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Yale"
         }
       }
     },

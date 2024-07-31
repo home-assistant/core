@@ -1095,6 +1095,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "wiz_*",
     },
     {
+        "domain": "yale",
+        "hostname": "yale-connect-plus",
+        "macaddress": "00177A*",
+    },
+    {
         "domain": "yeelight",
         "hostname": "yeelink-*",
     },

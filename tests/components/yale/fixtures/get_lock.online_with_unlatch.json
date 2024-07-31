@@ -1,0 +1,94 @@
+{
+  "LockName": "Lock online with unlatch supported",
+  "Type": 17,
+  "Created": "2024-03-14T18:03:09.003Z",
+  "Updated": "2024-03-14T18:03:09.003Z",
+  "LockID": "online_with_unlatch",
+  "HouseID": "mockhouseid1",
+  "HouseName": "Zuhause",
+  "Calibrated": false,
+  "timeZone": "Europe/Berlin",
+  "battery": 0.61,
+  "batteryInfo": {
+    "level": 0.61,
+    "warningState": "lock_state_battery_warning_none",
+    "infoUpdatedDate": "2024-04-30T17:55:09.045Z",
+    "lastChangeDate": "2024-03-15T07:04:00.000Z",
+    "lastChangeVoltage": 8350,
+    "state": "Mittel",
+    "icon": "https://app-resources.aaecosystem.com/images/lock_battery_state_medium.png"
+  },
+  "hostHardwareID": "xxx",
+  "supportsEntryCodes": true,
+  "remoteOperateSecret": "xxxx",
+  "skuNumber": "NONE",
+  "macAddress": "DE:AD:BE:00:00:00",
+  "SerialNumber": "LPOC000000",
+  "LockStatus": {
+    "status": "locked",
+    "dateTime": "2024-04-30T18:41:25.673Z",
+    "isLockStatusChanged": false,
+    "valid": true,
+    "doorState": "init"
+  },
+  "currentFirmwareVersion": "1.0.4",
+  "homeKitEnabled": false,
+  "zWaveEnabled": false,
+  "isGalileo": false,
+  "Bridge": {
+    "_id": "65f33445529187c78a100000",
+    "mfgBridgeID": "LPOCH0004Y",
+    "deviceModel": "august-lock",
+    "firmwareVersion": "1.0.4",
+    "operative": true,
+    "status": {
+      "current": "online",
+      "lastOnline": "2024-04-30T18:41:27.971Z",
+      "updated": "2024-04-30T18:41:27.971Z",
+      "lastOffline": "2024-04-25T14:41:40.118Z"
+    },
+    "locks": [
+      {
+        "_id": "656858c182e6c7c555faf758",
+        "LockID": "68895DD075A1444FAD4C00B273EEEF28",
+        "macAddress": "DE:AD:BE:EF:0B:BC"
+      }
+    ],
+    "hyperBridge": true
+  },
+  "OfflineKeys": {
+    "created": [],
+    "loaded": [
+      {
+        "created": "2024-03-14T18:03:09.034Z",
+        "key": "055281d4aa9bd7b68c7b7bb78e2f34ca",
+        "slot": 1,
+        "UserID": "b4b44424-0000-0000-0000-25c224dad337",
+        "loaded": "2024-03-14T18:03:33.470Z"
+      }
+    ],
+    "deleted": []
+  },
+  "parametersToSet": {},
+  "users": {
+    "b4b44424-0000-0000-0000-25c224dad337": {
+      "UserType": "superuser",
+      "FirstName": "m10x",
+      "LastName": "m10x",
+      "identifiers": ["phone:+494444444", "email:m10x@example.com"]
+    }
+  },
+  "pubsubChannel": "pubsub",
+  "ruleHash": {},
+  "cameras": [],
+  "geofenceLimits": {
+    "ios": {
+      "debounceInterval": 90,
+      "gpsAccuracyMultiplier": 2.5,
+      "maximumGeofence": 5000,
+      "minimumGeofence": 100,
+      "minGPSAccuracyRequired": 80
+    }
+  },
+  "accessSchedulesAllowed": true
+}
