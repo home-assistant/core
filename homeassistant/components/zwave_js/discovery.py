@@ -1092,13 +1092,22 @@ DISCOVERY_SCHEMAS = [
     # NOTE: keep this at the bottom of the discovery scheme,
     # to handle all others that need the multilevel CC first
     #
-    # Non-dimmable colored light - the version without color
-    # support is handled by the binary switch schema above
+    # Colored light (legacy device) that can only be controlled through Color Switch CC.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+    ),
+    # Colored light that can only be turned on or off through other CCs.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         required_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
     ),
+    # Dimmable light with or without color support.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
