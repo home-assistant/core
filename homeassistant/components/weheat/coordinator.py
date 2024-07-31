@@ -60,7 +60,7 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the model of the heat pump."""
         return self._heat_pump.model
 
-    def get_it(self):
+    def fetch_data(self):
         """Get the data from the API."""
         token = self.session.token["access_token"]
 
@@ -90,4 +90,4 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from the API."""
         await self.session.async_ensure_token_valid()
 
-        return await self.hass.async_add_executor_job(self.get_it)
+        return await self.hass.async_add_executor_job(self.fetch_data)

@@ -39,6 +39,7 @@ class OAuth2FlowHandler(
             preserved_data: dict = {}
             if config_entry is not None:
                 preserved_data = config_entry.data.get(HEAT_PUMP_INFO) or {}
+
             self.hass.config_entries.async_update_entry(
                 self.reauth_entry, data=(data | {HEAT_PUMP_INFO: preserved_data})
             )
