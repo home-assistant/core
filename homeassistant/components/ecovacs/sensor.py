@@ -324,7 +324,7 @@ class EcovacsLegacyLifespanSensor(EcovacsLegacyEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
 
-        def on_event() -> None:
+        def on_event(_: Any) -> None:
             if (
                 value := self.device.components.get(self.entity_description.component)
             ) is not None:
@@ -332,6 +332,4 @@ class EcovacsLegacyLifespanSensor(EcovacsLegacyEntity, SensorEntity):
             self._attr_native_value = value
             self.schedule_update_ha_state()
 
-        self._event_listeners.append(
-            self.device.lifespanEvents.subscribe(lambda _: on_event())
-        )
+        self._event_listeners.append(self.device.lifespanEvents.subscribe(on_event))

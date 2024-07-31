@@ -1,5 +1,7 @@
 """Tests for Ecovacs sensors."""
 
+from unittest.mock import Mock
+
 from deebot_client.event_bus import EventBus
 from deebot_client.events import (
     BatteryEvent,
@@ -163,7 +165,7 @@ async def test_legacy_sensors(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    mock_vacbot,
+    mock_vacbot: Mock,
 ) -> None:
     """Test that sensor entity snapshots match."""
     mock_vacbot.components = {"main_brush": 0.8, "side_brush": 0.6, "filter": 0.4}
