@@ -40,18 +40,6 @@ ORDERED_NAMED_FAN_SPEEDS = [
 ]
 
 
-def _build_entities(
-    device_list: list[ViCareDevice],
-) -> list[ViCareFan]:
-    """Create ViCare fan entities for a device."""
-
-    return [
-        ViCareFan(device.config, device.api, "ventilation")
-        for device in device_list
-        if isinstance(device.api, PyViCareVentilationDevice)
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -62,10 +50,11 @@ async def async_setup_entry(
     device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
-        await hass.async_add_executor_job(
-            _build_entities,
-            device_list,
-        )
+        [
+            ViCareFan(device.config, device.api, "ventilation")
+            for device in device_list
+            if isinstance(device.api, PyViCareVentilationDevice)
+        ]
     )
 
 
@@ -82,6 +71,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     )
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_translation_key = "ventilation"
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
