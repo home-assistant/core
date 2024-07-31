@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING, Any
+import sys
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,25 +17,22 @@ from homeassistant.components.homeassistant_yellow.helpers import (
 )
 from homeassistant.core import HomeAssistant
 
-if TYPE_CHECKING:
-    from gpiod.line import Value
-else:
-    import enum
-
-    class Value(enum.Enum):
-        """Mock `gpiod.line.Value`."""
-
-        INACTIVE = 0
-        ACTIVE = 1
-
 
 @contextlib.contextmanager
 def mock_gpio_pin_states(pin_states: dict[int, list[bool]]):
     """Mock the GPIO pin read function."""
 
+    # pylint: disable-next=import-outside-toplevel
+    from gpiod.line import Value
+
+    # pylint: disable-next=import-outside-toplevel
+    from gpiod.line_request import LineRequest
+
     read_count = 0
 
-    def mock_request_lines(path: str, consumer: str, config: dict[int, Any]):
+    def mock_request_lines(
+        path: str, consumer: str, config: dict[int, Any]
+    ) -> MagicMock:
         def mock_get_values() -> list[Value]:
             nonlocal read_count
 
@@ -46,21 +44,17 @@ def mock_gpio_pin_states(pin_states: dict[int, list[bool]]):
 
             return values
 
-        mock = MagicMock()
-        mock.__enter__.return_value.get_values.side_effect = mock_get_values
+        mock_line_request = MagicMock(autospec=LineRequest(None))
+        mock_line_request.__enter__.return_value = mock_line_request
+        mock_line_request.get_values.side_effect = mock_get_values
 
-        return mock
+        return mock_line_request
 
-    mock_gpiod = MagicMock()
-    mock_gpiod.request_lines.side_effect = mock_request_lines
-    mock_gpiod.line.Value = Value
-
-    with patch.dict(
-        "sys.modules", {"gpiod": mock_gpiod, "gpiod.line": mock_gpiod.line}
-    ):
+    with patch("gpiod.request_lines", autospec=True, side_effect=mock_request_lines):
         yield
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="gpiod requires linux")
 @pytest.mark.parametrize(
     ("states", "result"),
     [
