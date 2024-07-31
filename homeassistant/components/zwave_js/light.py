@@ -592,6 +592,12 @@ class ZwaveColorOnlyLight(ZwaveLight):
                 new_colors = self._last_on_color
                 old_brightness = max(self._last_on_color.values())
                 scale = brightness / old_brightness
+            elif hs_color is None and self._color_mode == ColorMode.HS:
+                hs_color = self._hs_color
+            elif color_temp is None and self._color_mode == ColorMode.COLOR_TEMP:
+                color_temp = self._color_temp
+            elif rgbw is None and self._color_mode == ColorMode.RGBW:
+                rgbw = self._rgbw_color
         elif hs_color is not None or color_temp is not None or rgbw is not None:
             # Turned on by using the color controls
             current_brightness = self.brightness
@@ -611,6 +617,9 @@ class ZwaveColorOnlyLight(ZwaveLight):
                 ColorComponent.GREEN: 255,
                 ColorComponent.BLUE: 255,
             }
+
+        # Reset last color until turning off again
+        self._last_on_color = None
 
         if new_colors is None:
             new_colors = self._get_new_colors(hs_color, color_temp, rgbw)
