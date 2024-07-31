@@ -376,6 +376,8 @@ build.json @home-assistant/supervisor
 /tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
+/homeassistant/components/elevenlabs/ @sorgfresser
+/tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
