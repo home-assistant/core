@@ -209,15 +209,22 @@ class MatrixBot:
             await self._resolve_room_aliases(listening_rooms)
             self._load_commands(commands)
             await self._join_rooms()
+
             # Sync once so that we don't respond to past events.
+            _LOGGER.debug("Starting initial sync for %s", self._mx_id)
             await self._client.sync(timeout=30_000)
+            _LOGGER.debug("Finished initial sync for %s", self._mx_id)
 
             self._client.add_event_callback(self._handle_room_message, RoomMessageText)
 
-            await self._client.sync_forever(
-                timeout=30_000,
-                loop_sleep_time=1_000,
-            )  # milliseconds.
+            _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
+            self.hass.async_create_background_task(
+                self._client.sync_forever(
+                    timeout=30_000,
+                    loop_sleep_time=1_000,
+                ),  # milliseconds.
+                name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
+            )
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
