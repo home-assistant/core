@@ -45,7 +45,7 @@ Pillow==10.4.0
 pip>=21.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.8.0
-pymicro-vad==1.0.1
+pymicro-vad==1.0.2
 PyNaCl==1.5.0
 pyOpenSSL==24.2.1
 pyserial==3.5
