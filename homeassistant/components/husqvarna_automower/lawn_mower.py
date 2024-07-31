@@ -70,21 +70,19 @@ async def async_setup_entry(
         },
         "async_override_schedule",
     )
-    for mower_id in coordinator.data:
-        if coordinator.data[mower_id].capabilities.work_areas:
-            platform.async_register_entity_service(
-                "override_schedule_work_area",
-                {
-                    vol.Required("work_area_id"): vol.Coerce(int),
-                    vol.Required("duration"): vol.All(
-                        cv.time_period,
-                        cv.positive_timedelta,
-                        vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
-                    ),
-                },
-                "async_override_schedule_work_area",
-            )
-            break
+    platform.async_register_entity_service(
+        "override_schedule_work_area",
+        {
+            vol.Required("work_area_id"): vol.Coerce(int),
+            vol.Required("duration"): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+                vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
+            ),
+        },
+        "async_override_schedule_work_area",
+    )
+
 
 
 class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
