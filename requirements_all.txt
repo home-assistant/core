@@ -1093,7 +1093,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240719.0
+home-assistant-frontend==20240731.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.29
@@ -1469,7 +1469,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ollama
-ollama==0.3.0
+ollama==0.3.1
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -2010,6 +2010,9 @@ pymelcloud==2.5.9
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
+# homeassistant.components.assist_pipeline
+pymicro-vad==1.0.0
+
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
 
@@ -2378,7 +2381,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.0.0
 
 # homeassistant.components.v2c
-pytrydan==0.7.0
+pytrydan==0.8.0
 
 # homeassistant.components.usb
 pyudev==0.24.1
@@ -2851,7 +2854,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.7.5
+velbus-aio==2024.7.6
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2898,9 +2901,6 @@ weatherflow4py==0.2.21
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
-
-# homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8

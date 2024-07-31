@@ -9,7 +9,12 @@ import logging
 from typing import Any
 
 from pyhomeworks import exceptions as hw_exceptions
-from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED, Homeworks
+from pyhomeworks.pyhomeworks import (
+    HW_BUTTON_PRESSED,
+    HW_BUTTON_RELEASED,
+    HW_LOGIN_INCORRECT,
+    Homeworks,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +22,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -137,12 +144,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def hw_callback(msg_type: Any, values: Any) -> None:
         """Dispatch state changes."""
         _LOGGER.debug("callback: %s, %s", msg_type, values)
+        if msg_type == HW_LOGIN_INCORRECT:
+            _LOGGER.debug("login incorrect")
+            return
         addr = values[0]
         signal = f"homeworks_entity_{controller_id}_{addr}"
         dispatcher_send(hass, signal, msg_type, values)
 
     config = entry.options
-    controller = Homeworks(config[CONF_HOST], config[CONF_PORT], hw_callback)
+    controller = Homeworks(
+        config[CONF_HOST],
+        config[CONF_PORT],
+        hw_callback,
+        entry.data.get(CONF_USERNAME),
+        entry.data.get(CONF_PASSWORD),
+    )
     try:
         await hass.async_add_executor_job(controller.connect)
     except hw_exceptions.HomeworksException as err:
