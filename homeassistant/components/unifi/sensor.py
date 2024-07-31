@@ -616,8 +616,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
 )
 
-ENTITY_DESCRIPTIONS += make_wan_latency_sensors()
-ENTITY_DESCRIPTIONS += make_device_temperatur_sensors()
+ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_sensors()
 
 
 async def async_setup_entry(
