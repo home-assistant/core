@@ -71,6 +71,43 @@ async def test_zeroconf_flow(
     mock_smlight_client: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
+    """Test the zeroconf flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
+    )
+
+    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    progress = hass.config_entries.flow.async_progress()
+    assert len(progress) == 1
+    assert progress[0]["flow_id"] == result["flow_id"]
+    assert progress[0]["context"]["confirm_only"] is True
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["context"]["source"] == "zeroconf"
+    assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result2["title"] == "SLZB-06p7"
+    assert result2["data"] == {
+        CONF_HOST: MOCK_HOST,
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_smlight_client.get_info.mock_calls) == 1
+
+
+async def test_zeroconf_flow_auth(
+    hass: HomeAssistant,
+    mock_smlight_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test the full zeroconf flow including authentication."""
     mock_smlight_client.check_auth_needed.return_value = True
 
@@ -247,6 +284,42 @@ async def test_user_cannot_connect(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smlight_client.get_info.mock_calls) == 1
+
+
+async def test_auth_cannot_connect(
+    hass: HomeAssistant, mock_smlight_client: MagicMock
+) -> None:
+    """Test we handle auth step cannot connect error."""
+    mock_smlight_client.check_auth_needed.return_value = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    mock_smlight_client.check_auth_needed.side_effect = SmlightConnectionError
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_zeroconf_cannot_connect(
