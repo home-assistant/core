@@ -194,7 +194,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Bluesound entry."""
     bluesound_player = BluesoundPlayer(
-        hass,
         config_entry.data[CONF_HOST],
         config_entry.data[CONF_PORT],
         config_entry.runtime_data.player,
@@ -230,7 +229,6 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         host: str,
         port: int,
         player: Player,
@@ -238,7 +236,6 @@ class BluesoundPlayer(MediaPlayerEntity):
     ) -> None:
         """Initialize the media player."""
         self.host = host
-        self._hass = hass
         self.port = port
         self._polling_task: Task[None] | None = None  # The actual polling task.
         self._id = sync_status.id
@@ -296,7 +293,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             master_id = f"{sync_status.master.ip}:{sync_status.master.port}"
             master_device = [
                 device
-                for device in self._hass.data[DATA_BLUESOUND]
+                for device in self.hass.data[DATA_BLUESOUND]
                 if device.id == master_id
             ]
 
@@ -334,7 +331,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Start the polling task."""
         await super().async_added_to_hass()
 
-        self._polling_task = self._hass.async_create_task(self._start_poll_command())
+        self._polling_task = self.hass.async_create_task(self._start_poll_command())
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop the polling task."""
@@ -344,7 +341,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._polling_task.cancel():
             await self._polling_task
 
-        self._hass.data[DATA_BLUESOUND].remove(self)
+        self.hass.data[DATA_BLUESOUND].remove(self)
 
     async def async_update(self) -> None:
         """Update internal status of the entity."""
@@ -408,7 +405,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Trigger sync status update on all devices."""
         _LOGGER.debug("Trigger sync status on all devices")
 
-        for player in self._hass.data[DATA_BLUESOUND]:
+        for player in self.hass.data[DATA_BLUESOUND]:
             await player.force_update_sync_status()
 
     @Throttle(SYNC_STATUS_INTERVAL)
@@ -696,7 +693,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         device_group = self._group_name.split("+")
 
         sorted_entities = sorted(
-            self._hass.data[DATA_BLUESOUND],
+            self.hass.data[DATA_BLUESOUND],
             key=lambda entity: entity.is_master,
             reverse=True,
         )
