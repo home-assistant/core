@@ -309,18 +309,17 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                         scale = self._last_brightness / 255
                 elif current_brightness is not None:
                     scale = current_brightness / 255
-            elif self._last_on_color is not None:
-                # Turned on without setting brightness
-                last_color = self._last_on_color
-                if not self._target_brightness and self._last_brightness is not None:
-                    scale = self._last_brightness / 255
-            else:
-                # Turned on a color-only light for the first time. Make it white!
-                last_color = {
-                    ColorComponent.RED: 255,
-                    ColorComponent.GREEN: 255,
-                    ColorComponent.BLUE: 255,
-                }
+            elif self._target_brightness is None:
+                if self._last_on_color is not None:
+                    # Turned on without setting brightness
+                    last_color = self._last_on_color
+                else:
+                    # Turned on a color-only light for the first time. Make it white!
+                    last_color = {
+                        ColorComponent.RED: 255,
+                        ColorComponent.GREEN: 255,
+                        ColorComponent.BLUE: 255,
+                    }
 
         # Mix brightness into last non-off color
         if last_color is not None:
@@ -392,15 +391,42 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         elif self._target_color is not None:
             # Remember last color and brightness to restore it when turning on
             self._last_brightness = self.brightness
+            (red_val, green_val, blue_val, ww_val, cw_val) = self._get_color_values()
+            last_color: dict[ColorComponent, int] | None = None
+            if (
+                red_val is not None
+                and red_val.value is not None
+                and green_val is not None
+                and green_val.value is not None
+                and blue_val is not None
+                and blue_val.value is not None
+            ):
+                last_color = {
+                    ColorComponent.RED: red_val.value,
+                    ColorComponent.GREEN: green_val.value,
+                    ColorComponent.BLUE: blue_val.value,
+                }
+            if self._supports_color_temp:
+                if last_color is None:
+                    last_color = {}
+                if ww_val is not None and ww_val.value is not None:
+                    last_color[ColorComponent.WARM_WHITE] = ww_val.value
+                if cw_val is not None and cw_val.value is not None:
+                    last_color[ColorComponent.COLD_WHITE] = cw_val.value
+            self._last_on_color = last_color
+
             # turn off all color channels
+            colors = {
+                ColorComponent.RED: 0,
+                ColorComponent.GREEN: 0,
+                ColorComponent.BLUE: 0,
+            }
+            if self._supports_color_temp:
+                colors[ColorComponent.WARM_WHITE] = 0
+                colors[ColorComponent.COLD_WHITE] = 0
+
             await self._async_set_colors(
-                {
-                    ColorComponent.RED: 0,
-                    ColorComponent.GREEN: 0,
-                    ColorComponent.BLUE: 0,
-                    ColorComponent.WARM_WHITE: 0,
-                    ColorComponent.COLD_WHITE: 0,
-                },
+                colors,
                 kwargs.get(ATTR_TRANSITION),
             )
 
@@ -435,9 +461,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             color_name = MULTI_COLOR_MAP[color]
             scaled_value = round(value * scale) if scale is not None else value
             colors_dict[color_name] = scaled_value
-        # Remember the last non-zero color
-        if max(colors.values()) > 0:
-            self._last_on_color = colors
         # set updated color object
         await self._async_set_value(combined_color_val, colors_dict, zwave_transition)
 
