@@ -1100,6 +1100,11 @@
         'my_lawn',
         'no_work_area_active',
       ]),
+      'work_area_id_assignment': dict({
+        0: 'my_lawn',
+        123456: 'Front lawn',
+        654321: 'Back lawn',
+      }),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_work_area',
