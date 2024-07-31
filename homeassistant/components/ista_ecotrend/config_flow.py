@@ -38,6 +38,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
     }
 )
+PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 
 class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -102,9 +103,14 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.reauth_entry
 
         if user_input is not None:
+            password = (
+                self.reauth_entry.data[CONF_PASSWORD]
+                if user_input[CONF_PASSWORD] == PWD_NOT_CHANGED
+                else user_input[CONF_PASSWORD]
+            )
             ista = PyEcotrendIsta(
                 user_input[CONF_EMAIL],
-                user_input[CONF_PASSWORD],
+                password,
                 _LOGGER,
             )
             try:
@@ -117,6 +123,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                user_input[CONF_PASSWORD] = password
                 return self.async_update_reload_and_abort(
                     self.reauth_entry, data=user_input
                 )
@@ -126,9 +133,16 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
                 suggested_values={
-                    CONF_EMAIL: user_input[CONF_EMAIL]
-                    if user_input is not None
-                    else self.reauth_entry.data[CONF_EMAIL]
+                    CONF_EMAIL: (
+                        user_input[CONF_EMAIL]
+                        if user_input is not None
+                        else self.reauth_entry.data[CONF_EMAIL]
+                    ),
+                    CONF_PASSWORD: (
+                        user_input[CONF_PASSWORD]
+                        if user_input is not None
+                        else PWD_NOT_CHANGED
+                    ),
                 },
             ),
             description_placeholders={
