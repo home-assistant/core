@@ -115,8 +115,14 @@ async def test_passing_variables(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("toggle", [False, True])
-async def test_turn_on_off_toggle(hass: HomeAssistant, toggle) -> None:
-    """Verify turn_on, turn_off & toggle services."""
+@pytest.mark.parametrize("action_schema_variations", ["action", "service"])
+async def test_turn_on_off_toggle(
+    hass: HomeAssistant, toggle: bool, action_schema_variations: str
+) -> None:
+    """Verify turn_on, turn_off & toggle services.
+
+    Ensures backward compatibility with the old service action schema is maintained.
+    """
     event = "test_event"
     event_mock = Mock()
 
@@ -132,9 +138,15 @@ async def test_turn_on_off_toggle(hass: HomeAssistant, toggle) -> None:
     async_track_state_change(hass, ENTITY_ID, state_listener, to_state="on")
 
     if toggle:
-        turn_off_step = {"action": "script.toggle", "entity_id": ENTITY_ID}
+        turn_off_step = {
+            action_schema_variations: "script.toggle",
+            "entity_id": ENTITY_ID,
+        }
     else:
-        turn_off_step = {"action": "script.turn_off", "entity_id": ENTITY_ID}
+        turn_off_step = {
+            action_schema_variations: "script.turn_off",
+            "entity_id": ENTITY_ID,
+        }
     assert await async_setup_component(
         hass,
         "script",
