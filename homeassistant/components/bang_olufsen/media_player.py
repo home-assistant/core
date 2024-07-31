@@ -368,7 +368,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             and source.id not in HIDDEN_SOURCE_IDS
         }
 
-        # Some sources are not Beolink expandable, meaning that they can't be joined by other Bang & Olufsen devices for a multi-room experience.
+        # Some sources are not Beolink expandable, meaning that they can't be joined by or expand to other Bang & Olufsen devices for a multi-room experience.
         # _source_change, which is used throughout the entity for current source information, lacks this information,
         # so source ID's and their expandability is stored in the self._beolink_sources variable.
         self._beolink_sources = {
