@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
     async def mqtt_unsubscribe(sub_state: PyPGLabSubState) -> None:
         async_unsubscribe_topics(hass, sub_state)
 
-    # Create a MQTT client for PGLab used for PGLab python module.
+    # Create an MQTT client for PGLab used for PGLab python module.
     pglab_mqtt = PyPGLabMqttClient(mqtt_publish, mqtt_subscribe, mqtt_unsubscribe)
 
     # Setup PGLab device discovery.
