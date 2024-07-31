@@ -12,12 +12,14 @@ from homeassistant.components.fritzbox.const import (
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -56,9 +58,11 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+    assert state.attributes[ATTR_HS_COLOR] == (28.395, 65.723)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
 
@@ -99,6 +103,9 @@ async def test_setup_non_color_non_level(hass: HomeAssistant, fritz: Mock) -> No
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
     assert ATTR_BRIGHTNESS not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
+    assert state.attributes.get(ATTR_HS_COLOR) is None
 
 
 async def test_setup_color(hass: HomeAssistant, fritz: Mock) -> None:
@@ -120,6 +127,8 @@ async def test_setup_color(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
     assert state.attributes[ATTR_BRIGHTNESS] == 100
     assert state.attributes[ATTR_HS_COLOR] == (100, 70)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
