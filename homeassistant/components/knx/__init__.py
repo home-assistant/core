@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import logging
 from pathlib import Path
@@ -225,7 +224,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
-        exposure.shutdown()
+        exposure.async_remove()
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
@@ -334,7 +333,7 @@ class KNXModule:
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
-        await self.project.load_project()
+        await self.project.load_project(self.xknx)
         await self.config_store.load_data()
         await self.telegrams.load_history()
         await self.xknx.start()
@@ -439,13 +438,13 @@ class KNXModule:
             threaded=True,
         )
 
-    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+    def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
         self.connected = state == XknxConnectionState.CONNECTED
-        if tasks := [device.after_update() for device in self.xknx.devices]:
-            await asyncio.gather(*tasks)
+        for device in self.xknx.devices:
+            device.after_update()
 
-    async def telegram_received_cb(self, telegram: Telegram) -> None:
+    def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""
         # Not all telegrams have serializable data.
         data: int | tuple[int, ...] | None = None
@@ -504,10 +503,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {
-                        _filter: transcoder  # type: ignore[type-abstract]
-                        for _filter in _filters
-                    }
+                    {_filter: transcoder for _filter in _filters}
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(

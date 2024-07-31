@@ -92,9 +92,7 @@ async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     # StateUpdater initialize state
     await knx.assert_read(test_brightness_state)
-    await knx.xknx.connection_manager.connection_state_changed(
-        XknxConnectionState.CONNECTED
-    )
+    knx.xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
     # turn on light via brightness
     await hass.services.async_call(
         "light",

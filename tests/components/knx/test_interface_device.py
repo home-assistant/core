@@ -66,24 +66,18 @@ async def test_diagnostic_entities(
     ):
         assert hass.states.get(entity_id).state == test_state
 
-    await knx.xknx.connection_manager.connection_state_changed(
+    knx.xknx.connection_manager.connection_state_changed(
         state=XknxConnectionState.DISCONNECTED
     )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(events) == 4  # 3 not always_available + 3 force_update - 2 disabled
     events.clear()
 
     knx.xknx.current_address = IndividualAddress("1.1.1")
-    await knx.xknx.connection_manager.connection_state_changed(
+    knx.xknx.connection_manager.connection_state_changed(
         state=XknxConnectionState.CONNECTED,
         connection_type=XknxConnectionType.TUNNEL_UDP,
     )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(events) == 6  # all diagnostic sensors - counters are reset on connect
 
@@ -111,7 +105,6 @@ async def test_removed_entity(
             "sensor.knx_interface_connection_established",
             disabled_by=er.RegistryEntryDisabler.USER,
         )
-        await hass.async_block_till_done()
         unregister_mock.assert_called_once()
 
 
