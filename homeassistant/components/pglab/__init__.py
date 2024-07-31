@@ -9,8 +9,8 @@ from pypglab.mqtt import (
 )
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import ReceiveMessage
-from homeassistant.components.mqtt.subscription import (
+from homeassistant.components.mqtt import (
+    ReceiveMessage,
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
