@@ -385,7 +385,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         effect_off_called = False
         if effect := kwargs.get(ATTR_EFFECT):
             if effect in {LightEffect.LIGHT_EFFECTS_OFF, EFFECT_OFF}:
-                if self._effect_module.effect != LightEffect.LIGHT_EFFECTS_OFF:
+                if self._effect_module.effect is not LightEffect.LIGHT_EFFECTS_OFF:
                     await self._effect_module.set_effect(LightEffect.LIGHT_EFFECTS_OFF)
                     effect_off_called = True
                 if len(kwargs) == 1:
