@@ -27,8 +27,8 @@ type PGLABConfigEntry = ConfigEntry[PGLabDiscovery]
 async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:
     """Set up PG LAB Electronics integration from a config entry."""
 
-    # Define the call back for PGLab module to publish a MQTT message.
     async def mqtt_publish(topic: str, payload: str, qos: int, retain: bool) -> None:
+        """Publish an MQTT message using the Home Assistant MQTT client."""
         await mqtt.async_publish(hass, topic, payload, qos, retain)
 
     # Define the call back for PGLab module to subscribe to a MQTT message.
