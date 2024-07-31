@@ -1095,6 +1095,7 @@ DISCOVERY_SCHEMAS = [
     # Colored light (legacy device) that can only be controlled through Color Switch CC.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
+        hint="color_only",
         primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
         absent_values=[
             SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
