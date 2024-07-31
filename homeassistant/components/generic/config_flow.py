@@ -578,10 +578,8 @@ async def ws_start_preview(
     _LOGGER.debug("Generating websocket handler for generic camera preview")
 
     flow = hass.config_entries.flow.async_get(msg["flow_id"])
-    schema = build_schema({})
     user_input = deepcopy(flow["context"]["preview_cam"])
     del user_input[CONF_CONTENT_TYPE]  # The schema doesn't like this generated field.
-    validated = schema(user_input)
 
     # Create an EntityPlatform, needed for name translations
     platform = await async_prepare_setup_platform(hass, {}, CAMERA_DOMAIN, DOMAIN)
@@ -596,14 +594,14 @@ async def ws_start_preview(
     )
     await entity_platform.async_load_translations()
 
-    validated[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
+    user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
 
-    ext_still_url = validated.get(CONF_STILL_IMAGE_URL)
-    ext_stream_url = validated.get(CONF_STREAM_SOURCE)
+    ext_still_url = user_input.get(CONF_STILL_IMAGE_URL)
+    ext_stream_url = user_input.get(CONF_STREAM_SOURCE)
 
     if ext_still_url:
-        errors, still_format = await async_test_still(hass, validated)
-        validated[CONF_CONTENT_TYPE] = still_format
+        errors, still_format = await async_test_still(hass, user_input)
+        user_input[CONF_CONTENT_TYPE] = still_format
         register_preview(hass)
 
         ha_still_url = f"/api/generic/preview_flow_image/{msg['flow_id']}?t={datetime.now().isoformat()}"
@@ -612,18 +610,18 @@ async def ws_start_preview(
         # If user didn't specify a still image URL,
         # The automatically generated still image that stream generates
         # is always jpeg
-        validated[CONF_CONTENT_TYPE] = "image/jpeg"
+        user_input[CONF_CONTENT_TYPE] = "image/jpeg"
         ha_still_url = None
 
     ha_stream_url = None
     if ext_stream_url:
-        errors = errors | await async_test_stream(hass, validated)
+        errors = errors | await async_test_stream(hass, user_input)
         if not errors:
             preview_entity = GenericCamera(
-                hass, validated, msg["flow_id"] + "stream_preview", "PreviewStream"
+                hass, user_input, msg["flow_id"] + "stream_preview", "PreviewStream"
             )
             preview_entity.platform = entity_platform
-            ha_stream_url = await register_stream_preview(hass, validated)
+            ha_stream_url = await register_stream_preview(hass, user_input)
 
     connection.send_result(msg["id"])
     connection.send_message(
