@@ -55,7 +55,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             except SmlightConnectionError:
                 errors["base"] = "cannot_connect"
             except SmlightAuthError:
-                return await self.async_step_auth(user_input)
+                return await self.async_step_auth()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -116,7 +116,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             except SmlightConnectionError:
                 errors["base"] = "cannot_connect"
             except SmlightAuthError:
-                return await self.async_step_auth(user_input)
+                return await self.async_step_auth()
 
         self._set_confirm_only()
 
