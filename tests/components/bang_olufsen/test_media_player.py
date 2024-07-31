@@ -1189,21 +1189,18 @@ async def test_async_browse_media(
 
 
 @pytest.mark.parametrize(
-    ("group_members", "expand_count", "join_count", "logger_count"),
+    ("group_members", "expand_count", "join_count"),
     [
         # Valid member
-        ([TEST_MEDIA_PLAYER_ENTITY_ID_2], 1, 0, 0),
+        ([TEST_MEDIA_PLAYER_ENTITY_ID_2], 1, 0),
         # Touch to join
-        ([], 0, 1, 0),
-        # Not registered member
-        ([TEST_MEDIA_PLAYER_ENTITY_ID_3], 0, 0, 1),
+        ([], 0, 1),
     ],
 )
 async def test_async_join_players(
     group_members,
     expand_count,
     join_count,
-    logger_count,
     hass: HomeAssistant,
     mock_mozart_client,
     mock_config_entry,
@@ -1227,14 +1224,9 @@ async def test_async_join_players(
 
     # Calling the async_beolink_join method from a service call causes the method to not be awaited.
     # Replace the real service call with a patch.
-    with (
-        patch(
-            "homeassistant.components.bang_olufsen.media_player._LOGGER.warning"
-        ) as mock_logger,
-        patch(
-            "homeassistant.components.bang_olufsen.media_player.BangOlufsenMediaPlayer.async_beolink_join"
-        ) as join_call,
-    ):
+    with patch(
+        "homeassistant.components.bang_olufsen.media_player.BangOlufsenMediaPlayer.async_beolink_join"
+    ) as join_call:
         await hass.services.async_call(
             "media_player",
             "join",
@@ -1247,7 +1239,34 @@ async def test_async_join_players(
 
     assert mock_mozart_client.post_beolink_expand.call_count == expand_count
     assert join_count == join_call.call_count
-    assert mock_logger.call_count == logger_count
+
+
+async def test_async_join_players_invalid_media_player(
+    hass: HomeAssistant,
+    mock_mozart_client,
+    mock_config_entry,
+) -> None:
+    """Test async_join_players with an invalid media_player entity."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "media_player",
+            "join",
+            {
+                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                ATTR_GROUP_MEMBERS: [TEST_MEDIA_PLAYER_ENTITY_ID_3],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "missing_beolink_jid"
+    assert exc_info.errisinstance(HomeAssistantError)
+
+    assert mock_mozart_client.post_beolink_expand.call_count == 0
 
 
 async def test_async_unjoin_player(
