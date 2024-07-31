@@ -505,13 +505,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self._remote_leader = self._playback_metadata.remote_leader
 
-        # Temp fix for mismatch in WebSocket metadata and "real" REST endpoint where the remote leader is not deleted.
-        if self._source_change.id in (
-            BangOlufsenSource.LINE_IN.id,
-            BangOlufsenSource.URI_STREAMER.id,
-        ):
-            self._remote_leader = None
-
         # Add Beolink listeners / leader
 
         # Create group members list
