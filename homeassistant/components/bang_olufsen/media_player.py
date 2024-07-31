@@ -234,7 +234,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
-                self._async_update_playback_metadata,
+                self._async_update_playback_metadata_and_beolink,
             )
         )
 
@@ -410,7 +410,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @callback
-    async def _async_update_playback_metadata(
+    async def _async_update_playback_metadata_and_beolink(
         self, data: PlaybackContentMetadata
     ) -> None:
         """Update _playback_metadata and related."""
