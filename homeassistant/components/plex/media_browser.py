@@ -132,11 +132,15 @@ def browse_media(  # noqa: C901
             "children": [],
         }
         for playlist in plex_server.playlists():
+<<<<<<< HEAD
             if (
                 playlist.type != "directory"
                 and playlist.playlistType != "audio"
                 and platform == "sonos"
             ):
+=======
+            if playlist.type != "directory" and playlist.playlistType != "audio" and platform == "sonos":
+>>>>>>> d1d2cffeef34a6990577331c53925500013179c3
                 continue
             try:
                 playlists_info["children"].append(item_payload(playlist))
