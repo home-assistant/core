@@ -39,7 +39,7 @@ _MINIMUM_INPUT_NUMBER = "input_number.minimum"
 _MAXIMUM_INPUT_NUMBER = "input_number.maximum"
 # Represent for number's step
 _STEP_INPUT_NUMBER = "input_number.step"
-# TODO comment
+# Represent for number's unit of measurement
 _UNIT_OF_MEASUREMENT_INPUT_TEXT = "input_text.unit_of_measurement"
 
 # Config for `_VALUE_INPUT_NUMBER`
