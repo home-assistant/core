@@ -126,7 +126,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Charge power',
     'platform': 'v2c',
     'previous_unique_id': None,
@@ -141,7 +141,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'EVSE 1.1.1.1 Charge power',
-      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -329,7 +328,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ip',
+    'original_icon': None,
     'original_name': 'IP address',
     'platform': 'v2c',
     'previous_unique_id': None,
@@ -343,7 +342,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'EVSE 1.1.1.1 IP address',
-      'icon': 'mdi:ip',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.evse_1_1_1_1_ip_address',
@@ -551,7 +549,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:signal',
+    'original_icon': None,
     'original_name': 'Signal Status',
     'platform': 'v2c',
     'previous_unique_id': None,
@@ -565,7 +563,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'EVSE 1.1.1.1 Signal Status',
-      'icon': 'mdi:signal',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -599,7 +596,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'SSID',
     'platform': 'v2c',
     'previous_unique_id': None,
@@ -613,7 +610,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'EVSE 1.1.1.1 SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.evse_1_1_1_1_ssid',
