@@ -908,8 +908,7 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
-            await self._execute_vacuum(command, data, params, challenge)
-            return
+            return await self._execute_vacuum(command, data, params, challenge)
         if domain in COVER_VALVE_DOMAINS:
             await self._execute_cover_or_valve(command, data, params, challenge)
             return
