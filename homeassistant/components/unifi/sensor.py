@@ -48,6 +48,7 @@ from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from . import UnifiConfigEntry
@@ -338,7 +339,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
             name_fn=lambda device: f"{device.name} {name} Temperature",
             object_fn=lambda api, obj_id: api.devices[obj_id],
             supported_fn=partial(async_device_temperatures_supported_fn, name),
-            unique_id_fn=lambda hub, obj_id: f"{name.lower}_temperature-{obj_id}",
+            unique_id_fn=lambda hub, obj_id: f"{slugify(name)}_temperature-{obj_id}",
             value_fn=partial(async_device_temperatures_value_fn, name),
         )
 
