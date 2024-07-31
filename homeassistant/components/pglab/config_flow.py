@@ -29,7 +29,7 @@ class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
             # Not a PGLab Electronics discovery message.
             return self.async_abort(reason="invalid_discovery_info")
         if not discovery_info.payload:
-            # Empty payload, Unexpected payload.
+            # Empty payload, unexpected payload.
             return self.async_abort(reason="invalid_discovery_info")
 
         return await self.async_step_confirm()
