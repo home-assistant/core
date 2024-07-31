@@ -199,8 +199,12 @@ class KNXClimate(KnxEntity, ClimateEntity):
             self.async_write_ha_state()
             return
 
-        if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            knx_controller_mode = CONTROLLER_MODES_INV.get(self._last_hvac_mode)
+        if (
+            self._device.mode is not None
+            and self._device.mode.supports_controller_mode
+            and (knx_controller_mode := CONTROLLER_MODES_INV.get(self._last_hvac_mode))
+            is not None
+        ):
             await self._device.mode.set_controller_mode(knx_controller_mode)
             self.async_write_ha_state()
 
@@ -314,8 +318,11 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if self._device.mode is not None and self._device.mode.supports_operation_mode:
-            knx_operation_mode = PRESET_MODES_INV.get(preset_mode)
+        if (
+            self._device.mode is not None
+            and self._device.mode.supports_operation_mode
+            and (knx_operation_mode := PRESET_MODES_INV.get(preset_mode)) is not None
+        ):
             await self._device.mode.set_operation_mode(knx_operation_mode)
             self.async_write_ha_state()
 

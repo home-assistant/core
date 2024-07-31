@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import logging
 from pathlib import Path
@@ -504,10 +503,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {
-                        _filter: transcoder  # type: ignore[type-abstract]
-                        for _filter in _filters
-                    }
+                    {_filter: transcoder for _filter in _filters}
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(

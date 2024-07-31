@@ -75,7 +75,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity, RestoreEntity):
         if (
             last_state := await self.async_get_last_state()
         ) and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            await self._device.remote_value.update_value(last_state.state == STATE_ON)
+            self._device.remote_value.update_value(last_state.state == STATE_ON)
 
     @property
     def is_on(self) -> bool:

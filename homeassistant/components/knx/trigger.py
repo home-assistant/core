@@ -99,7 +99,7 @@ async def async_attach_trigger(
         ):
             decoded_payload = decode_telegram_payload(
                 payload=telegram.payload.value,  # type: ignore[union-attr]  # checked via payload_apci
-                transcoder=trigger_transcoder,  # type: ignore[type-abstract]  # parse_transcoder don't return abstract classes
+                transcoder=trigger_transcoder,
             )
             # overwrite decoded payload values in telegram_dict
             telegram_trigger_data = {**trigger_data, **telegram_dict, **decoded_payload}
