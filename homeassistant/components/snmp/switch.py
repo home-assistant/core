@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pyasn1.error import PyAsn1Error
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
@@ -226,8 +227,27 @@ class SnmpSwitch(SwitchEntity):
         self._command_payload_off = command_payload_off or payload_off
 
         self._state: bool | None = None
-        self._payload_on = payload_on
-        self._payload_off = payload_off
+
+        try:
+            self._payload_on_int = Integer(payload_on)
+        except PyAsn1Error:
+            self._payload_on_int = None
+
+        try:
+            self._payload_on = OctetString(payload_on)
+        except PyAsn1Error:
+            self._payload_on = None
+
+        try:
+            self._payload_off_int = Integer(payload_off)
+        except PyAsn1Error:
+            self._payload_off_int = None
+
+        try:
+            self._payload_off = OctetString(payload_off)
+        except PyAsn1Error:
+            self._payload_off = None
+
         self._target = UdpTransportTarget((host, port))
         self._request_args = request_args
         self._command_args = command_args
@@ -268,12 +288,13 @@ class SnmpSwitch(SwitchEntity):
             )
         else:
             for resrow in restable:
-                if resrow[-1] == self._payload_on or resrow[-1] == Integer(
-                    self._payload_on
+                if (self._payload_on and resrow[-1] == self._payload_on) or (
+                    self._payload_on_int and resrow[-1] == Integer(self._payload_on_int)
                 ):
                     self._state = True
-                elif resrow[-1] == self._payload_off or resrow[-1] == Integer(
-                    self._payload_off
+                elif (self._payload_off and resrow[-1] == self._payload_off) or (
+                    self._payload_off_int
+                    and resrow[-1] == Integer(self._payload_off_int)
                 ):
                     self._state = False
                 else:
