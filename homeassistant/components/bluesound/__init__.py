@@ -67,15 +67,4 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    player = None
-    for player in hass.data[DOMAIN]:
-        if player.unique_id == config_entry.unique_id:
-            break
-
-    if player is None:
-        return False
-
-    player.stop_polling()
-    hass.data[DOMAIN].remove(player)
-
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
