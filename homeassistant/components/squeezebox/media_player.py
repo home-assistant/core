@@ -281,10 +281,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self._player.volume:
             return int(float(self._player.volume)) / 100.0
+        return None
 
     @property
     def is_volume_muted(self):
