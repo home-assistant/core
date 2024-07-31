@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant, callback
 
 from .discovery import PGLabDiscovery, create_discovery
 
-# Define custom PGLab Config entry.
 type PGLABConfigEntry = ConfigEntry[PGLabDiscovery]
 
 
