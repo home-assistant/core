@@ -1,4 +1,4 @@
-"""Linear garage door light."""
+"""Nice G.O. light."""
 
 from typing import Any
 
@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
-from .entity import LinearEntity
+from .entity import NiceGOEntity
 
 
 async def async_setup_entry(
@@ -20,13 +20,13 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        LinearLightEntity(coordinator, device_id, device_data.name, "light")
+        NiceGOLightEntity(coordinator, device_id, device_data.name, "light")
         for device_id, device_data in coordinator.data.items()
     )
 
 
-class LinearLightEntity(LinearEntity, LightEntity):
-    """Light for Linear devices."""
+class NiceGOLightEntity(NiceGOEntity, LightEntity):
+    """Light for Nice G.O. devices."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}

@@ -1,4 +1,4 @@
-"""Base entity for Linear."""
+"""Base entity for Nice G.O."""
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -7,7 +7,7 @@ from .const import DOMAIN
 from .coordinator import NiceGODevice, NiceGOUpdateCoordinator
 
 
-class LinearEntity(CoordinatorEntity[NiceGOUpdateCoordinator]):
+class NiceGOEntity(CoordinatorEntity[NiceGOUpdateCoordinator]):
     """Common base for Nice G.O. entities."""
 
     _attr_has_entity_name = True

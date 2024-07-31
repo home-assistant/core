@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
-from .entity import LinearEntity
+from .entity import NiceGOEntity
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -27,13 +27,13 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        LinearCoverEntity(coordinator, device_id, device_data.name, "cover")
+        NiceGOCoverEntity(coordinator, device_id, device_data.name, "cover")
         for device_id, device_data in coordinator.data.items()
     )
 
 
-class LinearCoverEntity(LinearEntity, CoverEntity):
-    """Representation of a Linear cover."""
+class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
+    """Representation of a Nice G.O. cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_name = None
