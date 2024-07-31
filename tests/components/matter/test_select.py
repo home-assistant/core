@@ -107,3 +107,25 @@ async def test_microwave_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.microwave_oven_mode")
     assert state.state == "Defrost"
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_attribute_select_entities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    light_node: MatterNode,
+) -> None:
+    """Test select entities are created for attribute based discovery schema(s)."""
+    entity_id = "select.mock_dimmable_light_power_on_behavior_on_startup"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Previous"
+    assert state.attributes["options"] == ["On", "Off", "Toggle", "Previous"]
+    assert (
+        state.attributes["friendly_name"]
+        == "Mock Dimmable Light Power-on behavior on Startup"
+    )
+    set_node_attribute(light_node, 1, 6, 16387, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "On"
