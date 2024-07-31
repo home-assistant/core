@@ -4,7 +4,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
