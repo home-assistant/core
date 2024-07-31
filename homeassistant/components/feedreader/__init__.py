@@ -5,7 +5,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_URL
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_URL, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -89,13 +89,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
         storage,
     )
 
-    await coordinator.async_config_entry_first_refresh()
-
-    # workaround because coordinators without listeners won't update
-    # can be removed when we have entities to update
-    coordinator.async_add_listener(lambda: None)
+    await coordinator.async_setup()
 
     entry.runtime_data = coordinator
+
+    # we need to setup event entities before the first coordinator data fetch
+    # so that the event entities can already fetch the events during the first fetch
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.EVENT])
+
+    await coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -110,7 +112,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) 
     # if this is the last entry, remove the storage
     if len(entries) == 1:
         hass.data.pop(MY_KEY)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, Platform.EVENT)
 
 
 async def _async_update_listener(

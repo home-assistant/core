@@ -42,12 +42,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
     """Test if humidifier accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -132,7 +132,9 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
     assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 39.0%"
 
 
-async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_dehumidifier(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if dehumidifier accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -220,7 +222,9 @@ async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
     )
 
 
-async def test_hygrostat_power_state(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_hygrostat_power_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -301,7 +305,7 @@ async def test_hygrostat_power_state(hass: HomeAssistant, hk_driver, events) -> 
 
 
 async def test_hygrostat_get_humidity_range(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test if humidity range is evaluated correctly."""
     entity_id = "humidifier.test"
@@ -452,7 +456,10 @@ async def test_humidifier_with_a_missing_linked_humidity_sensor(
 
 
 async def test_humidifier_as_dehumidifier(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an invalid char_target_humidifier_dehumidifier from HomeKit."""
     entity_id = "humidifier.test"
@@ -495,7 +502,10 @@ async def test_humidifier_as_dehumidifier(
 
 
 async def test_dehumidifier_as_humidifier(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an invalid char_target_humidifier_dehumidifier from HomeKit."""
     entity_id = "humidifier.test"

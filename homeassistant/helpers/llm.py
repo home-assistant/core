@@ -277,6 +277,8 @@ class AssistAPI(API):
         intent.INTENT_GET_STATE,
         intent.INTENT_NEVERMIND,
         intent.INTENT_TOGGLE,
+        intent.INTENT_GET_CURRENT_DATE,
+        intent.INTENT_GET_CURRENT_TIME,
     }
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -322,8 +324,7 @@ class AssistAPI(API):
             (
                 "When controlling Home Assistant always call the intent tools. "
                 "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-                "When controlling a device, prefer passing just its name and its domain "
-                "(what comes before the dot in its entity id). "
+                "When controlling a device, prefer passing just name and domain. "
                 "When controlling an area, prefer passing just area name and domain."
             )
         ]
@@ -361,7 +362,7 @@ class AssistAPI(API):
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml.dump(exposed_entities))
+            prompt.append(yaml.dump(list(exposed_entities.values())))
 
         return "\n".join(prompt)
 
@@ -475,6 +476,7 @@ def _get_exposed_entities(
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
+            "domain": state.domain,
             "state": state.state,
         }
 
@@ -483,7 +485,7 @@ def _get_exposed_entities(
 
         if attributes := {
             attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal))
+            if isinstance(attr_value, (Enum, Decimal, int))
             else attr_value
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
@@ -519,7 +521,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return convert(cv.CONDITIONS_SCHEMA)
 
     if isinstance(schema, selector.ConstantSelector):
-        return {"enum": [schema.config["value"]]}
+        return convert(vol.Schema(schema.config["value"]))
 
     result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
@@ -571,7 +573,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object"}
+        return {"type": "object", "additionalProperties": True}
 
     if isinstance(schema, selector.SelectSelector):
         options = [
@@ -615,6 +617,9 @@ class ScriptTool(Tool):
         entity_registry = er.async_get(hass)
 
         self.name = split_entity_id(script_entity_id)[1]
+        if self.name[0].isdigit():
+            self.name = "_" + self.name
+        self._entity_id = script_entity_id
         self.parameters = vol.Schema({})
         entity_entry = entity_registry.async_get(script_entity_id)
         if entity_entry and entity_entry.unique_id:
@@ -715,7 +720,7 @@ class ScriptTool(Tool):
             SCRIPT_DOMAIN,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: SCRIPT_DOMAIN + "." + self.name,
+                ATTR_ENTITY_ID: self._entity_id,
                 ATTR_VARIABLES: tool_input.tool_args,
             },
             context=llm_context.context,

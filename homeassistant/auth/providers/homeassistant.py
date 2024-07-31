@@ -55,13 +55,6 @@ class InvalidUser(HomeAssistantError):
     Will not be raised when validating authentication.
     """
 
-
-class InvalidUsername(InvalidUser):
-    """Raised when invalid username is specified.
-
-    Will not be raised when validating authentication.
-    """
-
     def __init__(
         self,
         *args: object,
@@ -75,6 +68,13 @@ class InvalidUsername(InvalidUser):
             translation_key=translation_key,
             translation_placeholders=translation_placeholders,
         )
+
+
+class InvalidUsername(InvalidUser):
+    """Raised when invalid username is specified.
+
+    Will not be raised when validating authentication.
+    """
 
 
 class Data:
@@ -216,7 +216,7 @@ class Data:
                 break
 
         if index is None:
-            raise InvalidUser
+            raise InvalidUser(translation_key="user_not_found")
 
         self.users.pop(index)
 
@@ -232,7 +232,7 @@ class Data:
                 user["password"] = self.hash_password(new_password, True).decode()
                 break
         else:
-            raise InvalidUser
+            raise InvalidUser(translation_key="user_not_found")
 
     @callback
     def _validate_new_username(self, new_username: str) -> None:
@@ -275,7 +275,7 @@ class Data:
                 self._async_check_for_not_normalized_usernames(self._data)
                 break
         else:
-            raise InvalidUser
+            raise InvalidUser(translation_key="user_not_found")
 
     async def async_save(self) -> None:
         """Save data."""

@@ -1,9 +1,9 @@
 """Session fixtures."""
 
+from collections.abc import Generator
 from unittest import mock
 
 import pytest
-from typing_extensions import Generator
 
 
 class MockServices:

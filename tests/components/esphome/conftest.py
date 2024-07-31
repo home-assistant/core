@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -24,7 +24,6 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
 )
 import pytest
-from typing_extensions import AsyncGenerator
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import dashboard

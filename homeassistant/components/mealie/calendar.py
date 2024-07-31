@@ -10,7 +10,7 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MealieConfigEntry, MealieCoordinator
+from .coordinator import MealieConfigEntry, MealieMealplanCoordinator
 from .entity import MealieEntity
 
 
@@ -20,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.mealplan_coordinator
 
     async_add_entities(
         MealieMealplanCalendarEntity(coordinator, entry_type)
@@ -47,7 +47,7 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
     """A calendar entity."""
 
     def __init__(
-        self, coordinator: MealieCoordinator, entry_type: MealplanEntryType
+        self, coordinator: MealieMealplanCoordinator, entry_type: MealplanEntryType
     ) -> None:
         """Create the Calendar entity."""
         super().__init__(coordinator, entry_type.name.lower())
@@ -60,7 +60,8 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         mealplans = self.coordinator.data[self._entry_type]
         if not mealplans:
             return None
-        return _get_event_from_mealplan(mealplans[0])
+        sorted_mealplans = sorted(mealplans, key=lambda x: x.mealplan_date)
+        return _get_event_from_mealplan(sorted_mealplans[0])
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime

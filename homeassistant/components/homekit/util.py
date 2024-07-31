@@ -106,7 +106,7 @@ from .const import (
     VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -366,7 +366,8 @@ def async_show_setup_message(
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry_id]
+    entry = cast(HomeKitConfigEntry, hass.config_entries.async_get_entry(entry_id))
+    entry_data = entry.runtime_data
 
     entry_data.pairing_qr = buffer.getvalue()
     entry_data.pairing_qr_secret = pairing_secret
@@ -433,13 +434,13 @@ def temperature_to_states(temperature: float, unit: str) -> float:
 
 def density_to_air_quality(density: float) -> int:
     """Map PM2.5 µg/m3 density to HomeKit AirQuality level."""
-    if density <= 12:  # US AQI 0-50 (HomeKit: Excellent)
+    if density <= 9:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
     if density <= 35.4:  # US AQI 51-100 (HomeKit: Good)
         return 2
     if density <= 55.4:  # US AQI 101-150 (HomeKit: Fair)
         return 3
-    if density <= 150.4:  # US AQI 151-200 (HomeKit: Inferior)
+    if density <= 125.4:  # US AQI 151-200 (HomeKit: Inferior)
         return 4
     return 5  # US AQI 201+ (HomeKit: Poor)
 

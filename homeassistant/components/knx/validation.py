@@ -30,9 +30,10 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
     return dpt_value_validator
 
 
+dpt_base_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 string_type_validator = dpt_subclass_validator(DPTString)
+sensor_type_validator = vol.Any(numeric_type_validator, string_type_validator)
 
 
 def ga_validator(value: Any) -> str | int:
@@ -50,10 +51,25 @@ def ga_validator(value: Any) -> str | int:
     return value
 
 
+def maybe_ga_validator(value: Any) -> str | int | None:
+    """Validate a group address or None."""
+    # this is a version of vol.Maybe(ga_validator) that delivers the
+    # error message of ga_validator if validation fails.
+    return ga_validator(value) if value is not None else None
+
+
 ga_list_validator = vol.All(
     cv.ensure_list,
     [ga_validator],
     vol.IsTrue("value must be a group address or a list containing group addresses"),
+)
+
+ga_list_validator_optional = vol.Maybe(
+    vol.All(
+        cv.ensure_list,
+        [ga_validator],
+        vol.Any(vol.IsTrue(), vol.SetTo(None)),  # avoid empty lists -> None
+    )
 )
 
 ia_validator = vol.Any(

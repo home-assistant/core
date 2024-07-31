@@ -1,5 +1,6 @@
 """Common fixtures for the Ecovacs tests."""
 
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -9,7 +10,6 @@ from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
 from deebot_client.models import Credentials
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.ecovacs import PLATFORMS
 from homeassistant.components.ecovacs.const import DOMAIN
@@ -115,6 +115,27 @@ def mock_mqtt_client(mock_authenticator: Mock) -> Generator[Mock]:
         client._authenticator = mock_authenticator
         client.subscribe.return_value = lambda: None
         yield client
+
+
+@pytest.fixture
+def mock_vacbot(device_fixture: str) -> Generator[Mock]:
+    """Mock the legacy VacBot."""
+    with patch(
+        "homeassistant.components.ecovacs.controller.VacBot",
+        autospec=True,
+    ) as mock:
+        vacbot = mock.return_value
+        vacbot.vacuum = load_json_object_fixture(
+            f"devices/{device_fixture}/device.json", DOMAIN
+        )
+        vacbot.statusEvents = Mock()
+        vacbot.batteryEvents = Mock()
+        vacbot.lifespanEvents = Mock()
+        vacbot.errorEvents = Mock()
+        vacbot.battery_status = None
+        vacbot.fan_speed = None
+        vacbot.components = {}
+        yield vacbot
 
 
 @pytest.fixture

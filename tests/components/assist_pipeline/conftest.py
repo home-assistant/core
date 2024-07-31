@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select

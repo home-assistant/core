@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -25,7 +25,7 @@ STATES: Final = "states"
 def _hass_domain_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
-        config = {CONF_PLATFORM: HA_DOMAIN, STATES: config}
+        config = {CONF_PLATFORM: HOMEASSISTANT_DOMAIN, STATES: config}
 
     return config
 
@@ -67,7 +67,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
     # Ensure Home Assistant platform always loaded.
     hass.async_create_task(
-        component.async_setup_platform(HA_DOMAIN, {"platform": HA_DOMAIN, STATES: []}),
+        component.async_setup_platform(
+            HOMEASSISTANT_DOMAIN, {"platform": HOMEASSISTANT_DOMAIN, STATES: []}
+        ),
         eager_start=True,
     )
     component.async_register_entity_service(

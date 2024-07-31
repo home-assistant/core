@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any, cast
 
@@ -30,23 +29,16 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_RETAIN,
-    CONF_SCHEMA,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_SCHEMA, CONF_STATE_TOPIC
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -157,47 +149,6 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-def _fail_legacy_config(discovery: bool) -> Callable[[ConfigType], ConfigType]:
-    @callback
-    def _fail_legacy_config_callback(config: ConfigType) -> ConfigType:
-        """Fail the legacy schema."""
-        if CONF_SCHEMA not in config:
-            return config
-
-        if config[CONF_SCHEMA] == "legacy":
-            raise vol.Invalid(
-                "The support for the `legacy` MQTT vacuum schema has been removed"
-            )
-
-        if discovery:
-            _LOGGER.warning(
-                "The `schema` option is deprecated for MQTT %s, but "
-                "it was used in a discovery payload. Please contact the maintainer "
-                "of the integration or service that supplies the config, and suggest "
-                "to remove the option. Got %s at discovery topic %s",
-                vacuum.DOMAIN,
-                config,
-                getattr(config, "discovery_data")["discovery_topic"],
-            )
-            return config
-
-        translation_key = "deprecation_mqtt_schema_vacuum_yaml"
-        hass = async_get_hass()
-        async_create_issue(
-            hass,
-            DOMAIN,
-            translation_key,
-            breaks_in_ha_version="2024.8.0",
-            is_fixable=False,
-            translation_key=translation_key,
-            learn_more_url=MQTT_VACUUM_DOCS_URL,
-            severity=IssueSeverity.WARNING,
-        )
-        return config
-
-    return _fail_legacy_config_callback
-
-
 VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
@@ -227,15 +178,20 @@ VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 DISCOVERY_SCHEMA = vol.All(
-    _fail_legacy_config(discovery=True),
     VACUUM_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
-    cv.deprecated(CONF_SCHEMA),
+    # Do not fail a config is the schema option is still present,
+    # De option was deprecated with HA Core 2024.2 and removed with HA Core 2024.8.
+    # As we allow extra options, and we will remove this check silently
+    # with HA Core 2025.8.0, we will only warn,
+    # if a adiscovery config still uses this option.
+    cv.removed(CONF_SCHEMA, raise_if_present=False),
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    _fail_legacy_config(discovery=False),
     VACUUM_BASE_SCHEMA,
-    cv.deprecated(CONF_SCHEMA),
+    # The schema options was removed with HA Core 2024.8,
+    # the cleanup is planned for HA Core 2025.8.
+    cv.removed(CONF_SCHEMA, raise_if_present=True),
 )
 
 

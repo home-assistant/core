@@ -61,7 +61,7 @@ def register_words_fixture():
 
 
 @pytest.fixture(name="config_addon")
-def config_addon_fixture():
+def config_addon_fixture() -> dict[str, Any] | None:
     """Add extra configuration items."""
     return None
 

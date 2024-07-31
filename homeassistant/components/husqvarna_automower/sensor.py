@@ -5,8 +5,10 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
 from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons
+from aioautomower.utils import naive_to_aware
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +20,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -184,6 +187,8 @@ RESTRICTED_REASONS: list = [
     RestrictedReasons.WEEK_SCHEDULE.lower(),
 ]
 
+STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
+
 
 @callback
 def _get_work_area_names(data: MowerAttributes) -> list[str]:
@@ -191,16 +196,21 @@ def _get_work_area_names(data: MowerAttributes) -> list[str]:
     if TYPE_CHECKING:
         # Sensor does not get created if it is None
         assert data.work_areas is not None
-    return [data.work_areas[work_area_id].name for work_area_id in data.work_areas]
+    work_area_list = [
+        data.work_areas[work_area_id].name for work_area_id in data.work_areas
+    ]
+    work_area_list.append(STATE_NO_WORK_AREA_ACTIVE)
+    return work_area_list
 
 
 @callback
 def _get_current_work_area_name(data: MowerAttributes) -> str:
     """Return the name of the current work area."""
+    if data.mower.work_area_id is None:
+        return STATE_NO_WORK_AREA_ACTIVE
     if TYPE_CHECKING:
         # Sensor does not get created if values are None
         assert data.work_areas is not None
-        assert data.mower.work_area_id is not None
     return data.work_areas[data.mower.work_area_id].name
 
 
@@ -317,7 +327,10 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.planner.next_start_datetime,
+        value_fn=lambda data: naive_to_aware(
+            data.planner.next_start_datetime_naive,
+            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
+        ),
     ),
     AutomowerSensorEntityDescription(
         key="error",

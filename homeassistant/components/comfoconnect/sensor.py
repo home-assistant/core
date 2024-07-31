@@ -327,7 +327,7 @@ class ComfoConnectSensor(SensorEntity):
             self._ccb.comfoconnect.register_sensor, self.entity_description.sensor_id
         )
 
-    def _handle_update(self, value):
+    def _handle_update(self, value: float) -> None:
         """Handle update callbacks."""
         _LOGGER.debug(
             "Handle update for sensor %s (%d): %s",

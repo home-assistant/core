@@ -9,7 +9,6 @@ from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -18,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, HUB_EXCEPTIONS
 from .coordinator import PowerviewShadeUpdateCoordinator
-from .model import PowerviewDeviceInfo, PowerviewEntryData
+from .model import PowerviewConfigEntry, PowerviewDeviceInfo, PowerviewEntryData
 from .shade_data import PowerviewShadeData
 
 PARALLEL_UPDATES = 1
@@ -36,7 +35,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
     """Set up Hunter Douglas PowerView from a config entry."""
 
     config = entry.data
@@ -100,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # populate raw shade data into the coordinator for diagnostics
     coordinator.data.store_group_data(shade_data)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = PowerviewEntryData(
+    entry.runtime_data = PowerviewEntryData(
         api=pv_request,
         room_data=room_data.processed,
         scene_data=scene_data.processed,
@@ -126,8 +125,6 @@ async def async_get_device_info(hub: Hub) -> PowerviewDeviceInfo:
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
