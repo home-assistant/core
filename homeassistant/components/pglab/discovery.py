@@ -78,11 +78,10 @@ class DiscoverDeviceInfo:
     def add_entity_id(self, entity: Entity) -> None:
         """Add the entity id."""
 
-        # Do some checking, be sure that the entity has a unique id.
-        if entity.unique_id:
-            self._entities.append((entity.platform.domain, entity.unique_id))
-        else:
-            raise PGLabDiscoveryError("Unexpected entity unique id")
+        # PGLabEntity always have unique IDs
+        if TYPE_CHECKING:
+            assert entity.unique_id is not None
+        self._entities.append((entity.platform.domain, entity.unique_id))
 
     @property
     def hash(self) -> int:
