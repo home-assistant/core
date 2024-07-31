@@ -505,6 +505,9 @@ class AudioSettings:
     samples_per_chunk: int | None = None
     """Number of samples that will be in each audio chunk (None for no chunking)."""
 
+    silence_seconds: float = 0.5
+    """Seconds of silence after voice command has ended."""
+
     def __post_init__(self) -> None:
         """Verify settings post-initialization."""
         if (self.noise_suppression_level < 0) or (self.noise_suppression_level > 4):
@@ -909,7 +912,9 @@ class PipelineRun:
             # Transcribe audio stream
             stt_vad: VoiceCommandSegmenter | None = None
             if self.audio_settings.is_vad_enabled:
-                stt_vad = VoiceCommandSegmenter()
+                stt_vad = VoiceCommandSegmenter(
+                    silence_seconds=self.audio_settings.silence_seconds
+                )
 
             result = await self.stt_provider.async_process_audio_stream(
                 metadata,
