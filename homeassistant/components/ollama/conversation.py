@@ -271,7 +271,7 @@ class OllamaConversationEntity(
                 _LOGGER.debug("Tool response: %s", tool_response)
                 message_history.messages.append(
                     ollama.Message(
-                        role=MessageRole.TOOL.value,  # type: ignore[typeddict-item]
+                        role=MessageRole.TOOL.value,
                         content=json.dumps(tool_response),
                     )
                 )
