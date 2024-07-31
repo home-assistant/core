@@ -232,6 +232,8 @@ build.json @home-assistant/supervisor
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221
 /homeassistant/components/button/ @home-assistant/core
 /tests/components/button/ @home-assistant/core
+/homeassistant/components/bzutech/ @enioo22
+/tests/components/bzutech/ @enioo22
 /homeassistant/components/calendar/ @home-assistant/core
 /tests/components/calendar/ @home-assistant/core
 /homeassistant/components/camera/ @home-assistant/core

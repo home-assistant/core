@@ -861,6 +861,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "bzutech": {
+      "name": "Bzu Tech",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "caldav": {
       "name": "CalDAV",
       "integration_type": "hub",

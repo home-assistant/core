@@ -556,6 +556,9 @@ bthome-ble==3.9.1
 # homeassistant.components.buienradar
 buienradar==1.0.6
 
+# homeassistant.components.bzutech
+bzutech==2.3.2
+
 # homeassistant.components.dhcp
 cached_ipaddress==0.3.0
 
