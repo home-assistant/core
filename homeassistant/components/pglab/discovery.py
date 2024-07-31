@@ -114,10 +114,10 @@ class PGLabDiscovery:
         # Check if the discovery message is in valid json format.
         try:
             payload = json.loads(msg.payload)
-        except ValueError:
+        except ValueError as err:
             raise PGLabDiscoveryError(
                 f"Can't decode discovery payload: {msg.payload!r}"
-            ) from None
+            ) from err
 
         device_id = "id"
 
