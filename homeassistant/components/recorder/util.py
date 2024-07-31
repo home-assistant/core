@@ -357,7 +357,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
     raise UnsupportedDialect
 
 
-def _fail_unsupported_version(
+def _raise_if_version_unsupported(
     server_version: str, dialect_name: str, minimum_version: str
 ) -> NoReturn:
     """Warn about unsupported database version."""
@@ -517,11 +517,11 @@ def setup_connection_for_dialect(
             version = _extract_version_from_server_response_or_raise(version_string)
 
             if version < MIN_VERSION_SQLITE:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
 
-            # No elif here since _fail_unsupported_version raises
+            # No elif here since _raise_if_version_unsupported raises
             if version < UPCOMING_MIN_VERSION_SQLITE:
                 instance.hass.add_job(
                     _async_create_issue_deprecated_version,
@@ -566,7 +566,7 @@ def setup_connection_for_dialect(
 
             if is_maria_db:
                 if not version or version < MIN_VERSION_MARIA_DB:
-                    _fail_unsupported_version(
+                    _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
                 if version and (
@@ -582,7 +582,7 @@ def setup_connection_for_dialect(
                     )
 
             elif not version or version < MIN_VERSION_MYSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
 
@@ -604,7 +604,7 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
             if not version or version < MIN_VERSION_PGSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
 
