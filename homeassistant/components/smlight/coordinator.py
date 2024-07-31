@@ -23,7 +23,6 @@ class SmData:
 
     sensors: Sensors
     info: Info
-    internet: bool
 
 
 class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
@@ -78,7 +77,6 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
             return SmData(
                 sensors=await self.client.get_sensors(),
                 info=await self.client.get_info(),
-                internet=False,
             )
         except SmlightConnectionError as err:
             raise UpdateFailed(err) from err
