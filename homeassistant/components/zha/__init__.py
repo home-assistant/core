@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
     try:
-        zha_gateway.async_initialize()
+        await zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,
