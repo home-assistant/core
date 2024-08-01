@@ -36,7 +36,7 @@ env:
   CACHE_VERSION: 9
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
-  HA_SHORT_VERSION: "2024.8"
+  HA_SHORT_VERSION: "2024.9"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
@@ -904,6 +904,7 @@ jobs:
             cov_params+=(--cov-report=xml)
           fi
 
+          echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \

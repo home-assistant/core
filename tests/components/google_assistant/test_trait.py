@@ -76,7 +76,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -186,12 +186,12 @@ async def test_onoff_group(hass: HomeAssistant) -> None:
 
     assert trt_off.query_attributes() == {"on": False}
 
-    on_calls = async_mock_service(hass, HA_DOMAIN, SERVICE_TURN_ON)
+    on_calls = async_mock_service(hass, HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "group.bla"}
 
-    off_calls = async_mock_service(hass, HA_DOMAIN, SERVICE_TURN_OFF)
+    off_calls = async_mock_service(hass, HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF)
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "group.bla"}

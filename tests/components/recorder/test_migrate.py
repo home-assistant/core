@@ -87,10 +87,23 @@ async def test_schema_update_calls(
         call(instance, hass, engine, session_maker, version + 1, 0)
         for version in range(db_schema.SCHEMA_VERSION)
     ]
-    status = migration.SchemaValidationStatus(0, True, set(), 0)
     assert migrate_schema.mock_calls == [
-        call(instance, hass, engine, session_maker, status, 0),
-        call(instance, hass, engine, session_maker, status, db_schema.SCHEMA_VERSION),
+        call(
+            instance,
+            hass,
+            engine,
+            session_maker,
+            migration.SchemaValidationStatus(0, True, set(), 0),
+            42,
+        ),
+        call(
+            instance,
+            hass,
+            engine,
+            session_maker,
+            migration.SchemaValidationStatus(42, True, set(), 0),
+            db_schema.SCHEMA_VERSION,
+        ),
     ]
 
 
@@ -117,7 +130,9 @@ async def test_migration_in_progress(
             new=create_engine_test,
         ),
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, wait_recorder_setup=False
+        )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
 
@@ -129,8 +144,25 @@ async def test_migration_in_progress(
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
+@pytest.mark.parametrize(
+    (
+        "func_to_patch",
+        "expected_setup_result",
+        "expected_pn_create",
+        "expected_pn_dismiss",
+    ),
+    [
+        ("migrate_schema_non_live", False, 1, 0),
+        ("migrate_schema_live", True, 2, 1),
+    ],
+)
 async def test_database_migration_failed(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    expected_pn_create: int,
+    expected_pn_dismiss: int,
 ) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -141,7 +173,7 @@ async def test_database_migration_failed(
             new=create_engine_test,
         ),
         patch(
-            "homeassistant.components.recorder.migration._apply_update",
+            f"homeassistant.components.recorder.migration.{func_to_patch}",
             side_effect=ValueError,
         ),
         patch(
@@ -153,7 +185,9 @@ async def test_database_migration_failed(
             side_effect=pn.dismiss,
         ) as mock_dismiss,
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, expected_setup_result=expected_setup_result
+        )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
@@ -161,8 +195,8 @@ async def test_database_migration_failed(
         await hass.async_block_till_done()
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    assert len(mock_create.mock_calls) == 2
-    assert len(mock_dismiss.mock_calls) == 1
+    assert len(mock_create.mock_calls) == expected_pn_create
+    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
@@ -346,7 +380,7 @@ async def test_events_during_migration_are_queued(
         ),
     ):
         await async_setup_recorder_instance(
-            hass, {"commit_interval": 0}, wait_recorder=False
+            hass, {"commit_interval": 0}, wait_recorder=False, wait_recorder_setup=False
         )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
@@ -389,7 +423,7 @@ async def test_events_during_migration_queue_exhausted(
         ),
     ):
         await async_setup_recorder_instance(
-            hass, {"commit_interval": 0}, wait_recorder=False
+            hass, {"commit_interval": 0}, wait_recorder=False, wait_recorder_setup=False
         )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
@@ -421,7 +455,15 @@ async def test_events_during_migration_queue_exhausted(
 
 @pytest.mark.parametrize(
     ("start_version", "live"),
-    [(0, True), (9, True), (16, True), (18, True), (22, True), (25, True), (43, True)],
+    [
+        (0, False),
+        (9, False),
+        (16, False),
+        (18, False),
+        (22, False),
+        (25, False),
+        (43, True),
+    ],
 )
 async def test_schema_migrate(
     hass: HomeAssistant,
@@ -500,7 +542,9 @@ async def test_schema_migrate(
             "homeassistant.components.recorder.Recorder._pre_process_startup_events",
         ),
     ):
-        await async_setup_recorder_instance(hass, wait_recorder=False)
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, wait_recorder_setup=live
+        )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
         await recorder_helper.async_wait_recorder(hass)
