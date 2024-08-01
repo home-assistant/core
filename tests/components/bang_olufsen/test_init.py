@@ -31,7 +31,6 @@ async def test_setup_entry(
         identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
     )
     assert device is not None
-    # Is usually TEST_NAME, but is updated to the device's friendly name by _update_name_and_beolink
     assert device.name == TEST_NAME
     assert device.model == TEST_MODEL_BALANCE
 
