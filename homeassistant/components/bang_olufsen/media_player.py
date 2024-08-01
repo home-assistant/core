@@ -8,7 +8,7 @@ import logging
 from typing import Any, cast
 
 from mozart_api import __version__ as MOZART_API_VERSION
-from mozart_api.exceptions import ApiException, NotFoundException
+from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
     Art,
@@ -46,7 +46,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
-from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -125,8 +125,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             serial_number=self._unique_id,
         )
         self._attr_unique_id = self._unique_id
-
-        # self._attr_beolink_jid = self._beolink_jid
 
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
@@ -824,75 +822,23 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Use the touch to join if no entities have been defined
         if len(group_members) == 0:
-            await self.async_beolink_join()
-            return
+            await self._client.join_latest_beolink_experience()
+        else:
+            # Get JID for each group member
+            for group_member in group_members:
+                # Check if an invalid entity
+                if (beolink_jid := self._get_beolink_jid(group_member)) is None:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="missing_beolink_jid",
+                        translation_placeholders={
+                            "group_member": group_member,
+                        },
+                    )
 
-        jids = []
-        # Get JID for each group member
-        for group_member in group_members:
-            # Check if an invalid entity
-            if (jid := self._get_beolink_jid(group_member)) is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="missing_beolink_jid",
-                    translation_placeholders={
-                        "group_member": group_member,
-                    },
-                )
-
-            jids.append(jid)
-
-        await self.async_beolink_expand(jids)
+                # Expand to device
+                await self._client.post_beolink_expand(jid=beolink_jid)
 
     async def async_unjoin_player(self) -> None:
         """Unjoin Beolink session. End session if leader."""
-        await self.async_beolink_leave()
-
-    # Custom services:
-    async def async_beolink_join(
-        self, beolink_jid: str | None = None
-    ) -> ServiceResponse:
-        """Join a Beolink multi-room experience."""
-        if beolink_jid is None:
-            response = await self._client.join_latest_beolink_experience()
-        else:
-            response = await self._client.join_beolink_peer(jid=beolink_jid)
-
-        if response:
-            return response.dict(by_alias=True, exclude={}, exclude_none=True)
-        return None
-
-    async def async_beolink_expand(
-        self, beolink_jids: list[str] | None = None, all_discovered: bool = False
-    ) -> ServiceResponse:
-        """Expand a Beolink multi-room experience with a device or devices."""
-        response: dict[str, Any] = {"not_on_network": []}
-
-        # Ensure that the current source is expandable
-        with contextlib.suppress(KeyError):
-            if not self._beolink_sources[cast(str, self._source_change.id)]:
-                return {"invalid_source": self.source}
-
-        # Expand to all discovered devices
-        if all_discovered:
-            peers = await self._client.get_beolink_peers()
-
-            for peer in peers:
-                await self._client.post_beolink_expand(jid=peer.jid)
-
-        # Try to expand to all defined devices
-        elif beolink_jids:
-            for beolink_jid in beolink_jids:
-                try:
-                    await self._client.post_beolink_expand(jid=beolink_jid)
-                except NotFoundException:
-                    response["not_on_network"].append(beolink_jid)
-
-            if len(response["not_on_network"]) > 0:
-                return response
-
-        return None
-
-    async def async_beolink_leave(self) -> None:
-        """Leave the current Beolink experience."""
         await self._client.post_beolink_leave()

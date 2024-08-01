@@ -3,10 +3,8 @@
 from contextlib import nullcontext as does_not_raise
 from unittest.mock import ANY, patch
 
-from mozart_api.exceptions import NotFoundException
 from mozart_api.models import BeolinkLeader, PlaybackContentMetadata
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_STATES,
@@ -49,18 +47,11 @@ from .const import (
     TEST_DEEZER_PLAYLIST,
     TEST_DEEZER_TRACK,
     TEST_FALLBACK_SOURCES,
-    TEST_FRIENDLY_NAME,
     TEST_FRIENDLY_NAME_2,
-    TEST_FRIENDLY_NAME_3,
-    TEST_FRIENDLY_NAME_4,
-    TEST_JID_1,
     TEST_JID_2,
-    TEST_JID_3,
-    TEST_JID_4,
     TEST_MEDIA_PLAYER_ENTITY_ID,
     TEST_MEDIA_PLAYER_ENTITY_ID_2,
     TEST_MEDIA_PLAYER_ENTITY_ID_3,
-    TEST_NAME,
     TEST_OVERLAY_INVALID_OFFSET_VOLUME_TTS,
     TEST_OVERLAY_OFFSET_VOLUME_TTS,
     TEST_PLAYBACK_ERROR,
@@ -112,9 +103,9 @@ async def test_initialization(
     mock_mozart_client.get_product_state.assert_called_once()
     mock_mozart_client.get_available_sources.assert_called_once()
     mock_mozart_client.get_remote_menu.assert_called_once()
-    mock_mozart_client.get_beolink_self.assert_called_once()
-    mock_mozart_client.get_beolink_peers.assert_called_once()
-    mock_mozart_client.get_beolink_listeners.assert_called_once()
+    # mock_mozart_client.get_beolink_self.assert_called_once()
+    # mock_mozart_client.get_beolink_peers.assert_called_once()
+    # mock_mozart_client.get_beolink_listeners.assert_called_once()
 
 
 async def test_async_update_sources_audio_only(
@@ -477,26 +468,21 @@ async def test_async_update_beolink_line_in(
     )
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states.attributes["beolink"]["self"] == {TEST_FRIENDLY_NAME: TEST_JID_1}
-    assert states.attributes["beolink"]["peers"] == {
-        TEST_FRIENDLY_NAME_2: TEST_JID_2,
-        TEST_FRIENDLY_NAME_3: TEST_JID_3,
-    }
+    assert states.attributes["group_members"] == []
 
-    assert "listeners" not in states.attributes["beolink"]
-    assert "leader" not in states.attributes["beolink"]
-
-    # call_count is 2 because the method is called on startup
-    assert mock_mozart_client.get_beolink_peers.call_count == 2
-    assert mock_mozart_client.get_beolink_listeners.call_count == 2
+    assert mock_mozart_client.get_beolink_listeners.call_count == 1
 
 
 async def test_async_update_beolink_listener(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant, mock_mozart_client, mock_config_entry, mock_config_entry_2
 ) -> None:
     """Test _async_update_beolink as a listener."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Add another entity
+    mock_config_entry_2.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_2.entry_id)
 
     # Runs _async_update_beolink
     async_dispatcher_send(
@@ -504,23 +490,19 @@ async def test_async_update_beolink_listener(
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_METADATA}",
         PlaybackContentMetadata(
             remote_leader=BeolinkLeader(
-                friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4
+                friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2
             )
         ),
     )
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states.attributes["beolink"]["self"] == {TEST_FRIENDLY_NAME: TEST_JID_1}
-    assert states.attributes["beolink"]["peers"] == {
-        TEST_FRIENDLY_NAME_2: TEST_JID_2,
-        TEST_FRIENDLY_NAME_3: TEST_JID_3,
-    }
-    assert states.attributes["beolink"]["leader"] == {TEST_FRIENDLY_NAME_4: TEST_JID_4}
 
-    assert "listeners" not in states.attributes["beolink"]
+    assert states.attributes["group_members"] == [
+        TEST_MEDIA_PLAYER_ENTITY_ID_2,
+        TEST_MEDIA_PLAYER_ENTITY_ID,
+    ]
 
-    assert mock_mozart_client.get_beolink_peers.call_count == 2
-    assert mock_mozart_client.get_beolink_listeners.call_count == 1
+    assert mock_mozart_client.get_beolink_listeners.call_count == 0
 
 
 async def test_async_mute_volume(
@@ -1222,23 +1204,18 @@ async def test_async_join_players(
         BangOlufsenSource.TIDAL,
     )
 
-    # Calling the async_beolink_join method from a service call causes the method to not be awaited.
-    # Replace the real service call with a patch.
-    with patch(
-        "homeassistant.components.bang_olufsen.media_player.BangOlufsenMediaPlayer.async_beolink_join"
-    ) as join_call:
-        await hass.services.async_call(
-            "media_player",
-            "join",
-            {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_GROUP_MEMBERS: group_members,
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "media_player",
+        "join",
+        {
+            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            ATTR_GROUP_MEMBERS: group_members,
+        },
+        blocking=True,
+    )
 
     assert mock_mozart_client.post_beolink_expand.call_count == expand_count
-    assert join_count == join_call.call_count
+    assert mock_mozart_client.join_latest_beolink_experience.call_count == join_count
 
 
 async def test_async_join_players_invalid_media_player(
@@ -1287,241 +1264,3 @@ async def test_async_unjoin_player(
     )
 
     mock_mozart_client.post_beolink_leave.assert_called_once()
-
-
-async def test_async_beolink_join(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_join."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    # Check no service response
-    mock_mozart_client.join_beolink_peer.return_value = None
-
-    assert await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_join",
-        {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            "beolink_jid": TEST_JID_2,
-        },
-        blocking=True,
-        return_response=True,
-    ) == {TEST_MEDIA_PLAYER_ENTITY_ID: None}
-
-    mock_mozart_client.join_beolink_peer.assert_called_once_with(jid=TEST_JID_2)
-
-
-async def test_async_beolink_join_touch_to_join(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_join using the "Touch to join" method."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_join",
-        {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-        },
-        blocking=True,
-    )
-
-    mock_mozart_client.join_latest_beolink_experience.assert_called_once()
-
-
-async def test_async_beolink_expand(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_expand."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_expand",
-        {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            "beolink_jids": [
-                TEST_JID_2,
-                TEST_JID_3,
-            ],
-        },
-        blocking=True,
-        return_response=True,
-    ) == {TEST_MEDIA_PLAYER_ENTITY_ID: None}
-
-    mock_mozart_client.post_beolink_expand.assert_any_call(jid=TEST_JID_2)
-    mock_mozart_client.post_beolink_expand.assert_any_call(jid=TEST_JID_3)
-    assert mock_mozart_client.post_beolink_expand.call_count == 2
-
-
-async def test_async_beolink_expand_not_on_network(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_expand with a device not on the network."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    mock_mozart_client.post_beolink_expand.side_effect = NotFoundException()
-
-    assert await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_expand",
-        {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            "beolink_jids": [TEST_JID_2],
-        },
-        blocking=True,
-        return_response=True,
-    ) == {TEST_MEDIA_PLAYER_ENTITY_ID: {"not_on_network": [TEST_JID_2]}}
-
-    mock_mozart_client.post_beolink_expand.assert_called_once_with(jid=TEST_JID_2)
-
-
-async def test_async_beolink_expand_invalid_source(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_expand with an invalid source."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    # Change to an invalid Beolink source
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
-        BangOlufsenSource.LINE_IN,
-    )
-
-    assert await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_expand",
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
-        blocking=True,
-        return_response=True,
-    ) == {
-        TEST_MEDIA_PLAYER_ENTITY_ID: {
-            "invalid_source": BangOlufsenSource.CHROMECAST.name
-        }
-    }
-
-    mock_mozart_client.post_beolink_expand.assert_not_called()
-
-
-async def test_async_beolink_expand_all_discovered(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_expand to all of the discovered devices.."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_expand",
-        {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            "all_discovered": True,
-        },
-        blocking=True,
-    )
-
-    assert mock_mozart_client.get_beolink_peers.call_count == 2
-    mock_mozart_client.post_beolink_expand.assert_any_call(jid=TEST_JID_2)
-    mock_mozart_client.post_beolink_expand.assert_any_call(jid=TEST_JID_3)
-    assert mock_mozart_client.post_beolink_expand.call_count == 2
-
-
-@pytest.mark.parametrize(
-    ("beolink_jids", "expected_result", "call_count"),
-    [
-        # Valid JIDs
-        ([TEST_JID_1, TEST_JID_2], does_not_raise(), 2),
-        # Malformed JIDs
-        ([TEST_JID_1, TEST_NAME], pytest.raises(MultipleInvalid), 0),
-    ],
-)
-async def test_async_beolink_unexpand(
-    beolink_jids,
-    expected_result,
-    call_count,
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_unexpand."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    with expected_result:
-        await hass.services.async_call(
-            "bang_olufsen",
-            "beolink_unexpand",
-            {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                "beolink_jids": beolink_jids,
-            },
-            blocking=True,
-        )
-
-    assert mock_mozart_client.post_beolink_unexpand.call_count == call_count
-
-
-async def test_async_beolink_leave(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_leave."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_leave",
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
-        blocking=True,
-    )
-
-    mock_mozart_client.post_beolink_leave.assert_called_once()
-
-
-async def test_async_beolink_allstandby(
-    hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
-) -> None:
-    """Test async_beolink_allstandby."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    await hass.services.async_call(
-        "bang_olufsen",
-        "beolink_allstandby",
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
-        blocking=True,
-    )
-
-    mock_mozart_client.post_beolink_allstandby.assert_called_once()
