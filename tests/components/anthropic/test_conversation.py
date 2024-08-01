@@ -67,7 +67,7 @@ async def test_error_handling(
         ),
     ):
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+            hass, "hello", None, Context(), agent_id="conversation.claude"
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -90,7 +90,7 @@ async def test_template_error(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+            hass, "hello", None, Context(), agent_id="conversation.claude"
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -124,7 +124,7 @@ async def test_template_variables(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
-            hass, "hello", None, context, agent_id=mock_config_entry.entry_id
+            hass, "hello", None, context, agent_id="conversation.claude"
         )
 
     assert (
@@ -140,9 +140,7 @@ async def test_conversation_agent(
     mock_init_component,
 ) -> None:
     """Test Anthropic Agent."""
-    agent = conversation.get_agent_manager(hass).async_get_agent(
-        mock_config_entry.entry_id
-    )
+    agent = conversation.agent_manager.async_get_agent(hass, "conversation.claude")
     assert agent.supported_languages == "*"
 
 
@@ -154,7 +152,7 @@ async def test_function_call(
     mock_init_component,
 ) -> None:
     """Test function call from the assistant."""
-    agent_id = mock_config_entry_with_assist.entry_id
+    agent_id = "conversation.claude"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -296,7 +294,7 @@ async def test_function_exception(
     mock_init_component,
 ) -> None:
     """Test function call with exception."""
-    agent_id = mock_config_entry_with_assist.entry_id
+    agent_id = "conversation.claude"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -409,7 +407,7 @@ async def test_assist_api_tools_conversion(
     ):
         assert await async_setup_component(hass, component, {})
 
-    agent_id = mock_config_entry_with_assist.entry_id
+    agent_id = "conversation.claude"
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
@@ -448,7 +446,7 @@ async def test_unknown_hass_api(
     )
 
     result = await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        hass, "hello", None, Context(), agent_id="conversation.claude"
     )
 
     assert result == snapshot
@@ -463,13 +461,13 @@ async def test_conversation_id(
 ) -> None:
     """Test conversation ID is honored."""
     result = await conversation.async_converse(
-        hass, "hello", None, None, agent_id=mock_config_entry.entry_id
+        hass, "hello", None, None, agent_id="conversation.claude"
     )
 
     conversation_id = result.conversation_id
 
     result = await conversation.async_converse(
-        hass, "hello", conversation_id, None, agent_id=mock_config_entry.entry_id
+        hass, "hello", conversation_id, None, agent_id="conversation.claude"
     )
 
     assert result.conversation_id == conversation_id
@@ -477,13 +475,13 @@ async def test_conversation_id(
     unknown_id = ulid.ulid()
 
     result = await conversation.async_converse(
-        hass, "hello", unknown_id, None, agent_id=mock_config_entry.entry_id
+        hass, "hello", unknown_id, None, agent_id="conversation.claude"
     )
 
     assert result.conversation_id != unknown_id
 
     result = await conversation.async_converse(
-        hass, "hello", "koala", None, agent_id=mock_config_entry.entry_id
+        hass, "hello", "koala", None, agent_id="conversation.claude"
     )
 
     assert result.conversation_id == "koala"
