@@ -209,11 +209,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """
         if self.info.primary_value.value is None:
             return None
-        if self._supports_dimming:
-            # Dimming is supported and the brightness is encoded in the primary value
-            return round((cast(int, self.info.primary_value.value) / 99) * 255)
-        # Binary switch is either on or off
-        return 255 if self.info.primary_value.value else 0
+        return round((cast(int, self.info.primary_value.value) / 99) * 255)
 
     @property
     def color_mode(self) -> str | None:
