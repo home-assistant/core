@@ -65,10 +65,10 @@ async def async_setup_entry(
     knx_module: KNXModule = hass.data[DOMAIN]
 
     entities: list[KnxEntity] = []
-    if yaml_config := hass.data[DATA_KNX_CONFIG].get(Platform.LIGHT):
+    if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.LIGHT):
         entities.extend(
-            KnxYamlLight(knx_module.xknx, entity_config)
-            for entity_config in yaml_config
+            KnxYamlLight(knx_module, entity_config)
+            for entity_config in yaml_platform_config
         )
     if ui_config := knx_module.config_store.data["entities"].get(Platform.LIGHT):
         entities.extend(
@@ -524,9 +524,12 @@ class KnxYamlLight(_KnxLight, KnxEntity):
 
     _device: XknxLight
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX light."""
-        super().__init__(_create_yaml_light(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_yaml_light(knx_module.xknx, config),
+        )
         self._attr_max_color_temp_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
         self._attr_min_color_temp_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)

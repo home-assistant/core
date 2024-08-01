@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from xknx import XKNX
 from xknx.devices import Switch as XknxSwitch
 
 from homeassistant import config_entries
@@ -54,10 +53,10 @@ async def async_setup_entry(
     knx_module: KNXModule = hass.data[DOMAIN]
 
     entities: list[KnxEntity] = []
-    if yaml_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
+    if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
         entities.extend(
-            KnxYamlSwitch(knx_module.xknx, entity_config)
-            for entity_config in yaml_config
+            KnxYamlSwitch(knx_module, entity_config)
+            for entity_config in yaml_platform_config
         )
     if ui_config := knx_module.config_store.data["entities"].get(Platform.SWITCH):
         entities.extend(
@@ -108,17 +107,18 @@ class KnxYamlSwitch(_KnxSwitch, KnxEntity):
 
     _device: XknxSwitch
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX switch."""
         super().__init__(
+            knx_module=knx_module,
             device=XknxSwitch(
-                xknx,
+                xknx=knx_module.xknx,
                 name=config[CONF_NAME],
                 group_address=config[KNX_ADDRESS],
                 group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
                 respond_to_read=config[CONF_RESPOND_TO_READ],
                 invert=config[SwitchSchema.CONF_INVERT],
-            )
+            ),
         )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)

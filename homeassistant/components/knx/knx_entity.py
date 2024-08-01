@@ -22,8 +22,9 @@ class KnxEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device: XknxDevice) -> None:
+    def __init__(self, knx_module: KNXModule, device: XknxDevice) -> None:
         """Set up device."""
+        self._knx_module = knx_module
         self._device = device
 
     @property
@@ -34,8 +35,7 @@ class KnxEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        knx_module: KNXModule = self.hass.data[DOMAIN]
-        return knx_module.connected
+        return self._knx_module.connected
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
@@ -63,11 +63,6 @@ class KnxUIEntity(KnxEntity):
     """Representation of a KNX UI entity."""
 
     _attr_unique_id: str
-
-    def __init__(self, knx_module: KNXModule, device: XknxDevice) -> None:
-        """Initialize of KNX UI entity."""
-        self._knx_module = knx_module
-        super().__init__(device)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
