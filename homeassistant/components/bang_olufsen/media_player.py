@@ -817,23 +817,51 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Use the touch to join if no entities have been defined
         if len(group_members) == 0:
-            await self._client.join_latest_beolink_experience()
-        else:
-            # Get JID for each group member
-            for group_member in group_members:
-                # Check if an invalid entity
-                if (beolink_jid := self._get_beolink_jid(group_member)) is None:
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="missing_beolink_jid",
-                        translation_placeholders={
-                            "group_member": group_member,
-                        },
-                    )
+            await self._async_beolink_join()
+            return
 
-                # Expand to device
-                await self._client.post_beolink_expand(jid=beolink_jid)
+        jids = []
+        # Get JID for each group member
+        for group_member in group_members:
+            # Check if an invalid entity
+            if (jid := self._get_beolink_jid(group_member)) is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_beolink_jid",
+                    translation_placeholders={
+                        "group_member": group_member,
+                    },
+                )
+
+            jids.append(jid)
+
+        await self._async_beolink_expand(jids)
 
     async def async_unjoin_player(self) -> None:
         """Unjoin Beolink session. End session if leader."""
+        await self._async_beolink_leave()
+
+    async def _async_beolink_join(self) -> None:
+        """Join a Beolink multi-room experience."""
+        await self._client.join_latest_beolink_experience()
+
+    async def _async_beolink_expand(self, beolink_jids: list[str]) -> None:
+        """Expand a Beolink multi-room experience with a device or devices."""
+        # Ensure that the current source is expandable
+        if not self._beolink_sources[cast(str, self._source_change.id)]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={
+                    "invalid_source": cast(str, self._source_change.id),
+                    "valid_sources": ", ".join(list(self._beolink_sources.keys())),
+                },
+            )
+
+        # Try to expand to all defined devices
+        for beolink_jid in beolink_jids:
+            await self._client.post_beolink_expand(jid=beolink_jid)
+
+    async def _async_beolink_leave(self) -> None:
+        """Leave the current Beolink experience."""
         await self._client.post_beolink_leave()
