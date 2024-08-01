@@ -31,6 +31,10 @@ on:
         description: "Only run mypy"
         default: false
         type: boolean
+      audit-licenses-only:
+        description: "Only run audit licenses"
+        default: false
+        type: boolean
 
 env:
   CACHE_VERSION: 9
@@ -222,6 +226,7 @@ jobs:
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
     steps:
@@ -343,6 +348,7 @@ jobs:
           pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
         env:
           RUFF_OUTPUT_FORMAT: github
+
   lint-other:
     name: Check other linters
     runs-on: ubuntu-24.04
@@ -518,6 +524,7 @@ jobs:
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
       - base
@@ -556,6 +563,7 @@ jobs:
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
       - base
@@ -589,7 +597,10 @@ jobs:
       - info
       - base
     if: |
-      needs.info.outputs.requirements == 'true'
+      (github.event.inputs.pylint-only != 'true'
+        && github.event.inputs.mypy-only != 'true'
+        || github.event.inputs.audit-licenses-only == 'true')
+      && needs.info.outputs.requirements == 'true'
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -628,6 +639,7 @@ jobs:
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.pylint-only == 'true'
     needs:
       - info
@@ -672,7 +684,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     if: |
-      (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
+      (github.event.inputs.mypy-only != 'true'
+        && github.event.inputs.audit-licenses-only != 'true'
+        || github.event.inputs.pylint-only == 'true')
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     needs:
       - info
@@ -717,6 +731,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.mypy-only == 'true'
     needs:
       - info
@@ -781,6 +796,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -831,6 +847,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -951,6 +968,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
@@ -1076,6 +1094,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
@@ -1220,6 +1239,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.tests_glob
       && needs.info.outputs.test_full_suite == 'false'
     needs:
