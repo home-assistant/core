@@ -49,5 +49,7 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    entry_id: str = data["entry_id"]
+    assert data is not None
+    entry_id = data["entry_id"]
+    assert isinstance(entry_id, str)
     return DoorBirdReloadConfirmRepairFlow(entry_id=entry_id)
