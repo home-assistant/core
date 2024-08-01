@@ -514,7 +514,7 @@ async def test_light_none_color_value(
 async def test_light_on_off_color(
     hass: HomeAssistant, client, logic_group_zdb5100, integration
 ) -> None:
-    """Test the light entity for lights without dimming support."""
+    """Test the light entity for RGB lights without dimming support."""
     node = logic_group_zdb5100
     state = hass.states.get(ZDB5100_ENTITY)
     assert state.state == STATE_OFF
@@ -631,15 +631,29 @@ async def test_light_on_off_color(
         node.receive_event(event)
         await hass.async_block_till_done()
 
-    # Turn on the light. It should only toggle the binary switch
+    # Turn on the light. Since this is the first call, the light should default to white
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ZDB5100_ENTITY},
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 1,
+        "property": "targetColor",
+    }
+    assert args["value"] == {
+        "red": 255,
+        "green": 255,
+        "blue": 255,
+    }
+
+    args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
@@ -705,7 +719,7 @@ async def test_light_on_off_color(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_RGBW_COLOR: (255, 0, 0, 0)},
+        {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_HS_COLOR: (0, 100)},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 2
@@ -786,7 +800,7 @@ async def test_light_on_off_color(
 async def test_light_color_only(
     hass: HomeAssistant, client, express_controls_ezmultipli, integration
 ) -> None:
-    """Test the black is off light entity."""
+    """Test the light entity for RGB lights with Color Switch CC only."""
     node = express_controls_ezmultipli
     state = hass.states.get(HSM200_V1_ENTITY)
     assert state.state == STATE_ON
