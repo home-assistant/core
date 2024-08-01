@@ -90,24 +90,25 @@ async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> Mag
     The class is mocked here to check the client was instantiated with the correct args.
     """
 
-    mock_client: EvohomeClient | None = None
+    client: EvohomeClient | None = None
 
     def capture_client(*args: Any, **kwargs: Any):
-        nonlocal mock_client
-        mock_client = EvohomeClient(*args, **kwargs)
-        return mock_client
+        nonlocal client
+        client = EvohomeClient(*args, **kwargs)
+        return client
 
     with patch(
         "homeassistant.components.evohome.evo.EvohomeClient", side_effect=capture_client
-    ) as mock_class:
+    ) as mock_client:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
         await hass.async_block_till_done()
 
-        mock_class.assert_called_once()
-        assert mock_class.call_args.args[0] == test_config[CONF_USERNAME]
-        assert mock_class.call_args.args[1] == test_config[CONF_PASSWORD]
+        mock_client.assert_called_once()
+        assert mock_client.call_args.args[0] == test_config[CONF_USERNAME]
+        assert mock_client.call_args.args[1] == test_config[CONF_PASSWORD]
 
-        assert isinstance(mock_class.call_args.kwargs["session"], ClientSession)
-        assert mock_client and mock_client.account_info is not None
+        assert isinstance(mock_client.call_args.kwargs["session"], ClientSession)
 
-        return mock_class
+        assert mock_client.account_info is not None
+
+        return mock_client
