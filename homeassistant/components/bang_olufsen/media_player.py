@@ -573,11 +573,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         return self._source_change.name
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the device's Beolink JID."""
-        return {"beolink_jid": self._beolink_jid}
-
     async def async_turn_off(self) -> None:
         """Set the device to "networkStandby"."""
         await self._client.post_standby()
