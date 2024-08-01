@@ -46,7 +46,7 @@ ENTITY_DESCRIPTIONS = (
     ),
     MastodonSensorEntityDescription(
         key="statuses",
-        native_unit_of_measurement="toots",
+        native_unit_of_measurement="posts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_STATUSES_COUNT),
     ),
