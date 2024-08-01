@@ -117,6 +117,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ha_zha_data.config_entry = config_entry
     zha_lib_data: ZHAData = create_zha_config(hass, ha_zha_data)
 
+    zha_gateway = await Gateway.async_from_config(zha_lib_data)
+
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
@@ -140,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
     try:
-        zha_gateway = await Gateway.async_from_config(zha_lib_data)
+        zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,
