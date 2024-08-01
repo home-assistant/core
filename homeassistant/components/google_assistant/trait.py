@@ -878,6 +878,8 @@ class StartStopTrait(_Trait):
         if domain in COVER_VALVE_DOMAINS:
             return {}
 
+        raise NotImplementedError(f"Unsupported domain {domain}")
+
     def query_attributes(self):
         """Return StartStop query attributes."""
         domain = self.state.domain
@@ -897,6 +899,8 @@ class StartStopTrait(_Trait):
                     COVER_VALVE_STATES[domain]["opening"],
                 )
             }
+
+        raise NotImplementedError(f"Unsupported domain {domain}")
 
     async def execute(self, command, data, params, challenge):
         """Execute a StartStop command."""
