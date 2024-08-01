@@ -24,6 +24,9 @@
     "sensor": {
       "balance": {
         "name": "Balance"
+      },
+      "age": {
+        "name": "Data age"
       }
     }
   }

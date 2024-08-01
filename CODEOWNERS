@@ -376,6 +376,8 @@ build.json @home-assistant/supervisor
 /tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
+/homeassistant/components/elevenlabs/ @sorgfresser
+/tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
@@ -1051,8 +1053,8 @@ build.json @home-assistant/supervisor
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ourgroceries/ @OnFreund
 /tests/components/ourgroceries/ @OnFreund
-/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
-/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
+/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117 @alexfp14
+/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117 @alexfp14
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas

@@ -124,7 +124,6 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aiohappyeyeballs",  # PSF-2.0 license
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
@@ -172,7 +171,6 @@ EXCEPTIONS = {
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
-    "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }

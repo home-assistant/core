@@ -312,8 +312,7 @@ class _KnxLight(KnxEntity, LightEntity):
         if self._device.supports_brightness:
             return self._device.current_brightness
         if self._device.current_xyy_color is not None:
-            _, brightness = self._device.current_xyy_color
-            return brightness
+            return self._device.current_xyy_color.brightness
         if self._device.supports_color or self._device.supports_rgbw:
             rgb, white = self._device.current_color
             if rgb is None:
@@ -363,8 +362,7 @@ class _KnxLight(KnxEntity, LightEntity):
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         if self._device.current_xyy_color is not None:
-            xy_color, _ = self._device.current_xyy_color
-            return xy_color
+            return self._device.current_xyy_color.color
         return None
 
     @property

@@ -63,6 +63,34 @@ def _format_tool(
     return {"type": "function", "function": tool_spec}
 
 
+def _fix_invalid_arguments(value: Any) -> Any:
+    """Attempt to repair incorrectly formatted json function arguments.
+
+    Small models (for example llama3.1 8B) may produce invalid argument values
+    which we attempt to repair here.
+    """
+    if not isinstance(value, str):
+        return value
+    if (value.startswith("[") and value.endswith("]")) or (
+        value.startswith("{") and value.endswith("}")
+    ):
+        try:
+            return json.loads(value)
+        except json.decoder.JSONDecodeError:
+            pass
+    return value
+
+
+def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
+    """Rewrite ollama tool arguments.
+
+    This function improves tool use quality by fixing common mistakes made by
+    small local tool use models. This will repair invalid json arguments and
+    omit unnecessary arguments with empty values that will fail intent parsing.
+    """
+    return {k: _fix_invalid_arguments(v) for k, v in arguments.items() if v}
+
+
 class OllamaConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -255,7 +283,7 @@ class OllamaConversationEntity(
             for tool_call in tool_calls:
                 tool_input = llm.ToolInput(
                     tool_name=tool_call["function"]["name"],
-                    tool_args=tool_call["function"]["arguments"],
+                    tool_args=_parse_tool_args(tool_call["function"]["arguments"]),
                 )
                 _LOGGER.debug(
                     "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
@@ -271,7 +299,7 @@ class OllamaConversationEntity(
                 _LOGGER.debug("Tool response: %s", tool_response)
                 message_history.messages.append(
                     ollama.Message(
-                        role=MessageRole.TOOL.value,  # type: ignore[typeddict-item]
+                        role=MessageRole.TOOL.value,
                         content=json.dumps(tool_response),
                     )
                 )

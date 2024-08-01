@@ -75,9 +75,7 @@ async def test_pipeline_from_audio_stream_auto(
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
         stt_stream=audio_data(),
-        audio_settings=assist_pipeline.AudioSettings(
-            is_vad_enabled=False, is_chunking_enabled=False
-        ),
+        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
     )
 
     assert process_events(events) == snapshot
@@ -140,9 +138,7 @@ async def test_pipeline_from_audio_stream_legacy(
         ),
         stt_stream=audio_data(),
         pipeline_id=pipeline_id,
-        audio_settings=assist_pipeline.AudioSettings(
-            is_vad_enabled=False, is_chunking_enabled=False
-        ),
+        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
     )
 
     assert process_events(events) == snapshot
@@ -205,9 +201,7 @@ async def test_pipeline_from_audio_stream_entity(
         ),
         stt_stream=audio_data(),
         pipeline_id=pipeline_id,
-        audio_settings=assist_pipeline.AudioSettings(
-            is_vad_enabled=False, is_chunking_enabled=False
-        ),
+        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
     )
 
     assert process_events(events) == snapshot
@@ -271,9 +265,7 @@ async def test_pipeline_from_audio_stream_no_stt(
             ),
             stt_stream=audio_data(),
             pipeline_id=pipeline_id,
-            audio_settings=assist_pipeline.AudioSettings(
-                is_vad_enabled=False, is_chunking_enabled=False
-            ),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
         )
 
     assert not events
@@ -335,24 +327,25 @@ async def test_pipeline_from_audio_stream_wake_word(
     # [0, 2, ...]
     wake_chunk_2 = bytes(it.islice(it.cycle(range(0, 256, 2)), BYTES_ONE_SECOND))
 
-    bytes_per_chunk = int(0.01 * BYTES_ONE_SECOND)
+    samples_per_chunk = 160
+    bytes_per_chunk = samples_per_chunk * 2  # 16-bit
 
     async def audio_data():
-        # 1 second in 10 ms chunks
+        # 1 second in chunks
         i = 0
         while i < len(wake_chunk_1):
             yield wake_chunk_1[i : i + bytes_per_chunk]
             i += bytes_per_chunk
 
-        # 1 second in 30 ms chunks
+        # 1 second in chunks
         i = 0
         while i < len(wake_chunk_2):
             yield wake_chunk_2[i : i + bytes_per_chunk]
             i += bytes_per_chunk
 
-        yield b"wake word!"
-        yield b"part1"
-        yield b"part2"
+        for chunk in (b"wake word!", b"part1", b"part2"):
+            yield chunk + bytes(bytes_per_chunk - len(chunk))
+
         yield b""
 
     await assist_pipeline.async_pipeline_from_audio_stream(
@@ -373,7 +366,7 @@ async def test_pipeline_from_audio_stream_wake_word(
             audio_seconds_to_buffer=1.5
         ),
         audio_settings=assist_pipeline.AudioSettings(
-            is_vad_enabled=False, is_chunking_enabled=False
+            is_vad_enabled=False, samples_per_chunk=samples_per_chunk
         ),
     )
 
@@ -390,7 +383,9 @@ async def test_pipeline_from_audio_stream_wake_word(
     )
     assert first_chunk == wake_chunk_1[len(wake_chunk_1) // 2 :] + wake_chunk_2
 
-    assert mock_stt_provider.received[-3:] == [b"queued audio", b"part1", b"part2"]
+    assert mock_stt_provider.received[-3] == b"queued audio"
+    assert mock_stt_provider.received[-2].startswith(b"part1")
+    assert mock_stt_provider.received[-1].startswith(b"part2")
 
 
 async def test_pipeline_save_audio(
@@ -438,9 +433,7 @@ async def test_pipeline_save_audio(
             pipeline_id=pipeline.id,
             start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
             end_stage=assist_pipeline.PipelineStage.STT,
-            audio_settings=assist_pipeline.AudioSettings(
-                is_vad_enabled=False, is_chunking_enabled=False
-            ),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
         )
 
         pipeline_dirs = list(temp_dir.iterdir())
@@ -685,9 +678,7 @@ async def test_wake_word_detection_aborted(
             wake_word_settings=assist_pipeline.WakeWordSettings(
                 audio_seconds_to_buffer=1.5
             ),
-            audio_settings=assist_pipeline.AudioSettings(
-                is_vad_enabled=False, is_chunking_enabled=False
-            ),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
         ),
     )
     await pipeline_input.validate()

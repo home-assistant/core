@@ -13,13 +13,10 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import TYPE_CHECKING, Any, Final, Literal, cast
+from typing import Any, Literal, cast
 import wave
 
 import voluptuous as vol
-
-if TYPE_CHECKING:
-    from webrtc_noise_gain import AudioProcessor
 
 from homeassistant.components import (
     conversation,
@@ -52,12 +49,17 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
+from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadEnhancer
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
     DATA_MIGRATIONS,
     DOMAIN,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
+    SAMPLES_PER_CHUNK,
     WAKE_WORD_COOLDOWN,
 )
 from .error import (
@@ -110,9 +112,6 @@ PIPELINE_FIELDS: VolDictType = {
 STORED_PIPELINE_RUNS = 10
 
 SAVE_DELAY = 10
-
-AUDIO_PROCESSOR_SAMPLES: Final = 160  # 10 ms @ 16 Khz
-AUDIO_PROCESSOR_BYTES: Final = AUDIO_PROCESSOR_SAMPLES * 2  # 16-bit samples
 
 
 @callback
@@ -503,8 +502,11 @@ class AudioSettings:
     is_vad_enabled: bool = True
     """True if VAD is used to determine the end of the voice command."""
 
-    is_chunking_enabled: bool = True
-    """True if audio is automatically split into 10 ms chunks (required for VAD, etc.)"""
+    samples_per_chunk: int | None = None
+    """Number of samples that will be in each audio chunk (None for no chunking)."""
+
+    silence_seconds: float = 0.5
+    """Seconds of silence after voice command has ended."""
 
     def __post_init__(self) -> None:
         """Verify settings post-initialization."""
@@ -513,9 +515,6 @@ class AudioSettings:
 
         if (self.auto_gain_dbfs < 0) or (self.auto_gain_dbfs > 31):
             raise ValueError("auto_gain_dbfs must be in [0, 31]")
-
-        if self.needs_processor and (not self.is_chunking_enabled):
-            raise ValueError("Chunking must be enabled for audio processing")
 
     @property
     def needs_processor(self) -> bool:
@@ -526,19 +525,10 @@ class AudioSettings:
             or (self.auto_gain_dbfs > 0)
         )
 
-
-@dataclass(frozen=True, slots=True)
-class ProcessedAudioChunk:
-    """Processed audio chunk and metadata."""
-
-    audio: bytes
-    """Raw PCM audio @ 16Khz with 16-bit mono samples"""
-
-    timestamp_ms: int
-    """Timestamp relative to start of audio stream (milliseconds)"""
-
-    is_speech: bool | None
-    """True if audio chunk likely contains speech, False if not, None if unknown"""
+    @property
+    def is_chunking_enabled(self) -> bool:
+        """True if chunk size is set."""
+        return self.samples_per_chunk is not None
 
 
 @dataclass
@@ -573,10 +563,10 @@ class PipelineRun:
     debug_recording_queue: Queue[str | bytes | None] | None = None
     """Queue to communicate with debug recording thread"""
 
-    audio_processor: AudioProcessor | None = None
+    audio_enhancer: AudioEnhancer | None = None
     """VAD/noise suppression/auto gain"""
 
-    audio_processor_buffer: AudioBuffer = field(init=False, repr=False)
+    audio_chunking_buffer: AudioBuffer | None = None
     """Buffer used when splitting audio into chunks for audio processing"""
 
     _device_id: str | None = None
@@ -601,18 +591,15 @@ class PipelineRun:
         pipeline_data.pipeline_runs.add_run(self)
 
         # Initialize with audio settings
-        self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
-        if self.audio_settings.needs_processor:
-            # Delay import of webrtc so HA start up is not crashing
-            # on older architectures (armhf).
-            #
-            # pylint: disable=import-outside-toplevel
-            from webrtc_noise_gain import AudioProcessor
-
-            self.audio_processor = AudioProcessor(
+        if self.audio_settings.needs_processor and (self.audio_enhancer is None):
+            # Default audio enhancer
+            self.audio_enhancer = MicroVadEnhancer(
                 self.audio_settings.auto_gain_dbfs,
                 self.audio_settings.noise_suppression_level,
+                self.audio_settings.is_vad_enabled,
             )
+
+        self.audio_chunking_buffer = AudioBuffer(self.samples_per_chunk * SAMPLE_WIDTH)
 
     def __eq__(self, other: object) -> bool:
         """Compare pipeline runs by id."""
@@ -620,6 +607,14 @@ class PipelineRun:
             return self.id == other.id
 
         return False
+
+    @property
+    def samples_per_chunk(self) -> int:
+        """Return number of samples expected in each audio chunk."""
+        if self.audio_enhancer is not None:
+            return self.audio_enhancer.samples_per_chunk or SAMPLES_PER_CHUNK
+
+        return self.audio_settings.samples_per_chunk or SAMPLES_PER_CHUNK
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -688,8 +683,8 @@ class PipelineRun:
 
     async def wake_word_detection(
         self,
-        stream: AsyncIterable[ProcessedAudioChunk],
-        audio_chunks_for_stt: list[ProcessedAudioChunk],
+        stream: AsyncIterable[EnhancedAudioChunk],
+        audio_chunks_for_stt: list[EnhancedAudioChunk],
     ) -> wake_word.DetectionResult | None:
         """Run wake-word-detection portion of pipeline. Returns detection result."""
         metadata_dict = asdict(
@@ -732,10 +727,11 @@ class PipelineRun:
         # Audio chunk buffer. This audio will be forwarded to speech-to-text
         # after wake-word-detection.
         num_audio_chunks_to_buffer = int(
-            (wake_word_settings.audio_seconds_to_buffer * 16000)
-            / AUDIO_PROCESSOR_SAMPLES
+            (wake_word_settings.audio_seconds_to_buffer * SAMPLE_RATE)
+            / self.samples_per_chunk
         )
-        stt_audio_buffer: deque[ProcessedAudioChunk] | None = None
+
+        stt_audio_buffer: deque[EnhancedAudioChunk] | None = None
         if num_audio_chunks_to_buffer > 0:
             stt_audio_buffer = deque(maxlen=num_audio_chunks_to_buffer)
 
@@ -797,7 +793,7 @@ class PipelineRun:
                 # speech-to-text so the user does not have to pause before
                 # speaking the voice command.
                 audio_chunks_for_stt.extend(
-                    ProcessedAudioChunk(
+                    EnhancedAudioChunk(
                         audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
                     )
                     for chunk_ts in result.queued_audio
@@ -819,18 +815,17 @@ class PipelineRun:
 
     async def _wake_word_audio_stream(
         self,
-        audio_stream: AsyncIterable[ProcessedAudioChunk],
-        stt_audio_buffer: deque[ProcessedAudioChunk] | None,
+        audio_stream: AsyncIterable[EnhancedAudioChunk],
+        stt_audio_buffer: deque[EnhancedAudioChunk] | None,
         wake_word_vad: VoiceActivityTimeout | None,
-        sample_rate: int = 16000,
-        sample_width: int = 2,
+        sample_rate: int = SAMPLE_RATE,
+        sample_width: int = SAMPLE_WIDTH,
     ) -> AsyncIterable[tuple[bytes, int]]:
         """Yield audio chunks with timestamps (milliseconds since start of stream).
 
         Adds audio to a ring buffer that will be forwarded to speech-to-text after
         detection. Times out if VAD detects enough silence.
         """
-        chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         async for chunk in audio_stream:
             if self.abort_wake_word_detection:
                 raise WakeWordDetectionAborted
@@ -845,6 +840,7 @@ class PipelineRun:
                 stt_audio_buffer.append(chunk)
 
             if wake_word_vad is not None:
+                chunk_seconds = (len(chunk.audio) // sample_width) / sample_rate
                 if not wake_word_vad.process(chunk_seconds, chunk.is_speech):
                     raise WakeWordTimeoutError(
                         code="wake-word-timeout", message="Wake word was not detected"
@@ -881,7 +877,7 @@ class PipelineRun:
     async def speech_to_text(
         self,
         metadata: stt.SpeechMetadata,
-        stream: AsyncIterable[ProcessedAudioChunk],
+        stream: AsyncIterable[EnhancedAudioChunk],
     ) -> str:
         """Run speech-to-text portion of pipeline. Returns the spoken text."""
         # Create a background task to prepare the conversation agent
@@ -916,7 +912,9 @@ class PipelineRun:
             # Transcribe audio stream
             stt_vad: VoiceCommandSegmenter | None = None
             if self.audio_settings.is_vad_enabled:
-                stt_vad = VoiceCommandSegmenter()
+                stt_vad = VoiceCommandSegmenter(
+                    silence_seconds=self.audio_settings.silence_seconds
+                )
 
             result = await self.stt_provider.async_process_audio_stream(
                 metadata,
@@ -957,18 +955,18 @@ class PipelineRun:
 
     async def _speech_to_text_stream(
         self,
-        audio_stream: AsyncIterable[ProcessedAudioChunk],
+        audio_stream: AsyncIterable[EnhancedAudioChunk],
         stt_vad: VoiceCommandSegmenter | None,
-        sample_rate: int = 16000,
-        sample_width: int = 2,
+        sample_rate: int = SAMPLE_RATE,
+        sample_width: int = SAMPLE_WIDTH,
     ) -> AsyncGenerator[bytes]:
         """Yield audio chunks until VAD detects silence or speech-to-text completes."""
-        chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         sent_vad_start = False
         async for chunk in audio_stream:
             self._capture_chunk(chunk.audio)
 
             if stt_vad is not None:
+                chunk_seconds = (len(chunk.audio) // sample_width) / sample_rate
                 if not stt_vad.process(chunk_seconds, chunk.is_speech):
                     # Silence detected at the end of voice command
                     self.process_event(
@@ -1072,8 +1070,8 @@ class PipelineRun:
             tts_options[tts.ATTR_PREFERRED_FORMAT] = self.tts_audio_output
             if self.tts_audio_output == "wav":
                 # 16 Khz, 16-bit mono
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = 16000
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = 1
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = SAMPLE_RATE
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = SAMPLE_CHANNELS
 
         try:
             options_supported = await tts.async_support_options(
@@ -1220,12 +1218,15 @@ class PipelineRun:
     async def process_volume_only(
         self,
         audio_stream: AsyncIterable[bytes],
-        sample_rate: int = 16000,
-        sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk]:
+        sample_rate: int = SAMPLE_RATE,
+        sample_width: int = SAMPLE_WIDTH,
+    ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
+        assert self.audio_chunking_buffer is not None
+
+        bytes_per_chunk = self.samples_per_chunk * sample_width
         ms_per_sample = sample_rate // 1000
-        ms_per_chunk = (AUDIO_PROCESSOR_SAMPLES // sample_width) // ms_per_sample
+        ms_per_chunk = self.samples_per_chunk // ms_per_sample
         timestamp_ms = 0
 
         async for chunk in audio_stream:
@@ -1233,19 +1234,18 @@ class PipelineRun:
                 chunk = _multiply_volume(chunk, self.audio_settings.volume_multiplier)
 
             if self.audio_settings.is_chunking_enabled:
-                # 10 ms chunking
-                for chunk_10ms in chunk_samples(
-                    chunk, AUDIO_PROCESSOR_BYTES, self.audio_processor_buffer
+                for sub_chunk in chunk_samples(
+                    chunk, bytes_per_chunk, self.audio_chunking_buffer
                 ):
-                    yield ProcessedAudioChunk(
-                        audio=chunk_10ms,
+                    yield EnhancedAudioChunk(
+                        audio=sub_chunk,
                         timestamp_ms=timestamp_ms,
                         is_speech=None,  # no VAD
                     )
                     timestamp_ms += ms_per_chunk
             else:
                 # No chunking
-                yield ProcessedAudioChunk(
+                yield EnhancedAudioChunk(
                     audio=chunk,
                     timestamp_ms=timestamp_ms,
                     is_speech=None,  # no VAD
@@ -1255,14 +1255,19 @@ class PipelineRun:
     async def process_enhance_audio(
         self,
         audio_stream: AsyncIterable[bytes],
-        sample_rate: int = 16000,
-        sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk]:
+        sample_rate: int = SAMPLE_RATE,
+        sample_width: int = SAMPLE_WIDTH,
+    ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Split audio into 10 ms chunks and apply VAD/noise suppression/auto gain/volume transformation."""
-        assert self.audio_processor is not None
+        assert self.audio_enhancer is not None
+        assert self.audio_enhancer.samples_per_chunk is not None
+        assert self.audio_chunking_buffer is not None
 
+        bytes_per_chunk = self.audio_enhancer.samples_per_chunk * sample_width
         ms_per_sample = sample_rate // 1000
-        ms_per_chunk = (AUDIO_PROCESSOR_SAMPLES // sample_width) // ms_per_sample
+        ms_per_chunk = (
+            self.audio_enhancer.samples_per_chunk // sample_width
+        ) // ms_per_sample
         timestamp_ms = 0
 
         async for dirty_samples in audio_stream:
@@ -1272,17 +1277,11 @@ class PipelineRun:
                     dirty_samples, self.audio_settings.volume_multiplier
                 )
 
-            # Split into 10ms chunks for audio enhancements/VAD
-            for dirty_10ms_chunk in chunk_samples(
-                dirty_samples, AUDIO_PROCESSOR_BYTES, self.audio_processor_buffer
+            # Split into chunks for audio enhancements/VAD
+            for dirty_chunk in chunk_samples(
+                dirty_samples, bytes_per_chunk, self.audio_chunking_buffer
             ):
-                ap_result = self.audio_processor.Process10ms(dirty_10ms_chunk)
-                yield ProcessedAudioChunk(
-                    audio=ap_result.audio,
-                    timestamp_ms=timestamp_ms,
-                    is_speech=ap_result.is_speech,
-                )
-
+                yield self.audio_enhancer.enhance_chunk(dirty_chunk, timestamp_ms)
                 timestamp_ms += ms_per_chunk
 
 
@@ -1323,9 +1322,9 @@ def _pipeline_debug_recording_thread_proc(
 
                 wav_path = run_recording_dir / f"{message}.wav"
                 wav_writer = wave.open(str(wav_path), "wb")
-                wav_writer.setframerate(16000)
-                wav_writer.setsampwidth(2)
-                wav_writer.setnchannels(1)
+                wav_writer.setframerate(SAMPLE_RATE)
+                wav_writer.setsampwidth(SAMPLE_WIDTH)
+                wav_writer.setnchannels(SAMPLE_CHANNELS)
             elif isinstance(message, bytes):
                 # Chunk of 16-bit mono audio at 16Khz
                 if wav_writer is not None:
@@ -1368,8 +1367,8 @@ class PipelineInput:
         """Run pipeline."""
         self.run.start(device_id=self.device_id)
         current_stage: PipelineStage | None = self.run.start_stage
-        stt_audio_buffer: list[ProcessedAudioChunk] = []
-        stt_processed_stream: AsyncIterable[ProcessedAudioChunk] | None = None
+        stt_audio_buffer: list[EnhancedAudioChunk] = []
+        stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
 
         if self.stt_stream is not None:
             if self.run.audio_settings.needs_processor:
@@ -1423,7 +1422,7 @@ class PipelineInput:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
                     async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[ProcessedAudioChunk]
+                        AsyncGenerator[EnhancedAudioChunk]
                     ):
                         # Buffered audio
                         for chunk in stt_audio_buffer:

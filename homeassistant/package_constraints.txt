@@ -4,7 +4,7 @@ aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.10.0b1
+aiohttp==3.10.0
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -18,7 +18,7 @@ bleak-retry-connector==3.5.0
 bleak==0.22.2
 bluetooth-adapters==0.19.3
 bluetooth-auto-recovery==1.4.2
-bluetooth-data-tools==1.19.3
+bluetooth-data-tools==1.19.4
 cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.1
@@ -31,8 +31,8 @@ habluetooth==3.1.3
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.12.2
-home-assistant-frontend==20240719.0
-home-assistant-intents==2024.7.10
+home-assistant-frontend==20240731.0
+home-assistant-intents==2024.7.29
 httpx==0.27.0
 ifaddr==0.2.0
 Jinja2==3.1.4
@@ -45,6 +45,7 @@ Pillow==10.4.0
 pip>=21.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.8.0
+pymicro-vad==1.0.1
 PyNaCl==1.5.0
 pyOpenSSL==24.2.1
 pyserial==3.5
@@ -55,12 +56,11 @@ PyYAML==6.0.1
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
-ulid-transform==0.10.1
+ulid-transform==0.13.1
 urllib3>=1.26.5,<2
-voluptuous-openapi==0.0.4
+voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-webrtc-noise-gain==1.2.3
 yarl==1.9.4
 zeroconf==0.132.2
 

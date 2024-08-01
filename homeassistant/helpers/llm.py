@@ -167,7 +167,7 @@ class APIInstance:
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
         async_conversation_trace_append(
-            ConversationTraceEventType.LLM_TOOL_CALL,
+            ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
@@ -521,7 +521,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return convert(cv.CONDITIONS_SCHEMA)
 
     if isinstance(schema, selector.ConstantSelector):
-        return {"enum": [schema.config["value"]]}
+        return convert(vol.Schema(schema.config["value"]))
 
     result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
@@ -573,7 +573,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object"}
+        return {"type": "object", "additionalProperties": True}
 
     if isinstance(schema, selector.SelectSelector):
         options = [
