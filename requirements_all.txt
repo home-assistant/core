@@ -407,7 +407,7 @@ aiowebostv==0.4.2
 aiowithings==3.0.2
 
 # homeassistant.components.yandex_transport
-aioymaps==1.2.4
+aioymaps==1.2.5
 
 # homeassistant.components.airgradient
 airgradient==0.7.1
@@ -450,6 +450,9 @@ anova-wifi==0.17.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
+
+# homeassistant.components.anthropic
+anthropic==0.31.2
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.2
@@ -2962,7 +2965,7 @@ yeelight==0.7.14
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.4.4
+yolink-api==0.4.6
 
 # homeassistant.components.youless
 youless-api==2.1.2

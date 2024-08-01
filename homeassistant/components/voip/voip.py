@@ -21,7 +21,7 @@ from voip_utils import (
     VoipDatagramProtocol,
 )
 
-from homeassistant.components import stt, tts
+from homeassistant.components import assist_pipeline, stt, tts
 from homeassistant.components.assist_pipeline import (
     Pipeline,
     PipelineEvent,
@@ -331,15 +331,14 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
-        assert audio_enhancer.samples_per_chunk is not None
-        vad_buffer = AudioBuffer(audio_enhancer.samples_per_chunk * WIDTH)
+        vad_buffer = AudioBuffer(assist_pipeline.SAMPLES_PER_CHUNK * WIDTH)
 
         while chunk:
             chunk_buffer.append(chunk)
 
             segmenter.process_with_vad(
                 chunk,
-                audio_enhancer.samples_per_chunk,
+                assist_pipeline.SAMPLES_PER_CHUNK,
                 lambda x: audio_enhancer.enhance_chunk(x, 0).is_speech is True,
                 vad_buffer,
             )
@@ -371,13 +370,12 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
-        assert audio_enhancer.samples_per_chunk is not None
-        vad_buffer = AudioBuffer(audio_enhancer.samples_per_chunk * WIDTH)
+        vad_buffer = AudioBuffer(assist_pipeline.SAMPLES_PER_CHUNK * WIDTH)
 
         while chunk:
             if not segmenter.process_with_vad(
                 chunk,
-                audio_enhancer.samples_per_chunk,
+                assist_pipeline.SAMPLES_PER_CHUNK,
                 lambda x: audio_enhancer.enhance_chunk(x, 0).is_speech is True,
                 vad_buffer,
             ):
@@ -437,13 +435,13 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     sample_channels = wav_file.getnchannels()
 
                     if (
-                        (sample_rate != 16000)
-                        or (sample_width != 2)
-                        or (sample_channels != 1)
+                        (sample_rate != RATE)
+                        or (sample_width != WIDTH)
+                        or (sample_channels != CHANNELS)
                     ):
                         raise ValueError(
-                            "Expected rate/width/channels as 16000/2/1,"
-                            " got {sample_rate}/{sample_width}/{sample_channels}}"
+                            f"Expected rate/width/channels as {RATE}/{WIDTH}/{CHANNELS},"
+                            f" got {sample_rate}/{sample_width}/{sample_channels}"
                         )
 
                 audio_bytes = wav_file.readframes(wav_file.getnframes())
