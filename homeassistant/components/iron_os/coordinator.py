@@ -4,30 +4,28 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
-from aiogithubapi import GitHubAPI
+from aiogithubapi import GitHubAPI, GitHubException, GitHubReleaseModel
 from pynecil import CommunicationError, DeviceInfoResponse, LiveDataResponse, Pynecil
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import Throttle
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL_GITHUB = timedelta(minutes=60)
 
 
-class IronOSCoordinator(DataUpdateCoordinator[LiveDataResponse]):
+class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     """IronOS coordinator."""
 
     device_info: DeviceInfoResponse
     config_entry: ConfigEntry
-    latest_release: Any
 
     def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
         """Initialize IronOS coordinator."""
@@ -43,7 +41,6 @@ class IronOSCoordinator(DataUpdateCoordinator[LiveDataResponse]):
         """Fetch data from Device."""
 
         try:
-            await self.get_latest_release()
             return await self.device.get_live_data()
 
         except CommunicationError as e:
@@ -57,14 +54,33 @@ class IronOSCoordinator(DataUpdateCoordinator[LiveDataResponse]):
 
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
-        await self.get_latest_release(no_throttle=True)
 
-    @Throttle(timedelta(hours=1))
-    async def get_latest_release(self) -> None:
-        """Get latest release from github."""
 
-        session = async_get_clientsession(self.hass)
-        async with GitHubAPI(session=session) as github:
-            self.latest_release = (
-                await github.repos.releases.latest("Ralim/IronOS")
-            ).data
+class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
+    """IronOS coordinator for retrieving update information from github."""
+
+    def __init__(self, hass: HomeAssistant, github: GitHubAPI) -> None:
+        """Initialize IronOS coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL_GITHUB,
+        )
+        self.github = github
+
+    async def _async_update_data(self) -> GitHubReleaseModel:
+        """Fetch data from Github."""
+
+        try:
+            release = await self.github.repos.releases.latest("Ralim/IronOS")
+
+        except GitHubException as e:
+            raise UpdateFailed(
+                "Failed to retrieve latest release data from Github"
+            ) from e
+
+        if TYPE_CHECKING:
+            assert release.data
+
+        return release.data

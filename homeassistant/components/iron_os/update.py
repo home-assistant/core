@@ -11,7 +11,8 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IronOSConfigEntry
+from . import IronOSConfigEntry, IronOSCoordinators
+from .coordinator import IronOSFirmwareUpdateCoordinator
 from .entity import IronOSBaseEntity
 
 UPDATE_DESCRIPTION = UpdateEntityDescription(
@@ -36,32 +37,25 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity):
     """Representation of an IronOS update entity."""
 
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
+    firmware: IronOSFirmwareUpdateCoordinator
 
-    @property
-    def installed_version(self) -> str | None:
-        """Version installed and in use."""
+    def __init__(
+        self,
+        coordinator: IronOSCoordinators,
+        entity_description: UpdateEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
 
-        return self.coordinator.device_info.build
+        super().__init__(coordinator.live_data, entity_description)
+
+        self.firmware = coordinator.firmware
+
+        self._attr_installed_version = coordinator.live_data.device_info.build
+        self._attr_release_url = coordinator.firmware.data.html_url
+        self._attr_latest_version = coordinator.firmware.data.tag_name
+        self._attr_title = f"IronOS {coordinator.firmware.data.name}"
 
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
 
-        return self.coordinator.latest_release.body
-
-    @property
-    def release_url(self) -> str | None:
-        """URL to the full release notes of the latest version available."""
-
-        return self.coordinator.latest_release.html_url
-
-    @property
-    def latest_version(self) -> str | None:
-        """Latest version available for install."""
-
-        return self.coordinator.latest_release.tag_name
-
-    @property
-    def title(self) -> str | None:
-        """Title of the release."""
-
-        return f"IronOS {self.coordinator.latest_release.name}"
+        return self.firmware.data.body
