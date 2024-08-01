@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING
 
 from xknx.devices import Device as XknxDevice
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import KNXModule
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import KNXModule
+
+SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal.{{}}"
 
 
 class KnxEntity(Entity):
@@ -29,7 +34,7 @@ class KnxEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        knx_module = cast(KNXModule, self.hass.data[DOMAIN])
+        knx_module: KNXModule = self.hass.data[DOMAIN]
         return knx_module.connected
 
     async def async_update(self) -> None:
@@ -44,8 +49,34 @@ class KnxEntity(Entity):
         """Store register state change callback and start device object."""
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
+        # super call needed to have methods of mulit-inherited classes called
+        # eg. for restoring state (like _KNXSwitch)
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_remove(self._device)
+
+
+class KnxUIEntity(KnxEntity):
+    """Representation of a KNX UI entity."""
+
+    _attr_unique_id: str
+
+    def __init__(self, knx_module: KNXModule, device: XknxDevice) -> None:
+        """Initialize of KNX UI entity."""
+        self._knx_module = knx_module
+        super().__init__(device)
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when entity added to hass."""
+        await super().async_added_to_hass()
+        self._knx_module.config_store.entities.add(self._attr_unique_id)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_ENTITY_REMOVE.format(self._attr_unique_id),
+                self.async_remove,
+            )
+        )

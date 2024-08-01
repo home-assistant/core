@@ -27,7 +27,7 @@ import homeassistant.util.color as color_util
 
 from . import KNXModule
 from .const import CONF_SYNC_STATE, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
-from .knx_entity import KnxEntity
+from .knx_entity import KnxEntity, KnxUIEntity
 from .schema import LightSchema
 from .storage.const import (
     CONF_COLOR_TEMP_MAX,
@@ -294,7 +294,7 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
     )
 
 
-class _KnxLight(KnxEntity, LightEntity):
+class _KnxLight(LightEntity):
     """Representation of a KNX light."""
 
     _attr_max_color_temp_kelvin: int
@@ -519,7 +519,7 @@ class _KnxLight(KnxEntity, LightEntity):
         await self._device.set_off()
 
 
-class KnxYamlLight(_KnxLight):
+class KnxYamlLight(_KnxLight, KnxEntity):
     """Representation of a KNX light."""
 
     _device: XknxLight
@@ -543,20 +543,21 @@ class KnxYamlLight(_KnxLight):
         )
 
 
-class KnxUiLight(_KnxLight):
+class KnxUiLight(_KnxLight, KnxUIEntity):
     """Representation of a KNX light."""
 
-    _device: XknxLight
     _attr_has_entity_name = True
+    _device: XknxLight
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, config: ConfigType
     ) -> None:
         """Initialize of KNX light."""
         super().__init__(
-            _create_ui_light(
+            knx_module=knx_module,
+            device=_create_ui_light(
                 knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
-            )
+            ),
         )
         self._attr_max_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MAX]
         self._attr_min_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MIN]
@@ -565,5 +566,3 @@ class KnxUiLight(_KnxLight):
         self._attr_unique_id = unique_id
         if device_info := config[CONF_ENTITY].get(CONF_DEVICE_INFO):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
-
-        knx_module.config_store.entities[unique_id] = self
