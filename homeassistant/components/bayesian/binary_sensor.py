@@ -84,7 +84,7 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
 def _above_greater_than_below(configs: list[dict[str, Any]]) -> list:
     for config in configs:
         if config.get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
-            return configs
+            continue
         above = config.get(CONF_ABOVE, None)
         below = config.get(CONF_BELOW, None)
         if above is None and below is None:
