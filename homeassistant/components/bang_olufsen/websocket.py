@@ -99,11 +99,6 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                     self.hass,
                     f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
                 )
-            elif notification.value is WebsocketNotification.CONFIGURATION.value:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
-                )
             elif notification.value is WebsocketNotification.REMOTE_MENU_CHANGED.value:
                 async_dispatcher_send(
                     self.hass,
