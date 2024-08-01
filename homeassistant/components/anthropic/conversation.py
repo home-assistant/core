@@ -66,6 +66,28 @@ def _format_tool(
     )
 
 
+def _message_convert(
+    message: Message,
+) -> MessageParam:
+    """Convert from class to TypedDict."""
+    param_content: list[TextBlockParam | ToolUseBlockParam] = []
+
+    for message_content in message.content:
+        if isinstance(message_content, TextBlock):
+            param_content.append(TextBlockParam(type="text", text=message_content.text))
+        elif isinstance(message_content, ToolUseBlock):
+            param_content.append(
+                ToolUseBlockParam(
+                    type="tool_use",
+                    id=message_content.id,
+                    name=message_content.name,
+                    input=message_content.input,
+                )
+            )
+
+    return MessageParam(role=message.role, content=param_content)
+
+
 class AnthropicConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -228,30 +250,7 @@ class AnthropicConversationEntity(
 
             LOGGER.debug("Response %s", response)
 
-            def message_convert(
-                message: Message,
-            ) -> MessageParam:
-                """Convert from class to TypedDict."""
-                param_content: list[TextBlockParam | ToolUseBlockParam] = []
-
-                for message_content in message.content:
-                    if isinstance(message_content, TextBlock):
-                        param_content.append(
-                            TextBlockParam(type="text", text=message_content.text)
-                        )
-                    elif isinstance(message_content, ToolUseBlock):
-                        param_content.append(
-                            ToolUseBlockParam(
-                                type="tool_use",
-                                id=message_content.id,
-                                name=message_content.name,
-                                input=message_content.input,
-                            )
-                        )
-
-                return MessageParam(role=message.role, content=param_content)
-
-            messages.append(message_convert(response))
+            messages.append(_message_convert(response))
 
             if response.stop_reason != "tool_use" or not llm_api:
                 break
