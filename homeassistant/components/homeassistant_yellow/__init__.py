@@ -45,8 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await check_multi_pan_addon(hass)
         except HomeAssistantError as err:
             raise ConfigEntryNotReady from err
-        else:
-            return True
 
     if firmware == ApplicationType.EZSP:
         discovery_flow.async_create_flow(
