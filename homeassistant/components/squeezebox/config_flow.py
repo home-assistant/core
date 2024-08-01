@@ -3,7 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -102,7 +102,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         # update with suggested values from discovery
         self.data_schema = _base_schema(self.discovery_info)
 
-    async def _validate_input(self, data) -> str | None:
+    async def _validate_input(self, data: dict[str, Any]) -> str | None:
         """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
