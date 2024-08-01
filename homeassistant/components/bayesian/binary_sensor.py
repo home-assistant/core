@@ -116,15 +116,15 @@ def _no_overlaping(configs: list[dict]) -> list[dict]:
         d.setdefault(entity_id, [])
         d[entity_id].append(Numeric_config(above, below))
 
-    for ent_id, named_tuples in d.items():
-        named_tuples = sorted(named_tuples, key=lambda tup: tup.above)
+    for ent_id, intervals in d.items():
+        intervals = sorted(intervals, key=lambda tup: tup.above)
 
-        for i, tup in enumerate(named_tuples):
-            if len(named_tuples) == i + 1:
+        for i, tup in enumerate(intervals):
+            if len(intervals) <= i + 1:
                 continue
-            if tup.below > named_tuples[i + 1].above:
+            if tup.below > intervals[i + 1].above:
                 raise vol.Invalid(
-                    f"For bayesian numeric state entities with more than one range like {ent_id}, they must not overlap, but above:{tup.above}, below:{tup.below} overlaps with above:{named_tuples[i+1].above}, below:{named_tuples[i+1].below}."
+                    f"For bayesian numeric state entities with more than one range like {ent_id}, they must not overlap, but above:{tup.above}, below:{tup.below} overlaps with above:{intervals[i+1].above}, below:{intervals[i+1].below}."
                 )
     return configs
 
