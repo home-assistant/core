@@ -90,20 +90,14 @@ async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> Mag
     The class is mocked here to check the client was instantiated with the correct args.
     """
 
-    client: EvohomeClient | None = None
-
-    def capture_client(*args: Any, **kwargs: Any):
-        nonlocal client
-        client = EvohomeClient(*args, **kwargs)
-        return client
-
     with patch(
-        "homeassistant.components.evohome.evo.EvohomeClient", side_effect=capture_client
+        "homeassistant.components.evohome.evo.EvohomeClient", side_effect=EvohomeClient
     ) as mock_client:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
         await hass.async_block_till_done()
 
         mock_client.assert_called_once()
+
         assert mock_client.call_args.args[0] == test_config[CONF_USERNAME]
         assert mock_client.call_args.args[1] == test_config[CONF_PASSWORD]
 
