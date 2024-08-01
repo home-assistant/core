@@ -365,6 +365,8 @@ async def test_mixed_states(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.anyone_home", "on")
     hass.states.async_set("sensor.temperature", 15)
 
+    await hass.async_block_till_done()
+
     state = hass.states.get("binary_sensor.should_HVAC")
 
     assert set(state.attributes.get("occurred_observation_entities")) == {
