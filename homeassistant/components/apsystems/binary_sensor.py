@@ -1,4 +1,4 @@
-"""The read-only sensors for APsystems local API integration."""
+"""The read-only binary sensors for APsystems local API integration."""
 
 from __future__ import annotations
 
