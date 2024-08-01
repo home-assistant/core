@@ -11,7 +11,7 @@ from homeassistant.helpers import issue_registry as ir
 
 
 class DoorBirdReloadConfirmRepairFlow(RepairsFlow):
-    """Handler for an issue fixing flow without any side effects."""
+    """Handler to show doorbird error and reload."""
 
     def __init__(self, entry_id: str) -> None:
         """Initialize the flow."""
