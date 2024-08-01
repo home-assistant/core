@@ -102,7 +102,10 @@ async def _async_register_events(
             translation_key="error_registering_events",
             data={"entry_id": entry.entry_id},
             is_fixable=True,
-            translation_placeholders={"error": str(ex)},
+            translation_placeholders={
+                "error": str(ex),
+                "name": door_station.name or entry.data[CONF_NAME],
+            },
         )
         _LOGGER.debug("Error registering DoorBird events", exc_info=True)
         return False
