@@ -877,7 +877,6 @@ class StartStopTrait(_Trait):
             }
         if domain in COVER_VALVE_DOMAINS:
             return {}
-        return {}
 
         raise NotImplementedError(f"Unsupported domain {domain}")
 
@@ -900,7 +899,6 @@ class StartStopTrait(_Trait):
                     COVER_VALVE_STATES[domain]["opening"],
                 )
             }
-        return {}
 
         raise NotImplementedError(f"Unsupported domain {domain}")
 
