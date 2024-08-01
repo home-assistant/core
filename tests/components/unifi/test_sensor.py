@@ -1655,3 +1655,73 @@ async def test_wan_monitor_latency_with_no_uptime(
 
     latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
     assert latency_entry is None
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+                "uplink": {
+                    "uplink_mac": "00:00:00:00:00:02",
+                    "port_idx": 1,
+                },
+            },
+        ],
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+                "uplink": {},
+            },
+        ],
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_uplink(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that temperature sensors are working as expected."""
+    has_uplink = device_payload[0].get("uplink", False)
+    if not has_uplink:
+        assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+        return
+
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+    assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:02"
+    assert (
+        entity_registry.async_get("sensor.device_uplink_mac").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    # Verify new event change temperature
+    device = device_payload[0]
+    device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
