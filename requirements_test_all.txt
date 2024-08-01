@@ -424,6 +424,9 @@ anova-wifi==0.17.0
 # homeassistant.components.anthemav
 anthemav==1.4.1
 
+# homeassistant.components.anthropic
+anthropic==0.31.2
+
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.2
 
