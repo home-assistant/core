@@ -208,7 +208,7 @@ class AnthropicConversationEntity(
         prompt = "\n".join(prompt_parts)
 
         # Create a copy of the variable because we attach it to the trace
-        messages.append(MessageParam(role="user", content=user_input.text))
+        messages = [*messages, MessageParam(role="user", content=user_input.text)]
 
         LOGGER.debug("Prompt: %s", messages)
         LOGGER.debug("Tools: %s", tools)
