@@ -2,37 +2,25 @@
 
 from __future__ import annotations
 
-from copy import copy, deepcopy
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock
-from homeassistant.config_entries import ConfigEntryState
 
+from homeassistant.components.doorbird.const import DOMAIN
 from homeassistant.components.repairs.issue_handler import (
     async_process_repairs_platforms,
 )
-from homeassistant.setup import async_setup_component
 from homeassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
     RepairsFlowResourceView,
 )
-from homeassistant.components.doorbird.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
 from homeassistant.helpers import issue_registry as ir
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from homeassistant.setup import async_setup_component
 
-from copy import deepcopy
-from http import HTTPStatus
-
-from doorbirdpy import DoorBirdScheduleEntry
-import pytest
-
-from homeassistant.components.doorbird.const import CONF_EVENTS
-from homeassistant.core import HomeAssistant
-
-from .conftest import DoorbirdMockerType
 from . import mock_not_found_exception
+from .conftest import DoorbirdMockerType
+
+from tests.typing import ClientSessionGenerator
 
 
 async def test_change_schedule_fails(
@@ -56,9 +44,7 @@ async def test_change_schedule_fails(
     client = await hass_client()
 
     url = RepairsFlowIndexView.url
-    resp = await client.post(
-        url, json={"handler": DOMAIN, "issue_id": issue_id}
-    )
+    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
