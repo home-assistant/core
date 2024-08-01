@@ -103,9 +103,6 @@ async def test_initialization(
     mock_mozart_client.get_product_state.assert_called_once()
     mock_mozart_client.get_available_sources.assert_called_once()
     mock_mozart_client.get_remote_menu.assert_called_once()
-    # mock_mozart_client.get_beolink_self.assert_called_once()
-    # mock_mozart_client.get_beolink_peers.assert_called_once()
-    # mock_mozart_client.get_beolink_listeners.assert_called_once()
 
 
 async def test_async_update_sources_audio_only(
