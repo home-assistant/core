@@ -500,7 +500,14 @@ async def test_multiple_observations(hass: HomeAssistant) -> None:
 async def test_multiple_numeric_observations(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test sensor on numeric state platform observations with more than one range."""
+    """Test sensor on numeric state platform observations with more than one range.
+
+    This tests an example where the probability of it being a 'nice day' varies over
+    a series of temperatures. Since this is a multi-state, all the non-observed ranges
+    should be ignored and only the range including the observed value should update
+    the prior. When a value lands on the threshold (15 is tested) it is inclusive
+    to the observation that has it as 'below' on not the one that has it as 'above'.
+    """
 
     config = {
         "binary_sensor": {
