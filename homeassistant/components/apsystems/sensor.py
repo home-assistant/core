@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from APsystemsEZ1 import ReturnOutputData
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -14,13 +16,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ApSystemsConfigEntry, ApSystemsData
-from .coordinator import ApSystemsDataCoordinator, ApSystemsSensorData
+from .coordinator import ApSystemsDataCoordinator
 from .entity import ApSystemsEntity
 
 
@@ -28,7 +29,7 @@ from .entity import ApSystemsEntity
 class ApsystemsLocalApiSensorDescription(SensorEntityDescription):
     """Describes Apsystens Inverter sensor entity."""
 
-    value_fn: Callable[[ApSystemsSensorData], bool | float | None]
+    value_fn: Callable[[ReturnOutputData], float | None]
 
 
 SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
@@ -38,7 +39,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda c: c["output_data"].p1 + c["output_data"].p2,
+        value_fn=lambda c: c.p1 + c.p2,
     ),
     ApsystemsLocalApiSensorDescription(
         key="total_power_p1",
@@ -46,7 +47,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda c: c["output_data"].p1,
+        value_fn=lambda c: c.p1,
     ),
     ApsystemsLocalApiSensorDescription(
         key="total_power_p2",
@@ -54,7 +55,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda c: c["output_data"].p2,
+        value_fn=lambda c: c.p2,
     ),
     ApsystemsLocalApiSensorDescription(
         key="lifetime_production",
@@ -62,7 +63,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c["output_data"].te1 + c["output_data"].te2,
+        value_fn=lambda c: c.te1 + c.te2,
     ),
     ApsystemsLocalApiSensorDescription(
         key="lifetime_production_p1",
@@ -70,7 +71,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c["output_data"].te1,
+        value_fn=lambda c: c.te1,
     ),
     ApsystemsLocalApiSensorDescription(
         key="lifetime_production_p2",
@@ -78,7 +79,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c["output_data"].te2,
+        value_fn=lambda c: c.te2,
     ),
     ApsystemsLocalApiSensorDescription(
         key="today_production",
@@ -86,7 +87,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c["output_data"].e1 + c["output_data"].e2,
+        value_fn=lambda c: c.e1 + c.e2,
     ),
     ApsystemsLocalApiSensorDescription(
         key="today_production_p1",
@@ -94,7 +95,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c["output_data"].e1,
+        value_fn=lambda c: c.e1,
     ),
     ApsystemsLocalApiSensorDescription(
         key="today_production_p2",
@@ -102,43 +103,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c["output_data"].e2,
-    ),
-    ApsystemsLocalApiSensorDescription(
-        key="off_grid_status",
-        translation_key="off_grid_status",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: c["alarm_info"].og.Status,
-    ),
-    ApsystemsLocalApiSensorDescription(
-        key="dc_1_short_circuit_error_status",
-        translation_key="dc_1_short_circuit_error_status",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: c["alarm_info"].isce1.Status,
-    ),
-    ApsystemsLocalApiSensorDescription(
-        key="dc_2_short_circuit_error_status",
-        translation_key="dc_2_short_circuit_error_status",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: c["alarm_info"].isce2.Status,
-    ),
-    ApsystemsLocalApiSensorDescription(
-        key="output_fault_status",
-        translation_key="output_fault_status",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: c["alarm_info"].oe.Status,
+        value_fn=lambda c: c.e2,
     ),
 )
 
@@ -183,4 +148,4 @@ class ApSystemsSensorWithDescription(
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data["output_data"])
