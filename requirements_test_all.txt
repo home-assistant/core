@@ -1048,7 +1048,7 @@ leaone-ble==0.1.0
 led-ble==1.0.2
 
 # homeassistant.components.lektrico
-lektricowifi==0.0.40
+lektricowifi==0.0.41
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
