@@ -505,8 +505,8 @@ async def test_multiple_numeric_observations(
     This tests an example where the probability of it being a 'nice day' varies over
     a series of temperatures. Since this is a multi-state, all the non-observed ranges
     should be ignored and only the range including the observed value should update
-    the prior. When a value lands on the threshold (15 is tested) it is inclusive
-    to the observation that has it as 'below' on not the one that has it as 'above'.
+    the prior. When a value lands on above or below (15 is tested) it is included if it
+    equals `below`, and ignored if it equals `above`.
     """
 
     config = {
