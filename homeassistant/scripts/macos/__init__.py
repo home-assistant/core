@@ -54,14 +54,14 @@ def run(args: list[str]) -> int:
     if args[0] == "install":
         install_osx()
         return 0
-
     if args[0] == "uninstall":
         uninstall_osx()
         return 0
+    if args[0] == "restart":
+        uninstall_osx()
+        # A small delay is needed on some systems to let the unload finish.
+        time.sleep(0.5)
+        install_osx()
+        return 0
 
-    # last case is "restart"
-    uninstall_osx()
-    # A small delay is needed on some systems to let the unload finish.
-    time.sleep(0.5)
-    install_osx()
-    return 0
+    raise ValueError(f"Invalid command {args[0]}")
