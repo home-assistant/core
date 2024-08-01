@@ -1,7 +1,7 @@
 """Test the KNX config flow."""
 
 from contextlib import contextmanager
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
@@ -510,7 +510,7 @@ async def test_routing_secure_keyfile(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual(
-    _gateway_scanner_mock,
+    gateway_scanner_mock: MagicMock,
     hass: HomeAssistant,
     knx_setup,
     user_input,
@@ -559,7 +559,7 @@ async def test_tunneling_setup_manual(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual_request_description_error(
-    _gateway_scanner_mock,
+    gateway_scanner_mock: MagicMock,
     hass: HomeAssistant,
     knx_setup,
 ) -> None:
@@ -700,7 +700,10 @@ async def test_tunneling_setup_manual_request_description_error(
     return_value=_gateway_descriptor("192.168.0.2", 3675),
 )
 async def test_tunneling_setup_for_local_ip(
-    _request_description_mock, _gateway_scanner_mock, hass: HomeAssistant, knx_setup
+    request_description_mock: MagicMock,
+    gateway_scanner_mock: MagicMock,
+    hass: HomeAssistant,
+    knx_setup,
 ) -> None:
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
@@ -962,7 +965,7 @@ async def _get_menu_step_secure_tunnel(hass: HomeAssistant) -> FlowResult:
     ),
 )
 async def test_get_secure_menu_step_manual_tunnelling(
-    _request_description_mock,
+    request_description_mock: MagicMock,
     hass: HomeAssistant,
 ) -> None:
     """Test flow reaches secure_tunnellinn menu step from manual tunnelling configuration."""
