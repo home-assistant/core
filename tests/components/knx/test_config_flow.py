@@ -510,7 +510,7 @@ async def test_routing_secure_keyfile(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual(
-    gateway_scanner_mock,
+    gateway_scanner_mock: Mock,
     hass: HomeAssistant,
     knx_setup,
     user_input,
@@ -559,7 +559,7 @@ async def test_tunneling_setup_manual(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual_request_description_error(
-    gateway_scanner_mock,
+    gateway_scanner_mock: Mock,
     hass: HomeAssistant,
     knx_setup,
 ) -> None:
@@ -700,7 +700,10 @@ async def test_tunneling_setup_manual_request_description_error(
     return_value=_gateway_descriptor("192.168.0.2", 3675),
 )
 async def test_tunneling_setup_for_local_ip(
-    request_description_mock, gateway_scanner_mock, hass: HomeAssistant, knx_setup
+    request_description_mock: Mock,
+    gateway_scanner_mock: Mock,
+    hass: HomeAssistant,
+    knx_setup,
 ) -> None:
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
@@ -962,7 +965,7 @@ async def _get_menu_step_secure_tunnel(hass: HomeAssistant) -> FlowResult:
     ),
 )
 async def test_get_secure_menu_step_manual_tunnelling(
-    request_description_mock,
+    request_description_mock: Mock,
     hass: HomeAssistant,
 ) -> None:
     """Test flow reaches secure_tunnellinn menu step from manual tunnelling configuration."""
