@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from collections.abc import Callable
 import logging
 import math
@@ -81,21 +81,21 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
 )
 
 
-def _above_greater_than_below(configs: list) -> list:
-    config = configs[0]
-    if config.get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
-        return configs
-    above = config.get(CONF_ABOVE, None)
-    below = config.get(CONF_BELOW, None)
-    if above is None and below is None:
-        raise vol.Invalid(
-            "For bayesian numeric state at least one of 'above' or 'below' must be specified."
-        )
-    if above is not None and below is not None:
-        if above > below:
+def _above_greater_than_below(configs: list[dict[str, Any]]) -> list:
+    for config in configs:
+        if config.get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
+            return configs
+        above = config.get(CONF_ABOVE, None)
+        below = config.get(CONF_BELOW, None)
+        if above is None and below is None:
             raise vol.Invalid(
-                "For bayesian numeric state 'above' must be less than 'below'."
+                "For bayesian numeric state at least one of 'above' or 'below' must be specified."
             )
+        if above is not None and below is not None:
+            if above > below:
+                raise vol.Invalid(
+                    f"For bayesian numeric state 'above' ({above}) must be less than 'below' ({below})."
+                )
     return configs
 
 
@@ -107,24 +107,24 @@ def _no_overlaping(configs: list[dict]) -> list[dict]:
     ]
     if len(numeric_configs) < 2:
         return configs
-    d: dict[str, list[tuple]] = {}
-    index = 0
-    for index, config in enumerate(numeric_configs):
+    Numeric_config = namedtuple("Numeric_config", ["above", "below"])
+    d: dict[str, list[Numeric_config]] = {}
+    for _, config in enumerate(numeric_configs):
         above = config.get(CONF_ABOVE, -math.inf)
         below = config.get(CONF_BELOW, math.inf)
         entity_id: str = str(config.get(CONF_ENTITY_ID))
         d.setdefault(entity_id, [])
-        d[entity_id].append((index, above, below))
+        d[entity_id].append(Numeric_config(above, below))
 
-    for ent_id, tuples in d.items():
-        tuples = sorted(tuples, key=lambda tup: tup[1])
+    for ent_id, named_tuples in d.items():
+        named_tuples = sorted(named_tuples, key=lambda tup: tup.above)
 
-        for i, tup in enumerate(tuples):
-            if len(tuples) == i + 1:
+        for i, tup in enumerate(named_tuples):
+            if len(named_tuples) == i + 1:
                 continue
-            if tup[2] > tuples[i + 1][1]:
+            if tup.below > named_tuples[i + 1].above:
                 raise vol.Invalid(
-                    f"For bayesian numeric state entities with more than one range like {ent_id}, they must not overlap, but above:{tup[1]}, below:{tup[2]} overlaps with above:{tuples[i+1][1]}, below:{tuples[i+1][2]}."
+                    f"For bayesian numeric state entities with more than one range like {ent_id}, they must not overlap, but above:{tup.above}, below:{tup.below} overlaps with above:{named_tuples[i+1].above}, below:{named_tuples[i+1].below}."
                 )
     return configs
 
@@ -496,7 +496,9 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Return True if numeric condition is met, return False if not, return None otherwise."""
         entity_id = entity_observation.entity_id
         # if we are dealing with numeric_state observations entity_id cannot be None
-        assert entity_id is not None
+        assert (
+            entity_id is not None
+        ), "Whilst processing the numeric state entity_id was found to be None when that should be impossible"
 
         entity = self.hass.states.get(entity_id)
         if entity is None:

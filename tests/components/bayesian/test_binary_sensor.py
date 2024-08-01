@@ -875,7 +875,10 @@ async def test_inverted_numeric(
     }
 
     assert await async_setup_component(hass, "binary_sensor", config)
-    assert "bayesian numeric state 'above' must be less than 'below'" in caplog.text
+    assert (
+        "bayesian numeric state 'above' (23.0) must be less than 'below' (20.0)"
+        in caplog.text
+    )
 
 
 async def test_no_value_numeric(
