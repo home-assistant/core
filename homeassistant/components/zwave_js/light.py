@@ -605,16 +605,17 @@ class ZwaveColorOnOffLight(ZwaveLight):
             # If brightness gets set, preserve the color and mix it with the new brightness
             if self.color_mode == ColorMode.HS:
                 scale = brightness / 255
-            if self._last_on_color is not None:
+            if (
+                self._last_on_color is not None
+                and None not in self._last_on_color.values()
+            ):
                 # Changed brightness from 0 to >0
                 old_brightness = max(self._last_on_color.values())
-                scale = brightness / old_brightness
-                if scale is None:
-                    new_colors = self._last_on_color
-                else:
-                    new_colors = {}
-                    for color, value in self._last_on_color.items():
-                        new_colors[color] = round(value * scale)
+                new_scale = brightness / old_brightness
+                scale = new_scale
+                new_colors = {}
+                for color, value in self._last_on_color.items():
+                    new_colors[color] = round(value * new_scale)
             elif hs_color is None and self._color_mode == ColorMode.HS:
                 hs_color = self._hs_color
         elif hs_color is not None and brightness is None:
