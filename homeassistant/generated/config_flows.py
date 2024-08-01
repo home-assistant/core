@@ -150,6 +150,7 @@ FLOWS = {
         "efergy",
         "electrasmart",
         "electric_kiwi",
+        "elevenlabs",
         "elgato",
         "elkm1",
         "elmax",

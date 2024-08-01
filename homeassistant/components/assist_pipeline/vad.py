@@ -80,7 +80,7 @@ class VoiceCommandSegmenter:
     speech_seconds: float = 0.3
     """Seconds of speech before voice command has started."""
 
-    silence_seconds: float = 0.5
+    silence_seconds: float = 1.0
     """Seconds of silence after voice command has ended."""
 
     timeout_seconds: float = 15.0

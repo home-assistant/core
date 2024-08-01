@@ -389,7 +389,7 @@ aiowebostv==0.4.2
 aiowithings==3.0.2
 
 # homeassistant.components.yandex_transport
-aioymaps==1.2.4
+aioymaps==1.2.5
 
 # homeassistant.components.airgradient
 airgradient==0.7.1
@@ -660,6 +660,9 @@ easyenergy==2.1.2
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
 
+# homeassistant.components.elevenlabs
+elevenlabs==1.6.1
+
 # homeassistant.components.elgato
 elgato==5.1.2
 
@@ -913,7 +916,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240719.0
+home-assistant-frontend==20240731.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.29
@@ -1604,7 +1607,7 @@ pymelcloud==2.5.9
 pymeteoclimatic==0.1.0
 
 # homeassistant.components.assist_pipeline
-pymicro-vad==1.0.0
+pymicro-vad==1.0.1
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -1810,7 +1813,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.5
+python-kasa[speedups]==0.7.1
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.5
@@ -2336,7 +2339,7 @@ yalexs==6.4.3
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.4
+yolink-api==0.4.6
 
 # homeassistant.components.youless
 youless-api==2.1.2

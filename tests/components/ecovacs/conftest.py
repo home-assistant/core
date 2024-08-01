@@ -10,6 +10,7 @@ from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
 from deebot_client.models import Credentials
 import pytest
+from sucks import EventEmitter
 
 from homeassistant.components.ecovacs import PLATFORMS
 from homeassistant.components.ecovacs.const import DOMAIN
@@ -128,10 +129,10 @@ def mock_vacbot(device_fixture: str) -> Generator[Mock]:
         vacbot.vacuum = load_json_object_fixture(
             f"devices/{device_fixture}/device.json", DOMAIN
         )
-        vacbot.statusEvents = Mock()
-        vacbot.batteryEvents = Mock()
-        vacbot.lifespanEvents = Mock()
-        vacbot.errorEvents = Mock()
+        vacbot.statusEvents = EventEmitter()
+        vacbot.batteryEvents = EventEmitter()
+        vacbot.lifespanEvents = EventEmitter()
+        vacbot.errorEvents = EventEmitter()
         vacbot.battery_status = None
         vacbot.fan_speed = None
         vacbot.components = {}
@@ -175,7 +176,7 @@ async def init_integration(
         mock_config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         yield mock_config_entry
 
 
