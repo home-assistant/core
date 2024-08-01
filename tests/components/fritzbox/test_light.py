@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, call
 
+import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import (
@@ -192,16 +193,16 @@ async def test_turn_on_color_unsupported_api_method(
     device.get_colors.return_value = {
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
-    mockresponse = Mock()
-    mockresponse.status_code = 400
-
-    error = HTTPError("Bad Request")
-    error.response = mockresponse
-    device.set_unmapped_color.side_effect = error
-
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
+
+    # test fallback to `setcolor`
+    error = HTTPError("Bad Request")
+    error.response = Mock()
+    error.response.status_code = 400
+    device.set_unmapped_color.side_effect = error
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -213,6 +214,16 @@ async def test_turn_on_color_unsupported_api_method(
     assert device.set_color.call_count == 1
     assert device.set_level.call_args_list == [call(100)]
     assert device.set_color.call_args_list == [call((100, 70))]
+
+    # test for unknown error
+    error.response.status_code = 500
+    with pytest.raises(HTTPError, match="Bad Request"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
+            True,
+        )
 
 
 async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
