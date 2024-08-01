@@ -3,40 +3,14 @@
 from unittest.mock import MagicMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.deako.const import DOMAIN
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
-
-@pytest.mark.asyncio
-async def test_light_setup_no_devices(
-    hass: HomeAssistant,
-    pydeako_deako_mock: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test light platform setup with no devices returned."""
-    mock_config_entry.add_to_hass(hass)
-
-    # no devices
-    pydeako_deako_mock.get_devices.return_value = {}
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.asyncio
@@ -45,6 +19,7 @@ async def test_light_setup_with_device(
     pydeako_deako_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test light platform setup with device returned."""
     mock_config_entry.add_to_hass(hass)
@@ -57,8 +32,7 @@ async def test_light_setup_with_device(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("light.some_device")
-    assert entity_entry
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.asyncio
@@ -67,7 +41,7 @@ async def test_light_initial_props(
     mock_config_entry: MockConfigEntry,
     pydeako_deako_mock: MagicMock,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test on/off light is setup with accurate initial properties."""
     mock_config_entry.add_to_hass(hass)
@@ -86,24 +60,7 @@ async def test_light_initial_props(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # make sure our initial state exists
-    assert (state := hass.states.get(f"{LIGHT_DOMAIN}.kitchen"))
-    assert state.state == STATE_OFF
-
-    # test other properties
-    entity = entity_registry.async_get(f"{LIGHT_DOMAIN}.kitchen")
-    assert entity
-    assert entity.unique_id == "uuid"
-    assert entity.original_name is None
-    assert ColorMode.ONOFF in entity.capabilities.get("supported_color_modes")
-
-    # test ha device
-    device = device_registry.async_get(entity.device_id)
-    assert device
-    assert device.model == "smart"
-    assert device.manufacturer == "Deako"
-    assert device.name == "kitchen"
-    assert (DOMAIN, "uuid") in device.identifiers
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.asyncio
@@ -112,7 +69,7 @@ async def test_dimmable_light_props(
     mock_config_entry: MockConfigEntry,
     pydeako_deako_mock: MagicMock,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test dimmable on/off light is setup with accurate initial properties."""
     mock_config_entry.add_to_hass(hass)
@@ -132,25 +89,7 @@ async def test_dimmable_light_props(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # make sure our initial state exists
-    assert (state := hass.states.get(f"{LIGHT_DOMAIN}.kitchen"))
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 127  # the converted brightness
-
-    # test other properties
-    entity = entity_registry.async_get(f"{LIGHT_DOMAIN}.kitchen")
-    assert entity
-    assert entity.unique_id == "uuid"
-    assert entity.original_name is None
-    assert ColorMode.BRIGHTNESS in entity.capabilities.get("supported_color_modes")
-
-    # test ha device
-    device = device_registry.async_get(entity.device_id)
-    assert device
-    assert device.model == "dimmer"
-    assert device.manufacturer == "Deako"
-    assert device.name == "kitchen"
-    assert (DOMAIN, "uuid") in device.identifiers
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.asyncio

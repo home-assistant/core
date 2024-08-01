@@ -14,14 +14,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={},
-        unique_id="aabbccddeeff",
     )
-
-
-@pytest.fixture(autouse=True)
-def deako_mock_async_zeroconf(mock_async_zeroconf: MagicMock):
-    """Auto mock zeroconf."""
 
 
 @pytest.fixture(name="pydeako_deako_mock", autouse=True)
@@ -32,7 +25,7 @@ def pydeako_deako_mock():
 
 
 @pytest.fixture(name="pydeako_discoverer_mock", autouse=True)
-def pydeako_discoverer_mock():
+def pydeako_discoverer_mock(mock_async_zeroconf: MagicMock):
     """Mock pydeako discovery client."""
     with patch("homeassistant.components.deako.DeakoDiscoverer", autospec=True) as mock:
         yield mock

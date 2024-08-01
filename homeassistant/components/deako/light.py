@@ -26,18 +26,15 @@ async def async_setup_entry(
     add_entities: AddEntitiesCallback,
 ) -> None:
     """Configure the platform."""
-    client: Deako = hass.data[DOMAIN][config.entry_id]
+    client: Deako = config.runtime_data
 
     devices = client.get_devices()
-    lights = [DeakoLightEntity(client, uuid) for uuid in devices]
-    add_entities(lights)
+    add_entities([DeakoLightEntity(client, uuid) for uuid in devices])
 
 
 class DeakoLightEntity(LightEntity):
     """Deako LightEntity class."""
 
-    # retype because these will be set
-    _attr_unique_id: str
     _attr_supported_color_modes: set[ColorMode]
 
     _attr_has_entity_name = True
@@ -75,12 +72,14 @@ class DeakoLightEntity(LightEntity):
         self.update()
         self.schedule_update_ha_state()
 
-    def get_state(self) -> dict:
+    def get_state(self) -> dict[str, bool | int]:
         """Return state of entity from client."""
+        assert self._attr_unique_id is not None
         return self.client.get_state(self._attr_unique_id) or {}
 
     async def control_device(self, power: bool, dim: int | None = None) -> None:
         """Control entity state via client."""
+        assert self._attr_unique_id is not None
         await self.client.control_device(self._attr_unique_id, power, dim)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
