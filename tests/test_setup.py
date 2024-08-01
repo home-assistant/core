@@ -352,7 +352,7 @@ async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
 
     def exception_setup(hass, config):
         """Raise exception."""
-        raise BaseException("fail!")
+        raise BaseException("fail!")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
