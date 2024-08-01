@@ -104,7 +104,7 @@ async def _async_register_events(
             is_fixable=True,
             translation_placeholders={"error": str(ex)},
         )
-        _LOGGER.exception("Error registering DoorBird events")
+        _LOGGER.debug("Error registering DoorBird events", exc_info=True)
         return False
     else:
         ir.async_delete_issue(hass, DOMAIN, issue_id)
