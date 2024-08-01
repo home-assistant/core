@@ -1516,6 +1516,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "elevenlabs": {
+      "name": "ElevenLabs",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "elgato": {
       "name": "Elgato",
       "integrations": {
@@ -4598,6 +4604,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "pinecil": {
+      "name": "Pinecil",
+      "integration_type": "virtual",
+      "supported_by": "iron_os"
     },
     "ping": {
       "name": "Ping (ICMP)",

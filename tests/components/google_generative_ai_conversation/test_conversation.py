@@ -269,11 +269,12 @@ async def test_function_call(
     assert [event["event_type"] for event in trace_events] == [
         trace.ConversationTraceEventType.ASYNC_PROCESS,
         trace.ConversationTraceEventType.AGENT_DETAIL,
-        trace.ConversationTraceEventType.LLM_TOOL_CALL,
+        trace.ConversationTraceEventType.TOOL_CALL,
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
     assert "Answer in plain text" in detail_event["data"]["prompt"]
+    assert [t.name for t in detail_event["data"]["tools"]] == ["test_tool"]
 
 
 @patch(
