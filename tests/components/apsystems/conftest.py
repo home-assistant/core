@@ -52,7 +52,7 @@ def mock_apsystems() -> Generator[MagicMock]:
             e2=6.0,
             te2=7.0,
         )
-        mock_api.get_output_data.return_value = ReturnAlarmInfo(
+        mock_api.get_alarm_info.return_value = ReturnAlarmInfo(
             og=Status.normal,
             isce1=Status.alarm,
             isce2=Status.normal,
