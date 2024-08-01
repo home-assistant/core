@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
+from typing import Any, Literal, Required, TypedDict, cast
 from uuid import UUID
 
 import voluptuous as vol
@@ -20,8 +20,6 @@ from homeassistant.util.yaml import dumper
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
-
-_T = TypeVar("_T", bound=Mapping[str, Any])
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -62,7 +60,7 @@ def validate_selector(config: Any) -> dict:
     }
 
 
-class Selector(Generic[_T]):
+class Selector[_T: Mapping[str, Any]]:
     """Base class for selectors."""
 
     CONFIG_SCHEMA: Callable
@@ -76,6 +74,13 @@ class Selector(Generic[_T]):
             config = {}
 
         self.config = self.CONFIG_SCHEMA(config)
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality."""
+        if not isinstance(other, Selector):
+            return NotImplemented
+
+        return self.selector_type == other.selector_type and self.config == other.config
 
     def serialize(self) -> dict[str, dict[str, _T]]:
         """Serialize Selector for voluptuous_serialize."""
@@ -280,7 +285,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema({})
 
-    def __init__(self, config: AssistPipelineSelectorConfig) -> None:
+    def __init__(self, config: AssistPipelineSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -432,10 +437,10 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         range_min = self.config.get("min")
         range_max = self.config.get("max")
 
-        if not range_min:
+        if range_min is None:
             range_min = self.config.get("min_mireds")
 
-        if not range_max:
+        if range_max is None:
             range_max = self.config.get("max_mireds")
 
         value: int = vol.All(
@@ -519,7 +524,7 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConstantSelectorConfig | None = None) -> None:
+    def __init__(self, config: ConstantSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -562,7 +567,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
         }
     )
 
-    def __init__(self, config: QrCodeSelectorConfig | None = None) -> None:
+    def __init__(self, config: QrCodeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -590,7 +595,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConversationAgentSelectorConfig) -> None:
+    def __init__(self, config: ConversationAgentSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -720,6 +725,8 @@ class DurationSelectorConfig(TypedDict, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_millisecond: bool
+    allow_negative: bool
 
 
 @SELECTORS.register("duration")
@@ -733,6 +740,10 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            # Enable millisecond field in frontend.
+            vol.Optional("enable_millisecond"): cv.boolean,
+            # Allow negative durations. Will default to False in HA Core 2025.6.0.
+            vol.Optional("allow_negative"): cv.boolean,
         }
     )
 
@@ -742,7 +753,10 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        cv.time_period_dict(data)
+        if self.config.get("allow_negative", True):
+            cv.time_period_dict(data)
+        else:
+            cv.positive_time_period_dict(data)
         return cast(dict[str, float], data)
 
 
@@ -816,7 +830,7 @@ class FloorSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("floor")
-class FloorSelector(Selector[AreaSelectorConfig]):
+class FloorSelector(Selector[FloorSelectorConfig]):
     """Selector of a single or list of floors."""
 
     selector_type = "floor"
@@ -930,7 +944,7 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
         }
     )
 
-    def __init__(self, config: LanguageSelectorConfig) -> None:
+    def __init__(self, config: LanguageSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1155,7 +1169,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         }
     )
 
-    def __init__(self, config: SelectSelectorConfig | None = None) -> None:
+    def __init__(self, config: SelectSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1171,7 +1185,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                     for option in cast(Sequence[SelectOptionDict], config_options)
                 ]
 
-        parent_schema = vol.In(options)
+        parent_schema: vol.In | vol.Any = vol.In(options)
         if self.config["custom_value"]:
             parent_schema = vol.Any(parent_schema, str)
 
@@ -1430,7 +1444,7 @@ class FileSelector(Selector[FileSelectorConfig]):
         }
     )
 
-    def __init__(self, config: FileSelectorConfig | None = None) -> None:
+    def __init__(self, config: FileSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 

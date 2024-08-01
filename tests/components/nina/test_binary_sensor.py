@@ -48,7 +48,7 @@ ENTRY_DATA_NO_AREA: dict[str, Any] = {
 }
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the NINA sensors."""
 
     with patch(
@@ -58,8 +58,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
@@ -164,7 +162,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
-async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
+async def test_sensors_without_corona_filter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
     with patch(
@@ -174,8 +174,6 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_CORONA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
@@ -292,7 +290,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
-async def test_sensors_with_area_filter(hass: HomeAssistant) -> None:
+async def test_sensors_with_area_filter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the NINA sensors with an area filter."""
 
     with patch(
@@ -302,8 +302,6 @@ async def test_sensors_with_area_filter(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_AREA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)

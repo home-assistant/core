@@ -13,13 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_IBEACON_DEVICE_NEW
+from . import IBeaconConfigEntry
+from .const import SIGNAL_IBEACON_DEVICE_NEW
 from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
 
@@ -67,10 +67,12 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IBeaconConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for iBeacon Tracker component."""
-    coordinator: IBeaconCoordinator = hass.data[DOMAIN]
+    coordinator = entry.runtime_data
 
     @callback
     def _async_device_new(

@@ -13,8 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .mock_data import MAP_DATA, PROP
+
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.roborock.mock_data import MAP_DATA, PROP
 from tests.typing import ClientSessionGenerator
 
 

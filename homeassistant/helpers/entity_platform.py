@@ -10,8 +10,6 @@ from functools import partial
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
 
-import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_RESTORED,
@@ -30,7 +28,13 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    PlatformNotReady,
+)
 from homeassistant.generated import languages
 from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
@@ -46,7 +50,7 @@ from . import (
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
 from .issue_registry import IssueSeverity, async_create_issue
-from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -196,8 +200,8 @@ class EntityPlatform:
           to that number.
 
         The default value for parallel requests is decided based on the first
-        entity that is added to Home Assistant. It's 0 if the entity defines
-        the async_update method, else it's 1.
+        entity of the platform which is added to Home Assistant. It's 1 if the
+        entity implements the update method, else it's 0.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -408,6 +412,16 @@ class EntityPlatform:
                 ),
                 self.platform_name,
                 SLOW_SETUP_MAX_WAIT,
+            )
+            return False
+        except (ConfigEntryNotReady, ConfigEntryAuthFailed, ConfigEntryError) as exc:
+            _LOGGER.error(
+                "%s raises exception %s in forwarded platform "
+                "%s; Instead raise %s before calling async_forward_entry_setups",
+                self.platform_name,
+                type(exc).__name__,
+                self.domain,
+                type(exc).__name__,
             )
             return False
         except Exception:
@@ -889,9 +903,9 @@ class EntityPlatform:
 
         def remove_entity_cb() -> None:
             """Remove entity from entities dict."""
-            self.entities.pop(entity_id)
-            self.domain_entities.pop(entity_id)
-            self.domain_platform_entities.pop(entity_id)
+            del self.entities[entity_id]
+            del self.domain_entities[entity_id]
+            del self.domain_platform_entities[entity_id]
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -971,7 +985,7 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType | None,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,

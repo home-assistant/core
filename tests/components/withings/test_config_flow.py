@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.withings.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -16,10 +18,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Check full flow."""
@@ -79,10 +81,10 @@ async def test_full_flow(
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_non_unique_profile(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -132,13 +134,13 @@ async def test_config_non_unique_profile(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_reauth_profile(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    current_request_with_host,
 ) -> None:
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, polling_config_entry)
@@ -194,13 +196,13 @@ async def test_config_reauth_profile(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    current_request_with_host,
 ) -> None:
     """Test reauth with wrong account."""
     await setup_integration(hass, polling_config_entry)
@@ -256,13 +258,13 @@ async def test_config_reauth_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_flow_with_invalid_credentials(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    current_request_with_host,
 ) -> None:
     """Test flow with invalid credentials."""
     result = await hass.config_entries.flow.async_init(

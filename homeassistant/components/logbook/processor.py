@@ -173,7 +173,7 @@ class EventProcessor:
             )
 
     def humanify(
-        self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result
+        self, rows: Generator[EventAsRow] | Sequence[Row] | Result
     ) -> list[dict[str, str]]:
         """Humanify rows."""
         return list(
@@ -189,11 +189,11 @@ class EventProcessor:
 
 def _humanify(
     hass: HomeAssistant,
-    rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
+    rows: Generator[EventAsRow] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
-) -> Generator[dict[str, Any], None, None]:
+) -> Generator[dict[str, Any]]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
@@ -204,13 +204,12 @@ def _humanify(
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
     memoize_new_contexts = logbook_run.memoize_new_contexts
-    memoize_context = context_lookup.setdefault
 
     # Process rows
     for row in rows:
         context_id_bin: bytes = row.context_id_bin
-        if memoize_new_contexts:
-            memoize_context(context_id_bin, row)
+        if memoize_new_contexts and context_id_bin not in context_lookup:
+            context_lookup[context_id_bin] = row
         if row.context_only:
             continue
         event_type = row.event_type

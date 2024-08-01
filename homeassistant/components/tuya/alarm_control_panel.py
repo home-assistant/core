@@ -88,6 +88,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
     _attr_name = None
+    _attr_code_arm_required = False
 
     def __init__(
         self,

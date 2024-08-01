@@ -11,10 +11,7 @@ from typing import Any, Self, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -23,11 +20,11 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=30)
-
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 _LOGGER = logging.getLogger(__name__)
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 class EventDeviceClass(StrEnum):

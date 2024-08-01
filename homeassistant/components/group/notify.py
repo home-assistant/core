@@ -12,18 +12,31 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
+    ATTR_TITLE,
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    SERVICE_SEND_MESSAGE,
     BaseNotificationService,
+    NotifyEntity,
 )
-from homeassistant.const import ATTR_SERVICE
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SERVICE,
+    CONF_ENTITIES,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .entity import GroupEntity
 
 CONF_SERVICES = "services"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERVICES): vol.All(
             cv.ensure_list,
@@ -82,3 +95,73 @@ class GroupNotifyPlatform(BaseNotificationService):
 
         if tasks:
             await asyncio.wait(tasks)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Notify Group config entry."""
+    registry = er.async_get(hass)
+    entities = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+
+    async_add_entities(
+        [NotifyGroup(config_entry.entry_id, config_entry.title, entities)]
+    )
+
+
+@callback
+def async_create_preview_notify(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> NotifyGroup:
+    """Create a preview notify group."""
+    return NotifyGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+    )
+
+
+class NotifyGroup(GroupEntity, NotifyEntity):
+    """Representation of a NotifyGroup."""
+
+    _attr_available: bool = False
+
+    def __init__(
+        self,
+        unique_id: str | None,
+        name: str,
+        entity_ids: list[str],
+    ) -> None:
+        """Initialize a NotifyGroup."""
+        self._entity_ids = entity_ids
+        self._attr_name = name
+        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_unique_id = unique_id
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to all members of the group."""
+        await self.hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: message,
+                ATTR_TITLE: title,
+                ATTR_ENTITY_ID: self._entity_ids,
+            },
+            blocking=True,
+            context=self._context,
+        )
+
+    @callback
+    def async_update_group_state(self) -> None:
+        """Query all members and determine the notify group state."""
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(
+            state.state != STATE_UNAVAILABLE
+            for entity_id in self._entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+        )

@@ -673,12 +673,13 @@ async def test_option_flow(hass: HomeAssistant, option_value: bool) -> None:
     }
 
 
-async def test_discovered_by_dhcp_updates_host(hass: HomeAssistant) -> None:
+async def test_discovered_by_dhcp_updates_host(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test dhcp updates existing host."""
     config_entry, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
-    registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert len(devices) == 1
     device = devices[0]
     assert device.model == "TestModel"
@@ -697,13 +698,12 @@ async def test_discovered_by_dhcp_updates_host(hass: HomeAssistant) -> None:
 
 
 async def test_discovered_by_dhcp_does_nothing_if_host_is_the_same(
-    hass: HomeAssistant,
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test dhcp update does nothing if host is the same."""
     config_entry, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
-    registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert len(devices) == 1
     device = devices[0]
     assert device.model == "TestModel"
@@ -722,13 +722,12 @@ async def test_discovered_by_dhcp_does_nothing_if_host_is_the_same(
 
 
 async def test_discovered_by_dhcp_does_not_update_if_already_loaded(
-    hass: HomeAssistant,
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test dhcp does not update existing host if its already loaded."""
     config_entry, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
-    registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert len(devices) == 1
     device = devices[0]
     assert device.model == "TestModel"

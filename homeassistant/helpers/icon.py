@@ -21,15 +21,6 @@ ICON_CACHE: HassKey[_IconsCache] = HassKey("icon_cache")
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def _component_icons_path(integration: Integration) -> pathlib.Path:
-    """Return the icons json file location for a component.
-
-    Ex: components/hue/icons.json
-    """
-    return integration.file_path / "icons.json"
-
-
 def _load_icons_files(
     icons_files: dict[str, pathlib.Path],
 ) -> dict[str, dict[str, Any]]:
@@ -50,7 +41,7 @@ async def _async_get_component_icons(
 
     # Determine files to load
     files_to_load = {
-        comp: _component_icons_path(integrations[comp]) for comp in components
+        comp: integrations[comp].file_path / "icons.json" for comp in components
     }
 
     # Load files

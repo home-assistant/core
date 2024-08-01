@@ -67,7 +67,7 @@ ALL_LANGUAGES = [
     "sr",
     "sv",
     "ta",
-    "te",
+    "te",  # codespell:ignore te
     "th",
     "tl",
     "tr",

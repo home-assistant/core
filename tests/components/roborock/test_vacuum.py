@@ -27,18 +27,21 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .mock_data import PROP
+
 from tests.common import MockConfigEntry
-from tests.components.roborock.mock_data import PROP
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
 
 
 async def test_registry_entries(
-    hass: HomeAssistant, bypass_api_fixture, setup_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
 ) -> None:
     """Tests devices are registered in the entity registry."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry.unique_id == DEVICE_ID
 

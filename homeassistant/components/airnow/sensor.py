@@ -23,7 +23,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import get_time_zone
 
 from . import AirNowConfigEntry, AirNowDataUpdateCoordinator
 from .const import (
@@ -31,10 +30,11 @@ from .const import (
     ATTR_API_AQI_DESCRIPTION,
     ATTR_API_AQI_LEVEL,
     ATTR_API_O3,
+    ATTR_API_PM10,
     ATTR_API_PM25,
     ATTR_API_REPORT_DATE,
     ATTR_API_REPORT_HOUR,
-    ATTR_API_REPORT_TZ,
+    ATTR_API_REPORT_TZINFO,
     ATTR_API_STATION,
     ATTR_API_STATION_LATITUDE,
     ATTR_API_STATION_LONGITUDE,
@@ -83,9 +83,18 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
                 f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}",
                 "%Y-%m-%d %H",
             )
-            .replace(tzinfo=get_time_zone(data[ATTR_API_REPORT_TZ]))
+            .replace(tzinfo=data[ATTR_API_REPORT_TZINFO])
             .isoformat(),
         },
+    ),
+    AirNowEntityDescription(
+        key=ATTR_API_PM10,
+        translation_key="pm10",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PM10,
+        value_fn=lambda data: data.get(ATTR_API_PM10),
+        extra_state_attributes_fn=None,
     ),
     AirNowEntityDescription(
         key=ATTR_API_PM25,

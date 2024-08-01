@@ -11,9 +11,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.COVER]
 
-Airtouch5ConfigEntry = ConfigEntry[Airtouch5SimpleClient]
+type Airtouch5ConfigEntry = ConfigEntry[Airtouch5SimpleClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -> bool:

@@ -55,13 +55,13 @@ async def test_knx_notify_service_issue(
     assert len(issue_registry.issues) == 1
     assert issue_registry.async_get_issue(
         domain="notify",
-        issue_id=f"migrate_notify_{DOMAIN}",
+        issue_id=f"migrate_notify_{DOMAIN}_notify",
     )
 
     # Test confirm step in repair flow
     resp = await http_client.post(
         RepairsFlowIndexView.url,
-        json={"handler": "notify", "issue_id": f"migrate_notify_{DOMAIN}"},
+        json={"handler": "notify", "issue_id": f"migrate_notify_{DOMAIN}_notify"},
     )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -79,6 +79,6 @@ async def test_knx_notify_service_issue(
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(
         domain="notify",
-        issue_id=f"migrate_notify_{DOMAIN}",
+        issue_id=f"migrate_notify_{DOMAIN}_notify",
     )
     assert len(issue_registry.issues) == 0

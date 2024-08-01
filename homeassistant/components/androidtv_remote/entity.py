@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import CONF_APPS, DOMAIN
 
 
 class AndroidTVRemoteBaseEntity(Entity):
@@ -26,6 +28,7 @@ class AndroidTVRemoteBaseEntity(Entity):
         self._api = api
         self._host = config_entry.data[CONF_HOST]
         self._name = config_entry.data[CONF_NAME]
+        self._apps: dict[str, Any] = config_entry.options.get(CONF_APPS, {})
         self._attr_unique_id = config_entry.unique_id
         self._attr_is_on = api.is_on
         device_info = api.device_info

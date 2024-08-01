@@ -12,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
+from .common import OmniLogicEntity, check_guard
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .coordinator import OmniLogicUpdateCoordinator
 
 SERVICE_SET_SPEED = "set_pump_speed"
 OMNILOGIC_SWITCH_OFF = 7

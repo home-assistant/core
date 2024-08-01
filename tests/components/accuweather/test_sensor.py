@@ -31,9 +31,9 @@ from . import init_integration
 from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
     mock_accuweather_client: AsyncMock,
     snapshot: SnapshotAssertion,

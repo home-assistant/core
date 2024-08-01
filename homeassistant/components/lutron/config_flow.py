@@ -73,37 +73,3 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Attempt to import the existing configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        main_repeater = Lutron(
-            import_config[CONF_HOST],
-            import_config[CONF_USERNAME],
-            import_config[CONF_PASSWORD],
-        )
-
-        def _load_db() -> None:
-            main_repeater.load_xml_db()
-
-        try:
-            await self.hass.async_add_executor_job(_load_db)
-        except HTTPError:
-            _LOGGER.exception("Http error")
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unknown error")
-            return self.async_abort(reason="unknown")
-
-        guid = main_repeater.guid
-
-        if len(guid) <= 10:
-            return self.async_abort(reason="cannot_connect")
-        _LOGGER.debug("Main Repeater GUID: %s", main_repeater.guid)
-
-        await self.async_set_unique_id(guid)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(title="Lutron", data=import_config)

@@ -20,7 +20,7 @@ from . import data
 from .const import DOMAIN
 
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
-ENERGY_USAGE_UNITS = {
+ENERGY_USAGE_UNITS: dict[str, tuple[UnitOfEnergy, ...]] = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
@@ -38,7 +38,7 @@ GAS_USAGE_DEVICE_CLASSES = (
     sensor.SensorDeviceClass.ENERGY,
     sensor.SensorDeviceClass.GAS,
 )
-GAS_USAGE_UNITS = {
+GAS_USAGE_UNITS: dict[str, tuple[UnitOfEnergy | UnitOfVolume, ...]] = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
@@ -58,7 +58,7 @@ GAS_PRICE_UNITS = tuple(
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
 WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
-WATER_USAGE_UNITS = {
+WATER_USAGE_UNITS: dict[str, tuple[UnitOfVolume, ...]] = {
     sensor.SensorDeviceClass.WATER: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
@@ -360,12 +360,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                             source_result,
                         )
                     )
-                elif flow.get("entity_energy_price") is not None:
+                elif (
+                    entity_energy_price := flow.get("entity_energy_price")
+                ) is not None:
                     validate_calls.append(
                         functools.partial(
                             _async_validate_price_entity,
                             hass,
-                            flow["entity_energy_price"],
+                            entity_energy_price,
                             source_result,
                             ENERGY_PRICE_UNITS,
                             ENERGY_PRICE_UNIT_ERROR,
@@ -411,12 +413,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                             source_result,
                         )
                     )
-                elif flow.get("entity_energy_price") is not None:
+                elif (
+                    entity_energy_price := flow.get("entity_energy_price")
+                ) is not None:
                     validate_calls.append(
                         functools.partial(
                             _async_validate_price_entity,
                             hass,
-                            flow["entity_energy_price"],
+                            entity_energy_price,
                             source_result,
                             ENERGY_PRICE_UNITS,
                             ENERGY_PRICE_UNIT_ERROR,
@@ -462,12 +466,12 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         source_result,
                     )
                 )
-            elif source.get("entity_energy_price") is not None:
+            elif (entity_energy_price := source.get("entity_energy_price")) is not None:
                 validate_calls.append(
                     functools.partial(
                         _async_validate_price_entity,
                         hass,
-                        source["entity_energy_price"],
+                        entity_energy_price,
                         source_result,
                         GAS_PRICE_UNITS,
                         GAS_PRICE_UNIT_ERROR,
@@ -513,12 +517,12 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         source_result,
                     )
                 )
-            elif source.get("entity_energy_price") is not None:
+            elif (entity_energy_price := source.get("entity_energy_price")) is not None:
                 validate_calls.append(
                     functools.partial(
                         _async_validate_price_entity,
                         hass,
-                        source["entity_energy_price"],
+                        entity_energy_price,
                         source_result,
                         WATER_PRICE_UNITS,
                         WATER_PRICE_UNIT_ERROR,

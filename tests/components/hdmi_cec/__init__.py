@@ -21,6 +21,7 @@ class MockHDMIDevice:
         self.turn_off = Mock()
         self.send_command = Mock()
         self.async_send_command = AsyncMock()
+        self._update = None
 
     def __getattr__(self, name):
         """Get attribute from `_values` if not explicitly set."""

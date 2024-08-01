@@ -108,13 +108,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def discover_scripts(hass):
+def discover_scripts(hass: HomeAssistant) -> None:
     """Discover python scripts in folder."""
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
-        return False
+        return
 
     def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
         """Handle python script service calls."""
@@ -200,7 +200,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         _LOGGER.error(
             "Error loading script %s: %s", filename, ", ".join(compiled.errors)
         )
-        return
+        return None
 
     if compiled.warnings:
         _LOGGER.warning(

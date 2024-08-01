@@ -27,7 +27,9 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_p1monitor():
     """Return a mocked P1 Monitor client."""
-    with patch("homeassistant.components.p1_monitor.P1Monitor") as p1monitor_mock:
+    with patch(
+        "homeassistant.components.p1_monitor.coordinator.P1Monitor"
+    ) as p1monitor_mock:
         client = p1monitor_mock.return_value
         client.smartmeter = AsyncMock(
             return_value=SmartMeter.from_dict(

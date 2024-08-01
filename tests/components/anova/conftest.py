@@ -1,5 +1,7 @@
 """Common fixtures for Anova."""
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 import json
@@ -40,7 +42,7 @@ class MockedAnovaWebsocketStream:
         """Initialize a Anova Websocket Stream that can be manipulated for tests."""
         self.messages = messages
 
-    def __aiter__(self) -> "MockedAnovaWebsocketStream":
+    def __aiter__(self) -> MockedAnovaWebsocketStream:
         """Handle async iteration."""
         return self
 
@@ -76,7 +78,9 @@ class MockedAnovaWebsocketHandler(AnovaWebsocketHandler):
         self.ws = MockedAnovaWebsocketStream(self.connect_messages)
         await self.message_listener()
         self.ws = MockedAnovaWebsocketStream(self.post_connect_messages)
-        self.fut = asyncio.ensure_future(self.message_listener())
+        # RUF006 ignored as it replicates the parent library
+        # https://github.com/Lash-L/anova_wifi/issues/35
+        asyncio.ensure_future(self.message_listener())  # noqa: RUF006
 
 
 def anova_api_mock(

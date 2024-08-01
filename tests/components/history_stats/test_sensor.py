@@ -8,20 +8,33 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config as hass_config
-from homeassistant.components.history_stats import DOMAIN
+from homeassistant.components.history_stats.const import (
+    CONF_END,
+    CONF_START,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from homeassistant.components.history_stats.sensor import (
     PLATFORM_SCHEMA as SENSOR_SCHEMA,
 )
 from homeassistant.components.recorder import Recorder
-from homeassistant.const import ATTR_DEVICE_CLASS, SERVICE_RELOAD, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_STATE,
+    CONF_TYPE,
+    SERVICE_RELOAD,
+    STATE_UNKNOWN,
+)
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import RecorderInstanceGenerator
 
@@ -46,6 +59,15 @@ async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test")
     assert state.state == "0.0"
+
+
+async def test_setup_config_entry(
+    recorder_mock: Recorder, hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test the history statistics sensor setup from a config entry."""
+
+    state = hass.states.get("sensor.unnamed_statistics")
+    assert state.state == "2"
 
 
 async def test_setup_multiple_states(
@@ -591,7 +613,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     hass: HomeAssistant,
 ) -> None:
     """Test we startup from history and switch to watching state changes."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -692,7 +714,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     hass: HomeAssistant,
 ) -> None:
     """Test we startup from history and switch to watching state changes with an expanding end time."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -809,7 +831,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     hass: HomeAssistant,
 ) -> None:
     """Test we startup from history and switch to watching state changes."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -950,7 +972,7 @@ async def test_does_not_work_into_the_future(
 
     Verifies we do not regress https://github.com/home-assistant/core/pull/20589
     """
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -1357,7 +1379,7 @@ async def test_measure_from_end_going_backwards(
 
 async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor measure with a non-UTC timezone."""
-    hass.config.set_time_zone("Europe/Berlin")
+    await hass.config.async_set_time_zone("Europe/Berlin")
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -1446,7 +1468,7 @@ async def test_end_time_with_microseconds_zeroed(
     hass: HomeAssistant,
 ) -> None:
     """Test the history statistics sensor that has the end time microseconds zeroed out."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     start_of_today = dt_util.now().replace(
         day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
     )
@@ -1650,7 +1672,7 @@ async def test_history_stats_handles_floored_timestamps(
     hass: HomeAssistant,
 ) -> None:
     """Test we account for microseconds when doing the data calculation."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
     last_times = None
@@ -1727,3 +1749,50 @@ async def test_unique_id(
         entity_registry.async_get("sensor.test").unique_id
         == "some_history_stats_unique_id"
     )
+
+
+async def test_device_id(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test for source entity device for History stats."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("binary_sensor.test_source") is not None
+
+    history_stats_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "binary_sensor.test_source",
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+            CONF_END: "{{ utcnow() }}",
+        },
+        title="History stats",
+    )
+    history_stats_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    history_stats_entity = entity_registry.async_get("sensor.history_stats")
+    assert history_stats_entity is not None
+    assert history_stats_entity.device_id == source_entity.device_id

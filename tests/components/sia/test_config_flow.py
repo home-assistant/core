@@ -139,7 +139,7 @@ async def entry_with_additional_account_config(hass, flow_at_add_account_step):
         )
 
 
-async def setup_sia(hass, config_entry: MockConfigEntry):
+async def setup_sia(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Add mock config to HASS."""
     assert await async_setup_component(hass, DOMAIN, {})
     config_entry.add_to_hass(hass)

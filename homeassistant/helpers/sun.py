@@ -22,7 +22,7 @@ DATA_LOCATION_CACHE: HassKey[
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
 
-_AstralSunEventCallable = Callable[..., datetime.datetime]
+type _AstralSunEventCallable = Callable[..., datetime.datetime]
 
 
 @callback

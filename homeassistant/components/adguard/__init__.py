@@ -43,7 +43,7 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
-AdGuardConfigEntry = ConfigEntry["AdGuardData"]
+type AdGuardConfigEntry = ConfigEntry[AdGuardData]
 
 
 @dataclass

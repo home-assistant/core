@@ -128,7 +128,6 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
             user_input={CONF_API_KEY: "newkey"},
         )
 
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert entry.data[CONF_API_KEY] == "newkey"

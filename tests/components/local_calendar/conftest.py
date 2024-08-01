@@ -60,9 +60,7 @@ def mock_store_read_side_effect() -> Any | None:
 
 
 @pytest.fixture(name="store", autouse=True)
-def mock_store(
-    ics_content: str, store_read_side_effect: Any | None
-) -> Generator[None, None, None]:
+def mock_store(ics_content: str, store_read_side_effect: Any | None) -> Generator[None]:
     """Test cleanup, remove any media storage persisted during the test."""
 
     stores: dict[Path, FakeStore] = {}
@@ -87,11 +85,11 @@ def mock_time_zone() -> str:
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant, time_zone: str):
+async def set_time_zone(hass: HomeAssistant, time_zone: str):
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
 
 
 @pytest.fixture(name="config_entry")
@@ -108,7 +106,7 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-GetEventsFn = Callable[[str, str], Awaitable[list[dict[str, Any]]]]
+type GetEventsFn = Callable[[str, str], Awaitable[list[dict[str, Any]]]]
 
 
 @pytest.fixture(name="get_events")
@@ -130,7 +128,7 @@ def event_fields(data: dict[str, str]) -> dict[str, str]:
     """Filter event API response to minimum fields."""
     return {
         k: data[k]
-        for k in ["summary", "start", "end", "recurrence_id", "location"]
+        for k in ("summary", "start", "end", "recurrence_id", "location")
         if data.get(k)
     }
 
@@ -169,7 +167,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Awaitable[Client]]
+type ClientFixture = Callable[[], Awaitable[Client]]
 
 
 @pytest.fixture

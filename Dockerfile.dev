@@ -35,21 +35,30 @@ RUN \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install uv
+RUN pip3 install uv
+
 WORKDIR /usr/src
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
-    && pip3 install -e hass-release/
+    && uv pip install --system -e hass-release/
 
-WORKDIR /workspaces
+USER vscode
+ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
+RUN uv venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+WORKDIR /tmp
 
 # Install Python dependencies from requirements
 COPY requirements.txt ./
 COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
-RUN pip3 install -r requirements.txt
+RUN uv pip install -r requirements.txt
 COPY requirements_test.txt requirements_test_pre_commit.txt ./
-RUN pip3 install -r requirements_test.txt
-RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
+RUN uv pip install -r requirements_test.txt
+
+WORKDIR /workspaces
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash

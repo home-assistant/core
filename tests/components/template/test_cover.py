@@ -26,7 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.common import assert_setup_component
 
@@ -267,11 +267,11 @@ async def test_template_position(
     hass.states.async_set("cover.test", STATE_OPEN)
     attrs = {}
 
-    for set_state, pos, test_state in [
+    for set_state, pos, test_state in (
         (STATE_CLOSED, 42, STATE_OPEN),
         (STATE_OPEN, 0.0, STATE_CLOSED),
         (STATE_CLOSED, None, STATE_UNKNOWN),
-    ]:
+    ):
         attrs["position"] = pos
         hass.states.async_set("cover.test", set_state, attributes=attrs)
         await hass.async_block_till_done()
@@ -445,7 +445,9 @@ async def test_template_open_or_position(
         },
     ],
 )
-async def test_open_action(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_open_action(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test the open_cover command."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
@@ -484,7 +486,9 @@ async def test_open_action(hass: HomeAssistant, start_ha, calls) -> None:
         },
     ],
 )
-async def test_close_stop_action(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_close_stop_action(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test the close-cover and stop_cover commands."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPEN
@@ -513,7 +517,9 @@ async def test_close_stop_action(hass: HomeAssistant, start_ha, calls) -> None:
         {"input_number": {"test": {"min": "0", "max": "100", "initial": "42"}}},
     ],
 )
-async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_set_position(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test the set_position command."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -643,7 +649,12 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     ],
 )
 async def test_set_tilt_position(
-    hass: HomeAssistant, service, attr, start_ha, calls, tilt_position
+    hass: HomeAssistant,
+    service,
+    attr,
+    start_ha,
+    calls: list[ServiceCall],
+    tilt_position,
 ) -> None:
     """Test the set_tilt_position command."""
     await hass.services.async_call(
@@ -676,7 +687,9 @@ async def test_set_tilt_position(
         },
     ],
 )
-async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_set_position_optimistic(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test optimistic position mode."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") is None
@@ -691,12 +704,12 @@ async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> 
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 42.0
 
-    for service, test_state in [
+    for service, test_state in (
         (SERVICE_CLOSE_COVER, STATE_CLOSED),
         (SERVICE_OPEN_COVER, STATE_OPEN),
         (SERVICE_TOGGLE, STATE_CLOSED),
         (SERVICE_TOGGLE, STATE_OPEN),
-    ]:
+    ):
         await hass.services.async_call(
             DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )
@@ -724,7 +737,7 @@ async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> 
     ],
 )
 async def test_set_tilt_position_optimistic(
-    hass: HomeAssistant, start_ha, calls
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
 ) -> None:
     """Test the optimistic tilt_position mode."""
     state = hass.states.get("cover.test_template_cover")
@@ -740,12 +753,12 @@ async def test_set_tilt_position_optimistic(
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") == 42.0
 
-    for service, pos in [
+    for service, pos in (
         (SERVICE_CLOSE_COVER_TILT, 0.0),
         (SERVICE_OPEN_COVER_TILT, 100.0),
         (SERVICE_TOGGLE_COVER_TILT, 0.0),
         (SERVICE_TOGGLE_COVER_TILT, 100.0),
-    ]:
+    ):
         await hass.services.async_call(
             DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )

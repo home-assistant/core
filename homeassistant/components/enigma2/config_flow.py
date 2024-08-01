@@ -1,6 +1,6 @@
 """Config flow for Enigma2."""
 
-from typing import Any
+from typing import Any, cast
 
 from aiohttp.client_exceptions import ClientError
 from openwebif.api import OpenWebIfDevice
@@ -8,7 +8,12 @@ from openwebif.error import InvalidAuthError
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,10 +22,15 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .const import (
     CONF_DEEP_STANDBY,
@@ -53,6 +63,32 @@ CONFIG_SCHEMA = vol.Schema(
         ): selector.BooleanSelector(),
     }
 )
+
+
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Get the options schema."""
+    entry = cast(SchemaOptionsFlowHandler, handler.parent_handler).config_entry
+    bouquets = [
+        b[1] for b in (await entry.runtime_data.device.get_all_bouquets())["bouquets"]
+    ]
+
+    return vol.Schema(
+        {
+            vol.Optional(CONF_DEEP_STANDBY): selector.BooleanSelector(),
+            vol.Optional(CONF_SOURCE_BOUQUET): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=bouquets,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_USE_CHANNEL_ICON): selector.BooleanSelector(),
+        }
+    )
+
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(get_options_schema),
+}
 
 
 class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -163,3 +199,9 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             data=data, title=data[CONF_HOST], options=options
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

@@ -270,13 +270,11 @@ async def test_switch_error(
 
     with pytest.raises(HomeAssistantError, match=expected_msg):
         await switch_common.async_turn_on(hass, "switch.rain_bird_sprinkler_3")
-        await hass.async_block_till_done()
 
     responses.append(mock_response_error(status=status))
 
     with pytest.raises(HomeAssistantError, match=expected_msg):
         await switch_common.async_turn_off(hass, "switch.rain_bird_sprinkler_3")
-        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
