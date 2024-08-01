@@ -6,6 +6,8 @@ import logging
 
 from pymicro_vad import MicroVad
 
+from .const import BYTES_PER_CHUNK
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -38,11 +40,6 @@ class AudioEnhancer(ABC):
     def enhance_chunk(self, audio: bytes, timestamp_ms: int) -> EnhancedAudioChunk:
         """Enhance chunk of PCM audio @ 16Khz with 16-bit mono samples."""
 
-    @property
-    @abstractmethod
-    def samples_per_chunk(self) -> int | None:
-        """Return number of samples per chunk or None if chunking isn't required."""
-
 
 class MicroVadEnhancer(AudioEnhancer):
     """Audio enhancer that just runs microVAD."""
@@ -61,22 +58,15 @@ class MicroVadEnhancer(AudioEnhancer):
             _LOGGER.debug("Initialized microVAD with threshold=%s", self.threshold)
 
     def enhance_chunk(self, audio: bytes, timestamp_ms: int) -> EnhancedAudioChunk:
-        """Enhance chunk of PCM audio @ 16Khz with 16-bit mono samples."""
+        """Enhance 10ms chunk of PCM audio @ 16Khz with 16-bit mono samples."""
         is_speech: bool | None = None
 
         if self.vad is not None:
             # Run VAD
+            assert len(audio) == BYTES_PER_CHUNK
             speech_prob = self.vad.Process10ms(audio)
             is_speech = speech_prob > self.threshold
 
         return EnhancedAudioChunk(
             audio=audio, timestamp_ms=timestamp_ms, is_speech=is_speech
         )
-
-    @property
-    def samples_per_chunk(self) -> int | None:
-        """Return number of samples per chunk or None if chunking isn't required."""
-        if self.is_vad_enabled:
-            return 160  # 10ms
-
-        return None
