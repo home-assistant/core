@@ -54,7 +54,7 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_config_entry_2():
+def mock_config_entry_2() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
