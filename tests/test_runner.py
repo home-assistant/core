@@ -105,7 +105,7 @@ def test_run_does_not_block_forever_with_shielded_task(
             try:
                 await asyncio.sleep(2)
             except asyncio.CancelledError:
-                raise Exception  # pylint: disable=broad-exception-raised
+                raise Exception  # noqa: TRY002
 
         async def async_shielded(*_):
             try:
@@ -142,8 +142,7 @@ async def test_unhandled_exception_traceback(
 
     async def _unhandled_exception():
         raised.set()
-        # pylint: disable-next=broad-exception-raised
-        raise Exception("This is unhandled")
+        raise Exception("This is unhandled")  # noqa: TRY002
 
     try:
         hass.loop.set_debug(True)
