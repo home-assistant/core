@@ -34,7 +34,7 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_A30
         case "ARYLIC_A50S":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_A50S
-        case: "UP2STREAM_AMP_V3":
+        case "UP2STREAM_AMP_V3":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_AMP_V3
         case: "UP2STREAM_AMP_V4":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_AMP_V4
