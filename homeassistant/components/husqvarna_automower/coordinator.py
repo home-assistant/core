@@ -74,7 +74,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "Failed to connect to websocket. Trying to reconnect: %s", err
             )
             if not hass.is_stopping:
-                reconnect_time = 2
                 await asyncio.sleep(reconnect_time)
                 reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
                 entry.async_create_background_task(
