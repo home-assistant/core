@@ -9,9 +9,9 @@ from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
 
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
-    SensorStateClass
+    SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
