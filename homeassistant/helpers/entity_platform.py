@@ -999,6 +999,8 @@ class EntityPlatform:
 
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
+        elif schema is None:
+            raise HomeAssistantError("This won't work!")
 
         service_func: str | HassJob[..., Any]
         service_func = func if isinstance(func, str) else HassJob(func)
