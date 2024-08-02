@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation, ollama
 from homeassistant.components.conversation import trace
-from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
@@ -554,3 +554,26 @@ async def test_conversation_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == MATCH_ALL
+
+    state = hass.states.get("conversation.mock_title")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+
+async def test_conversation_agent_with_assist(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test OllamaConversationEntity."""
+    agent = conversation.get_agent_manager(hass).async_get_agent(
+        mock_config_entry_with_assist.entry_id
+    )
+    assert agent.supported_languages == MATCH_ALL
+
+    state = hass.states.get("conversation.mock_title")
+    assert state
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == conversation.ConversationEntityFeature.CONTROL
+    )
