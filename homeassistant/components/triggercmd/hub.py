@@ -18,7 +18,7 @@ class Hub:
 
     manufacturer = "TRIGGERcmd"
 
-    def __init__(self, hass: HomeAssistant, token: str) -> None:
+    def __init__(self, token: str) -> None:
         """Init hub."""
         tokenData = jwt.decode(token, options={"verify_signature": False})
         self._id = tokenData["id"]
