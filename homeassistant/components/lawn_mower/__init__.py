@@ -16,8 +16,11 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
+    SERVICE_CANCEL,
     SERVICE_DOCK,
+    SERVICE_FIXED_MOWING,
     SERVICE_PAUSE,
+    SERVICE_RESUME,
     SERVICE_START_MOWING,
     LawnMowerActivity,
     LawnMowerEntityFeature,
@@ -48,6 +51,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_DOCK, {}, "async_dock", [LawnMowerEntityFeature.DOCK]
+    )
+    component.async_register_entity_service(
+        SERVICE_RESUME, {}, "async_resume", [LawnMowerEntityFeature.RESUME]
+    )
+    component.async_register_entity_service(
+        SERVICE_CANCEL, {}, "async_cancel", [LawnMowerEntityFeature.CANCEL]
+    )
+    component.async_register_entity_service(
+        SERVICE_FIXED_MOWING,
+        {},
+        "async_fixed_mowing",
+        [LawnMowerEntityFeature.FIXED_MOWING],
     )
 
     return True
@@ -101,11 +116,11 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_supported_features
 
     def start_mowing(self) -> None:
-        """Start or resume mowing."""
+        """Start mowing."""
         raise NotImplementedError
 
     async def async_start_mowing(self) -> None:
-        """Start or resume mowing."""
+        """Start mowing."""
         await self.hass.async_add_executor_job(self.start_mowing)
 
     def dock(self) -> None:
@@ -123,3 +138,27 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
         await self.hass.async_add_executor_job(self.pause)
+
+    def resume(self) -> None:
+        """Resume mowing."""
+        raise NotImplementedError
+
+    async def async_resume(self) -> None:
+        """Resume mowing."""
+        await self.hass.async_add_executor_job(self.resume)
+
+    def cancel(self) -> None:
+        """Cancel/Stop lawn mowing."""
+        raise NotImplementedError
+
+    async def async_cancel(self) -> None:
+        """Cancel/Stop lawn mowing."""
+        await self.hass.async_add_executor_job(self.cancel)
+
+    def fixed_mowing(self) -> None:
+        """Start mowing around a fixed spot."""
+        raise NotImplementedError
+
+    async def async_fixed_mowing(self) -> None:
+        """Start mowing around a fixed spot."""
+        await self.hass.async_add_executor_job(self.fixed_mowing)
