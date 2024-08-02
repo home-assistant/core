@@ -34,9 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 class NestEventEntityDescription(EventEntityDescription):
     """Entity description for nest event entities."""
 
-    trait_types: list[TraitType] | None = None
-    api_event_types: list[EventType] | None = None
-    event_types: list[str] | None = None
+    trait_types: list[TraitType]
+    api_event_types: list[EventType]
+    event_types: list[str]
 
 
 ENTITY_DESCRIPTIONS = [
@@ -79,7 +79,7 @@ async def async_setup_entry(
         NestTraitEventEntity(entity_description, device)
         for device in device_manager.devices.values()
         for entity_description in ENTITY_DESCRIPTIONS
-        for trait_type in (entity_description.trait_types or ())
+        for trait_type in entity_description.trait_types
         if trait_type in device.traits
     )
 
@@ -108,7 +108,7 @@ class NestTraitEventEntity(EventEntity):
         ):
             return
         for api_event_type, nest_event in events.items():
-            if api_event_type not in (self.entity_description.api_event_types or ()):
+            if api_event_type not in self.entity_description.api_event_types:
                 continue
 
             event_type = EVENT_NAME_MAP[api_event_type]
