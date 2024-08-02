@@ -2301,7 +2301,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.1
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.5
+python-linkplay==0.0.6
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2992,7 +2992,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.24
+zha==0.0.25
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12

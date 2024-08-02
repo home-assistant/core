@@ -985,7 +985,7 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: VolDictType | VolSchemaType | None,
+        schema: VolDictType | VolSchemaType,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
