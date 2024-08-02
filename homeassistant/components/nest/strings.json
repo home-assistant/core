@@ -76,16 +76,26 @@
   "entity": {
     "event": {
       "chime": {
-        "name": "Chime"
+        "name": "Chime",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "doorbell_chime": "Chime"
+            }
+          }
+        }
       },
       "motion": {
-        "name": "Motion"
-      },
-      "person": {
-        "name": "Person"
-      },
-      "sound": {
-        "name": "Sound"
+        "name": "Motion",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "camera_motion": "Motion",
+              "camera_person": "Person",
+              "camera_sound": "Sound"
+            }
+          }
+        }
       }
     }
   }
