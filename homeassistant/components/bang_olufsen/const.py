@@ -78,6 +78,11 @@ class WebsocketNotification(StrEnum):
     VOLUME: Final[str] = "volume"
 
     # Sub-notifications
+    BEOLINK: Final[str] = "beolink"
+    BEOLINK_PEERS: Final[str] = "beolinkPeers"
+    BEOLINK_LISTENERS: Final[str] = "beolinkListeners"
+    BEOLINK_AVAILABLE_LISTENERS: Final[str] = "beolinkAvailableListeners"
+    CONFIGURATION: Final[str] = "configuration"
     NOTIFICATION: Final[str] = "notification"
     REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
 
