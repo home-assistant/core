@@ -94,7 +94,11 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send notification dispatch."""
 
         if notification.value:
-            if WebsocketNotification.BEOLINK.value in notification.value:
+            if notification.value in (
+                "beolinkPeers",
+                "beolinkListeners",
+                "beolinkAvailableListeners",
+            ):
                 async_dispatcher_send(
                     self.hass,
                     f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
