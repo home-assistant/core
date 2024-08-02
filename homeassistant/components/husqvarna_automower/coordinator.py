@@ -74,28 +74,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "Failed to connect to websocket. Trying to reconnect: %s", err
             )
             if not hass.is_stopping:
-                # self.hass.async_create_background_task(
-                #     hass,
-                #     self.client_listen(hass, entry, automower_client),
-                #     "reconnect_task",
-                # )
                 reconnect_time = 2
                 await asyncio.sleep(reconnect_time)
                 reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-                await self.client_listen(
-                    hass=hass,
-                    entry=entry,
-                    automower_client=automower_client,
-                    reconnect_time=reconnect_time,
+                entry.async_create_background_task(
+                    hass,
+                    self.client_listen(hass, entry, automower_client),
+                    "reconnect_task",
                 )
         else:
             await automower_client.start_listening()
-
-    async def try_reconnect(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        automower_client: AutomowerSession,
-        reconnect_time: int = 2,
-    ) -> None:
-        """Listen with the client."""

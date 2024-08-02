@@ -141,12 +141,19 @@ async def test_websocket_not_available(
     reconnect_time = 2
     for count in range(1, 945):
         reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-        print("reconnect_t", reconnect_time)
         freezer.tick(timedelta(seconds=reconnect_time))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_automower_client.auth.websocket_connect.call_count == count + 1
         assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_automower_client.auth.websocket_connect.side_effect = None
+    freezer.tick(timedelta(seconds=MAX_WS_RECONNECT_TIME))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.start_listening.call_count == 1
+    mock_automower_client.auth.websocket_connect.side_effect = (
+        HusqvarnaWSServerHandshakeError("Boom")
+    )
 
 
 async def test_device_info(
