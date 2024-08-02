@@ -945,7 +945,7 @@ class Integration:
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  we are unable to resolve"
+                    "Unable to resolve dependencies for %s: unable to resolve"
                     " (sub)dependency %s"
                 ),
                 self.domain,
@@ -954,7 +954,7 @@ class Integration:
         except CircularDependency as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  it contains a circular"
+                    "Unable to resolve dependencies for %s: it contains a circular"
                     " dependency: %s -> %s"
                 ),
                 self.domain,

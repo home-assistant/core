@@ -12,27 +12,26 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
+from . import JellyfinConfigEntry
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
 from .const import CONTENT_TYPE_MAP, DOMAIN, LOGGER
 from .coordinator import JellyfinDataUpdateCoordinator
 from .entity import JellyfinEntity
-from .models import JellyfinData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: JellyfinConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Jellyfin media_player from a config entry."""
-    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
+    jellyfin_data = entry.runtime_data
     coordinator = jellyfin_data.coordinators["sessions"]
 
     @callback

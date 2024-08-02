@@ -30,12 +30,17 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Context,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
-    entity,
     entity_registry as er,
     floor_registry as fr,
     intent,
@@ -79,8 +84,8 @@ async def init_components(hass: HomeAssistant) -> None:
     [
         {"hidden_by": er.RegistryEntryHider.USER},
         {"hidden_by": er.RegistryEntryHider.INTEGRATION},
-        {"entity_category": entity.EntityCategory.CONFIG},
-        {"entity_category": entity.EntityCategory.DIAGNOSTIC},
+        {"entity_category": EntityCategory.CONFIG},
+        {"entity_category": EntityCategory.DIAGNOSTIC},
     ],
 )
 @pytest.mark.usefixtures("init_components")
@@ -93,7 +98,7 @@ async def test_hidden_entities_skipped(
         "light", "demo", "1234", suggested_object_id="Test light", **er_kwargs
     )
     hass.states.async_set("light.test_light", "off")
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, HOMEASSISTANT_DOMAIN, "turn_on")
     result = await conversation.async_converse(
         hass, "turn on test light", None, Context(), None
     )

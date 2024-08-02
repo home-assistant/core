@@ -914,12 +914,37 @@ async def async_service_temperature_set(
     """Handle set temperature service."""
     hass = entity.hass
     kwargs = {}
+    min_temp = entity.min_temp
+    max_temp = entity.max_temp
+    temp_unit = entity.temperature_unit
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, entity.temperature_unit
+            kwargs[value] = check_temp = TemperatureConverter.convert(
+                temp, hass.config.units.temperature_unit, temp_unit
             )
+
+            _LOGGER.debug(
+                "Check valid temperature %d %s (%d %s) in range %d %s - %d %s",
+                check_temp,
+                entity.temperature_unit,
+                temp,
+                hass.config.units.temperature_unit,
+                min_temp,
+                temp_unit,
+                max_temp,
+                temp_unit,
+            )
+            if check_temp < min_temp or check_temp > max_temp:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="temp_out_of_range",
+                    translation_placeholders={
+                        "check_temp": str(check_temp),
+                        "min_temp": str(min_temp),
+                        "max_temp": str(max_temp),
+                    },
+                )
         else:
             kwargs[value] = temp
 

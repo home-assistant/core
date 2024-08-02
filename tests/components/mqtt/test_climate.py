@@ -654,11 +654,11 @@ async def test_set_target_temperature(
     assert state.state == "heat"
     mqtt_mock.async_publish.assert_called_once_with("mode-topic", "heat", 0, False)
     mqtt_mock.async_publish.reset_mock()
-    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    await common.async_set_temperature(hass, temperature=35, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("temperature") == 47
+    assert state.attributes.get("temperature") == 35
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "47.0", 0, False
+        "temperature-topic", "35.0", 0, False
     )
 
     # also test directly supplying the operation mode to set_temperature
@@ -713,7 +713,7 @@ async def test_set_target_temperature_pessimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") is None
     await common.async_set_hvac_mode(hass, "heat", ENTITY_CLIMATE)
-    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    await common.async_set_temperature(hass, temperature=35, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") is None
 
@@ -1590,13 +1590,13 @@ async def test_set_and_templates(
     assert state.attributes.get("swing_mode") == "on"
 
     # Temperature
-    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    await common.async_set_temperature(hass, temperature=35, entity_id=ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "temp: 47.0", 0, False
+        "temperature-topic", "temp: 35.0", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("temperature") == 47
+    assert state.attributes.get("temperature") == 35
 
     # Temperature Low/High
     await common.async_set_temperature(

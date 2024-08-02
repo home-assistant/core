@@ -7,9 +7,9 @@ import pytest
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
