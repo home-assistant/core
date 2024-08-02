@@ -308,31 +308,3 @@ async def json_serialize_states(hass):
     start = timer()
     JSON_DUMP(states)
     return timer() - start
-
-
-def _create_state_changed_event_from_old_new(
-    entity_id, event_time_fired, old_state, new_state
-):
-    """Create a state changed event from a old and new state."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import logbook
-
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.logbook import models
-
-    row = models.EventAsRow(
-        row_id=1,
-        event_type=EVENT_STATE_CHANGED,
-        event_data="{}",
-        time_fired_ts=event_time_fired,
-        context_id_bin=b"",
-        context_user_id_bin=None,
-        context_parent_id_bin=None,
-        state=new_state and new_state.get("state"),
-        entity_id=entity_id,
-        icon=None,
-        context_only=None,
-        data=None,
-        context=None,
-    )
-    return logbook.LazyEventPartialState(row, {})
