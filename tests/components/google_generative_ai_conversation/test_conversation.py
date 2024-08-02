@@ -18,7 +18,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
 from homeassistant.components.google_generative_ai_conversation.conversation import (
     _escape_decode,
 )
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
@@ -38,10 +38,13 @@ def freeze_the_time():
     "agent_id", [None, "conversation.google_generative_ai_conversation"]
 )
 @pytest.mark.parametrize(
-    "config_entry_options",
+    ("config_entry_options", "expected_features"),
     [
-        {},
-        {CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+        ({}, 0),
+        (
+            {CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+            conversation.ConversationEntityFeature.CONTROL,
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
@@ -51,6 +54,7 @@ async def test_default_prompt(
     snapshot: SnapshotAssertion,
     agent_id: str | None,
     config_entry_options: {},
+    expected_features: conversation.ConversationEntityFeature,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the default prompt works."""
@@ -96,6 +100,9 @@ async def test_default_prompt(
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
     assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
     assert mock_get_tools.called == (CONF_LLM_HASS_API in config_entry_options)
+
+    state = hass.states.get("conversation.google_generative_ai_conversation")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected_features
 
 
 @pytest.mark.parametrize(

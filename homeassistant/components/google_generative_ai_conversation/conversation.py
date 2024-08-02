@@ -164,6 +164,10 @@ class GoogleGenerativeAIConversationEntity(
             model="Generative AI",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
