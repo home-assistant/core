@@ -138,6 +138,17 @@ async def test_sync_start_mowing(hass: HomeAssistant) -> None:
     assert lawn_mower.start_mowing.called
 
 
+async def test_sync_fixed_mowing(hass: HomeAssistant) -> None:
+    """Test if async fixed_mowing calls sync fixed_mowing."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.fixed_mowing = MagicMock()
+    await lawn_mower.async_fixed_mowing()
+
+    assert lawn_mower.fixed_mowing.called
+
+
 async def test_sync_dock(hass: HomeAssistant) -> None:
     """Test if async dock calls sync dock."""
     lawn_mower = MockLawnMowerEntity()
@@ -160,6 +171,28 @@ async def test_sync_pause(hass: HomeAssistant) -> None:
     assert lawn_mower.pause.called
 
 
+async def test_sync_resume(hass: HomeAssistant) -> None:
+    """Test if async resume calls sync resume."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.resume = MagicMock()
+    await lawn_mower.async_resume()
+
+    assert lawn_mower.resume.called
+
+
+async def test_sync_cancel(hass: HomeAssistant) -> None:
+    """Test if async cancel calls sync cancel."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.cancel = MagicMock()
+    await lawn_mower.async_cancel()
+
+    assert lawn_mower.cancel.called
+
+
 async def test_lawn_mower_default(hass: HomeAssistant) -> None:
     """Test lawn mower entity with defaults."""
     lawn_mower = MockLawnMowerEntity()
@@ -177,3 +210,4 @@ async def test_lawn_mower_state(hass: HomeAssistant) -> None:
     lawn_mower.start_mowing()
 
     assert lawn_mower.state == str(LawnMowerActivity.MOWING)
+

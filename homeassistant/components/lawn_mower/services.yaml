@@ -20,3 +20,24 @@ pause:
       domain: lawn_mower
       supported_features:
         - lawn_mower.LawnMowerEntityFeature.PAUSE
+
+resume:
+  target:
+    entity:
+      domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.RESUME
+
+cancel:
+  target:
+    entity:
+      domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.CANCEL
+
+fixed_mowing:
+  target:
+    entity:
+      domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.FIXED_MOWING
