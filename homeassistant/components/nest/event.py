@@ -42,28 +42,28 @@ class NestEventEntityDescription(EventEntityDescription):
 ENTITY_DESCRIPTIONS = [
     NestEventEntityDescription(
         key=EVENT_DOORBELL_CHIME,
-        name="Chime",
+        translation_key="chime",
         device_class=EventDeviceClass.DOORBELL,
         trait_type=TraitType.DOORBELL_CHIME,
         api_event_type=EventType.DOORBELL_CHIME,
     ),
     NestEventEntityDescription(
         key=EVENT_CAMERA_MOTION,
-        name="Motion",
+        translation_key="motion",
         device_class=EventDeviceClass.MOTION,
         trait_type=TraitType.CAMERA_MOTION,
         api_event_type=EventType.CAMERA_MOTION,
     ),
     NestEventEntityDescription(
         key=EVENT_CAMERA_PERSON,
-        name="Person",
+        translation_key="person",
         device_class=EventDeviceClass.MOTION,
         trait_type=TraitType.CAMERA_PERSON,
         api_event_type=EventType.CAMERA_PERSON,
     ),
     NestEventEntityDescription(
         key=EVENT_CAMERA_SOUND,
-        name="Sound",
+        translation_key="sound",
         device_class=EventDeviceClass.MOTION,
         trait_type=TraitType.CAMERA_SOUND,
         api_event_type=EventType.CAMERA_SOUND,
