@@ -221,17 +221,17 @@ class EnergyConverter(BaseUnitConverter):
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfEnergy.JOULE: 1,
-        UnitOfEnergy.KILO_JOULE: 1 / 1e3,
-        UnitOfEnergy.MEGA_JOULE: 1 / 1e6,
-        UnitOfEnergy.GIGA_JOULE: 1 / 1e9,
-        UnitOfEnergy.WATT_HOUR: 1 / _WH_TO_J,
-        UnitOfEnergy.KILO_WATT_HOUR: 1 / _WH_TO_J / 1e3,
-        UnitOfEnergy.MEGA_WATT_HOUR: 1 / _WH_TO_J / 1e6,
-        UnitOfEnergy.CALORIE: 1 / _CAL_TO_J,
-        UnitOfEnergy.KILO_CALORIE: 1 / _CAL_TO_J / 1e3,
-        UnitOfEnergy.MEGA_CALORIE: 1 / _CAL_TO_J / 1e6,
-        UnitOfEnergy.GIGA_CALORIE: 1 / _CAL_TO_J / 1e9,
+        UnitOfEnergy.JOULE: _WH_TO_J * 1e3,
+        UnitOfEnergy.KILO_JOULE: _WH_TO_J,
+        UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
+        UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
+        UnitOfEnergy.WATT_HOUR: 1e3,
+        UnitOfEnergy.KILO_WATT_HOUR: 1,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
+        UnitOfEnergy.CALORIE: _WH_TO_J / _CAL_TO_J * 1e3,
+        UnitOfEnergy.KILO_CALORIE: _WH_TO_J / _CAL_TO_J,
+        UnitOfEnergy.MEGA_CALORIE: _WH_TO_J / _CAL_TO_J / 1e3,
+        UnitOfEnergy.GIGA_CALORIE: _WH_TO_J / _CAL_TO_J / 1e6,
     }
     VALID_UNITS = set(UnitOfEnergy)
 
