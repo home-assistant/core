@@ -33,14 +33,22 @@ async def async_setup_entry(
     entry: GeniusHubConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Genius Hub switch entities."""
-
+    """Set up the Genius Hub switch entities. A switch is only a switch if it appears alone in a zone."""
     broker = entry.runtime_data
 
     async_add_entities(
         GeniusSwitch(broker, z)
         for z in broker.client.zone_objs
         if z.data.get("type") == GH_ON_OFF_ZONE
+        and len(
+            list(
+                filter(
+                    lambda dev: dev.assigned_zone.name == z.name,
+                    broker.client.device_objs,
+                )
+            )
+        )
+        == 1
     )
 
     # Register custom services
