@@ -213,7 +213,6 @@ def async_register_services(  # noqa: C901
 
     session = async_get_clientsession(hass)
 
-
     async def handle_new_task(call: ServiceCall) -> None:  # noqa: C901
         """Call when a user creates a new Todoist Task from Home Assistant."""
         project_name = call.data[PROJECT_NAME].lower()
