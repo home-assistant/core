@@ -68,6 +68,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
+from .util import get_serial_number_from_jid
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -392,7 +393,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Update the current Beolink leader, listeners, peers and self."""
 
         # Add Beolink listeners / leader
-
         self._remote_leader = self._playback_metadata.remote_leader
 
         # Create group members list
@@ -436,7 +436,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def _get_entity_id_from_jid(self, jid: str) -> str | None:
         """Get entity_id from Beolink JID (if available)."""
 
-        unique_id = jid.split(".")[2].split("@")[0]
+        unique_id = get_serial_number_from_jid(jid)
 
         entity_registry = er.async_get(self.hass)
         return entity_registry.async_get_entity_id(
@@ -498,10 +498,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Return the current playback progress."""
-        # Don't show progress if the the device is a Beolink listener.
-        if self._remote_leader is None:
-            return self._playback_progress.progress
-        return None
+        return self._playback_progress.progress
 
     @property
     def media_image_url(self) -> str | None:

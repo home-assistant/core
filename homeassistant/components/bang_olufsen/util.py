@@ -19,3 +19,8 @@ def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None
     assert device
 
     return device
+
+
+def get_serial_number_from_jid(jid: str) -> str:
+    """Get serial number from Beolink JID."""
+    return jid.split(".")[2].split("@")[0]
