@@ -54,8 +54,6 @@ class Switch:
         self._id = switchid
         self.hub = hub
         self.name = name
-        self._is_on = False
-        self._loop = asyncio.get_event_loop()
         self.firmware_version = "1.0.0"
         self.model = "Trigger Device"
 
