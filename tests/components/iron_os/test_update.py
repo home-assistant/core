@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
+from aiohttp import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
@@ -54,3 +56,23 @@ async def test_update(
     result = await ws_client.receive_json()
 
     assert result["result"] == snapshot
+
+
+@pytest.mark.usefixtures("ble_device", "mock_pynecil")
+async def test_config_entry_not_ready(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_github: AiohttpClientMocker,
+) -> None:
+    """Test config entry not ready."""
+    mock_github.clear_requests()
+    mock_github.get(
+        "https://api.github.com/repos/Ralim/IronOS/releases/latest",
+        side_effect=ClientError,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
