@@ -96,6 +96,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
+UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.40.1")
 MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
@@ -356,7 +357,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
     raise UnsupportedDialect
 
 
-def _fail_unsupported_version(
+def _raise_if_version_unsupported(
     server_version: str, dialect_name: str, minimum_version: str
 ) -> NoReturn:
     """Warn about unsupported database version."""
@@ -373,16 +374,54 @@ def _fail_unsupported_version(
     raise UnsupportedDialect
 
 
+@callback
+def _async_delete_issue_deprecated_version(
+    hass: HomeAssistant, dialect_name: str
+) -> None:
+    """Delete the issue about upcoming unsupported database version."""
+    ir.async_delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
+
+
+@callback
+def _async_create_issue_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    dialect_name: str,
+    min_version: AwesomeVersion,
+) -> None:
+    """Warn about upcoming unsupported database version."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{dialect_name}_too_old",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        translation_key=f"{dialect_name}_too_old",
+        translation_placeholders={
+            "server_version": str(server_version),
+            "min_version": str(min_version),
+        },
+        breaks_in_ha_version="2025.2.0",
+    )
+
+
+def _extract_version_from_server_response_or_raise(
+    server_response: str,
+) -> AwesomeVersion:
+    """Extract version from server response."""
+    return AwesomeVersion(
+        server_response,
+        ensure_strategy=AwesomeVersionStrategy.SIMPLEVER,
+        find_first_match=True,
+    )
+
+
 def _extract_version_from_server_response(
     server_response: str,
 ) -> AwesomeVersion | None:
     """Attempt to extract version from server response."""
     try:
-        return AwesomeVersion(
-            server_response,
-            ensure_strategy=AwesomeVersionStrategy.SIMPLEVER,
-            find_first_match=True,
-        )
+        return _extract_version_from_server_response_or_raise(server_response)
     except AwesomeVersionException:
         return None
 
@@ -475,11 +514,25 @@ def setup_connection_for_dialect(
             # as its persistent and isn't free to call every time.
             result = query_on_connection(dbapi_connection, "SELECT sqlite_version()")
             version_string = result[0][0]
-            version = _extract_version_from_server_response(version_string)
+            version = _extract_version_from_server_response_or_raise(version_string)
 
-            if not version or version < MIN_VERSION_SQLITE:
-                _fail_unsupported_version(
+            if version < MIN_VERSION_SQLITE:
+                _raise_if_version_unsupported(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
+                )
+
+            # No elif here since _raise_if_version_unsupported raises
+            if version < UPCOMING_MIN_VERSION_SQLITE:
+                instance.hass.add_job(
+                    _async_create_issue_deprecated_version,
+                    instance.hass,
+                    version or version_string,
+                    dialect_name,
+                    UPCOMING_MIN_VERSION_SQLITE,
+                )
+            else:
+                instance.hass.add_job(
+                    _async_delete_issue_deprecated_version, instance.hass, dialect_name
                 )
 
             if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
@@ -513,7 +566,7 @@ def setup_connection_for_dialect(
 
             if is_maria_db:
                 if not version or version < MIN_VERSION_MARIA_DB:
-                    _fail_unsupported_version(
+                    _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
                 if version and (
@@ -529,7 +582,7 @@ def setup_connection_for_dialect(
                     )
 
             elif not version or version < MIN_VERSION_MYSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
 
@@ -551,7 +604,7 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
             if not version or version < MIN_VERSION_PGSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
 

@@ -666,7 +666,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity_reg.async_remove(entity.entity_id)
 
         device_reg = dr.async_get(self.hass)
-        orphan_connections = {(CONNECTION_NETWORK_MAC, mac) for mac in orphan_macs}
+        orphan_connections = {
+            (CONNECTION_NETWORK_MAC, dr.format_mac(mac)) for mac in orphan_macs
+        }
         for device in dr.async_entries_for_config_entry(
             device_reg, config_entry.entry_id
         ):

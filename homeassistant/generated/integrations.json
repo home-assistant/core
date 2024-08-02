@@ -315,6 +315,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "anthropic": {
+      "name": "Anthropic Conversation",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "anwb_energie": {
       "name": "ANWB Energie",
       "integration_type": "virtual",
@@ -1513,6 +1519,12 @@
     "electric_kiwi": {
       "name": "Electric Kiwi",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "elevenlabs": {
+      "name": "ElevenLabs",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4598,6 +4610,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "pinecil": {
+      "name": "Pinecil",
+      "integration_type": "virtual",
+      "supported_by": "iron_os"
     },
     "ping": {
       "name": "Ping (ICMP)",
