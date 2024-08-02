@@ -153,8 +153,12 @@ class SwissPublicTransportSensor(
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self.entity_description.index]
+        return (
+            self.entity_description.value_fn(
+                self.coordinator.data[self.entity_description.index]
+            )
+            if self.coordinator.data
+            else None
         )
 
     async def async_fetch_connections(
