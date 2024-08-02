@@ -9,6 +9,7 @@ CONF_START: Final = "from"
 CONF_VIA: Final = "via"
 
 DEFAULT_NAME = "Next Destination"
+DEFAULT_UPDATE_TIME = 90
 
 MAX_VIA = 5
 SENSOR_CONNECTIONS_COUNT = 3
