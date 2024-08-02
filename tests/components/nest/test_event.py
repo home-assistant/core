@@ -71,45 +71,56 @@ def create_events(events: str) -> EventMessage:
 
 @pytest.mark.parametrize(
     (
-        "trait_type",
+        "trait_types",
+        "entity_id",
+        "expected_attributes",
         "api_event_type",
         "expected_event_type",
-        "device_class",
-        "entity_id",
-        "entity_name",
     ),
     [
         (
-            TraitType.DOORBELL_CHIME,
+            [TraitType.DOORBELL_CHIME, TraitType.CAMERA_MOTION],
+            "event.front_chime",
+            {
+                "device_class": "doorbell",
+                "event_types": ["doorbell_chime"],
+                "friendly_name": "Front Chime",
+            },
             EventType.DOORBELL_CHIME,
             "doorbell_chime",
-            "doorbell",
-            "event.front_chime",
-            "Front Chime",
         ),
         (
-            TraitType.CAMERA_MOTION,
+            [TraitType.CAMERA_MOTION, TraitType.CAMERA_PERSON, TraitType.CAMERA_SOUND],
+            "event.front_motion",
+            {
+                "device_class": "motion",
+                "event_types": ["camera_motion", "camera_person", "camera_sound"],
+                "friendly_name": "Front Motion",
+            },
             EventType.CAMERA_MOTION,
             "camera_motion",
-            "motion",
-            "event.front_motion",
-            "Front Motion",
         ),
         (
-            TraitType.CAMERA_PERSON,
+            [TraitType.CAMERA_MOTION, TraitType.CAMERA_PERSON, TraitType.CAMERA_SOUND],
+            "event.front_motion",
+            {
+                "device_class": "motion",
+                "event_types": ["camera_motion", "camera_person", "camera_sound"],
+                "friendly_name": "Front Motion",
+            },
             EventType.CAMERA_PERSON,
             "camera_person",
-            "motion",
-            "event.front_person",
-            "Front Person",
         ),
         (
-            TraitType.CAMERA_SOUND,
+            [TraitType.CAMERA_MOTION, TraitType.CAMERA_PERSON, TraitType.CAMERA_SOUND],
+            "event.front_motion",
+            {
+                "device_class": "motion",
+                "event_types": ["camera_motion", "camera_person", "camera_sound"],
+                "friendly_name": "Front Motion",
+            },
             EventType.CAMERA_SOUND,
             "camera_sound",
-            "motion",
-            "event.front_sound",
-            "Front Sound",
         ),
     ],
 )
@@ -117,18 +128,17 @@ async def test_receive_events(
     hass: HomeAssistant,
     subscriber: FakeSubscriber,
     setup_platform: PlatformSetup,
-    trait_type: TraitType,
+    create_device: CreateDevice,
+    trait_types: list[TraitType],
+    entity_id: str,
+    expected_attributes: dict[str, str],
     api_event_type: EventType,
     expected_event_type: str,
-    device_class: str,
-    create_device: CreateDevice,
-    entity_id: str,
-    entity_name: str,
 ) -> None:
     """Test a pubsub message for a camera person event."""
     create_device.create(
         raw_traits={
-            trait_type: {},
+            **{trait_type: {} for trait_type in trait_types},
             api_event_type: {},
         }
     )
@@ -137,10 +147,8 @@ async def test_receive_events(
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
     assert state.attributes == {
-        "device_class": device_class,
+        **expected_attributes,
         "event_type": None,
-        "event_types": [expected_event_type],
-        "friendly_name": entity_name,
     }
 
     await subscriber.async_receive_event(create_events([api_event_type]))
@@ -149,10 +157,8 @@ async def test_receive_events(
     state = hass.states.get(entity_id)
     assert state.state != "unknown"
     assert state.attributes == {
-        "device_class": device_class,
+        **expected_attributes,
         "event_type": expected_event_type,
-        "event_types": [expected_event_type],
-        "friendly_name": entity_name,
         "nest_event_id": ENCODED_EVENT_ID,
     }
 

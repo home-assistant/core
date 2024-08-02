@@ -24,6 +24,7 @@ from .events import (
     EVENT_CAMERA_PERSON,
     EVENT_CAMERA_SOUND,
     EVENT_DOORBELL_CHIME,
+    EVENT_NAME_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,10 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 class NestEventEntityDescription(EventEntityDescription):
     """Entity description for nest event entities."""
 
-    trait_type: TraitType | None = None
-    api_event_type: EventType | None = None
-    event_type: str | None = None
-    has_entity_name = True
+    trait_types: list[TraitType] | None = None
+    api_event_types: list[EventType] | None = None
+    event_types: list[str] | None = None
 
 
 ENTITY_DESCRIPTIONS = [
@@ -44,29 +44,25 @@ ENTITY_DESCRIPTIONS = [
         key=EVENT_DOORBELL_CHIME,
         translation_key="chime",
         device_class=EventDeviceClass.DOORBELL,
-        trait_type=TraitType.DOORBELL_CHIME,
-        api_event_type=EventType.DOORBELL_CHIME,
+        event_types=[EVENT_DOORBELL_CHIME],
+        trait_types=[TraitType.DOORBELL_CHIME],
+        api_event_types=[EventType.DOORBELL_CHIME],
     ),
     NestEventEntityDescription(
         key=EVENT_CAMERA_MOTION,
         translation_key="motion",
         device_class=EventDeviceClass.MOTION,
-        trait_type=TraitType.CAMERA_MOTION,
-        api_event_type=EventType.CAMERA_MOTION,
-    ),
-    NestEventEntityDescription(
-        key=EVENT_CAMERA_PERSON,
-        translation_key="person",
-        device_class=EventDeviceClass.MOTION,
-        trait_type=TraitType.CAMERA_PERSON,
-        api_event_type=EventType.CAMERA_PERSON,
-    ),
-    NestEventEntityDescription(
-        key=EVENT_CAMERA_SOUND,
-        translation_key="sound",
-        device_class=EventDeviceClass.MOTION,
-        trait_type=TraitType.CAMERA_SOUND,
-        api_event_type=EventType.CAMERA_SOUND,
+        event_types=[EVENT_CAMERA_MOTION, EVENT_CAMERA_PERSON, EVENT_CAMERA_SOUND],
+        trait_types=[
+            TraitType.CAMERA_MOTION,
+            TraitType.CAMERA_PERSON,
+            TraitType.CAMERA_SOUND,
+        ],
+        api_event_types=[
+            EventType.CAMERA_MOTION,
+            EventType.CAMERA_PERSON,
+            EventType.CAMERA_SOUND,
+        ],
     ),
 ]
 
@@ -83,7 +79,8 @@ async def async_setup_entry(
         NestTraitEventEntity(entity_description, device)
         for device in device_manager.devices.values()
         for entity_description in ENTITY_DESCRIPTIONS
-        if entity_description.trait_type in device.traits
+        for trait_type in (entity_description.trait_types or ())
+        if trait_type in device.traits
     )
 
 
@@ -91,7 +88,7 @@ class NestTraitEventEntity(EventEntity):
     """Nest doorbell event entity."""
 
     entity_description: NestEventEntityDescription
-    _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, entity_description: NestEventEntityDescription, device: Device
@@ -101,7 +98,6 @@ class NestTraitEventEntity(EventEntity):
         self._device = device
         self._attr_unique_id = f"{device.name}-{entity_description.key}"
         self._attr_device_info = NestDeviceInfo(device).device_info
-        self._attr_event_types = [entity_description.key]
 
     async def _async_handle_event(self, event_message: EventMessage) -> None:
         """Handle a device event."""
@@ -112,11 +108,13 @@ class NestTraitEventEntity(EventEntity):
         ):
             return
         for api_event_type, nest_event in events.items():
-            if self.entity_description.api_event_type != api_event_type:
+            if api_event_type not in (self.entity_description.api_event_types or ()):
                 continue
 
+            event_type = EVENT_NAME_MAP[api_event_type]
+
             self._trigger_event(
-                self.entity_description.key,
+                event_type,
                 {"nest_event_id": nest_event.event_token},
             )
             self.async_write_ha_state()
