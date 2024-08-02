@@ -25,7 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 class EpsonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for epson."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""

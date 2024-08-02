@@ -74,15 +74,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
+    if config_entry.version > 1 or config_entry.minor_version > 1:
         # This means the user has downgraded from a future version
         return False
 
-    if config_entry.version == 1:
+    if config_entry.version == 1 and config_entry.minor_version == 1:
         new_data = {**config_entry.data}
         new_data[CONF_CONNECTION_TYPE] = "http"
 
-        hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, version=1, minor_version=2
+        )
 
     _LOGGER.debug(
         "Migration to configuration version %s successful", config_entry.version

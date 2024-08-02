@@ -10,12 +10,13 @@ from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry(hass: HomeAssistant) -> None:
-    """Test successful migration of entry data from version 1 to 2."""
+    """Test successful migration of entry data from version 1 to 1.2."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Epson",
         version=1,
+        minor_version=1,
         data={CONF_HOST: "1.1.1.1"},
         entry_id="1cb78c095906279574a0442a1f0003ef",
     )
@@ -31,6 +32,7 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
     # Check that is now has connection_type
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert updated_entry
-    assert updated_entry.version == 2
+    assert updated_entry.version == 1
+    assert updated_entry.minor_version == 2
     assert updated_entry.data.get(CONF_CONNECTION_TYPE) == "http"
     assert updated_entry.data.get(CONF_HOST) == "1.1.1.1"
