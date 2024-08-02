@@ -100,32 +100,19 @@ class LazyEventPartialState:
 
 # Row order must match the query order in queries/common.py
 # ---------------------------------------------------------
-# row_id - 0
 ROW_ID_POS: Final = 0
-# event_type - 1
 EVENT_TYPE_POS: Final = 1
-# event_data - 2
 EVENT_DATA_POS: Final = 2
-# time_fired_ts - 3
 TIME_FIRED_TS_POS: Final = 3
-# context_id_bin - 4
 CONTEXT_ID_BIN_POS: Final = 4
-# context_user_id_bin - 5
 CONTEXT_USER_ID_BIN_POS: Final = 5
-# context_parent_id_bin - 6
 CONTEXT_PARENT_ID_BIN_POS: Final = 6
-# state - 7
 STATE_POS: Final = 7
-# entity_id - 8
 ENTITY_ID_POS: Final = 8
-# icon - 9
 ICON_POS: Final = 9
-# context_only - 10
 CONTEXT_ONLY_POS: Final = 10
 # - For EventAsRow, additional fields are:
-# data - 11
 DATA_POS: Final = 11
-# context - 12
 CONTEXT_POS: Final = 12
 
 
