@@ -813,6 +813,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Create a Beolink session with defined group members."""
 
         # Use the touch to join if no entities have been defined
+        # Touch to join will make the device connect to any other currently-playing Beolink compatible B&O device.
+        # Repeated presses / calls will cycle between compatible playing devices.
         if len(group_members) == 0:
             await self._async_beolink_join()
             return
