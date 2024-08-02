@@ -7,6 +7,9 @@
   "services": {
     "dock": "mdi:home-import-outline",
     "pause": "mdi:pause",
-    "start_mowing": "mdi:play"
+    "resume": "mdi:play-pause",
+    "cancel": "mdi:stop",
+    "start_mowing": "mdi:play",
+    "fixed_mowing": "mdi:target-variant"
   }
 }
