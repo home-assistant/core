@@ -36,11 +36,11 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_A50S
         case "UP2STREAM_AMP_V3":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_AMP_V3
-        case: "UP2STREAM_AMP_V4":
+        case "UP2STREAM_AMP_V4":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_AMP_V4
-        case: "UP2STREAM_PRO_V3":
+        case "UP2STREAM_PRO_V3":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_PRO_V3
-        case: "iEAST-02":
+        case "iEAST-02":
             return MANUFACTURER_IEAST, MODELS_IEAST_AUDIOCAST_M5
         case _:
             return MANUFACTURER_GENERIC, MODELS_GENERIC
