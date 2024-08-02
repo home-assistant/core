@@ -135,6 +135,15 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except AddressValueError:
             return self.async_abort(reason="ipv6_address")
 
+        # Check connection to ensure valid address is received
+        self._client = MozartClient(self._host)
+
+        async with self._client:
+            try:
+                await self._client.get_beolink_self(_request_timeout=3)
+            except (ClientConnectorError, TimeoutError):
+                return self.async_abort(reason="invalid_address")
+
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
         self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"

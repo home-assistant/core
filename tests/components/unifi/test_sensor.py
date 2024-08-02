@@ -1,6 +1,5 @@
 """UniFi Network sensor platform tests."""
 
-from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from types import MappingProxyType
@@ -29,7 +28,7 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -42,7 +41,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 DEVICE_1 = {
     "board_rev": 2,
@@ -362,9 +367,9 @@ async def test_no_clients(hass: HomeAssistant) -> None:
 )
 async def test_bandwidth_sensors(
     hass: HomeAssistant,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     config_entry_options: MappingProxyType[str, Any],
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that bandwidth sensors are working as expected."""
@@ -491,7 +496,9 @@ async def test_bandwidth_sensors(
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_sensors(
-    hass: HomeAssistant, mock_websocket_message, client_payload: list[dict[str, Any]]
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify removing of clients work as expected."""
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
@@ -520,8 +527,8 @@ async def test_remove_sensors(
 async def test_poe_port_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
-    mock_websocket_state,
+    mock_websocket_message: WebsocketMessageMock,
+    mock_websocket_state: WebsocketStateManager,
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
@@ -594,9 +601,9 @@ async def test_poe_port_switches(
 async def test_wlan_client_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
-    mock_websocket_state,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
+    mock_websocket_state: WebsocketStateManager,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
@@ -736,7 +743,7 @@ async def test_wlan_client_sensors(
 async def test_outlet_power_readings(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
     entity_id: str,
     expected_unique_id: str,
@@ -798,7 +805,7 @@ async def test_outlet_power_readings(
 async def test_device_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that temperature sensors are working as expected."""
@@ -847,7 +854,7 @@ async def test_device_temperature(
 async def test_device_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that state sensors are working as expected."""
@@ -884,7 +891,7 @@ async def test_device_state(
 async def test_device_system_stats(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
@@ -979,9 +986,9 @@ async def test_device_system_stats(
 async def test_bandwidth_port_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that port bandwidth sensors are working as expected."""
@@ -1096,9 +1103,9 @@ async def test_bandwidth_port_sensors(
 async def test_device_client_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory,
-    mock_websocket_message,
-    client_payload,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
+    client_payload: dict[str, Any],
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
     client_payload += [
@@ -1246,8 +1253,8 @@ async def test_sensor_sources(
 async def _test_uptime_entity(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_websocket_message,
-    config_entry_factory: Callable[[], ConfigEntry],
+    mock_websocket_message: WebsocketMessageMock,
+    config_entry_factory: ConfigEntryFactoryType,
     payload: dict[str, Any],
     entity_id: str,
     message_key: MessageKey,
@@ -1326,9 +1333,9 @@ async def test_client_uptime(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_websocket_message,
     config_entry_options: MappingProxyType[str, Any],
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
     client_payload: list[dict[str, Any]],
     initial_uptime,
     event_uptime,
@@ -1401,8 +1408,8 @@ async def test_device_uptime(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_websocket_message,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device uptime sensors are working as expected."""
@@ -1424,3 +1431,227 @@ async def test_device_uptime(
         entity_registry.async_get("sensor.device_uptime").entity_category
         is EntityCategory.DIAGNOSTIC
     )
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "uptime_stats": {
+                    "WAN": {
+                        "availability": 100.0,
+                        "latency_average": 39,
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 56,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 53,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 30,
+                                "target": "1.1.1.1",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
+                    "WAN2": {
+                        "monitors": [
+                            {
+                                "availability": 0.0,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 0.0,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
+                        ],
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity_id", "state", "updated_state", "index_to_update"),
+    [
+        # Microsoft
+        ("microsoft_wan", "56", "20", 0),
+        # Google
+        ("google_wan", "53", "90", 1),
+        # Cloudflare
+        ("cloudflare_wan", "30", "80", 2),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    entity_id: str,
+    state: str,
+    updated_state: str,
+    index_to_update: int,
+) -> None:
+    """Verify that wan latency sensors are working as expected."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get(f"sensor.mock_name_{entity_id}_latency")
+    assert latency_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert latency_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    # Enable entity
+    entity_registry.async_update_entity(
+        entity_id=f"sensor.mock_name_{entity_id}_latency", disabled_by=None
+    )
+
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+
+    # Verify sensor attributes and state
+    latency_entry = hass.states.get(f"sensor.mock_name_{entity_id}_latency")
+    assert latency_entry.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
+    assert (
+        latency_entry.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    )
+    assert latency_entry.state == state
+
+    # Verify state update
+    device = device_payload[0]
+    device["uptime_stats"]["WAN"]["monitors"][index_to_update]["latency_average"] = (
+        updated_state
+    )
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert (
+        hass.states.get(f"sensor.mock_name_{entity_id}_latency").state == updated_state
+    )
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "uptime_stats": {
+                    "WAN": {
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 30,
+                                "target": "1.2.3.4",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
+                    "WAN2": {
+                        "monitors": [
+                            {
+                                "availability": 0.0,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 0.0,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
+                        ],
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_with_no_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify that wan latency sensors is not created if there is no data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
+    assert latency_entry is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_with_no_uptime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify that wan latency sensors is not created if there is no data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
+    assert latency_entry is None

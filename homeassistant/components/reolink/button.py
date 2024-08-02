@@ -164,11 +164,9 @@ async def async_setup_entry(
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkHostButtonEntity(reolink_data, entity_description)
-            for entity_description in HOST_BUTTON_ENTITIES
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkHostButtonEntity(reolink_data, entity_description)
+        for entity_description in HOST_BUTTON_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
     )
     async_add_entities(entities)
 

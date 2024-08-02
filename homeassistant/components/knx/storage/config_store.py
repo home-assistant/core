@@ -2,20 +2,19 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, Final, TypedDict
+from typing import Any, Final, TypedDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
 from ..const import DOMAIN
+from ..knx_entity import SIGNAL_ENTITY_REMOVE
 from .const import CONF_DATA
-
-if TYPE_CHECKING:
-    from ..knx_entity import KnxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +39,16 @@ class KNXConfigStore:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize config store."""
         self.hass = hass
+        self.config_entry = config_entry
         self._store = Store[KNXConfigStoreModel](hass, STORAGE_VERSION, STORAGE_KEY)
         self.data = KNXConfigStoreModel(entities={})
 
-        # entities and async_add_entity are filled by platform setups
-        self.entities: dict[str, KnxEntity] = {}  # unique_id as key
+        # entities and async_add_entity are filled by platform / entity setups
+        self.entities: set[str] = set()  # unique_id as values
         self.async_add_entity: dict[
             Platform, Callable[[str, dict[str, Any]], None]
         ] = {}
@@ -108,7 +108,7 @@ class KNXConfigStore:
             raise ConfigStoreException(
                 f"Entity not found in storage: {entity_id} - {unique_id}"
             )
-        await self.entities.pop(unique_id).async_remove()
+        async_dispatcher_send(self.hass, SIGNAL_ENTITY_REMOVE.format(unique_id))
         self.async_add_entity[platform](unique_id, data)
         # store data after entity is added to make sure config doesn't raise exceptions
         self.data["entities"][platform][unique_id] = data
@@ -126,7 +126,7 @@ class KNXConfigStore:
                 f"Entity not found in {entry.domain}: {entry.unique_id}"
             ) from err
         try:
-            del self.entities[entry.unique_id]
+            self.entities.remove(entry.unique_id)
         except KeyError:
             _LOGGER.warning("Entity not initialized when deleted: %s", entity_id)
         entity_registry.async_remove(entity_id)
@@ -134,10 +134,14 @@ class KNXConfigStore:
 
     def get_entity_entries(self) -> list[er.RegistryEntry]:
         """Get entity_ids of all configured entities by platform."""
+        entity_registry = er.async_get(self.hass)
+
         return [
-            entity.registry_entry
-            for entity in self.entities.values()
-            if entity.registry_entry is not None
+            registry_entry
+            for registry_entry in er.async_entries_for_config_entry(
+                entity_registry, self.config_entry.entry_id
+            )
+            if registry_entry.unique_id in self.entities
         ]
 
 

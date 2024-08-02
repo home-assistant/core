@@ -2555,7 +2555,9 @@ async def test_recorder_info_migration_queue_exhausted(
             recorder.core, "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG", sys.maxsize
         ),
     ):
-        async with async_test_recorder(hass, wait_recorder=False):
+        async with async_test_recorder(
+            hass, wait_recorder=False, wait_recorder_setup=False
+        ):
             await hass.async_add_executor_job(
                 instrument_migration.migration_started.wait
             )
