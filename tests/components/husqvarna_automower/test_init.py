@@ -15,6 +15,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.husqvarna_automower.coordinator import (
+    MAX_WS_RECONNECT_TIME,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -128,20 +131,22 @@ async def test_websocket_not_available(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test trying reload the websocket."""
-    mock_automower_client.start_listening.side_effect = HusqvarnaWSServerHandshakeError(
-        "Boom"
+    mock_automower_client.auth.websocket_connect.side_effect = (
+        HusqvarnaWSServerHandshakeError("Boom")
     )
     await setup_integration(hass, mock_config_entry)
     assert "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
     assert mock_automower_client.auth.websocket_connect.call_count == 1
-    assert mock_automower_client.start_listening.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    freezer.tick(timedelta(seconds=2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.auth.websocket_connect.call_count == 2
-    assert mock_automower_client.start_listening.call_count == 2
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    reconnect_time = 2
+    for count in range(1, 945):
+        reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
+        print("reconnect_t", reconnect_time)
+        freezer.tick(timedelta(seconds=reconnect_time))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_automower_client.auth.websocket_connect.call_count == count + 1
+        assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_device_info(
