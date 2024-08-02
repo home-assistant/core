@@ -584,7 +584,7 @@ async def test_remove_entry_raises(
 
     async def mock_unload_entry(hass, entry):
         """Mock unload entry function."""
-        raise Exception("BROKEN")  # pylint: disable=broad-exception-raised
+        raise Exception("BROKEN")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", async_unload_entry=mock_unload_entry))
 
