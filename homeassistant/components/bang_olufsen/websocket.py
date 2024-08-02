@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     BANG_OLUFSEN_WEBSOCKET_EVENT,
@@ -93,21 +94,23 @@ class BangOlufsenWebsocket(BangOlufsenBase):
     ) -> None:
         """Send notification dispatch."""
 
-        if notification.value:
-            if notification.value in (
-                WebsocketNotification.BEOLINK_PEERS,
-                WebsocketNotification.BEOLINK_LISTENERS,
-                WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
-            ):
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
-                )
-            elif notification.value is WebsocketNotification.REMOTE_MENU_CHANGED.value:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
-                )
+        # Try to match the notification type with available WebsocketNotification members
+        notification_type = try_parse_enum(WebsocketNotification, notification.value)
+
+        if notification_type in (
+            WebsocketNotification.BEOLINK_PEERS,
+            WebsocketNotification.BEOLINK_LISTENERS,
+            WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
+            )
+        elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED.value:
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
+            )
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:
         """Send playback_error dispatch."""
