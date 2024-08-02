@@ -124,8 +124,6 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aiohappyeyeballs",  # PSF-2.0 license
-    "aiohttp-fast-url-dispatcher",  # https://github.com/bdraco/aiohttp-fast-url-dispatcher/pull/10
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
@@ -163,7 +161,6 @@ EXCEPTIONS = {
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
-    "pyswitchbee",  # https://github.com/jafar-atili/pySwitchbee/pull/5
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
@@ -174,7 +171,6 @@ EXCEPTIONS = {
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
-    "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
@@ -189,9 +185,6 @@ TODO = {
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "pyElectra": AwesomeVersion(
-        "1.2.3"
-    ),  # No License https://github.com/jafar-atili/pyElectra/issues/3
     "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
     "uvcclient": AwesomeVersion(
         "0.11.0"

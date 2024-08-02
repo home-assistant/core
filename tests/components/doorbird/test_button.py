@@ -1,18 +1,15 @@
 """Test DoorBird buttons."""
 
-from collections.abc import Callable, Coroutine
-from typing import Any
-
 from homeassistant.components.button import DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockDoorbirdEntry
+from .conftest import DoorbirdMockerType
 
 
 async def test_relay_button(
     hass: HomeAssistant,
-    doorbird_mocker: Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]],
+    doorbird_mocker: DoorbirdMockerType,
 ) -> None:
     """Test pressing a relay button."""
     doorbird_entry = await doorbird_mocker()
@@ -27,7 +24,7 @@ async def test_relay_button(
 
 async def test_ir_button(
     hass: HomeAssistant,
-    doorbird_mocker: Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]],
+    doorbird_mocker: DoorbirdMockerType,
 ) -> None:
     """Test pressing the IR button."""
     doorbird_entry = await doorbird_mocker()
@@ -42,7 +39,7 @@ async def test_ir_button(
 
 async def test_reset_favorites_button(
     hass: HomeAssistant,
-    doorbird_mocker: Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]],
+    doorbird_mocker: DoorbirdMockerType,
 ) -> None:
     """Test pressing the reset favorites button."""
     doorbird_entry = await doorbird_mocker()
@@ -52,4 +49,4 @@ async def test_reset_favorites_button(
         DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: reset_entity_id}, blocking=True
     )
     assert hass.states.get(reset_entity_id).state != STATE_UNKNOWN
-    assert doorbird_entry.api.delete_favorite.call_count == 1
+    assert doorbird_entry.api.delete_favorite.call_count == 2

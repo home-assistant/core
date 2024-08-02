@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 import socket
 from telnetlib import Telnet  # pylint: disable=deprecated-module
+from typing import Any
 
 import voluptuous as vol
 
@@ -82,10 +83,11 @@ class HddTempSensor(SensorEntity):
         self._details = None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._details is not None:
             return {ATTR_DEVICE: self._details[0], ATTR_MODEL: self._details[1]}
+        return None
 
     def update(self) -> None:
         """Get the latest data from HDDTemp daemon and updates the state."""

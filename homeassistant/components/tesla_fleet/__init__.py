@@ -26,7 +26,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, MODELS
+from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
@@ -34,7 +34,7 @@ from .coordinator import (
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
-PLATFORMS: Final = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
 
@@ -113,6 +113,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
         elif "energy_site_id" in product and tesla.energy:
             site_id = product["energy_site_id"]
+            if not (
+                product["components"]["battery"]
+                or product["components"]["solar"]
+                or "wall_connectors" in product["components"]
+            ):
+                LOGGER.debug(
+                    "Skipping Energy Site %s as it has no components",
+                    site_id,
+                )
+                continue
+
             api = EnergySpecific(tesla.energy, site_id)
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, api)

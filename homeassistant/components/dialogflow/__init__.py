@@ -103,6 +103,8 @@ def get_api_version(message):
     if message.get("responseId") is not None:
         return V2
 
+    raise ValueError(f"Unable to extract API version from message: {message}")
+
 
 async def async_handle_message(hass, message):
     """Handle a DialogFlow message."""
@@ -173,3 +175,5 @@ class DialogflowResponse:
 
         if self.api_version is V2:
             return {"fulfillmentText": self.speech, "source": SOURCE}
+
+        raise ValueError(f"Invalid API version: {self.api_version}")

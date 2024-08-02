@@ -21,7 +21,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["universal-silabs-flasher==0.0.21", "zha==0.0.23"],
+  "requirements": ["universal-silabs-flasher==0.0.22", "zha==0.0.24"],
   "usb": [
     {
       "vid": "10C4",
