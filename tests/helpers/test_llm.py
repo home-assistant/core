@@ -374,11 +374,16 @@ async def test_assist_api_prompt(
                         "beer": {"description": "Number of beers"},
                         "wine": {},
                     },
-                }
+                },
+                "script_with_no_fields": {
+                    "description": "This is another test script",
+                    "sequence": [],
+                },
             }
         },
     )
     async_expose_entity(hass, "conversation", "script.test_script", True)
+    async_expose_entity(hass, "conversation", "script.script_with_no_fields", True)
 
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
@@ -511,6 +516,10 @@ async def test_assist_api_prompt(
         )
     )
     exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+- names: script_with_no_fields
+  domain: script
+  state: 'off'
+  description: This is another test script
 - names: Kitchen
   domain: light
   state: 'on'
@@ -657,6 +666,10 @@ async def test_script_tool(
                         "extra_field": {"selector": {"area": {}}},
                     },
                 },
+                "script_with_no_fields": {
+                    "description": "This is another test script",
+                    "sequence": [],
+                },
                 "unexposed_script": {
                     "sequence": [],
                 },
@@ -664,6 +677,7 @@ async def test_script_tool(
         },
     )
     async_expose_entity(hass, "conversation", "script.test_script", True)
+    async_expose_entity(hass, "conversation", "script.script_with_no_fields", True)
 
     entity_registry.async_update_entity(
         "script.test_script", name="script name", aliases={"script alias"}
@@ -700,7 +714,8 @@ async def test_script_tool(
         "test_script": (
             "This is a test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
-        )
+        ),
+        "script_with_no_fields": ("This is another test script", vol.Schema({})),
     }
 
     tool_input = llm.ToolInput(
@@ -781,7 +796,8 @@ async def test_script_tool(
         "test_script": (
             "This is a new test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
-        )
+        ),
+        "script_with_no_fields": ("This is another test script", vol.Schema({})),
     }
 
 
