@@ -4,6 +4,7 @@ from typing import Final
 
 MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
 MANUFACTURER_ARYLIC: Final[str] = "Arylic"
+MANUFACTURER_IEAST: Final[str] = "iEAST"
 MANUFACTURER_GENERIC: Final[str] = "Generic"
 MODELS_ARTSOUND_SMART_ZONE4: Final[str] = "Smart Zone 4 AMP"
 MODELS_ARTSOUND_SMART_HYDE: Final[str] = "Smart Hyde"
@@ -14,6 +15,7 @@ MODELS_ARYLIC_A50S:  Final[str] = "A50+"
 MODELS_ARYLIC_UP2STREAM_AMP_V3: Final[str] = "Up2Stream Amp v3"
 MODELS_ARYLIC_UP2STREAM_AMP_V4: Final[str] = "Up2Stream Amp v4"
 MODELS_ARYLIC_UP2STREAM_PRO_V3: Final[str] = "Up2Stream Pro v3"
+MODELS_IEAST_AUDIOCAST_M5: Final[str] = "AudioCast M5"
 MODELS_GENERIC: Final[str] = "Generic"
 
 
@@ -38,5 +40,7 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_AMP_V4
         case: "UP2STREAM_PRO_V3":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_PRO_V3
+        case: "iEAST-02":
+            return MANUFACTURER_IEAST, MODELS_IEAST_AUDIOCAST_M5
         case _:
             return MANUFACTURER_GENERIC, MODELS_GENERIC
