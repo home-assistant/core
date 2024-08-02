@@ -93,7 +93,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
     ) -> None:
         """Send notification dispatch."""
         if notification.value:
-            if WebsocketNotification.REMOTE_MENU_CHANGED in notification.value:
+            if notification.value == WebsocketNotification.REMOTE_MENU_CHANGED:
                 async_dispatcher_send(
                     self.hass,
                     f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
