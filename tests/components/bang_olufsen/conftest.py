@@ -241,8 +241,11 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()
         client.close_api_client = AsyncMock()
+
+        # WebSocket listener
         client.connect_notifications = AsyncMock()
         client.disconnect_notifications = Mock()
+        client.websocket_connected = False
 
         yield client
 

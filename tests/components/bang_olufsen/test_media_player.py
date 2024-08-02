@@ -3,14 +3,13 @@
 from contextlib import nullcontext as does_not_raise
 from unittest.mock import ANY, patch
 
-from mozart_api.models import PlaybackContentMetadata
+from mozart_api.models import PlaybackContentMetadata, WebsocketNotificationTag
 import pytest
 
 from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_STATES,
     DOMAIN,
     BangOlufsenSource,
-    WebsocketNotification,
 )
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -36,7 +35,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -57,7 +55,6 @@ from .const import (
     TEST_PLAYBACK_STATE_TURN_OFF,
     TEST_RADIO_STATION,
     TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
-    TEST_SERIAL_NUMBER,
     TEST_SOURCES,
     TEST_VIDEO_SOURCES,
     TEST_VOLUME,
@@ -129,6 +126,27 @@ async def test_async_update_sources_outdated_api(
     )
 
 
+async def test_async_update_sources_remote(
+    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+) -> None:
+    """Test _async_update_sources is called when there are new video sources."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
+
+    # This is not an ideal check, but I couldn't get anything else to work
+    assert mock_mozart_client.get_available_sources.call_count == 1
+    assert mock_mozart_client.get_remote_menu.call_count == 1
+
+    # Send the remote menu dispatch
+    websocket.on_notification_notification(
+        WebsocketNotificationTag(value="remoteMenuChanged")
+    )
+    assert mock_mozart_client.get_available_sources.call_count == 2
+    assert mock_mozart_client.get_remote_menu.call_count == 2
+
+
 async def test_async_update_playback_metadata(
     hass: HomeAssistant, mock_mozart_client, mock_config_entry
 ) -> None:
@@ -136,6 +154,7 @@ async def test_async_update_playback_metadata(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_DURATION not in states.attributes
@@ -146,11 +165,7 @@ async def test_async_update_playback_metadata(
     assert ATTR_MEDIA_CHANNEL not in states.attributes
 
     # Send the WebSocket event dispatch
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_METADATA}",
-        TEST_PLAYBACK_METADATA,
-    )
+    websocket.on_playback_metadata_notification(TEST_PLAYBACK_METADATA)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert (
@@ -173,14 +188,11 @@ async def test_async_update_playback_error(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     # The async_dispatcher_send function seems to swallow exceptions, making pytest.raises unusable
     with patch("homeassistant.helpers.dispatcher._LOGGER.error") as mock_logger:
-        async_dispatcher_send(
-            hass,
-            f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_ERROR}",
-            TEST_PLAYBACK_ERROR,
-        )
+        websocket.on_playback_error_notification(TEST_PLAYBACK_ERROR)
 
     # The traceback can't be tested, so it is replaced with "ANY"
     mock_logger.assert_called_once_with(
@@ -197,17 +209,14 @@ async def test_async_update_playback_progress(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_POSITION not in states.attributes
     old_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
     assert old_updated_at
 
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_PROGRESS}",
-        TEST_PLAYBACK_PROGRESS,
-    )
+    websocket.on_playback_progress_notification(TEST_PLAYBACK_PROGRESS)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_MEDIA_POSITION] == TEST_PLAYBACK_PROGRESS.progress
@@ -223,15 +232,12 @@ async def test_async_update_playback_state(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == MediaPlayerState.PLAYING
 
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_STATE}",
-        TEST_PLAYBACK_STATE_PAUSED,
-    )
+    websocket.on_playback_state_notification(TEST_PLAYBACK_STATE_PAUSED)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == TEST_PLAYBACK_STATE_PAUSED.value
@@ -305,30 +311,18 @@ async def test_async_update_source_change(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_INPUT_SOURCE not in states.attributes
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
 
     # Simulate progress attribute being available
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_PROGRESS}",
-        TEST_PLAYBACK_PROGRESS,
-    )
+    websocket.on_playback_progress_notification(TEST_PLAYBACK_PROGRESS)
 
     # Simulate metadata
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_METADATA}",
-        metadata,
-    )
-
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
-        reported_source,
-    )
+    websocket.on_playback_metadata_notification(metadata)
+    websocket.on_source_change_notification(reported_source)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_INPUT_SOURCE] == real_source.name
@@ -343,6 +337,7 @@ async def test_async_turn_off(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     await hass.services.async_call(
         "media_player",
@@ -351,11 +346,7 @@ async def test_async_turn_off(
         blocking=True,
     )
 
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_STATE}",
-        TEST_PLAYBACK_STATE_TURN_OFF,
-    )
+    websocket.on_playback_state_notification(TEST_PLAYBACK_STATE_TURN_OFF)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_TURN_OFF.value]
@@ -371,6 +362,7 @@ async def test_async_set_volume_level(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_VOLUME_LEVEL not in states.attributes
@@ -386,11 +378,7 @@ async def test_async_set_volume_level(
     )
 
     # The service call will trigger a WebSocket notification
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.VOLUME}",
-        TEST_VOLUME,
-    )
+    websocket.on_volume_notification(TEST_VOLUME)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert (
@@ -409,6 +397,7 @@ async def test_async_mute_volume(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_VOLUME_MUTED not in states.attributes
@@ -424,11 +413,7 @@ async def test_async_mute_volume(
     )
 
     # The service call will trigger a WebSocket notification
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.VOLUME}",
-        TEST_VOLUME_MUTED,
-    )
+    websocket.on_volume_notification(TEST_VOLUME_MUTED)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert (
@@ -461,13 +446,10 @@ async def test_async_media_play_pause(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     # Set the initial state
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_STATE}",
-        initial_state,
-    )
+    websocket.on_playback_state_notification(initial_state)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == BANG_OLUFSEN_STATES[initial_state.value]
@@ -489,13 +471,10 @@ async def test_async_media_stop(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     # Set the state to playing
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_STATE}",
-        TEST_PLAYBACK_STATE_PLAYING,
-    )
+    websocket.on_playback_state_notification(TEST_PLAYBACK_STATE_PLAYING)
 
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_PLAYING.value]
@@ -550,13 +529,10 @@ async def test_async_media_seek(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     # Set the source
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
-        source,
-    )
+    websocket.on_source_change_notification(source)
 
     # Check results
     with expected_result:
@@ -770,13 +746,10 @@ async def test_async_play_media_overlay_offset_volume_tts(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     # Set the volume to enable offset
-    async_dispatcher_send(
-        hass,
-        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.VOLUME}",
-        TEST_VOLUME,
-    )
+    websocket.on_volume_notification(TEST_VOLUME)
 
     await hass.services.async_call(
         "media_player",
