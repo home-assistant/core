@@ -76,11 +76,10 @@ async def async_setup_entry(
         DATA_DEVICE_MANAGER
     ]
     async_add_entities(
-        NestTraitEventEntity(entity_description, device)
+        NestTraitEventEntity(desc, device)
         for device in device_manager.devices.values()
-        for entity_description in ENTITY_DESCRIPTIONS
-        for trait_type in entity_description.trait_types
-        if trait_type in device.traits
+        for desc in ENTITY_DESCRIPTIONS
+        if any(trait in device.traits for trait in desc.trait_types)
     )
 
 
