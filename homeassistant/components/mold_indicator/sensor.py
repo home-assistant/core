@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
+from typing import Any
 
 import voluptuous as vol
 
@@ -30,7 +31,7 @@ from homeassistant.core import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -67,11 +68,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MoldIndicator sensor."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
-    outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
-    indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
-    calib_factor = config.get(CONF_CALIBRATION_FACTOR)
+    name: str = config[CONF_NAME]
+    indoor_temp_sensor: str = config[CONF_INDOOR_TEMP]
+    outdoor_temp_sensor: str = config[CONF_OUTDOOR_TEMP]
+    indoor_humidity_sensor: str = config[CONF_INDOOR_HUMIDITY]
+    calib_factor: float = config[CONF_CALIBRATION_FACTOR]
 
     async_add_entities(
         [
@@ -92,36 +93,37 @@ class MoldIndicator(SensorEntity):
     """Represents a MoldIndication sensor."""
 
     _attr_should_poll = False
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self,
-        name,
-        is_metric,
-        indoor_temp_sensor,
-        outdoor_temp_sensor,
-        indoor_humidity_sensor,
-        calib_factor,
-    ):
+        name: str,
+        is_metric: bool,
+        indoor_temp_sensor: str,
+        outdoor_temp_sensor: str,
+        indoor_humidity_sensor: str,
+        calib_factor: float,
+    ) -> None:
         """Initialize the sensor."""
         self._state = None
-        self._name = name
+        self._attr_name = name
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor
         self._calib_factor = calib_factor
         self._is_metric = is_metric
-        self._available = False
+        self._attr_available = False
         self._entities = {
             self._indoor_temp_sensor,
             self._indoor_humidity_sensor,
             self._outdoor_temp_sensor,
         }
 
-        self._dewpoint = None
-        self._indoor_temp = None
-        self._outdoor_temp = None
-        self._indoor_hum = None
-        self._crit_temp = None
+        self._dewpoint: float | None = None
+        self._indoor_temp: float | None = None
+        self._outdoor_temp: float | None = None
+        self._indoor_hum: float | None = None
+        self._crit_temp: float | None = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -295,7 +297,7 @@ class MoldIndicator(SensorEntity):
         _LOGGER.debug("Update state for %s", self.entity_id)
         # check all sensors
         if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
-            self._available = False
+            self._attr_available = False
             self._dewpoint = None
             self._crit_temp = None
             return
@@ -304,11 +306,11 @@ class MoldIndicator(SensorEntity):
         self._calc_dewpoint()
         self._calc_moldindicator()
         if self._state is None:
-            self._available = False
+            self._attr_available = False
             self._dewpoint = None
             self._crit_temp = None
         else:
-            self._available = True
+            self._attr_available = True
 
     def _calc_dewpoint(self):
         """Calculate the dewpoint for the indoor air."""
@@ -335,7 +337,7 @@ class MoldIndicator(SensorEntity):
                 self._calib_factor,
             )
             self._state = None
-            self._available = False
+            self._attr_available = False
             self._crit_temp = None
             return
 
@@ -374,37 +376,21 @@ class MoldIndicator(SensorEntity):
         _LOGGER.debug("Mold indicator humidity: %s", self._state)
 
     @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self._state
 
     @property
-    def available(self):
-        """Return the availability of this sensor."""
-        return self._available
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._is_metric:
-            return {
-                ATTR_DEWPOINT: round(self._dewpoint, 2),
-                ATTR_CRITICAL_TEMP: round(self._crit_temp, 2),
-            }
+            convert_to = UnitOfTemperature.CELSIUS
+        else:
+            convert_to = UnitOfTemperature.FAHRENHEIT
 
         dewpoint = (
             TemperatureConverter.convert(
-                self._dewpoint, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+                self._dewpoint, UnitOfTemperature.CELSIUS, convert_to
             )
             if self._dewpoint is not None
             else None
@@ -412,13 +398,13 @@ class MoldIndicator(SensorEntity):
 
         crit_temp = (
             TemperatureConverter.convert(
-                self._crit_temp, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+                self._crit_temp, UnitOfTemperature.CELSIUS, convert_to
             )
             if self._crit_temp is not None
             else None
         )
 
         return {
-            ATTR_DEWPOINT: round(dewpoint, 2),
-            ATTR_CRITICAL_TEMP: round(crit_temp, 2),
+            ATTR_DEWPOINT: round(dewpoint, 2) if dewpoint else None,
+            ATTR_CRITICAL_TEMP: round(crit_temp, 2) if crit_temp else None,
         }
