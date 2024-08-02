@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
-async def sensor_only() -> AsyncGenerator[None, None]:
+async def sensor_only() -> AsyncGenerator[None]:
     """Enable only the number platform."""
     with patch(
         "homeassistant.components.iron_os.PLATFORMS",
