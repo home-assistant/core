@@ -1016,7 +1016,7 @@ class MockProviderBoom(MockProvider):
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         # This should not be called, data should be fetched from cache
-        raise Exception("Boom!")  # pylint: disable=broad-exception-raised
+        raise Exception("Boom!")  # noqa: TRY002
 
 
 class MockEntityBoom(MockTTSEntity):
@@ -1027,7 +1027,7 @@ class MockEntityBoom(MockTTSEntity):
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         # This should not be called, data should be fetched from cache
-        raise Exception("Boom!")  # pylint: disable=broad-exception-raised
+        raise Exception("Boom!")  # noqa: TRY002
 
 
 @pytest.mark.parametrize("mock_provider", [MockProviderBoom(DEFAULT_LANG)])

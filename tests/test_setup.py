@@ -338,7 +338,7 @@ async def test_component_exception_setup(hass: HomeAssistant) -> None:
 
     def exception_setup(hass, config):
         """Raise exception."""
-        raise Exception("fail!")  # pylint: disable=broad-exception-raised
+        raise Exception("fail!")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
@@ -352,7 +352,7 @@ async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
 
     def exception_setup(hass, config):
         """Raise exception."""
-        raise BaseException("fail!")  # pylint: disable=broad-exception-raised
+        raise BaseException("fail!")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
@@ -372,8 +372,7 @@ async def test_component_setup_with_validation_and_dependency(
         """Test that config is passed in."""
         if config.get("comp_a", {}).get("valid", False):
             return True
-        # pylint: disable-next=broad-exception-raised
-        raise Exception(f"Config not passed in: {config}")
+        raise Exception(f"Config not passed in: {config}")  # noqa: TRY002
 
     platform = MockPlatform()
 
