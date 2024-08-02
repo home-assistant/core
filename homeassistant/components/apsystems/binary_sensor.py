@@ -99,4 +99,4 @@ class ApSystemsBinarySensorWithDescription(
     @property
     def is_on(self) -> bool | None:
         """Return value of sensor."""
-        return self.entity_description.is_on(self.coordinator.data["alarm_info"])
+        return self.entity_description.is_on(self.coordinator.data.alarm_info)

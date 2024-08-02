@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import TypedDict
 
 from APsystemsEZ1 import APsystemsEZ1M, ReturnAlarmInfo, ReturnOutputData
 
@@ -13,7 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import LOGGER
 
 
-class ApSystemsSensorData(TypedDict):
+@dataclass
+class ApSystemsSensorData:
     """Representing different Apsystems sensor data."""
 
     output_data: ReturnOutputData
