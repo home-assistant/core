@@ -22,7 +22,7 @@
   },
   "exceptions": {
     "section_invalid": {
-      "message": "Invalid section \"{section}\" within project \"{project}\""
+      "message": "Project \"{project}\" has no section \"{section}\""
     }
   },
   "services": {
