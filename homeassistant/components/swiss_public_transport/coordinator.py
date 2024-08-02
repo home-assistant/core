@@ -7,7 +7,10 @@ import logging
 from typing import TypedDict
 
 from opendata_transport import OpendataTransport
-from opendata_transport.exceptions import OpendataTransportError
+from opendata_transport.exceptions import (
+    OpendataTransportConnectionError,
+    OpendataTransportError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -81,6 +84,9 @@ class SwissPublicTransportDataUpdateCoordinator(
         self._opendata.limit = limit
         try:
             await self._opendata.async_get_data()
+        except OpendataTransportConnectionError as e:
+            _LOGGER.warning("Connection to transport.opendata.ch cannot be established")
+            raise OpendataTransportConnectionError from e
         except OpendataTransportError as e:
             _LOGGER.warning(
                 "Unable to connect and retrieve data from transport.opendata.ch"
