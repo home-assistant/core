@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -94,6 +96,8 @@ class MoldIndicator(SensorEntity):
 
     _attr_should_poll = False
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -105,7 +109,7 @@ class MoldIndicator(SensorEntity):
         calib_factor: float,
     ) -> None:
         """Initialize the sensor."""
-        self._state = None
+        self._state: str | None = None
         self._attr_name = name
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
@@ -114,9 +118,9 @@ class MoldIndicator(SensorEntity):
         self._is_metric = is_metric
         self._attr_available = False
         self._entities = {
-            self._indoor_temp_sensor,
-            self._indoor_humidity_sensor,
-            self._outdoor_temp_sensor,
+            indoor_temp_sensor,
+            indoor_humidity_sensor,
+            outdoor_temp_sensor,
         }
 
         self._dewpoint: float | None = None
@@ -147,7 +151,7 @@ class MoldIndicator(SensorEntity):
                 self.async_schedule_update_ha_state(True)
 
         @callback
-        def mold_indicator_startup(event):
+        def mold_indicator_startup(event: Event) -> None:
             """Add listeners and get 1st state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
@@ -201,11 +205,11 @@ class MoldIndicator(SensorEntity):
             return False
 
         if entity == self._indoor_temp_sensor:
-            self._indoor_temp = MoldIndicator._update_temp_sensor(new_state)
+            self._indoor_temp = self._update_temp_sensor(new_state)
         elif entity == self._outdoor_temp_sensor:
-            self._outdoor_temp = MoldIndicator._update_temp_sensor(new_state)
+            self._outdoor_temp = self._update_temp_sensor(new_state)
         elif entity == self._indoor_humidity_sensor:
-            self._indoor_hum = MoldIndicator._update_hum_sensor(new_state)
+            self._indoor_hum = self._update_hum_sensor(new_state)
 
         return True
 
@@ -312,9 +316,11 @@ class MoldIndicator(SensorEntity):
         else:
             self._attr_available = True
 
-    def _calc_dewpoint(self):
+    def _calc_dewpoint(self) -> None:
         """Calculate the dewpoint for the indoor air."""
         # Use magnus approximation to calculate the dew point
+        if TYPE_CHECKING:
+            assert self._indoor_temp and self._indoor_hum
         alpha = MAGNUS_K2 * self._indoor_temp / (MAGNUS_K3 + self._indoor_temp)
         beta = MAGNUS_K2 * MAGNUS_K3 / (MAGNUS_K3 + self._indoor_temp)
 
@@ -328,8 +334,11 @@ class MoldIndicator(SensorEntity):
             )
         _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, UnitOfTemperature.CELSIUS)
 
-    def _calc_moldindicator(self):
+    def _calc_moldindicator(self) -> None:
         """Calculate the humidity at the (cold) calibration point."""
+        if TYPE_CHECKING:
+            assert self._outdoor_temp and self._indoor_temp and self._dewpoint
+
         if None in (self._dewpoint, self._calib_factor) or self._calib_factor == 0:
             _LOGGER.debug(
                 "Invalid inputs - dewpoint: %s, calibration-factor: %s",
