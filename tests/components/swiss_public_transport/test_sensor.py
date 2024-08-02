@@ -167,3 +167,60 @@ async def test_service_call_fetch_connections_error(
                 blocking=True,
                 return_response=True,
             )
+
+
+async def test_service_call_fetch_connections_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test service call with unavailability."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_DATA_STEP_BASE,
+        title="Service test call with default limit",
+        unique_id=unique_id_from_config(MOCK_DATA_STEP_BASE),
+    )
+    config_entry.add_to_hass(hass)
+
+    expected_result1 = pytest.raises(UpdateFailed)
+    expected_result2 = pytest.raises(HomeAssistantError)
+
+    with patch(
+        "homeassistant.components.swiss_public_transport.OpendataTransport",
+        return_value=AsyncMock(),
+    ) as mock:
+        # Setup the config entry
+        unique_id = unique_id_from_config(config_entry.data)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = entity_registry.entities.get_entity_id(
+            (
+                Platform.SENSOR,
+                DOMAIN,
+                f"{unique_id}_departure",
+            )
+        )
+        assert entity_registry.async_is_registered(entity_id)
+
+        assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
+        mock().async_get_data.side_effect = OpendataTransportError()
+        with expected_result1:
+            await hass.services.async_call(
+                domain=DOMAIN,
+                service=SERVICE_FETCH_CONNECTIONS,
+                service_data={ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+                return_response=True,
+            )
+
+        await hass.async_block_till_done()
+
+        with expected_result2:
+            await hass.services.async_call(
+                domain=DOMAIN,
+                service=SERVICE_FETCH_CONNECTIONS,
+                service_data={ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+                return_response=True,
+            )
