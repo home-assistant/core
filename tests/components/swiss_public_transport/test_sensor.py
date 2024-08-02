@@ -1,9 +1,11 @@
 """Test the swiss_public_transport service."""
 
+from contextlib import nullcontext as does_not_raise
 import json
 import logging
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
@@ -14,6 +16,7 @@ from voluptuous import error as vol_er
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
+    DEFAULT_UPDATE_TIME,
     DOMAIN,
     SENSOR_CONNECTIONS_MAX,
     SERVICE_FETCH_CONNECTIONS,
@@ -25,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,9 +172,10 @@ async def test_service_call_fetch_connections_error(
             )
 
 
-async def test_service_call_fetch_connections_unavailable(
+async def test_service_call_fetch_connections_availability(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test service call with unavailability."""
 
@@ -185,6 +189,7 @@ async def test_service_call_fetch_connections_unavailable(
 
     expected_result1 = pytest.raises(UpdateFailed)
     expected_result2 = pytest.raises(HomeAssistantError)
+    expected_result3 = does_not_raise()
 
     with patch(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
@@ -204,7 +209,9 @@ async def test_service_call_fetch_connections_unavailable(
         assert entity_registry.async_is_registered(entity_id)
 
         assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
+
         mock().async_get_data.side_effect = OpendataTransportError()
+
         with expected_result1:
             await hass.services.async_call(
                 domain=DOMAIN,
@@ -214,9 +221,27 @@ async def test_service_call_fetch_connections_unavailable(
                 return_response=True,
             )
 
+        freezer.tick(DEFAULT_UPDATE_TIME)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         with expected_result2:
+            await hass.services.async_call(
+                domain=DOMAIN,
+                service=SERVICE_FETCH_CONNECTIONS,
+                service_data={ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+                return_response=True,
+            )
+
+        mock().async_get_data.side_effect = None
+        mock().connections = json.loads(load_fixture("connections.json", DOMAIN))
+
+        freezer.tick(DEFAULT_UPDATE_TIME)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        with expected_result3:
             await hass.services.async_call(
                 domain=DOMAIN,
                 service=SERVICE_FETCH_CONNECTIONS,
