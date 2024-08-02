@@ -2908,9 +2908,6 @@ webmin-xmlrpc==0.0.2
 # homeassistant.components.weheat
 weheat==2024.7.8rc1
 
-# homeassistant.components.weheat
-weheat==2024.7.8rc1
-
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
 
