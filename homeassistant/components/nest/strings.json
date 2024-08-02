@@ -80,17 +80,17 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "doorbell_chime": "Chime"
+              "doorbell_chime": "[%key:component::nest::entity::event::chime::name%]"
             }
           }
         }
       },
       "motion": {
-        "name": "Motion",
+        "name": "[%key:component::event::entity_component::motion::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
-              "camera_motion": "Motion",
+              "camera_motion": "[%key:component::event::entity_component::motion::name%]",
               "camera_person": "Person",
               "camera_sound": "Sound"
             }
