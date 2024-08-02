@@ -81,14 +81,6 @@ class HomeAssistantYellowConfigFlow(
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
         await self._probe_firmware_type()
 
-        result = self.async_create_entry(
-            title=BOARD_NAME,
-            data={
-                # Assume the firmware type is EZSP if we cannot probe it
-                "firmware": (self._probed_firmware_type or ApplicationType.EZSP).value,
-            },
-        )
-
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
         if self._probed_firmware_type == ApplicationType.EZSP:
             discovery_flow.async_create_flow(
@@ -98,7 +90,7 @@ class HomeAssistantYellowConfigFlow(
                 data=ZHA_HW_DISCOVERY_DATA,
             )
 
-        return result
+        return self._async_flow_finished()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
@@ -107,7 +99,8 @@ class HomeAssistantYellowConfigFlow(
         return self.async_create_entry(
             title=BOARD_NAME,
             data={
-                "firmware": self._probed_firmware_type.value,
+                # Assume the firmware type is EZSP if we cannot probe it
+                "firmware": (self._probed_firmware_type or ApplicationType.EZSP).value,
             },
         )
 
@@ -118,10 +111,6 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
     _hw_settings: dict[str, bool] | None = None
 
     @abstractmethod
-    async def async_step_init(self, _: None = None) -> ConfigFlowResult:
-        """Start the options flow."""
-
-    @abstractmethod
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
 
@@ -129,7 +118,7 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle logic when on Supervisor host."""
-        return await self.async_step_init()
+        return await self.async_step_main_menu()
 
     async def async_step_hardware_settings(
         self, user_input: dict[str, Any] | None = None
@@ -213,7 +202,7 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle multipan settings."""
-        return await super().async_step_on_supervisor(user_input)
+        return await super().async_step_init(user_input)
 
     async def _async_serial_port_settings(
         self,

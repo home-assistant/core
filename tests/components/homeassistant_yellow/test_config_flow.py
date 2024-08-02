@@ -66,10 +66,16 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("hassio"))
     await async_setup_component(hass, HASSIO_DOMAIN, {})
 
-    with patch(
-        "homeassistant.components.homeassistant_yellow.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
         )
