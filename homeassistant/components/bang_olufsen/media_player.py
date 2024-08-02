@@ -150,7 +150,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         }
 
         for signal, signal_handler in signal_handlers.items():
-            _LOGGER.warning("%s -%s", signal, signal_handler)
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
