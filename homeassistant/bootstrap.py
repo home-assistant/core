@@ -223,8 +223,10 @@ CRITICAL_INTEGRATIONS = {
 SETUP_ORDER = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
-    # Setup frontend and recorder
-    ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
+    # Setup frontend
+    ("frontend", FRONTEND_INTEGRATIONS),
+    # Setup recorder
+    ("recorder", RECORDER_INTEGRATIONS),
     # Start up debuggers. Start these first in case they want to wait.
     ("debugger", DEBUGGER_INTEGRATIONS),
 )
@@ -906,7 +908,13 @@ async def _async_resolve_domains_to_setup(
             await asyncio.gather(*resolve_dependencies_tasks)
 
         for itg in integrations_to_process:
-            for dep in itg.all_dependencies:
+            try:
+                all_deps = itg.all_dependencies
+            except RuntimeError:
+                # Integration.all_dependencies raises RuntimeError if
+                # dependencies could not be resolved
+                continue
+            for dep in all_deps:
                 if dep in domains_to_setup:
                     continue
                 domains_to_setup.add(dep)

@@ -35,7 +35,7 @@ class _WebsocketMock(Protocol):
 # Config entry fixtures
 
 API_KEY = "1234567890ABCDEF"
-BRIDGEID = "01234E56789A"
+BRIDGE_ID = "01234E56789A"
 HOST = "1.2.3.4"
 PORT = 80
 
@@ -50,7 +50,7 @@ def fixture_config_entry(
     return MockConfigEntry(
         domain=DECONZ_DOMAIN,
         entry_id="1",
-        unique_id=BRIDGEID,
+        unique_id=BRIDGE_ID,
         data=config_entry_data,
         options=config_entry_options,
         source=config_entry_source,
@@ -122,6 +122,8 @@ def fixture_get_request(
     if "state" in light_payload:
         light_payload = {"0": light_payload}
     data.setdefault("lights", light_payload)
+    if "state" in sensor_payload or "config" in sensor_payload:
+        sensor_payload = {"0": sensor_payload}
     data.setdefault("sensors", sensor_payload)
 
     def __mock_requests(host: str = "") -> None:
@@ -156,7 +158,7 @@ def fixture_alarm_system_data() -> dict[str, Any]:
 def fixture_config_data() -> dict[str, Any]:
     """Config data."""
     return {
-        "bridgeid": BRIDGEID,
+        "bridgeid": BRIDGE_ID,
         "ipaddress": HOST,
         "mac": "00:11:22:33:44:55",
         "modelid": "deCONZ",
@@ -185,16 +187,13 @@ def fixture_light_data() -> dict[str, Any]:
 
 
 @pytest.fixture(name="sensor_payload")
-def fixture_sensor_data(sensor_1_payload: dict[str, Any]) -> dict[str, Any]:
-    """Sensor data."""
-    if sensor_1_payload:
-        return {"1": sensor_1_payload}
-    return {}
+def fixture_sensor_data() -> dict[str, Any]:
+    """Sensor data.
 
-
-@pytest.fixture(name="sensor_1_payload")
-def fixture_sensor_1_data() -> dict[str, Any]:
-    """Sensor 1 data."""
+    Should be
+     - one sensor data payload {"config": ..., "state": ...} ("0")
+     - multiple sensors {"1": ..., "2": ...}
+    """
     return {}
 
 
@@ -220,8 +219,7 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    hass: HomeAssistant,
-    config_entry_factory: Callable[[], Coroutine[Any, Any, MockConfigEntry]],
+    config_entry_factory: ConfigEntryFactoryType,
 ) -> MockConfigEntry:
     """Fixture providing a set up instance of deCONZ integration."""
     return await config_entry_factory()
@@ -268,6 +266,32 @@ def fixture_websocket_data(_mock_websocket: _WebsocketMock) -> WebsocketDataType
         await _mock_websocket(data=data)
 
     return change_websocket_data
+
+
+@pytest.fixture(name="light_ws_data")
+def fixture_light_websocket_data(
+    mock_websocket_data: WebsocketDataType,
+) -> WebsocketDataType:
+    """Fixture to send light data over websocket."""
+
+    async def send_light_data(data: dict[str, Any]) -> None:
+        """Send light data on the websocket."""
+        await mock_websocket_data({"r": "lights"} | data)
+
+    return send_light_data
+
+
+@pytest.fixture(name="sensor_ws_data")
+def fixture_sensor_websocket_data(
+    mock_websocket_data: WebsocketDataType,
+) -> WebsocketDataType:
+    """Fixture to send sensor data over websocket."""
+
+    async def send_sensor_data(data: dict[str, Any]) -> None:
+        """Send sensor data on the websocket."""
+        await mock_websocket_data({"r": "sensors"} | data)
+
+    return send_sensor_data
 
 
 @pytest.fixture(name="mock_websocket_state")

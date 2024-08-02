@@ -328,7 +328,7 @@ def create_state_changed_event_from_old_new(
     if new_state is not None:
         attributes = new_state.get("attributes")
     attributes_json = json.dumps(attributes, cls=JSONEncoder)
-    row = collections.namedtuple(
+    row = collections.namedtuple(  # noqa: PYI024
         "Row",
         [
             "event_type",
