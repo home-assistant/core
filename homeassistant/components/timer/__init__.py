@@ -340,7 +340,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             )
         # Check against new remaining time before checking boundaries
         new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
-        if self._remaining and (new_remaining) > self._running_duration:
+        if self._remaining and new_remaining > self._running_duration:
             raise HomeAssistantError(
                 f"Not possible to change timer {self.entity_id} beyond duration"
             )
