@@ -19,9 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BringConfigEntry
 from .const import (
@@ -30,7 +28,8 @@ from .const import (
     DOMAIN,
     SERVICE_PUSH_NOTIFICATION,
 )
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .coordinator import BringData
+from .entity import BringBaseEntity
 
 
 async def async_setup_entry(
@@ -41,16 +40,10 @@ async def async_setup_entry(
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data
 
-    unique_id = config_entry.unique_id
-
-    if TYPE_CHECKING:
-        assert unique_id
-
     async_add_entities(
         BringTodoListEntity(
             coordinator,
             bring_list=bring_list,
-            unique_id=unique_id,
         )
         for bring_list in coordinator.data.values()
     )
@@ -71,13 +64,10 @@ async def async_setup_entry(
     )
 
 
-class BringTodoListEntity(
-    CoordinatorEntity[BringDataUpdateCoordinator], TodoListEntity
-):
+class BringTodoListEntity(BringBaseEntity, TodoListEntity):
     """A To-do List representation of the Bring! Shopping List."""
 
     _attr_translation_key = "shopping_list"
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -85,25 +75,6 @@ class BringTodoListEntity(
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
-
-    def __init__(
-        self,
-        coordinator: BringDataUpdateCoordinator,
-        bring_list: BringData,
-        unique_id: str,
-    ) -> None:
-        """Initialize BringTodoListEntity."""
-        super().__init__(coordinator)
-        self._list_uuid = bring_list["listUuid"]
-        self._attr_unique_id = f"{unique_id}_{self._list_uuid}"
-        self.device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            name=bring_list["name"],
-            identifiers={(DOMAIN, f"{unique_id}_{self._list_uuid}")},
-            manufacturer="Bring! Labs AG",
-            model="Bring! Grocery Shopping List",
-            configuration_url=f"https://web.getbring.com/app/lists/{list(self.coordinator.data.keys()).index(bring_list["listUuid"])}",
-        )
 
     @property
     def todo_items(self) -> list[TodoItem]:
