@@ -113,17 +113,13 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_FETCH_CONNECTIONS,
-        vol.Schema(
-            {
-                vol.Required(
-                    ATTR_LIMIT, default=SENSOR_CONNECTIONS_COUNT
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=0, max=SENSOR_CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
-                    )
-                ),
-            }
-        ),
+        {
+            vol.Required(ATTR_LIMIT, default=SENSOR_CONNECTIONS_COUNT): NumberSelector(
+                NumberSelectorConfig(
+                    min=0, max=SENSOR_CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
+                )
+            ),
+        },
         "async_fetch_connections",
         supports_response=SupportsResponse.ONLY,
     )
