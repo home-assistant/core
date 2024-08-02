@@ -84,7 +84,6 @@ class ApSystemsBinarySensorWithDescription(
     """Base binary sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiBinarySensorDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
