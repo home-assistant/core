@@ -30,7 +30,7 @@ from .events import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(kw_only=True, frozen=True)
 class NestEventEntityDescription(EventEntityDescription):
     """Entity description for nest event entities."""
 
