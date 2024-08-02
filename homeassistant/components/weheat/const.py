@@ -14,12 +14,12 @@ DOMAIN = "weheat"
 HEAT_PUMP_INFO = "heat_pump_info"
 
 OAUTH2_AUTHORIZE = (
-    "https://auth.early.weheat.nl/auth/realms/Weheat/protocol/openid-connect/auth/"
+    "https://auth.weheat.nl/auth/realms/Weheat/protocol/openid-connect/auth/"
 )
 OAUTH2_TOKEN = (
-    "https://auth.early.weheat.nl/auth/realms/Weheat/protocol/openid-connect/token/"
+    "https://auth.weheat.nl/auth/realms/Weheat/protocol/openid-connect/token/"
 )
-API_URL = "https://api.early.weheat.nl"
+API_URL = "https://api.weheat.nl"
 
 
 UPDATE_INTERVAL = 30
