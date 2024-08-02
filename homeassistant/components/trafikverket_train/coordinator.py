@@ -10,7 +10,9 @@ from typing import TYPE_CHECKING
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
+    MultipleTrainStationsFound,
     NoTrainAnnouncementFound,
+    NoTrainStationFound,
     UnknownError,
 )
 from pytrafikverket.models import StationInfoModel, TrainStopModel
@@ -22,7 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_FILTER_PRODUCT, CONF_TIME, DOMAIN
+from .const import CONF_FILTER_PRODUCT, CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import next_departuredate
 
 if TYPE_CHECKING:
@@ -70,12 +72,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
 
     config_entry: TVTrainConfigEntry
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        to_station: StationInfoModel,
-        from_station: StationInfoModel,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
@@ -86,16 +83,35 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         self._train_api = TrafikverketTrain(
             async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
         )
-        self.from_station: StationInfoModel = from_station
-        self.to_station: StationInfoModel = to_station
+        self.from_station: StationInfoModel | None = None
+        self.to_station: StationInfoModel | None = None
         self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
         self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
         self._filter_product: str | None = self.config_entry.options.get(
             CONF_FILTER_PRODUCT
         )
 
+    async def _async_setup(self) -> None:
+        """Initiate stations."""
+        try:
+            self.to_station = await self._train_api.async_get_train_station(
+                self.config_entry.data[CONF_TO]
+            )
+            self.from_station = await self._train_api.async_get_train_station(
+                self.config_entry.data[CONF_FROM]
+            )
+        except InvalidAuthentication as error:
+            raise ConfigEntryAuthFailed from error
+        except (NoTrainStationFound, MultipleTrainStationsFound) as error:
+            raise UpdateFailed(
+                f"Problem when trying station {self.config_entry.data[CONF_FROM]} to"
+                f" {self.config_entry.data[CONF_TO]}. Error: {error} "
+            ) from error
+
     async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
+        if TYPE_CHECKING:
+            assert self.from_station and self.to_station
 
         when = dt_util.now()
         state: TrainStopModel | None = None
