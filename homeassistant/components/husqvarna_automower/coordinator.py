@@ -79,7 +79,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
                 entry.async_create_background_task(
                     hass,
-                    self.client_listen(hass, entry, automower_client),
+                    self.client_listen(hass, entry, automower_client, reconnect_time),
                     "reconnect_task",
                 )
         else:
