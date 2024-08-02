@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import jwt
 import pytest
@@ -83,7 +84,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_products():
+def mock_products() -> Generator[AsyncMock]:
     """Mock Tesla Fleet Api products method."""
     with patch(
         "homeassistant.components.tesla_fleet.TeslaFleetApi.products",
@@ -93,7 +94,7 @@ def mock_products():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle_state():
+def mock_vehicle_state() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle method."""
     with patch(
         "homeassistant.components.tesla_fleet.VehicleSpecific.vehicle",
@@ -103,7 +104,7 @@ def mock_vehicle_state():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle_data():
+def mock_vehicle_data() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
         "homeassistant.components.tesla_fleet.VehicleSpecific.vehicle_data",
@@ -113,7 +114,7 @@ def mock_vehicle_data():
 
 
 @pytest.fixture(autouse=True)
-def mock_wake_up():
+def mock_wake_up() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific wake_up method."""
     with patch(
         "homeassistant.components.tesla_fleet.VehicleSpecific.wake_up",
@@ -123,7 +124,7 @@ def mock_wake_up():
 
 
 @pytest.fixture(autouse=True)
-def mock_live_status():
+def mock_live_status() -> Generator[AsyncMock]:
     """Mock Teslemetry Energy Specific live_status method."""
     with patch(
         "homeassistant.components.tesla_fleet.EnergySpecific.live_status",
@@ -133,7 +134,7 @@ def mock_live_status():
 
 
 @pytest.fixture(autouse=True)
-def mock_site_info():
+def mock_site_info() -> Generator[AsyncMock]:
     """Mock Teslemetry Energy Specific site_info method."""
     with patch(
         "homeassistant.components.tesla_fleet.EnergySpecific.site_info",

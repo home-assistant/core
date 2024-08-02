@@ -548,7 +548,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-06-05T19:00:00+00:00',
+    'state': '2023-06-05T17:00:00+00:00',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_none-entry]
@@ -1100,6 +1100,11 @@
         'my_lawn',
         'no_work_area_active',
       ]),
+      'work_area_id_assignment': dict({
+        0: 'my_lawn',
+        123456: 'Front lawn',
+        654321: 'Back lawn',
+      }),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_work_area',
