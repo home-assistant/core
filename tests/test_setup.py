@@ -245,7 +245,7 @@ async def test_validate_platform_config_4(hass: HomeAssistant) -> None:
 async def test_component_not_found(
     hass: HomeAssistant, issue_registry: IssueRegistry
 ) -> None:
-    """setup_component should not crash if component doesn't exist."""
+    """setup_component should raise a repair issue if component doesn't exist."""
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(
@@ -253,6 +253,15 @@ async def test_component_not_found(
     )
     assert issue
     assert issue.translation_key == "integration_not_found"
+
+
+async def test_component_missing_not_raising_in_safe_mode(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
+    """setup_component should not raise an issue if component doesn't exist in safe."""
+    hass.config.safe_mode = True
+    assert await setup.async_setup_component(hass, "non_existing", {}) is False
+    assert len(issue_registry.issues) == 0
 
 
 async def test_component_not_double_initialized(hass: HomeAssistant) -> None:
