@@ -35,6 +35,7 @@
               You are a voice assistant for Home Assistant.
               Answer questions about the world truthfully.
               Answer in plain text. Keep it simple and to the point.
+              User's language is: en
             ''',
             'role': 'user',
           }),
@@ -87,6 +88,7 @@
               You are a voice assistant for Home Assistant.
               Answer questions about the world truthfully.
               Answer in plain text. Keep it simple and to the point.
+              User's language is: en
             ''',
             'role': 'user',
           }),
@@ -140,6 +142,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
         ''',
         'tools': None,
       }),
@@ -184,6 +187,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
         ''',
         'tools': None,
       }),
@@ -240,6 +244,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
         ''',
         'tools': None,
       }),
@@ -288,6 +293,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
         ''',
         'tools': None,
       }),
@@ -336,6 +342,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
           <api_prompt>
         ''',
         'tools': None,
@@ -385,6 +392,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
           <api_prompt>
         ''',
         'tools': None,
@@ -434,6 +442,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
           Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
         ''',
         'tools': list([
@@ -541,6 +550,7 @@
           You are a voice assistant for Home Assistant.
           Answer questions about the world truthfully.
           Answer in plain text. Keep it simple and to the point.
+          User's language is: en
           Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
         ''',
         'tools': list([
