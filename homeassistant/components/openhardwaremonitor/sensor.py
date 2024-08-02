@@ -30,8 +30,8 @@ STATE_OBJECT = "object"
 CONF_INTERVAL = "interval"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
-SCAN_INTERVAL = timedelta(seconds=30)
-RETRY_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=1)
+RETRY_INTERVAL = timedelta(seconds=1)
 
 OHM_VALUE = "Value"
 OHM_MIN = "Min"
