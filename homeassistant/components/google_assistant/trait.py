@@ -878,6 +878,8 @@ class StartStopTrait(_Trait):
         if domain in COVER_VALVE_DOMAINS:
             return {}
 
+        raise NotImplementedError(f"Unsupported domain {domain}")
+
     def query_attributes(self):
         """Return StartStop query attributes."""
         domain = self.state.domain
@@ -898,13 +900,17 @@ class StartStopTrait(_Trait):
                 )
             }
 
+        raise NotImplementedError(f"Unsupported domain {domain}")
+
     async def execute(self, command, data, params, challenge):
         """Execute a StartStop command."""
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
-            return await self._execute_vacuum(command, data, params, challenge)
+            await self._execute_vacuum(command, data, params, challenge)
+            return
         if domain in COVER_VALVE_DOMAINS:
-            return await self._execute_cover_or_valve(command, data, params, challenge)
+            await self._execute_cover_or_valve(command, data, params, challenge)
+            return
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
