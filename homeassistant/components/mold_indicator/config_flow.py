@@ -76,10 +76,6 @@ CONFIG_FLOW = {
         schema=DATA_SCHEMA_CONFIG,
         validate_user_input=validate_duplicate,
     ),
-    "import": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_CONFIG,
-        validate_user_input=validate_duplicate,
-    ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
