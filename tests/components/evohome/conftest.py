@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 from typing import Any, Final
 from unittest.mock import MagicMock, patch
@@ -51,42 +52,49 @@ def zone_schedule_fixture(installation: str) -> JsonObjectType:
     return load_json_object_fixture(f"{installation}/schedule_zone.json", DOMAIN)
 
 
-async def mock_get(
-    self: Broker, url: str, **kwargs: Any
-) -> JsonArrayType | JsonObjectType:
-    """Return the JSON for a HTTP get of a given URL."""
+def mock_get_factory(installation: str) -> Awaitable:
+    """Return a get method for a specified installation."""
 
-    installation = "minimal"
+    async def mock_get(
+        self: Broker, url: str, **kwargs: Any
+    ) -> JsonArrayType | JsonObjectType:
+        """Return the JSON for a HTTP get of a given URL."""
 
-    # a proxy for the behaviour of the real web API
-    if self.refresh_token is None:
-        self.refresh_token = f"new_{REFRESH_TOKEN}"
+        # a proxy for the behaviour of the real web API
+        if self.refresh_token is None:
+            self.refresh_token = f"new_{REFRESH_TOKEN}"
 
-    if self.access_token_expires is None or self.access_token_expires < datetime.now():
-        self.access_token = f"new_{ACCESS_TOKEN}"
-        self.access_token_expires = datetime.now() + timedelta(minutes=30)
+        if (
+            self.access_token_expires is None
+            or self.access_token_expires < datetime.now()
+        ):
+            self.access_token = f"new_{ACCESS_TOKEN}"
+            self.access_token_expires = datetime.now() + timedelta(minutes=30)
 
-    # assume a valid GET, and return the JSON for that web API
-    if url == "userAccount":  #                    userAccount
-        return user_account_config_fixture(installation)
+        # assume a valid GET, and return the JSON for that web API
+        if url == "userAccount":  # userAccount
+            return user_account_config_fixture(installation)
 
-    if url.startswith("location"):
-        if "installationInfo" in url:  #           location/installationInfo?userId={id}
-            return user_locations_config_fixture(installation)
-        if "location" in url:  #                   location/{id}/status
-            return location_status_fixture(installation, "2738909")
+        if url.startswith("location"):
+            if "installationInfo" in url:  # location/installationInfo?userId={id}
+                return user_locations_config_fixture(installation)
+            if "location" in url:  #                   location/{id}/status
+                return location_status_fixture(installation, "2738909")
 
-    elif "schedule" in url:
-        if url.startswith("domesticHotWater"):  #  domesticHotWater/{id}/schedule
-            return dhw_schedule_fixture(installation)
-        if url.startswith("temperatureZone"):  #   temperatureZone/{id}/schedule
-            return zone_schedule_fixture(installation)
+        elif "schedule" in url:
+            if url.startswith("domesticHotWater"):  # domesticHotWater/{id}/schedule
+                return dhw_schedule_fixture(installation)
+            if url.startswith("temperatureZone"):  # temperatureZone/{id}/schedule
+                return zone_schedule_fixture(installation)
 
-    pytest.xfail(f"Unexpected URL: {url}")
+        pytest.xfail(f"Unexpected URL: {url}")
+
+    return mock_get
 
 
-@patch("evohomeasync2.broker.Broker.get", mock_get)
-async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> MagicMock:
+async def setup_evohome(
+    hass: HomeAssistant, test_config: dict[str, str], installation: str = "default"
+) -> MagicMock:
     """Set up the evohome integration and return its client.
 
     The class is mocked here to check the client was instantiated with the correct args.
@@ -95,6 +103,7 @@ async def setup_evohome(hass: HomeAssistant, test_config: dict[str, str]) -> Mag
     with (
         patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
+        patch("evohomeasync2.broker.Broker.get", mock_get_factory(installation)),
     ):
         mock_client.side_effect = EvohomeClient
 
