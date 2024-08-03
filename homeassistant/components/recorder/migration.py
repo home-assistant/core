@@ -119,7 +119,17 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
+# Live schema migration supported starting from schema version 42 or newer
+# Schema version 41 was introduced in HA Core 2023.4
+# Schema version 42 was introduced in HA Core 2023.11
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 42
+
+MIGRATION_NOTE_OFFLINE = (
+    "Note: this may take several hours on large databases and slow machines. "
+    "Home Assistant will not start until the upgrade is completed. Please be patient "
+    "and do not turn off or restart Home Assistant while the upgrade is in progress!"
+)
+
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
 
@@ -276,9 +286,12 @@ def _migrate_schema(
 
     if current_version < end_version:
         _LOGGER.warning(
-            "Database is about to upgrade from schema version: %s to: %s",
+            "The database is about to upgrade from schema version %s to %s%s",
             current_version,
             end_version,
+            f". {MIGRATION_NOTE_OFFLINE}"
+            if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
+            else "",
         )
         schema_status = dataclass_replace(schema_status, current_version=end_version)
 
@@ -362,7 +375,7 @@ def _create_index(
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
         "Adding index `%s` to table `%s`. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
+        "minutes on large databases and slow machines. Please "
         "be patient!",
         index_name,
         table_name,
@@ -411,7 +424,7 @@ def _drop_index(
     """
     _LOGGER.warning(
         "Dropping index `%s` from table `%s`. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
+        "minutes on large databases and slow machines. Please "
         "be patient!",
         index_name,
         table_name,
@@ -462,7 +475,7 @@ def _add_columns(
     _LOGGER.warning(
         (
             "Adding columns %s to table %s. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
+            "minutes on large databases and slow machines. Please "
             "be patient!"
         ),
         ", ".join(column.split(" ")[0] for column in columns_def),
@@ -524,7 +537,7 @@ def _modify_columns(
     _LOGGER.warning(
         (
             "Modifying columns %s in table %s. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
+            "minutes on large databases and slow machines. Please "
             "be patient!"
         ),
         ", ".join(column.split(" ")[0] for column in columns_def),
@@ -1554,7 +1567,7 @@ def _correct_table_character_set_and_collation(
     _LOGGER.warning(
         "Updating character set and collation of table %s to utf8mb4. "
         "Note: this can take several minutes on large databases and slow "
-        "computers. Please be patient!",
+        "machines. Please be patient!",
         table,
     )
     with (

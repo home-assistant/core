@@ -97,6 +97,12 @@ async def test_lock(
     assert state
     assert state.state == STATE_UNKNOWN
 
+    # test featuremap update
+    set_node_attribute(door_lock, 1, 257, 65532, 4096)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("lock.mock_door_lock_lock")
+    assert state.attributes["supported_features"] & LockEntityFeature.OPEN
+
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])

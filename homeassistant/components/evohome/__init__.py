@@ -243,6 +243,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         update_method=broker.async_update,
     )
+    await coordinator.async_register_shutdown()
 
     hass.data[DOMAIN] = {"broker": broker, "coordinator": coordinator}
 

@@ -5,9 +5,9 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 from dsmr_parser.obis_references import (
-    BELGIUM_MBUS1_DEVICE_TYPE,
-    BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-    BELGIUM_MBUS1_METER_READING2,
+    MBUS_DEVICE_TYPE,
+    MBUS_EQUIPMENT_IDENTIFIER,
+    MBUS_METER_READING,
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 
@@ -67,20 +67,20 @@ async def test_migrate_gas_to_mbus(
 
     telegram = Telegram()
     telegram.add(
-        BELGIUM_MBUS1_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 1), [{"value": "003", "unit": ""}]),
-        "BELGIUM_MBUS1_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        "BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS1_METER_READING2,
+        MBUS_METER_READING,
         MBusObject(
             (0, 1),
             [
@@ -88,7 +88,7 @@ async def test_migrate_gas_to_mbus(
                 {"value": Decimal(745.695), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS1_METER_READING2",
+        "MBUS_METER_READING",
     )
 
     assert await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -184,20 +184,20 @@ async def test_migrate_gas_to_mbus_exists(
 
     telegram = Telegram()
     telegram.add(
-        BELGIUM_MBUS1_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 0), [{"value": "003", "unit": ""}]),
-        "BELGIUM_MBUS1_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        "BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS1_METER_READING2,
+        MBUS_METER_READING,
         MBusObject(
             (0, 1),
             [
@@ -205,7 +205,7 @@ async def test_migrate_gas_to_mbus_exists(
                 {"value": Decimal(745.695), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS1_METER_READING2",
+        "MBUS_METER_READING",
     )
 
     assert await hass.config_entries.async_setup(mock_entry.entry_id)

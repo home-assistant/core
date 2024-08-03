@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 from typing import Any, Final
 
-from xknx import XKNX
 from xknx.devices import Fan as XknxFan
 
 from homeassistant import config_entries
@@ -20,6 +19,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
+from . import KNXModule
 from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import FanSchema
@@ -33,10 +33,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up fan(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module: KNXModule = hass.data[DOMAIN]
     config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.FAN]
 
-    async_add_entities(KNXFan(xknx, entity_config) for entity_config in config)
+    async_add_entities(KNXFan(knx_module, entity_config) for entity_config in config)
 
 
 class KNXFan(KnxEntity, FanEntity):
@@ -45,12 +45,13 @@ class KNXFan(KnxEntity, FanEntity):
     _device: XknxFan
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX fan."""
         max_step = config.get(FanSchema.CONF_MAX_STEP)
         super().__init__(
+            knx_module=knx_module,
             device=XknxFan(
-                xknx,
+                xknx=knx_module.xknx,
                 name=config[CONF_NAME],
                 group_address_speed=config.get(KNX_ADDRESS),
                 group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
@@ -61,7 +62,7 @@ class KNXFan(KnxEntity, FanEntity):
                     FanSchema.CONF_OSCILLATION_STATE_ADDRESS
                 ),
                 max_step=max_step,
-            )
+            ),
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None

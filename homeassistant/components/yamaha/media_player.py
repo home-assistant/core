@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -157,7 +158,10 @@ async def async_setup_platform(
     # Get the Infos for configuration from config (YAML) or Discovery
     config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
     # Async check if the Receivers are there in the network
-    zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
+    try:
+        zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
+    except requests.exceptions.ConnectionError as ex:
+        raise PlatformNotReady(f"Issue while connecting to {config_info.name}") from ex
 
     entities = []
     for zctrl in zone_ctrls:
@@ -423,19 +427,21 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self.zctrl.surround_program = sound_mode
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             return self._play_status.artist
+        return None
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album of current playing media."""
         if self._play_status is not None:
             return self._play_status.album
+        return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
         if self._is_playback_supported:
@@ -443,7 +449,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             song = self._play_status.song
@@ -455,3 +461,4 @@ class YamahaDeviceZone(MediaPlayerEntity):
                 return f"{station}: {song}"
 
             return song or station
+        return None

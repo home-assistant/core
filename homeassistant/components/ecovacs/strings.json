@@ -91,6 +91,9 @@
       "clean_count": {
         "name": "Clean count"
       },
+      "cut_direction": {
+        "name": "Cut direction"
+      },
       "volume": {
         "name": "Volume"
       }
@@ -115,6 +118,9 @@
       },
       "lifespan_lens_brush": {
         "name": "Lens brush lifespan"
+      },
+      "lifespan_main_brush": {
+        "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
       },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"

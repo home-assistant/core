@@ -108,6 +108,8 @@ build.json @home-assistant/supervisor
 /tests/components/anova/ @Lash-L
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
+/homeassistant/components/anthropic/ @Shulyaka
+/tests/components/anthropic/ @Shulyaka
 /homeassistant/components/aosmith/ @bdr99
 /tests/components/aosmith/ @bdr99
 /homeassistant/components/apache_kafka/ @bachya
@@ -197,7 +199,8 @@ build.json @home-assistant/supervisor
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
-/homeassistant/components/bluesound/ @thrawnarn
+/homeassistant/components/bluesound/ @thrawnarn @LouisChrist
+/tests/components/bluesound/ @thrawnarn @LouisChrist
 /homeassistant/components/bluetooth/ @bdraco
 /tests/components/bluetooth/ @bdraco
 /homeassistant/components/bluetooth_adapters/ @bdraco
@@ -220,6 +223,8 @@ build.json @home-assistant/supervisor
 /tests/components/brottsplatskartan/ @gjohansson-ST
 /homeassistant/components/brunt/ @eavanvalkenburg
 /tests/components/brunt/ @eavanvalkenburg
+/homeassistant/components/bryant_evolution/ @danielsmyers
+/tests/components/bryant_evolution/ @danielsmyers
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
 /homeassistant/components/bt_smarthub/ @typhoon2099
@@ -373,6 +378,8 @@ build.json @home-assistant/supervisor
 /tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
+/homeassistant/components/elevenlabs/ @sorgfresser
+/tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
@@ -707,6 +714,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
+/homeassistant/components/iron_os/ @tr4nt0r
+/tests/components/iron_os/ @tr4nt0r
 /homeassistant/components/isal/ @bdraco
 /tests/components/isal/ @bdraco
 /homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
@@ -1046,8 +1055,8 @@ build.json @home-assistant/supervisor
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ourgroceries/ @OnFreund
 /tests/components/ourgroceries/ @OnFreund
-/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
-/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
+/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117 @alexfp14
+/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117 @alexfp14
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
