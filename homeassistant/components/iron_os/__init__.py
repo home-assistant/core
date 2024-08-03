@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
     session = async_get_clientsession(hass)
     github = GitHubAPI(session=session)
 
-    firmware_update_coordinator = IronOSFirmwareUpdateCoordinator(hass, github)
+    firmware_update_coordinator = IronOSFirmwareUpdateCoordinator(hass, device, github)
     await firmware_update_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = IronOSCoordinators(

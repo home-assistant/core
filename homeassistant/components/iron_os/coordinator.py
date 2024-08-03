@@ -21,21 +21,39 @@ SCAN_INTERVAL = timedelta(seconds=5)
 SCAN_INTERVAL_GITHUB = timedelta(minutes=60)
 
 
-class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
-    """IronOS coordinator."""
+class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """IronOS base coordinator."""
 
     device_info: DeviceInfoResponse
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: Pynecil,
+        update_interval: timedelta,
+    ) -> None:
         """Initialize IronOS coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=update_interval,
         )
         self.device = device
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        self.device_info = await self.device.get_device_info()
+
+
+class IronOSLiveDataCoordinator(IronOSBaseCoordinator):
+    """IronOS live data coordinator."""
+
+    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
+        """Initialize IronOS coordinator."""
+        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
@@ -46,9 +64,6 @@ class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-
         try:
             self.device_info = await self.device.get_device_info()
 
@@ -56,17 +71,12 @@ class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
             raise UpdateFailed("Cannot connect to device") from e
 
 
-class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
+class IronOSFirmwareUpdateCoordinator(IronOSBaseCoordinator):
     """IronOS coordinator for retrieving update information from github."""
 
-    def __init__(self, hass: HomeAssistant, github: GitHubAPI) -> None:
+    def __init__(self, hass: HomeAssistant, device: Pynecil, github: GitHubAPI) -> None:
         """Initialize IronOS coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL_GITHUB,
-        )
+        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL_GITHUB)
         self.github = github
 
     async def _async_update_data(self) -> GitHubReleaseModel:
