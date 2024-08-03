@@ -7,6 +7,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
 import logging
+import time
 from typing import Any
 
 from sqlalchemy.engine import Result
@@ -18,7 +19,6 @@ from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
     extract_event_type_ids,
     extract_metadata_ids,
-    process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import (
@@ -410,7 +410,7 @@ def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
 
 def _row_time_fired_timestamp(row: Row | EventAsRow) -> float:
     """Convert the row timed_fired to timestamp."""
-    return row[TIME_FIRED_TS_POS] or process_datetime_to_timestamp(dt_util.utcnow())
+    return row[TIME_FIRED_TS_POS] or time.time()
 
 
 class EntityNameCache:
