@@ -21,38 +21,41 @@ from .const import ACCESS_TOKEN, REFRESH_TOKEN
 
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
-TEST_CONFIG: Final = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
+DEFAULT_TEST_CONFIG: Final = {
+    "username": "username",
+    "password": "password",
 }
 
 
-def user_account_config_fixture(installation: str) -> JsonObjectType:
+def user_account_config_fixture(install: str) -> JsonObjectType:
     """Load JSON for the config of a user's account."""
-    return load_json_object_fixture(f"{installation}/user_account.json", DOMAIN)
+    return load_json_object_fixture(f"{install}/user_account.json", DOMAIN)
 
 
-def user_locations_config_fixture(installation: str) -> JsonArrayType:
+def user_locations_config_fixture(install: str) -> JsonArrayType:
     """Load JSON for the config of a user's installation (a list of locations)."""
-    return load_json_array_fixture(f"{installation}/user_locations.json", DOMAIN)
+    return load_json_array_fixture(f"{install}/user_locations.json", DOMAIN)
 
 
-def location_status_fixture(installation: str, loc_id: str) -> JsonObjectType:
+def location_status_fixture(install: str, loc_id: str | None = None) -> JsonObjectType:
     """Load JSON for the status of a specific location."""
-    return load_json_object_fixture(f"{installation}/status_{loc_id}.json", DOMAIN)
+    if loc_id is None:
+        _install = load_json_array_fixture(f"{install}/user_locations.json", DOMAIN)
+        loc_id = _install[0]["locationInfo"]["locationId"]
+    return load_json_object_fixture(f"{install}/status_{loc_id}.json", DOMAIN)
 
 
-def dhw_schedule_fixture(installation: str) -> JsonObjectType:
+def dhw_schedule_fixture(install: str) -> JsonObjectType:
     """Load JSON for the schedule of a domesticHotWater zone."""
-    return load_json_object_fixture(f"{installation}/schedule_dhw.json", DOMAIN)
+    return load_json_object_fixture(f"{install}/schedule_dhw.json", DOMAIN)
 
 
-def zone_schedule_fixture(installation: str) -> JsonObjectType:
+def zone_schedule_fixture(install: str) -> JsonObjectType:
     """Load JSON for the schedule of a temperatureZone zone."""
-    return load_json_object_fixture(f"{installation}/schedule_zone.json", DOMAIN)
+    return load_json_object_fixture(f"{install}/schedule_zone.json", DOMAIN)
 
 
-def mock_get_factory(installation: str) -> Awaitable:
+def mock_get_factory(install: str) -> Awaitable:
     """Return a get method for a specified installation."""
 
     async def mock_get(
@@ -73,37 +76,57 @@ def mock_get_factory(installation: str) -> Awaitable:
 
         # assume a valid GET, and return the JSON for that web API
         if url == "userAccount":  # userAccount
-            return user_account_config_fixture(installation)
+            return user_account_config_fixture(install)
 
         if url.startswith("location"):
             if "installationInfo" in url:  # location/installationInfo?userId={id}
-                return user_locations_config_fixture(installation)
-            if "location" in url:  #                   location/{id}/status
-                return location_status_fixture(installation, "2738909")
+                return user_locations_config_fixture(install)
+            if "location" in url:  # location/{id}/status
+                return location_status_fixture(install)
 
         elif "schedule" in url:
             if url.startswith("domesticHotWater"):  # domesticHotWater/{id}/schedule
-                return dhw_schedule_fixture(installation)
+                return dhw_schedule_fixture(install)
             if url.startswith("temperatureZone"):  # temperatureZone/{id}/schedule
-                return zone_schedule_fixture(installation)
+                return zone_schedule_fixture(install)
 
         pytest.xfail(f"Unexpected URL: {url}")
 
     return mock_get
 
 
+def mock_put_factory() -> Awaitable:
+    """Return a get method for a specified installation."""
+
+    async def mock_put(self: Broker, url: str, **kwargs: Any) -> None:
+        """Effect the action for a HTTP put of a given URL."""
+
+        if url == "userAccount":  # userAccount
+            return
+
+        pytest.xfail(f"Unexpected URL: {url}")
+
+    return mock_put
+
+
 async def setup_evohome(
-    hass: HomeAssistant, test_config: dict[str, str], installation: str = "default"
+    hass: HomeAssistant,
+    test_config: dict[str, str] | None = None,
+    installation: str = "default",
 ) -> MagicMock:
     """Set up the evohome integration and return its client.
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
 
+    if test_config is None:
+        test_config = DEFAULT_TEST_CONFIG
+
     with (
         patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
         patch("evohomeasync2.broker.Broker.get", mock_get_factory(installation)),
+        patch("evohomeasync2.broker.Broker.put", mock_put_factory()),
     ):
         mock_client.side_effect = EvohomeClient
 
