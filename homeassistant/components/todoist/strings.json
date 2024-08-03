@@ -21,6 +21,9 @@
     }
   },
   "exceptions": {
+    "project_invalid": {
+      "message": "Invalid project name \"{project}\""
+    },
     "section_invalid": {
       "message": "Project \"{project}\" has no section \"{section}\""
     }
