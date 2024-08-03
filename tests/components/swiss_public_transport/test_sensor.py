@@ -21,7 +21,6 @@ from homeassistant.components.swiss_public_transport.const import (
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -107,7 +106,7 @@ async def test_service_call_fetch_connections_success(
         (
             1,
             MOCK_DATA_STEP_BASE,
-            pytest.raises(HomeAssistantError),
+            pytest.raises(UpdateFailed),
             OpendataTransportConnectionError(),
         ),
         (

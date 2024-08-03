@@ -84,15 +84,14 @@ class SwissPublicTransportDataUpdateCoordinator(
         self._opendata.limit = limit
         try:
             await self._opendata.async_get_data()
-        except OpendataTransportConnectionError:
+        except OpendataTransportConnectionError as e:
             _LOGGER.warning("Connection to transport.opendata.ch cannot be established")
-            raise
+            raise UpdateFailed from e
         except OpendataTransportError as e:
             _LOGGER.warning(
                 "Unable to connect and retrieve data from transport.opendata.ch"
             )
             raise UpdateFailed from e
-
         connections = self._opendata.connections
         return [
             DataConnection(
