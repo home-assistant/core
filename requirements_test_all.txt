@@ -1469,7 +1469,7 @@ pyegps==0.2.5
 pyemoncms==0.0.7
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.6
+pyenphase==1.22.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
