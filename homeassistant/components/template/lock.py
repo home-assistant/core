@@ -10,6 +10,7 @@ from homeassistant.components.lock import (
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     STATE_JAMMED,
     STATE_LOCKING,
+    STATE_OPEN,
     STATE_UNLOCKING,
     LockEntity,
     LockEntityFeature,
@@ -98,7 +99,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
         if CONF_OPEN in config:
             self._command_open = Script(hass, config[CONF_OPEN], name, DOMAIN)
-            self._attr_supported_features = LockEntityFeature.OPEN
+            self._attr_supported_features |= LockEntityFeature.OPEN
         self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
         self._code_format = None
         self._code_format_template_error = None
@@ -124,6 +125,11 @@ class TemplateLock(TemplateEntity, LockEntity):
     def is_locking(self) -> bool:
         """Return true if lock is locking."""
         return self._state == STATE_LOCKING
+
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is opened."""
+        return self._state == STATE_OPEN
 
     @callback
     def _update_state(self, result):
@@ -209,7 +215,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._optimistic:
-            self._state = False
+            self._state = STATE_OPEN
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
