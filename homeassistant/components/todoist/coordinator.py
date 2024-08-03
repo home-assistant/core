@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from todoist_api_python.api_async import TodoistAPIAsync
-from todoist_api_python.models import Label, Project, Task
+from todoist_api_python.models import Label, Project, Section, Task
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -40,6 +40,10 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
         if self._projects is None:
             self._projects = await self.api.get_projects()
         return self._projects
+
+    async def async_get_sections(self, project_id: str) -> list[Section]:
+        """Return todoist sections for a given project ID."""
+        return await self.api.get_sections(project_id=project_id)
 
     async def async_get_labels(self) -> list[Label]:
         """Return todoist labels fetched at most once."""

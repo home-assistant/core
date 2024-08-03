@@ -39,6 +39,8 @@ def async_handle_timer_event(
                     # Android
                     "channel": "Timers",
                     "importance": "high",
+                    "ttl": 0,
+                    "priority": "high",
                     # iOS
                     "push": {
                         "interruption-level": "time-sensitive",
