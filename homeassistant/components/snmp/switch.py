@@ -277,6 +277,12 @@ class SnmpSwitch(SwitchEntity):
                 ):
                     self._state = False
                 else:
+                    _LOGGER.warning(
+                        "SNMP warning: "
+                        "did not recognise %s as a valid response payload, "
+                        "state will be unknown",
+                        resrow[-1],
+                    )
                     self._state = None
 
     @property
