@@ -172,6 +172,10 @@ class GoogleGenerativeAIConversationEntity(
             model="Generative AI",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -185,6 +189,9 @@ class GoogleGenerativeAIConversationEntity(
             self.hass, "conversation", self.entry.entry_id, self.entity_id
         )
         conversation.async_set_agent(self.hass, self.entry, self)
+        self.entry.async_on_unload(
+            self.entry.add_update_listener(self._async_entry_update_listener)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
@@ -405,3 +412,10 @@ class GoogleGenerativeAIConversationEntity(
             parts.append(llm_api.api_prompt)
 
         return "\n".join(parts)
+
+    async def _async_entry_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        # Reload as we update device info + entity name + supported features
+        await hass.config_entries.async_reload(entry.entry_id)
