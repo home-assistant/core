@@ -26,35 +26,37 @@ TEST_CONFIG: Final = {
 }
 
 
-def user_account_config_fixture() -> JsonObjectType:
+def user_account_config_fixture(installation: str) -> JsonObjectType:
     """Load JSON for the config of a user's account."""
-    return load_json_object_fixture("user_account.json", DOMAIN)
+    return load_json_object_fixture(f"{installation}/user_account.json", DOMAIN)
 
 
-def user_locations_config_fixture() -> JsonArrayType:
+def user_locations_config_fixture(installation: str) -> JsonArrayType:
     """Load JSON for the config of a user's installation (a list of locations)."""
-    return load_json_array_fixture("user_locations.json", DOMAIN)
+    return load_json_array_fixture(f"{installation}/user_locations.json", DOMAIN)
 
 
-def location_status_fixture(loc_id: str) -> JsonObjectType:
+def location_status_fixture(installation: str, loc_id: str) -> JsonObjectType:
     """Load JSON for the status of a specific location."""
-    return load_json_object_fixture(f"status_{loc_id}.json", DOMAIN)
+    return load_json_object_fixture(f"{installation}/status_{loc_id}.json", DOMAIN)
 
 
-def dhw_schedule_fixture() -> JsonObjectType:
+def dhw_schedule_fixture(installation: str) -> JsonObjectType:
     """Load JSON for the schedule of a domesticHotWater zone."""
-    return load_json_object_fixture("schedule_dhw.json", DOMAIN)
+    return load_json_object_fixture(f"{installation}/schedule_dhw.json", DOMAIN)
 
 
-def zone_schedule_fixture() -> JsonObjectType:
+def zone_schedule_fixture(installation: str) -> JsonObjectType:
     """Load JSON for the schedule of a temperatureZone zone."""
-    return load_json_object_fixture("schedule_zone.json", DOMAIN)
+    return load_json_object_fixture(f"{installation}/schedule_zone.json", DOMAIN)
 
 
 async def mock_get(
     self: Broker, url: str, **kwargs: Any
 ) -> JsonArrayType | JsonObjectType:
     """Return the JSON for a HTTP get of a given URL."""
+
+    installation = "minimal"
 
     # a proxy for the behaviour of the real web API
     if self.refresh_token is None:
@@ -66,19 +68,19 @@ async def mock_get(
 
     # assume a valid GET, and return the JSON for that web API
     if url == "userAccount":  #                    userAccount
-        return user_account_config_fixture()
+        return user_account_config_fixture(installation)
 
     if url.startswith("location"):
         if "installationInfo" in url:  #           location/installationInfo?userId={id}
-            return user_locations_config_fixture()
+            return user_locations_config_fixture(installation)
         if "location" in url:  #                   location/{id}/status
-            return location_status_fixture("2738909")
+            return location_status_fixture(installation, "2738909")
 
     elif "schedule" in url:
         if url.startswith("domesticHotWater"):  #  domesticHotWater/{id}/schedule
-            return dhw_schedule_fixture()
+            return dhw_schedule_fixture(installation)
         if url.startswith("temperatureZone"):  #   temperatureZone/{id}/schedule
-            return zone_schedule_fixture()
+            return zone_schedule_fixture(installation)
 
     pytest.xfail(f"Unexpected URL: {url}")
 
