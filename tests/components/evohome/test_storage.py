@@ -48,7 +48,7 @@ SZ_USER_DATA: Final = "user_data"
 def dt_pair(dt_dtm: datetime) -> tuple[datetime, str]:
     """Return a datetime without milliseconds and its string representation."""
     dt_str = dt_dtm.isoformat(timespec="seconds")  # e.g. 2024-07-28T00:57:29+01:00
-    return dt_util.parse_datetime(dt_str), dt_str  # type: ignore[return-value]
+    return dt_util.parse_datetime(dt_str, raise_on_error=True), dt_str
 
 
 ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(hours=1))
@@ -112,7 +112,7 @@ async def test_auth_tokens_null(
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
-    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) > dt_util.now()  # type: ignore[operator]
+    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True) > dt_util.now()
 
 
 @pytest.mark.parametrize("idx", TEST_DATA)
@@ -170,7 +170,7 @@ async def test_auth_tokens_past(
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
-    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) > dt_util.now()  # type: ignore[operator]
+    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True) > dt_util.now()
 
 
 @pytest.mark.parametrize("idx", TEST_DATA)
@@ -196,4 +196,4 @@ async def test_auth_tokens_diff(
     assert data[SZ_USERNAME] == USERNAME_DIFF
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
-    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) > dt_util.now()  # type: ignore[operator]
+    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True) > dt_util.now()
