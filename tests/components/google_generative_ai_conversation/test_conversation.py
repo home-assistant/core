@@ -17,6 +17,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
 )
 from homeassistant.components.google_generative_ai_conversation.conversation import (
     _escape_decode,
+    _format_schema,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
@@ -629,3 +630,61 @@ async def test_escape_decode() -> None:
         "param2": "param2's value",
         "param3": {"param31": "Cheminée", "param32": "Cheminée"},
     }
+
+
+@pytest.mark.parametrize(
+    ("openapi", "protobuf"),
+    [
+        (
+            {"type": "string", "enum": ["a", "b", "c"]},
+            {"type_": "STRING", "enum": ["a", "b", "c"]},
+        ),
+        (
+            {"type": "integer", "enum": [1, 2, 3]},
+            {"type_": "STRING", "enum": ["1", "2", "3"]},
+        ),
+        ({"anyOf": [{"type": "integer"}, {"type": "number"}]}, {"type_": "INTEGER"}),
+        (
+            {
+                "anyOf": [
+                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
+                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
+                ]
+            },
+            {"type_": "INTEGER"},
+        ),
+        ({"type": "string", "format": "lower"}, {"type_": "STRING"}),
+        ({"type": "boolean", "format": "bool"}, {"type_": "BOOLEAN"}),
+        (
+            {"type": "number", "format": "percent"},
+            {"type_": "NUMBER", "format_": "percent"},
+        ),
+        (
+            {
+                "type": "object",
+                "properties": {"var": {"type": "string"}},
+                "required": [],
+            },
+            {
+                "type_": "OBJECT",
+                "properties": {"var": {"type_": "STRING"}},
+                "required": [],
+            },
+        ),
+        (
+            {"type": "object", "additionalProperties": True},
+            {
+                "type_": "OBJECT",
+                "properties": {"json": {"type_": "STRING"}},
+                "required": [],
+            },
+        ),
+        (
+            {"type": "array", "items": {"type": "string"}},
+            {"type_": "ARRAY", "items": {"type_": "STRING"}},
+        ),
+    ],
+)
+async def test_format_schema(openapi, protobuf) -> None:
+    """Test _format_schema."""
+    assert _format_schema(openapi) == protobuf
