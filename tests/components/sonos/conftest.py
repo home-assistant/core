@@ -259,7 +259,7 @@ def soco_factory(
     current_track_info_empty,
     battery_info,
     alarm_clock,
-    sonos_playlists,
+    sonos_playlists: SearchResult,
 ):
     """Create factory for instantiating SoCo mocks."""
     factory = SoCoMockFactory(
