@@ -6,6 +6,7 @@ from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from datetime import datetime as dt
 import logging
+import time
 from typing import Any
 
 from sqlalchemy.engine import Result
@@ -17,7 +18,6 @@ from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
     extract_event_type_ids,
     extract_metadata_ids,
-    process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import (
@@ -81,7 +81,7 @@ class LogbookRun:
     event_cache: EventCache
     entity_name_cache: EntityNameCache
     include_entity_name: bool
-    format_time: Callable[[Row | EventAsRow], Any]
+    timestamp: bool
     memoize_new_contexts: bool = True
 
 
@@ -110,16 +110,13 @@ class EventProcessor:
         self.context_id = context_id
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         self.filters: Filters | None = logbook_config.sqlalchemy_filter
-        format_time = (
-            _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
-        )
         self.logbook_run = LogbookRun(
             context_lookup={None: None},
             external_events=logbook_config.external_events,
             event_cache=EventCache({}),
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
-            format_time=format_time,
+            timestamp=timestamp,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
 
@@ -201,7 +198,7 @@ def _humanify(
     event_cache = logbook_run.event_cache
     entity_name_cache = logbook_run.entity_name_cache
     include_entity_name = logbook_run.include_entity_name
-    format_time = logbook_run.format_time
+    timestamp = logbook_run.timestamp
     memoize_new_contexts = logbook_run.memoize_new_contexts
 
     # Process rows
@@ -215,6 +212,15 @@ def _humanify(
 
         if event_type == EVENT_CALL_SERVICE:
             continue
+
+        time_fired_ts = row.time_fired_ts
+        if timestamp:
+            when = time_fired_ts or time.time()
+        else:
+            when = process_timestamp_to_utc_isoformat(
+                dt_util.utc_from_timestamp(time_fired_ts) or dt_util.utcnow()
+            )
+
         if event_type is PSEUDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
@@ -228,7 +234,7 @@ def _humanify(
                 continue
 
             data = {
-                LOGBOOK_ENTRY_WHEN: format_time(row),
+                LOGBOOK_ENTRY_WHEN: when,
                 LOGBOOK_ENTRY_STATE: row.state,
                 LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
@@ -249,7 +255,7 @@ def _humanify(
                     "Error with %s describe event for %s", domain, event_type
                 )
                 continue
-            data[LOGBOOK_ENTRY_WHEN] = format_time(row)
+            data[LOGBOOK_ENTRY_WHEN] = when
             data[LOGBOOK_ENTRY_DOMAIN] = domain
             context_augmenter.augment(data, row, context_id_bin)
             yield data
@@ -263,7 +269,7 @@ def _humanify(
             if entry_domain is None and entry_entity_id is not None:
                 entry_domain = split_entity_id(str(entry_entity_id))[0]
             data = {
-                LOGBOOK_ENTRY_WHEN: format_time(row),
+                LOGBOOK_ENTRY_WHEN: when,
                 LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
                 LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
@@ -377,18 +383,6 @@ def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     return bool(
         row is other_row or (row_id := row.row_id) and row_id == other_row.row_id
     )
-
-
-def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
-    """Convert the row timed_fired to isoformat."""
-    return process_timestamp_to_utc_isoformat(
-        dt_util.utc_from_timestamp(row.time_fired_ts) or dt_util.utcnow()
-    )
-
-
-def _row_time_fired_timestamp(row: Row | EventAsRow) -> float:
-    """Convert the row timed_fired to timestamp."""
-    return row.time_fired_ts or process_datetime_to_timestamp(dt_util.utcnow())
 
 
 class EntityNameCache:
