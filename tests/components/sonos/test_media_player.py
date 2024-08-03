@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from soco.data_structures import SearchResult
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
@@ -530,6 +531,30 @@ async def test_play_media_music_library_playlist_dne(
     assert soco_mock.play_uri.call_count == 0
     assert media_content_id in caplog.text
     assert "playlist" in caplog.text
+
+
+async def test_play_sonos_playlist(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco: MockSoCo,
+    sonos_playlists: SearchResult,
+) -> None:
+    """Test that sonos playlists can be played."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "playlist",
+            "media_content_id": "sample playlist",
+        },
+        blocking=True,
+    )
+    assert soco.clear_queue.call_count == 1
+    assert soco.add_to_queue.call_count == 1
+    soco.add_to_queue.asset_called_with(
+        sonos_playlists[0], timeout=LONG_SERVICE_TIMEOUT
+    )
 
 
 @pytest.mark.parametrize(
