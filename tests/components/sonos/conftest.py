@@ -341,7 +341,7 @@ def sonos_favorites_fixture() -> SearchResult:
 
 @pytest.fixture(name="sonos_playlists")
 def sonos_playlists_fixture() -> SearchResult:
-    """Create sonos favorites fixture."""
+    """Create sonos playlist fixture."""
     playlists = load_json_value_fixture("sonos_playlists.json", "sonos")
     playlists_list = [DidlPlaylistContainer.from_dict(pl) for pl in playlists]
     return SearchResult(playlists_list, "sonos_playlists", 1, 1, 0)
