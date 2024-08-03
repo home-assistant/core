@@ -17,9 +17,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -32,7 +35,7 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
 )
-from .knx_entity import KnxEntity, KnxUIEntity
+from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import SwitchSchema
 from .storage.const import (
     CONF_DEVICE_INFO,
@@ -51,8 +54,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch(es) for KNX platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
+    platform = async_get_current_platform()
+    platform_controller = KnxUiEntityPlatformController(
+        knx_module=knx_module,
+        entity_platform=platform,
+        entity_class=KnxUiSwitch,
+    )
+    knx_module.config_store.platform_controllers[Platform.SWITCH] = platform_controller
 
-    entities: list[KnxEntity] = []
+    entities: list[KnxYamlEntity | KnxUiEntity] = []
     if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
         entities.extend(
             KnxYamlSwitch(knx_module, entity_config)
@@ -65,13 +75,6 @@ async def async_setup_entry(
         )
     if entities:
         async_add_entities(entities)
-
-    @callback
-    def add_new_ui_switch(unique_id: str, config: dict[str, Any]) -> None:
-        """Add KNX entity at runtime."""
-        async_add_entities([KnxUiSwitch(knx_module, unique_id, config)])
-
-    knx_module.config_store.async_add_entity[Platform.SWITCH] = add_new_ui_switch
 
 
 class _KnxSwitch(SwitchEntity, RestoreEntity):
@@ -102,7 +105,7 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
         await self._device.set_off()
 
 
-class KnxYamlSwitch(_KnxSwitch, KnxEntity):
+class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
     """Representation of a KNX switch configured from YAML."""
 
     _device: XknxSwitch
@@ -125,7 +128,7 @@ class KnxYamlSwitch(_KnxSwitch, KnxEntity):
         self._attr_unique_id = str(self._device.switch.group_address)
 
 
-class KnxUiSwitch(_KnxSwitch, KnxUIEntity):
+class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
     """Representation of a KNX switch configured from UI."""
 
     _attr_has_entity_name = True
@@ -134,21 +137,19 @@ class KnxUiSwitch(_KnxSwitch, KnxUIEntity):
     def __init__(
         self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
     ) -> None:
-        """Initialize of KNX switch."""
-        super().__init__(
-            knx_module=knx_module,
-            device=XknxSwitch(
-                knx_module.xknx,
-                name=config[CONF_ENTITY][CONF_NAME],
-                group_address=config[DOMAIN][CONF_GA_SWITCH][CONF_GA_WRITE],
-                group_address_state=[
-                    config[DOMAIN][CONF_GA_SWITCH][CONF_GA_STATE],
-                    *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
-                ],
-                respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
-                sync_state=config[DOMAIN][CONF_SYNC_STATE],
-                invert=config[DOMAIN][CONF_INVERT],
-            ),
+        """Initialize KNX switch."""
+        self._knx_module = knx_module
+        self._device = XknxSwitch(
+            knx_module.xknx,
+            name=config[CONF_ENTITY][CONF_NAME],
+            group_address=config[DOMAIN][CONF_GA_SWITCH][CONF_GA_WRITE],
+            group_address_state=[
+                config[DOMAIN][CONF_GA_SWITCH][CONF_GA_STATE],
+                *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
+            ],
+            respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
+            sync_state=config[DOMAIN][CONF_SYNC_STATE],
+            invert=config[DOMAIN][CONF_INVERT],
         )
         self._attr_entity_category = config[CONF_ENTITY][CONF_ENTITY_CATEGORY]
         self._attr_unique_id = unique_id

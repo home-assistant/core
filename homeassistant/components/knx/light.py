@@ -19,15 +19,18 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
 from . import KNXModule
 from .const import CONF_SYNC_STATE, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
-from .knx_entity import KnxEntity, KnxUIEntity
+from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import LightSchema
 from .storage.const import (
     CONF_COLOR_TEMP_MAX,
@@ -63,8 +66,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up light(s) for KNX platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
+    platform = async_get_current_platform()
+    platform_controller = KnxUiEntityPlatformController(
+        knx_module=knx_module,
+        entity_platform=platform,
+        entity_class=KnxUiLight,
+    )
+    knx_module.config_store.platform_controllers[Platform.LIGHT] = platform_controller
 
-    entities: list[KnxEntity] = []
+    entities: list[KnxYamlEntity | KnxUiEntity] = []
     if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.LIGHT):
         entities.extend(
             KnxYamlLight(knx_module, entity_config)
@@ -77,13 +87,6 @@ async def async_setup_entry(
         )
     if entities:
         async_add_entities(entities)
-
-    @callback
-    def add_new_ui_light(unique_id: str, config: dict[str, Any]) -> None:
-        """Add KNX entity at runtime."""
-        async_add_entities([KnxUiLight(knx_module, unique_id, config)])
-
-    knx_module.config_store.async_add_entity[Platform.LIGHT] = add_new_ui_light
 
 
 def _create_yaml_light(xknx: XKNX, config: ConfigType) -> XknxLight:
@@ -519,7 +522,7 @@ class _KnxLight(LightEntity):
         await self._device.set_off()
 
 
-class KnxYamlLight(_KnxLight, KnxEntity):
+class KnxYamlLight(_KnxLight, KnxYamlEntity):
     """Representation of a KNX light."""
 
     _device: XknxLight
@@ -546,7 +549,7 @@ class KnxYamlLight(_KnxLight, KnxEntity):
         )
 
 
-class KnxUiLight(_KnxLight, KnxUIEntity):
+class KnxUiLight(_KnxLight, KnxUiEntity):
     """Representation of a KNX light."""
 
     _attr_has_entity_name = True
@@ -556,11 +559,9 @@ class KnxUiLight(_KnxLight, KnxUIEntity):
         self, knx_module: KNXModule, unique_id: str, config: ConfigType
     ) -> None:
         """Initialize of KNX light."""
-        super().__init__(
-            knx_module=knx_module,
-            device=_create_ui_light(
-                knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
-            ),
+        self._knx_module = knx_module
+        self._device = _create_ui_light(
+            knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
         )
         self._attr_max_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MAX]
         self._attr_min_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MIN]
