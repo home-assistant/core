@@ -166,11 +166,6 @@ class SwissPublicTransportSensor(
         limit: int,
     ) -> dict:
         """Fetch a set of connections."""
-        if not self.available:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="service_entity_unavailable",
-            )
         try:
             connections = await self.coordinator.fetch_connections(limit=int(limit))
         except OpendataTransportConnectionError as e:
