@@ -56,9 +56,9 @@ async def async_setup_entry(
         for device in controller.devices
         if device.capabilities.device_type is DeviceType.VACUUM
     ]
-    for device in controller.legacy_devices:
-        await hass.async_add_executor_job(device.connect_and_wait_until_ready)
-        vacuums.append(EcovacsLegacyVacuum(device))
+    vacuums.extend(
+        [EcovacsLegacyVacuum(device) for device in controller.legacy_devices]
+    )
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
 
@@ -168,6 +168,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         data: dict[str, Any] = {}
         data[ATTR_ERROR] = self.error
 
+        # these attributes are deprecated and can be removed in 2025.2
         for key, val in self.device.components.items():
             attr_name = ATTR_COMPONENT_PREFIX + key
             data[attr_name] = int(val * 100)

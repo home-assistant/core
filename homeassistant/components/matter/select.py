@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import Nullable
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +15,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -38,7 +43,41 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SELECT, async_add_entities)
 
 
-class MatterModeSelectEntity(MatterEntity, SelectEntity):
+@dataclass(frozen=True)
+class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescription):
+    """Describe Matter select entities."""
+
+
+class MatterSelectEntity(MatterEntity, SelectEntity):
+    """Representation of a select entity from Matter Attribute read/write."""
+
+    entity_description: MatterSelectEntityDescription
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected mode."""
+        value_convert = self.entity_description.ha_to_native_value
+        if TYPE_CHECKING:
+            assert value_convert is not None
+        await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                self._endpoint.endpoint_id, self._entity_info.primary_attribute
+            ),
+            value=value_convert(option),
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value: Nullable | int | None
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        value_convert = self.entity_description.measurement_to_ha
+        if TYPE_CHECKING:
+            assert value_convert is not None
+        self._attr_current_option = value_convert(value)
+
+
+class MatterModeSelectEntity(MatterSelectEntity):
     """Representation of a select entity from Matter (Mode) Cluster attribute(s)."""
 
     async def async_select_option(self, option: str) -> None:
@@ -77,7 +116,7 @@ class MatterModeSelectEntity(MatterEntity, SelectEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterModeSelect",
             entity_category=EntityCategory.CONFIG,
             translation_key="mode",
@@ -90,7 +129,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterOvenMode",
             translation_key="mode",
         ),
@@ -102,7 +141,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterLaundryWasherMode",
             translation_key="mode",
         ),
@@ -114,7 +153,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterRefrigeratorAndTemperatureControlledCabinetMode",
             translation_key="mode",
         ),
@@ -126,7 +165,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterRvcRunMode",
             translation_key="mode",
         ),
@@ -138,7 +177,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterRvcCleanMode",
             translation_key="mode",
         ),
@@ -150,7 +189,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterDishwasherMode",
             translation_key="mode",
         ),
@@ -162,7 +201,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterMicrowaveOvenMode",
             translation_key="mode",
         ),
@@ -174,7 +213,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterEnergyEvseMode",
             translation_key="mode",
         ),
@@ -186,7 +225,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=SelectEntityDescription(
+        entity_description=MatterSelectEntityDescription(
             key="MatterDeviceEnergyManagementMode",
             translation_key="mode",
         ),
@@ -195,5 +234,28 @@ DISCOVERY_SCHEMAS = [
             clusters.DeviceEnergyManagementMode.Attributes.CurrentMode,
             clusters.DeviceEnergyManagementMode.Attributes.SupportedModes,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="MatterStartUpOnOff",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="startup_on_off",
+            options=["On", "Off", "Toggle", "Previous"],
+            measurement_to_ha=lambda x: {
+                0: "Off",
+                1: "On",
+                2: "Toggle",
+                None: "Previous",
+            }[x],
+            ha_to_native_value=lambda x: {
+                "Off": 0,
+                "On": 1,
+                "Toggle": 2,
+                "Previous": None,
+            }[x],
+        ),
+        entity_class=MatterSelectEntity,
+        required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
     ),
 ]

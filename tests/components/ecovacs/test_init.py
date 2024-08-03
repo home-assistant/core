@@ -136,7 +136,7 @@ async def test_devices_in_dr(
     ("device_fixture", "entities"),
     [
         ("yna5x1", 26),
-        ("5xu9h3", 24),
+        ("5xu9h3", 25),
         ("123", 1),
     ],
 )

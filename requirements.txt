@@ -4,7 +4,7 @@
 
 # Home Assistant Core
 aiodns==3.2.0
-aiohttp==3.10.0b1
+aiohttp==3.10.0
 aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.1.1
 aiozoneinfo==0.2.1
@@ -36,9 +36,9 @@ PyYAML==6.0.1
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
-ulid-transform==0.10.1
+ulid-transform==0.13.1
 urllib3>=1.26.5,<2
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
-voluptuous-openapi==0.0.4
+voluptuous-openapi==0.0.5
 yarl==1.9.4

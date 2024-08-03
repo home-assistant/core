@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
 import logging
@@ -262,8 +261,7 @@ def _humanify(
             entry_domain = event_data.get(ATTR_DOMAIN)
             entry_entity_id = event_data.get(ATTR_ENTITY_ID)
             if entry_domain is None and entry_entity_id is not None:
-                with suppress(IndexError):
-                    entry_domain = split_entity_id(str(entry_entity_id))[0]
+                entry_domain = split_entity_id(str(entry_entity_id))[0]
             data = {
                 LOGBOOK_ENTRY_WHEN: format_time(row),
                 LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
