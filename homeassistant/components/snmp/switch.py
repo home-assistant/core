@@ -288,13 +288,18 @@ class SnmpSwitch(SwitchEntity):
             )
         else:
             for resrow in restable:
-                if (self._payload_on and resrow[-1] == self._payload_on) or (
-                    self._payload_on_int and resrow[-1] == Integer(self._payload_on_int)
+                if (
+                    self._payload_on is not None and resrow[-1] == self._payload_on
+                ) or (
+                    self._payload_on_int is not None
+                    and resrow[-1] == self._payload_on_int
                 ):
                     self._state = True
-                elif (self._payload_off and resrow[-1] == self._payload_off) or (
-                    self._payload_off_int
-                    and resrow[-1] == Integer(self._payload_off_int)
+                elif (
+                    self._payload_off is not None and resrow[-1] == self._payload_off
+                ) or (
+                    self._payload_off_int is not None
+                    and resrow[-1] == self._payload_off_int
                 ):
                     self._state = False
                 else:
