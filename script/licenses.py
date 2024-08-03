@@ -46,7 +46,7 @@ class PackageDefinition:
 
 
 # Incomplete list of OSI approved SPDX identifiers
-# Add more as needed
+# Add more as needed, see https://spdx.org/licenses/
 OSI_APPROVED_LICENSES_SPDX = {
     "Apache-2.0",
     "BSD-3-Clause",
