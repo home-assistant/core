@@ -9,7 +9,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bryant_evolution.climate import SCAN_INTERVAL
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
@@ -32,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def trigger_polling(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Trigger a polling event."""
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(timedelta(seconds=61))  # Matches 1 minute pollling interval
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

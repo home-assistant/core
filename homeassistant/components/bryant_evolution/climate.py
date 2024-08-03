@@ -1,6 +1,5 @@
 """Support for Bryant Evolution HVAC systems."""
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -24,9 +23,6 @@ from .const import CONF_SYSTEM_ZONE, DOMAIN
 from .coordinator import EvolutionCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(

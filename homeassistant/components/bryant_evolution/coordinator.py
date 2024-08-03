@@ -104,7 +104,7 @@ class EvolutionCoordinator(DataUpdateCoordinator[EvolutionState]):
             hass,
             logger=_LOGGER,
             name=f"Bryant Evolution at {tty}",
-            update_interval=timedelta(minutes=10),
+            update_interval=timedelta(minutes=1),
             update_method=lambda: _read_evolution_state(
                 self.system_zone_tuples, self.tty
             ),
