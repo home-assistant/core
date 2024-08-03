@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from importlib import metadata
 import json
+import logging
 from pathlib import Path
 import sys
 from typing import TypedDict, cast
@@ -22,6 +23,7 @@ from license_expression import (
 )
 
 licensing = get_spdx_licensing()
+logger = logging.getLogger(__name__)
 
 
 class PackageMetadata(TypedDict):
@@ -38,7 +40,6 @@ class PackageMetadata(TypedDict):
 class PackageDefinition:
     """Package definition."""
 
-    license: str
     license_expression: str | None
     license_metadata: str | None
     license_classifier: list[str]
@@ -48,10 +49,7 @@ class PackageDefinition:
     @classmethod
     def from_dict(cls, data: PackageMetadata) -> PackageDefinition:
         """Create a package definition from PackageMetadata."""
-        if not (license_str := "; ".join(data["license_classifier"])):
-            license_str = data["license_metadata"] or "UNKNOWN"
         return cls(
-            license=license_str,
             license_expression=data["license_expression"],
             license_metadata=data["license_metadata"],
             license_classifier=data["license_classifier"],
@@ -93,7 +91,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "ZPL-2.1",
 }
 
-OSI_APPROVED_LICENSES = {
+OSI_APPROVED_LICENSE_CLASSIFIER = {
     "Academic Free License (AFL)",
     "Apache Software License",
     "Apple Public Source License",
@@ -161,19 +159,6 @@ OSI_APPROVED_LICENSES = {
     "Zero-Clause BSD (0BSD)",
     "Zope Public License",
     "zlib/libpng License",
-    # End license classifier
-    "Apache License",
-    "MIT",
-    "MPL2",
-    "Apache 2",
-    "LGPL v3",
-    "BSD",
-    "GNU-3.0",
-    "GPLv3",
-    "Eclipse Public License v2.0",
-    "ISC",
-    "GNU General Public License v3",
-    "GPLv2",
 }
 
 EXCEPTIONS = {
@@ -210,6 +195,65 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
+    # -- Full license text in metadata
+    "PyNINA": AwesomeVersion("0.3.5"),  # MIT
+    "aioconsole": AwesomeVersion("0.8.1"),  # GPL
+    "dicttoxml": AwesomeVersion("1.7.16"),  # GPL
+    "ibmiotf": AwesomeVersion("0.3.4"),  # Eclipse Public License
+    "matrix-nio": AwesomeVersion("0.25.2"),  # ISC
+    # -- Not SPDX license strings --
+    "PyNaCl": AwesomeVersion("1.5.0"),  # Apache License 2.0
+    "PySocks": AwesomeVersion("1.7.1"),  # BSD
+    "aioairq": AwesomeVersion("0.4.4"),  # Apache License, Version 2.0
+    "aioaquacell": AwesomeVersion("0.2.0"),  # Apache License 2.0
+    "aioeagle": AwesomeVersion("1.1.0"),  # Apache License 2.0
+    "amcrest": AwesomeVersion("1.9.8"),  # GPLv2
+    "async_modbus": AwesomeVersion("0.2.2"),  # GNU General Public License v3
+    "baidu-aip": AwesomeVersion("1.6.6.0"),  # Apache License
+    "bs4": AwesomeVersion("0.0.2"),  # MIT License
+    "bt-proximity": AwesomeVersion("0.2.1"),  # Apache 2.0
+    "connio": AwesomeVersion("0.2.0"),  # GPLv3+
+    "datapoint": AwesomeVersion("0.9.9"),  # GPLv3
+    "freebox-api": AwesomeVersion("1.2.2"),  # GNU GPL v3
+    "insteon-frontend-home-assistant": AwesomeVersion("0.5.0"),  # MIT License
+    "libpyfoscam": AwesomeVersion("1.2.2"),  # LGPLv3+
+    "london-tube-status": AwesomeVersion("0.5"),  # Apache License, Version 2.0
+    "mutesync": AwesomeVersion("0.0.1"),  # Apache License 2.0
+    "oemthermostat": AwesomeVersion("1.1.1"),  # BSD
+    "peblar": AwesomeVersion("0.4.0"),  # MIT License
+    "pilight": AwesomeVersion("0.1.1"),  # MIT License
+    "ply": AwesomeVersion("3.11"),  # BSD
+    "protobuf": AwesomeVersion("5.29.2"),  # 3-Clause BSD License
+    "psutil-home-assistant": AwesomeVersion("0.0.1"),  # Apache License 2.0
+    "pyAtome": AwesomeVersion("0.1.1"),  # Apache Software License
+    "pybotvac": AwesomeVersion("0.0.26"),  # Licensed under the MIT license
+    "pychannels": AwesomeVersion("1.2.3"),  # The MIT License
+    "pycognito": AwesomeVersion("2024.5.1"),  # Apache License 2.0
+    "pycryptodome": AwesomeVersion("3.22.0"),  # BSD, Public Domain
+    "pycryptodomex": AwesomeVersion("3.22.0"),  # BSD, Public Domain
+    "pydanfossair": AwesomeVersion("0.1.0"),  # Apache 2.0
+    "pydroid-ipcam": AwesomeVersion("3.0.0"),  # Apache License 2.0
+    "pyebox": AwesomeVersion("1.1.4"),  # Apache 2.0
+    "pyevilgenius": AwesomeVersion("2.0.0"),  # Apache License 2.0
+    "pyezviz": AwesomeVersion("0.2.2.3"),  # Apache Software License 2.0
+    "pyfido": AwesomeVersion("2.1.2"),  # Apache 2.0
+    "pyialarm": AwesomeVersion("2.2.0"),  # Apache 2.0
+    "pylitejet": AwesomeVersion("0.6.3"),  # MIT License
+    "pyquery": AwesomeVersion("2.0.1"),  # BSD
+    "python-digitalocean": AwesomeVersion("1.13.2"),  # LGPL v3
+    "pywebpush": AwesomeVersion("1.14.1"),  # MPL2
+    "qbusmqttapi": AwesomeVersion("1.3.0"),  # MIT License 2025
+    "raincloudy": AwesomeVersion("0.0.7"),  # Apache License 2.0
+    "simplehound": AwesomeVersion("0.3"),  # Apache License, Version 2.0
+    "sockio": AwesomeVersion("0.15.0"),  # GPLv3+
+    "starkbank-ecdsa": AwesomeVersion("2.2.0"),  # MIT License
+    "streamlabswater": AwesomeVersion("1.0.1"),  # Apache 2.0
+    "vilfo-api-client": AwesomeVersion("0.5.0"),  # MIT License
+    "voluptuous-openapi": AwesomeVersion("0.0.6"),  # Apache License 2.0
+    "voluptuous-serialize": AwesomeVersion("2.6.0"),  # Apache License 2.0
+    "vultr": AwesomeVersion("0.1.2"),  # The MIT License (MIT)
+    "wallbox": AwesomeVersion("0.8.0"),  # Apache 2
+    "zhong-hong-hvac": AwesomeVersion("1.0.13"),  # Apache
 }
 
 EXCEPTIONS_AND_TODOS = EXCEPTIONS.union(TODO)
@@ -274,22 +318,25 @@ def check_license_status(package: PackageDefinition) -> bool:
     """Check if package licenses is OSI approved."""
     if package.license_expression:
         # Prefer 'License-Expression' if it exists
-        return check_license_expression(package.license_expression) or False
+        return (
+            check_license_expression(package.license_expression, package.name) or False
+        )
 
     if (
         package.license_metadata
-        and (check := check_license_expression(package.license_metadata)) is not None
+        and (check := check_license_expression(package.license_metadata, package.name))
+        is not None
     ):
         # Check license metadata if it's a valid SPDX license expression
         return check
 
-    for approved_license in OSI_APPROVED_LICENSES:
-        if approved_license in package.license:
-            return True
+    if check := check_license_classifier(package.license_classifier, package.name):
+        return check
+
     return False
 
 
-def check_license_expression(license_str: str) -> bool | None:
+def check_license_expression(license_str: str, package_name: str) -> bool | None:
     """Check if license expression is a valid and approved SPDX license string."""
     if license_str == "UNKNOWN" or "\n" in license_str:
         # Ignore common errors for license metadata values
@@ -298,6 +345,11 @@ def check_license_expression(license_str: str) -> bool | None:
     try:
         expr = licensing.parse(license_str, validate=True)
     except ExpressionError:
+        logger.debug(
+            "Not a validate metadata license for %s: %s",
+            package_name,
+            license_str,
+        )
         return None
     return check_spdx_license(expr)
 
@@ -311,6 +363,24 @@ def check_spdx_license(expr: LicenseExpression) -> bool:
     if isinstance(expr, AND):
         return all(check_spdx_license(arg) for arg in expr.args)
     return False
+
+
+def check_license_classifier(licenses: list[str], package_name: str) -> bool | None:
+    """Check license classifier are OSI approved."""
+    if not licenses:
+        return None
+    if len(licenses) > 1:
+        # It's not defined how multiple license classifier should be interpreted
+        # To be safe required ALL to be approved
+        check = all(
+            classifier in OSI_APPROVED_LICENSE_CLASSIFIER for classifier in licenses
+        )
+        if check is False:
+            logger.debug(
+                "Not all classifier approved for %s: %s", package_name, licenses
+            )
+        return check
+    return licenses[0] in OSI_APPROVED_LICENSE_CLASSIFIER
 
 
 def get_license_str(package: PackageDefinition) -> str:
@@ -374,6 +444,9 @@ class CheckArgs(Namespace):
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the main script."""
     parser = ArgumentParser()
+    parser.add_argument(
+        "-v", dest="verbose", action="store_true", help="Enable verbose logging"
+    )
     subparsers = parser.add_subparsers(title="Subcommands", required=True)
 
     parser_extract = subparsers.add_parser("extract")
@@ -396,6 +469,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     argv = argv or sys.argv[1:]
     args = parser.parse_args(argv)
+
+    logging.basicConfig(
+        format="%(levelname)s:%(message)s", stream=sys.stdout, level=logging.INFO
+    )
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
 
     if args.action == "extract":
         args = cast(ExtractArgs, args)
