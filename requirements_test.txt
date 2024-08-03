@@ -10,6 +10,7 @@
 astroid==3.2.4
 coverage==7.6.0
 freezegun==1.5.1
+license-expression==30.3.0
 mock-open==1.4.0
 mypy-dev==1.12.0a2
 pre-commit==3.7.1
