@@ -32,7 +32,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
         raise InvalidToken
 
     r = client.list(data["token"])
-    if not str(r) == "<Response [200 OK]>":
+    if not r.status_code == 200:
         raise InvalidToken
 
     return {"title": tokenData["id"]}

@@ -17,7 +17,7 @@ type TriggercmdConfigEntry = ConfigEntry[Hub]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
     """Set up TRIGGERcmd from a config entry."""
-    entry.runtime_data = Hub(hass, entry.data["token"])
+    entry.runtime_data = Hub(entry.data["token"])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

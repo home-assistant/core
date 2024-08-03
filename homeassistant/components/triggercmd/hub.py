@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 
-import jwt
-from triggercmd import client
-
-from homeassistant.core import HomeAssistant
+from triggercmd import client, utils
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +16,7 @@ class Hub:
 
     def __init__(self, token: str) -> None:
         """Init hub."""
-        tokenData = jwt.decode(token, options={"verify_signature": False})
-        self._id = tokenData["id"]
+        self._id = utils.user_id(token)
         self._token = token
 
         r = client.list(token)
