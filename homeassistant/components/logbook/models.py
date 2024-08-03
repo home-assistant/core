@@ -45,8 +45,6 @@ class LazyEventPartialState:
     ) -> None:
         """Init the lazy event."""
         self.row = row
-        self._event_data: dict[str, Any] | None = None
-        self._event_data_cache = event_data_cache
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
         if type(row) is EventAsRow:
@@ -60,10 +58,10 @@ class LazyEventPartialState:
             source = row.event_data
         if not source:
             self.data = {}
-        elif event_data := self._event_data_cache.get(source):
+        elif event_data := event_data_cache.get(source):
             self.data = event_data
         else:
-            self.data = self._event_data_cache[source] = cast(
+            self.data = event_data_cache[source] = cast(
                 dict[str, Any], json_loads(source)
             )
 
