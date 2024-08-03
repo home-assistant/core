@@ -64,12 +64,6 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator):
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
 
-        try:
-            self.device_info = await self.device.get_device_info()
-
-        except CommunicationError as e:
-            raise UpdateFailed("Cannot connect to device") from e
-
 
 class IronOSFirmwareUpdateCoordinator(IronOSBaseCoordinator):
     """IronOS coordinator for retrieving update information from github."""
