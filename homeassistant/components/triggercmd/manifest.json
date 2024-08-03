@@ -6,5 +6,5 @@
   "documentation": "https://docs.triggercmd.com",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["triggercmd==0.0.21"]
+  "requirements": ["triggercmd==0.0.22"]
 }

@@ -2777,7 +2777,7 @@ tplink-omada-client==1.3.12
 transmission-rpc==7.0.3
 
 # homeassistant.components.triggercmd
-triggercmd==0.0.21
+triggercmd==0.0.22
 
 # homeassistant.components.twinkly
 ttls==1.8.3

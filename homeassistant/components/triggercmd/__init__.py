@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
+from triggercmd import ha
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from .hub import Hub
 
 PLATFORMS = [
     Platform.SWITCH,
 ]
 
-type TriggercmdConfigEntry = ConfigEntry[Hub]
+type TriggercmdConfigEntry = ConfigEntry[ha.Hub]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
     """Set up TRIGGERcmd from a config entry."""
-    entry.runtime_data = Hub(entry.data["token"])
+    entry.runtime_data = ha.Hub(entry.data["token"])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
