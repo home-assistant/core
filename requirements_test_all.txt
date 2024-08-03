@@ -717,6 +717,9 @@ eternalegypt==0.0.16
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
 
+# homeassistant.components.evohome
+evohome-async==0.4.20
+
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
 
@@ -1472,7 +1475,7 @@ pyegps==0.2.5
 pyemoncms==0.0.7
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.6
+pyenphase==1.22.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
