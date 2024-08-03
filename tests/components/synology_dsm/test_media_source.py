@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import web
 import pytest
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
@@ -30,7 +31,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.aiohttp import MockRequest, web
+from homeassistant.util.aiohttp import MockRequest
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
