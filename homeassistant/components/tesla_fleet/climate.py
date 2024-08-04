@@ -40,7 +40,7 @@ async def async_setup_entry(
     entry: TeslaFleetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the TeslaFleet Climate platform from a config entry."""
+    """Set up the Tesla Fleet Climate platform from a config entry."""
 
     async_add_entities(
         chain(
@@ -61,7 +61,7 @@ async def async_setup_entry(
 
 
 class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
-    """Telemetry vehicle climate entity."""
+    """Tesla Fleet vehicle climate entity."""
 
     _attr_precision = PRECISION_HALVES
 
@@ -191,7 +191,7 @@ COP_LEVELS = {
 
 
 class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEntity):
-    """Telemetry vehicle cabin overheat protection entity."""
+    """Tesla Fleet vehicle cabin overheat protection entity."""
 
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
