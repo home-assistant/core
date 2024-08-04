@@ -71,7 +71,6 @@ from .models import (
     ENTITY_ID_POS,
     EVENT_TYPE_POS,
     ICON_POS,
-    ROW_ID_POS,
     STATE_POS,
     TIME_FIRED_TS_POS,
     EventAsRow,
