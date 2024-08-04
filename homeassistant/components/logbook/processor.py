@@ -300,7 +300,7 @@ def _humanify(
             (row is context_row or _rows_ids_match(row, context_row))
             and (
                 not (context_parent := row[CONTEXT_PARENT_ID_BIN_POS])
-                or not (context_row := get_context(context_parent, context_row))  # type: ignore[arg-type]
+                or not (context_row := get_context(context_parent, context_row))
                 or row is context_row
                 or _rows_ids_match(row, context_row)
             )
@@ -322,7 +322,7 @@ class ContextAugmenter:
         self.include_entity_name = logbook_run.include_entity_name
 
     def get_context(
-        self, context_id_bin: bytes | None, row: Row | EventAsRow
+        self, context_id_bin: bytes | None, row: Row | EventAsRow | None
     ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
         if context_id_bin is not None and (
