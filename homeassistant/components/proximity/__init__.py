@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import voluptuous as vol
 
@@ -13,7 +12,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
-    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -24,12 +22,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    ATTR_DIR_OF_TRAVEL,
-    ATTR_DIST_TO,
-    ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
     CONF_TRACKED_ENTITIES,
@@ -39,7 +33,6 @@ from .const import (
     UNITS,
 )
 from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
-from .helpers import entity_used_in
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,34 +55,6 @@ CONFIG_SCHEMA = vol.Schema(
     ),
     extra=vol.ALLOW_EXTRA,
 )
-
-
-async def _async_setup_legacy(
-    hass: HomeAssistant,
-    entry: ProximityConfigEntry,
-    coordinator: ProximityDataUpdateCoordinator,
-) -> None:
-    """Legacy proximity entity handling, can be removed in 2024.8."""
-    friendly_name = entry.data[CONF_NAME]
-    proximity = Proximity(hass, friendly_name, coordinator)
-    await proximity.async_added_to_hass()
-    proximity.async_write_ha_state()
-
-    if used_in := entity_used_in(hass, f"{DOMAIN}.{friendly_name}"):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_proximity_entity_{friendly_name}",
-            breaks_in_ha_version="2024.8.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_proximity_entity",
-            translation_placeholders={
-                "entity": f"{DOMAIN}.{friendly_name}",
-                "used_in": "\n- ".join([f"`{x}`" for x in used_in]),
-            },
-        )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -160,9 +125,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    if entry.source == SOURCE_IMPORT:
-        await _async_setup_legacy(hass, entry, coordinator)
-
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
@@ -176,45 +138,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
-    """Representation of a Proximity."""
-
-    # This entity is legacy and does not have a platform.
-    # We can't fix this easily without breaking changes.
-    _no_platform_reported = True
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        friendly_name: str,
-        coordinator: ProximityDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the proximity."""
-        super().__init__(coordinator)
-        self.hass = hass
-        self.entity_id = f"{DOMAIN}.{friendly_name}"
-
-        self._attr_name = friendly_name
-        self._attr_unit_of_measurement = self.coordinator.unit_of_measurement
-
-    @property
-    def data(self) -> dict[str, str | int | None]:
-        """Get data from coordinator."""
-        return self.coordinator.data.proximity
-
-    @property
-    def state(self) -> str | float:
-        """Return the state."""
-        if isinstance(distance := self.data[ATTR_DIST_TO], str):
-            return distance
-        return self.coordinator.convert_legacy(cast(int, distance))
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes."""
-        return {
-            ATTR_DIR_OF_TRAVEL: str(self.data[ATTR_DIR_OF_TRAVEL] or STATE_UNKNOWN),
-            ATTR_NEAREST: str(self.data[ATTR_NEAREST]),
-        }
