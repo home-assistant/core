@@ -165,6 +165,18 @@
       "lifetime_consumption_phase": {
         "name": "Lifetime energy consumption {phase_name}"
       },
+      "balanced_net_consumption": {
+        "name": "balanced net power consumption"
+      },
+      "lifetime_balanced_net_consumption": {
+        "name": "Lifetime balanced net energy consumption"
+      },
+      "balanced_net_consumption_phase": {
+        "name": "balanced net power consumption {phase_name}"
+      },
+      "lifetime_balanced_net_consumption_phase": {
+        "name": "Lifetime balanced net energy consumption {phase_name}"
+      },
       "lifetime_net_consumption": {
         "name": "Lifetime net energy consumption"
       },
