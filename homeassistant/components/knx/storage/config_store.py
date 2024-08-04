@@ -79,12 +79,7 @@ class KNXConfigStore:
         self, platform: Platform, data: dict[str, Any]
     ) -> str | None:
         """Create a new entity."""
-        try:
-            platform_controller = self._platform_controllers[platform]
-        except KeyError as err:
-            raise ConfigStoreException(
-                f"Entity platform not ready: {platform}"
-            ) from err
+        platform_controller = self._platform_controllers[platform]
         unique_id = f"knx_es_{ulid_now()}"
         await platform_controller.create_entity(unique_id, data)
         # store data after entity was added to be sure config didn't raise exceptions
@@ -112,12 +107,7 @@ class KNXConfigStore:
         self, platform: Platform, entity_id: str, data: dict[str, Any]
     ) -> None:
         """Update an existing entity."""
-        try:
-            platform_controller = self._platform_controllers[platform]
-        except KeyError as err:
-            raise ConfigStoreException(
-                f"Entity platform not ready: {platform}"
-            ) from err
+        platform_controller = self._platform_controllers[platform]
         entity_registry = er.async_get(self.hass)
         if (entry := entity_registry.async_get(entity_id)) is None:
             raise ConfigStoreException(f"Entity not found: {entity_id}")
