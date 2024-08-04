@@ -9,9 +9,11 @@ import pytest
 @pytest.fixture
 def mock_nextcloud_monitor() -> Mock:
     """Mock of NextcloudMonitor."""
-    return Mock(
-        update=Mock(return_value=True),
-    )
+    with patch(
+        "homeassistant.components.nextcloud.NextcloudMonitor",
+    ) as mock_nextcloud_monitor:
+        mock_nextcloud_monitor.update = Mock(return_value=True)
+        yield mock_nextcloud_monitor
 
 
 @pytest.fixture
