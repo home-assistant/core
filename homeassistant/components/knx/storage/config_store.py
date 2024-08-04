@@ -69,7 +69,7 @@ class KNXConfigStore:
                 len(self.data["entities"]),
             )
 
-    def add_platfrom(
+    def add_platform(
         self, platform: Platform, controller: PlatformControllerBase
     ) -> None:
         """Add platform controller."""

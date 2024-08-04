@@ -67,7 +67,7 @@ async def async_setup_entry(
     """Set up light(s) for KNX platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
     platform = async_get_current_platform()
-    knx_module.config_store.add_platfrom(
+    knx_module.config_store.add_platform(
         platform=Platform.LIGHT,
         controller=KnxUiEntityPlatformController(
             knx_module=knx_module,
