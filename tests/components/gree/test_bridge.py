@@ -1,18 +1,16 @@
 """Tests for gree component."""
 
 from datetime import timedelta
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.climate import DOMAIN
+from homeassistant.components.climate import DOMAIN, HVACMode
 from homeassistant.components.gree.const import (
     COORDINATORS,
     DOMAIN as GREE,
     UPDATE_INTERVAL,
 )
-from homeassistant.components.gree.coordinator import DeviceDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -78,30 +76,30 @@ async def test_discovery_after_setup(
 
 
 async def test_coordinator_updates(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test gree devices update their state."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to(dt_util.utcnow())
+
     await async_setup_gree(hass)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all(DOMAIN)) == 1
 
-    coordinator = hass.data[GREE][COORDINATORS][0]
+    callback = device().add_handler.call_args_list[0][0][1]
 
-    def update_device_state():
-        """Update the device state."""
-        coordinator.device_state_updated(["test"])
+    async def fake_update_state(*args):
+        """Fake update state."""
+        device().power = True
+        callback()
 
-    device().update_state.side_effect = update_device_state
+    device().update_state.side_effect = fake_update_state
 
-    next_update = mock_now + timedelta(seconds=UPDATE_INTERVAL)
-    freezer.move_to(next_update)
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    with patch.object(
-        DeviceDataUpdateCoordinator, "async_set_updated_data"
-    ) as mock_set_updated_data:
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
-        mock_set_updated_data.assert_called_once_with(device().raw_properties)
-
-    assert coordinator.last_update_success is not None
+    state = hass.states.get(ENTITY_ID_1)
+    assert state is not None
+    assert state.state != HVACMode.OFF
