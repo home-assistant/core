@@ -98,7 +98,6 @@ class KNXConfigStore:
             raise ConfigStoreException(
                 f"Entity platform not ready: {platform}"
             ) from err
-        unique_id = f"knx_es_{ulid_now()}"
         entity_registry = er.async_get(self.hass)
         if (entry := entity_registry.async_get(entity_id)) is None:
             raise ConfigStoreException(f"Entity not found: {entity_id}")
@@ -110,7 +109,7 @@ class KNXConfigStore:
             raise ConfigStoreException(
                 f"Entity not found in storage: {entity_id} - {unique_id}"
             )
-        await platform_controller.reload_entity(entity_id, unique_id, data)
+        await platform_controller.reload_entity(entry, data)
         # store data after entity is added to make sure config doesn't raise exceptions
         self.data["entities"][platform][unique_id] = data
         await self._store.async_save(self.data)

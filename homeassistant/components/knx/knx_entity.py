@@ -9,6 +9,7 @@ from xknx.devices import Device as XknxDevice
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.entity_registry import RegistryEntry
 
 if TYPE_CHECKING:
     from . import KNXModule
@@ -35,11 +36,11 @@ class KnxUiEntityPlatformController:
         )
 
     async def reload_entity(
-        self, entity_id: str, unique_id: str, config: dict[str, Any]
+        self, entity_entry: RegistryEntry, config: dict[str, Any]
     ) -> None:
         """Reload an existing UI entity."""
-        await self._entity_platform.async_remove_entity(entity_id)
-        await self.add_entity(unique_id=unique_id, config=config)
+        await self._entity_platform.async_remove_entity(entity_entry.entity_id)
+        await self.add_entity(unique_id=entity_entry.unique_id, config=config)
 
 
 class _KnxEntityBase(Entity):
