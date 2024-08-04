@@ -20,14 +20,14 @@ async def test_vendor_json(hass: HomeAssistant, install: str) -> None:
 
     num_entities = (
         TEST_INSTALLS[install].get("num_dhw", 0) + TEST_INSTALLS[install]["num_zones"]
-    )
+    ) + 1  # also the TCS
 
-    assert len(hass.data["entity_info"].keys()) == num_entities + 1
+    assert len(hass.data["entity_info"].keys()) == num_entities
 
-    if "water_heater.domestic_hot_water" in hass.data["entity_info"]:
-        assert TEST_INSTALLS[install].get("num_dhw", 0) == 1
+    if TEST_INSTALLS[install].get("num_dhw", 0) == 0:
+        assert "water_heater.domestic_hot_water" not in hass.data["entity_info"]
     else:
-        assert TEST_INSTALLS[install].get("num_dhw", 0) == 0
+        assert "water_heater.domestic_hot_water" in hass.data["entity_info"]
 
     domain_services = hass.services.async_services_for_domain(DOMAIN)
     assert len(domain_services) == TEST_INSTALLS[install].get(
