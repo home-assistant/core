@@ -35,11 +35,11 @@ class PlatformControllerBase(ABC):
     """Entity platform controller base class."""
 
     @abstractmethod
-    async def add_entity(self, unique_id: str, config: dict[str, Any]) -> None:
-        """Add a new entity."""
+    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+        """Create a new entity."""
 
     @abstractmethod
-    async def update_entity_config(
+    async def update_entity(
         self, entity_entry: er.RegistryEntry, config: dict[str, Any]
     ) -> None:
         """Update an existing entities configuration."""
@@ -80,7 +80,7 @@ class KNXConfigStore:
                 f"Entity platform not ready: {platform}"
             ) from err
         unique_id = f"knx_es_{ulid_now()}"
-        await platform_controller.add_entity(unique_id, data)
+        await platform_controller.create_entity(unique_id, data)
         # store data after entity was added to be sure config didn't raise exceptions
         self.data["entities"].setdefault(platform, {})[unique_id] = data
         await self._store.async_save(self.data)
@@ -123,7 +123,7 @@ class KNXConfigStore:
             raise ConfigStoreException(
                 f"Entity not found in storage: {entity_id} - {unique_id}"
             )
-        await platform_controller.update_entity_config(entry, data)
+        await platform_controller.update_entity(entry, data)
         # store data after entity is added to make sure config doesn't raise exceptions
         self.data["entities"][platform][unique_id] = data
         await self._store.async_save(self.data)

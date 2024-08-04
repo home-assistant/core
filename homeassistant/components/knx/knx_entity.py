@@ -31,18 +31,18 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
         self._entity_platform = entity_platform
         self._entity_class = entity_class
 
-    async def add_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
         """Add a new UI entity."""
         await self._entity_platform.async_add_entities(
             [self._entity_class(self._knx_module, unique_id, config)]
         )
 
-    async def update_entity_config(
+    async def update_entity(
         self, entity_entry: RegistryEntry, config: dict[str, Any]
     ) -> None:
         """Update an existing UI entities configuration."""
         await self._entity_platform.async_remove_entity(entity_entry.entity_id)
-        await self.add_entity(unique_id=entity_entry.unique_id, config=config)
+        await self.create_entity(unique_id=entity_entry.unique_id, config=config)
 
 
 class _KnxEntityBase(Entity):
