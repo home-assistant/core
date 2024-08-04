@@ -145,10 +145,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 },
             )
 
-    def convert_legacy(self, value: float | str) -> float | str:
+    def convert_legacy(self, value: float) -> float:
         """Round and convert given distance value."""
-        if isinstance(value, str):
-            return value
         return round(
             DistanceConverter.convert(
                 value,
