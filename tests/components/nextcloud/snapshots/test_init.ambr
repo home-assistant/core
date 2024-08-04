@@ -7,6 +7,9 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled_state]
   'on'
 # ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled_unique_id]
+  '1234567890abcdef#system_enable_avatars'
+# ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Debug enabled',
@@ -14,6 +17,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled_state]
   'off'
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled_unique_id]
+  '1234567890abcdef#system_debug'
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled_attributes]
   ReadOnlyDict({
@@ -23,6 +29,9 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled_state]
   'on'
 # ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled_unique_id]
+  '1234567890abcdef#system_filelocking.enabled'
+# ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Previews enabled',
@@ -30,6 +39,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled_state]
   'on'
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled_unique_id]
+  '1234567890abcdef#system_enable_previews'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes_attributes]
   ReadOnlyDict({
@@ -40,6 +52,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes_state]
   '0'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes_unique_id]
+  '1234567890abcdef#activeUsers_last5minutes'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of active users last day',
@@ -48,6 +63,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day_state]
   '0'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day_unique_id]
+  '1234567890abcdef#activeUsers_last24hours'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour_attributes]
   ReadOnlyDict({
@@ -58,6 +76,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour_state]
   '0'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour_unique_id]
+  '1234567890abcdef#activeUsers_last1hour'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of files',
@@ -66,6 +87,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files_state]
   '6783'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files_unique_id]
+  '1234567890abcdef#storage_num_files'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares_attributes]
   ReadOnlyDict({
@@ -76,6 +100,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares_state]
   '0'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares_unique_id]
+  '1234567890abcdef#shares_num_shares_groups'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of link shares',
@@ -84,6 +111,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares_state]
   '2'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares_unique_id]
+  '1234567890abcdef#shares_num_shares_link'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages_attributes]
   ReadOnlyDict({
@@ -94,6 +124,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages_state]
   '1'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages_unique_id]
+  '1234567890abcdef#storage_num_storages_local'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of mail shares',
@@ -102,6 +135,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares_state]
   '0'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares_unique_id]
+  '1234567890abcdef#shares_num_shares_mail'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages_attributes]
   ReadOnlyDict({
@@ -112,6 +148,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages_state]
   '1'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages_unique_id]
+  '1234567890abcdef#storage_num_storages_other'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of passwordless link shares',
@@ -121,6 +160,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares_state]
   '2'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares_unique_id]
+  '1234567890abcdef#shares_num_shares_link_no_password'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of room shares',
@@ -129,6 +171,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares_state]
   '0'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares_unique_id]
+  '1234567890abcdef#shares_num_shares_room'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_attributes]
   ReadOnlyDict({
@@ -145,6 +190,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received_state]
   '1'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received_unique_id]
+  '1234567890abcdef#shares_num_fed_shares_received'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of shares sent',
@@ -154,8 +202,14 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent_state]
   '0'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent_unique_id]
+  '1234567890abcdef#shares_num_fed_shares_sent'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_state]
   '2'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_unique_id]
+  '1234567890abcdef#shares_num_shares'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home_attributes]
   ReadOnlyDict({
@@ -166,6 +220,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home_state]
   '2'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home_unique_id]
+  '1234567890abcdef#storage_num_storages_home'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Amount of storages',
@@ -174,6 +231,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_state]
   '4'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_unique_id]
+  '1234567890abcdef#storage_num_storages'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_attributes]
   ReadOnlyDict({
@@ -190,8 +250,14 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares_state]
   '0'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares_unique_id]
+  '1234567890abcdef#shares_num_shares_user'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_state]
   '2'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_unique_id]
+  '1234567890abcdef#storage_num_users'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed_attributes]
   ReadOnlyDict({
@@ -201,6 +267,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed_state]
   '41'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed_unique_id]
+  '1234567890abcdef#system_apps_num_installed'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size_attributes]
   ReadOnlyDict({
@@ -212,6 +281,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size_state]
   '0.175296'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size_unique_id]
+  '1234567890abcdef#cache_mem_size'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local CPU Load last 15 minutes',
@@ -220,6 +292,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes_state]
   '1.45263671875'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes_unique_id]
+  '1234567890abcdef#system_cpuload_15'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute_attributes]
   ReadOnlyDict({
@@ -230,6 +305,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute_state]
   '2.06640625'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute_unique_id]
+  '1234567890abcdef#system_cpuload_1'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local CPU Load last 5 minutes',
@@ -238,6 +316,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes_state]
   '1.58447265625'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes_unique_id]
+  '1234567890abcdef#system_cpuload_5'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_size_attributes]
   ReadOnlyDict({
@@ -249,6 +330,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_size_state]
   '4.784128'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_size_unique_id]
+  '1234567890abcdef#database_size'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_type_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Database type',
@@ -257,6 +341,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_type_state]
   'sqlite3'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_type_unique_id]
+  '1234567890abcdef#database_type'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_version_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Database version',
@@ -264,6 +351,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_version_state]
   '3.40.1'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_version_unique_id]
+  '1234567890abcdef#database_version'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_memory_attributes]
   ReadOnlyDict({
@@ -275,6 +365,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_memory_state]
   '6.75328'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_memory_unique_id]
+  '1234567890abcdef#system_mem_free'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_space_attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
@@ -284,6 +377,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_space_state]
   '32.769138688'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_space_unique_id]
+  '1234567890abcdef#system_freespace'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory_attributes]
   ReadOnlyDict({
@@ -295,6 +391,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory_state]
   '10.484736'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory_unique_id]
+  '1234567890abcdef#system_swap_free'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time_attributes]
   ReadOnlyDict({
     'device_class': 'duration',
@@ -304,6 +403,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time_state]
   '3600'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time_unique_id]
+  '1234567890abcdef#server_php_max_execution_time'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit_attributes]
   ReadOnlyDict({
@@ -315,6 +417,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit_state]
   '536.870912'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit_unique_id]
+  '1234567890abcdef#server_php_memory_limit'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize_attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
@@ -325,6 +430,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize_state]
   '536.870912'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize_unique_id]
+  '1234567890abcdef#server_php_upload_max_filesize'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_version_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local PHP version',
@@ -332,6 +440,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_version_state]
   '8.2.18'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_version_unique_id]
+  '1234567890abcdef#server_php_version'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_theme_attributes]
   ReadOnlyDict({
@@ -341,6 +452,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_theme_state]
   ''
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_theme_unique_id]
+  '1234567890abcdef#system_theme'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_version_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local System version',
@@ -348,6 +462,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_version_state]
   '28.0.4.1'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_version_unique_id]
+  '1234567890abcdef#system_version'
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_memory_attributes]
   ReadOnlyDict({
@@ -359,6 +476,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_memory_state]
   '30.728192'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_memory_unique_id]
+  '1234567890abcdef#system_mem_total'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory_attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
@@ -369,6 +489,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory_state]
   '10.484736'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory_unique_id]
+  '1234567890abcdef#system_swap_total'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_updates_available_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Updates available',
@@ -378,6 +501,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_updates_available_state]
   '0'
 # ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_updates_available_unique_id]
+  '1234567890abcdef#system_apps_num_updates_available'
+# ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_webserver_attributes]
   ReadOnlyDict({
     'friendly_name': 'my.nc_url.local Webserver',
@@ -385,6 +511,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_webserver_state]
   'Apache/2.4.57 (Debian)'
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_webserver_unique_id]
+  '1234567890abcdef#server_webserver'
 # ---
 # name: test_async_setup_entry[update.my_nc_url_local_none_attributes]
   ReadOnlyDict({
@@ -403,4 +532,7 @@
 # ---
 # name: test_async_setup_entry[update.my_nc_url_local_none_state]
   'off'
+# ---
+# name: test_async_setup_entry[update.my_nc_url_local_none_unique_id]
+  '1234567890abcdef#update'
 # ---

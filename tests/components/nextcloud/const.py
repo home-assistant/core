@@ -2,6 +2,8 @@
 
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 
+MOCKED_ENTRY_ID = "1234567890abcdef"
+
 VALID_CONFIG = {
     CONF_URL: "https://my.nc_url.local",
     CONF_USERNAME: "nc_user",

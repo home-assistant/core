@@ -6,6 +6,8 @@ from homeassistant.components.nextcloud.const import DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
+from .const import MOCKED_ENTRY_ID
+
 from tests.common import MockConfigEntry
 
 
@@ -13,7 +15,9 @@ async def init_integration(
     hass: HomeAssistant, config: dict, data: dict
 ) -> MockConfigEntry:
     """Set up the nextcloud integration."""
-    entry = MockConfigEntry(domain=DOMAIN, title=config[CONF_URL], data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=config[CONF_URL], data=config, entry_id=MOCKED_ENTRY_ID
+    )
 
     entry.add_to_hass(hass)
 
