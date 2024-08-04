@@ -87,7 +87,7 @@ async def test_setup_entry_errors(
 ) -> None:
     """Test a successful setup entry."""
 
-    entry = mock_config_entry(VALID_CONFIG, NC_DATA)
+    entry = mock_config_entry(VALID_CONFIG)
     entry.add_to_hass(hass)
 
     with (
