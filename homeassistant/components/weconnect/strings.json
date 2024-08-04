@@ -1,0 +1,49 @@
+{
+  "config": {
+    "flow_title": "Volkswagen WeConnect",
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "spin": "S-PIN"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "mileage": {
+        "name": "Mileage"
+      },
+      "inspection_due_days": {
+        "name": "Inspection Due Days"
+      },
+      "inspection_due_range": {
+        "name": "Inspection Due Range"
+      },
+      "remaining_range": {
+        "name": "Remaining Range"
+      },
+      "fuel_remaining_percentage": {
+        "name": "Fuel Remaining Percentage"
+      },
+      "fuel_remaining_range": {
+        "name": "Fuel Remaining Range"
+      },
+      "battery_remaining_percentage": {
+        "name": "Battery Remaining Percentage"
+      },
+      "battery_remaining_range": {
+        "name": "Battery Remaining Range"
+      }
+    }
+  }
+}

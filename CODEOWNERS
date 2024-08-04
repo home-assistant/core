@@ -1688,6 +1688,8 @@ build.json @home-assistant/supervisor
 /tests/components/webostv/ @thecode
 /homeassistant/components/websocket_api/ @home-assistant/core
 /tests/components/websocket_api/ @home-assistant/core
+/homeassistant/components/weconnect/ @krzysdabro
+/tests/components/weconnect/ @krzysdabro
 /homeassistant/components/weheat/ @jesperraemaekers
 /tests/components/weheat/ @jesperraemaekers
 /homeassistant/components/wemo/ @esev

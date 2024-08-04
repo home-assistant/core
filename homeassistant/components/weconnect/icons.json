@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "mileage": {
+        "default": "mdi:speedometer"
+      },
+      "inspection_due_days": {
+        "default": "mdi:car-wrench"
+      },
+      "inspection_due_range": {
+        "default": "mdi:car-wrench"
+      },
+      "remaining_range": {
+        "default": "mdi:map-marker-distance"
+      },
+      "fuel_remaining_percentage": {
+        "default": "mdi:gas-station"
+      },
+      "fuel_remaining_range": {
+        "default": "mdi:map-marker-distance"
+      },
+      "battery_remaining_percentage": {
+        "default": "mdi:ev-station"
+      },
+      "battery_remaining_range": {
+        "default": "mdi:map-marker-distance"
+      }
+    }
+  }
+}

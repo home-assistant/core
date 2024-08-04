@@ -3029,6 +3029,9 @@ webio-api==0.1.11
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
 
+# homeassistant.components.weconnect
+weconnect==0.60.3
+
 # homeassistant.components.weheat
 weheat==2024.12.22
 

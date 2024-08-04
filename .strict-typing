@@ -523,6 +523,7 @@ homeassistant.components.weather.*
 homeassistant.components.webhook.*
 homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
+homeassistant.components.weconnect.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
 homeassistant.components.withings.*
