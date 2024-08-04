@@ -10,11 +10,10 @@ from typing import Any
 from adguardhome import AdGuardHome, AdGuardHomeError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AdGuardData
+from . import AdGuardConfigEntry, AdGuardData
 from .const import DOMAIN, LOGGER
 from .entity import AdGuardHomeEntity
 
@@ -79,11 +78,11 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AdGuardConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
-    data: AdGuardData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         [AdGuardHomeSwitch(data, entry, description) for description in SWITCHES],
@@ -99,7 +98,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
     def __init__(
         self,
         data: AdGuardData,
-        entry: ConfigEntry,
+        entry: AdGuardConfigEntry,
         description: AdGuardHomeSwitchEntityDescription,
     ) -> None:
         """Initialize AdGuard Home switch."""

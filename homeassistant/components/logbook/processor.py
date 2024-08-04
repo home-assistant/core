@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
 import logging
@@ -173,7 +172,7 @@ class EventProcessor:
             )
 
     def humanify(
-        self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result
+        self, rows: Generator[EventAsRow] | Sequence[Row] | Result
     ) -> list[dict[str, str]]:
         """Humanify rows."""
         return list(
@@ -189,11 +188,11 @@ class EventProcessor:
 
 def _humanify(
     hass: HomeAssistant,
-    rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
+    rows: Generator[EventAsRow] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
-) -> Generator[dict[str, Any], None, None]:
+) -> Generator[dict[str, Any]]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
@@ -204,13 +203,12 @@ def _humanify(
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
     memoize_new_contexts = logbook_run.memoize_new_contexts
-    memoize_context = context_lookup.setdefault
 
     # Process rows
     for row in rows:
         context_id_bin: bytes = row.context_id_bin
-        if memoize_new_contexts:
-            memoize_context(context_id_bin, row)
+        if memoize_new_contexts and context_id_bin not in context_lookup:
+            context_lookup[context_id_bin] = row
         if row.context_only:
             continue
         event_type = row.event_type
@@ -246,7 +244,7 @@ def _humanify(
             domain, describe_event = external_events[event_type]
             try:
                 data = describe_event(event_cache.get(row))
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Error with %s describe event for %s", domain, event_type
                 )
@@ -263,8 +261,7 @@ def _humanify(
             entry_domain = event_data.get(ATTR_DOMAIN)
             entry_entity_id = event_data.get(ATTR_ENTITY_ID)
             if entry_domain is None and entry_entity_id is not None:
-                with suppress(IndexError):
-                    entry_domain = split_entity_id(str(entry_entity_id))[0]
+                entry_domain = split_entity_id(str(entry_entity_id))[0]
             data = {
                 LOGBOOK_ENTRY_WHEN: format_time(row),
                 LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
@@ -358,7 +355,7 @@ class ContextAugmenter:
         event = self.event_cache.get(context_row)
         try:
             described = describe_event(event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error with %s describe event for %s", domain, event_type)
             return
         if name := described.get(LOGBOOK_ENTRY_NAME):

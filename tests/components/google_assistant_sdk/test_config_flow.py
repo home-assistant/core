@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.google_assistant_sdk.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -19,11 +21,11 @@ GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 TITLE = "Google Assistant SDK"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
 ) -> None:
     """Check full flow."""
@@ -80,11 +82,11 @@ async def test_full_flow(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
@@ -155,11 +157,11 @@ async def test_reauth(
     assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_single_instance_allowed(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
 ) -> None:
     """Test case where config flow allows a single test."""

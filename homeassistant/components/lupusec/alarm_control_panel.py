@@ -48,6 +48,7 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(
         self, data: lupupy.Lupusec, device: lupupy.devices.LupusecAlarm, entry_id: str

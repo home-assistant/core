@@ -168,7 +168,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 except WizLightConnectionError:
                     errors["base"] = "no_wiz_light"
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:

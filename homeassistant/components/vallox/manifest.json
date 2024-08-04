@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/vallox",
   "iot_class": "local_polling",
   "loggers": ["vallox_websocket_api"],
-  "requirements": ["vallox-websocket-api==5.1.1"]
+  "requirements": ["vallox-websocket-api==5.3.0"]
 }

@@ -1,5 +1,6 @@
 """API for Google Tasks bound to Home Assistant OAuth."""
 
+from functools import partial
 import json
 import logging
 from typing import Any
@@ -52,7 +53,9 @@ class AsyncConfigEntryAuth:
     async def _get_service(self) -> Resource:
         """Get current resource."""
         token = await self.async_get_access_token()
-        return build("tasks", "v1", credentials=Credentials(token=token))
+        return await self._hass.async_add_executor_job(
+            partial(build, "tasks", "v1", credentials=Credentials(token=token))
+        )
 
     async def list_task_lists(self) -> list[dict[str, Any]]:
         """Get all TaskList resources."""
@@ -65,7 +68,10 @@ class AsyncConfigEntryAuth:
         """Get all Task resources for the task list."""
         service = await self._get_service()
         cmd: HttpRequest = service.tasks().list(
-            tasklist=task_list_id, maxResults=MAX_TASK_RESULTS
+            tasklist=task_list_id,
+            maxResults=MAX_TASK_RESULTS,
+            showCompleted=True,
+            showHidden=True,
         )
         result = await self._execute(cmd)
         return result["items"]

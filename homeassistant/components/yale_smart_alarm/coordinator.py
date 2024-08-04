@@ -39,6 +39,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         locks = []
         door_windows = []
+        temp_sensors = []
 
         for device in updates["cycle"]["device_status"]:
             state = device["status1"]
@@ -107,19 +108,24 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 device["_state"] = "unavailable"
                 door_windows.append(device)
                 continue
+            if device["type"] == "device_type.temperature_sensor":
+                temp_sensors.append(device)
 
         _sensor_map = {
             contact["address"]: contact["_state"] for contact in door_windows
         }
         _lock_map = {lock["address"]: lock["_state"] for lock in locks}
+        _temp_map = {temp["address"]: temp["status_temp"] for temp in temp_sensors}
 
         return {
             "alarm": updates["arm_status"],
             "locks": locks,
             "door_windows": door_windows,
+            "temp_sensors": temp_sensors,
             "status": updates["status"],
             "online": updates["online"],
             "sensor_map": _sensor_map,
+            "temp_map": _temp_map,
             "lock_map": _lock_map,
             "panel_info": updates["panel_info"],
         }

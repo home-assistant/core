@@ -23,10 +23,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -34,9 +31,10 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "valve"
-SCAN_INTERVAL = timedelta(seconds=15)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 class ValveDeviceClass(StrEnum):
@@ -225,7 +223,8 @@ class ValveEntity(Entity):
     async def async_handle_open_valve(self) -> None:
         """Open the valve."""
         if self.supported_features & ValveEntityFeature.SET_POSITION:
-            return await self.async_set_valve_position(100)
+            await self.async_set_valve_position(100)
+            return
         await self.async_open_valve()
 
     def close_valve(self) -> None:
@@ -240,7 +239,8 @@ class ValveEntity(Entity):
     async def async_handle_close_valve(self) -> None:
         """Close the valve."""
         if self.supported_features & ValveEntityFeature.SET_POSITION:
-            return await self.async_set_valve_position(0)
+            await self.async_set_valve_position(0)
+            return
         await self.async_close_valve()
 
     async def async_toggle(self) -> None:

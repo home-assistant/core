@@ -10,7 +10,11 @@ import requests
 from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+    CameraEntityFeature,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -28,7 +32,7 @@ DEFAULT_PASSWORD = "ubnt"
 DEFAULT_PORT = 7080
 DEFAULT_SSL = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NVR): cv.string,
         vol.Required(CONF_KEY): cv.string,
@@ -247,8 +251,7 @@ class UnifiVideoCamera(Camera):
                     (
                         uri
                         for i, uri in enumerate(channel["rtspUris"])
-                        # pylint: disable-next=protected-access
-                        if re.search(self._nvr._host, uri)
+                        if re.search(self._nvr._host, uri)  # noqa: SLF001
                     )
                 )
 

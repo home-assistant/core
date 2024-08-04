@@ -1,14 +1,17 @@
 """The tests for http static files."""
 
+from http import HTTPStatus
 from pathlib import Path
 
 from aiohttp.test_utils import TestClient
 from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.http.static import CachingStaticResource, _get_file_path
-from homeassistant.core import EVENT_HOMEASSISTANT_START, HomeAssistant
-from homeassistant.helpers.http import KEY_ALLOW_CONFIGRED_CORS
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
@@ -49,7 +52,7 @@ async def test_static_path_blocks_anchors(
     resource = CachingStaticResource(url, str(tmp_path))
     assert resource.canonical == canonical_url
     app.router.register_resource(resource)
-    app[KEY_ALLOW_CONFIGRED_CORS](resource)
+    app[KEY_ALLOW_CONFIGURED_CORS](resource)
 
     resp = await mock_http_client.get(canonical_url, allow_redirects=False)
     assert resp.status == 403
@@ -59,3 +62,23 @@ async def test_static_path_blocks_anchors(
     # changes we still block it.
     with pytest.raises(HTTPForbidden):
         _get_file_path(canonical_url, tmp_path)
+
+
+async def test_async_register_static_paths(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test registering multiple static paths."""
+    assert await async_setup_component(hass, "frontend", {})
+    path = str(Path(__file__).parent)
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig("/something", path),
+            StaticPathConfig("/something_else", path),
+        ]
+    )
+
+    client = await hass_client()
+    resp = await client.get("/something/__init__.py")
+    assert resp.status == HTTPStatus.OK
+    resp = await client.get("/something_else/__init__.py")
+    assert resp.status == HTTPStatus.OK

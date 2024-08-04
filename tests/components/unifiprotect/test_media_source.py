@@ -5,15 +5,16 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Bootstrap,
     Camera,
     Event,
     EventType,
+    ModelType,
     Permission,
     SmartDetectObjectType,
 )
-from pyunifiprotect.exceptions import NvrError
+from uiprotect.exceptions import NvrError
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import MediaSourceItem
@@ -72,6 +73,7 @@ async def test_resolve_media_thumbnail(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -103,6 +105,7 @@ async def test_resolve_media_event(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -172,6 +175,7 @@ async def test_browse_media_event_ongoing(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -344,7 +348,11 @@ async def test_browse_media_root_single_console(
 
 
 async def test_browse_media_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, camera: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    camera: Camera,
 ) -> None:
     """Test browsing camera selector level media."""
 
@@ -360,7 +368,6 @@ async def test_browse_media_camera(
         ),
     ]
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
         "camera.test_camera_high_resolution_channel",
         disabled_by=er.RegistryEntryDisabler("user"),
@@ -588,6 +595,7 @@ async def test_browse_media_recent(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -625,6 +633,7 @@ async def test_browse_media_recent_truncated(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -657,6 +666,7 @@ async def test_browse_media_recent_truncated(
     [
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.RING,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -670,6 +680,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.MOTION,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -683,6 +694,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -705,6 +717,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -718,6 +731,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -731,6 +745,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -754,6 +769,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -783,6 +799,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -817,6 +834,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -849,6 +867,7 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_AUDIO_DETECT,
                 start=datetime(1000, 1, 1, 0, 0, 0),
@@ -903,6 +922,7 @@ async def test_browse_media_eventthumb(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=20),
@@ -966,6 +986,7 @@ async def test_browse_media_browse_day(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1007,6 +1028,7 @@ async def test_browse_media_browse_whole_month(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1049,6 +1071,7 @@ async def test_browse_media_browse_whole_month_december(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event1 = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=3663),
@@ -1060,6 +1083,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event1._api = ufp.api
     event2 = Event(
+        model=ModelType.EVENT,
         id="test_event_id2",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1071,6 +1095,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event2._api = ufp.api
     event3 = Event(
+        model=ModelType.EVENT,
         id="test_event_id3",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1082,6 +1107,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event3._api = ufp.api
     event4 = Event(
+        model=ModelType.EVENT,
         id="test_event_id4",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),

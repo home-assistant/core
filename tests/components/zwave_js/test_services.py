@@ -67,6 +67,9 @@ from tests.common import MockConfigEntry
 
 async def test_set_config_parameter(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     client,
     multisensor_6,
     aeotec_zw164_siren,
@@ -74,9 +77,7 @@ async def test_set_config_parameter(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the set_config_parameter service."""
-    dev_reg = async_get_dev_reg(hass)
-    ent_reg = async_get_ent_reg(hass)
-    entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
+    entity_entry = entity_registry.async_get(AIR_TEMPERATURE_SENSOR)
 
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
@@ -185,9 +186,8 @@ async def test_set_config_parameter(
     client.async_send_command_no_wait.reset_mock()
 
     # Test using area ID
-    area_reg = async_get_area_reg(hass)
-    area = area_reg.async_get_or_create("test")
-    ent_reg.async_update_entity(entity_entry.entity_id, area_id=area.id)
+    area = area_registry.async_get_or_create("test")
+    entity_registry.async_update_entity(entity_entry.entity_id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_CONFIG_PARAMETER,
@@ -380,16 +380,16 @@ async def test_set_config_parameter(
 
     non_zwave_js_config_entry = MockConfigEntry(entry_id="fake_entry_id")
     non_zwave_js_config_entry.add_to_hass(hass)
-    non_zwave_js_device = dev_reg.async_get_or_create(
+    non_zwave_js_device = device_registry.async_get_or_create(
         config_entry_id=non_zwave_js_config_entry.entry_id,
         identifiers={("test", "test")},
     )
 
-    zwave_js_device_with_invalid_node_id = dev_reg.async_get_or_create(
+    zwave_js_device_with_invalid_node_id = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id, identifiers={(DOMAIN, "500-500")}
     )
 
-    non_zwave_js_entity = ent_reg.async_get_or_create(
+    non_zwave_js_entity = entity_registry.async_get_or_create(
         "test",
         "sensor",
         "test_sensor",
@@ -636,11 +636,15 @@ async def test_set_config_parameter_gather(
 
 
 async def test_bulk_set_config_parameters(
-    hass: HomeAssistant, client, multisensor_6, integration
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    client,
+    multisensor_6,
+    integration,
 ) -> None:
     """Test the bulk_set_partial_config_parameters service."""
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, multisensor_6)}
     )
     assert device
@@ -671,9 +675,8 @@ async def test_bulk_set_config_parameters(
     client.async_send_command_no_wait.reset_mock()
 
     # Test using area ID
-    area_reg = async_get_area_reg(hass)
-    area = area_reg.async_get_or_create("test")
-    dev_reg.async_update_device(device.id, area_id=area.id)
+    area = area_registry.async_get_or_create("test")
+    device_registry.async_update_device(device.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -1031,11 +1034,15 @@ async def test_refresh_value(
 
 
 async def test_set_value(
-    hass: HomeAssistant, client, climate_danfoss_lc_13, integration
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    client,
+    climate_danfoss_lc_13,
+    integration,
 ) -> None:
     """Test set_value service."""
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device
@@ -1093,9 +1100,8 @@ async def test_set_value(
     client.async_send_command.reset_mock()
 
     # Test using area ID
-    area_reg = async_get_area_reg(hass)
-    area = area_reg.async_get_or_create("test")
-    dev_reg.async_update_device(device.id, area_id=area.id)
+    area = area_registry.async_get_or_create("test")
+    device_registry.async_update_device(device.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
@@ -1347,6 +1353,8 @@ async def test_set_value_gather(
 
 async def test_multicast_set_value(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
     climate_danfoss_lc_13,
     climate_eurotronic_spirit_z,
@@ -1420,19 +1428,17 @@ async def test_multicast_set_value(
     client.async_send_command.reset_mock()
 
     # Test using area ID
-    dev_reg = async_get_dev_reg(hass)
-    device_eurotronic = dev_reg.async_get_device(
+    device_eurotronic = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, climate_eurotronic_spirit_z)}
     )
     assert device_eurotronic
-    device_danfoss = dev_reg.async_get_device(
+    device_danfoss = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device_danfoss
-    area_reg = async_get_area_reg(hass)
-    area = area_reg.async_get_or_create("test")
-    dev_reg.async_update_device(device_eurotronic.id, area_id=area.id)
-    dev_reg.async_update_device(device_danfoss.id, area_id=area.id)
+    area = area_registry.async_get_or_create("test")
+    device_registry.async_update_device(device_eurotronic.id, area_id=area.id)
+    device_registry.async_update_device(device_danfoss.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_MULTICAST_SET_VALUE,
@@ -1782,14 +1788,15 @@ async def test_multicast_set_value_string(
 
 async def test_ping(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
     climate_danfoss_lc_13,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
 ) -> None:
     """Test ping service."""
-    dev_reg = async_get_dev_reg(hass)
-    device_radio_thermostat = dev_reg.async_get_device(
+    device_radio_thermostat = device_registry.async_get_device(
         identifiers={
             get_device_id(
                 client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
@@ -1797,7 +1804,7 @@ async def test_ping(
         }
     )
     assert device_radio_thermostat
-    device_danfoss = dev_reg.async_get_device(
+    device_danfoss = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device_danfoss
@@ -1857,10 +1864,9 @@ async def test_ping(
     client.async_send_command.reset_mock()
 
     # Test successful ping call with area
-    area_reg = async_get_area_reg(hass)
-    area = area_reg.async_get_or_create("test")
-    dev_reg.async_update_device(device_radio_thermostat.id, area_id=area.id)
-    dev_reg.async_update_device(device_danfoss.id, area_id=area.id)
+    area = area_registry.async_get_or_create("test")
+    device_registry.async_update_device(device_radio_thermostat.id, area_id=area.id)
+    device_registry.async_update_device(device_danfoss.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PING,
@@ -1964,14 +1970,15 @@ async def test_ping(
 
 async def test_invoke_cc_api(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
     climate_danfoss_lc_13,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
 ) -> None:
     """Test invoke_cc_api service."""
-    dev_reg = async_get_dev_reg(hass)
-    device_radio_thermostat = dev_reg.async_get_device(
+    device_radio_thermostat = device_registry.async_get_device(
         identifiers={
             get_device_id(
                 client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
@@ -1979,7 +1986,7 @@ async def test_invoke_cc_api(
         }
     )
     assert device_radio_thermostat
-    device_danfoss = dev_reg.async_get_device(
+    device_danfoss = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device_danfoss
@@ -2029,9 +2036,8 @@ async def test_invoke_cc_api(
     client.async_send_command_no_wait.reset_mock()
 
     # Test successful invoke_cc_api call without an endpoint (include area)
-    area_reg = async_get_area_reg(hass)
-    area = area_reg.async_get_or_create("test")
-    dev_reg.async_update_device(device_danfoss.id, area_id=area.id)
+    area = area_registry.async_get_or_create("test")
+    device_registry.async_update_device(device_danfoss.id, area_id=area.id)
 
     client.async_send_command.return_value = {"response": True}
     client.async_send_command_no_wait.return_value = {"response": True}
@@ -2183,22 +2189,26 @@ async def test_invoke_cc_api(
 
 
 async def test_refresh_notifications(
-    hass: HomeAssistant, client, zen_31, multisensor_6, integration
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    client,
+    zen_31,
+    multisensor_6,
+    integration,
 ) -> None:
     """Test refresh_notifications service."""
-    dev_reg = async_get_dev_reg(hass)
-    zen_31_device = dev_reg.async_get_device(
+    zen_31_device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, zen_31)}
     )
     assert zen_31_device
-    multisensor_6_device = dev_reg.async_get_device(
+    multisensor_6_device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, multisensor_6)}
     )
     assert multisensor_6_device
 
-    area_reg = async_get_area_reg(hass)
-    area = area_reg.async_get_or_create("test")
-    dev_reg.async_update_device(zen_31_device.id, area_id=area.id)
+    area = area_registry.async_get_or_create("test")
+    device_registry.async_update_device(zen_31_device.id, area_id=area.id)
 
     # Test successful refresh_notifications call
     client.async_send_command.return_value = {"response": True}

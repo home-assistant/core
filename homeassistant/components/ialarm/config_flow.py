@@ -48,7 +48,7 @@ class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = await _get_device_mac(self.hass, host, port)
         except ConnectionError:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 

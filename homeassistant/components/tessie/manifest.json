@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tessie",
   "iot_class": "cloud_polling",
   "loggers": ["tessie"],
-  "requirements": ["tessie-api==0.0.9"]
+  "quality_scale": "platinum",
+  "requirements": ["tessie-api==0.1.1", "tesla-fleet-api==0.7.3"]
 }

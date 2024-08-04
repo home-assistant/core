@@ -140,7 +140,12 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def _get_sound_modes_info(self):
         """Get available sound modes and the active one."""
-        settings = await self._dev.get_sound_settings("soundField")
+        for settings in await self._dev.get_sound_settings():
+            if settings.target == "soundField":
+                break
+        else:
+            return None, {}
+
         if isinstance(settings, Setting):
             settings = [settings]
 
@@ -396,7 +401,7 @@ class SongpalEntity(MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn the device on."""
         try:
-            return await self._dev.set_power(True)
+            await self._dev.set_power(True)
         except SongpalException as ex:
             if ex.code == ERROR_REQUEST_RETRY:
                 _LOGGER.debug(
@@ -408,7 +413,7 @@ class SongpalEntity(MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the device off."""
         try:
-            return await self._dev.set_power(False)
+            await self._dev.set_power(False)
         except SongpalException as ex:
             if ex.code == ERROR_REQUEST_RETRY:
                 _LOGGER.debug(

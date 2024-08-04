@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from yalexs.authenticator import ValidationResult
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
 from homeassistant import config_entries
 from homeassistant.components.august.const import (
@@ -12,11 +13,6 @@ from homeassistant.components.august.const import (
     CONF_LOGIN_METHOD,
     DOMAIN,
     VERIFICATION_CODE_KEY,
-)
-from homeassistant.components.august.exceptions import (
-    CannotConnect,
-    InvalidAuth,
-    RequireValidation,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -151,7 +147,7 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
             side_effect=RequireValidation,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
     ):
@@ -176,11 +172,11 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
             side_effect=RequireValidation,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
             return_value=ValidationResult.INVALID_VERIFICATION_CODE,
         ) as mock_validate_verification_code,
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
     ):
@@ -204,11 +200,11 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
             return_value=True,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
             return_value=ValidationResult.VALIDATED,
         ) as mock_validate_verification_code,
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
         patch(
@@ -310,7 +306,7 @@ async def test_form_reauth_with_2fa(hass: HomeAssistant) -> None:
             side_effect=RequireValidation,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
     ):
@@ -334,11 +330,11 @@ async def test_form_reauth_with_2fa(hass: HomeAssistant) -> None:
             return_value=True,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
             return_value=ValidationResult.VALIDATED,
         ) as mock_validate_verification_code,
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
         patch(

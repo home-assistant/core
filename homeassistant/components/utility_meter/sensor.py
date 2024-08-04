@@ -37,12 +37,8 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_platform,
-    entity_registry as er,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -57,7 +53,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
-    ATTR_CRON_PATTERN,
+    ATTR_NEXT_RESET,
     ATTR_VALUE,
     BIMONTHLY,
     CONF_CRON_PATTERN,
@@ -130,27 +126,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    source_entity = registry.async_get(source_entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        source_entity_id,
+    )
 
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
@@ -373,6 +352,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
+    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET})
 
     def __init__(
         self,
@@ -424,6 +404,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._sensor_periodically_resetting = periodically_resetting
         self._tariff = tariff
         self._tariff_entity = tariff_entity
+        self._next_reset = None
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
@@ -563,14 +544,15 @@ class UtilityMeterSensor(RestoreSensor):
     async def _program_reset(self):
         """Program the reset of the utility meter."""
         if self._cron_pattern is not None:
-            tz = dt_util.get_time_zone(self.hass.config.time_zone)
+            tz = dt_util.get_default_time_zone()
+            self._next_reset = croniter(self._cron_pattern, dt_util.now(tz)).get_next(
+                datetime
+            )  # we need timezone for DST purposes (see issue #102984)
             self.async_on_remove(
                 async_track_point_in_time(
                     self.hass,
                     self._async_reset_meter,
-                    croniter(self._cron_pattern, dt_util.now(tz)).get_next(
-                        datetime
-                    ),  # we need timezone for DST purposes (see issue #102984)
+                    self._next_reset,
                 )
             )
 
@@ -736,15 +718,10 @@ class UtilityMeterSensor(RestoreSensor):
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         state_attr = {
-            ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: str(self._last_period),
             ATTR_LAST_VALID_STATE: str(self._last_valid_state),
         }
-        if self._period is not None:
-            state_attr[ATTR_PERIOD] = self._period
-        if self._cron_pattern is not None:
-            state_attr[ATTR_CRON_PATTERN] = self._cron_pattern
         if self._tariff is not None:
             state_attr[ATTR_TARIFF] = self._tariff
         # last_reset in utility meter was used before last_reset was added for long term
@@ -754,6 +731,8 @@ class UtilityMeterSensor(RestoreSensor):
         # in extra state attributes.
         if last_reset := self._last_reset:
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
+        if self._next_reset is not None:
+            state_attr[ATTR_NEXT_RESET] = self._next_reset.isoformat()
 
         return state_attr
 

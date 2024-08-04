@@ -2,14 +2,14 @@
 
 import pytest
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -496,10 +496,10 @@ async def test_temperature_error(hass: HomeAssistant, expected, mock_do_cycle) -
     ],
 )
 async def test_service_climate_update(
-    hass: HomeAssistant, mock_modbus, mock_ha, result, register_words
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
@@ -611,10 +611,10 @@ async def test_service_climate_update(
     ],
 )
 async def test_service_climate_fan_update(
-    hass: HomeAssistant, mock_modbus, mock_ha, result, register_words
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
@@ -751,10 +751,10 @@ async def test_service_climate_fan_update(
     ],
 )
 async def test_service_climate_swing_update(
-    hass: HomeAssistant, mock_modbus, mock_ha, result, register_words
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
@@ -766,7 +766,7 @@ async def test_service_climate_swing_update(
     ("temperature", "result", "do_config"),
     [
         (
-            35,
+            31,
             [0x00],
             {
                 CONF_CLIMATES: [
@@ -781,7 +781,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            36,
+            32,
             [0x00, 0x00],
             {
                 CONF_CLIMATES: [
@@ -796,7 +796,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            37.5,
+            33.5,
             [0x00, 0x00],
             {
                 CONF_CLIMATES: [
@@ -811,7 +811,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            "39",
+            "34",
             [0x00, 0x00, 0x00, 0x00],
             {
                 CONF_CLIMATES: [
@@ -844,10 +844,10 @@ async def test_service_climate_swing_update(
     ],
 )
 async def test_service_climate_set_temperature(
-    hass: HomeAssistant, temperature, result, mock_modbus, mock_ha
+    hass: HomeAssistant, temperature, result, mock_modbus_ha
 ) -> None:
     """Test set_temperature."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_temperature",
@@ -954,10 +954,10 @@ async def test_service_climate_set_temperature(
     ],
 )
 async def test_service_set_hvac_mode(
-    hass: HomeAssistant, hvac_mode, result, mock_modbus, mock_ha
+    hass: HomeAssistant, hvac_mode, result, mock_modbus_ha
 ) -> None:
     """Test set HVAC mode."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -1018,10 +1018,10 @@ async def test_service_set_hvac_mode(
     ],
 )
 async def test_service_set_fan_mode(
-    hass: HomeAssistant, fan_mode, result, mock_modbus, mock_ha
+    hass: HomeAssistant, fan_mode, result, mock_modbus_ha
 ) -> None:
     """Test set Fan mode."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_fan_mode",
@@ -1081,10 +1081,10 @@ async def test_service_set_fan_mode(
     ],
 )
 async def test_service_set_swing_mode(
-    hass: HomeAssistant, swing_mode, result, mock_modbus, mock_ha
+    hass: HomeAssistant, swing_mode, result, mock_modbus_ha
 ) -> None:
     """Test set Swing mode."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_swing_mode",

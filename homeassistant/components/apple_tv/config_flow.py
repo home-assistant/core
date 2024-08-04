@@ -184,7 +184,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_devices_found"
             except DeviceAlreadyConfigured:
                 errors["base"] = "already_configured"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -329,7 +329,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         except DeviceAlreadyConfigured:
             return self.async_abort(reason="already_configured")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
@@ -472,7 +472,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         except exceptions.PairingError:
             _LOGGER.exception("Authentication problem")
             abort_reason = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             abort_reason = "unknown"
 
@@ -514,7 +514,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             except exceptions.PairingError:
                 _LOGGER.exception("Authentication problem")
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

@@ -7,10 +7,10 @@ import asyncio
 import base64
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
-from contextlib import AbstractContextManager, suppress
+from contextlib import AbstractContextManager
 from contextvars import ContextVar
-from datetime import datetime, timedelta
-from functools import cache, lru_cache, partial, wraps
+from datetime import date, datetime, time, timedelta
+from functools import cache, cached_property, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -22,17 +22,7 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType, TracebackType
-from typing import (
-    Any,
-    Concatenate,
-    Literal,
-    NoReturn,
-    ParamSpec,
-    Self,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Concatenate, Literal, NoReturn, Self, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -76,6 +66,7 @@ from homeassistant.util import (
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
@@ -99,12 +90,15 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_ENVIRONMENT = "template.environment"
-_ENVIRONMENT_LIMITED = "template.environment_limited"
-_ENVIRONMENT_STRICT = "template.environment_strict"
+_ENVIRONMENT: HassKey[TemplateEnvironment] = HassKey("template.environment")
+_ENVIRONMENT_LIMITED: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_limited"
+)
+_ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_strict"
+)
 _HASS_LOADER = "template.hass_loader"
 
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
@@ -114,9 +108,6 @@ _RESERVED_NAMES = {
     "environmentfunction",
     "jinja_pass_arg",
 }
-
-_GROUP_DOMAIN_PREFIX = "group."
-_ZONE_DOMAIN_PREFIX = "zone."
 
 _COLLECTABLE_STATE_ATTRIBUTES = {
     "state",
@@ -128,10 +119,6 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "object_id",
     "name",
 }
-
-_T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 ALL_STATES_RATE_LIMIT = 60  # seconds
 DOMAIN_STATES_RATE_LIMIT = 1  # seconds
@@ -270,7 +257,9 @@ def is_complex(value: Any) -> bool:
 
 def is_template_string(maybe_template: str) -> bool:
     """Check if the input is a Jinja2 template."""
-    return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
+    return "{" in maybe_template and (
+        "{%" in maybe_template or "{{" in maybe_template or "{#" in maybe_template
+    )
 
 
 class ResultWrapper:
@@ -338,7 +327,33 @@ def _false(arg: str) -> bool:
     return False
 
 
-_cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
+@lru_cache(maxsize=EVAL_CACHE_SIZE)
+def _cached_parse_result(render_result: str) -> Any:
+    """Parse a result and cache the result."""
+    result = literal_eval(render_result)
+    if type(result) in RESULT_WRAPPERS:
+        result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)
+
+    # If the literal_eval result is a string, use the original
+    # render, by not returning right here. The evaluation of strings
+    # resulting in strings impacts quotes, to avoid unexpected
+    # output; use the original render instead of the evaluated one.
+    # Complex and scientific values are also unexpected. Filter them out.
+    if (
+        # Filter out string and complex numbers
+        not isinstance(result, (str, complex))
+        and (
+            # Pass if not numeric and not a boolean
+            not isinstance(result, (int, float))
+            # Or it's a boolean (inherit from int)
+            or isinstance(result, bool)
+            # Or if it's a digit
+            or _IS_NUMERIC.match(render_result) is not None
+        )
+    ):
+        return result
+
+    return render_result
 
 
 class RenderInfo:
@@ -511,8 +526,7 @@ class Template:
             wanted_env = _ENVIRONMENT_STRICT
         else:
             wanted_env = _ENVIRONMENT
-        ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
-        if ret is None:
+        if (ret := self.hass.data.get(wanted_env)) is None:
             ret = self.hass.data[wanted_env] = TemplateEnvironment(
                 self.hass, self._limited, self._strict, self._log_fn
             )
@@ -520,11 +534,15 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
+        if self.is_static or self._compiled_code is not None:
+            return
+
+        if compiled := self._env.template_cache.get(self.template):
+            self._compiled_code = compiled
+            return
+
         with _template_context_manager as cm:
             cm.set_template(self.template, "compiling")
-            if self.is_static or self._compiled_code is not None:
-                return
-
             try:
                 self._compiled_code = self._env.compile(self.template)
             except jinja2.TemplateError as err:
@@ -596,31 +614,7 @@ class Template:
     def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
-            result = _cached_literal_eval(render_result)
-
-            if type(result) in RESULT_WRAPPERS:
-                result = RESULT_WRAPPERS[type(result)](
-                    result, render_result=render_result
-                )
-
-            # If the literal_eval result is a string, use the original
-            # render, by not returning right here. The evaluation of strings
-            # resulting in strings impacts quotes, to avoid unexpected
-            # output; use the original render instead of the evaluated one.
-            # Complex and scientific values are also unexpected. Filter them out.
-            if (
-                # Filter out string and complex numbers
-                not isinstance(result, (str, complex))
-                and (
-                    # Pass if not numeric and not a boolean
-                    not isinstance(result, (int, float))
-                    # Or it's a boolean (inherit from int)
-                    or isinstance(result, bool)
-                    # Or if it's a digit
-                    or _IS_NUMERIC.match(render_result) is not None
-                )
-            ):
-                return result
+            return _cached_parse_result(render_result)
         except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
 
@@ -666,7 +660,7 @@ class Template:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 self._exc_info = sys.exc_info()
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)
@@ -695,20 +689,30 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        if self.hass and self.hass.config.debug:
+            self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
-        assert self.hass and _render_info.get() is None
 
         render_info = RenderInfo(self)
 
-        # pylint: disable=protected-access
+        if not self.hass:
+            raise RuntimeError(f"hass not set while rendering {self}")
+
+        if _render_info.get() is not None:
+            raise RuntimeError(
+                f"RenderInfo already set while rendering {self}, "
+                "this usually indicates the template is being rendered "
+                "in the wrong thread"
+            )
+
         if self.is_static:
-            render_info._result = self.template.strip()
-            render_info._freeze_static()
+            render_info._result = self.template.strip()  # noqa: SLF001
+            render_info._freeze_static()  # noqa: SLF001
             return render_info
 
         token = _render_info.set(render_info)
         try:
-            render_info._result = self.async_render(
+            render_info._result = self.async_render(  # noqa: SLF001
                 variables, strict=strict, log_fn=log_fn, **kwargs
             )
         except TemplateError as ex:
@@ -716,7 +720,7 @@ class Template:
         finally:
             _render_info.reset(token)
 
-        render_info._freeze()
+        render_info._freeze()  # noqa: SLF001
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -758,8 +762,10 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(*JSON_DECODE_EXCEPTIONS):
+        try:  # noqa: SIM105 - suppress is much slower
             variables["value_json"] = json_loads(value)
+        except JSON_DECODE_EXCEPTIONS:
+            pass
 
         try:
             render_result = _render_with_context(
@@ -876,7 +882,7 @@ class AllStates:
         if (render_info := _render_info.get()) is not None:
             render_info.all_states_lifecycle = True
 
-    def __iter__(self) -> Generator[TemplateState, None, None]:
+    def __iter__(self) -> Generator[TemplateState]:
         """Return all states."""
         self._collect_all()
         return _state_generator(self._hass, None)
@@ -966,7 +972,7 @@ class DomainStates:
         if (entity_collect := _render_info.get()) is not None:
             entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
-    def __iter__(self) -> Generator[TemplateState, None, None]:
+    def __iter__(self) -> Generator[TemplateState]:
         """Return the iteration over all the states."""
         self._collect_domain()
         return _state_generator(self._hass, self._domain)
@@ -1016,7 +1022,7 @@ class TemplateStateBase(State):
             return self.state_with_unit
         raise KeyError
 
-    @property
+    @cached_property
     def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
@@ -1154,7 +1160,7 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
 
 def _state_generator(
     hass: HomeAssistant, domain: str | None
-) -> Generator[TemplateState, None, None]:
+) -> Generator[TemplateState]:
     """State generator for a domain or all states."""
     states = hass.states
     # If domain is None, we want to iterate over all states, but making
@@ -1167,7 +1173,7 @@ def _state_generator(
     #
     container: Iterable[State]
     if domain is None:
-        container = states._states.values()  # pylint: disable=protected-access
+        container = states._states.values()  # noqa: SLF001
     else:
         container = states.async_all(domain)
     for state in container:
@@ -1212,10 +1218,10 @@ def forgiving_boolean(value: Any) -> bool | object: ...
 
 
 @overload
-def forgiving_boolean(value: Any, default: _T) -> bool | _T: ...
+def forgiving_boolean[_T](value: Any, default: _T) -> bool | _T: ...
 
 
-def forgiving_boolean(
+def forgiving_boolean[_T](
     value: Any, default: _T | object = _SENTINEL
 ) -> bool | _T | object:
     """Try to convert value to a boolean."""
@@ -1347,8 +1353,8 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     return next(
         (
-            id
-            for id, device in dev_reg.devices.items()
+            device_id
+            for device_id, device in dev_reg.devices.items()
             if (name := device.name_by_user or device.name)
             and (str(entity_id_or_device_name) == name)
         ),
@@ -1372,6 +1378,24 @@ def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -
     if device is None or not hasattr(device, attr_name):
         return None
     return getattr(device, attr_name)
+
+
+def config_entry_attr(
+    hass: HomeAssistant, config_entry_id_: str, attr_name: str
+) -> Any:
+    """Get config entry specific attribute."""
+    if not isinstance(config_entry_id_, str):
+        raise TemplateError("Must provide a config entry ID")
+
+    if attr_name not in ("domain", "title", "state", "source", "disabled_by"):
+        raise TemplateError("Invalid config entry attribute")
+
+    config_entry = hass.config_entries.async_get_entry(config_entry_id_)
+
+    if config_entry is None:
+        return None
+
+    return getattr(config_entry, attr_name)
 
 
 def is_device_attr(
@@ -1453,8 +1477,7 @@ def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
-    area_reg = area_registry.async_get(hass)
-    return [area.id for area in area_reg.async_list_areas()]
+    return list(area_registry.async_get(hass).areas)
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
@@ -1580,7 +1603,7 @@ def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None
     """Return all labels, or those from a area ID, device ID, or entity ID."""
     label_reg = label_registry.async_get(hass)
     if lookup_value is None:
-        return [label.label_id for label in label_reg.async_list_labels()]
+        return list(label_reg.labels)
 
     ent_reg = entity_registry.async_get(hass)
 
@@ -1884,6 +1907,17 @@ def multiply(value, amount, default=_SENTINEL):
         return default
 
 
+def add(value, amount, default=_SENTINEL):
+    """Filter to convert value to float and add it."""
+    try:
+        return float(value) + amount
+    except (ValueError, TypeError):
+        # If value can't be converted to float
+        if default is _SENTINEL:
+            raise_no_default("add", value)
+        return default
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -2002,12 +2036,12 @@ def square_root(value, default=_SENTINEL):
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
     """Filter to convert given timestamp to format."""
     try:
-        date = dt_util.utc_from_timestamp(value)
+        result = dt_util.utc_from_timestamp(value)
 
         if local:
-            date = dt_util.as_local(date)
+            result = dt_util.as_local(result)
 
-        return date.strftime(date_format)
+        return result.strftime(date_format)
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -2049,6 +2083,12 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
 
 def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
     """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    # Return datetime.datetime object without changes
+    if type(value) is datetime:
+        return value
+    # Add midnight to datetime.date object
+    if type(value) is date:
+        return datetime.combine(value, time(0, 0, 0))
     try:
         # Check for a valid UNIX timestamp string, int or float
         timestamp = float(value)
@@ -2287,7 +2327,7 @@ def regex_match(value, find="", ignorecase=False):
     """Match value using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return bool(_regex_cache(find, flags).match(value))
 
 
@@ -2298,7 +2338,7 @@ def regex_replace(value="", find="", replace="", ignorecase=False):
     """Replace using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return _regex_cache(find, flags).sub(replace, value)
 
 
@@ -2306,7 +2346,7 @@ def regex_search(value, find="", ignorecase=False):
     """Search using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return bool(_regex_cache(find, flags).search(value))
 
 
@@ -2319,7 +2359,7 @@ def regex_findall(value, find="", ignorecase=False):
     """Find all matches using regex."""
     if not isinstance(value, str):
         value = str(value)
-    flags = re.I if ignorecase else 0
+    flags = re.IGNORECASE if ignorecase else 0
     return _regex_cache(find, flags).findall(value)
 
 
@@ -2374,20 +2414,25 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return None
 
 
-def base64_encode(value):
+def base64_encode(value: str) -> str:
     """Perform base64 encode."""
     return base64.b64encode(value.encode("utf-8")).decode("utf-8")
 
 
-def base64_decode(value):
-    """Perform base64 denode."""
-    return base64.b64decode(value).decode("utf-8")
+def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
+    """Perform base64 decode."""
+    decoded = base64.b64decode(value)
+    if encoding:
+        return decoded.decode(encoding)
+
+    return decoded
 
 
 def ordinal(value):
     """Perform ordinal conversion."""
+    suffixes = ["th", "st", "nd", "rd"] + ["th"] * 6  # codespell:ignore nd
     return str(value) + (
-        list(["th", "st", "nd", "rd"] + ["th"] * 6)[(int(str(value)[-1])) % 10]
+        suffixes[(int(str(value)[-1])) % 10]
         if int(str(value)[-2:]) % 100 not in range(11, 14)
         else "th"
     )
@@ -2469,10 +2514,15 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
-    Make sure date is not in the future, or else it will return None.
+    If the input datetime is in the future,
+    the input datetime will be returned.
 
     If the input are not a datetime object the input will be returned unmodified.
+
+    Note: This template function is deprecated in favor of `time_until`, but is still
+    supported so as not to break old templates.
     """
+
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
@@ -2483,6 +2533,50 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     if dt_util.now() < value:
         return value
     return dt_util.get_age(value)
+
+
+def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in seconds, minutes, hours, days, months and year.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+
+    return dt_util.get_age(value, precision)
+
+
+def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return the amount of time until that time as a string.
+
+    The time until can be in seconds, minutes, hours, days, months and years.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() > value:
+        return value
+
+    return dt_util.get_time_remaining(value, precision)
 
 
 def urlencode(value):
@@ -2664,11 +2758,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         super().__init__(undefined=make_logging_undefined(strict, log_fn))
         self.hass = hass
         self.template_cache: weakref.WeakValueDictionary[
-            str | jinja2.nodes.Template, CodeType | str | None
+            str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
+        self.filters["add"] = add
         self.filters["log"] = logarithm
         self.filters["sin"] = sine
         self.filters["cos"] = cosine
@@ -2769,7 +2864,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # evaluated fresh with every execution, rather than executed
         # at compile time and the value stored. The context itself
         # can be discarded, we only need to get at the hass object.
-        def hassfunction(
+        def hassfunction[**_P, _R](
             func: Callable[Concatenate[HomeAssistant, _P], _R],
             jinja_context: Callable[
                 [Callable[Concatenate[Any, _P], _R]],
@@ -2789,6 +2884,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["device_attr"] = hassfunction(device_attr)
         self.filters["device_attr"] = self.globals["device_attr"]
+
+        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
+        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
 
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
         self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
@@ -2883,6 +2981,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "floor_id",
                 "floor_name",
                 "relative_time",
+                "time_since",
+                "time_until",
                 "today_at",
                 "label_id",
                 "label_name",
@@ -2939,6 +3039,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
         self.filters["relative_time"] = self.globals["relative_time"]
+        self.globals["time_since"] = hassfunction(time_since)
+        self.filters["time_since"] = self.globals["time_since"]
+        self.globals["time_until"] = hassfunction(time_until)
+        self.filters["time_until"] = self.globals["time_until"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
 
@@ -2961,7 +3065,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return super().is_safe_attribute(obj, attr, value)
 
     @overload
-    def compile(  # type: ignore[overload-overlap]
+    def compile(
         self,
         source: str | jinja2.nodes.Template,
         name: str | None = None,
@@ -3006,10 +3110,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 defer_init,
             )
 
-        if (cached := self.template_cache.get(source)) is None:
-            cached = self.template_cache[source] = super().compile(source)
-
-        return cached
+        compiled = super().compile(source)
+        self.template_cache[source] = compiled
+        return compiled
 
 
 _NO_HASS_ENV = TemplateEnvironment(None)

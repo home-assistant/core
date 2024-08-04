@@ -21,14 +21,14 @@ async def test_buttons(
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
-    for entity_id, func in [
+    for entity_id, func in (
         ("button.test_wake", "wake"),
         ("button.test_flash_lights", "flash_lights"),
         ("button.test_honk_horn", "honk"),
         ("button.test_homelink", "trigger_homelink"),
         ("button.test_keyless_driving", "enable_keyless_driving"),
         ("button.test_play_fart", "boombox"),
-    ]:
+    ):
         with patch(
             f"homeassistant.components.tessie.button.{func}",
         ) as mock_press:

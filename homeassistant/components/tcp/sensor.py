@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 
 from .common import TCP_PLATFORM_SCHEMA, TcpEntity
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
+PLATFORM_SCHEMA: Final = SENSOR_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
 
 
 def setup_platform(

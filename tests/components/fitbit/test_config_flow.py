@@ -32,11 +32,11 @@ from tests.typing import ClientSessionGenerator
 REDIRECT_URL = "https://example.com/auth/external/callback"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
 ) -> None:
@@ -97,11 +97,11 @@ async def test_full_flow(
         (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_token_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
     status_code: HTTPStatus,
@@ -155,11 +155,11 @@ async def test_token_error(
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_api_failure(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     requests_mock: Mocker,
     setup_credentials: None,
     http_status: HTTPStatus,
@@ -207,12 +207,11 @@ async def test_api_failure(
     assert result.get("reason") == error_reason
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_entry_already_exists(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
-    requests_mock: Mocker,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
@@ -457,12 +456,12 @@ async def test_platform_setup_without_import(
     assert issue.translation_key == "deprecated_yaml_no_import"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
 ) -> None:
@@ -532,12 +531,12 @@ async def test_reauth_flow(
 
 
 @pytest.mark.parametrize("profile_id", ["other-user-id"])
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_wrong_user_id(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
 ) -> None:
@@ -610,11 +609,11 @@ async def test_reauth_wrong_user_id(
     ],
     ids=("full_profile_data", "display_name_only"),
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_partial_profile_data(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
     expected_title: str,

@@ -169,7 +169,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             except ConnectionFailure as exc:
                 LOGGER.error(exc)
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

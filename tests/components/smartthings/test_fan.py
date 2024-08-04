@@ -39,12 +39,20 @@ async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
     # Dimmer 1
     state = hass.states.get("fan.fan_1")
     assert state.state == "on"
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FanEntityFeature.SET_SPEED
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     assert state.attributes[ATTR_PERCENTAGE] == 66
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
@@ -62,8 +70,6 @@ async def test_entity_and_device_attributes(
     )
     # Act
     await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Assert
     entry = entity_registry.async_get("fan.fan_1")
     assert entry
@@ -99,7 +105,12 @@ async def test_setup_mode_capability(hass: HomeAssistant, device_factory) -> Non
     # Assert
     state = hass.states.get("fan.fan_1")
     assert state is not None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FanEntityFeature.PRESET_MODE
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     assert state.attributes[ATTR_PRESET_MODE] == "high"
     assert state.attributes[ATTR_PRESET_MODES] == ["high", "low", "medium"]
 
@@ -121,7 +132,12 @@ async def test_setup_speed_capability(hass: HomeAssistant, device_factory) -> No
     # Assert
     state = hass.states.get("fan.fan_1")
     assert state is not None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FanEntityFeature.SET_SPEED
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     assert state.attributes[ATTR_PERCENTAGE] == 66
 
 
@@ -150,7 +166,10 @@ async def test_setup_both_capabilities(hass: HomeAssistant, device_factory) -> N
     assert state is not None
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+        == FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_PERCENTAGE] == 66
     assert state.attributes[ATTR_PRESET_MODE] == "high"

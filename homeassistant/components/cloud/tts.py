@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -31,7 +30,7 @@ from homeassistant.setup import async_when_setup
 
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
-from .const import DATA_PLATFORMS_SETUP, DOMAIN, TTS_ENTITY_UNIQUE_ID
+from .const import DATA_CLOUD, DATA_PLATFORMS_SETUP, DOMAIN, TTS_ENTITY_UNIQUE_ID
 from .prefs import CloudPreferences
 
 ATTR_GENDER = "gender"
@@ -97,7 +96,7 @@ async def async_get_engine(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CloudProvider:
     """Set up Cloud speech component."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     cloud_provider = CloudProvider(cloud)
     if discovery_info is not None:
         discovery_info["platform_loaded"].set()
@@ -110,9 +109,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud text-to-speech platform."""
-    tts_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.TTS]
+    tts_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.TTS]
     tts_platform_loaded.set()
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     async_add_entities([CloudTTSEntity(cloud)])
 
 

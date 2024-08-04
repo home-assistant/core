@@ -18,13 +18,14 @@ from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import ValloxDataUpdateCoordinator, ValloxEntity
+from . import ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -32,6 +33,7 @@ from .const import (
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
+from .coordinator import ValloxDataUpdateCoordinator
 
 
 class ValloxSensorEntity(ValloxEntity, SensorEntity):
@@ -108,7 +110,7 @@ class ValloxFilterRemainingSensor(ValloxSensorEntity):
 
         return datetime.combine(
             next_filter_change_date,
-            time(hour=13, minute=0, second=0, tzinfo=dt_util.DEFAULT_TIME_ZONE),
+            time(hour=13, minute=0, second=0, tzinfo=dt_util.get_default_time_zone()),
         )
 
 
@@ -124,6 +126,18 @@ class ValloxCellStateSensor(ValloxSensorEntity):
             return None
 
         return VALLOX_CELL_STATE_TO_STR.get(super_native_value)
+
+
+class ValloxProfileDurationSensor(ValloxSensorEntity):
+    """Child class for profile duration reporting."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+
+        return self.coordinator.data.get_remaining_profile_duration(
+            self.coordinator.data.profile
+        )
 
 
 @dataclass(frozen=True)
@@ -251,6 +265,14 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
+        key="profile_duration",
+        translation_key="profile_duration",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_type=ValloxProfileDurationSensor,
     ),
 )
 

@@ -20,8 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
 
@@ -121,7 +120,7 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
 
 def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry):
     """Update device identifiers to new identifiers."""
-    device_registry = async_get(hass)
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, DOMAIN)})
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_identifiers = {(DOMAIN, entry.entry_id)}

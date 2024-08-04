@@ -28,7 +28,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
         await base.update_data()
     except (aiohttp.client_exceptions.ClientConnectorError, TimeoutError):
         return {"error": "cannot_connect"}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception")
         return {"error": "unknown"}
 

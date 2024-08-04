@@ -7,6 +7,7 @@ extend-ignore = [
     "B904", # Use raise from to specify exception cause
     "N815", # Variable {name} in class scope should not be mixedCase
     "RUF018", # Avoid assignment expressions in assert statements
+    "SLF001", # Private member accessed: Tests do often test internals a lot
 ]
 
 [lint.isort]

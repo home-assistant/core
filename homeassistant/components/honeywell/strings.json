@@ -61,6 +61,39 @@
     }
   },
   "exceptions": {
+    "temp_failed": {
+      "message": "Honeywell set temperature failed"
+    },
+    "sys_mode_failed": {
+      "message": "Honeywell could not set system mode"
+    },
+    "fan_mode_failed": {
+      "message": "Honeywell could not set fan mode"
+    },
+    "away_mode_failed": {
+      "message": "Honeywell set away mode failed"
+    },
+    "temp_failed_value": {
+      "message": "Honeywell set temperature failed: invalid temperature {temperature}"
+    },
+    "temp_failed_range": {
+      "message": "Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {heat}, Cool Temperature: {cool}"
+    },
+    "set_hold_failed": {
+      "message": "Honeywell could not set permanent hold"
+    },
+    "set_mode_failed": {
+      "message": "Honeywell invalid system mode returned {mode}"
+    },
+    "stop_hold_failed": {
+      "message": "Honeywell could not stop hold mode"
+    },
+    "set_aux_failed": {
+      "message": "Honeywell could not set system mode to aux heat"
+    },
+    "disable_aux_failed": {
+      "message": "Honeywell could turn off aux heat mode"
+    },
     "switch_failed_off": {
       "message": "Honeywell could turn off emergency heat mode."
     },

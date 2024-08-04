@@ -138,7 +138,7 @@ class ConditionError(HomeAssistantError):
         """Return indentation."""
         return "  " * indent + message
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         raise NotImplementedError
 
@@ -154,7 +154,7 @@ class ConditionErrorMessage(ConditionError):
     # A message describing this error
     message: str
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
@@ -170,7 +170,7 @@ class ConditionErrorIndex(ConditionError):
     # The error that this error wraps
     error: ConditionError
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         if self.total > 1:
             yield self._indent(
@@ -189,7 +189,7 @@ class ConditionErrorContainer(ConditionError):
     # List of ConditionErrors that this error wraps
     errors: Sequence[ConditionError]
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         for item in self.errors:
             yield from item.output(indent)
@@ -255,7 +255,7 @@ class UnknownUser(Unauthorized):
     """When call is made with user ID that doesn't exist."""
 
 
-class ServiceNotFound(HomeAssistantError):
+class ServiceNotFound(ServiceValidationError):
     """Raised when a service is not found."""
 
     def __init__(self, domain: str, service: str) -> None:

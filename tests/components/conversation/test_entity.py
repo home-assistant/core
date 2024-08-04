@@ -2,7 +2,9 @@
 
 from unittest.mock import patch
 
+from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -31,6 +33,11 @@ async def test_state_set_and_restore(hass: HomeAssistant) -> None:
         ) as mock_process,
         patch("homeassistant.util.dt.utcnow", return_value=now),
     ):
+        intent_response = intent.IntentResponse(language="en")
+        intent_response.async_set_speech("response text")
+        mock_process.return_value = conversation.ConversationResult(
+            response=intent_response,
+        )
         await hass.services.async_call(
             "conversation",
             "process",

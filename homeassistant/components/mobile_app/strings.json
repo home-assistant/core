@@ -13,6 +13,10 @@
   "device_automation": {
     "action_type": {
       "notify": "Send a notification"
+    },
+    "extra_fields": {
+      "message": "Message",
+      "title": "Title"
     }
   }
 }

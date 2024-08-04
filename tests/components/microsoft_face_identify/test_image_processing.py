@@ -4,8 +4,8 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
-import homeassistant.components.image_processing as ip
-import homeassistant.components.microsoft_face as mf
+from homeassistant.components.image_processing import DOMAIN as IP_DOMAIN
+from homeassistant.components.microsoft_face import DOMAIN as MF_DOMAIN, FACE_API_URL
 from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -43,32 +43,32 @@ def poll_mock():
 
 
 CONFIG = {
-    ip.DOMAIN: {
+    IP_DOMAIN: {
         "platform": "microsoft_face_identify",
         "source": {"entity_id": "camera.demo_camera", "name": "test local"},
         "group": "Test Group1",
     },
     "camera": {"platform": "demo"},
-    mf.DOMAIN: {"api_key": "12345678abcdef6"},
+    MF_DOMAIN: {"api_key": "12345678abcdef6"},
 }
 
-ENDPOINT_URL = f"https://westus.{mf.FACE_API_URL}"
+ENDPOINT_URL = f"https://westus.{FACE_API_URL}"
 
 
 async def test_setup_platform(hass: HomeAssistant, store_mock) -> None:
     """Set up platform with one entity."""
     config = {
-        ip.DOMAIN: {
+        IP_DOMAIN: {
             "platform": "microsoft_face_identify",
             "source": {"entity_id": "camera.demo_camera"},
             "group": "Test Group1",
         },
         "camera": {"platform": "demo"},
-        mf.DOMAIN: {"api_key": "12345678abcdef6"},
+        MF_DOMAIN: {"api_key": "12345678abcdef6"},
     }
 
-    with assert_setup_component(1, ip.DOMAIN):
-        await async_setup_component(hass, ip.DOMAIN, config)
+    with assert_setup_component(1, IP_DOMAIN):
+        await async_setup_component(hass, IP_DOMAIN, config)
         await hass.async_block_till_done()
 
     assert hass.states.get("image_processing.microsoftface_demo_camera")
@@ -77,17 +77,17 @@ async def test_setup_platform(hass: HomeAssistant, store_mock) -> None:
 async def test_setup_platform_name(hass: HomeAssistant, store_mock) -> None:
     """Set up platform with one entity and set name."""
     config = {
-        ip.DOMAIN: {
+        IP_DOMAIN: {
             "platform": "microsoft_face_identify",
             "source": {"entity_id": "camera.demo_camera", "name": "test local"},
             "group": "Test Group1",
         },
         "camera": {"platform": "demo"},
-        mf.DOMAIN: {"api_key": "12345678abcdef6"},
+        MF_DOMAIN: {"api_key": "12345678abcdef6"},
     }
 
-    with assert_setup_component(1, ip.DOMAIN):
-        await async_setup_component(hass, ip.DOMAIN, config)
+    with assert_setup_component(1, IP_DOMAIN):
+        await async_setup_component(hass, IP_DOMAIN, config)
         await hass.async_block_till_done()
 
     assert hass.states.get("image_processing.test_local")
@@ -110,7 +110,7 @@ async def test_ms_identify_process_image(
         text=load_fixture("persons.json", "microsoft_face_identify"),
     )
 
-    await async_setup_component(hass, ip.DOMAIN, CONFIG)
+    await async_setup_component(hass, IP_DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
     state = hass.states.get("camera.demo_camera")

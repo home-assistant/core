@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import (
@@ -37,6 +37,8 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
+    if not discovery_info:
+        return
     switches = []
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     entities: dict[str, dict[str, Any]] = {
@@ -147,8 +149,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             if self._value_template:
                 return await self._async_query_state_value(self._command_state)
             return await self._async_query_state_code(self._command_state)
-        if TYPE_CHECKING:
-            return None
+        return None
 
     async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
@@ -191,12 +192,12 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         """Turn the device on."""
         if await self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         await self._update_entity_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         await self._update_entity_state()

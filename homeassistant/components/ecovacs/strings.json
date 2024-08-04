@@ -46,14 +46,26 @@
       "relocate": {
         "name": "Relocate"
       },
+      "reset_lifespan_blade": {
+        "name": "Reset blade lifespan"
+      },
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
       },
+      "reset_lifespan_lens_brush": {
+        "name": "Reset lens brush lifespan"
+      },
+      "reset_lifespan_round_mop": {
+        "name": "Reset round mop lifespan"
+      },
+      "reset_lifespan_unit_care": {
+        "name": "Reset unit care lifespan"
+      },
       "reset_lifespan_side_brush": {
-        "name": "Reset side brushes lifespan"
+        "name": "Reset side brush lifespan"
       }
     },
     "event": {
@@ -79,6 +91,9 @@
       "clean_count": {
         "name": "Clean count"
       },
+      "cut_direction": {
+        "name": "Cut direction"
+      },
       "volume": {
         "name": "Volume"
       }
@@ -92,14 +107,29 @@
           }
         }
       },
+      "lifespan_blade": {
+        "name": "Blade lifespan"
+      },
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
       "lifespan_filter": {
         "name": "Filter lifespan"
       },
+      "lifespan_lens_brush": {
+        "name": "Lens brush lifespan"
+      },
+      "lifespan_main_brush": {
+        "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
+      },
       "lifespan_side_brush": {
-        "name": "Side brushes lifespan"
+        "name": "Side brush lifespan"
+      },
+      "lifespan_unit_care": {
+        "name": "Unit care lifespan"
+      },
+      "lifespan_round_mop": {
+        "name": "Round mop lifespan"
       },
       "network_ip": {
         "name": "IP address"
@@ -202,6 +232,9 @@
     },
     "vacuum_send_command_params_required": {
       "message": "Params are required for the command: {command}"
+    },
+    "vacuum_raw_get_positions_not_supported": {
+      "message": "Getting the positions of the chargers and the device itself is not supported"
     }
   },
   "issues": {
@@ -236,6 +269,12 @@
         "cloud": "Cloud",
         "self_hosted": "Self-hosted"
       }
+    }
+  },
+  "services": {
+    "raw_get_positions": {
+      "name": "Get raw positions",
+      "description": "Get the raw response for the positions of the chargers and the device itself."
     }
   }
 }

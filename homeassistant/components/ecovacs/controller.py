@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Mapping
 import logging
 import ssl
 from typing import Any
 
 from deebot_client.api_client import ApiClient
 from deebot_client.authentication import Authenticator, create_rest_config
-from deebot_client.capabilities import Capabilities
 from deebot_client.const import UNDEFINED, UndefinedType
 from deebot_client.device import Device
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
@@ -20,7 +19,7 @@ from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.ssl import get_default_no_verify_context
@@ -42,8 +41,9 @@ class EcovacsController:
         """Initialize controller."""
         self._hass = hass
         self._devices: list[Device] = []
-        self.legacy_devices: list[VacBot] = []
-        self._device_id = get_client_device_id()
+        self._legacy_devices: list[VacBot] = []
+        rest_url = config.get(CONF_OVERRIDE_REST_URL)
+        self._device_id = get_client_device_id(hass, rest_url is not None)
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
 
@@ -52,7 +52,7 @@ class EcovacsController:
                 aiohttp_client.async_get_clientsession(self._hass),
                 device_id=self._device_id,
                 alpha_2_country=country,
-                override_rest_url=config.get(CONF_OVERRIDE_REST_URL),
+                override_rest_url=rest_url,
             ),
             config[CONF_USERNAME],
             md5(config[CONF_PASSWORD]),
@@ -73,6 +73,8 @@ class EcovacsController:
             ),
             self._authenticator,
         )
+
+        self._added_legacy_entities: set[str] = set()
 
     async def initialize(self) -> None:
         """Init controller."""
@@ -100,7 +102,7 @@ class EcovacsController:
                         self._continent,
                         monitor=True,
                     )
-                    self.legacy_devices.append(bot)
+                    self._legacy_devices.append(bot)
         except InvalidAuthenticationError as ex:
             raise ConfigEntryError("Invalid credentials") from ex
         except DeebotError as ex:
@@ -112,14 +114,25 @@ class EcovacsController:
         """Disconnect controller."""
         for device in self._devices:
             await device.teardown()
-        for legacy_device in self.legacy_devices:
+        for legacy_device in self._legacy_devices:
             await self._hass.async_add_executor_job(legacy_device.disconnect)
         await self._mqtt.disconnect()
         await self._authenticator.teardown()
 
-    @callback
-    def devices(self, capability: type[Capabilities]) -> Generator[Device, None, None]:
-        """Return generator for devices with a specific capability."""
-        for device in self._devices:
-            if isinstance(device.capabilities, capability):
-                yield device
+    def add_legacy_entity(self, device: VacBot, component: str) -> None:
+        """Add legacy entity."""
+        self._added_legacy_entities.add(f"{device.vacuum['did']}_{component}")
+
+    def legacy_entity_is_added(self, device: VacBot, component: str) -> bool:
+        """Check if legacy entity is added."""
+        return f"{device.vacuum['did']}_{component}" in self._added_legacy_entities
+
+    @property
+    def devices(self) -> list[Device]:
+        """Return devices."""
+        return self._devices
+
+    @property
+    def legacy_devices(self) -> list[VacBot]:
+        """Return legacy devices."""
+        return self._legacy_devices

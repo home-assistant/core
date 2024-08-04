@@ -44,9 +44,7 @@ async def ws_add_dataset(
     try:
         await dataset_store.async_add_dataset(hass, source, tlv)
     except TLVError as exc:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(exc)
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(exc))
         return
 
     connection.send_result(msg["id"])
@@ -94,9 +92,7 @@ async def ws_set_preferred_dataset(
     try:
         store.preferred_dataset = dataset_id
     except KeyError:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown dataset"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "unknown dataset")
         return
 
     connection.send_result(msg["id"])
@@ -120,10 +116,10 @@ async def ws_delete_dataset(
     try:
         store.async_delete(dataset_id)
     except KeyError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(exc))
         return
     except dataset_store.DatasetPreferredError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_ALLOWED, str(exc))
         return
 
     connection.send_result(msg["id"])
@@ -145,9 +141,7 @@ async def ws_get_dataset(
 
     store = await dataset_store.async_get_store(hass)
     if not (dataset := store.async_get(dataset_id)):
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown dataset"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "unknown dataset")
         return
 
     connection.send_result(msg["id"], {"tlv": dataset.tlv})

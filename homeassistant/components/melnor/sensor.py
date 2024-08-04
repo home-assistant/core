@@ -27,12 +27,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .models import (
-    MelnorBluetoothEntity,
-    MelnorDataUpdateCoordinator,
-    MelnorZoneEntity,
-    get_entities_for_valves,
-)
+from .coordinator import MelnorDataUpdateCoordinator
+from .models import MelnorBluetoothEntity, MelnorZoneEntity, get_entities_for_valves
 
 
 def watering_seconds_left(valve: Valve) -> datetime | None:

@@ -63,6 +63,7 @@ async def async_inject_broadcast(
             advertisement=generate_advertisement_data(local_name="Not it"),
             time=broadcast_time or time.monotonic(),
             connectable=False,
+            tx_power=-127,
         ),
     )
     await hass.async_block_till_done()

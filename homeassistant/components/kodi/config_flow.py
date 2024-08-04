@@ -133,7 +133,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_ws_port()
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
@@ -167,7 +167,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -192,7 +192,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -215,7 +215,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_ws(self.hass, self._get_data())
             except WSCannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -235,7 +235,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             _LOGGER.exception("Cannot connect to Kodi")
             reason = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             reason = "unknown"
         else:

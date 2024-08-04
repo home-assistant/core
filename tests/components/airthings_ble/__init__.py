@@ -97,6 +97,7 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -141,6 +142,7 @@ VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -161,6 +163,7 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 WAVE_DEVICE_INFO = AirthingsDevice(

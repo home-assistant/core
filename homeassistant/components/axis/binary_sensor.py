@@ -17,11 +17,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
+from . import AxisConfigEntry
 from .entity import AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
@@ -177,11 +177,11 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AxisConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    AxisHub.get_hub(hass, config_entry).entity_loader.register_platform(
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities, AxisBinarySensor, ENTITY_DESCRIPTIONS
     )
 

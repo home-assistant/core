@@ -13,8 +13,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
@@ -29,6 +29,7 @@ from pyunifiprotect.data import (
     Viewer,
     WSSubscriptionMessage,
 )
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -148,7 +149,14 @@ def mock_entry(
             ufp.ws_subscription = ws_callback
             return Mock()
 
+        def subscribe_websocket_state(
+            ws_state_subscription: Callable[[WebsocketState], None],
+        ) -> Any:
+            ufp.ws_state_subscription = ws_state_subscription
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
+        ufp_client.subscribe_websocket_state = subscribe_websocket_state
         yield ufp
 
 
@@ -216,6 +224,8 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.smart_detect_types = [
         SmartDetectObjectType.PERSON,
         SmartDetectObjectType.VEHICLE,
+        SmartDetectObjectType.ANIMAL,
+        SmartDetectObjectType.PACKAGE,
     ]
     doorbell.has_speaker = True
     doorbell.feature_flags.has_hdr = True

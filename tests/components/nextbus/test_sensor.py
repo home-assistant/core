@@ -18,9 +18,9 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
-VALID_AGENCY = "sf-muni"
+VALID_AGENCY = "sfmta-cis"
 VALID_ROUTE = "F"
-VALID_STOP = "5650"
+VALID_STOP = "5184"
 VALID_AGENCY_TITLE = "San Francisco Muni"
 VALID_ROUTE_TITLE = "F-Market & Wharves"
 VALID_STOP_TITLE = "Market St & 7th St"
@@ -44,29 +44,42 @@ CONFIG_BASIC = {
     }
 }
 
-BASIC_RESULTS = {
-    "predictions": {
-        "agencyTitle": VALID_AGENCY_TITLE,
-        "agencyTag": VALID_AGENCY,
-        "routeTitle": VALID_ROUTE_TITLE,
-        "routeTag": VALID_ROUTE,
-        "stopTitle": VALID_STOP_TITLE,
-        "stopTag": VALID_STOP,
-        "direction": {
-            "title": "Outbound",
-            "prediction": [
-                {"minutes": "1", "epochTime": "1553807371000"},
-                {"minutes": "2", "epochTime": "1553807372000"},
-                {"minutes": "3", "epochTime": "1553807373000"},
-                {"minutes": "10", "epochTime": "1553807380000"},
-            ],
+BASIC_RESULTS = [
+    {
+        "route": {
+            "title": VALID_ROUTE_TITLE,
+            "id": VALID_ROUTE,
         },
+        "stop": {
+            "name": VALID_STOP_TITLE,
+            "id": VALID_STOP,
+        },
+        "values": [
+            {"minutes": 1, "timestamp": 1553807371000},
+            {"minutes": 2, "timestamp": 1553807372000},
+            {"minutes": 3, "timestamp": 1553807373000},
+            {"minutes": 10, "timestamp": 1553807380000},
+        ],
     }
-}
+]
+
+NO_UPCOMING = [
+    {
+        "route": {
+            "title": VALID_ROUTE_TITLE,
+            "id": VALID_ROUTE,
+        },
+        "stop": {
+            "name": VALID_STOP_TITLE,
+            "id": VALID_STOP,
+        },
+        "values": [],
+    }
+]
 
 
 @pytest.fixture
-def mock_nextbus() -> Generator[MagicMock, None, None]:
+def mock_nextbus() -> Generator[MagicMock]:
     """Create a mock py_nextbus module."""
     with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
         yield client
@@ -75,12 +88,12 @@ def mock_nextbus() -> Generator[MagicMock, None, None]:
 @pytest.fixture
 def mock_nextbus_predictions(
     mock_nextbus: MagicMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Create a mock of NextBusClient predictions."""
     instance = mock_nextbus.return_value
-    instance.get_predictions_for_multi_stops.return_value = BASIC_RESULTS
+    instance.predictions_for_stop.return_value = BASIC_RESULTS
 
-    return instance.get_predictions_for_multi_stops
+    return instance.predictions_for_stop
 
 
 async def assert_setup_sensor(
@@ -105,117 +118,23 @@ async def assert_setup_sensor(
     return config_entry
 
 
-async def test_message_dict(
-    hass: HomeAssistant,
-    mock_nextbus: MagicMock,
-    mock_nextbus_lists: MagicMock,
-    mock_nextbus_predictions: MagicMock,
-) -> None:
-    """Verify that a single dict message is rendered correctly."""
-    mock_nextbus_predictions.return_value = {
-        "predictions": {
-            "agencyTitle": VALID_AGENCY_TITLE,
-            "agencyTag": VALID_AGENCY,
-            "routeTitle": VALID_ROUTE_TITLE,
-            "routeTag": VALID_ROUTE,
-            "stopTitle": VALID_STOP_TITLE,
-            "stopTag": VALID_STOP,
-            "message": {"text": "Message"},
-            "direction": {
-                "title": "Outbound",
-                "prediction": [
-                    {"minutes": "1", "epochTime": "1553807371000"},
-                    {"minutes": "2", "epochTime": "1553807372000"},
-                    {"minutes": "3", "epochTime": "1553807373000"},
-                ],
-            },
-        }
-    }
-
-    await assert_setup_sensor(hass, CONFIG_BASIC)
-
-    state = hass.states.get(SENSOR_ID)
-    assert state is not None
-    assert state.attributes["message"] == "Message"
-
-
-async def test_message_list(
+async def test_predictions(
     hass: HomeAssistant,
     mock_nextbus: MagicMock,
     mock_nextbus_lists: MagicMock,
     mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify that a list of messages are rendered correctly."""
-    mock_nextbus_predictions.return_value = {
-        "predictions": {
-            "agencyTitle": VALID_AGENCY_TITLE,
-            "agencyTag": VALID_AGENCY,
-            "routeTitle": VALID_ROUTE_TITLE,
-            "routeTag": VALID_ROUTE,
-            "stopTitle": VALID_STOP_TITLE,
-            "stopTag": VALID_STOP,
-            "message": [{"text": "Message 1"}, {"text": "Message 2"}],
-            "direction": {
-                "title": "Outbound",
-                "prediction": [
-                    {"minutes": "1", "epochTime": "1553807371000"},
-                    {"minutes": "2", "epochTime": "1553807372000"},
-                    {"minutes": "3", "epochTime": "1553807373000"},
-                ],
-            },
-        }
-    }
-
-    await assert_setup_sensor(hass, CONFIG_BASIC)
-
-    state = hass.states.get(SENSOR_ID)
-    assert state is not None
-    assert state.attributes["message"] == "Message 1 -- Message 2"
-
-
-async def test_direction_list(
-    hass: HomeAssistant,
-    mock_nextbus: MagicMock,
-    mock_nextbus_lists: MagicMock,
-    mock_nextbus_predictions: MagicMock,
-) -> None:
-    """Verify that a list of messages are rendered correctly."""
-    mock_nextbus_predictions.return_value = {
-        "predictions": {
-            "agencyTitle": VALID_AGENCY_TITLE,
-            "agencyTag": VALID_AGENCY,
-            "routeTitle": VALID_ROUTE_TITLE,
-            "routeTag": VALID_ROUTE,
-            "stopTitle": VALID_STOP_TITLE,
-            "stopTag": VALID_STOP,
-            "message": [{"text": "Message 1"}, {"text": "Message 2"}],
-            "direction": [
-                {
-                    "title": "Outbound",
-                    "prediction": [
-                        {"minutes": "1", "epochTime": "1553807371000"},
-                        {"minutes": "2", "epochTime": "1553807372000"},
-                        {"minutes": "3", "epochTime": "1553807373000"},
-                    ],
-                },
-                {
-                    "title": "Outbound 2",
-                    "prediction": {"minutes": "0", "epochTime": "1553807374000"},
-                },
-            ],
-        }
-    }
 
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
     state = hass.states.get(SENSOR_ID)
     assert state is not None
     assert state.state == "2019-03-28T21:09:31+00:00"
-    assert state.attributes["agency"] == VALID_AGENCY_TITLE
+    assert state.attributes["agency"] == VALID_AGENCY
     assert state.attributes["route"] == VALID_ROUTE_TITLE
     assert state.attributes["stop"] == VALID_STOP_TITLE
-    assert state.attributes["direction"] == "Outbound, Outbound 2"
-    assert state.attributes["upcoming"] == "0, 1, 2, 3"
+    assert state.attributes["upcoming"] == "1, 2, 3, 10"
 
 
 @pytest.mark.parametrize(
@@ -256,27 +175,19 @@ async def test_custom_name(
     assert state.name == "Custom Name"
 
 
-@pytest.mark.parametrize(
-    "prediction_results",
-    [
-        {},
-        {"Error": "Failed"},
-    ],
-)
-async def test_no_predictions(
+async def test_verify_no_predictions(
     hass: HomeAssistant,
     mock_nextbus: MagicMock,
-    mock_nextbus_predictions: MagicMock,
     mock_nextbus_lists: MagicMock,
-    prediction_results: dict[str, str],
+    mock_nextbus_predictions: MagicMock,
 ) -> None:
-    """Verify there are no exceptions when no predictions are returned."""
-    mock_nextbus_predictions.return_value = prediction_results
-
+    """Verify attributes are set despite no upcoming times."""
+    mock_nextbus_predictions.return_value = []
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
     state = hass.states.get(SENSOR_ID)
     assert state is not None
+    assert "upcoming" not in state.attributes
     assert state.state == "unknown"
 
 
@@ -287,21 +198,10 @@ async def test_verify_no_upcoming(
     mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify attributes are set despite no upcoming times."""
-    mock_nextbus_predictions.return_value = {
-        "predictions": {
-            "agencyTitle": VALID_AGENCY_TITLE,
-            "agencyTag": VALID_AGENCY,
-            "routeTitle": VALID_ROUTE_TITLE,
-            "routeTag": VALID_ROUTE,
-            "stopTitle": VALID_STOP_TITLE,
-            "stopTag": VALID_STOP,
-            "direction": {"title": "Outbound", "prediction": []},
-        }
-    }
-
+    mock_nextbus_predictions.return_value = NO_UPCOMING
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
     state = hass.states.get(SENSOR_ID)
     assert state is not None
-    assert state.state == "unknown"
     assert state.attributes["upcoming"] == "No upcoming predictions"
+    assert state.state == "unknown"
