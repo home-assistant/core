@@ -5,10 +5,23 @@
       "gatewayId": "222222",
       "temperatureControlSystems": [
         {
-          "systemId": "416856",
+          "systemId": "8557535",
           "zones": [
             {
-              "zoneId": "416856",
+              "zoneId": "8557539",
+              "temperatureStatus": {
+                "temperature": 21.5,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 21.5,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "THERMOSTAT"
+            },
+            {
+              "zoneId": "8557541",
               "temperatureStatus": {
                 "temperature": 21.5,
                 "isAvailable": true
@@ -22,7 +35,7 @@
             }
           ],
           "activeFaults": [],
-          "systemModeStatus": { "mode": "Heat", "isPermanent": true }
+          "systemModeStatus": { "mode": "Auto", "isPermanent": true }
         }
       ],
       "activeFaults": []

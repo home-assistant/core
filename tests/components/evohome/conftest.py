@@ -29,7 +29,10 @@ DEFAULT_TEST_CONFIG: Final = {
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
     """Load JSON for the config of a user's account."""
-    return load_json_object_fixture(f"{install}/user_account.json", DOMAIN)
+    try:
+        return load_json_object_fixture(f"{install}/user_account.json", DOMAIN)
+    except FileNotFoundError:
+        return load_json_object_fixture("default/user_account.json", DOMAIN)
 
 
 def user_locations_config_fixture(install: str) -> JsonArrayType:
@@ -47,12 +50,18 @@ def location_status_fixture(install: str, loc_id: str | None = None) -> JsonObje
 
 def dhw_schedule_fixture(install: str) -> JsonObjectType:
     """Load JSON for the schedule of a domesticHotWater zone."""
-    return load_json_object_fixture(f"{install}/schedule_dhw.json", DOMAIN)
+    try:
+        return load_json_object_fixture(f"{install}/schedule_dhw.json", DOMAIN)
+    except FileNotFoundError:
+        return load_json_object_fixture("default/schedule_dhw.json", DOMAIN)
 
 
 def zone_schedule_fixture(install: str) -> JsonObjectType:
     """Load JSON for the schedule of a temperatureZone zone."""
-    return load_json_object_fixture(f"{install}/schedule_zone.json", DOMAIN)
+    try:
+        return load_json_object_fixture(f"{install}/schedule_zone.json", DOMAIN)
+    except FileNotFoundError:
+        return load_json_object_fixture("default/schedule_zone.json", DOMAIN)
 
 
 def mock_get_factory(install: str) -> Awaitable:

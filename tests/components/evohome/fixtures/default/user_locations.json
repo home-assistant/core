@@ -246,7 +246,7 @@
               },
               {
                 "zoneId": "3450733",
-                "modelType": "xx",
+                "modelType": "xxx",
                 "setpointCapabilities": {
                   "maxHeatSetpoint": 35.0,
                   "minHeatSetpoint": 5.0,
@@ -268,7 +268,7 @@
                   "setpointValueResolution": 0.5
                 },
                 "name": "Spare Room",
-                "zoneType": "xx"
+                "zoneType": "xxx"
               }
             ],
             "dhw": {

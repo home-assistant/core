@@ -10,9 +10,20 @@ SESSION_ID: Final = "F7181186..."
 USERNAME: Final = "test_user@gmail.com"
 
 TEST_INSTALLS: Final = {
-    "minimal": {},  # evohome (single zone, no DHW)
-    "default": {},  # evohome
-    "h032585": {},  # VisionProWifi
-    "h099625": {},  # RoundThermostat
-    "system_004": {},  # Multiple
+    "minimal": {
+        "num_zones": 1,
+    },  # evohome (single zone, no DHW)
+    "default": {
+        "num_zones": 7,
+        "num_dhw": 1,
+    },  # evohome
+    "h032585": {
+        "num_svcs": 4,
+        "num_zones": 1,
+    },  # VisionProWifi
+    "h099625": {"num_svcs": 4, "num_zones": 2},  # RoundThermostat
+    "system_004": {
+        "num_svcs": 4,
+        "num_zones": 1,
+    },  # Multiple
 }
