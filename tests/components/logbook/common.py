@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.components import logbook
 from homeassistant.components.logbook import processor
-from homeassistant.components.logbook.models import LogbookConfig
+from homeassistant.components.logbook.models import EventAsRow, LogbookConfig
 from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
     ulid_to_bytes_or_none,
@@ -17,6 +17,8 @@ from homeassistant.core import Context
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
+
+IDX_TO_NAME = dict(enumerate(EventAsRow._fields))
 
 
 class MockRow:
@@ -47,6 +49,10 @@ class MockRow:
         self.shared_attrs = None
         self.attributes = None
         self.context_only = False
+
+    def __getitem__(self, idx: int) -> Any:
+        """Get item."""
+        return getattr(self, IDX_TO_NAME[idx])
 
     @property
     def time_fired_minute(self):

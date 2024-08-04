@@ -62,7 +62,23 @@ from .const import (
     LOGBOOK_ENTRY_WHEN,
 )
 from .helpers import is_sensor_continuous
-from .models import EventAsRow, LazyEventPartialState, LogbookConfig, async_event_to_row
+from .models import (
+    CONTEXT_ID_BIN_POS,
+    CONTEXT_ONLY_POS,
+    CONTEXT_PARENT_ID_BIN_POS,
+    CONTEXT_POS,
+    CONTEXT_USER_ID_BIN_POS,
+    ENTITY_ID_POS,
+    EVENT_TYPE_POS,
+    ICON_POS,
+    ROW_ID_POS,
+    STATE_POS,
+    TIME_FIRED_TS_POS,
+    EventAsRow,
+    LazyEventPartialState,
+    LogbookConfig,
+    async_event_to_row,
+)
 from .queries import statement_for_request
 from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
@@ -203,12 +219,12 @@ def _humanify(
 
     # Process rows
     for row in rows:
-        context_id_bin: bytes = row.context_id_bin
+        context_id_bin: bytes = row[CONTEXT_ID_BIN_POS]
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
-        if row.context_only:
+        if row[CONTEXT_ONLY_POS]:
             continue
-        event_type = row.event_type
+        event_type = row[EVENT_TYPE_POS]
 
         if event_type == EVENT_CALL_SERVICE:
             continue
@@ -222,7 +238,7 @@ def _humanify(
             )
 
         if event_type is PSEUDO_EVENT_STATE_CHANGED:
-            entity_id = row.entity_id
+            entity_id = row[ENTITY_ID_POS]
             assert entity_id is not None
             # Skip continuous sensors
             if (
@@ -235,12 +251,12 @@ def _humanify(
 
             data = {
                 LOGBOOK_ENTRY_WHEN: when,
-                LOGBOOK_ENTRY_STATE: row.state,
+                LOGBOOK_ENTRY_STATE: row[STATE_POS],
                 LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
             if include_entity_name:
                 data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id)
-            if icon := row.icon:
+            if icon := row[ICON_POS]:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
             context_augmenter.augment(data, row, context_id_bin)
@@ -298,9 +314,11 @@ class ContextAugmenter:
             context_row := self.context_lookup.get(context_id_bin)
         ):
             return context_row
-        if (context := getattr(row, "context", None)) is not None and (
-            origin_event := context.origin_event
-        ) is not None:
+        if (
+            type(row) is EventAsRow
+            and (context := row[CONTEXT_POS]) is not None
+            and (origin_event := context.origin_event) is not None
+        ):
             return async_event_to_row(origin_event)
         return None
 
@@ -308,7 +326,7 @@ class ContextAugmenter:
         self, data: dict[str, Any], row: Row | EventAsRow, context_id_bin: bytes | None
     ) -> None:
         """Augment data from the row and cache."""
-        if context_user_id_bin := row.context_user_id_bin:
+        if context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]:
             data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(context_user_id_bin)
 
         if not (context_row := self._get_context_row(context_id_bin, row)):
@@ -317,7 +335,7 @@ class ContextAugmenter:
         if _rows_match(row, context_row):
             # This is the first event with the given ID. Was it directly caused by
             # a parent event?
-            context_parent_id_bin = row.context_parent_id_bin
+            context_parent_id_bin = row[CONTEXT_PARENT_ID_BIN_POS]
             if (
                 not context_parent_id_bin
                 or (
@@ -332,10 +350,10 @@ class ContextAugmenter:
             # this log entry.
             if _rows_match(row, context_row):
                 return
-        event_type = context_row.event_type
+        event_type = context_row[EVENT_TYPE_POS]
         # State change
-        if context_entity_id := context_row.entity_id:
-            data[CONTEXT_STATE] = context_row.state
+        if context_entity_id := context_row[ENTITY_ID_POS]:
+            data[CONTEXT_STATE] = context_row[STATE_POS]
             data[CONTEXT_ENTITY_ID] = context_entity_id
             if self.include_entity_name:
                 data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
@@ -381,7 +399,9 @@ class ContextAugmenter:
 def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
     return bool(
-        row is other_row or (row_id := row.row_id) and row_id == other_row.row_id
+        row is other_row
+        or (row_id := row[ROW_ID_POS])
+        and row_id == other_row[ROW_ID_POS]
     )
 
 
