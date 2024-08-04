@@ -300,9 +300,9 @@ def _humanify(
             (row is context_row or _rows_ids_match(row, context_row))
             and (
                 not (context_parent := row[CONTEXT_PARENT_ID_BIN_POS])
-                or not (parent_context_row := get_context(context_parent, context_row))
-                or row is parent_context_row
-                or _rows_ids_match(row, parent_context_row)
+                or not (context_row := get_context(context_parent, context_row))  # type: ignore[arg-type]
+                or row is context_row
+                or _rows_ids_match(row, context_row)
             )
         ):
             context_augmenter.augment(data, context_row)
