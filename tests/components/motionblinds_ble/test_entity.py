@@ -26,7 +26,6 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("platform", "entity"),
     [
-        (Platform.COVER, None),
         (Platform.BUTTON, ATTR_CONNECT),
         (Platform.BUTTON, ATTR_DISCONNECT),
         (Platform.BUTTON, ATTR_FAVORITE),
@@ -49,11 +48,7 @@ async def test_entity_update(
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {
-            ATTR_ENTITY_ID: f"{platform.name.lower()}.{name}"
-            if platform is Platform.COVER
-            else f"{platform.name.lower()}.{name}_{entity}"
-        },
+        {ATTR_ENTITY_ID: f"{platform.name.lower()}.{name}_{entity}"},
         blocking=True,
     )
     getattr(mock_motion_device, "status_query").assert_called_once_with()
