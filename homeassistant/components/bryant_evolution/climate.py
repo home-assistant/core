@@ -35,22 +35,15 @@ async def async_setup_entry(
     # Add a climate entity for each system/zone.
     sam_uid = names.sam_device_uid(config_entry)
     entities: list[Entity] = []
-    coordinator = EvolutionCoordinator(
-        hass, config_entry.data[CONF_FILENAME], config_entry.data[CONF_SYSTEM_ZONE]
-    )
-
-    # Fetch initial data so we have data when entities subscribe.
-    await coordinator.async_config_entry_first_refresh()
 
     for sz in config_entry.data[CONF_SYSTEM_ZONE]:
         system_id = sz[0]
         zone_id = sz[1]
-        client = config_entry.runtime_data.get(tuple(sz))
         climate = BryantEvolutionClimate(
-            client,
-            coordinator,
+            config_entry.runtime_data,  # coordinator
             system_id,
             zone_id,
+            config_entry.data[CONF_FILENAME],
             sam_uid,
         )
         entities.append(climate)
@@ -86,17 +79,17 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
     def __init__(
         self,
-        client: BryantEvolutionLocalClient,
         coordinator: EvolutionCoordinator,
         system_id: int,
         zone_id: int,
+        tty: str,
         sam_uid: str,
     ) -> None:
         """Initialize an entity from parts."""
         super().__init__(coordinator)
-        self._client = client
         self.system_id = system_id
         self.zone_id = zone_id
+        self.tty = tty
         self._attr_name = None
         self._attr_unique_id = names.zone_entity_uid(sam_uid, system_id, zone_id)
         self._attr_device_info = DeviceInfo(
@@ -126,6 +119,12 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
             self.system_id, self.zone_id
         )
 
+    async def _client(self) -> BryantEvolutionLocalClient:
+        """Return a client to control our (system, zone)."""
+        return await BryantEvolutionLocalClient.get_client(
+            self.system_id, self.zone_id, self.tty
+        )
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -136,7 +135,8 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT_COOL:
             hvac_mode = HVACMode.AUTO
-        if not await self._client.set_hvac_mode(hvac_mode):
+        client = await self._client()
+        if not await client.set_hvac_mode(hvac_mode):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="failed_to_set_hvac_mode"
             )
@@ -146,9 +146,10 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        client = await self._client()
         if kwargs.get("target_temp_high"):
             temp = int(kwargs["target_temp_high"])
-            if not await self._client.set_cooling_setpoint(temp):
+            if not await client.set_cooling_setpoint(temp):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_clsp"
                 )
@@ -156,7 +157,7 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
         if kwargs.get("target_temp_low"):
             temp = int(kwargs["target_temp_low"])
-            if not await self._client.set_heating_setpoint(temp):
+            if not await client.set_heating_setpoint(temp):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_htsp"
                 )
@@ -165,9 +166,9 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
         if kwargs.get("temperature"):
             temp = int(kwargs["temperature"])
             fn = (
-                self._client.set_heating_setpoint
+                client.set_heating_setpoint
                 if self.hvac_mode == HVACMode.HEAT
-                else self._client.set_cooling_setpoint
+                else client.set_cooling_setpoint
             )
             if not await fn(temp):
                 raise HomeAssistantError(
@@ -182,7 +183,8 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if not await self._client.set_fan_mode(fan_mode):
+        client = await self._client()
+        if not await client.set_fan_mode(fan_mode):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="failed_to_set_fan_mode"
             )
