@@ -10,3 +10,4 @@ ATTR_MANUFACTURER = "SMLIGHT"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=300)
 SMLIGHT_SLZB_REBOOT_EVENT = "smlight_slzb_reboot"
+UPTIME_DEVIATION = timedelta(seconds=5)

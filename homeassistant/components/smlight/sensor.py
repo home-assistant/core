@@ -20,11 +20,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import SmConfigEntry
-from .const import LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT
+from .const import LOGGER, SCAN_INTERVAL, SMLIGHT_SLZB_REBOOT_EVENT, UPTIME_DEVIATION
 from .coordinator import SmDataUpdateCoordinator
 from .entity import SmEntity
-
-UPTIME_DEVIATION = 5  # seconds
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,7 +80,7 @@ SENSORS = [
         translation_key="socket_uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        value_fn=lambda x: x.socket_uptime,
+        value_fn=lambda x: x.socket_uptime if x.socket_uptime > 0 else None,
     ),
 ]
 
@@ -116,33 +114,42 @@ class SmSensorEntity(SmEntity, SensorEntity):
         self._last_uptime: datetime | None = None
 
     def get_uptime(self, uptime: float | None) -> datetime | None:
-        """Return device uptime, tolerate up to 5 seconds deviation."""
-        if uptime == 0 or uptime is None:
+        """Return device or zigbee socket uptime.
+
+        Converts uptime from seconds to a datetime value, allow up to 5
+        seconds deviation. Fire a reboot event if device uptime has reset
+        since last run.
+        """
+        if uptime is None:
+            # reset to unknown state
             self._last_uptime = None
             return None
 
         delta = timedelta(seconds=uptime)
 
         if "core_uptime" in self.entity_description.key and delta <= SCAN_INTERVAL:
-            self.coordinator.hass.bus.async_fire(
-                SMLIGHT_SLZB_REBOOT_EVENT,
-                {
-                    "device_id": self.coordinator.unique_id,
-                    "host": self.coordinator.hostname,
-                },
-            )
-            LOGGER.debug("SLZB device reboot detected")
+            self.fire_reboot_event()
 
-        delta_uptime = utcnow() - delta
+        new_uptime = utcnow() - delta
 
         if (
             not self._last_uptime
-            or abs((delta_uptime - self._last_uptime).total_seconds())
-            > UPTIME_DEVIATION
+            or abs(new_uptime - self._last_uptime) > UPTIME_DEVIATION
         ):
-            self._last_uptime = delta_uptime
+            self._last_uptime = new_uptime
 
         return self._last_uptime
+
+    def fire_reboot_event(self):
+        """Fire reboot event."""
+        self.coordinator.hass.bus.async_fire(
+            SMLIGHT_SLZB_REBOOT_EVENT,
+            {
+                "device_id": self.coordinator.unique_id,
+                "host": self.coordinator.hostname,
+            },
+        )
+        LOGGER.debug("SLZB device reboot detected")
 
     @property
     def native_value(self) -> float | datetime | None:
