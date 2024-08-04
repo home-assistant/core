@@ -82,8 +82,11 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                name=api.device_metadata.name
+                if name is None:
+                    name = 'tami4'
                 return self.async_create_entry(
-                    title=api.device_metadata.name,
+                    title=name,
                     data={CONF_REFRESH_TOKEN: refresh_token},
                 )
 
