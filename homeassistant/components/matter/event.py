@@ -64,7 +64,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
             # Momentary switch with multi press support
             # NOTE: We ignore 'multi press ongoing' as it doesn't make a lot
             # of sense and many devices do not support it.
-            # Instead we we report on the 'multi press complete' event with the number
+            # Instead we report on the 'multi press complete' event with the number
             # of presses.
             max_presses_supported = self.get_matter_attribute_value(
                 clusters.Switch.Attributes.MultiPressMax

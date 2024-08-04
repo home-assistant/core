@@ -29,6 +29,16 @@
           }
         }
       },
+      "vibration": {
+        "name": "Vibration",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "vibration": "Vibration"
+            }
+          }
+        }
+      },
       "button_0": {
         "name": "Button 1",
         "state_attributes": {

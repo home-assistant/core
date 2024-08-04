@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["tessie"],
   "quality_scale": "platinum",
-  "requirements": ["tessie-api==0.1.1", "tesla-fleet-api==0.7.2"]
+  "requirements": ["tessie-api==0.1.1", "tesla-fleet-api==0.7.3"]
 }

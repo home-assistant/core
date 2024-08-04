@@ -3,8 +3,11 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from airgradient import AirGradientConnectionError, ConfigurationControl
-from mashumaro import MissingField
+from airgradient import (
+    AirGradientConnectionError,
+    AirGradientParseError,
+    ConfigurationControl,
+)
 
 from homeassistant.components.airgradient import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -141,9 +144,7 @@ async def test_flow_old_firmware_version(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test flow with old firmware version."""
-    mock_airgradient_client.get_current_measures.side_effect = MissingField(
-        "", object, object
-    )
+    mock_airgradient_client.get_current_measures.side_effect = AirGradientParseError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

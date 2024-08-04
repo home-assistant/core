@@ -185,7 +185,7 @@ async def async_setup_entry(
         {vol.Required(ATTR_OTHER_PLAYER): cv.string},
         "async_sync",
     )
-    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
+    platform.async_register_entity_service(SERVICE_UNSYNC, {}, "async_unsync")
 
     # Start server discovery task if not already running
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
@@ -282,10 +282,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self._player.volume:
             return int(float(self._player.volume)) / 100.0
+        return None
 
     @property
     def is_volume_muted(self):
