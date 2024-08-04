@@ -149,7 +149,7 @@ async def test_discovery_after_setup(
     discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
-    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL) + timedelta(minutes=1))
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -186,7 +186,7 @@ async def test_discovery_add_device_after_setup(
     discovery.return_value.mock_devices = [MockDevice2]
     device.side_effect = [MockDevice2]
 
-    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL) + timedelta(minutes=1))
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -218,7 +218,7 @@ async def test_discovery_device_bind_after_setup(
     MockDevice1.bind.side_effect = None
     MockDevice1.update_state.side_effect = None
 
-    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL) + timedelta(minutes=1))
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -239,7 +239,7 @@ async def test_update_connection_failure(
     await async_setup_gree(hass)  # Update 1
 
     async def run_update():
-        freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
         async_fire_time_changed(hass)
 
     await hass.async_block_till_done()
@@ -273,7 +273,7 @@ async def test_update_connection_send_failure_recovery(
     await async_setup_gree(hass)  # Update 1
 
     async def run_update():
-        freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
         async_fire_time_changed(hass)
 
     await hass.async_block_till_done()
@@ -301,7 +301,7 @@ async def test_update_unhandled_exception(
     assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -316,7 +316,7 @@ async def test_send_command_device_timeout(
     """Test for sending power on command to the device with a device timeout."""
     await async_setup_gree(hass)
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -346,7 +346,7 @@ async def test_unresponsive_device(
     await async_setup_gree(hass)
 
     async def run_update():
-        freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
