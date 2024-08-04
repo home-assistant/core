@@ -1,7 +1,7 @@
 [
   {
     "locationInfo": {
-      "locationId": "400000",
+      "locationId": "111111",
       "timeZone": {
         "timeZoneId": "GMTStandardTime",
         "displayName": "(UTC+00:00) Dublin, Edinburgh, Lisbon, London",
@@ -13,7 +13,7 @@
     "gateways": [
       {
         "gatewayInfo": {
-          "gatewayId": "410000",
+          "gatewayId": "222222",
           "mac": "00D02DEE0000",
           "crc": "1234",
           "isWiFi": false
