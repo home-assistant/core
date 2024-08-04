@@ -14,8 +14,10 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 if TYPE_CHECKING:
     from . import KNXModule
 
+from .storage.config_store import PlatformControllerBase
 
-class KnxUiEntityPlatformController:
+
+class KnxUiEntityPlatformController(PlatformControllerBase):
     """Class to manage dynamic adding and reloading of UI entities."""
 
     def __init__(
@@ -35,7 +37,7 @@ class KnxUiEntityPlatformController:
             [self._entity_class(self._knx_module, unique_id, config)]
         )
 
-    async def reload_entity(
+    async def reload_with_new_config(
         self, entity_entry: RegistryEntry, config: dict[str, Any]
     ) -> None:
         """Reload an existing UI entity."""

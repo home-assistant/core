@@ -1,5 +1,6 @@
 """KNX entity configuration store."""
 
+from abc import ABC, abstractmethod
 import logging
 from typing import Any, Final, TypedDict
 
@@ -11,7 +12,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
 from ..const import DOMAIN
-from ..knx_entity import KnxUiEntityPlatformController
 from .const import CONF_DATA
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +31,20 @@ class KNXConfigStoreModel(TypedDict):
     entities: KNXEntityStoreModel
 
 
+class PlatformControllerBase(ABC):
+    """Entity platform controller base class."""
+
+    @abstractmethod
+    async def add_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+        """Add a new entity."""
+
+    @abstractmethod
+    async def reload_with_new_config(
+        self, entity_entry: er.RegistryEntry, config: dict[str, Any]
+    ) -> None:
+        """Remove an existing entity and load it again with new config."""
+
+
 class KNXConfigStore:
     """Manage KNX config store data."""
 
@@ -44,7 +58,7 @@ class KNXConfigStore:
         self.config_entry = config_entry
         self._store = Store[KNXConfigStoreModel](hass, STORAGE_VERSION, STORAGE_KEY)
         self.data = KNXConfigStoreModel(entities={})
-        self.platform_controllers: dict[Platform, KnxUiEntityPlatformController] = {}
+        self.platform_controllers: dict[Platform, PlatformControllerBase] = {}
 
     async def load_data(self) -> None:
         """Load config store data from storage."""
@@ -109,7 +123,7 @@ class KNXConfigStore:
             raise ConfigStoreException(
                 f"Entity not found in storage: {entity_id} - {unique_id}"
             )
-        await platform_controller.reload_entity(entry, data)
+        await platform_controller.reload_with_new_config(entry, data)
         # store data after entity is added to make sure config doesn't raise exceptions
         self.data["entities"][platform][unique_id] = data
         await self._store.async_save(self.data)
