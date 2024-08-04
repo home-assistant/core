@@ -332,7 +332,7 @@ class ContextAugmenter:
         if not (context_row := self._get_context_row(context_id_bin, row)):
             return
 
-        if _rows_match(row, context_row):
+        if row is context_row or _rows_ids_match(row, context_row):
             # This is the first event with the given ID. Was it directly caused by
             # a parent event?
             context_parent_id_bin = row[CONTEXT_PARENT_ID_BIN_POS]
@@ -348,7 +348,7 @@ class ContextAugmenter:
                 return
             # Ensure the (parent) context_event exists and is not the root cause of
             # this log entry.
-            if _rows_match(row, context_row):
+            if row is context_row or _rows_ids_match(row, context_row):
                 return
         event_type = context_row[EVENT_TYPE_POS]
         # State change
@@ -396,13 +396,9 @@ class ContextAugmenter:
             data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(attr_entity_id)
 
 
-def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
+def _rows_ids_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
-    return bool(
-        row is other_row
-        or (row_id := row[ROW_ID_POS])
-        and row_id == other_row[ROW_ID_POS]
-    )
+    return bool((row_id := row[ROW_ID_POS]) and row_id == other_row[ROW_ID_POS])
 
 
 class EntityNameCache:
