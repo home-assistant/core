@@ -33,6 +33,7 @@ class TeslaFleetVehicleData:
     coordinator: TeslaFleetVehicleDataCoordinator
     vin: str
     device: DeviceInfo
+    signing: bool
 
 
 @dataclass
