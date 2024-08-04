@@ -75,7 +75,6 @@ async def test_discovery_after_setup(
     assert device_infos[1].ip == "2.2.2.1"
 
 
-@pytest.mark.freeze_time("2023-10-21")
 async def test_coordinator_updates(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
