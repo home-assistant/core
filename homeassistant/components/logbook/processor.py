@@ -228,7 +228,7 @@ def _humanify(
         if event_type == EVENT_CALL_SERVICE:
             continue
 
-        time_fired_ts = row.time_fired_ts
+        time_fired_ts = row[TIME_FIRED_TS_POS]
         if timestamp:
             when = time_fired_ts or time.time()
         else:
