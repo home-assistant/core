@@ -57,7 +57,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._last_response_time = utcnow()
         self.async_set_updated_data(self.device.raw_properties)
 
-    async def _async_update_data(self) -> Any:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the state of the device."""
         _LOGGER.debug(
             "Updating device state: %s, error count: %d", self.name, self._error_count

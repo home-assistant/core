@@ -75,13 +75,11 @@ async def test_discovery_after_setup(
     assert device_infos[1].ip == "2.2.2.1"
 
 
+@pytest.mark.freeze_time("2023-10-21")
 async def test_coordinator_updates(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test gree devices update their state."""
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to(dt_util.utcnow())
-
     await async_setup_gree(hass)
     await hass.async_block_till_done()
 
@@ -89,14 +87,14 @@ async def test_coordinator_updates(
 
     callback = device().add_handler.call_args_list[0][0][1]
 
-    async def fake_update_state(*args):
+    async def fake_update_state(*args) -> None:
         """Fake update state."""
         device().power = True
         callback()
 
     device().update_state.side_effect = fake_update_state
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
