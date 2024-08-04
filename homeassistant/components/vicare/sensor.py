@@ -946,23 +946,10 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(device_config, api, description.key)
         self.entity_description = description
-        # run update to have device_class set depending on unit_of_measurement
-        self.update()
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_native_value is not None
-
-    def update(self) -> None:
-        """Update state of sensor."""
         vicare_unit = None
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_native_value = self.entity_description.value_getter(
-                    self._api
-                )
-
                 if self.entity_description.unit_getter:
                     vicare_unit = self.entity_description.unit_getter(self._api)
         except requests.exceptions.ConnectionError:
@@ -982,3 +969,24 @@ class ViCareSensor(ViCareEntity, SensorEntity):
             self._attr_native_unit_of_measurement = VICARE_UNIT_TO_HA_UNIT.get(
                 vicare_unit
             )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_native_value is not None
+
+    def update(self) -> None:
+        """Update state of sensor."""
+        try:
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_native_value = self.entity_description.value_getter(
+                    self._api
+                )
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Unable to retrieve data from ViCare server")
+        except ValueError:
+            _LOGGER.error("Unable to decode data from ViCare server")
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
+        except PyViCareInvalidDataError as invalid_data_exception:
+            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
