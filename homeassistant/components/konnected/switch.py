@@ -102,7 +102,7 @@ class KonnectedSwitch(SwitchEntity):
         if resp.get(ATTR_STATE) is not None:
             self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
 
-    def _boolean_state(self, int_state: int | None) -> bool:
+    def _boolean_state(self, int_state: int | None) -> bool | None:
         if int_state == 0:
             return self._activation == STATE_LOW
         if int_state == 1:
