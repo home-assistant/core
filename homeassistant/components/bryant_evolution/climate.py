@@ -47,7 +47,7 @@ async def async_setup_entry(
             sam_uid,
         )
         entities.append(climate)
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEntity):
