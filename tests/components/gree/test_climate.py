@@ -140,8 +140,6 @@ async def test_discovery_after_setup(
     discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_setup_gree(hass)  # Update 1
 
     assert discovery.return_value.scan_count == 1
@@ -176,8 +174,6 @@ async def test_discovery_add_device_after_setup(
     discovery.return_value.mock_devices = [MockDevice1]
     device.side_effect = [MockDevice1]
 
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_setup_gree(hass)  # Update 1
 
     await async_setup_gree(hass)
@@ -211,8 +207,6 @@ async def test_discovery_device_bind_after_setup(
     discovery.return_value.mock_devices = [MockDevice1]
     device.return_value = MockDevice1
 
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_setup_gree(hass)  # Update 1
 
     assert len(hass.states.async_all(DOMAIN)) == 1
@@ -242,8 +236,6 @@ async def test_update_connection_failure(
         DeviceTimeoutError,
     ]
 
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_setup_gree(hass)  # Update 1
 
     async def run_update():
@@ -278,9 +270,6 @@ async def test_update_connection_send_failure_recovery(
         DEFAULT_MOCK,
     ]
 
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
-
     await async_setup_gree(hass)  # Update 1
 
     async def run_update():
@@ -306,8 +295,6 @@ async def test_update_unhandled_exception(
     """Testing update hvac connection unhandled response exception."""
     device().update_state.side_effect = [DEFAULT_MOCK, Exception]
 
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_setup_gree(hass)
 
     state = hass.states.get(ENTITY_ID)
@@ -327,8 +314,6 @@ async def test_send_command_device_timeout(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test for sending power on command to the device with a device timeout."""
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_setup_gree(hass)
 
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL) + timedelta(seconds=1))
@@ -358,8 +343,6 @@ async def test_unresponsive_device(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test for unresponsive device."""
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_setup_gree(hass)
 
     async def run_update():
