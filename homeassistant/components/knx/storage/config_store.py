@@ -58,7 +58,7 @@ class KNXConfigStore:
         self.config_entry = config_entry
         self._store = Store[KNXConfigStoreModel](hass, STORAGE_VERSION, STORAGE_KEY)
         self.data = KNXConfigStoreModel(entities={})
-        self.platform_controllers: dict[Platform, PlatformControllerBase] = {}
+        self._platform_controllers: dict[Platform, PlatformControllerBase] = {}
 
     async def load_data(self) -> None:
         """Load config store data from storage."""
@@ -69,12 +69,18 @@ class KNXConfigStore:
                 len(self.data["entities"]),
             )
 
+    def add_platfrom(
+        self, platform: Platform, controller: PlatformControllerBase
+    ) -> None:
+        """Add platform controller."""
+        self._platform_controllers[platform] = controller
+
     async def create_entity(
         self, platform: Platform, data: dict[str, Any]
     ) -> str | None:
         """Create a new entity."""
         try:
-            platform_controller = self.platform_controllers[platform]
+            platform_controller = self._platform_controllers[platform]
         except KeyError as err:
             raise ConfigStoreException(
                 f"Entity platform not ready: {platform}"
@@ -107,7 +113,7 @@ class KNXConfigStore:
     ) -> None:
         """Update an existing entity."""
         try:
-            platform_controller = self.platform_controllers[platform]
+            platform_controller = self._platform_controllers[platform]
         except KeyError as err:
             raise ConfigStoreException(
                 f"Entity platform not ready: {platform}"

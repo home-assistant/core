@@ -67,12 +67,14 @@ async def async_setup_entry(
     """Set up light(s) for KNX platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
     platform = async_get_current_platform()
-    platform_controller = KnxUiEntityPlatformController(
-        knx_module=knx_module,
-        entity_platform=platform,
-        entity_class=KnxUiLight,
+    knx_module.config_store.add_platfrom(
+        platform=Platform.LIGHT,
+        controller=KnxUiEntityPlatformController(
+            knx_module=knx_module,
+            entity_platform=platform,
+            entity_class=KnxUiLight,
+        ),
     )
-    knx_module.config_store.platform_controllers[Platform.LIGHT] = platform_controller
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
     if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.LIGHT):

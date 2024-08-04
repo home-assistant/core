@@ -55,12 +55,14 @@ async def async_setup_entry(
     """Set up switch(es) for KNX platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
     platform = async_get_current_platform()
-    platform_controller = KnxUiEntityPlatformController(
-        knx_module=knx_module,
-        entity_platform=platform,
-        entity_class=KnxUiSwitch,
+    knx_module.config_store.add_platfrom(
+        platform=Platform.SWITCH,
+        controller=KnxUiEntityPlatformController(
+            knx_module=knx_module,
+            entity_platform=platform,
+            entity_class=KnxUiSwitch,
+        ),
     )
-    knx_module.config_store.platform_controllers[Platform.SWITCH] = platform_controller
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
     if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
