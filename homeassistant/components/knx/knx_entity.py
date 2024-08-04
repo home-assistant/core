@@ -37,10 +37,10 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
             [self._entity_class(self._knx_module, unique_id, config)]
         )
 
-    async def reload_with_new_config(
+    async def update_entity_config(
         self, entity_entry: RegistryEntry, config: dict[str, Any]
     ) -> None:
-        """Reload an existing UI entity."""
+        """Update an existing UI entities configuration."""
         await self._entity_platform.async_remove_entity(entity_entry.entity_id)
         await self.add_entity(unique_id=entity_entry.unique_id, config=config)
 

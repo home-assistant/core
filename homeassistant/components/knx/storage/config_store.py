@@ -39,10 +39,10 @@ class PlatformControllerBase(ABC):
         """Add a new entity."""
 
     @abstractmethod
-    async def reload_with_new_config(
+    async def update_entity_config(
         self, entity_entry: er.RegistryEntry, config: dict[str, Any]
     ) -> None:
-        """Remove an existing entity and load it again with new config."""
+        """Update an existing entities configuration."""
 
 
 class KNXConfigStore:
@@ -123,7 +123,7 @@ class KNXConfigStore:
             raise ConfigStoreException(
                 f"Entity not found in storage: {entity_id} - {unique_id}"
             )
-        await platform_controller.reload_with_new_config(entry, data)
+        await platform_controller.update_entity_config(entry, data)
         # store data after entity is added to make sure config doesn't raise exceptions
         self.data["entities"][platform][unique_id] = data
         await self._store.async_save(self.data)
