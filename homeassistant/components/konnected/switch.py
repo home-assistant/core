@@ -107,7 +107,7 @@ class KonnectedSwitch(SwitchEntity):
             return self._activation == STATE_LOW
         if int_state == 1:
             return self._activation == STATE_HIGH
-        return False
+        return None
 
     def _set_state(self, state):
         self._attr_is_on = state
