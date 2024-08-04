@@ -73,6 +73,7 @@ from .models import (
     ICON_POS,
     ROW_ID_POS,
     STATE_POS,
+    TIME_FIRED_TS_POS,
     EventAsRow,
     LazyEventPartialState,
     LogbookConfig,
