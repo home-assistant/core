@@ -5,6 +5,7 @@ from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -76,6 +77,11 @@ class TeslaFleetEntity(
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
+    def raise_for_scope(self):
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError("Missing required scope")
+
 
 class TeslaFleetVehicleEntity(TeslaFleetEntity):
     """Parent class for TeslaFleet Vehicle entities."""
@@ -99,6 +105,13 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
+
+    def raise_for_signing(self):
+        """Raise an error if signing is required."""
+        if not self.signing:
+            raise ServiceValidationError(
+                "Vehicle requires command signing which is not supported"
+            )
 
 
 class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):

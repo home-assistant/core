@@ -133,6 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     coordinator=coordinator,
                     vin=vin,
                     device=device,
+                    signing=product["command_signing"] == "required",
                 )
             )
         elif "energy_site_id" in product and hasattr(tesla, "energy"):
