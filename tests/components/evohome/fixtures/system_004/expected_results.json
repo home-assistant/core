@@ -1,0 +1,25 @@
+{
+  "tcs": {
+    "climate.living_room": {
+      "state": "heat",
+      "preset_mode": null,
+      "supported_features": 400
+    }
+  },
+  "zones": {
+    "climate.thermostat": {
+      "state": "heat",
+      "current_temperature": 19.5,
+      "preset_mode": "permanent",
+      "supported_features": 401,
+      "temperature": 15.0
+    }
+  },
+  "dhw": {},
+  "services": [
+    "refresh_system",
+    "set_system_mode",
+    "clear_zone_override",
+    "set_zone_override"
+  ]
+}

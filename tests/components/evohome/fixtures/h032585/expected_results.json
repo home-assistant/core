@@ -1,0 +1,24 @@
+{
+  "tcs": {
+    "climate.my_home": {
+      "state": "heat",
+      "supported_features": 384
+    }
+  },
+  "zones": {
+    "climate.thermostat": {
+      "state": "heat",
+      "current_temperature": 21.5,
+      "preset_mode": "none",
+      "supported_features": 401,
+      "temperature": 21.5
+    }
+  },
+  "dhw": {},
+  "services": [
+    "refresh_system",
+    "set_system_mode",
+    "clear_zone_override",
+    "set_zone_override"
+  ]
+}
