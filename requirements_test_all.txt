@@ -445,9 +445,6 @@ aranet4==2.3.4
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.5.2
 
-# homeassistant.components.asterisk_mbox
-asterisk_mbox==0.5.0
-
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
