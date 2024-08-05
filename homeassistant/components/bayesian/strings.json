@@ -47,7 +47,8 @@
           "entity_id": "Entity",
           "to_state": "To state",
           "prob_given_true": "Probability Given True",
-          "prob_given_false": "Probability Given False"
+          "prob_given_false": "Probability Given False",
+          "add_another": "Add another observation?"
         },
         "data_description": {
           "entity_id": "The entity of interest.",
@@ -64,7 +65,8 @@
           "above": "Above",
           "below": "Below",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
-          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]"
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
@@ -81,7 +83,8 @@
           "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
           "template": "Template",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
-          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]"
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",

@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.helpers import selector
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -55,7 +56,7 @@ class Observation_types(StrEnum):
         return [c.value for c in Observation_types]
 
 
-async def _validate_mode(
+async def _validate_mode(  # TODO - do some actual validation
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate the threshold mode, and set limits to None if not set."""
@@ -96,6 +97,13 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
     }
 )
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
+    }
+).extend(OPTIONS_SCHEMA.schema)
+
 SUBSCHEMA_BOILERPLATE = vol.Schema(
     {
         vol.Required(CONF_P_GIVEN_T): selector.NumberSelector(
@@ -116,8 +124,22 @@ SUBSCHEMA_BOILERPLATE = vol.Schema(
                 unit_of_measurement="%",
             ),
         ),
+        vol.Optional("add_another"): cv.boolean,
     }
 )
+
+STATE_SUBSCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN])
+        ),
+        vol.Required(CONF_TO_STATE): selector.TextSelector(
+            selector.TextSelectorConfig(
+                multiline=False, type=selector.TextSelectorType.TEXT, multiple=False
+            )  # ideally this would be a state selector context-linked to the above entity.
+        ),
+    },
+).extend(SUBSCHEMA_BOILERPLATE.schema)
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
@@ -139,19 +161,6 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     },
 ).extend(SUBSCHEMA_BOILERPLATE.schema)
 
-STATE_SUBSCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN])
-        ),
-        vol.Required(CONF_TO_STATE): selector.TextSelector(
-            selector.TextSelectorConfig(
-                multiline=False, type=selector.TextSelectorType.TEXT, multiple=False
-            )  # ideally this would be a state selector context-linked to the above entity.
-        ),
-    },
-).extend(SUBSCHEMA_BOILERPLATE.schema)
-
 TEMPLATE_SUBSCHEMA = vol.Schema(
     {
         vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
@@ -160,31 +169,44 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
     },
 ).extend(SUBSCHEMA_BOILERPLATE.schema)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
-    }
-).extend(OPTIONS_SCHEMA.schema)
+
+class ConfigSteps(StrEnum):
+    """StrEnum for all the different config steps."""
+
+    USER = "user"
+    OBSERVATION_SELECTOR = "observation_selector"
+
+
+async def _choose_observation_step(user_input: dict[str, Any]) -> ConfigSteps | None:
+    """Return next step_id for options flow according to template_type."""
+    if user_input.get("add_another", False):
+        # TODO - we need to clear the last user input somehow else it remains saved in the ui
+        return ConfigSteps.OBSERVATION_SELECTOR
+    return None
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(
+    str(ConfigSteps.USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
-        preview="bayesian",
         validate_user_input=_validate_mode,
-        next_step="observation_selector",
+        next_step=ConfigSteps.OBSERVATION_SELECTOR,
     ),
-    "observation_selector": SchemaFlowMenuStep(Observation_types.list()),
+    str(ConfigSteps.OBSERVATION_SELECTOR): SchemaFlowMenuStep(Observation_types.list()),
     Observation_types.STATE: SchemaFlowFormStep(
-        STATE_SUBSCHEMA,
+        STATE_SUBSCHEMA, next_step=_choose_observation_step
     ),
-    Observation_types.NUMERIC_STATE: SchemaFlowFormStep(
-        NUMERIC_STATE_SUBSCHEMA,
+    str(Observation_types.NUMERIC_STATE): SchemaFlowFormStep(
+        NUMERIC_STATE_SUBSCHEMA, next_step=_choose_observation_step
     ),
-    Observation_types.TEMPLATE: SchemaFlowFormStep(TEMPLATE_SUBSCHEMA),
+    str(Observation_types.TEMPLATE): SchemaFlowFormStep(
+        TEMPLATE_SUBSCHEMA,
+        next_step=_choose_observation_step,
+        preview="bayesian",
+    ),
 }
 
 OPTIONS_FLOW = {
+    # TODO - echo elements and steps of the config flow, relying on scrape as inspiration
     "init": SchemaFlowFormStep(
         OPTIONS_SCHEMA, preview="bayesian", validate_user_input=_validate_mode
     )
@@ -202,7 +224,7 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
-    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
+    def async_config_entry_title(self, options: Mapping[str, str]) -> str:
         """Return config entry title."""
         name: str = options[CONF_NAME]
         return name
