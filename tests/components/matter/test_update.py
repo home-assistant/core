@@ -81,7 +81,7 @@ async def test_update_install(
     check_node_update: AsyncMock,
     updateable_node: MatterNode,
 ) -> None:
-    """Test update entity exists and update check got made."""
+    """Test device update with Matter attribute changes influence progress."""
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_OFF
@@ -188,7 +188,7 @@ async def test_update_install_failure(
     update_node: AsyncMock,
     updateable_node: MatterNode,
 ) -> None:
-    """Test update entity exists and update check got made."""
+    """Test update entity service call errors."""
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_OFF
@@ -263,7 +263,7 @@ async def test_update_state_restore(
     update_node: AsyncMock,
     updateable_node: MatterNode,
 ) -> None:
-    """Test update entity exists and update check got made."""
+    """Test latest update information is retained across reload/restart."""
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_OFF
