@@ -19,60 +19,16 @@
     "step": {
       "user": {
         "title": "Add a Bayesian Sensor",
-        "description": "Create a binary sensor which combines the state from one of state, numeric state or template sensors. Combinations of sensor types are only supported in YAML currently.",
-
-        "menu_options": {
-          "state": "Bayesian sensor from state sensors",
-          "numeric_state": "Bayesian sensor from numeric ranges",
-          "template": "Bayesian sensor from templates"
-        }
-      },
-      "state": {
-        "title": "Add a Bayesian Sensor",
-        "description": "Create a Bayesian binary sensor which combines the state from multiple entities.",
+        "description": "Create a binary sensor which combines the state from multiple sensors.",
         "data": {
           "probability_threshold": "Probability Threshold",
           "prior": "Prior",
           "device_class": "Device Class",
-          "name": "[%key:common::config_flow::data::name%]",
-          "entity_id": "Entities"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
           "probability_threshold": "The probability above which the sensor will show as 'on'",
-          "prior": "The baseline probabilty the sensor should be on, if you knew nothing else about the state of the entities below",
-          "entity_id": "The entities to be configured on the next page."
-        }
-      },
-      "numeric_state": {
-        "title": "[%key:component::bayesian::config::step::state::title%]",
-        "description": "Create a Bayesian binary sensor which combines the state from multiple numeric entities.",
-        "data": {
-          "probability_threshold": "[%key:component::bayesian::config::step::state::data::probability_threshold%]",
-          "prior": "[%key:component::bayesian::config::step::state::data::prior%]",
-          "device_class": "[%key:component::bayesian::config::step::state::data::device_class%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]"
-        },
-        "data_description": {
-          "probability_threshold": "[%key:component::bayesian::config::step::state::data_description::probability_threshold%]",
-          "prior": "[%key:component::bayesian::config::step::state::data_description::prior%]",
-          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]"
-        }
-      },
-      "template": {
-        "title": "[%key:component::bayesian::config::step::state::title%]",
-        "description": "Create a Bayesian binary sensor which combines the state from multiple templates.",
-        "data": {
-          "probability_threshold": "[%key:component::bayesian::config::step::state::data::probability_threshold%]",
-          "prior": "[%key:component::bayesian::config::step::state::data::prior%]",
-          "device_class": "[%key:component::bayesian::config::step::state::data::device_class%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "value_template0": "Templates"
-        },
-        "data_description": {
-          "probability_threshold": "[%key:component::bayesian::config::step::state::data_description::probability_threshold%]",
-          "prior": "[%key:component::bayesian::config::step::state::data_description::prior%]",
-          "value_template0": "Templates should return `true`, `false` or nothing"
+          "prior": "The baseline probabilty the sensor should be on, if you knew nothing else about the state of the entities below"
         }
       }
     }
