@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
+from . import KNXModule
 from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -30,7 +31,7 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 
 
 async def async_setup_entry(
@@ -39,10 +40,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module: KNXModule = hass.data[DOMAIN]
     config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.DATE]
 
-    async_add_entities(KNXDateEntity(xknx, entity_config) for entity_config in config)
+    async_add_entities(
+        KNXDateEntity(knx_module, entity_config) for entity_config in config
+    )
 
 
 def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateDevice:
@@ -58,14 +61,17 @@ def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateDevice:
     )
 
 
-class KNXDateEntity(KnxEntity, DateEntity, RestoreEntity):
+class KNXDateEntity(KnxYamlEntity, DateEntity, RestoreEntity):
     """Representation of a KNX date."""
 
     _device: XknxDateDevice
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX time."""
-        super().__init__(_create_xknx_device(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_xknx_device(knx_module.xknx, config),
+        )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.remote_value.group_address)
 

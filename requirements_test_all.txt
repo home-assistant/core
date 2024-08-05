@@ -424,6 +424,9 @@ anova-wifi==0.17.0
 # homeassistant.components.anthemav
 anthemav==1.4.1
 
+# homeassistant.components.anthropic
+anthropic==0.31.2
+
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.2
 
@@ -441,9 +444,6 @@ aranet4==2.3.4
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.5.2
-
-# homeassistant.components.asterisk_mbox
-asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -714,6 +714,9 @@ eternalegypt==0.0.16
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
 
+# homeassistant.components.evohome
+evohome-async==0.4.20
+
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
 
@@ -848,7 +851,7 @@ govee-local-api==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.4.6
+greeclimate==2.0.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -916,7 +919,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240731.0
+home-assistant-frontend==20240802.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.29
@@ -1469,7 +1472,7 @@ pyegps==0.2.5
 pyemoncms==0.0.7
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.6
+pyenphase==1.22.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1816,7 +1819,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.1
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.5
+python-linkplay==0.0.6
 
 # homeassistant.components.matter
 python-matter-server==6.3.0
@@ -2237,7 +2240,7 @@ upcloud-api==2.5.1
 url-normalize==1.4.3
 
 # homeassistant.components.uvc
-uvcclient==0.11.0
+uvcclient==0.11.1
 
 # homeassistant.components.roborock
 vacuum-map-parser-roborock==0.1.2
@@ -2360,7 +2363,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.24
+zha==0.0.27
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0

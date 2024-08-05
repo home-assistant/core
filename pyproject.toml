@@ -24,7 +24,7 @@ classifiers = [
 requires-python = ">=3.12.0"
 dependencies    = [
     "aiodns==3.2.0",
-    "aiohttp==3.10.0",
+    "aiohttp==3.10.1",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
     "aiozoneinfo==0.2.1",
@@ -312,6 +312,7 @@ disable = [
     "no-else-return", # RET505
     "broad-except", # BLE001
     "protected-access", # SLF001
+    "broad-exception-raised", # TRY002
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
@@ -820,11 +821,8 @@ ignore = [
     "PLE0605",
 
     # temporarily disabled
-    "PT019",
-    "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
     "RET503",
     "RET501",
-    "TRY002",
     "TRY301"
 ]
 

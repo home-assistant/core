@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.elevenlabs.async_setup_entry", return_value=True
@@ -25,7 +25,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_async_client() -> Generator[AsyncMock, None, None]:
+def mock_async_client() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
     client_mock = AsyncMock()
     client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
@@ -37,7 +37,7 @@ def mock_async_client() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_async_client_fail() -> Generator[AsyncMock, None, None]:
+def mock_async_client_fail() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
     with patch(
         "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",

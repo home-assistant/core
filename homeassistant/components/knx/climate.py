@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
+from . import KNXModule
 from .const import (
     CONTROLLER_MODES,
     CURRENT_HVAC_ACTIONS,
@@ -34,7 +35,7 @@ from .const import (
     DOMAIN,
     PRESET_MODES,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 from .schema import ClimateSchema
 
 ATTR_COMMAND_VALUE = "command_value"
@@ -48,10 +49,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module: KNXModule = hass.data[DOMAIN]
     config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.CLIMATE]
 
-    async_add_entities(KNXClimate(xknx, entity_config) for entity_config in config)
+    async_add_entities(
+        KNXClimate(knx_module, entity_config) for entity_config in config
+    )
 
 
 def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
@@ -130,16 +133,19 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
     )
 
 
-class KNXClimate(KnxEntity, ClimateEntity):
+class KNXClimate(KnxYamlEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
     _device: XknxClimate
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
-        super().__init__(_create_climate(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_climate(knx_module.xknx, config),
+        )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if self._device.supports_on_off:
