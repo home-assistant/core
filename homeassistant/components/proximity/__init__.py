@@ -7,18 +7,15 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
 
-from .const import CONF_TRACKED_ENTITIES, DOMAIN
+from .const import CONF_TRACKED_ENTITIES
 from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> bool:
