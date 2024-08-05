@@ -1,22 +1,24 @@
 """Config flow to configure Dreo."""
+
+import hashlib
 import logging
-import voluptuous as vol
+
 from hscloud.hscloud import HsCloud
+from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+
 from .const import DOMAIN
-import hashlib
-from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str
-    }
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
+
 
 class DreoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Dreo config flow."""
@@ -43,10 +45,10 @@ class DreoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(manager.login)
 
-        except HsCloudException as exc:
+        except HsCloudException:
             return self._show_form(errors={"base": "cannot_connect"})
 
-        except HsCloudBusinessException as exc:
+        except HsCloudBusinessException:
             return self._show_form(errors={"base": "invalid_auth"})
 
         except Exception:  # pylint: disable=broad-except
