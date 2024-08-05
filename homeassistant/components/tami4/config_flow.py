@@ -82,7 +82,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                device_name=api.device_metadata.name
+                device_name = api.device_metadata.name
                 if device_name is None:
                     device_name = 'tami4'
                 return self.async_create_entry(
