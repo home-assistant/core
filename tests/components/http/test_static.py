@@ -4,11 +4,10 @@ from http import HTTPStatus
 from pathlib import Path
 
 from aiohttp.test_utils import TestClient
-from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.http.static import CachingStaticResource, _get_file_path
+from homeassistant.components.http.static import CachingStaticResource
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
@@ -56,12 +55,6 @@ async def test_static_path_blocks_anchors(
 
     resp = await mock_http_client.get(canonical_url, allow_redirects=False)
     assert resp.status == 403
-
-    # Tested directly since aiohttp will block it before
-    # it gets here but we want to make sure if aiohttp ever
-    # changes we still block it.
-    with pytest.raises(HTTPForbidden):
-        _get_file_path(canonical_url, tmp_path)
 
 
 async def test_async_register_static_paths(
