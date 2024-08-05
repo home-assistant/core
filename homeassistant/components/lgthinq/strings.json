@@ -1,0 +1,98 @@
+{
+  "services": {
+    "reload_device_list": {
+      "name": "Reload device list",
+      "description": "Reload LG ThinQ device list."
+    },
+    "refresh_device_status": {
+      "name": "Refresh device status",
+      "description": "Refresh status of LG ThinQ device.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The target device id."
+        }
+      }
+    },
+    "get_device_profile": {
+      "name": "Get device profile",
+      "description": "Get profile of LG ThinQ device from the server.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The target device id."
+        }
+      }
+    },
+    "get_device_status": {
+      "name": "Get device status",
+      "description": "Get status of LG ThinQ device from the server.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The target device id."
+        }
+      }
+    },
+    "post_device_status": {
+      "name": "Post device status",
+      "description": "Post status of LG ThinQ device to the server.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The target device id."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value to post."
+        }
+      }
+    },
+    "button": {
+      "name": "Button",
+      "description": "Sends a button press command.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of the webostv entities where to run the API method."
+        },
+        "button": {
+          "name": "Button",
+          "description": "Name of the button to press.  Known possible values are LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT, MUTE, RED, GREEN, BLUE, YELLOW, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN, PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9."
+        }
+      }
+    },
+    "command": {
+      "name": "Command",
+      "description": "Sends a command.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::webostv::services::button::fields::entity_id::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Endpoint of the command."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "An optional payload to provide to the endpoint in the format of key value pair(s)."
+        }
+      }
+    },
+    "select_sound_output": {
+      "name": "Select sound output",
+      "description": "Sends the TV the command to change sound output.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of the webostv entities to change sound output on."
+        },
+        "sound_output": {
+          "name": "Sound output",
+          "description": "Name of the sound output to switch to."
+        }
+      }
+    }
+  }
+}
