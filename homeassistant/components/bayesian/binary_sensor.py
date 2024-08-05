@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from collections.abc import Callable
 import logging
 import math
-from typing import Any
+from typing import Any, NamedTuple
 from uuid import UUID
 
 import voluptuous as vol
@@ -107,14 +107,18 @@ def _no_overlaping(configs: list[dict]) -> list[dict]:
     ]
     if len(numeric_configs) < 2:
         return configs
-    Numeric_config = namedtuple("Numeric_config", ["above", "below"])
-    d: dict[str, list[Numeric_config]] = {}
+
+    class NumericConfig(NamedTuple):
+        above: float
+        below: float
+
+    d: dict[str, list[NumericConfig]] = {}
     for _, config in enumerate(numeric_configs):
         above = config.get(CONF_ABOVE, -math.inf)
         below = config.get(CONF_BELOW, math.inf)
         entity_id: str = str(config.get(CONF_ENTITY_ID))
         d.setdefault(entity_id, [])
-        d[entity_id].append(Numeric_config(above, below))
+        d[entity_id].append(NumericConfig(above, below))
 
     for ent_id, intervals in d.items():
         intervals = sorted(intervals, key=lambda tup: tup.above)
