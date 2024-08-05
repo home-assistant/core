@@ -84,7 +84,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 device_name = api.device_metadata.name
                 if device_name is None:
-                    device_name = 'tami4'
+                    device_name = "Tami4"
                 return self.async_create_entry(
                     title=device_name,
                     data={CONF_REFRESH_TOKEN: refresh_token},
