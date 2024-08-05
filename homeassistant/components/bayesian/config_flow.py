@@ -298,7 +298,7 @@ OPTIONS_FLOW = {
         _get_remove_observation_schema,
         suggested_values=None,
     ),
-}.update(CONFIG_FLOW.pop(str(ConfigFlowSteps.USER)))
+}.update(CONFIG_FLOW)
 
 
 class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
