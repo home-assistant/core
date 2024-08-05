@@ -502,22 +502,11 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "asterisk": {
-      "name": "Asterisk",
-      "integrations": {
-        "asterisk_cdr": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "Asterisk Call Detail Records"
-        },
-        "asterisk_mbox": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_push",
-          "name": "Asterisk Voicemail"
-        }
-      }
+    "asterisk_mbox": {
+      "name": "Asterisk Voicemail",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_push"
     },
     "asuswrt": {
       "name": "ASUSWRT",
