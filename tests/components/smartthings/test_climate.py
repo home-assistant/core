@@ -100,7 +100,7 @@ def minimal_thermostat_fixture(device_factory):
         status={
             Attribute.heating_setpoint: 68,
             Attribute.thermostat_mode: "off",
-            Attribute.supported_thermostat_modes: ["off", "auto", "heat", "cool"],
+            Attribute.supported_thermostat_modes: ["off", "heat"],
         },
     )
     device.status.attributes[Attribute.temperature] = Status(70, "F", None)
