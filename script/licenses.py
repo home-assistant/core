@@ -208,7 +208,7 @@ def main() -> int:
             if previous_unapproved_version < package.version:
                 if approved:
                     print(
-                        "Approved license detected for"
+                        "Approved license detected for "
                         f"{package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
@@ -222,14 +222,14 @@ def main() -> int:
                 exit_code = 1
         elif not approved and package.name not in EXCEPTIONS:
             print(
-                "We could not detect an OSI-approved license for"
+                "We could not detect an OSI-approved license for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print()
             exit_code = 1
         elif approved and package.name in EXCEPTIONS:
             print(
-                "Approved license detected for"
+                "Approved license detected for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")
