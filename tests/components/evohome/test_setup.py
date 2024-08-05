@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from homeassistant.components.evohome import DOMAIN
-from homeassistant.components.evohome.const import EvoService
 from homeassistant.core import HomeAssistant
 
-from .conftest import setup_evohome
+from .conftest import ExpectedResults, expected_results_fixture, setup_evohome
 from .const import TEST_INSTALLS
 
 
@@ -18,18 +16,10 @@ async def test_vendor_json(hass: HomeAssistant, install: str) -> None:
 
     await setup_evohome(hass, installation=install)
 
-    num_entities = (
-        TEST_INSTALLS[install].get("num_dhw", 0) + TEST_INSTALLS[install]["num_zones"]
-    ) + 1  # also the TCS
+    results = ExpectedResults(hass, expected_results_fixture(install))
 
-    assert len(hass.data["entity_info"].keys()) == num_entities
+    results.assert_services()
+    results.assert_entities()
 
-    if TEST_INSTALLS[install].get("num_dhw", 0) == 0:
-        assert "water_heater.domestic_hot_water" not in hass.data["entity_info"]
-    else:
-        assert "water_heater.domestic_hot_water" in hass.data["entity_info"]
-
-    domain_services = hass.services.async_services_for_domain(DOMAIN)
-    assert len(domain_services) == TEST_INSTALLS[install].get(
-        "num_svcs", len(EvoService)
-    )
+    for entity_id in results.entities:
+        results.assert_entity_state(entity_id)
