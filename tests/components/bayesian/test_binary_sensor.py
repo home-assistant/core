@@ -383,9 +383,15 @@ async def test_mixed_states(hass: HomeAssistant) -> None:
     assert template_obs in state.attributes.get("observations")
 
     assert abs(0.95857988 - state.attributes.get("probability")) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.3, P(B|A) = 0.3 , P(B|notA) = 0.15 = 0.46153846
-    # Step 2 0.91139240
-    # step 3 0.95857988 (negative observation)
+    # A = binary_sensor.should_HVAC being TRUE, P(A) being the prior
+    # B = value_template evaluating to TRUE
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Calculated where P(A) = 0.3, P(B|A) = 0.3 , P(B|notA) = 0.15 = 0.46153846
+    # Step 2, prior is now 0.46153846, B now refers to sensor.anyone_home=='on'
+    # P(A) = 0.46153846, P(B|A) = 0.6 , P(B|notA) = 0.05, result = 0.91139240
+    # Step 3, prior is now 0.91139240, B now refers to sensor.temperature in range [19,24]
+    # However since the temp is 15 we take the inverse probability for this negative observation
+    # P(A) = 0.91139240, P(B|A) = (1-0.1) , P(B|notA) = (1-0.6), result = 0.95857988
 
 
 async def test_threshold(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
@@ -573,10 +579,12 @@ async def test_multiple_numeric_observations(
     assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
     assert abs(state.attributes.get("probability") - 0.09677) < 0.01
     # A = binary_sensor.nice_day being TRUE
-    # B = sensor.test_temp in the range [5, 10]
-    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / P(B|A)*P(A) + P(B|~A)*P(~A).
+    # B = sensor.test_temp in the range (, 0]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
     # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
     # Calculated using P(A) = 0.3, P(B|A) = 0.05, P(B|~A) = 0.2 -> 0.09677
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
     assert state.state == "off"
 
     hass.states.async_set("sensor.test_temp", 5)
@@ -586,7 +594,13 @@ async def test_multiple_numeric_observations(
 
     assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
     assert abs(state.attributes.get("probability") - 0.14634146) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (0, 10]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
     # Calculated using P(A) = 0.3, P(B|A) = 0.1, P(B|~A) = 0.25 -> 0.14634146
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "off"
 
@@ -595,7 +609,13 @@ async def test_multiple_numeric_observations(
 
     state = hass.states.get("binary_sensor.nice_day")
     assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (10, 15]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
     # Calculated using P(A) = 0.3, P(B|A) = 0.2, P(B|~A) = 0.35 -> 0.19672131
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "off"
 
@@ -604,7 +624,13 @@ async def test_multiple_numeric_observations(
 
     state = hass.states.get("binary_sensor.nice_day")
     assert abs(state.attributes.get("probability") - 0.58823529) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (15, 25]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
     # Calculated using P(A) = 0.3, P(B|A) = 0.5, P(B|~A) = 0.15 -> 0.58823529
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "on"
 
@@ -613,7 +639,13 @@ async def test_multiple_numeric_observations(
 
     state = hass.states.get("binary_sensor.nice_day")
     assert abs(state.attributes.get("probability") - 0.562500) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (25, ]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
     # Calculated using P(A) = 0.3, P(B|A) = 0.15, P(B|~A) = 0.05 -> 0.562500
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "on"
 
@@ -628,7 +660,13 @@ async def test_multiple_numeric_observations(
 
     assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
     # Where there are multi numeric ranges when on the threshold, use below
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (10, 15]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
     # Calculated using P(A) = 0.3, P(B|A) = 0.2, P(B|~A) = 0.35 -> 0.19672131
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "off"
 
