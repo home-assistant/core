@@ -1,4 +1,4 @@
-"""Test the APSystem sensor module."""
+"""Test the APSystem binary sensor module."""
 
 from unittest.mock import AsyncMock, patch
 
