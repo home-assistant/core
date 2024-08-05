@@ -377,11 +377,10 @@ async def test_asleep_or_offline(
 
 async def test_climate_noscope(
     hass: HomeAssistant,
-    noscope_config_entry: MockConfigEntry,
+    readonly_config_entry: MockConfigEntry,
 ) -> None:
     """Tests that the climate entity is correct."""
-
-    await setup_platform(hass, noscope_config_entry, [Platform.CLIMATE])
+    await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
     with pytest.raises(ServiceValidationError):
