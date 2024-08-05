@@ -439,7 +439,9 @@ def rename_old_gas_to_mbus(
         entries = er.async_entries_for_device(ent_reg, device_id)
 
         for entity in entries:
-            if entity.unique_id.endswith("belgium_5min_gas_meter_reading"):
+            if entity.unique_id.endswith(
+                "belgium_5min_gas_meter_reading"
+            ) or entity.unique_id.endswith("hourly_gas_meter_reading"):
                 try:
                     ent_reg.async_update_entity(
                         entity.entity_id,

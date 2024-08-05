@@ -21,7 +21,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -215,14 +215,21 @@ def async_register_services(  # noqa: C901
 
     async def handle_new_task(call: ServiceCall) -> None:  # noqa: C901
         """Call when a user creates a new Todoist Task from Home Assistant."""
-        project_name = call.data[PROJECT_NAME].lower()
+        project_name = call.data[PROJECT_NAME]
         projects = await coordinator.async_get_projects()
         project_id: str | None = None
         for project in projects:
             if project_name == project.name.lower():
                 project_id = project.id
+                break
         if project_id is None:
-            raise HomeAssistantError(f"Invalid project name '{project_name}'")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="project_invalid",
+                translation_placeholders={
+                    "project": project_name,
+                },
+            )
 
         # Optional section within project
         section_id: str | None = None

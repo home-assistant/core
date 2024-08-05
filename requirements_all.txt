@@ -481,9 +481,6 @@ arris-tg2492lg==2.2.0
 # homeassistant.components.ampio
 asmog==0.0.6
 
-# homeassistant.components.asterisk_mbox
-asterisk_mbox==0.5.0
-
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
@@ -1010,7 +1007,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.4.6
+greeclimate==2.0.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1096,7 +1093,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240802.0
+home-assistant-frontend==20240805.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.29
@@ -2845,7 +2842,7 @@ upcloud-api==2.5.1
 url-normalize==1.4.3
 
 # homeassistant.components.uvc
-uvcclient==0.11.0
+uvcclient==0.11.1
 
 # homeassistant.components.roborock
 vacuum-map-parser-roborock==0.1.2
@@ -2989,7 +2986,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.25
+zha==0.0.27
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
