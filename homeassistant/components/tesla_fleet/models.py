@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
@@ -34,6 +35,7 @@ class TeslaFleetVehicleData:
     vin: str
     device: DeviceInfo
     signing: bool
+    wakelock = asyncio.Lock()
 
 
 @dataclass
