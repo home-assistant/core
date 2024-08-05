@@ -2,30 +2,55 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any
 
 from xknx.devices import Device as XknxDevice
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-
-from .const import DOMAIN
+from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.entity_registry import RegistryEntry
 
 if TYPE_CHECKING:
     from . import KNXModule
 
-SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal.{{}}"
+from .storage.config_store import PlatformControllerBase
 
 
-class KnxEntity(Entity):
+class KnxUiEntityPlatformController(PlatformControllerBase):
+    """Class to manage dynamic adding and reloading of UI entities."""
+
+    def __init__(
+        self,
+        knx_module: KNXModule,
+        entity_platform: EntityPlatform,
+        entity_class: type[KnxUiEntity],
+    ) -> None:
+        """Initialize the UI platform."""
+        self._knx_module = knx_module
+        self._entity_platform = entity_platform
+        self._entity_class = entity_class
+
+    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+        """Add a new UI entity."""
+        await self._entity_platform.async_add_entities(
+            [self._entity_class(self._knx_module, unique_id, config)]
+        )
+
+    async def update_entity(
+        self, entity_entry: RegistryEntry, config: dict[str, Any]
+    ) -> None:
+        """Update an existing UI entities configuration."""
+        await self._entity_platform.async_remove_entity(entity_entry.entity_id)
+        await self.create_entity(unique_id=entity_entry.unique_id, config=config)
+
+
+class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
 
     _attr_should_poll = False
-
-    def __init__(self, knx_module: KNXModule, device: XknxDevice) -> None:
-        """Set up device."""
-        self._knx_module = knx_module
-        self._device = device
+    _knx_module: KNXModule
+    _device: XknxDevice
 
     @property
     def name(self) -> str:
@@ -49,7 +74,7 @@ class KnxEntity(Entity):
         """Store register state change callback and start device object."""
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
-        # super call needed to have methods of mulit-inherited classes called
+        # super call needed to have methods of multi-inherited classes called
         # eg. for restoring state (like _KNXSwitch)
         await super().async_added_to_hass()
 
@@ -59,19 +84,22 @@ class KnxEntity(Entity):
         self._device.xknx.devices.async_remove(self._device)
 
 
-class KnxUIEntity(KnxEntity):
+class KnxYamlEntity(_KnxEntityBase):
+    """Representation of a KNX entity configured from YAML."""
+
+    def __init__(self, knx_module: KNXModule, device: XknxDevice) -> None:
+        """Initialize the YAML entity."""
+        self._knx_module = knx_module
+        self._device = device
+
+
+class KnxUiEntity(_KnxEntityBase, ABC):
     """Representation of a KNX UI entity."""
 
     _attr_unique_id: str
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks when entity added to hass."""
-        await super().async_added_to_hass()
-        self._knx_module.config_store.entities.add(self._attr_unique_id)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_ENTITY_REMOVE.format(self._attr_unique_id),
-                self.async_remove,
-            )
-        )
+    @abstractmethod
+    def __init__(
+        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+    ) -> None:
+        """Initialize the UI entity."""

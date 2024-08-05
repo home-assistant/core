@@ -496,29 +496,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "assist_pipeline": {
-      "name": "Assist pipeline",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
-    "asterisk": {
-      "name": "Asterisk",
-      "integrations": {
-        "asterisk_cdr": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "Asterisk Call Detail Records"
-        },
-        "asterisk_mbox": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_push",
-          "name": "Asterisk Voicemail"
-        }
-      }
-    },
     "asuswrt": {
       "name": "ASUSWRT",
       "integration_type": "hub",
@@ -6019,10 +5996,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "tag": {
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "tailscale": {
       "name": "Tailscale",
       "integration_type": "hub",
@@ -6826,11 +6799,6 @@
         }
       }
     },
-    "webhook": {
-      "name": "Webhook",
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "webmin": {
       "name": "Webmin",
       "integration_type": "device",
@@ -7371,7 +7339,6 @@
     "shopping_list",
     "sun",
     "switch_as_x",
-    "tag",
     "threshold",
     "time_date",
     "tod",
