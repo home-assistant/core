@@ -87,11 +87,12 @@ class ExpectedResults:
                     assert (
                         entity.attributes[attr] == value
                     ), f"{attr} is {entity.attributes[attr]}"
+
         except AssertionError:
             expected = {
                 "state": entity.state,
                 "current_temperature": entity.attributes["current_temperature"],
-                # "temperature": entity.attributes["temperature"],
+                "supported_features": entity.attributes["supported_features"],
             }
             for k in ("away_mode", "operation_mode", "preset_mode"):
                 if k in entity.attributes:
