@@ -854,7 +854,7 @@ govee-local-api==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.4.6
+greeclimate==2.0.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
