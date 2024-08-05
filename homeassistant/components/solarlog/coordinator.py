@@ -56,6 +56,12 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
             self.host, extended_data, hass.config.time_zone, enabled_devices
         )
 
+    async def _async_setup(self) -> None:
+        """Do initialization logic."""
+        if self.solarlog.extended_data:
+            device_list = await self.solarlog.client.get_device_list()
+            self.solarlog.set_enabled_devices({key: True for key in device_list})
+
     async def _async_update_data(self) -> SolarlogData:
         """Update the data from the SolarLog device."""
         _LOGGER.debug("Start data update")

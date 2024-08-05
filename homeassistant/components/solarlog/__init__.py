@@ -17,7 +17,6 @@ type SolarlogConfigEntry = ConfigEntry[SolarLogCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
     """Set up a config entry for solarlog."""
-    entry.async_on_unload(entry.add_update_listener(update_listener))
     coordinator = SolarLogCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

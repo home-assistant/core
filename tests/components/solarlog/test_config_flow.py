@@ -8,7 +8,6 @@ from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogEr
 from homeassistant import config_entries
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DOMAIN
-from homeassistant.components.solarlog.coordinator import SolarLogCoordinator
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

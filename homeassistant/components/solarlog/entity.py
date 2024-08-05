@@ -59,22 +59,13 @@ class SolarLogInverterEntity(SolarLogBaseEntity):
     ) -> None:
         """Initialize the SolarLogInverter sensor."""
         super().__init__(coordinator, description)
-        self._attr_unique_id = f"{coordinator.unique_id}-{slugify(coordinator.solarlog.device_name(device_id))}-{description.key}"
+        name = f"{coordinator.unique_id}-{slugify(coordinator.solarlog.device_name(device_id))}"
+        self._attr_unique_id = f"{name}-{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
             model="Inverter",
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.unique_id}-{slugify(coordinator.solarlog.device_name(device_id))}",
-                )
-            },
+            identifiers={(DOMAIN, name)},
             name=coordinator.solarlog.device_name(device_id),
             via_device=(DOMAIN, coordinator.unique_id),
         )
         self.device_id = device_id
-
-    @property
-    def available(self) -> bool:
-        """Test if entity is available."""
-        return super().available

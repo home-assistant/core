@@ -30,14 +30,14 @@ from .entity import SolarLogCoordinatorEntity, SolarLogInverterEntity
 
 @dataclass(frozen=True, kw_only=True)
 class SolarLogCoordinatorSensorEntityDescription(SensorEntityDescription):
-    """Describes Solarlog sensor entity."""
+    """Describes Solarlog coordinator sensor entity."""
 
     value_fn: Callable[[SolarlogData], StateType | datetime | None]
 
 
 @dataclass(frozen=True, kw_only=True)
 class SolarLogInverterSensorEntityDescription(SensorEntityDescription):
-    """Describes Solarlog sensor entity."""
+    """Describes Solarlog inverter sensor entity."""
 
     value_fn: Callable[[InverterData], float | None]
 
@@ -245,25 +245,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add solarlog entry."""
-    coordinator = entry.runtime_data
+    coordinator: SolarLogCoordinator = entry.runtime_data
 
     # https://github.com/python/mypy/issues/14294
 
     entities: list[SensorEntity] = [
-        SolarLogCoordinatorSensor(coordinator, sensor)  # noqa: PGH003
+        SolarLogCoordinatorSensor(coordinator, sensor)
         for sensor in SOLARLOG_SENSOR_TYPES
     ]
 
     device_data = coordinator.data.inverter_data
 
-    if device_data != {}:
-        for did in device_data:
-            device_id = int(did)
-            if coordinator.solarlog.device_enabled(device_id):
-                entities.extend(
-                    SolarLogInverterSensor(coordinator, sensor, device_id)  # noqa: PGH003
-                    for sensor in INVERTER_SENSOR_TYPES
-                )
+    if device_data:
+        entities.extend(
+            SolarLogInverterSensor(coordinator, sensor, device_id)
+            for device_id in device_data
+            for sensor in INVERTER_SENSOR_TYPES
+        )
 
     async_add_entities(entities)
 
@@ -277,8 +275,6 @@ class SolarLogCoordinatorSensor(SolarLogCoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType | datetime | None:
         """Return the state for this sensor."""
 
-        # val = self.coordinator.data[self.entity_description.key]
-        # return self.entity_description.value_fn(val)
         return self.entity_description.value_fn(self.coordinator.data)
 
 
@@ -291,10 +287,6 @@ class SolarLogInverterSensor(SolarLogInverterEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return the state for this sensor."""
 
-        # val = self.coordinator.data["devices"][self.device_id][
-        #    self.entity_description.key
-        # ]
-        # return self.entity_description.value_fn(val)
         return self.entity_description.value_fn(
             self.coordinator.data.inverter_data[self.device_id]
         )

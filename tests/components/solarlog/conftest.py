@@ -30,6 +30,17 @@ INVERTER_DATA = {
     1: InverterData(name="Inverter 2", enabled=False),
 }
 
+DEVICE_LIST = {
+    0: InverterData(name="Inverter 1", enabled=True),
+    1: InverterData(name="Inverter 2", enabled=False),
+}
+INVERTER_DATA = {
+    0: InverterData(
+        name="Inverter 1", enabled=True, consumption_year=354687, current_power=5
+    ),
+    1: InverterData(name="Inverter 2", enabled=False),
+}
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
