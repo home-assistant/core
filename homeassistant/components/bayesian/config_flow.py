@@ -10,6 +10,8 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ABOVE,
@@ -120,7 +122,9 @@ SUBSCHEMA_BOILERPLATE = vol.Schema(
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
+            selector.EntitySelectorConfig(
+                domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
+            )
         ),
         vol.Optional(CONF_ABOVE): selector.NumberSelector(
             selector.NumberSelectorConfig(
