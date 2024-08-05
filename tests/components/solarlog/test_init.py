@@ -5,13 +5,14 @@ from unittest.mock import AsyncMock
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError
 
 from homeassistant.components.solarlog.const import DOMAIN
+from homeassistant.components.solarlog.coordinator import SolarLogCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import setup_platform
+from . import enabled_devices, setup_platform
 from .const import HOST, NAME
 
 from tests.common import MockConfigEntry
@@ -93,3 +94,30 @@ async def test_migrate_config_entry(
     assert entry.minor_version == 2
     assert entry.data[CONF_HOST] == HOST
     assert entry.data["extended_data"] is False
+
+
+async def test_update_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Test options update and unchecked entities are deleted."""
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.update_listeners is not None
+    state = hass.states.get("sensor.inverter_1_power")
+    assert state.state == "5"
+
+    mock_config_entry.runtime_data = SolarLogCoordinator(hass, mock_config_entry)
+    mock_solarlog_connector.device_enabled = lambda *args: enabled_devices(*args)  # pylint: disable=unnecessary-lambda
+    hass.config_entries.async_update_entry(mock_config_entry, options={})
+    await hass.async_block_till_done()
+
+    entry_check = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry_check.state is ConfigEntryState.LOADED
+
+    assert hass.states.get("sensor.inverter_1_current_power") is None

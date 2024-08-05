@@ -8,6 +8,7 @@ from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogEr
 from homeassistant import config_entries
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DEFAULT_HOST, DOMAIN
+from homeassistant.components.solarlog.coordinator import SolarLogCoordinator
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -123,7 +124,7 @@ async def test_form_exceptions(
     assert result["data"]["extended_data"] is False
 
 
-async def test_import(hass: HomeAssistant, test_connect) -> None:
+async def test_import(hass: HomeAssistant, test_connect: None) -> None:
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -152,7 +153,7 @@ async def test_import(hass: HomeAssistant, test_connect) -> None:
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None:
+async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -> None:
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
@@ -222,3 +223,71 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Test updating options."""
+
+    mock_config_entry.runtime_data = SolarLogCoordinator(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={
+            "source": "test",
+        },
+        data=None,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "enabled_devices": ["0", "1"],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "devices": {
+            0: True,
+            1: True,
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        SolarLogConnectionError,
+        Exception,
+    ],
+)
+async def test_options_exceptions(
+    hass: HomeAssistant,
+    exception: Exception,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Test updating options with exceptions."""
+
+    mock_config_entry.runtime_data = SolarLogCoordinator(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+
+    mock_solarlog_connector.client.get_device_list.side_effect = exception
+
+    # tests with error
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={
+            "source": "test",
+        },
+        data=None,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
