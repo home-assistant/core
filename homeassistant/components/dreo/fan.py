@@ -11,8 +11,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
-    ranged_value_to_percentage, int_states_in_range
+    ranged_value_to_percentage
 )
+from homeassistant.util.scaling import int_states_in_range
 from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 
 from . import DreoConfigEntry
@@ -34,10 +35,10 @@ async def async_setup_entry(
         if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
     ])
 
-
 class DreoFanHA(DreoEntity, FanEntity):
     """Dreo fan."""
 
+    _attr_state: bool | None = None
     _attr_has_entity_name = True
     _attr_supported_features = (FanEntityFeature.PRESET_MODE
                                 | FanEntityFeature.SET_SPEED
@@ -73,7 +74,7 @@ class DreoFanHA(DreoEntity, FanEntity):
             return self._attr_speed_count
         return 6
 
-    def turn_on(self, **kwargs: Any) -> None:
+    def turn_on(self, percentage: int | None = None, preset_mode: str | None = None, **kwargs: Any) -> None:
         """Turn the device on."""
         self._try_command(
             "Turn the device on failed.", power_switch=True

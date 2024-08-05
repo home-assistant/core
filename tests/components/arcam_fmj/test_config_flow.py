@@ -8,8 +8,7 @@ from arcam.fmj.client import ConnectionFailed
 import pytest
 
 from homeassistant.components import ssdp
-from homeassistant.components.arcam_fmj.config_flow import get_entry_client
-from homeassistant.components.arcam_fmj.const import DOMAIN, DOMAIN_DATA_ENTRIES
+from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -215,12 +214,3 @@ async def test_user_wrong(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["result"].unique_id is None
-
-
-async def test_get_entry_client(hass: HomeAssistant) -> None:
-    """Test helper for configuration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG_ENTRY, title=MOCK_NAME, unique_id=MOCK_UUID
-    )
-    hass.data[DOMAIN_DATA_ENTRIES] = {entry.entry_id: "dummy"}
-    assert get_entry_client(hass, entry) == "dummy"

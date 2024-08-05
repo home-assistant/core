@@ -148,4 +148,4 @@ class ApSystemsSensorWithDescription(
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.output_data)

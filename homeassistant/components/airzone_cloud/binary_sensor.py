@@ -14,6 +14,7 @@ from aioairzone_cloud.const import (
     AZD_FLOOR_DEMAND,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
+    AZD_THERMOSTAT_BATTERY_LOW,
     AZD_WARNINGS,
     AZD_ZONES,
 )
@@ -87,6 +88,10 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
     AirzoneBinarySensorEntityDescription(
         key=AZD_AQ_ACTIVE,
         translation_key="air_quality_active",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.BATTERY,
+        key=AZD_THERMOSTAT_BATTERY_LOW,
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,

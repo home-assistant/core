@@ -21,7 +21,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def kodi_media_player(hass):
+async def kodi_media_player(hass: HomeAssistant) -> str:
     """Get a kodi media player."""
     await init_integration(hass)
     return f"{MP_DOMAIN}.name"
@@ -68,7 +68,7 @@ async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
-    kodi_media_player,
+    kodi_media_player: str,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(kodi_media_player)
@@ -144,7 +144,7 @@ async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
-    kodi_media_player,
+    kodi_media_player: str,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(kodi_media_player)

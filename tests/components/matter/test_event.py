@@ -50,8 +50,6 @@ async def test_generic_switch_node(
         "short_release",
         "long_press",
         "long_release",
-        "multi_press_ongoing",
-        "multi_press_complete",
     ]
     # trigger firing a new event from the device
     await trigger_subscription_callback(
@@ -72,26 +70,6 @@ async def test_generic_switch_node(
     )
     state = hass.states.get("event.mock_generic_switch_button")
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
-    # trigger firing a multi press event
-    await trigger_subscription_callback(
-        hass,
-        matter_client,
-        EventType.NODE_EVENT,
-        MatterNodeEvent(
-            node_id=generic_switch_node.node_id,
-            endpoint_id=1,
-            cluster_id=59,
-            event_id=5,
-            event_number=0,
-            priority=1,
-            timestamp=0,
-            timestamp_type=0,
-            data={"NewPosition": 3},
-        ),
-    )
-    state = hass.states.get("event.mock_generic_switch_button")
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_ongoing"
-    assert state.attributes["NewPosition"] == 3
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -109,8 +87,8 @@ async def test_generic_switch_multi_node(
     assert state_button_1.name == "Mock Generic Switch Button (1)"
     # check event_types from featuremap 14
     assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
-        "initial_press",
-        "short_release",
+        "multi_press_1",
+        "multi_press_2",
         "long_press",
         "long_release",
     ]
@@ -120,3 +98,23 @@ async def test_generic_switch_multi_node(
     assert state_button_1.state == "unknown"
     # name should be 'DeviceName Fancy Button' due to the label set to 'Fancy Button'
     assert state_button_1.name == "Mock Generic Switch Fancy Button"
+
+    # trigger firing a multi press event
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=generic_switch_multi_node.node_id,
+            endpoint_id=1,
+            cluster_id=59,
+            event_id=6,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"totalNumberOfPressesCounted": 2},
+        ),
+    )
+    state = hass.states.get("event.mock_generic_switch_button_1")
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_2"

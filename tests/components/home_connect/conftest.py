@@ -152,15 +152,18 @@ def mock_appliance(request: pytest.FixtureRequest) -> MagicMock:
 
 
 @pytest.fixture(name="problematic_appliance")
-def mock_problematic_appliance() -> Mock:
+def mock_problematic_appliance(request: pytest.FixtureRequest) -> Mock:
     """Fixture to mock a problematic Appliance."""
     app = "Washer"
+    if hasattr(request, "param") and request.param:
+        app = request.param
+
     mock = Mock(
-        spec=HomeConnectAppliance,
+        autospec=HomeConnectAppliance,
         **MOCK_APPLIANCES_PROPERTIES.get(app),
     )
     mock.name = app
-    setattr(mock, "status", {})
+    type(mock).status = PropertyMock(return_value={})
     mock.get_programs_active.side_effect = HomeConnectError
     mock.get_programs_available.side_effect = HomeConnectError
     mock.start_program.side_effect = HomeConnectError

@@ -113,7 +113,7 @@ async def test_airzone_sensors_availability(hass: HomeAssistant) -> None:
         ),
     ):
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.dorm_ppal_temperature")
     assert state.state == STATE_UNAVAILABLE

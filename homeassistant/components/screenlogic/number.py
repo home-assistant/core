@@ -14,13 +14,11 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
@@ -28,6 +26,7 @@ from .entity import (
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
+from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,14 +97,12 @@ SUPPORTED_SCG_NUMBERS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ScreenLogicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicNumber] = []
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     gateway = coordinator.gateway
 
     for chem_number_description in SUPPORTED_INTELLICHEM_NUMBERS:

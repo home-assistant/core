@@ -57,7 +57,7 @@
       "message": "{entity_id} is not a valid scene entity_id."
     },
     "entity_not_dynamically_created": {
-      "message": "The scene {entity_id} is not created with service `scene.create`."
+      "message": "The scene {entity_id} is not created with action `scene.create`."
     }
   }
 }

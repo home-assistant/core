@@ -1,0 +1,11 @@
+{
+  "domain": "simplefin",
+  "name": "SimpleFin",
+  "codeowners": ["@scottg489", "@jeeftor"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/simplefin",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["simplefin"],
+  "requirements": ["simplefin4py==0.0.18"]
+}

@@ -7,9 +7,9 @@ import pytest
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -295,6 +295,45 @@ async def async_yaml_patch_helper(hass, filename):
             },
             {
                 "state": "{{1 == 2}}",
+            },
+        ),
+        (
+            {
+                "template_type": "image",
+                "name": "My template",
+                "url": "http://example.com",
+            },
+            {
+                "url": "http://example.com",
+            },
+        ),
+        (
+            {
+                "template_type": "button",
+                "name": "My template",
+            },
+            {},
+        ),
+        (
+            {
+                "template_type": "select",
+                "name": "My template",
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+            },
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+            },
+        ),
+        (
+            {
+                "template_type": "switch",
+                "name": "My template",
+                "value_template": "{{ true }}",
+            },
+            {
+                "value_template": "{{ true }}",
             },
         ),
     ],

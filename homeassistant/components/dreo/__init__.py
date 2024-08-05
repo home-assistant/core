@@ -19,7 +19,7 @@ type DreoConfigEntry = ConfigEntry[DreoData]
 @dataclass
 class DreoData:
     client: HsCloud
-    devices: []
+    devices: list
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry):
