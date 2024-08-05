@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from TransportNSW import TransportNSW
 import voluptuous as vol
@@ -98,7 +99,7 @@ class TransportNSWSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times is not None:
             return {
@@ -110,6 +111,7 @@ class TransportNSWSensor(SensorEntity):
                 ATTR_DESTINATION: self._times[ATTR_DESTINATION],
                 ATTR_MODE: self._times[ATTR_MODE],
             }
+        return None
 
     @property
     def native_unit_of_measurement(self):

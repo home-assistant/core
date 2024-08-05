@@ -11,6 +11,19 @@
       }
     }
   },
+  "issues": {
+    "error_registering_events": {
+      "title": "DoorBird {name} configuration failure",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::doorbird::issues::error_registering_events::title%]",
+            "description": "Configuring DoorBird {name} failed with error: `{error}`. Please enable the API Operator permission for the DoorBird user and continue to reload the integration."
+          }
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {

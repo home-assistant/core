@@ -398,6 +398,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     static_paths_configs: list[StaticPathConfig] = []
 
     for path, should_cache in (
+        ("service_worker.js", False),
         ("sw-modern.js", False),
         ("sw-modern.js.map", False),
         ("sw-legacy.js", False),

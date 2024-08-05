@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Final, TypedDict
 
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 from xknx.telegram import Telegram
 
 from homeassistant.components.climate import (
@@ -158,12 +159,12 @@ SUPPORTED_PLATFORMS_UI: Final = {Platform.SWITCH, Platform.LIGHT}
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {
     # Map DPT 20.105 HVAC control modes
-    "Auto": HVACMode.AUTO,
-    "Heat": HVACMode.HEAT,
-    "Cool": HVACMode.COOL,
-    "Off": HVACMode.OFF,
-    "Fan only": HVACMode.FAN_ONLY,
-    "Dry": HVACMode.DRY,
+    HVACControllerMode.AUTO: HVACMode.AUTO,
+    HVACControllerMode.HEAT: HVACMode.HEAT,
+    HVACControllerMode.COOL: HVACMode.COOL,
+    HVACControllerMode.OFF: HVACMode.OFF,
+    HVACControllerMode.FAN_ONLY: HVACMode.FAN_ONLY,
+    HVACControllerMode.DEHUMIDIFICATION: HVACMode.DRY,
 }
 
 CURRENT_HVAC_ACTIONS: Final = {
@@ -176,9 +177,9 @@ CURRENT_HVAC_ACTIONS: Final = {
 
 PRESET_MODES: Final = {
     # Map DPT 20.102 HVAC operating modes to HA presets
-    "Auto": PRESET_NONE,
-    "Frost Protection": PRESET_ECO,
-    "Night": PRESET_SLEEP,
-    "Standby": PRESET_AWAY,
-    "Comfort": PRESET_COMFORT,
+    HVACOperationMode.AUTO: PRESET_NONE,
+    HVACOperationMode.BUILDING_PROTECTION: PRESET_ECO,
+    HVACOperationMode.ECONOMY: PRESET_SLEEP,
+    HVACOperationMode.STANDBY: PRESET_AWAY,
+    HVACOperationMode.COMFORT: PRESET_COMFORT,
 }
