@@ -30,6 +30,65 @@
           "probability_threshold": "The probability above which the sensor will show as 'on'",
           "prior": "The baseline probabilty the sensor should be on, if you knew nothing else about the state of the entities below"
         }
+      },
+      "observation_selector": {
+        "title": "Add an observation",
+        "description": "One by one, add an observation that will inform the bayesian sensor. Each observation will update the proability of the Bayesian sensor if it is detected, or if its inverse is detected. If the state of the entity becomes `UNAVAILABLE` or `UNKOWN` it will be ignored. If more than one `state` or more than 1 `numeric_range` is configured for the same entity then inverse detections will be ignored.",
+        "menu_options": {
+          "state": "Observation from state sensor",
+          "numeric_state": "Observation from  from numeric range",
+          "template": "Observation from  from template"
+        }
+      },
+      "state": {
+        "title": "Add a Bayesian Sensor",
+        "description": "Add an observation which examines the state of an entity.",
+        "data": {
+          "entity_id": "Entity",
+          "to_state": "To state",
+          "prob_given_true": "Probability Given True",
+          "prob_given_false": "Probability Given False"
+        },
+        "data_description": {
+          "entity_id": "The entity of interest.",
+          "to_state": "The state of the sensor to be detected",
+          "prob_given_true": "The probability of detecting the above state when the Bayesian sensor should be on",
+          "prob_given_false": "The probability of *not* detecting the above state when the Bayesian sensor should be on"
+        }
+      },
+      "numeric_state": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "Add an observation which examines the value of a numeric entity.",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "above": "Above",
+          "below": "Below",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "above": "Optional - the lower end of the numeric range. Values exactly matching this will not count",
+          "below": "Optional - the upper end of the numeric range. Values matching this will only count if more than one range is configured for the same entity.",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
+        }
+      },
+      "template": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "Add an observation with evaluates a template.",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "template": "Template",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "template": "A template that evaluates to `True` will update the prior accordingly, A template that returns `False` will update the prior with inverse probabilities, a template that resolves `None` will be ignored.",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
+        }
       }
     }
   },

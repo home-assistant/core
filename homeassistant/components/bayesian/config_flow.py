@@ -1,6 +1,7 @@
 """Config flow for the Bayesian integration."""
 
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any
 
 import voluptuous as vol
@@ -23,6 +24,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
+    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -30,10 +32,25 @@ from .const import (
     CONF_P_GIVEN_T,
     CONF_PRIOR,
     CONF_PROBABILITY_THRESHOLD,
+    CONF_TO_STATE,
     DEFAULT_NAME,
     DEFAULT_PROBABILITY_THRESHOLD,
     DOMAIN,
 )
+
+
+class Observation_types(StrEnum):
+    """StrEnum for all the different observation types."""
+
+    STATE = "state"
+    NUMERIC_STATE = "numeric_state"
+    TEMPLATE = "template"
+
+    @staticmethod
+    def list() -> list[str]:
+        """Return a list of the values."""
+
+        return [c.value for c in Observation_types]
 
 
 async def _validate_mode(
@@ -123,10 +140,10 @@ STATE_SUBSCHEMA = vol.Schema(
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN])
         ),
-        vol.Required(CONF_ENTITY_ID): selector.StateSelector(
-            selector.StateSelectorConfig(
-                entity_id="***THAT_ENTITY_ABOVE_DYNAMICALLY_SOMEHOW***"
-            )
+        vol.Required(CONF_TO_STATE): selector.TextSelector(
+            selector.TextSelectorConfig(
+                multiline=False, type=selector.TextSelectorType.TEXT, multiple=False
+            )  # ideally this would be a state selector context-linked to the above entity.
         ),
     },
 ).extend(SUBSCHEMA_BOILERPLATE.schema)
@@ -148,8 +165,19 @@ CONFIG_SCHEMA = vol.Schema(
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        CONFIG_SCHEMA, preview="bayesian", validate_user_input=_validate_mode
-    )
+        CONFIG_SCHEMA,
+        preview="bayesian",
+        validate_user_input=_validate_mode,
+        next_step="observation_selector",
+    ),
+    "observation_selector": SchemaFlowMenuStep(Observation_types.list()),
+    Observation_types.STATE: SchemaFlowFormStep(
+        STATE_SUBSCHEMA,
+    ),
+    Observation_types.NUMERIC_STATE: SchemaFlowFormStep(
+        NUMERIC_STATE_SUBSCHEMA,
+    ),
+    Observation_types.TEMPLATE: SchemaFlowFormStep(TEMPLATE_SUBSCHEMA),
 }
 
 OPTIONS_FLOW = {
