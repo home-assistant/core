@@ -1,0 +1,9 @@
+{
+  "domain": "assist_satellite",
+  "name": "Assist Satellite",
+  "codeowners": ["@synesthesiam"],
+  "config_flow": false,
+  "dependencies": ["assist_pipeline"],
+  "documentation": "https://www.home-assistant.io/integrations/assist_satellite",
+  "integration_type": "entity"
+}

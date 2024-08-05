@@ -19,6 +19,7 @@ from .satellite import WyomingSatellite
 _LOGGER = logging.getLogger(__name__)
 
 SATELLITE_PLATFORMS = [
+    Platform.ASSIST_SATELLITE,
     Platform.BINARY_SENSOR,
     Platform.SELECT,
     Platform.SWITCH,

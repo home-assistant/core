@@ -1,0 +1,1 @@
+DOMAIN = "assist_satellite"
