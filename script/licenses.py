@@ -179,9 +179,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "asterisk_mbox": AwesomeVersion(
-        "0.5.0"
-    ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
