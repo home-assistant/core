@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from opendata_transport.exceptions import OpendataTransportConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -29,7 +28,7 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
 )
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 
 from .const import (
     ATTR_LIMIT,
@@ -168,12 +167,12 @@ class SwissPublicTransportSensor(
         """Fetch a set of connections."""
         try:
             connections = await self.coordinator.fetch_connections(limit=int(limit))
-        except OpendataTransportConnectionError as e:
+        except UpdateFailed as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={
-                    "error": e,
+                    "error": str(e),
                 },
             ) from e
         return {"connections": connections}

@@ -21,8 +21,8 @@ from homeassistant.components.swiss_public_transport.const import (
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -64,7 +64,7 @@ async def test_service_call_fetch_connections_success(
         return_value=AsyncMock(),
     ) as mock:
         mock().connections = json.loads(load_fixture("connections.json", DOMAIN))[
-            0:limit
+            0 : limit + 2
         ]
 
         # Setup the config entry
@@ -106,13 +106,13 @@ async def test_service_call_fetch_connections_success(
         (
             1,
             MOCK_DATA_STEP_BASE,
-            pytest.raises(UpdateFailed),
+            pytest.raises(HomeAssistantError),
             OpendataTransportConnectionError(),
         ),
         (
             2,
             MOCK_DATA_STEP_BASE,
-            pytest.raises(UpdateFailed),
+            pytest.raises(HomeAssistantError),
             OpendataTransportError(),
         ),
     ],
