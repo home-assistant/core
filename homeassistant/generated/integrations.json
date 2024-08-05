@@ -6013,10 +6013,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "tag": {
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "tailscale": {
       "name": "Tailscale",
       "integration_type": "hub",
@@ -7365,7 +7361,6 @@
     "shopping_list",
     "sun",
     "switch_as_x",
-    "tag",
     "threshold",
     "time_date",
     "tod",
