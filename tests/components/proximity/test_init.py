@@ -17,48 +17,72 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
-from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
 
 
+async def async_setup_single_entry(
+    hass: HomeAssistant,
+    zone: str,
+    tracked_entites: list[str],
+    ignored_zones: list[str],
+    tolerance: int,
+) -> MockConfigEntry:
+    """Set up the proximity component with a single entry."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={
+            CONF_ZONE: zone,
+            CONF_TRACKED_ENTITIES: tracked_entites,
+            CONF_IGNORED_ZONES: ignored_zones,
+            CONF_TOLERANCE: tolerance,
+        },
+    )
+    mock_config.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
+    await hass.async_block_till_done()
+    return mock_config
+
+
 @pytest.mark.parametrize(
-    ("friendly_name", "config"),
+    "config",
     [
-        (
-            "home",
-            {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1", "device_tracker.test2"],
-                "tolerance": "1",
-            },
-        ),
-        (
-            "work",
-            {
-                "devices": ["device_tracker.test1"],
-                "tolerance": "1",
-                "zone": "work",
-            },
-        ),
+        {
+            CONF_IGNORED_ZONES: ["zone.work"],
+            CONF_TRACKED_ENTITIES: ["device_tracker.test1", "device_tracker.test2"],
+            CONF_TOLERANCE: 1,
+            CONF_ZONE: "zone.home",
+        },
+        {
+            CONF_IGNORED_ZONES: [],
+            CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+            CONF_TOLERANCE: 1,
+            CONF_ZONE: "zone.work",
+        },
     ],
 )
-async def test_proximities(
-    hass: HomeAssistant, friendly_name: str, config: dict
-) -> None:
+async def test_proximities(hass: HomeAssistant, config: dict) -> None:
     """Test a list of proximities."""
-    assert await async_setup_component(
-        hass, DOMAIN, {"proximity": {friendly_name: config}}
+    title = hass.states.get(config[CONF_ZONE]).name
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        title=title,
+        data=config,
     )
+    mock_config.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
 
+    zone_name = slugify(title)
+
     # sensor entities
-    state = hass.states.get(f"sensor.{friendly_name}_nearest_device")
+    state = hass.states.get(f"sensor.{zone_name}_nearest_device")
     assert state.state == STATE_UNKNOWN
 
-    for device in config["devices"]:
-        entity_base_name = f"sensor.{friendly_name}_{slugify(device.split('.')[-1])}"
+    for device in config[CONF_TRACKED_ENTITIES]:
+        entity_base_name = f"sensor.{zone_name}_{slugify(device.split('.')[-1])}"
         state = hass.states.get(f"{entity_base_name}_distance")
         assert state.state == STATE_UNAVAILABLE
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
@@ -67,17 +91,7 @@ async def test_proximities(
 
 async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
     """Test for tracker in zone."""
-    config = {
-        "proximity": {
-            "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1"],
-                "tolerance": "1",
-            }
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -99,17 +113,7 @@ async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
 
 async def test_device_tracker_test1_away(hass: HomeAssistant) -> None:
     """Test for tracker state away."""
-    config = {
-        "proximity": {
-            "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1"],
-                "tolerance": "1",
-            }
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -134,20 +138,7 @@ async def test_device_tracker_test1_awayfurther(
     hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker state away further."""
-
-    await hass.async_block_till_done()
-
-    config = {
-        "proximity": {
-            "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1"],
-                "tolerance": "1",
-            }
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -188,19 +179,7 @@ async def test_device_tracker_test1_awaycloser(
     hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker state away closer."""
-    await hass.async_block_till_done()
-
-    config = {
-        "proximity": {
-            "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1"],
-                "tolerance": "1",
-            }
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -239,17 +218,7 @@ async def test_device_tracker_test1_awaycloser(
 
 async def test_all_device_trackers_in_ignored_zone(hass: HomeAssistant) -> None:
     """Test for tracker in ignored zone."""
-    config = {
-        "proximity": {
-            "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1"],
-                "tolerance": "1",
-            }
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
 
     hass.states.async_set("device_tracker.test1", "work", {"friendly_name": "test1"})
     await hass.async_block_till_done()
@@ -267,17 +236,7 @@ async def test_all_device_trackers_in_ignored_zone(hass: HomeAssistant) -> None:
 
 async def test_device_tracker_test1_no_coordinates(hass: HomeAssistant) -> None:
     """Test for tracker with no coordinates."""
-    config = {
-        "proximity": {
-            "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1"],
-                "tolerance": "1",
-            }
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
 
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
@@ -297,19 +256,8 @@ async def test_device_tracker_test1_no_coordinates(hass: HomeAssistant) -> None:
 
 async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> None:
     """Test for tracker states."""
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            "proximity": {
-                "home": {
-                    "ignored_zones": ["work"],
-                    "devices": ["device_tracker.test1"],
-                    "tolerance": 1000,
-                    "zone": "home",
-                }
-            }
-        },
+    await async_setup_single_entry(
+        hass, "zone.home", ["device_tracker.test1"], ["zone.work"], 1000
     )
 
     hass.states.async_set(
@@ -349,17 +297,13 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
 
 async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
     """Test for trackers in zone."""
-    config = {
-        "proximity": {
-            "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1", "device_tracker.test2"],
-                "tolerance": "1",
-            }
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_single_entry(
+        hass,
+        "zone.home",
+        ["device_tracker.test1", "device_tracker.test2"],
+        ["zone.work"],
+        1,
+    )
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -390,30 +334,18 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
     hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker ordering."""
-    await hass.async_block_till_done()
-
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
     )
-    await hass.async_block_till_done()
     hass.states.async_set(
         "device_tracker.test2", "not_home", {"friendly_name": "test2"}
     )
-    await hass.async_block_till_done()
-
-    assert await async_setup_component(
+    await async_setup_single_entry(
         hass,
-        DOMAIN,
-        {
-            "proximity": {
-                "home": {
-                    "ignored_zones": ["work"],
-                    "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "tolerance": "1",
-                    "zone": "home",
-                }
-            }
-        },
+        "zone.home",
+        ["device_tracker.test1", "device_tracker.test2"],
+        ["zone.work"],
+        1,
     )
 
     hass.states.async_set(
@@ -467,28 +399,19 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(
     hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker ordering."""
-    await hass.async_block_till_done()
-
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
     )
-    await hass.async_block_till_done()
     hass.states.async_set(
         "device_tracker.test2", "not_home", {"friendly_name": "test2"}
     )
-    await hass.async_block_till_done()
-    assert await async_setup_component(
+
+    await async_setup_single_entry(
         hass,
-        DOMAIN,
-        {
-            "proximity": {
-                "home": {
-                    "ignored_zones": ["work"],
-                    "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
-                }
-            }
-        },
+        "zone.home",
+        ["device_tracker.test1", "device_tracker.test2"],
+        ["zone.work"],
+        1,
     )
 
     hass.states.async_set(
@@ -545,23 +468,15 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
     )
-    await hass.async_block_till_done()
     hass.states.async_set("device_tracker.test2", "work", {"friendly_name": "test2"})
-    await hass.async_block_till_done()
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            "proximity": {
-                "home": {
-                    "ignored_zones": ["work"],
-                    "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
-                }
-            }
-        },
-    )
 
+    await async_setup_single_entry(
+        hass,
+        "zone.home",
+        ["device_tracker.test1", "device_tracker.test2"],
+        ["zone.work"],
+        1,
+    )
     hass.states.async_set(
         "device_tracker.test1",
         "not_home",
@@ -590,29 +505,19 @@ async def test_device_tracker_test1_awayfurther_test2_first(
     hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker state."""
-    await hass.async_block_till_done()
-
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
     )
-    await hass.async_block_till_done()
     hass.states.async_set(
         "device_tracker.test2", "not_home", {"friendly_name": "test2"}
     )
-    await hass.async_block_till_done()
 
-    assert await async_setup_component(
+    await async_setup_single_entry(
         hass,
-        DOMAIN,
-        {
-            "proximity": {
-                "home": {
-                    "ignored_zones": ["work"],
-                    "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
-                }
-            }
-        },
+        "zone.home",
+        ["device_tracker.test1", "device_tracker.test2"],
+        ["zone.work"],
+        1,
     )
 
     hass.states.async_set(
@@ -668,7 +573,6 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
 ) -> None:
     """Test for tracker states."""
     await hass.async_block_till_done()
-
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
     )
@@ -678,19 +582,27 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
     )
     await hass.async_block_till_done()
 
-    assert await async_setup_component(
+    await async_setup_single_entry(
         hass,
-        DOMAIN,
-        {
-            "proximity": {
-                "home": {
-                    "ignored_zones": ["work"],
-                    "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
-                }
-            }
-        },
+        "zone.home",
+        ["device_tracker.test1", "device_tracker.test2"],
+        ["zone.work"],
+        1,
     )
+
+    # assert await async_setup_component(
+    #     hass,
+    #     DOMAIN,
+    #     {
+    #         "proximity": {
+    #             "home": {
+    #                 "ignored_zones": ["zone.work"],
+    #                 "devices": ["device_tracker.test1", "device_tracker.test2"],
+    #                 "zone": "home",
+    #             }
+    #         }
+    #     },
+    # )
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -764,21 +676,9 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
 
 async def test_nearest_sensors(hass: HomeAssistant, config_zones) -> None:
     """Test for nearest sensors."""
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        title="home",
-        data={
-            CONF_ZONE: "zone.home",
-            CONF_TRACKED_ENTITIES: ["device_tracker.test1", "device_tracker.test2"],
-            CONF_IGNORED_ZONES: [],
-            CONF_TOLERANCE: 1,
-        },
-        unique_id=f"{DOMAIN}_home",
+    await async_setup_single_entry(
+        hass, "zone.home", ["device_tracker.test1", "device_tracker.test2"], [], 1
     )
-
-    mock_config.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config.entry_id)
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -904,21 +804,9 @@ async def test_create_removed_tracked_entity_issue(
     hass.states.async_set(t1.entity_id, "not_home")
     hass.states.async_set(t2.entity_id, "not_home")
 
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        title="home",
-        data={
-            CONF_ZONE: "zone.home",
-            CONF_TRACKED_ENTITIES: [t1.entity_id, t2.entity_id],
-            CONF_IGNORED_ZONES: [],
-            CONF_TOLERANCE: 1,
-        },
-        unique_id=f"{DOMAIN}_home",
+    await async_setup_single_entry(
+        hass, "zone.home", [t1.entity_id, t2.entity_id], [], 1
     )
-
-    mock_config.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config.entry_id)
-    await hass.async_block_till_done()
 
     sensor_t1 = f"sensor.home_{t1.entity_id.split('.')[-1]}_distance"
     sensor_t2 = f"sensor.home_{t2.entity_id.split('.')[-1]}_distance"
@@ -953,21 +841,9 @@ async def test_track_renamed_tracked_entity(
 
     hass.states.async_set(t1.entity_id, "not_home")
 
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        title="home",
-        data={
-            CONF_ZONE: "zone.home",
-            CONF_TRACKED_ENTITIES: [t1.entity_id],
-            CONF_IGNORED_ZONES: [],
-            CONF_TOLERANCE: 1,
-        },
-        unique_id=f"{DOMAIN}_home",
+    mock_config = await async_setup_single_entry(
+        hass, "zone.home", [t1.entity_id], ["zone.work"], 1
     )
-
-    mock_config.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config.entry_id)
-    await hass.async_block_till_done()
 
     sensor_t1 = f"sensor.home_{t1.entity_id.split('.')[-1]}_distance"
 
@@ -1001,28 +877,16 @@ async def test_sensor_unique_ids(
 
     hass.states.async_set("device_tracker.test2", "not_home")
 
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        title="home",
-        data={
-            CONF_ZONE: "zone.home",
-            CONF_TRACKED_ENTITIES: [t1.entity_id, "device_tracker.test2"],
-            CONF_IGNORED_ZONES: [],
-            CONF_TOLERANCE: 1,
-        },
-        unique_id=f"{DOMAIN}_home",
+    mock_config = await async_setup_single_entry(
+        hass, "zone.home", [t1.entity_id, "device_tracker.test2"], ["zone.work"], 1
     )
-
-    mock_config.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config.entry_id)
-    await hass.async_block_till_done()
 
     sensor_t1 = "sensor.home_test_tracker_1_distance"
     entity = entity_registry.async_get(sensor_t1)
     assert entity
     assert entity.unique_id == f"{mock_config.entry_id}_{t1.id}_dist_to_zone"
     state = hass.states.get(sensor_t1)
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home Test tracker 1 Distance"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Home Test tracker 1 Distance"
 
     entity = entity_registry.async_get("sensor.home_test2_distance")
     assert entity
