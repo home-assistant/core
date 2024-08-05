@@ -1,4 +1,5 @@
 """The Wallbox integration."""
+
 from __future__ import annotations
 
 from wallbox import Wallbox

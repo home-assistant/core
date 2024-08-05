@@ -1,4 +1,5 @@
 """Refoss integration."""
+
 from __future__ import annotations
 
 from refoss_ha.device import DeviceInfo
@@ -29,7 +30,7 @@ class DiscoveryService(Listener):
 
         device = await async_build_base_device(device_info)
         if device is None:
-            return None
+            return
 
         coordo = RefossDataUpdateCoordinator(self.hass, device)
         self.hass.data[DOMAIN][COORDINATORS].append(coordo)

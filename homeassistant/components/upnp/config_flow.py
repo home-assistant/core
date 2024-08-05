@@ -1,4 +1,5 @@
 """Config flow for UPNP."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,19 +8,27 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpServiceInfo
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
+    CONFIG_ENTRY_FORCE_POLL,
     CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
+    DEFAULT_CONFIG_ENTRY_FORCE_POLL,
     DOMAIN,
     DOMAIN_DISCOVERIES,
     LOGGER,
@@ -42,7 +51,7 @@ def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
 def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     """Test if discovery is complete and usable."""
     return bool(
-        ssdp.ATTR_UPNP_UDN in discovery_info.upnp
+        discovery_info.ssdp_udn
         and discovery_info.ssdp_st
         and discovery_info.ssdp_all_locations
         and discovery_info.ssdp_usn
@@ -74,15 +83,20 @@ def _is_igd_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     return root_device_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) in {ST_IGD_V1, ST_IGD_V2}
 
 
-class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
     VERSION = 1
 
     # Paths:
-    # - ssdp(discovery_info) --> ssdp_confirm(None)
-    # --> ssdp_confirm({}) --> create_entry()
-    # - user(None): scan --> user({...}) --> create_entry()
+    # 1: ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
+    # 2: user(None): scan --> user({...}) --> create_entry()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return UpnpOptionsFlowHandler(config_entry)
 
     @property
     def _discoveries(self) -> dict[str, SsdpServiceInfo]:
@@ -100,7 +114,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
@@ -151,7 +165,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered UPnP/IGD device.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -201,25 +217,17 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Check ssdp_st to prevent swapping between IGDv1 and IGDv2.
                 continue
 
-            if entry.source == config_entries.SOURCE_IGNORE:
+            if entry.source == SOURCE_IGNORE:
                 # Host was already ignored. Don't update ignored entries.
                 return self.async_abort(reason="discovery_ignored")
 
             LOGGER.debug("Updating entry: %s", entry.entry_id)
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 entry,
                 unique_id=unique_id,
                 data={**entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
+                reason="config_entry_updated",
             )
-            if entry.state == config_entries.ConfigEntryState.LOADED:
-                # Only reload when entry has state LOADED; when entry has state
-                # SETUP_RETRY, another load is started,
-                # causing the entry to be loaded twice.
-                LOGGER.debug("Reloading entry: %s", entry.entry_id)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-            return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
         self._add_discovery(discovery_info)
@@ -233,7 +241,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp_confirm(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm integration via SSDP."""
         LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
         if user_input is None:
@@ -243,27 +251,32 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = self._remove_discovery(self.unique_id)
         return await self._async_create_entry_from_discovery(discovery)
 
-    async def async_step_ignore(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Ignore this config flow."""
         usn = user_input["unique_id"]
         discovery = self._remove_discovery(usn)
         mac_address = await _async_mac_address_from_discovery(self.hass, discovery)
         data = {
-            CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_ST: discovery.ssdp_st,
-            CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_ORIGINAL_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
             CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
         }
+        options = {
+            CONFIG_ENTRY_FORCE_POLL: False,
+        }
 
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
-        return self.async_create_entry(title=user_input["title"], data=data)
+        return self.async_create_entry(
+            title=user_input["title"], data=data, options=options
+        )
 
     async def _async_create_entry_from_discovery(
         self,
         discovery: SsdpServiceInfo,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create an entry from discovery."""
         LOGGER.debug(
             "_async_create_entry_from_discovery: discovery: %s",
@@ -273,11 +286,37 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         title = _friendly_name_from_discovery(discovery)
         mac_address = await _async_mac_address_from_discovery(self.hass, discovery)
         data = {
-            CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_ST: discovery.ssdp_st,
-            CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_ORIGINAL_UDN: discovery.ssdp_udn,
             CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
         }
-        return self.async_create_entry(title=title, data=data)
+        options = {
+            CONFIG_ENTRY_FORCE_POLL: False,
+        }
+        return self.async_create_entry(title=title, data=data, options=options)
+
+
+class UpnpOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Handle an options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONFIG_ENTRY_FORCE_POLL,
+                    default=self.options.get(
+                        CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL
+                    ),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

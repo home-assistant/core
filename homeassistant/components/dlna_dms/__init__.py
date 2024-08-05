@@ -3,6 +3,7 @@
 A single config entry is used, with SSDP discovery for media servers. Each
 server is wrapped in a DmsEntity, and the server's USN is used as the unique_id.
 """
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry

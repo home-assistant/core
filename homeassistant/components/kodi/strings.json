@@ -83,5 +83,14 @@
         }
       }
     }
+  },
+  "entity": {
+    "media_player": {
+      "media_player": {
+        "state_attributes": {
+          "dynamic_range": { "name": "Dynamic range" }
+        }
+      }
+    }
   }
 }

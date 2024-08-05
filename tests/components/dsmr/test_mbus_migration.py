@@ -1,27 +1,32 @@
 """Tests for the DSMR integration."""
+
 import datetime
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+from dsmr_parser.obis_references import (
+    MBUS_DEVICE_TYPE,
+    MBUS_EQUIPMENT_IDENTIFIER,
+    MBUS_METER_READING,
+)
+from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 async def test_migrate_gas_to_mbus(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -41,7 +46,6 @@ async def test_migrate_gas_to_mbus(
 
     old_unique_id = "37464C4F32313139303333373331_belgium_5min_gas_meter_reading"
 
-    device_registry = hass.helpers.device_registry.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=mock_entry.entry_id,
         identifiers={(DOMAIN, mock_entry.entry_id)},
@@ -61,22 +65,31 @@ async def test_migrate_gas_to_mbus(
     assert entity.unique_id == old_unique_id
     await hass.async_block_till_done()
 
-    telegram = {
-        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject(
-            BELGIUM_MBUS1_DEVICE_TYPE, [{"value": "003", "unit": ""}]
-        ),
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER: CosemObject(
-            BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+    telegram = Telegram()
+    telegram.add(
+        MBUS_DEVICE_TYPE,
+        CosemObject((0, 1), [{"value": "003", "unit": ""}]),
+        "MBUS_DEVICE_TYPE",
+    )
+    telegram.add(
+        MBUS_EQUIPMENT_IDENTIFIER,
+        CosemObject(
+            (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        BELGIUM_MBUS1_METER_READING2: MBusObject(
-            BELGIUM_MBUS1_METER_READING2,
+        "MBUS_EQUIPMENT_IDENTIFIER",
+    )
+    telegram.add(
+        MBUS_METER_READING,
+        MBusObject(
+            (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
             ],
         ),
-    }
+        "MBUS_METER_READING",
+    )
 
     assert await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
@@ -107,17 +120,13 @@ async def test_migrate_gas_to_mbus(
 
 
 async def test_migrate_gas_to_mbus_exists(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -137,7 +146,6 @@ async def test_migrate_gas_to_mbus_exists(
 
     old_unique_id = "37464C4F32313139303333373331_belgium_5min_gas_meter_reading"
 
-    device_registry = hass.helpers.device_registry.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=mock_entry.entry_id,
         identifiers={(DOMAIN, mock_entry.entry_id)},
@@ -174,22 +182,31 @@ async def test_migrate_gas_to_mbus_exists(
     )
     await hass.async_block_till_done()
 
-    telegram = {
-        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject(
-            BELGIUM_MBUS1_DEVICE_TYPE, [{"value": "003", "unit": ""}]
-        ),
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER: CosemObject(
-            BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+    telegram = Telegram()
+    telegram.add(
+        MBUS_DEVICE_TYPE,
+        CosemObject((0, 0), [{"value": "003", "unit": ""}]),
+        "MBUS_DEVICE_TYPE",
+    )
+    telegram.add(
+        MBUS_EQUIPMENT_IDENTIFIER,
+        CosemObject(
+            (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        BELGIUM_MBUS1_METER_READING2: MBusObject(
-            BELGIUM_MBUS1_METER_READING2,
+        "MBUS_EQUIPMENT_IDENTIFIER",
+    )
+    telegram.add(
+        MBUS_METER_READING,
+        MBusObject(
+            (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
             ],
         ),
-    }
+        "MBUS_METER_READING",
+    )
 
     assert await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()

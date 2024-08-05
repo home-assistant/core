@@ -1,4 +1,5 @@
 """Tests for the Abode switch device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode import (

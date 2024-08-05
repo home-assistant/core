@@ -1,4 +1,5 @@
 """Support for Magic Home switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -103,11 +104,6 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
         """Return true if remote access is enabled."""
         return bool(self.entry.data[CONF_REMOTE_ACCESS_ENABLED])
 
-    @property
-    def icon(self) -> str:
-        """Return icon based on state."""
-        return "mdi:cloud-outline" if self.is_on else "mdi:cloud-off-outline"
-
 
 class FluxMusicSwitch(FluxEntity, SwitchEntity):
     """Representation of a Flux music switch."""
@@ -131,8 +127,3 @@ class FluxMusicSwitch(FluxEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if microphone is is on."""
         return self._device.is_on and self._device.effect == MODE_MUSIC
-
-    @property
-    def icon(self) -> str:
-        """Return icon based on state."""
-        return "mdi:microphone" if self.is_on else "mdi:microphone-off"

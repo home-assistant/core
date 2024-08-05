@@ -1,4 +1,5 @@
 """Support for V2C binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,27 +12,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import V2CConfigEntry
 from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
 
-@dataclass(frozen=True)
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an EVSE binary sensor entity."""
 
     value_fn: Callable[[Trydan], bool]
-
-
-@dataclass(frozen=True)
-class V2CBinarySensorEntityDescription(
-    BinarySensorEntityDescription, V2CRequiredKeysMixin
-):
-    """Describes an EVSE binary sensor entity."""
 
 
 TRYDAN_SENSORS = (
@@ -57,11 +50,11 @@ TRYDAN_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: V2CConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C binary sensor platform."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CBinarySensorBaseEntity(coordinator, description, config_entry.entry_id)

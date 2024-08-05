@@ -1,4 +1,5 @@
 """Test the devolo Home Network config flow."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -36,7 +37,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -51,7 +52,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["result"].unique_id == info["serial_number"]
     assert result2["title"] == info["title"]
     assert result2["data"] == {
@@ -63,7 +64,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
 
 @pytest.mark.parametrize(
     ("exception_type", "expected_error"),
-    [[DeviceNotFound(IP), "cannot_connect"], [Exception, "unknown"]],
+    [(DeviceNotFound(IP), "cannot_connect"), (Exception, "unknown")],
 )
 async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -> None:
     """Test we handle errors."""
@@ -82,7 +83,7 @@ async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_BASE: expected_error}
 
 
@@ -95,7 +96,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {"host_name": "test"}
 
     context = next(
@@ -133,7 +134,7 @@ async def test_abort_zeroconf_wrong_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=DISCOVERY_INFO_WRONG_DEVICE,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "home_control"
 
 
@@ -157,7 +158,7 @@ async def test_abort_if_configued(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
     # Abort on concurrent zeroconf discovery flow
@@ -166,7 +167,7 @@ async def test_abort_if_configued(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=DISCOVERY_INFO_CHANGED,
     )
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == IP_ALT
 
@@ -191,7 +192,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.devolo_home_network.async_setup_entry",
@@ -203,7 +204,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -1,4 +1,5 @@
 """Setup the Reolink tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -24,19 +25,22 @@ TEST_USERNAME = "admin"
 TEST_USERNAME2 = "username"
 TEST_PASSWORD = "password"
 TEST_PASSWORD2 = "new_password"
-TEST_MAC = "ab:cd:ef:gh:ij:kl"
-TEST_MAC2 = "12:34:56:78:9a:bc"
+TEST_MAC = "aa:bb:cc:dd:ee:ff"
+TEST_MAC2 = "ff:ee:dd:cc:bb:aa"
+DHCP_FORMATTED_MAC = "aabbccddeeff"
 TEST_UID = "ABC1234567D89EFG"
+TEST_UID_CAM = "DEF7654321D89GHT"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_NVR_NAME2 = "test2_reolink_name"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
+TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.reolink.async_setup_entry", return_value=True
@@ -45,16 +49,17 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def reolink_connect_class(
-    mock_get_source_ip: None,
-) -> Generator[MagicMock, None, None]:
+def reolink_connect_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
-    with patch(
-        "homeassistant.components.reolink.host.webhook.async_register",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.reolink.host.Host", autospec=True
-    ) as host_mock_class:
+    with (
+        patch(
+            "homeassistant.components.reolink.host.webhook.async_register",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.reolink.host.Host", autospec=True
+        ) as host_mock_class,
+    ):
         host_mock = host_mock_class.return_value
         host_mock.get_host_data.return_value = None
         host_mock.get_states.return_value = None
@@ -79,9 +84,16 @@ def reolink_connect_class(
         host_mock.sw_version = "v1.0.0.0.0.0000"
         host_mock.manufacturer = "Reolink"
         host_mock.model = TEST_HOST_MODEL
+        host_mock.item_number = TEST_ITEM_NUMBER
         host_mock.camera_model.return_value = TEST_CAM_MODEL
         host_mock.camera_name.return_value = TEST_NVR_NAME
+        host_mock.camera_hardware_version.return_value = "IPC_00001"
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
+        host_mock.camera_sw_version_update_required.return_value = False
+        host_mock.camera_uid.return_value = TEST_UID_CAM
+        host_mock.channel_for_uid.return_value = 0
+        host_mock.get_encoding.return_value = "h264"
+        host_mock.firmware_update_available.return_value = False
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
@@ -101,13 +113,13 @@ def reolink_connect_class(
 @pytest.fixture
 def reolink_connect(
     reolink_connect_class: MagicMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock reolink connection."""
     return reolink_connect_class.return_value
 
 
 @pytest.fixture
-def reolink_platforms(mock_get_source_ip: None) -> Generator[None, None, None]:
+def reolink_platforms() -> Generator[None]:
     """Mock reolink entry setup."""
     with patch("homeassistant.components.reolink.PLATFORMS", return_value=[]):
         yield

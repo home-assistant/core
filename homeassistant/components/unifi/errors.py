@@ -1,4 +1,5 @@
 """Errors for the UniFi Network integration."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 
@@ -15,7 +16,7 @@ class AuthenticationRequired(UnifiException):
 
 
 class CannotConnect(UnifiException):
-    """Unable to connect to the controller."""
+    """Unable to connect to UniFi Network."""
 
 
 class LoginRequired(UnifiException):

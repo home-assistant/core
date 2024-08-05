@@ -1,4 +1,5 @@
 """Support for KEBA charging station sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (

@@ -1,4 +1,5 @@
 """Support for Fibaro sensors."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -105,29 +106,28 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro controller devices."""
-    entities: list[SensorEntity] = []
 
     controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    entities: list[SensorEntity] = [
+        FibaroSensor(device, MAIN_SENSOR_TYPES.get(device.type))
+        for device in controller.fibaro_devices[Platform.SENSOR]
+    ]
 
-    for device in controller.fibaro_devices[Platform.SENSOR]:
-        entity_description = MAIN_SENSOR_TYPES.get(device.type)
-
-        # main sensors are created even if the entity type is not known
-        entities.append(FibaroSensor(device, entity_description))
-
-    for platform in (
-        Platform.BINARY_SENSOR,
-        Platform.CLIMATE,
-        Platform.COVER,
-        Platform.LIGHT,
-        Platform.LOCK,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ):
-        for device in controller.fibaro_devices[platform]:
-            for entity_description in ADDITIONAL_SENSOR_TYPES:
-                if entity_description.key in device.properties:
-                    entities.append(FibaroAdditionalSensor(device, entity_description))
+    entities.extend(
+        FibaroAdditionalSensor(device, entity_description)
+        for platform in (
+            Platform.BINARY_SENSOR,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.LIGHT,
+            Platform.LOCK,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        )
+        for device in controller.fibaro_devices[platform]
+        for entity_description in ADDITIONAL_SENSOR_TYPES
+        if entity_description.key in device.properties
+    )
 
     async_add_entities(entities, True)
 

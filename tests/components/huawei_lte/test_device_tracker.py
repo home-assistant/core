@@ -7,13 +7,13 @@ from homeassistant.components.huawei_lte import device_tracker
 
 @pytest.mark.parametrize(
     ("value", "expected"),
-    (
+    [
         ("HTTP", "http"),
         ("ID", "id"),
         ("IPAddress", "ip_address"),
         ("HTTPResponse", "http_response"),
         ("foo_bar", "foo_bar"),
-    ),
+    ],
 )
 def test_better_snakecase(value, expected) -> None:
     """Test that better snakecase works better."""

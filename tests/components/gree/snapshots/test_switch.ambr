@@ -5,11 +5,11 @@
       'attributes': ReadOnlyDict({
         'device_class': 'switch',
         'friendly_name': 'fake-device-1 Panel light',
-        'icon': 'mdi:lightbulb',
       }),
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_panel_light',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -21,6 +21,7 @@
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_quiet',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -32,6 +33,7 @@
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_fresh_air',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -43,6 +45,7 @@
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_xfan',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -50,11 +53,11 @@
       'attributes': ReadOnlyDict({
         'device_class': 'switch',
         'friendly_name': 'fake-device-1 Health mode',
-        'icon': 'mdi:pine-tree',
       }),
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_health_mode',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -78,11 +81,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-      'original_icon': 'mdi:lightbulb',
+      'original_icon': None,
       'original_name': 'Panel light',
       'platform': 'gree',
       'previous_unique_id': None,
@@ -107,6 +112,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -136,6 +143,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -165,6 +174,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -194,11 +205,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-      'original_icon': 'mdi:pine-tree',
+      'original_icon': None,
       'original_name': 'Health mode',
       'platform': 'gree',
       'previous_unique_id': None,

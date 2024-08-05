@@ -27,7 +27,9 @@ async def test_config_entry(
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
-    assert diag == snapshot(exclude=props("last_updated", "last_changed"))
+    assert diag == snapshot(
+        exclude=props("last_changed", "last_reported", "last_updated")
+    )
 
 
 async def test_device(
@@ -45,4 +47,6 @@ async def test_device(
 
     diag = await get_diagnostics_for_device(hass, hass_client, config_entry, device)
 
-    assert diag == snapshot(exclude=props("last_updated", "last_changed"))
+    assert diag == snapshot(
+        exclude=props("last_changed", "last_reported", "last_updated")
+    )

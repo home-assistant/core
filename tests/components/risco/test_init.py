@@ -1,21 +1,30 @@
-"""Tests for the Risco initialization."""
+"""Tests for the Risco integration."""
+
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant.components.risco import CannotConnectError
-from homeassistant.components.risco.const import CONF_COMMUNICATION_DELAY
 from homeassistant.core import HomeAssistant
 
 
-@pytest.mark.parametrize("exception", [CannotConnectError])
-async def test_single_error_on_connect(
-    hass: HomeAssistant, connect_with_single_error, local_config_entry
-) -> None:
-    """Test single error on connect to validate communication delay update from 0 (default) to 1."""
-    expected_data = {
-        **local_config_entry.data,
-        **{"type": "local", CONF_COMMUNICATION_DELAY: 1},
-    }
+@pytest.fixture
+def mock_error_handler():
+    """Create a mock for add_error_handler."""
+    with patch("homeassistant.components.risco.RiscoLocal.add_error_handler") as mock:
+        yield mock
 
-    await hass.config_entries.async_setup(local_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert local_config_entry.data == expected_data
+
+async def test_connection_reset(
+    hass: HomeAssistant, two_zone_local, mock_error_handler, setup_risco_local
+) -> None:
+    """Test config entry reload on connection reset."""
+
+    callback = mock_error_handler.call_args.args[0]
+    assert callback is not None
+
+    with patch.object(hass.config_entries, "async_reload") as reload_mock:
+        await callback(Exception())
+        reload_mock.assert_not_awaited()
+
+        await callback(ConnectionResetError())
+        reload_mock.assert_awaited_once()

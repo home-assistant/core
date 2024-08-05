@@ -1,4 +1,5 @@
 """Constants for the Todoist component."""
+
 from typing import Final
 
 CONF_EXTRA_PROJECTS: Final = "custom_projects"
@@ -77,6 +78,8 @@ PROJECT_ID: Final = "project_id"
 PROJECT_NAME: Final = "project"
 # Todoist API: Fetch all Projects
 PROJECTS: Final = "projects"
+# Section Name: What Section of the Project do you want to add the Task to?
+SECTION_NAME: Final = "section"
 # Calendar Platform: When does a calendar event start?
 START: Final = "start"
 # Calendar Platform: What is the next calendar event about?

@@ -1,6 +1,5 @@
 """The twinkly component."""
 
-
 from aiohttp import ClientError
 from ttls.client import Twinkly
 

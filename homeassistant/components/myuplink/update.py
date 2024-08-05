@@ -1,17 +1,14 @@
 """Update entity for myUplink."""
-from typing import cast
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 
 UPDATE_DESCRIPTION = UpdateEntityDescription(
@@ -22,25 +19,21 @@ UPDATE_DESCRIPTION = UpdateEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MyUplinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entity."""
-    entities: list[UpdateEntity] = []
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
-    # Setup update entities
-    for device_id in coordinator.data.devices:
-        entities.append(
-            MyUplinkDeviceUpdate(
-                coordinator=coordinator,
-                device_id=device_id,
-                entity_description=UPDATE_DESCRIPTION,
-                unique_id_suffix="upd",
-            )
+    async_add_entities(
+        MyUplinkDeviceUpdate(
+            coordinator=coordinator,
+            device_id=device_id,
+            entity_description=UPDATE_DESCRIPTION,
+            unique_id_suffix="upd",
         )
-
-    async_add_entities(entities)
+        for device_id in coordinator.data.devices
+    )
 
 
 class MyUplinkDeviceUpdate(MyUplinkEntity, UpdateEntity):
@@ -65,9 +58,9 @@ class MyUplinkDeviceUpdate(MyUplinkEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Return installed_version."""
-        return cast(str, self.coordinator.data.devices[self.device_id].firmwareCurrent)
+        return self.coordinator.data.devices[self.device_id].firmwareCurrent
 
     @property
     def latest_version(self) -> str | None:
         """Return latest_version."""
-        return cast(str, self.coordinator.data.devices[self.device_id].firmwareDesired)
+        return self.coordinator.data.devices[self.device_id].firmwareDesired

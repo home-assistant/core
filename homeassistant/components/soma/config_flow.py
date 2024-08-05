@@ -1,11 +1,12 @@
 """Config flow for Soma."""
+
 import logging
 
 from api.soma_api import SomaApi
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DOMAIN
@@ -15,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 3000
 
 
-class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1

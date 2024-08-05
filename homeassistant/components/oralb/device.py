@@ -1,4 +1,5 @@
 """Support for OralB devices."""
+
 from __future__ import annotations
 
 from oralb_ble import DeviceKey

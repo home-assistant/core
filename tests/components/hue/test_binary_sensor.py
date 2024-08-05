@@ -1,12 +1,16 @@
 """Philips Hue binary_sensor platform tests for V2 bridge/api."""
+
+from unittest.mock import Mock
+
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
 from .const import FAKE_BINARY_SENSOR, FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
 
 
 async def test_binary_sensors(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
     """Test if all v2 binary_sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -77,7 +81,9 @@ async def test_binary_sensors(
     assert sensor.attributes["device_class"] == "motion"
 
 
-async def test_binary_sensor_add_update(hass: HomeAssistant, mock_bridge_v2) -> None:
+async def test_binary_sensor_add_update(
+    hass: HomeAssistant, mock_bridge_v2: Mock
+) -> None:
     """Test if binary_sensor get added/updated from events."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
     await setup_platform(hass, mock_bridge_v2, "binary_sensor")

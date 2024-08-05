@@ -1,5 +1,7 @@
 """Common fixtures for the Wyoming tests."""
+
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,7 +19,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
@@ -29,7 +31,7 @@ async def init_components(hass: HomeAssistant):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.wyoming.async_setup_entry", return_value=True
@@ -145,12 +147,15 @@ def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
 @pytest.fixture
 async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntry):
     """Initialize Wyoming satellite."""
-    with patch(
-        "homeassistant.components.wyoming.data.load_wyoming_info",
-        return_value=SATELLITE_INFO,
-    ), patch(
-        "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
-    ) as _run_mock:
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+        ) as _run_mock,
+    ):
         # _run_mock: satellite task does not actually run
         await hass.config_entries.async_setup(satellite_config_entry.entry_id)
 

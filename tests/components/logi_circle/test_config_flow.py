@@ -1,11 +1,15 @@
 """Tests for Logi Circle config flow."""
+
 import asyncio
+from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.logi_circle import config_flow
 from homeassistant.components.logi_circle.config_flow import (
     DOMAIN,
@@ -13,6 +17,7 @@ from homeassistant.components.logi_circle.config_flow import (
     LogiCircleAuthCallbackView,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -21,13 +26,13 @@ from tests.common import MockConfigEntry
 class MockRequest:
     """Mock request passed to HomeAssistantView."""
 
-    def __init__(self, hass, query):
+    def __init__(self, hass: HomeAssistant, query: dict[str, Any]) -> None:
         """Init request object."""
-        self.app = {"hass": hass}
+        self.app = {KEY_HASS: hass}
         self.query = query
 
 
-def init_config_flow(hass):
+def init_config_flow(hass: HomeAssistant) -> config_flow.LogiCircleFlowHandler:
     """Init a configuration flow."""
     config_flow.register_flow_implementation(
         hass,
@@ -45,7 +50,7 @@ def init_config_flow(hass):
 
 
 @pytest.fixture
-def mock_logi_circle():
+def mock_logi_circle() -> Generator[MagicMock]:
     """Mock logi_circle."""
     with patch(
         "homeassistant.components.logi_circle.config_flow.LogiCircle"
@@ -60,16 +65,18 @@ def mock_logi_circle():
         yield LogiCircle
 
 
-async def test_step_import(hass: HomeAssistant, mock_logi_circle) -> None:
+@pytest.mark.usefixtures("mock_logi_circle")
+async def test_step_import(hass: HomeAssistant) -> None:
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
-async def test_full_flow_implementation(hass: HomeAssistant, mock_logi_circle) -> None:
+@pytest.mark.usefixtures("mock_logi_circle")
+async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(
         hass,
@@ -83,18 +90,18 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_logi_circle) -
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({"flow_impl": "test-other"})
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
         "authorization_url": "http://example.com"
     }
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Logi Circle ({})".format("testId")
 
 
@@ -112,7 +119,7 @@ async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> Non
     flow.hass = hass
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
@@ -125,21 +132,21 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    with pytest.raises(data_entry_flow.AbortFlow):
+    with pytest.raises(AbortFlow):
         result = await flow.async_step_code()
 
     result = await flow.async_step_auth()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "external_setup"
 
 
@@ -151,14 +158,17 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     ],
 )
 async def test_abort_if_authorize_fails(
-    hass: HomeAssistant, mock_logi_circle, side_effect, error
+    hass: HomeAssistant,
+    mock_logi_circle: MagicMock,
+    side_effect: type[Exception],
+    error: str,
 ) -> None:
     """Test we abort if authorizing fails."""
     flow = init_config_flow(hass)
     mock_logi_circle.authorize.side_effect = side_effect
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "external_error"
 
     result = await flow.async_step_auth()
@@ -170,11 +180,12 @@ async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
-async def test_gen_auth_url(hass: HomeAssistant, mock_logi_circle) -> None:
+@pytest.mark.usefixtures("mock_logi_circle")
+async def test_gen_auth_url(hass: HomeAssistant) -> None:
     """Test generating authorize URL from Logi Circle API."""
     config_flow.register_flow_implementation(
         hass,
@@ -203,7 +214,7 @@ async def test_callback_view_rejects_missing_code(hass: HomeAssistant) -> None:
 
 
 async def test_callback_view_accepts_code(
-    hass: HomeAssistant, mock_logi_circle
+    hass: HomeAssistant, mock_logi_circle: MagicMock
 ) -> None:
     """Test the auth callback view handles requests with auth code."""
     init_config_flow(hass)

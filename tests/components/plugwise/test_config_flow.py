@@ -1,4 +1,5 @@
 """Test the Plugwise config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -119,7 +120,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
 
@@ -132,7 +133,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Test Smile Name"
     assert result2.get("data") == {
         CONF_HOST: TEST_HOST,
@@ -166,7 +167,7 @@ async def test_zeroconf_flow(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=discovery,
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
 
@@ -176,7 +177,7 @@ async def test_zeroconf_flow(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Test Smile Name"
     assert result2.get("data") == {
         CONF_HOST: TEST_HOST,
@@ -201,7 +202,7 @@ async def test_zeroconf_flow_stretch(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=TEST_DISCOVERY2,
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
 
@@ -211,7 +212,7 @@ async def test_zeroconf_flow_stretch(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Test Smile Name"
     assert result2.get("data") == {
         CONF_HOST: TEST_HOST,
@@ -252,7 +253,7 @@ async def test_zercoconf_discovery_update_configuration(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=TEST_DISCOVERY,
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert entry.data[CONF_HOST] == "0.0.0.0"
 
@@ -263,7 +264,7 @@ async def test_zercoconf_discovery_update_configuration(
         data=TEST_DISCOVERY,
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert entry.data[CONF_HOST] == "1.1.1.1"
 
@@ -292,7 +293,7 @@ async def test_flow_errors(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
 
@@ -302,7 +303,7 @@ async def test_flow_errors(
         user_input={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": reason}
     assert result2.get("step_id") == "user"
 
@@ -315,7 +316,7 @@ async def test_flow_errors(
         user_input={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
     )
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "Test Smile Name"
     assert result3.get("data") == {
         CONF_HOST: TEST_HOST,
@@ -340,7 +341,7 @@ async def test_zeroconf_abort_anna_with_existing_config_entries(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=TEST_DISCOVERY_ANNA,
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "anna_with_adam"
 
 
@@ -351,7 +352,7 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=TEST_DISCOVERY_ANNA,
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     flows_in_progress = hass.config_entries.flow.async_progress()
@@ -365,7 +366,7 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
         data=TEST_DISCOVERY_ADAM,
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
 
     flows_in_progress = hass.config_entries.flow.async_progress()
@@ -378,7 +379,7 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=TEST_DISCOVERY_ANNA,
     )
-    assert result3.get("type") == FlowResultType.ABORT
+    assert result3.get("type") is FlowResultType.ABORT
     assert result3.get("reason") == "anna_with_adam"
 
     # Adam should still be there

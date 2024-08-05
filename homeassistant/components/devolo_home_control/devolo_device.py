@@ -1,4 +1,5 @@
 """Base class for a device entity integrated in devolo Home Control."""
+
 from __future__ import annotations
 
 import logging
@@ -39,6 +40,7 @@ class DevoloDeviceEntity(Entity):
             identifiers={(DOMAIN, self._device_instance.uid)},
             manufacturer=device_instance.brand,
             model=device_instance.name,
+            model_id=device_instance.identifier,
             name=device_instance.settings_property["general_device_settings"].name,
             suggested_area=device_instance.settings_property[
                 "general_device_settings"

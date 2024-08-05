@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+
 import struct
 
 import pytest
@@ -112,15 +113,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_OFFSET: 0,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                     CONF_DEVICE_CLASS: "battery",
-                }
-            ]
-        },
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_DATA_TYPE: DataType.INT16,
                 }
             ]
         },
@@ -909,7 +901,7 @@ async def test_virtual_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i, expected_value in enumerate(expected):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"
         if i:
@@ -917,7 +909,7 @@ async def test_virtual_sensor(
             unique_id = f"{unique_id}_{i}"
         entry = entity_registry.async_get(entity_id)
         state = hass.states.get(entity_id).state
-        assert state == expected[i]
+        assert state == expected_value
         assert entry.unique_id == unique_id
 
 
@@ -1079,12 +1071,12 @@ async def test_virtual_swap_sensor(
     hass: HomeAssistant, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i, expected_value in enumerate(expected):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         if i:
             entity_id = f"{entity_id}_{i}"
         state = hass.states.get(entity_id).state
-        assert state == expected[i]
+        assert state == expected_value
 
 
 @pytest.mark.parametrize(
@@ -1399,14 +1391,14 @@ async def test_restore_state_sensor(
         },
     ],
 )
-async def test_service_sensor_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
+async def test_service_sensor_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_input_registers.return_value = ReadResult([27])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([27])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "27"
-    mock_modbus.read_input_registers.return_value = ReadResult([32])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )

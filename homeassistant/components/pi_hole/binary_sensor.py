@@ -1,4 +1,5 @@
 """Support for getting status from a Pi-hole system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,29 +12,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
+from . import PiHoleConfigEntry, PiHoleEntity
 
 
-@dataclass(frozen=True)
-class RequiredPiHoleBinaryDescription:
-    """Represent the required attributes of the PiHole binary description."""
-
-    state_value: Callable[[Hole], bool]
-
-
-@dataclass(frozen=True)
-class PiHoleBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RequiredPiHoleBinaryDescription
-):
+@dataclass(frozen=True, kw_only=True)
+class PiHoleBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes PiHole binary sensor entity."""
 
+    state_value: Callable[[Hole], bool]
     extra_value: Callable[[Hole], dict[str, Any] | None] = lambda api: None
 
 
@@ -41,23 +32,24 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        icon="mdi:pi-hole",
         state_value=lambda api: bool(api.data.get("status") == "enabled"),
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PiHoleConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole binary sensor."""
     name = entry.data[CONF_NAME]
-    hole_data = hass.data[PIHOLE_DOMAIN][entry.entry_id]
+    hole_data = entry.runtime_data
 
     binary_sensors = [
         PiHoleBinarySensor(
-            hole_data[DATA_KEY_API],
-            hole_data[DATA_KEY_COORDINATOR],
+            hole_data.api,
+            hole_data.coordinator,
             name,
             entry.entry_id,
             description,
@@ -77,7 +69,7 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         name: str,
         server_unique_id: str,
         description: PiHoleBinarySensorEntityDescription,

@@ -1,4 +1,5 @@
 """Support for GoodWe inverter via UDP."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

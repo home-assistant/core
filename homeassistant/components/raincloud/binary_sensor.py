@@ -1,11 +1,15 @@
 """Support for Melnor RainCloud sprinkler water timer."""
+
 from __future__ import annotations
 
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -16,7 +20,7 @@ from . import BINARY_SENSORS, DATA_RAINCLOUD, ICON_MAP, RainCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)): vol.All(
             cv.ensure_list, [vol.In(BINARY_SENSORS)]
@@ -44,8 +48,10 @@ def setup_platform(
 
         else:
             # create a sensor for each zone managed by faucet
-            for zone in raincloud.controller.faucet.zones:
-                sensors.append(RainCloudBinarySensor(zone, sensor_type))
+            sensors.extend(
+                RainCloudBinarySensor(zone, sensor_type)
+                for zone in raincloud.controller.faucet.zones
+            )
 
     add_entities(sensors, True)
 

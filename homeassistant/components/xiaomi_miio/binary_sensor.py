@@ -1,4 +1,5 @@
 """Support for Xiaomi Miio binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -189,7 +190,8 @@ async def async_setup_entry(
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         elif model in MODELS_VACUUM:
-            return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+            _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+            return
 
         for description in BINARY_SENSOR_TYPES:
             if description.key not in sensors:

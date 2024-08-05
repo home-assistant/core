@@ -1,4 +1,5 @@
 """Errors for the Axis component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

@@ -1,4 +1,5 @@
 """Custom dumper and representers."""
+
 from collections import OrderedDict
 from typing import Any
 

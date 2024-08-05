@@ -28,7 +28,8 @@
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
+      "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
+      "password_incompatible": "Password contains incompatible special character, only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
@@ -69,6 +70,10 @@
     "firmware_update": {
       "title": "Reolink firmware update required",
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
+    },
+    "hdr_switch_deprecated": {
+      "title": "Reolink HDR switch deprecated",
+      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
     }
   },
   "services": {
@@ -86,64 +91,160 @@
   "entity": {
     "binary_sensor": {
       "face": {
-        "name": "Face"
+        "name": "Face",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person": {
-        "name": "Person"
+        "name": "Person",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle": {
-        "name": "Vehicle"
+        "name": "Vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet": {
-        "name": "Pet"
+        "name": "Pet",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "animal": {
-        "name": "Animal"
+        "name": "Animal",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor": {
         "name": "Visitor"
       },
+      "package": {
+        "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
       "motion_lens_0": {
-        "name": "Motion lens 0"
+        "name": "Motion lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "face_lens_0": {
-        "name": "Face lens 0"
+        "name": "Face lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person_lens_0": {
-        "name": "Person lens 0"
+        "name": "Person lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle_lens_0": {
-        "name": "Vehicle lens 0"
+        "name": "Vehicle lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet_lens_0": {
-        "name": "Pet lens 0"
+        "name": "Pet lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "animal_lens_0": {
-        "name": "Animal lens 0"
+        "name": "Animal lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
+      "package_lens_0": {
+        "name": "Package lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
       "motion_lens_1": {
-        "name": "Motion lens 1"
+        "name": "Motion lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "face_lens_1": {
-        "name": "Face lens 1"
+        "name": "Face lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person_lens_1": {
-        "name": "Person lens 1"
+        "name": "Person lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle_lens_1": {
-        "name": "Vehicle lens 1"
+        "name": "Vehicle lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet_lens_1": {
-        "name": "Pet lens 1"
+        "name": "Pet lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "animal_lens_1": {
-        "name": "Animal lens 1"
+        "name": "Animal lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
+      },
+      "package_lens_1": {
+        "name": "Package lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "sleep": {
+        "name": "Sleep status",
+        "state": {
+          "off": "Awake",
+          "on": "Sleeping"
+        }
       }
     },
     "button": {
@@ -261,19 +362,25 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
-      "ai_face_sensititvity": {
+      "pir_sensitivity": {
+        "name": "PIR sensitivity"
+      },
+      "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
-      "ai_person_sensititvity": {
+      "ai_person_sensitivity": {
         "name": "AI person sensitivity"
       },
-      "ai_vehicle_sensititvity": {
+      "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
       },
-      "ai_pet_sensititvity": {
+      "ai_package_sensitivity": {
+        "name": "AI package sensitivity"
+      },
+      "ai_pet_sensitivity": {
         "name": "AI pet sensitivity"
       },
-      "ai_animal_sensititvity": {
+      "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
       "ai_face_delay": {
@@ -284,6 +391,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_package_delay": {
+        "name": "AI package delay"
       },
       "ai_pet_delay": {
         "name": "AI pet delay"
@@ -348,6 +458,9 @@
       "ptz_preset": {
         "name": "PTZ preset"
       },
+      "play_quick_reply_message": {
+        "name": "Play quick reply message"
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -362,12 +475,69 @@
           "pantiltfirst": "Pan/tilt first"
         }
       },
-      "status_led": {
-        "name": "Status LED",
+      "doorbell_led": {
+        "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
-          "alwaysonatnight": "Auto & always on at night"
+          "alwaysonatnight": "Auto & always on at night",
+          "alwayson": "Always on"
+        }
+      },
+      "hdr": {
+        "name": "HDR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "Auto"
+        }
+      },
+      "motion_tone": {
+        "name": "Motion ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "City bird",
+          "originaltune": "Original tune",
+          "pianokey": "Piano key",
+          "loop": "Loop",
+          "attraction": "Attraction",
+          "hophop": "Hop hop",
+          "goodday": "Good day",
+          "operetta": "Operetta",
+          "moonlight": "Moonlight",
+          "waybackhome": "Way back home"
+        }
+      },
+      "people_tone": {
+        "name": "Person ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "visitor_tone": {
+        "name": "Visitor ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       }
     },
@@ -377,6 +547,23 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "charging": "Charging",
+          "chargecomplete": "Charge complete"
+        }
+      },
+      "hdd_storage": {
+        "name": "HDD {hdd_index} storage"
+      },
+      "sd_storage": {
+        "name": "SD {hdd_index} storage"
       }
     },
     "siren": {
@@ -400,8 +587,11 @@
       "auto_focus": {
         "name": "Auto focus"
       },
-      "gaurd_return": {
+      "guard_return": {
         "name": "Guard return"
+      },
+      "ptz_patrol": {
+        "name": "PTZ patrol"
       },
       "email": {
         "name": "Email on event"
@@ -415,6 +605,9 @@
       "record": {
         "name": "Record"
       },
+      "manual_record": {
+        "name": "Manual record"
+      },
       "buzzer": {
         "name": "Buzzer on event"
       },
@@ -422,7 +615,16 @@
         "name": "Doorbell button sound"
       },
       "hdr": {
-        "name": "HDR"
+        "name": "[%key:component::reolink::entity::select::hdr::name%]"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
+      },
+      "pir_reduce_alarm": {
+        "name": "PIR reduce false alarm"
+      },
+      "led": {
+        "name": "LED"
       }
     }
   }

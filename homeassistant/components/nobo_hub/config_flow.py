@@ -1,4 +1,5 @@
 """Config flow for Nobø Ecohub integration."""
+
 from __future__ import annotations
 
 import socket
@@ -7,10 +8,14 @@ from typing import Any
 from pynobo import nobo
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -26,7 +31,7 @@ DATA_NOBO_HUB_IMPL = "nobo_hub_flow_implementation"
 DEVICE_INPUT = "device_input"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nobø Ecohub."""
 
     VERSION = 1
@@ -38,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._discovered_hubs is None:
             self._discovered_hubs = dict(await nobo.async_discover_hubs())
@@ -67,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_selected(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle configuration of a selected discovered device."""
         errors = {}
         if user_input is not None:
@@ -97,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle configuration of an undiscovered device."""
         errors = {}
         if user_input is not None:
@@ -124,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _create_configuration(
         self, serial: str, ip_address: str, auto_discovered: bool
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
         name = await self._test_connection(serial, ip_address)
@@ -164,8 +169,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -179,14 +184,14 @@ class NoboHubConnectError(HomeAssistantError):
         self.msg = msg
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
 
         if user_input is not None:

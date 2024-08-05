@@ -1,4 +1,5 @@
 """Support for NuHeat thermostats."""
+
 import logging
 from typing import Any
 

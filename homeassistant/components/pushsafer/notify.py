@@ -1,4 +1,5 @@
 """Pushsafer platform for notify component."""
+
 from __future__ import annotations
 
 import base64
@@ -15,7 +16,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_ICON
@@ -53,7 +54,9 @@ ATTR_PICTURE1_USERNAME = "username"
 ATTR_PICTURE1_PASSWORD = "password"
 ATTR_PICTURE1_AUTH = "auth"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEVICE_KEY): cv.string})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_DEVICE_KEY): cv.string}
+)
 
 
 def get_service(

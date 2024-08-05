@@ -1,5 +1,7 @@
 """Aiohttp test utils."""
+
 import asyncio
+from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 import re
@@ -53,7 +55,7 @@ class AiohttpClientMocker:
         content=None,
         json=None,
         params=None,
-        headers={},
+        headers=None,
         exc=None,
         cookies=None,
         side_effect=None,
@@ -295,7 +297,7 @@ class AiohttpClientMockResponse:
 
 
 @contextmanager
-def mock_aiohttp_client():
+def mock_aiohttp_client() -> Iterator[AiohttpClientMocker]:
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
@@ -334,7 +336,7 @@ class MockLongPollSideEffect:
     async def __call__(self, method, url, data):
         """Fetch the next response from the queue or wait until the queue has items."""
         if self.stopping:
-            raise ClientError()
+            raise ClientError
         await self.semaphore.acquire()
         kwargs = self.response_list.pop(0)
         return AiohttpClientMockResponse(method=method, url=url, **kwargs)

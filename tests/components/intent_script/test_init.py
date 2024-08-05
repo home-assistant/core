@@ -1,12 +1,13 @@
 """Test intent_script component."""
+
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.intent_script import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, get_fixture_path
 
@@ -21,6 +22,8 @@ async def test_intent_script(hass: HomeAssistant) -> None:
         {
             "intent_script": {
                 "HelloWorld": {
+                    "description": "Intent to control a test service.",
+                    "platforms": ["switch"],
                     "action": {
                         "service": "test.service",
                         "data_template": {"hello": "{{ name }}"},
@@ -34,6 +37,17 @@ async def test_intent_script(hass: HomeAssistant) -> None:
             }
         },
     )
+
+    handlers = [
+        intent_handler
+        for intent_handler in intent.async_get(hass)
+        if intent_handler.intent_type == "HelloWorld"
+    ]
+
+    assert len(handlers) == 1
+    handler = handlers[0]
+    assert handler.description == "Intent to control a test service."
+    assert handler.platforms == {"switch"}
 
     response = await intent.async_handle(
         hass, "test", "HelloWorld", {"name": {"value": "Paulus"}}
@@ -76,6 +90,16 @@ async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
             }
         },
     )
+
+    handlers = [
+        intent_handler
+        for intent_handler in intent.async_get(hass)
+        if intent_handler.intent_type == "HelloWorldWaitResponse"
+    ]
+
+    assert len(handlers) == 1
+    handler = handlers[0]
+    assert handler.platforms is None
 
     response = await intent.async_handle(
         hass, "test", "HelloWorldWaitResponse", {"name": {"value": "Paulus"}}

@@ -1,4 +1,5 @@
 """Tests for pylint hass_enforce_sorted_platforms plugin."""
+
 from __future__ import annotations
 
 import astroid
@@ -26,6 +27,18 @@ from . import assert_adds_messages, assert_no_messages
         PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
         """,
             id="multiple_platforms",
+        ),
+        pytest.param(
+            """
+        PLATFORMS: list[str] = [Platform.SENSOR]
+        """,
+            id="typed_on_platform",
+        ),
+        pytest.param(
+            """
+        PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+        """,
+            id="typed_multiple_platform",
         ),
     ],
 )
@@ -69,3 +82,31 @@ def test_enforce_sorted_platforms_bad(
         ),
     ):
         enforce_sorted_platforms_checker.visit_assign(assign_node)
+
+
+def test_enforce_sorted_platforms_bad_typed(
+    linter: UnittestLinter,
+    enforce_sorted_platforms_checker: BaseChecker,
+) -> None:
+    """Bad typed test case."""
+    assign_node = astroid.extract_node(
+        """
+    PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
+    """,
+        "homeassistant.components.pylint_test",
+    )
+
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="hass-enforce-sorted-platforms",
+            line=2,
+            node=assign_node,
+            args=None,
+            confidence=UNDEFINED,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=81,
+        ),
+    ):
+        enforce_sorted_platforms_checker.visit_annassign(assign_node)

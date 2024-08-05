@@ -1,7 +1,8 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
@@ -16,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -23,11 +25,8 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import EventType
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.event_type import EventType
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
 from .models import LogbookConfig
@@ -65,7 +64,7 @@ def _async_config_entries_for_ids(
 
 def async_determine_event_types(
     hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
-) -> tuple[str, ...]:
+) -> tuple[EventType[Any] | str, ...]:
     """Reduce the event types based on the entity ids and device ids."""
     logbook_config: LogbookConfig = hass.data[DOMAIN]
     external_events = logbook_config.external_events
@@ -83,7 +82,7 @@ def async_determine_event_types(
     # to add them since we have historically included
     # them when matching only on entities
     #
-    intrested_event_types: set[str] = {
+    intrested_event_types: set[EventType[Any] | str] = {
         external_event
         for external_event, domain_call in external_events.items()
         if domain_call[0] in interested_domains
@@ -96,7 +95,7 @@ def async_determine_event_types(
 
 
 @callback
-def extract_attr(source: dict[str, Any], attr: str) -> list[str]:
+def extract_attr(source: Mapping[str, Any], attr: str) -> list[str]:
     """Extract an attribute as a list or string."""
     if (value := source.get(attr)) is None:
         return []
@@ -161,8 +160,8 @@ def event_forwarder_filtered(
 def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
-    target: Callable[[Event], None],
-    event_types: tuple[str, ...],
+    target: Callable[[Event[Any]], None],
+    event_types: tuple[EventType[Any] | str, ...],
     entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
@@ -176,10 +175,9 @@ def async_subscribe_events(
     event_forwarder = event_forwarder_filtered(
         target, entities_filter, entity_ids, device_ids
     )
-    for event_type in event_types:
-        subscriptions.append(
-            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        )
+    subscriptions.extend(
+        hass.bus.async_listen(event_type, event_forwarder) for event_type in event_types
+    )
 
     if device_ids and not entity_ids:
         # No entities to subscribe to but we are filtering
@@ -188,7 +186,7 @@ def async_subscribe_events(
         return
 
     @callback
-    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
+    def _forward_state_events_filtered(event: Event[EventStateChangedData]) -> None:
         if (old_state := event.data["old_state"]) is None or (
             new_state := event.data["new_state"]
         ) is None:
@@ -211,8 +209,7 @@ def async_subscribe_events(
     subscriptions.append(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            _forward_state_events_filtered,  # type: ignore[arg-type]
-            run_immediately=True,
+            _forward_state_events_filtered,
         )
     )
 

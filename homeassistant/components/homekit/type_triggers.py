@@ -1,10 +1,12 @@
 """Class to hold all sensor accessories."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from pyhap.const import CATEGORY_SENSOR
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.core import CALLBACK_TYPE, Context, callback
 from homeassistant.helpers import entity_registry as er
@@ -84,6 +86,30 @@ class DeviceTriggerAccessory(HomeAccessory):
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
             serv_stateless_switch.add_linked_service(serv_service_label)
 
+    @callback
+    def _remove_triggers_if_configured(self) -> None:
+        if self._remove_triggers:
+            self._remove_triggers()
+            self._remove_triggers = None
+
+    async def async_attach(self) -> None:
+        """Start the accessory."""
+        self._remove_triggers_if_configured()
+        self._remove_triggers = await async_initialize_triggers(
+            self.hass,
+            self._device_triggers,
+            self.async_trigger,
+            "homekit",
+            self.display_name,
+            _LOGGER.log,
+        )
+
+    @pyhap_callback  # type: ignore[misc]
+    @callback
+    def run(self) -> None:
+        """Run the accessory."""
+        # Triggers have not entities so we do not call super().run()
+
     async def async_trigger(
         self,
         run_variables: dict[str, Any],
@@ -101,24 +127,10 @@ class DeviceTriggerAccessory(HomeAccessory):
         idx = int(run_variables["trigger"]["idx"])
         self.triggers[idx].set_value(0)
 
-    # Attach the trigger using the helper in async run
-    # and detach it in async stop
-    async def run(self) -> None:
-        """Handle accessory driver started event."""
-        self._remove_triggers = await async_initialize_triggers(
-            self.hass,
-            self._device_triggers,
-            self.async_trigger,
-            "homekit",
-            self.display_name,
-            _LOGGER.log,
-        )
-
     @callback
     def async_stop(self) -> None:
         """Handle accessory driver stop event."""
-        if self._remove_triggers:
-            self._remove_triggers()
+        self._remove_triggers_if_configured()
         super().async_stop()
 
     @property

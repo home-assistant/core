@@ -1,4 +1,5 @@
 """Tests for the Switch as X Light platform."""
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,

@@ -17,6 +17,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -42,6 +44,7 @@
     'context': <ANY>,
     'entity_id': 'media_player.test_media_player',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'idle',
   })
@@ -51,13 +54,21 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Test Media player',
+      'media_album_name': 'Album',
+      'media_artist': 'Artist',
+      'media_duration': 60.0,
+      'media_playlist': 'Playlist',
+      'media_position': 30.0,
+      'media_title': 'Song',
+      'source': 'Spotify',
       'supported_features': <MediaPlayerEntityFeature: 0>,
       'volume_level': 0.22580323309042688,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.test_media_player',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': 'playing',
   })
 # ---

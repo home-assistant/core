@@ -1,4 +1,5 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
+
 from gpiozero import LED, DigitalInputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
 

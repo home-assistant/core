@@ -1,4 +1,5 @@
 """Common utils for Litter-Robot tests."""
+
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -32,6 +33,7 @@ ROBOT_4_DATA = {
     "wifiRssi": -53.0,
     "unitPowerType": "AC",
     "catWeight": 12.0,
+    "displayCode": "DC_MODE_IDLE",
     "unitTimezone": "America/New_York",
     "unitTime": None,
     "cleanCycleWaitTime": 15,
@@ -65,7 +67,7 @@ ROBOT_4_DATA = {
     "isDFIResetPending": False,
     "DFINumberOfCycles": 104,
     "DFILevelPercent": 76,
-    "isDFIFull": True,
+    "isDFIFull": False,
     "DFIFullCounter": 3,
     "DFITriggerCount": 42,
     "litterLevel": 460,
@@ -142,17 +144,3 @@ FEEDER_ROBOT_DATA = {
 }
 
 VACUUM_ENTITY_ID = "vacuum.test_litter_box"
-
-
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]

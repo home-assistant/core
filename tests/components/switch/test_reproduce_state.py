@@ -1,4 +1,5 @@
 """Test reproduce state for Switch."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant, State

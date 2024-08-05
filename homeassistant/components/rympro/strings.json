@@ -21,6 +21,9 @@
     "sensor": {
       "total_consumption": {
         "name": "Total consumption"
+      },
+      "monthly_forecast": {
+        "name": "Monthly forecast"
       }
     }
   }

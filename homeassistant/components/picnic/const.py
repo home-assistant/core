@@ -1,4 +1,5 @@
 """Constants for the Picnic integration."""
+
 from __future__ import annotations
 
 DOMAIN = "picnic"

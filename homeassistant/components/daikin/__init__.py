@@ -1,4 +1,5 @@
 """Platform for the Daikin AC."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,6 +9,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
+from pydaikin.factory import DaikinFactory
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -83,22 +85,21 @@ async def daikin_api_setup(
     session = async_get_clientsession(hass)
     try:
         async with asyncio.timeout(TIMEOUT):
-            device = await Appliance.factory(
+            device: Appliance = await DaikinFactory(
                 host, session, key=key, uuid=uuid, password=password
             )
+        _LOGGER.debug("Connection to %s successful", host)
     except TimeoutError as err:
         _LOGGER.debug("Connection to %s timed out", host)
         raise ConfigEntryNotReady from err
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
-    api = DaikinApi(device)
-
-    return api
+    return DaikinApi(device)
 
 
 class DaikinApi:

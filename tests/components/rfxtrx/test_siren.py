@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx siren platform."""
+
 from unittest.mock import call
 
 from homeassistant.components.rfxtrx import DOMAIN

@@ -1,4 +1,5 @@
 """The test for the ecobee thermostat number module."""
+
 from unittest.mock import patch
 
 from homeassistant.components.number import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE

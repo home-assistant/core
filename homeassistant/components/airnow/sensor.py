@@ -1,4 +1,5 @@
 """Support for the AirNow sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TIME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -23,18 +23,18 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import get_time_zone
 
-from . import AirNowDataUpdateCoordinator
+from . import AirNowConfigEntry, AirNowDataUpdateCoordinator
 from .const import (
     ATTR_API_AQI,
     ATTR_API_AQI_DESCRIPTION,
     ATTR_API_AQI_LEVEL,
     ATTR_API_O3,
+    ATTR_API_PM10,
     ATTR_API_PM25,
     ATTR_API_REPORT_DATE,
     ATTR_API_REPORT_HOUR,
-    ATTR_API_REPORT_TZ,
+    ATTR_API_REPORT_TZINFO,
     ATTR_API_STATION,
     ATTR_API_STATION_LATITUDE,
     ATTR_API_STATION_LONGITUDE,
@@ -51,17 +51,12 @@ ATTR_LEVEL = "level"
 ATTR_STATION = "reporting_station"
 
 
-@dataclass(frozen=True)
-class AirNowEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AirNowEntityDescription(SensorEntityDescription):
+    """Describes Airnow sensor entity."""
 
     value_fn: Callable[[Any], StateType]
     extra_state_attributes_fn: Callable[[Any], dict[str, str]] | None
-
-
-@dataclass(frozen=True)
-class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMixin):
-    """Describes Airnow sensor entity."""
 
 
 def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
@@ -88,9 +83,18 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
                 f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}",
                 "%Y-%m-%d %H",
             )
-            .replace(tzinfo=get_time_zone(data[ATTR_API_REPORT_TZ]))
+            .replace(tzinfo=data[ATTR_API_REPORT_TZINFO])
             .isoformat(),
         },
+    ),
+    AirNowEntityDescription(
+        key=ATTR_API_PM10,
+        translation_key="pm10",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PM10,
+        value_fn=lambda data: data.get(ATTR_API_PM10),
+        extra_state_attributes_fn=None,
     ),
     AirNowEntityDescription(
         key=ATTR_API_PM25,
@@ -120,11 +124,11 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AirNowConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirNow sensor entities based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [AirNowSensor(coordinator, description) for description in SENSOR_TYPES]
 

@@ -1,4 +1,5 @@
 """Support for Z-Wave controls using the select platform."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -29,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Select entity from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_select(info: ZwaveDiscoveryInfo) -> None:

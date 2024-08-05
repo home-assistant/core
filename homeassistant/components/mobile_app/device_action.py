@@ -1,4 +1,5 @@
 """Provides device actions for Mobile App."""
+
 from __future__ import annotations
 
 import voluptuous as vol

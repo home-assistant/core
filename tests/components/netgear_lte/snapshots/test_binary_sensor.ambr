@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.netgear_lm1200_mobile_connected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -20,6 +21,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.netgear_lm1200_roaming',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -33,6 +35,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.netgear_lm1200_wire_connected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

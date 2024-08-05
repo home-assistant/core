@@ -1,4 +1,5 @@
 """Support for lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,7 @@ from typing import Any
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,8 +35,10 @@ async def async_setup_entry(
 class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     """Light device."""
 
+    _attr_color_mode = ColorMode.ONOFF
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
         self,

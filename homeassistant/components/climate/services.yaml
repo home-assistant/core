@@ -148,3 +148,11 @@ turn_off:
       domain: climate
       supported_features:
         - climate.ClimateEntityFeature.TURN_OFF
+
+toggle:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_OFF
+        - climate.ClimateEntityFeature.TURN_ON

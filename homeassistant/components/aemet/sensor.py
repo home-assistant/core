@@ -1,4 +1,5 @@
 """Support for the AEMET OpenData service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,7 +28,7 @@ from aemet_opendata.const import (
     AOD_TEMP,
     AOD_TEMP_MAX,
     AOD_TEMP_MIN,
-    AOD_TIMESTAMP,
+    AOD_TIMESTAMP_UTC,
     AOD_TOWN,
     AOD_WEATHER,
     AOD_WIND_DIRECTION,
@@ -42,7 +43,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -55,6 +55,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import AemetConfigEntry
 from .const import (
     ATTR_API_CONDITION,
     ATTR_API_FORECAST_CONDITION,
@@ -84,11 +85,7 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_MAX_SPEED,
     ATTR_API_WIND_SPEED,
-    ATTRIBUTION,
     CONDITIONS_MAP,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
 )
 from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
@@ -171,7 +168,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_TIME}",
-        keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP_UTC],
         name="Daily forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -179,7 +176,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_TIME}",
-        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP_UTC],
         name="Hourly forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -286,7 +283,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_STATION_TIMESTAMP,
-        keys=[AOD_STATION, AOD_TIMESTAMP],
+        keys=[AOD_STATION, AOD_TIMESTAMP_UTC],
         name="Station timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -326,7 +323,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_TOWN_TIMESTAMP,
-        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_TIMESTAMP_UTC],
         name="Town timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -359,34 +356,32 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AemetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AEMET OpenData sensor entities based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    name: str = domain_data[ENTRY_NAME]
-    coordinator: WeatherUpdateCoordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    coordinator = domain_data.coordinator
 
-    entities: list[AemetSensor] = []
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
 
-    for description in FORECAST_SENSORS + WEATHER_SENSORS:
-        if dict_nested_value(coordinator.data["lib"], description.keys) is not None:
-            entities.append(
-                AemetSensor(
-                    name,
-                    coordinator,
-                    description,
-                    config_entry,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AemetSensor(
+            name,
+            coordinator,
+            description,
+            unique_id,
+        )
+        for description in FORECAST_SENSORS + WEATHER_SENSORS
+        if dict_nested_value(coordinator.data["lib"], description.keys) is not None
+    )
 
 
 class AemetSensor(AemetEntity, SensorEntity):
     """Implementation of an AEMET OpenData sensor."""
 
-    _attr_attribution = ATTRIBUTION
     entity_description: AemetSensorEntityDescription
 
     def __init__(
@@ -394,13 +389,12 @@ class AemetSensor(AemetEntity, SensorEntity):
         name: str,
         coordinator: WeatherUpdateCoordinator,
         description: AemetSensorEntityDescription,
-        config_entry: ConfigEntry,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, name, unique_id)
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{config_entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
     def native_value(self):

@@ -1,31 +1,22 @@
 """Support for ESPHome locks."""
+
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import EntityInfo, LockCommand, LockEntityState, LockInfo, LockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome switches based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=LockInfo,
-        entity_type=EsphomeLock,
-        state_type=LockEntityState,
-    )
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
@@ -69,15 +60,26 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
         """Return true if the lock is jammed (incomplete locking)."""
         return self._state.state == LockState.JAMMED
 
+    @convert_api_error_ha_error
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._client.lock_command(self._key, LockCommand.LOCK)
+        self._client.lock_command(self._key, LockCommand.LOCK)
 
+    @convert_api_error_ha_error
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         code = kwargs.get(ATTR_CODE, None)
-        await self._client.lock_command(self._key, LockCommand.UNLOCK, code)
+        self._client.lock_command(self._key, LockCommand.UNLOCK, code)
 
+    @convert_api_error_ha_error
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        await self._client.lock_command(self._key, LockCommand.OPEN)
+        self._client.lock_command(self._key, LockCommand.OPEN)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=LockInfo,
+    entity_type=EsphomeLock,
+    state_type=LockEntityState,
+)

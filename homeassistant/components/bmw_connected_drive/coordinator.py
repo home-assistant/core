@@ -1,4 +1,5 @@
 """Coordinator for BMW."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -48,6 +49,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=f"{DOMAIN}-{entry.data['username']}",
             update_interval=timedelta(seconds=SCAN_INTERVALS[entry.data[CONF_REGION]]),
         )
+
+        # Default to false on init so _async_update_data logic works
+        self.last_update_success = False
 
     async def _async_update_data(self) -> None:
         """Fetch data from BMW."""

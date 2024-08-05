@@ -1,7 +1,9 @@
 """Tests for Shelly button platform."""
-from __future__ import annotations
+
+from unittest.mock import Mock
 
 from aioshelly.const import MODEL_I3
+import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.event import (
@@ -12,6 +14,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, inject_rpc_device_event, register_entity
 
@@ -19,7 +22,10 @@ DEVICE_BLOCK_ID = 4
 
 
 async def test_rpc_button(
-    hass: HomeAssistant, mock_rpc_device, entity_registry, monkeypatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device event."""
     await init_integration(hass, 2)
@@ -59,7 +65,10 @@ async def test_rpc_button(
 
 
 async def test_rpc_event_removal(
-    hass: HomeAssistant, mock_rpc_device, entity_registry, monkeypatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC event entity is removed due to removal_condition."""
     entity_id = register_entity(hass, EVENT_DOMAIN, "test_name_input_0", "input:0")
@@ -73,7 +82,10 @@ async def test_rpc_event_removal(
 
 
 async def test_block_event(
-    hass: HomeAssistant, monkeypatch, mock_block_device, entity_registry
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test block device event."""
     await init_integration(hass, 1)
@@ -103,7 +115,9 @@ async def test_block_event(
     assert state.attributes.get(ATTR_EVENT_TYPE) == "long"
 
 
-async def test_block_event_shix3_1(hass: HomeAssistant, mock_block_device) -> None:
+async def test_block_event_shix3_1(
+    hass: HomeAssistant, mock_block_device: Mock
+) -> None:
     """Test block device event for SHIX3-1."""
     await init_integration(hass, 1, model=MODEL_I3)
     entity_id = "event.test_name_channel_1"

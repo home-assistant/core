@@ -1,4 +1,5 @@
 """Test the Cover significant change platform."""
+
 import pytest
 
 from homeassistant.components.cover import (

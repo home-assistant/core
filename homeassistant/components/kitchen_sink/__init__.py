@@ -3,6 +3,7 @@
 This sets up a demo environment of features which are obscure or which represent
 incorrect behavior, and are thus not wanted in the demo integration.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -27,10 +28,13 @@ DOMAIN = "kitchen_sink"
 
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
+    Platform.BUTTON,
     Platform.IMAGE,
     Platform.LAWN_MOWER,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WEATHER,
 ]
 
@@ -67,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-def _create_issues(hass):
+def _create_issues(hass: HomeAssistant) -> None:
     """Create some issue registry issues."""
     async_create_issue(
         hass,

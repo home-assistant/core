@@ -1,6 +1,8 @@
 """Support for Hue lights."""
+
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aiohue import HueBridgeV2
@@ -51,17 +53,15 @@ async def async_setup_entry(
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
     controller: LightsController = api.lights
+    make_light_entity = partial(HueLight, bridge, controller)
 
     @callback
     def async_add_light(event_type: EventType, resource: Light) -> None:
         """Add Hue Light."""
-        light = HueLight(bridge, controller, resource)
-        async_add_entities([light])
+        async_add_entities([make_light_entity(resource)])
 
     # add all current items in controller
-    for light in controller:
-        async_add_light(EventType.RESOURCE_ADDED, resource=light)
-
+    async_add_entities(make_light_entity(light) for light in controller)
     # register listener for new lights
     config_entry.async_on_unload(
         controller.subscribe(async_add_light, event_filter=EventType.RESOURCE_ADDED)
@@ -235,6 +235,9 @@ class HueLight(HueBaseEntity, LightEntity):
                 if transition is None:
                     # a transition is required for timed effect, default to 10 minutes
                     transition = 600000
+            # we need to clear color values if an effect is applied
+            color_temp = None
+            xy_color = None
 
         if flash is not None:
             await self.async_set_flash(flash)

@@ -1,4 +1,5 @@
 """The Matrix bot component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -208,15 +209,22 @@ class MatrixBot:
             await self._resolve_room_aliases(listening_rooms)
             self._load_commands(commands)
             await self._join_rooms()
+
             # Sync once so that we don't respond to past events.
+            _LOGGER.debug("Starting initial sync for %s", self._mx_id)
             await self._client.sync(timeout=30_000)
+            _LOGGER.debug("Finished initial sync for %s", self._mx_id)
 
             self._client.add_event_callback(self._handle_room_message, RoomMessageText)
 
-            await self._client.sync_forever(
-                timeout=30_000,
-                loop_sleep_time=1_000,
-            )  # milliseconds.
+            _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
+            self.hass.async_create_background_task(
+                self._client.sync_forever(
+                    timeout=30_000,
+                    loop_sleep_time=1_000,
+                ),  # milliseconds.
+                name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
+            )
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
@@ -307,7 +315,9 @@ class MatrixBot:
     async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
         """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
         resolved_rooms = [
-            self.hass.async_create_task(self._resolve_room_alias(room_alias_or_id))
+            self.hass.async_create_task(
+                self._resolve_room_alias(room_alias_or_id), eager_start=False
+            )
             for room_alias_or_id in listening_rooms
         ]
         for resolved_room in asyncio.as_completed(resolved_rooms):
@@ -329,7 +339,9 @@ class MatrixBot:
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
         rooms = [
-            self.hass.async_create_task(self._join_room(room_id, room_alias_or_id))
+            self.hass.async_create_task(
+                self._join_room(room_id, room_alias_or_id), eager_start=False
+            )
             for room_alias_or_id, room_id in self._listening_rooms.items()
         ]
         await asyncio.wait(rooms)
@@ -337,7 +349,9 @@ class MatrixBot:
     async def _get_auth_tokens(self) -> JsonObjectType:
         """Read sorted authentication tokens from disk."""
         try:
-            return load_json_object(self._session_filepath)
+            return await self.hass.async_add_executor_job(
+                load_json_object, self._session_filepath
+            )
         except HomeAssistantError as ex:
             _LOGGER.warning(
                 "Loading authentication tokens from file '%s' failed: %s",
@@ -431,18 +445,17 @@ class MatrixBot:
         self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
     ) -> None:
         """Wrap _handle_room_send for multiple target_rooms."""
-        _tasks = []
-        for target_room in target_rooms:
-            _tasks.append(
-                self.hass.async_create_task(
-                    self._handle_room_send(
-                        target_room=target_room,
-                        message_type=message_type,
-                        content=content,
-                    )
-                )
+        await asyncio.wait(
+            self.hass.async_create_task(
+                self._handle_room_send(
+                    target_room=target_room,
+                    message_type=message_type,
+                    content=content,
+                ),
+                eager_start=False,
             )
-        await asyncio.wait(_tasks)
+            for target_room in target_rooms
+        )
 
     async def _send_image(
         self, image_path: str, target_rooms: Sequence[RoomAnyID]
@@ -515,7 +528,9 @@ class MatrixBot:
             and len(target_rooms) > 0
         ):
             image_tasks = [
-                self.hass.async_create_task(self._send_image(image_path, target_rooms))
+                self.hass.async_create_task(
+                    self._send_image(image_path, target_rooms), eager_start=False
+                )
                 for image_path in image_paths
             ]
             await asyncio.wait(image_tasks)

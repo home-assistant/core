@@ -1,6 +1,10 @@
 """The Traccar Server integration."""
+
 from __future__ import annotations
 
+from datetime import timedelta
+
+from aiohttp import CookieJar
 from pytraccar import ApiClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +18,8 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_CUSTOM_ATTRIBUTES,
@@ -25,15 +30,25 @@ from .const import (
 )
 from .coordinator import TraccarServerCoordinator
 
-PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Traccar Server from a config entry."""
+    client_session = async_create_clientsession(
+        hass,
+        cookie_jar=CookieJar(
+            unsafe=not entry.data[CONF_SSL] or not entry.data[CONF_VERIFY_SSL]
+        ),
+    )
     coordinator = TraccarServerCoordinator(
         hass=hass,
         client=ApiClient(
-            client_session=async_get_clientsession(hass),
+            client_session=client_session,
             host=entry.data[CONF_HOST],
             port=entry.data[CONF_PORT],
             username=entry.data[CONF_USERNAME],
@@ -54,6 +69,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    if entry.options.get(CONF_EVENTS):
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass,
+                coordinator.import_events,
+                timedelta(seconds=30),
+                cancel_on_shutdown=True,
+                name="traccar_server_import_events",
+            )
+        )
+
+    entry.async_create_background_task(
+        hass=hass,
+        target=coordinator.subscribe(),
+        name="Traccar Server subscription",
+    )
 
     return True
 

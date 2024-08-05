@@ -1,5 +1,5 @@
 """Tests for the WLED light platform."""
-import json
+
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -8,14 +8,24 @@ from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
-from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, SCAN_INTERVAL
+from homeassistant.components.wled.const import (
+    CONF_KEEP_MAIN_LIGHT,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -29,7 +39,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -40,9 +54,9 @@ async def test_rgb_light_state(
     """Test the creation and values of the WLED lights."""
     # First segment of the strip
     assert (state := hass.states.get("light.wled_rgb_light"))
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 127
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
     assert state.attributes.get(ATTR_EFFECT) == "Solid"
-    assert state.attributes.get(ATTR_HS_COLOR) == (37.412, 100.0)
+    assert state.attributes.get(ATTR_HS_COLOR) == (218.906, 50.196)
     assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
@@ -51,9 +65,9 @@ async def test_rgb_light_state(
 
     # Second segment of the strip
     assert (state := hass.states.get("light.wled_rgb_light_segment_1"))
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 127
-    assert state.attributes.get(ATTR_EFFECT) == "Blink"
-    assert state.attributes.get(ATTR_HS_COLOR) == (148.941, 100.0)
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
+    assert state.attributes.get(ATTR_EFFECT) == "Wipe"
+    assert state.attributes.get(ATTR_HS_COLOR) == (40.0, 100.0)
     assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
@@ -62,7 +76,7 @@ async def test_rgb_light_state(
 
     # Test main control of the lightstrip
     assert (state := hass.states.get("light.wled_rgb_light_main"))
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 127
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 128
     assert state.state == STATE_ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light_main"))
@@ -187,8 +201,8 @@ async def test_dynamically_handle_segments(
     assert not hass.states.get("light.wled_rgb_light_segment_1")
 
     return_value = mock_wled.update.return_value
-    mock_wled.update.return_value = WLEDDevice(
-        json.loads(load_fixture("wled/rgb.json"))
+    mock_wled.update.return_value = WLEDDevice.from_dict(
+        load_json_object_fixture("rgb.json", DOMAIN)
     )
 
     freezer.tick(SCAN_INTERVAL)
@@ -326,6 +340,8 @@ async def test_rgbw_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     """Test RGBW support for WLED."""
     assert (state := hass.states.get("light.wled_rgbw_light"))
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.RGBW]
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBW
     assert state.attributes.get(ATTR_RGBW_COLOR) == (255, 0, 0, 139)
 
     await hass.services.async_call(
@@ -361,3 +377,34 @@ async def test_single_segment_with_keep_main_light(
 
     assert (state := hass.states.get("light.wled_rgb_light_main"))
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
+    """Test CCT support for WLED."""
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGBW,
+    ]
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
+    assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 2000
+    assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 2942
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_cct_light",
+            ATTR_COLOR_TEMP_KELVIN: 4321,
+        },
+        blocking=True,
+    )
+    assert mock_wled.segment.call_count == 1
+    mock_wled.segment.assert_called_with(
+        cct=130,
+        on=True,
+        segment_id=0,
+    )

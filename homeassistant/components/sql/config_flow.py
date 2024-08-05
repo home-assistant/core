@@ -1,4 +1,5 @@
 """Adds config flow for SQL integration."""
+
 from __future__ import annotations
 
 import logging
@@ -12,12 +13,17 @@ import sqlparse
 from sqlparse.exceptions import SQLParseError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -26,7 +32,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
@@ -128,7 +133,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
     return True
 
 
-class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SQL integration."""
 
     VERSION = 1
@@ -136,14 +141,14 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SQLOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SQLOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step."""
         errors = {}
         description_placeholders = {}
@@ -204,12 +209,12 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class SQLOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle SQL options."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage SQL options."""
         errors = {}
         description_placeholders = {}

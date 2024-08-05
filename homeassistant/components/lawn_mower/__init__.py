@@ -1,16 +1,15 @@
 """The lawn mower integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -24,15 +23,11 @@ from .const import (
     LawnMowerEntityFeature,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
-SCAN_INTERVAL = timedelta(seconds=60)
-
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -107,7 +102,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def start_mowing(self) -> None:
         """Start or resume mowing."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
@@ -115,7 +110,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def dock(self) -> None:
         """Dock the mower."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_dock(self) -> None:
         """Dock the mower."""
@@ -123,7 +118,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def pause(self) -> None:
         """Pause the lawn mower."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_pause(self) -> None:
         """Pause the lawn mower."""

@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "rainsensor": {
+        "default": "mdi:water"
+      }
+    },
+    "calendar": {
+      "calendar": {
+        "default": "mdi:sprinkler"
+      }
+    },
+    "number": {
+      "rain_delay": {
+        "default": "mdi:water-off"
+      }
+    },
+    "sensor": {
+      "raindelay": {
+        "default": "mdi:water-off"
+      }
+    }
+  },
+  "services": {
+    "start_irrigation": "mdi:water",
+    "set_rain_delay": "mdi:water-sync"
+  }
+}

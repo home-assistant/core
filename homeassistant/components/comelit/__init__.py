@@ -1,6 +1,5 @@
 """Comelit integration."""
 
-
 from aiocomelit.const import BRIDGE
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +12,7 @@ from .coordinator import ComelitBaseCoordinator, ComelitSerialBridge, ComelitVed
 BRIDGE_PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,

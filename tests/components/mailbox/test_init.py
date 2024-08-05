@@ -1,4 +1,5 @@
 """The tests for the mailbox component."""
+
 from datetime import datetime
 from hashlib import sha1
 from http import HTTPStatus
@@ -7,10 +8,11 @@ from typing import Any
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
-import homeassistant.components.mailbox as mailbox
+from homeassistant.components import mailbox
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockModule, mock_integration, mock_platform
@@ -47,7 +49,7 @@ class TestMailbox(mailbox.Mailbox):
         """Initialize Test mailbox."""
         super().__init__(hass, name)
         self._messages: dict[str, dict[str, Any]] = {}
-        for idx in range(0, 10):
+        for idx in range(10):
             msg = _create_message(idx)
             msgsha = msg["sha"]
             self._messages[msgsha] = msg
@@ -162,7 +164,7 @@ async def test_delete_from_mailbox(mock_http_client: TestClient) -> None:
     msgsha1 = sha1(msgtxt1.encode("utf-8")).hexdigest()
     msgsha2 = sha1(msgtxt2.encode("utf-8")).hexdigest()
 
-    for msg in [msgsha1, msgsha2]:
+    for msg in (msgsha1, msgsha2):
         url = f"/api/mailbox/delete/TestMailbox/{msg}"
         req = await mock_http_client.delete(url)
         assert req.status == HTTPStatus.OK
@@ -207,3 +209,17 @@ async def test_delete_from_invalid_mailbox(mock_http_client: TestClient) -> None
 
     req = await mock_http_client.delete(url)
     assert req.status == HTTPStatus.NOT_FOUND
+
+
+async def test_repair_issue_is_created(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_mailbox: None
+) -> None:
+    """Test repair issue is created."""
+    assert await async_setup_component(
+        hass, mailbox.DOMAIN, {mailbox.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+    assert (
+        mailbox.DOMAIN,
+        "deprecated_mailbox_test",
+    ) in issue_registry.issues

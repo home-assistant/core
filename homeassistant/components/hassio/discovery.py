@@ -1,4 +1,5 @@
 """Implement the services discovery feature from Hass.io for Add-ons."""
+
 from __future__ import annotations
 
 import asyncio
@@ -77,7 +78,7 @@ class HassIODiscovery(HomeAssistantView):
             data = await self.hassio.get_discovery_message(uuid)
         except HassioAPIError as err:
             _LOGGER.error("Can't read discovery data: %s", err)
-            raise HTTPServiceUnavailable() from None
+            raise HTTPServiceUnavailable from None
 
         await self.async_process_new(data)
         return web.Response()

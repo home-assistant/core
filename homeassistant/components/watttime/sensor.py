@@ -1,4 +1,5 @@
 """Support for WattTime sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -38,14 +39,12 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
         translation_key="marginal_operating_emissions_rate",
-        icon="mdi:blur",
         native_unit_of_measurement=f"{UnitOfMass.POUNDS} CO2/MWh",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT,
         translation_key="relative_marginal_emissions_intensity",
-        icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

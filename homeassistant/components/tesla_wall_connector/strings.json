@@ -37,7 +37,7 @@
           "not_connected": "Vehicle not connected",
           "connected": "Vehicle connected",
           "ready": "Ready to charge",
-          "negociating": "Negociating connection",
+          "negotiating": "Negotiating connection",
           "error": "Error",
           "charging_finished": "Charging finished",
           "waiting_car": "Waiting for car",
@@ -50,6 +50,12 @@
       },
       "handle_temp_c": {
         "name": "Handle temperature"
+      },
+      "pcba_temp_c": {
+        "name": "PCB temperature"
+      },
+      "mcu_temp_c": {
+        "name": "MCU temperature"
       },
       "grid_v": {
         "name": "Grid voltage"

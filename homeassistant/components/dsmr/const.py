@@ -1,4 +1,5 @@
 """Constants for the DSMR integration."""
+
 from __future__ import annotations
 
 import logging
@@ -21,8 +22,6 @@ DEFAULT_PORT = "/dev/ttyUSB0"
 DEFAULT_PRECISION = 3
 DEFAULT_RECONNECT_INTERVAL = 30
 DEFAULT_TIME_BETWEEN_UPDATE = 30
-
-DATA_TASK = "task"
 
 DEVICE_NAME_ELECTRICITY = "Electricity Meter"
 DEVICE_NAME_GAS = "Gas Meter"

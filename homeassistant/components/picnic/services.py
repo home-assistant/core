@@ -1,4 +1,5 @@
 """Services for the Picnic integration."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -75,7 +76,7 @@ async def handle_add_product(
     )
 
 
-def product_search(api_client: PicnicAPI, product_name: str | None) -> None | str:
+def product_search(api_client: PicnicAPI, product_name: str | None) -> str | None:
     """Query the api client for the product name."""
     if product_name is None:
         return None

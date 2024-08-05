@@ -1,0 +1,57 @@
+get_travel_times:
+  fields:
+    origin:
+      required: true
+      example: "38.9"
+      selector:
+        text:
+    destination:
+      required: true
+      example: "-77.04833"
+      selector:
+        text:
+    region:
+      required: true
+      default: "us"
+      selector:
+        select:
+          translation_key: region
+          options:
+            - us
+            - na
+            - eu
+            - il
+            - au
+    units:
+      default: "metric"
+      selector:
+        select:
+          translation_key: units
+          options:
+            - metric
+            - imperial
+    vehicle_type:
+      default: "car"
+      selector:
+        select:
+          translation_key: vehicle_type
+          options:
+            - car
+            - taxi
+            - motorcycle
+    realtime:
+      required: false
+      selector:
+        boolean:
+    avoid_toll_roads:
+      required: false
+      selector:
+        boolean:
+    avoid_ferries:
+      required: false
+      selector:
+        boolean:
+    avoid_subscription_roads:
+      required: false
+      selector:
+        boolean:

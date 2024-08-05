@@ -1,4 +1,5 @@
 """The data update coordinator for OctoPrint."""
+
 from __future__ import annotations
 
 from datetime import timedelta

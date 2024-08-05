@@ -1,4 +1,5 @@
 """Support for Verisure alarm control panels."""
+
 from __future__ import annotations
 
 import asyncio

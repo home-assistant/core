@@ -1,4 +1,5 @@
 """Tests for the Awair sensor platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.awair.const import (

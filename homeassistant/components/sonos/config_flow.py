@@ -1,10 +1,11 @@
 """Config flow for SONOS."""
+
 from collections.abc import Awaitable
 import dataclasses
 
 from homeassistant.components import ssdp, zeroconf
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN, UPNP_ST
@@ -25,7 +26,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DO
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf."""
         hostname = discovery_info.hostname
         if hostname is None or not hostname.lower().startswith("sonos"):

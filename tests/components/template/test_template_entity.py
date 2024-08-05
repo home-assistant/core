@@ -1,4 +1,5 @@
 """Test template entity."""
+
 import pytest
 
 from homeassistant.components.template import template_entity

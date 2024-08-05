@@ -1,4 +1,5 @@
 """Binary sensor support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from aioskybell.helpers import const as CONST

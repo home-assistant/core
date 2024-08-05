@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "ssid": {
+        "default": "mdi:wifi"
+      }
+    }
+  }
+}

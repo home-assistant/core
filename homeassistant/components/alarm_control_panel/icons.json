@@ -18,9 +18,9 @@
     "alarm_arm_away": "mdi:shield-lock",
     "alarm_arm_home": "mdi:shield-home",
     "alarm_arm_night": "mdi:shield-moon",
-    "alarm_custom_bypass": "mdi:security",
+    "alarm_arm_custom_bypass": "mdi:security",
     "alarm_disarm": "mdi:shield-off",
     "alarm_trigger": "mdi:bell-ring",
-    "arlam_arm_vacation": "mdi:shield-airplane"
+    "alarm_arm_vacation": "mdi:shield-airplane"
   }
 }

@@ -1,4 +1,5 @@
 """Helpers for automation integration."""
+
 from homeassistant.components.blueprint import DomainBlueprints
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback

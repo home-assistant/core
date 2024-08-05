@@ -33,7 +33,6 @@ STATUS_ENTITY_DESCRIPTIONS: tuple[AOSmithStatusSensorEntityDescription, ...] = (
     AOSmithStatusSensorEntityDescription(
         key="hot_water_availability",
         translation_key="hot_water_availability",
-        icon="mdi:water-thermometer",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "medium", "high"],
         value_fn=lambda device: HOT_WATER_STATUS_MAP.get(

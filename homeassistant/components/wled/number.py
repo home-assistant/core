@@ -1,4 +1,5 @@
 """Support for LED numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,26 +9,26 @@ from functools import partial
 from wled import Segment
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_INTENSITY, ATTR_SPEED, DOMAIN
+from . import WLEDConfigEntry
+from .const import ATTR_INTENSITY, ATTR_SPEED
 from .coordinator import WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-from .models import WLEDEntity
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WLEDConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED number based on a config entry."""
-    coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     update_segments = partial(
         async_update_segments,
@@ -43,7 +44,7 @@ async def async_setup_entry(
 class WLEDNumberEntityDescription(NumberEntityDescription):
     """Class describing WLED number entities."""
 
-    value_fn: Callable[[Segment], float | None]
+    value_fn: Callable[[Segment], int | None]
 
 
 NUMBERS = [
@@ -63,7 +64,7 @@ NUMBERS = [
         native_step=1,
         native_min_value=0,
         native_max_value=255,
-        value_fn=lambda segment: segment.intensity,
+        value_fn=lambda segment: int(segment.intensity),
     ),
 ]
 
@@ -99,7 +100,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         """Return True if entity is available."""
         try:
             self.coordinator.data.state.segments[self._segment]
-        except IndexError:
+        except KeyError:
             return False
 
         return super().available
@@ -132,14 +133,19 @@ def async_update_segments(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
+    segment_ids = {
+        segment.segment_id
+        for segment in coordinator.data.state.segments.values()
+        if segment.segment_id is not None
+    }
 
     new_entities: list[WLEDNumber] = []
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:
         current_ids.add(segment_id)
-        for desc in NUMBERS:
-            new_entities.append(WLEDNumber(coordinator, segment_id, desc))
+        new_entities.extend(
+            WLEDNumber(coordinator, segment_id, desc) for desc in NUMBERS
+        )
 
     async_add_entities(new_entities)

@@ -1,0 +1,10 @@
+{
+  "domain": "weatherflow_cloud",
+  "name": "WeatherflowCloud",
+  "codeowners": ["@jeeftor"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/weatherflow_cloud",
+  "iot_class": "cloud_polling",
+  "loggers": ["weatherflow4py"],
+  "requirements": ["weatherflow4py==0.2.21"]
+}

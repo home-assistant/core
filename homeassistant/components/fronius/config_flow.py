@@ -1,4 +1,5 @@
 """Config flow for Fronius integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,11 +9,10 @@ from typing import Any, Final
 from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -21,12 +21,6 @@ from .const import DOMAIN, FroniusConfigEntryData
 _LOGGER: Final = logging.getLogger(__name__)
 
 DHCP_REQUEST_DELAY: Final = 60
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-    }
-)
 
 
 def create_title(info: FroniusConfigEntryData) -> str:
@@ -40,10 +34,7 @@ def create_title(info: FroniusConfigEntryData) -> str:
 async def validate_host(
     hass: HomeAssistant, host: str
 ) -> tuple[str, FroniusConfigEntryData]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     fronius = Fronius(async_get_clientsession(hass), host)
 
     try:
@@ -73,7 +64,7 @@ async def validate_host(
     )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fronius."""
 
     VERSION = 1
@@ -81,39 +72,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self.info: FroniusConfigEntryData
+        self._entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
 
-        try:
-            unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(unique_id, raise_on_progress=False)
-            self._abort_if_unique_id_configured(updates=dict(info))
+        if user_input is not None:
+            try:
+                unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(unique_id, raise_on_progress=False)
+                self._abort_if_unique_id_configured(updates=dict(info))
 
-            return self.async_create_entry(title=create_title(info), data=info)
+                return self.async_create_entry(title=create_title(info), data=info)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the DHCP client."""
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST].lstrip("http://").rstrip("/").lower() in (
+            if entry.data[CONF_HOST].removeprefix("http://").rstrip("/").lower() in (
                 discovery_info.ip,
                 discovery_info.hostname,
             ):
@@ -133,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Attempt to confirm."""
         title = create_title(self.info)
         if user_input is not None:
@@ -146,6 +138,51 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "device": title,
             },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add reconfigure step to allow to reconfigure a config entry."""
+        errors = {}
+
+        if user_input is not None:
+            try:
+                unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Config didn't change or is already configured in another entry
+                self._async_abort_entries_match(dict(info))
+
+                existing_entry = await self.async_set_unique_id(
+                    unique_id, raise_on_progress=False
+                )
+                assert self._entry is not None
+                if existing_entry and existing_entry.entry_id != self._entry.entry_id:
+                    # Uid of device is already configured in another entry (but with different host)
+                    self._abort_if_unique_id_configured()
+
+                return self.async_update_reload_and_abort(
+                    self._entry,
+                    data=info,
+                    reason="reconfigure_successful",
+                )
+
+        if self._entry is None:
+            self._entry = self.hass.config_entries.async_get_entry(
+                self.context["entry_id"]
+            )
+            assert self._entry is not None
+        host = self._entry.data[CONF_HOST]
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            description_placeholders={"device": self._entry.title},
+            errors=errors,
         )
 
 

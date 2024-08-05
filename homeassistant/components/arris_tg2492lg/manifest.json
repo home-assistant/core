@@ -2,8 +2,10 @@
   "domain": "arris_tg2492lg",
   "name": "Arris TG2492LG",
   "codeowners": ["@vanbalken"],
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/arris_tg2492lg",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["arris_tg2492lg"],
-  "requirements": ["arris-tg2492lg==1.2.1"]
+  "requirements": ["arris-tg2492lg==2.2.0"]
 }

@@ -1,4 +1,5 @@
 """Platform for UPB light integration."""
+
 from typing import Any
 
 from homeassistant.components.light import (

@@ -1,0 +1,6 @@
+# serializer version: 1
+# name: test_get_config_entry_diagnostics
+  dict({
+    'coordinator_data': 50.3,
+  })
+# ---

@@ -1,4 +1,5 @@
 """Tests for the Backup integration."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -29,38 +30,46 @@ async def _mock_backup_generation(manager: BackupManager):
             Path(".storage"),
         ]
 
-    with patch("tarfile.open", MagicMock()) as mocked_tarfile, patch(
-        "pathlib.Path.iterdir", _mock_iterdir
-    ), patch("pathlib.Path.stat", MagicMock(st_size=123)), patch(
-        "pathlib.Path.is_file", lambda x: x.name != ".storage"
-    ), patch(
-        "pathlib.Path.is_dir",
-        lambda x: x.name == ".storage",
-    ), patch(
-        "pathlib.Path.exists",
-        lambda x: x != manager.backup_dir,
-    ), patch(
-        "pathlib.Path.is_symlink",
-        lambda _: False,
-    ), patch(
-        "pathlib.Path.mkdir",
-        MagicMock(),
-    ), patch(
-        "homeassistant.components.backup.manager.save_json"
-    ) as mocked_save_json, patch(
-        "homeassistant.components.backup.manager.HAVERSION",
-        "2025.1.0",
+    with (
+        patch(
+            "homeassistant.components.backup.manager.SecureTarFile"
+        ) as mocked_tarfile,
+        patch("pathlib.Path.iterdir", _mock_iterdir),
+        patch("pathlib.Path.stat", MagicMock(st_size=123)),
+        patch("pathlib.Path.is_file", lambda x: x.name != ".storage"),
+        patch(
+            "pathlib.Path.is_dir",
+            lambda x: x.name == ".storage",
+        ),
+        patch(
+            "pathlib.Path.exists",
+            lambda x: x != manager.backup_dir,
+        ),
+        patch(
+            "pathlib.Path.is_symlink",
+            lambda _: False,
+        ),
+        patch(
+            "pathlib.Path.mkdir",
+            MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.backup.manager.json_bytes",
+            return_value=b"{}",  # Empty JSON
+        ) as mocked_json_bytes,
+        patch(
+            "homeassistant.components.backup.manager.HAVERSION",
+            "2025.1.0",
+        ),
     ):
         await manager.generate_backup()
 
-        assert mocked_save_json.call_count == 1
-        assert mocked_save_json.call_args[0][1]["homeassistant"] == {
-            "version": "2025.1.0"
-        }
-
-        assert (
-            manager.backup_dir.as_posix()
-            in mocked_tarfile.call_args_list[0].kwargs["name"]
+        assert mocked_json_bytes.call_count == 1
+        backup_json_dict = mocked_json_bytes.call_args[0][0]
+        assert isinstance(backup_json_dict, dict)
+        assert backup_json_dict["homeassistant"] == {"version": "2025.1.0"}
+        assert manager.backup_dir.as_posix() in str(
+            mocked_tarfile.call_args_list[0][0][0]
         )
 
 
@@ -82,18 +91,21 @@ async def test_constructor(hass: HomeAssistant) -> None:
 async def test_load_backups(hass: HomeAssistant) -> None:
     """Test loading backups."""
     manager = BackupManager(hass)
-    with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
-        "tarfile.open", return_value=MagicMock()
-    ), patch(
-        "homeassistant.components.backup.manager.json_loads_object",
-        return_value={
-            "slug": TEST_BACKUP.slug,
-            "name": TEST_BACKUP.name,
-            "date": TEST_BACKUP.date,
-        },
-    ), patch(
-        "pathlib.Path.stat",
-        return_value=MagicMock(st_size=TEST_BACKUP.size),
+    with (
+        patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]),
+        patch("tarfile.open", return_value=MagicMock()),
+        patch(
+            "homeassistant.components.backup.manager.json_loads_object",
+            return_value={
+                "slug": TEST_BACKUP.slug,
+                "name": TEST_BACKUP.name,
+                "date": TEST_BACKUP.date,
+            },
+        ),
+        patch(
+            "pathlib.Path.stat",
+            return_value=MagicMock(st_size=TEST_BACKUP.size),
+        ),
     ):
         await manager.load_backups()
     backups = await manager.get_backups()
@@ -106,12 +118,13 @@ async def test_load_backups_with_exception(
 ) -> None:
     """Test loading backups with exception."""
     manager = BackupManager(hass)
-    with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
-        "tarfile.open", side_effect=OSError("Test ecxeption")
+    with (
+        patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]),
+        patch("tarfile.open", side_effect=OSError("Test exception")),
     ):
         await manager.load_backups()
     backups = await manager.get_backups()
-    assert f"Unable to read backup {TEST_BACKUP.path}: Test ecxeption" in caplog.text
+    assert f"Unable to read backup {TEST_BACKUP.path}: Test exception" in caplog.text
     assert backups == {}
 
 
@@ -200,6 +213,7 @@ async def test_loading_platforms(
         ),
     )
     await manager.load_platforms()
+    await hass.async_block_till_done()
 
     assert manager.loaded_platforms
     assert len(manager.platforms) == 1
@@ -219,6 +233,7 @@ async def test_not_loading_bad_platforms(
 
     await _setup_mock_domain(hass)
     await manager.load_platforms()
+    await hass.async_block_till_done()
 
     assert manager.loaded_platforms
     assert len(manager.platforms) == 0
@@ -268,3 +283,53 @@ async def test_exception_plaform_post(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError):
         await _mock_backup_generation(manager)
+
+
+async def test_loading_platforms_when_running_pre_backup_actions(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading backup platforms when running post backup actions."""
+    manager = BackupManager(hass)
+
+    assert not manager.loaded_platforms
+    assert not manager.platforms
+
+    await _setup_mock_domain(
+        hass,
+        Mock(
+            async_pre_backup=AsyncMock(),
+            async_post_backup=AsyncMock(),
+        ),
+    )
+    await manager.pre_backup_actions()
+
+    assert manager.loaded_platforms
+    assert len(manager.platforms) == 1
+
+    assert "Loaded 1 platforms" in caplog.text
+
+
+async def test_loading_platforms_when_running_post_backup_actions(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading backup platforms when running post backup actions."""
+    manager = BackupManager(hass)
+
+    assert not manager.loaded_platforms
+    assert not manager.platforms
+
+    await _setup_mock_domain(
+        hass,
+        Mock(
+            async_pre_backup=AsyncMock(),
+            async_post_backup=AsyncMock(),
+        ),
+    )
+    await manager.post_backup_actions()
+
+    assert manager.loaded_platforms
+    assert len(manager.platforms) == 1
+
+    assert "Loaded 1 platforms" in caplog.text

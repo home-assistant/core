@@ -28,7 +28,7 @@
       "model": "Plug",
       "name": "Playstation Smart Plug",
       "sensors": {
-        "electricity_consumed": 82.6,
+        "electricity_consumed": 84.1,
         "electricity_consumed_interval": 8.6,
         "electricity_produced": 0.0,
         "electricity_produced_interval": 0.0
@@ -479,6 +479,7 @@
         "warning": "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device."
       }
     },
+    "reboot": true,
     "smile_name": "Adam"
   }
 }

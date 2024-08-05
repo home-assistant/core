@@ -1,4 +1,5 @@
 """Test starting HA helpers."""
+
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED

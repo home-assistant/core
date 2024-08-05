@@ -1,4 +1,5 @@
 """Support for Keenetic routers as device tracker."""
+
 from __future__ import annotations
 
 import logging
@@ -118,7 +119,7 @@ class KeeneticTracker(ScannerEntity):
         return f"{self._device.mac}_{self._router.config_entry.entry_id}"
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ip if self.is_connected else None
 

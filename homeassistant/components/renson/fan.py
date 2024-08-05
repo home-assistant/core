@@ -1,11 +1,17 @@
 """Platform to control a Renson ventilation unit."""
+
 from __future__ import annotations
 
 import logging
 import math
 from typing import Any
 
-from renson_endura_delta.field_enum import CURRENT_LEVEL_FIELD, DataType
+from renson_endura_delta.field_enum import (
+    BREEZE_LEVEL_FIELD,
+    BREEZE_TEMPERATURE_FIELD,
+    CURRENT_LEVEL_FIELD,
+    DataType,
+)
 from renson_endura_delta.renson import Level, RensonVentilation
 import voluptuous as vol
 
@@ -15,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -38,26 +45,27 @@ CMD_MAPPING = {
 SPEED_MAPPING = {
     Level.OFF.value: 0,
     Level.HOLIDAY.value: 0,
+    Level.BREEZE.value: 0,
     Level.LEVEL1.value: 1,
     Level.LEVEL2.value: 2,
     Level.LEVEL3.value: 3,
     Level.LEVEL4.value: 4,
 }
 
-SET_TIMER_LEVEL_SCHEMA = {
+SET_TIMER_LEVEL_SCHEMA: VolDictType = {
     vol.Required("timer_level"): vol.In(
         ["level1", "level2", "level3", "level4", "holiday", "breeze"]
     ),
     vol.Required("minutes"): cv.positive_int,
 }
 
-SET_BREEZE_SCHEMA = {
+SET_BREEZE_SCHEMA: VolDictType = {
     vol.Required("breeze_level"): vol.In(["level1", "level2", "level3", "level4"]),
     vol.Required("temperature"): cv.positive_int,
     vol.Required("activate"): bool,
 }
 
-SET_POLLUTION_SETTINGS_SCHEMA = {
+SET_POLLUTION_SETTINGS_SCHEMA: VolDictType = {
     vol.Required("day_pollution_level"): vol.In(
         ["level1", "level2", "level3", "level4"]
     ),
@@ -111,10 +119,15 @@ async def async_setup_entry(
 class RensonFan(RensonEntity, FanEntity):
     """Representation of the Renson fan platform."""
 
-    _attr_icon = "mdi:air-conditioner"
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_translation_key = "fan"
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
         """Initialize the Renson fan."""
@@ -128,6 +141,21 @@ class RensonFan(RensonEntity, FanEntity):
             self.api.get_field_value(self.coordinator.data, CURRENT_LEVEL_FIELD.name),
             DataType.LEVEL,
         )
+
+        if level == Level.BREEZE.value:
+            level = self.api.parse_value(
+                self.api.get_field_value(
+                    self.coordinator.data, BREEZE_LEVEL_FIELD.name
+                ),
+                DataType.LEVEL,
+            )
+        else:
+            level = self.api.parse_value(
+                self.api.get_field_value(
+                    self.coordinator.data, CURRENT_LEVEL_FIELD.name
+                ),
+                DataType.LEVEL,
+            )
 
         self._attr_percentage = ranged_value_to_percentage(
             SPEED_RANGE, SPEED_MAPPING[level]
@@ -155,13 +183,25 @@ class RensonFan(RensonEntity, FanEntity):
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
 
+        level = self.api.parse_value(
+            self.api.get_field_value(self.coordinator.data, CURRENT_LEVEL_FIELD.name),
+            DataType.LEVEL,
+        )
+
         if percentage == 0:
             cmd = Level.HOLIDAY
         else:
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
 
-        await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)
+        if level == Level.BREEZE.value:
+            all_data = self.coordinator.data
+            breeze_temp = self.api.get_field_value(all_data, BREEZE_TEMPERATURE_FIELD)
+            await self.hass.async_add_executor_job(
+                self.api.set_breeze, cmd.name, breeze_temp, True
+            )
+        else:
+            await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)
 
         await self.coordinator.async_request_refresh()
 

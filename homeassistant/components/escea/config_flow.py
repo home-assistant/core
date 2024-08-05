@@ -1,4 +1,5 @@
 """Config flow for escea."""
+
 import asyncio
 from contextlib import suppress
 import logging

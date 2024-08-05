@@ -1,4 +1,5 @@
 """Hue sensor entities."""
+
 from aiohue.v1.sensors import (
     TYPE_ZLL_LIGHTLEVEL,
     TYPE_ZLL_ROTARY,

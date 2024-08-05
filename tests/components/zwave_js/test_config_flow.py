@@ -1,9 +1,11 @@
 """Test the Z-Wave JS config flow."""
+
 import asyncio
 from collections.abc import Generator
 from copy import copy
 from ipaddress import ip_address
-from unittest.mock import DEFAULT, MagicMock, call, patch
+from typing import Any
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, call, patch
 
 import aiohttp
 import pytest
@@ -18,6 +20,7 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -57,7 +60,7 @@ CP2652_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
 
 
 @pytest.fixture(name="setup_entry")
-def setup_entry_fixture():
+def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.zwave_js.async_setup_entry", return_value=True
@@ -66,7 +69,7 @@ def setup_entry_fixture():
 
 
 @pytest.fixture(name="supervisor")
-def mock_supervisor_fixture():
+def mock_supervisor_fixture() -> Generator[None]:
     """Mock Supervisor."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.is_hassio", return_value=True
@@ -75,19 +78,21 @@ def mock_supervisor_fixture():
 
 
 @pytest.fixture(name="discovery_info")
-def discovery_info_fixture():
+def discovery_info_fixture() -> dict[str, Any]:
     """Return the discovery info from the supervisor."""
     return DEFAULT
 
 
 @pytest.fixture(name="discovery_info_side_effect")
-def discovery_info_side_effect_fixture():
+def discovery_info_side_effect_fixture() -> Any | None:
     """Return the discovery info from the supervisor."""
     return None
 
 
 @pytest.fixture(name="get_addon_discovery_info")
-def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
+def mock_get_addon_discovery_info(
+    discovery_info: dict[str, Any], discovery_info_side_effect: Any | None
+) -> Generator[AsyncMock]:
     """Mock get add-on discovery info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
@@ -98,13 +103,15 @@ def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
 
 
 @pytest.fixture(name="server_version_side_effect")
-def server_version_side_effect_fixture():
+def server_version_side_effect_fixture() -> Any | None:
     """Return the server version side effect."""
     return None
 
 
 @pytest.fixture(name="get_server_version", autouse=True)
-def mock_get_server_version(server_version_side_effect, server_version_timeout):
+def mock_get_server_version(
+    server_version_side_effect: Any | None, server_version_timeout: int
+) -> Generator[AsyncMock]:
     """Mock server version."""
     version_info = VersionInfo(
         driver_version="mock-driver-version",
@@ -113,30 +120,33 @@ def mock_get_server_version(server_version_side_effect, server_version_timeout):
         min_schema_version=0,
         max_schema_version=1,
     )
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.get_server_version",
-        side_effect=server_version_side_effect,
-        return_value=version_info,
-    ) as mock_version, patch(
-        "homeassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
-        new=server_version_timeout,
+    with (
+        patch(
+            "homeassistant.components.zwave_js.config_flow.get_server_version",
+            side_effect=server_version_side_effect,
+            return_value=version_info,
+        ) as mock_version,
+        patch(
+            "homeassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
+            new=server_version_timeout,
+        ),
     ):
         yield mock_version
 
 
 @pytest.fixture(name="server_version_timeout")
-def mock_server_version_timeout():
+def mock_server_version_timeout() -> int:
     """Patch the timeout for getting server version."""
     return SERVER_VERSION_TIMEOUT
 
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
-def mock_addon_setup_time():
+def mock_addon_setup_time() -> Generator[None]:
     """Mock add-on setup sleep time."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.ADDON_SETUP_TIMEOUT", new=0
-    ) as addon_setup_time:
-        yield addon_setup_time
+    ):
+        yield
 
 
 @pytest.fixture(name="serial_port")
@@ -154,7 +164,7 @@ def serial_port_fixture() -> ListPortInfo:
 
 
 @pytest.fixture(name="mock_list_ports", autouse=True)
-def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
+def mock_list_ports_fixture(serial_port) -> Generator[MagicMock]:
     """Mock list ports."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.list_ports.comports"
@@ -174,7 +184,7 @@ def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture(name="mock_usb_serial_by_id", autouse=True)
-def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
+def mock_usb_serial_by_id_fixture() -> Generator[MagicMock]:
     """Mock usb serial by id."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
@@ -189,14 +199,17 @@ async def test_manual(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -205,7 +218,7 @@ async def test_manual(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Z-Wave JS"
     assert result2["data"] == {
         "url": "ws://localhost:3000",
@@ -214,6 +227,8 @@ async def test_manual(hass: HomeAssistant) -> None:
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
         "s2_unauthenticated_key": None,
+        "lr_s2_access_control_key": None,
+        "lr_s2_authenticated_key": None,
         "use_addon": False,
         "integration_created_addon": False,
     }
@@ -270,7 +285,7 @@ async def test_manual_errors(
     entry = integration
     result = await getattr(hass.config_entries, flow).async_init(**flow_params(entry))
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await getattr(hass.config_entries, flow).async_configure(
@@ -280,7 +295,7 @@ async def test_manual_errors(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
     assert result["errors"] == {"base": error}
 
@@ -303,7 +318,7 @@ async def test_manual_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
@@ -313,7 +328,7 @@ async def test_manual_already_configured(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://1.1.1.1:3001"
     assert entry.data["use_addon"] is False
@@ -335,6 +350,8 @@ async def test_supervisor_discovery(
     addon_options["s2_access_control_key"] = "new456"
     addon_options["s2_authenticated_key"] = "new789"
     addon_options["s2_unauthenticated_key"] = "new987"
+    addon_options["lr_s2_access_control_key"] = "new654"
+    addon_options["lr_s2_authenticated_key"] = "new321"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -347,16 +364,19 @@ async def test_supervisor_discovery(
         ),
     )
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -365,6 +385,8 @@ async def test_supervisor_discovery(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": False,
     }
@@ -392,7 +414,7 @@ async def test_supervisor_discovery_cannot_connect(
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -411,6 +433,8 @@ async def test_clean_discovery_on_user_create(
     addon_options["s2_access_control_key"] = "new456"
     addon_options["s2_authenticated_key"] = "new789"
     addon_options["s2_unauthenticated_key"] = "new987"
+    addon_options["lr_s2_access_control_key"] = "new654"
+    addon_options["lr_s2_authenticated_key"] = "new321"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -423,28 +447,31 @@ async def test_clean_discovery_on_user_create(
         ),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": False}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -454,7 +481,7 @@ async def test_clean_discovery_on_user_create(
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.flow.async_progress()) == 0
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://localhost:3000",
@@ -463,6 +490,8 @@ async def test_clean_discovery_on_user_create(
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
         "s2_unauthenticated_key": None,
+        "lr_s2_access_control_key": None,
+        "lr_s2_authenticated_key": None,
         "use_addon": False,
         "integration_created_addon": False,
     }
@@ -494,7 +523,7 @@ async def test_abort_discovery_with_existing_entry(
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # Assert that the entry data is updated with discovery info.
     assert entry.data["url"] == "ws://host1:3001"
@@ -509,7 +538,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
 
     result2 = await hass.config_entries.flow.async_init(
@@ -523,7 +552,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
         ),
     )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
 
@@ -546,7 +575,7 @@ async def test_abort_hassio_discovery_for_other_addon(
         ),
     )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "not_zwave_js_addon"
 
 
@@ -567,12 +596,12 @@ async def test_usb_discovery(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
 
     # Make sure the flow continues when the progress task is done.
@@ -582,7 +611,7 @@ async def test_usb_discovery(
 
     assert install_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -592,6 +621,8 @@ async def test_usb_discovery(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -605,26 +636,31 @@ async def test_usb_discovery(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -633,6 +669,8 @@ async def test_usb_discovery(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": True,
     }
@@ -658,12 +696,12 @@ async def test_usb_discovery_addon_not_running(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     # Make sure the discovered usb device is preferred.
@@ -673,6 +711,8 @@ async def test_usb_discovery_addon_not_running(
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
         "s2_unauthenticated_key": "",
+        "lr_s2_access_control_key": "",
+        "lr_s2_authenticated_key": "",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -682,6 +722,8 @@ async def test_usb_discovery_addon_not_running(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -695,26 +737,31 @@ async def test_usb_discovery_addon_not_running(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -723,6 +770,8 @@ async def test_usb_discovery_addon_not_running(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": False,
     }
@@ -753,11 +802,11 @@ async def test_discovery_addon_not_running(
     )
 
     assert result["step_id"] == "hassio_confirm"
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -768,6 +817,8 @@ async def test_discovery_addon_not_running(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -781,26 +832,31 @@ async def test_discovery_addon_not_running(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -809,6 +865,8 @@ async def test_discovery_addon_not_running(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": False,
     }
@@ -838,12 +896,12 @@ async def test_discovery_addon_not_installed(
     )
 
     assert result["step_id"] == "hassio_confirm"
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["step_id"] == "install_addon"
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     await hass.async_block_till_done()
 
@@ -851,7 +909,7 @@ async def test_discovery_addon_not_installed(
 
     assert install_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -862,6 +920,8 @@ async def test_discovery_addon_not_installed(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -875,26 +935,31 @@ async def test_discovery_addon_not_installed(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -903,6 +968,8 @@ async def test_discovery_addon_not_installed(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": True,
     }
@@ -925,7 +992,7 @@ async def test_abort_usb_discovery_with_existing_flow(
         ),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
 
     result2 = await hass.config_entries.flow.async_init(
@@ -933,7 +1000,7 @@ async def test_abort_usb_discovery_with_existing_flow(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
 
@@ -954,7 +1021,7 @@ async def test_abort_usb_discovery_already_configured(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -965,7 +1032,7 @@ async def test_usb_discovery_requires_supervisor(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_requires_supervisor"
 
 
@@ -978,7 +1045,7 @@ async def test_usb_discovery_already_running(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -995,7 +1062,7 @@ async def test_abort_usb_discovery_aborts_specific_devices(
         context={"source": config_entries.SOURCE_USB},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_zwave_device"
 
 
@@ -1006,22 +1073,25 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": False}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1030,7 +1100,7 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://localhost:3000",
@@ -1039,6 +1109,8 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
         "s2_unauthenticated_key": None,
+        "lr_s2_access_control_key": None,
+        "lr_s2_authenticated_key": None,
         "use_addon": False,
         "integration_created_addon": False,
     }
@@ -1060,26 +1132,31 @@ async def test_addon_running(
     addon_options["s2_access_control_key"] = "new456"
     addon_options["s2_authenticated_key"] = "new789"
     addon_options["s2_unauthenticated_key"] = "new987"
+    addon_options["lr_s2_access_control_key"] = "new654"
+    addon_options["lr_s2_authenticated_key"] = "new321"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"use_addon": True}
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -1088,6 +1165,8 @@ async def test_addon_running(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": False,
     }
@@ -1150,14 +1229,14 @@ async def test_addon_running_failures(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
 
 
@@ -1175,6 +1254,9 @@ async def test_addon_running_already_configured(
     addon_options["s2_access_control_key"] = "new456"
     addon_options["s2_authenticated_key"] = "new789"
     addon_options["s2_unauthenticated_key"] = "new987"
+    addon_options["lr_s2_access_control_key"] = "new654"
+    addon_options["lr_s2_authenticated_key"] = "new321"
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1185,6 +1267,8 @@ async def test_addon_running_already_configured(
             "s2_access_control_key": "old456",
             "s2_authenticated_key": "old789",
             "s2_unauthenticated_key": "old987",
+            "lr_s2_access_control_key": "old654",
+            "lr_s2_authenticated_key": "old321",
         },
         title=TITLE,
         unique_id=1234,  # Unique ID is purposely set to int to test migration logic
@@ -1196,14 +1280,14 @@ async def test_addon_running_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test_new"
@@ -1211,6 +1295,8 @@ async def test_addon_running_already_configured(
     assert entry.data["s2_access_control_key"] == "new456"
     assert entry.data["s2_authenticated_key"] == "new789"
     assert entry.data["s2_unauthenticated_key"] == "new987"
+    assert entry.data["lr_s2_access_control_key"] == "new654"
+    assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
@@ -1229,14 +1315,14 @@ async def test_addon_installed(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -1247,6 +1333,8 @@ async def test_addon_installed(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -1260,26 +1348,31 @@ async def test_addon_installed(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -1288,6 +1381,8 @@ async def test_addon_installed(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": False,
     }
@@ -1314,14 +1409,14 @@ async def test_addon_installed_start_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -1332,6 +1427,8 @@ async def test_addon_installed_start_failure(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -1345,11 +1442,13 @@ async def test_addon_installed_start_failure(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -1357,7 +1456,7 @@ async def test_addon_installed_start_failure(
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
 
 
@@ -1389,14 +1488,14 @@ async def test_addon_installed_failures(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -1407,6 +1506,8 @@ async def test_addon_installed_failures(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -1420,11 +1521,13 @@ async def test_addon_installed_failures(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -1432,7 +1535,7 @@ async def test_addon_installed_failures(
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
 
 
@@ -1455,14 +1558,14 @@ async def test_addon_installed_set_options_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -1473,6 +1576,8 @@ async def test_addon_installed_set_options_failure(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -1486,11 +1591,13 @@ async def test_addon_installed_set_options_failure(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_set_config_failed"
 
     assert start_addon.call_count == 0
@@ -1517,6 +1624,8 @@ async def test_addon_installed_already_configured(
             "s2_access_control_key": "old456",
             "s2_authenticated_key": "old789",
             "s2_unauthenticated_key": "old987",
+            "lr_s2_access_control_key": "old654",
+            "lr_s2_authenticated_key": "old321",
         },
         title=TITLE,
         unique_id="1234",
@@ -1527,14 +1636,14 @@ async def test_addon_installed_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -1545,6 +1654,8 @@ async def test_addon_installed_already_configured(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -1558,11 +1669,13 @@ async def test_addon_installed_already_configured(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -1570,7 +1683,7 @@ async def test_addon_installed_already_configured(
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/new"
@@ -1578,6 +1691,8 @@ async def test_addon_installed_already_configured(
     assert entry.data["s2_access_control_key"] == "new456"
     assert entry.data["s2_authenticated_key"] == "new789"
     assert entry.data["s2_unauthenticated_key"] == "new987"
+    assert entry.data["lr_s2_access_control_key"] == "new654"
+    assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
@@ -1596,14 +1711,14 @@ async def test_addon_not_installed(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
 
     # Make sure the flow continues when the progress task is done.
@@ -1613,7 +1728,7 @@ async def test_addon_not_installed(
 
     assert install_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
@@ -1624,6 +1739,8 @@ async def test_addon_not_installed(
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
         },
     )
 
@@ -1637,26 +1754,31 @@ async def test_addon_not_installed(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -1665,6 +1787,8 @@ async def test_addon_not_installed(
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
         "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
         "use_addon": True,
         "integration_created_addon": True,
     }
@@ -1682,14 +1806,14 @@ async def test_install_addon_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     # Make sure the flow continues when the progress task is done.
     await hass.async_block_till_done()
@@ -1698,21 +1822,21 @@ async def test_install_addon_failure(
 
     assert install_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
 
 
 async def test_options_manual(hass: HomeAssistant, client, integration) -> None:
     """Test manual settings in options flow."""
     entry = integration
-    entry.unique_id = "1234"
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.options.async_configure(
@@ -1720,7 +1844,7 @@ async def test_options_manual(hass: HomeAssistant, client, integration) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://1.1.1.1:3001"
     assert entry.data["use_addon"] is False
     assert entry.data["integration_created_addon"] is False
@@ -1733,11 +1857,11 @@ async def test_options_manual_different_device(
 ) -> None:
     """Test options flow manual step connecting to different device."""
     entry = integration
-    entry.unique_id = 5678
+    hass.config_entries.async_update_entry(entry, unique_id="5678")
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.options.async_configure(
@@ -1745,7 +1869,7 @@ async def test_options_manual_different_device(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "different_device"
 
 
@@ -1754,21 +1878,21 @@ async def test_options_not_addon(
 ) -> None:
     """Test options flow and opting out of add-on on Supervisor."""
     entry = integration
-    entry.unique_id = "1234"
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"use_addon": False}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.options.async_configure(
@@ -1779,7 +1903,7 @@ async def test_options_not_addon(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://localhost:3000"
     assert entry.data["use_addon"] is False
     assert entry.data["integration_created_addon"] is False
@@ -1806,6 +1930,8 @@ async def test_options_not_addon(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
             },
             {
                 "usb_path": "/new",
@@ -1813,6 +1939,8 @@ async def test_options_not_addon(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -1828,6 +1956,8 @@ async def test_options_not_addon(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
             },
             {
                 "usb_path": "/new",
@@ -1835,6 +1965,8 @@ async def test_options_not_addon(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -1861,9 +1993,8 @@ async def test_options_addon_running(
     """Test options flow and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -1872,14 +2003,14 @@ async def test_options_addon_running(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.options.async_configure(
@@ -1895,7 +2026,7 @@ async def test_options_addon_running(
     )
     assert client.disconnect.call_count == disconnect_calls
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -1904,7 +2035,7 @@ async def test_options_addon_running(
 
     assert restart_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == new_addon_options["device"]
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
@@ -1918,6 +2049,14 @@ async def test_options_addon_running(
     assert (
         entry.data["s2_unauthenticated_key"]
         == new_addon_options["s2_unauthenticated_key"]
+    )
+    assert (
+        entry.data["lr_s2_access_control_key"]
+        == new_addon_options["lr_s2_access_control_key"]
+    )
+    assert (
+        entry.data["lr_s2_authenticated_key"]
+        == new_addon_options["lr_s2_authenticated_key"]
     )
     assert entry.data["use_addon"] is True
     assert entry.data["integration_created_addon"] is False
@@ -1938,6 +2077,8 @@ async def test_options_addon_running(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -1947,6 +2088,8 @@ async def test_options_addon_running(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -1971,9 +2114,8 @@ async def test_options_addon_running_no_changes(
     """Test options flow without changes, and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -1982,14 +2124,14 @@ async def test_options_addon_running_no_changes(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.options.async_configure(
@@ -2002,7 +2144,7 @@ async def test_options_addon_running_no_changes(
     assert set_addon_options.call_count == 0
     assert restart_addon.call_count == 0
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == new_addon_options["device"]
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
@@ -2016,6 +2158,14 @@ async def test_options_addon_running_no_changes(
     assert (
         entry.data["s2_unauthenticated_key"]
         == new_addon_options["s2_unauthenticated_key"]
+    )
+    assert (
+        entry.data["lr_s2_access_control_key"]
+        == new_addon_options["lr_s2_access_control_key"]
+    )
+    assert (
+        entry.data["lr_s2_authenticated_key"]
+        == new_addon_options["lr_s2_authenticated_key"]
     )
     assert entry.data["use_addon"] is True
     assert entry.data["integration_created_addon"] is False
@@ -2054,6 +2204,8 @@ async def different_device_server_version(*args):
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2063,6 +2215,8 @@ async def different_device_server_version(*args):
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2079,6 +2233,8 @@ async def different_device_server_version(*args):
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
             },
             {
@@ -2087,6 +2243,8 @@ async def different_device_server_version(*args):
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2115,9 +2273,8 @@ async def test_options_different_device(
     """Test options flow and configuring a different device."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2126,14 +2283,14 @@ async def test_options_different_device(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.options.async_configure(
@@ -2149,7 +2306,7 @@ async def test_options_different_device(
         {"options": new_addon_options},
     )
     assert client.disconnect.call_count == disconnect_calls
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -2171,7 +2328,7 @@ async def test_options_different_device(
         "core_zwave_js",
         {"options": addon_options},
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -2182,7 +2339,7 @@ async def test_options_different_device(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "different_device"
     assert entry.data == data
     assert client.connect.call_count == 2
@@ -2209,6 +2366,8 @@ async def test_options_different_device(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2218,6 +2377,8 @@ async def test_options_different_device(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2234,6 +2395,8 @@ async def test_options_different_device(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2243,6 +2406,8 @@ async def test_options_different_device(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2274,9 +2439,8 @@ async def test_options_addon_restart_failed(
     """Test options flow and add-on restart failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2285,14 +2449,14 @@ async def test_options_addon_restart_failed(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.options.async_configure(
@@ -2308,7 +2472,7 @@ async def test_options_addon_restart_failed(
         {"options": new_addon_options},
     )
     assert client.disconnect.call_count == disconnect_calls
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -2327,7 +2491,7 @@ async def test_options_addon_restart_failed(
         "core_zwave_js",
         {"options": old_addon_options},
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -2338,7 +2502,7 @@ async def test_options_addon_restart_failed(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
     assert entry.data == data
     assert client.connect.call_count == 2
@@ -2365,6 +2529,8 @@ async def test_options_addon_restart_failed(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2374,6 +2540,8 @@ async def test_options_addon_restart_failed(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2402,9 +2570,8 @@ async def test_options_addon_running_server_info_failure(
     """Test options flow and add-on already running with server info failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2413,14 +2580,14 @@ async def test_options_addon_running_server_info_failure(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.options.async_configure(
@@ -2429,7 +2596,7 @@ async def test_options_addon_running_server_info_failure(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     assert entry.data == data
     assert client.connect.call_count == 2
@@ -2455,6 +2622,8 @@ async def test_options_addon_running_server_info_failure(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
             },
             {
                 "usb_path": "/new",
@@ -2462,6 +2631,8 @@ async def test_options_addon_running_server_info_failure(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2477,6 +2648,8 @@ async def test_options_addon_running_server_info_failure(
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
             },
             {
                 "usb_path": "/new",
@@ -2484,6 +2657,8 @@ async def test_options_addon_running_server_info_failure(
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2511,9 +2686,8 @@ async def test_options_addon_not_installed(
     """Test options flow and add-on not installed on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2522,14 +2696,14 @@ async def test_options_addon_not_installed(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
 
     # Make sure the flow continues when the progress task is done.
@@ -2539,7 +2713,7 @@ async def test_options_addon_not_installed(
 
     assert install_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.options.async_configure(
@@ -2555,7 +2729,7 @@ async def test_options_addon_not_installed(
     )
     assert client.disconnect.call_count == disconnect_calls
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -2567,7 +2741,7 @@ async def test_options_addon_not_installed(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == new_addon_options["device"]
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
@@ -2596,14 +2770,14 @@ async def test_import_addon_installed(
         data={"usb_path": "/test/imported", "network_key": "imported123"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
 
     # the default input should be the imported data
@@ -2615,6 +2789,8 @@ async def test_import_addon_installed(
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
         "s2_unauthenticated_key": "",
+        "lr_s2_access_control_key": "",
+        "lr_s2_authenticated_key": "",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -2631,26 +2807,31 @@ async def test_import_addon_installed(
                 "s2_access_control_key": "",
                 "s2_authenticated_key": "",
                 "s2_unauthenticated_key": "",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
             }
         },
     )
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -2659,6 +2840,8 @@ async def test_import_addon_installed(
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
         "s2_unauthenticated_key": "",
+        "lr_s2_access_control_key": "",
+        "lr_s2_authenticated_key": "",
         "use_addon": True,
         "integration_created_addon": False,
     }
@@ -2683,19 +2866,22 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://127.0.0.1:3000",
@@ -2704,6 +2890,8 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
         "s2_unauthenticated_key": None,
+        "lr_s2_access_control_key": None,
+        "lr_s2_authenticated_key": None,
         "use_addon": False,
         "integration_created_addon": False,
     }

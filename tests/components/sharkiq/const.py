@@ -65,6 +65,11 @@ SHARK_PROPERTIES_DICT = {
         "read_only": True,
         "value": "Dummy Firmware 1.0",
     },
+    "Robot_Room_List": {
+        "base_type": "string",
+        "read_only": True,
+        "value": "AY001MRT1:Kitchen:Living Room",
+    },
 }
 
 TEST_USERNAME = "test-username"

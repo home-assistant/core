@@ -1,4 +1,5 @@
 """The tests for the hassio component."""
+
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
@@ -309,7 +310,7 @@ async def test_ingress_missing_peername(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test hadnling of missing peername."""
+    """Test handling of missing peername."""
     aioclient_mock.get(
         "http://127.0.0.1/ingress/lorem/ipsum",
         text="test",
@@ -368,7 +369,7 @@ async def test_ingress_request_get_compressed(
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text=body,
-        headers={"Content-Length": len(body)},
+        headers={"Content-Length": len(body), "Content-Type": "text/plain"},
     )
 
     resp = await hassio_noauth_client.get(
@@ -378,8 +379,8 @@ async def test_ingress_request_get_compressed(
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == body
+    resp_body = await resp.text()
+    assert resp_body == body
     assert resp.headers["Content-Encoding"] == "deflate"
 
     # Check we forwarded command
@@ -403,6 +404,7 @@ async def test_ingress_request_get_compressed(
         "image/jpeg",
         "font/woff2",
         "video/mp4",
+        "application/tar",
     ],
 )
 async def test_ingress_request_not_compressed(
@@ -458,6 +460,7 @@ async def test_ingress_request_with_charset_in_content_type(
         "text/html",
         "application/javascript",
         "text/plain",
+        "application/json",
     ],
 )
 async def test_ingress_request_compressed(

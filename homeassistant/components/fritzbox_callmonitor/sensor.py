@@ -1,4 +1,5 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,19 +14,18 @@ from typing import Any, cast
 from fritzconnection.core.fritzmonitor import FritzMonitor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import FritzBoxCallMonitorConfigEntry
 from .base import FritzBoxPhonebook
 from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
     CONF_PREFIXES,
     DOMAIN,
-    FRITZBOX_PHONEBOOK,
     MANUFACTURER,
     SERIAL_NUMBER,
     FritzState,
@@ -47,13 +47,11 @@ class CallState(StrEnum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FritzBoxCallMonitorConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the fritzbox_callmonitor sensor from config_entry."""
-    fritzbox_phonebook: FritzBoxPhonebook = hass.data[DOMAIN][config_entry.entry_id][
-        FRITZBOX_PHONEBOOK
-    ]
+    fritzbox_phonebook = config_entry.runtime_data
 
     phonebook_id: int = config_entry.data[CONF_PHONEBOOK]
     prefixes: list[str] | None = config_entry.options.get(CONF_PREFIXES)
@@ -104,6 +102,7 @@ class FritzBoxCallSensor(SensorEntity):
         self._attr_unique_id = unique_id
         self._attr_native_value = CallState.IDLE
         self._attr_device_info = DeviceInfo(
+            configuration_url=self._fritzbox_phonebook.fph.fc.address,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             model=self._fritzbox_phonebook.fph.modelname,

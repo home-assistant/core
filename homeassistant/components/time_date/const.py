@@ -1,4 +1,5 @@
 """Constants for the Time & Date integration."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -17,6 +18,5 @@ OPTION_TYPES = [
     "date_time_utc",
     "date_time_iso",
     "time_date",
-    "beat",
     "time_utc",
 ]

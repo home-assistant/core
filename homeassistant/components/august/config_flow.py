@@ -1,18 +1,20 @@
 """Config flow for August integration."""
+
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
+from pathlib import Path
 from typing import Any
 
 import aiohttp
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
@@ -23,7 +25,6 @@ from .const import (
     LOGIN_METHODS,
     VERIFICATION_CODE_KEY,
 )
-from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
 
@@ -65,7 +66,7 @@ async def async_validate_input(
     }
 
 
-@dataclass
+@dataclass(slots=True)
 class ValidateResult:
     """Result from validation."""
 
@@ -75,7 +76,7 @@ class ValidateResult:
     description_placeholders: dict[str, str]
 
 
-class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for August."""
 
     VERSION = 1
@@ -91,13 +92,13 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         return await self.async_step_user_validate()
 
     async def async_step_user_validate(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle authentication."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -137,7 +138,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_validation(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle validation (2fa) step."""
         if user_input:
             if self._mode == "reauth":
@@ -164,7 +165,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._august_gateway is not None:
             return self._august_gateway
         self._aiohttp_session = async_create_august_clientsession(self.hass)
-        self._august_gateway = AugustGateway(self.hass, self._aiohttp_session)
+        self._august_gateway = AugustGateway(
+            Path(self.hass.config.config_dir), self._aiohttp_session
+        )
         return self._august_gateway
 
     @callback
@@ -174,7 +177,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._aiohttp_session.detach()
         self._august_gateway = None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._user_auth_details = dict(entry_data)
         self._mode = "reauth"
@@ -183,7 +188,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_validate(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth and validation."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -252,7 +257,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except RequireValidation:
             validation_required = True
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unhandled"
             description_placeholders = {"error": str(ex)}
@@ -261,7 +266,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             validation_required, info, errors, description_placeholders
         )
 
-    async def _async_update_or_create_entry(self, info: dict[str, Any]) -> FlowResult:
+    async def _async_update_or_create_entry(
+        self, info: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Update existing entry or create a new one."""
         self._async_shutdown_gateway()
 

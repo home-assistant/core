@@ -1,4 +1,5 @@
 """The OurGroceries coordinator."""
+
 from __future__ import annotations
 
 import asyncio

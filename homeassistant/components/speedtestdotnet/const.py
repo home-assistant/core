@@ -1,4 +1,5 @@
 """Constants used by Speedtest.net."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -20,5 +21,3 @@ DEFAULT_SCAN_INTERVAL: Final = 60
 DEFAULT_SERVER: Final = "*Auto Detect"
 
 ATTRIBUTION: Final = "Data retrieved from Speedtest.net by Ookla"
-
-ICON: Final = "mdi:speedometer"

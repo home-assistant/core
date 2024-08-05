@@ -1,4 +1,5 @@
 """Class to hold all media player accessories."""
+
 import logging
 from typing import Any
 

@@ -1,4 +1,5 @@
 """Support for Spider switches."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity

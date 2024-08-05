@@ -1,4 +1,5 @@
 """Constants for the Slack integration."""
+
 from typing import Final
 
 ATTR_BLOCKS = "blocks"

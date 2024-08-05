@@ -1,4 +1,5 @@
 """Test the Insteon All-Link Database APIs."""
+
 import json
 from unittest.mock import patch
 
@@ -25,7 +26,7 @@ from tests.common import load_fixture
 from tests.typing import WebSocketGenerator
 
 
-@pytest.fixture(name="aldb_data", scope="session")
+@pytest.fixture(name="aldb_data", scope="module")
 def aldb_data_fixture():
     """Load the controller state fixture data."""
     return json.loads(load_fixture("insteon/aldb_data.json"))
@@ -302,7 +303,7 @@ async def test_bad_address(
     record = _aldb_dict(0)
 
     ws_id = 0
-    for call in ["get", "write", "load", "reset", "add_default_links", "notify"]:
+    for call in ("get", "write", "load", "reset", "add_default_links", "notify"):
         ws_id += 1
         await ws_client.send_json(
             {
@@ -315,7 +316,7 @@ async def test_bad_address(
         assert not msg["success"]
         assert msg["error"]["message"] == INSTEON_DEVICE_NOT_FOUND
 
-    for call in ["change", "create"]:
+    for call in ("change", "create"):
         ws_id += 1
         await ws_client.send_json(
             {

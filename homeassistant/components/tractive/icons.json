@@ -1,0 +1,58 @@
+{
+  "entity": {
+    "device_tracker": {
+      "tracker": {
+        "default": "mdi:paw"
+      }
+    },
+    "sensor": {
+      "activity": {
+        "default": "mdi:run"
+      },
+      "activity_time": {
+        "default": "mdi:clock-time-eight-outline"
+      },
+      "calories": {
+        "default": "mdi:fire"
+      },
+      "daily_goal": {
+        "default": "mdi:flag-checkered"
+      },
+      "minutes_day_sleep": {
+        "default": "mdi:sleep"
+      },
+      "minutes_night_sleep": {
+        "default": "mdi:sleep"
+      },
+      "rest_time": {
+        "default": "mdi:clock-time-eight-outline"
+      },
+      "sleep": {
+        "default": "mdi:sleep"
+      },
+      "tracker_state": {
+        "default": "mdi:radar"
+      }
+    },
+    "switch": {
+      "tracker_buzzer": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-off"
+        }
+      },
+      "tracker_led": {
+        "default": "mdi:led-on",
+        "state": {
+          "off": "mdi:led-off"
+        }
+      },
+      "live_tracking": {
+        "default": "mdi:map-marker-path",
+        "state": {
+          "off": "mdi:map-marker-off"
+        }
+      }
+    }
+  }
+}
