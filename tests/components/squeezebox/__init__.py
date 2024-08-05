@@ -2,6 +2,7 @@
 
 from homeassistant.components.squeezebox.const import (
     DOMAIN,
+    STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
     STATUS_QUERY_VERSION,
@@ -19,11 +20,32 @@ FAKE_UUID = "deadbeefdeadbeefbeefdeafbeef42"
 FAKE_PORT = 9000
 FAKE_VERSION = "42.0"
 
-FAKE_STATUS = {
+FAKE_QUERY_RESPONCE = {
     STATUS_QUERY_UUID: FAKE_UUID,
     STATUS_QUERY_MAC: FAKE_MAC,
     STATUS_QUERY_VERSION: FAKE_VERSION,
     STATUS_SENSOR_RESCAN: 1,
+    STATUS_QUERY_LIBRARYNAME: "FakeLib",
+    "players_loop": [
+        {
+            "isplaying": 0,
+            "name": "SqueezeLite-HA-Addon",
+            "seq_no": 0,
+            "modelname": "SqueezeLite-HA-Addon",
+            "playerindex": "status",
+            "model": "squeezelite",
+            "uuid": FAKE_UUID,
+            "canpoweroff": 1,
+            "ip": "192.168.78.86:57700",
+            "displaytype": "none",
+            "playerid": "f9:23:cd:37:c5:ff",
+            "power": 0,
+            "isplayer": 1,
+            "connected": 1,
+            "firmware": "v2.0.0-1488",
+        }
+    ],
+    "count": 1,
 }
 
 

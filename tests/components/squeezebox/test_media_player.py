@@ -9,7 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from . import FAKE_QUERY_RESPONCE, setup_mocked_integration
 
 
-async def test_binary_sensor(
+async def test_media_player(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -19,7 +19,7 @@ async def test_binary_sensor(
     with (
         patch(
             "homeassistant.components.squeezebox.PLATFORMS",
-            [Platform.BINARY_SENSOR],
+            [Platform.MEDIA_PLAYER],
         ),
         patch(
             "pysqueezebox.Server.async_query",
