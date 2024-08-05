@@ -7,10 +7,16 @@ import pytest
 
 from homeassistant.components.solarlog.const import DOMAIN as SOLARLOG_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from .const import HOST, NAME
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_object_fixture,
+    mock_device_registry,
+    mock_registry,
+)
 
 
 @pytest.fixture
