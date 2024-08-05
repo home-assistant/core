@@ -31,6 +31,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
+    CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
     CONF_PRIOR,
@@ -42,7 +43,7 @@ from .const import (
 )
 
 
-class Observation_types(StrEnum):
+class ObservationTypes(StrEnum):
     """StrEnum for all the different observation types."""
 
     STATE = "state"
@@ -53,7 +54,7 @@ class Observation_types(StrEnum):
     def list() -> list[str]:
         """Return a list of the values."""
 
-        return [c.value for c in Observation_types]
+        return [c.value for c in ObservationTypes]
 
 
 async def _validate_mode(  # TODO - do some actual validation
@@ -170,47 +171,134 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
 ).extend(SUBSCHEMA_BOILERPLATE.schema)
 
 
-class ConfigSteps(StrEnum):
+class ConfigFlowSteps(StrEnum):
     """StrEnum for all the different config steps."""
 
     USER = "user"
     OBSERVATION_SELECTOR = "observation_selector"
 
 
-async def _choose_observation_step(user_input: dict[str, Any]) -> ConfigSteps | None:
+class OptionsFlowSteps(StrEnum):
+    """StrEnum for all the different options flow steps."""
+
+    INIT = "init"
+    BASE_OPTIONS = "base_options"
+    ADD_OBSERVATION = str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+    SELECT_EDIT_OBSERVATION = "select_edit_observation"
+    EDIT_OBSERVATION = "edit_observation"
+    REMOVE_OBSERVATION = "remove_observation"
+
+    @staticmethod
+    def list_primary_steps() -> list[str]:
+        """Return a list of the values."""
+        li = [c.value for c in OptionsFlowSteps]
+        li.remove("init")
+        li.remove("edit_observation")
+        return li
+
+
+async def _choose_observation_step(
+    user_input: dict[str, Any],
+) -> ConfigFlowSteps | None:
     """Return next step_id for options flow according to template_type."""
     if user_input.get("add_another", False):
         # TODO - we need to clear the last user input somehow else it remains saved in the ui
-        return ConfigSteps.OBSERVATION_SELECTOR
+        return ConfigFlowSteps.OBSERVATION_SELECTOR
     return None
 
 
 CONFIG_FLOW = {
-    str(ConfigSteps.USER): SchemaFlowFormStep(
+    str(ConfigFlowSteps.USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
         validate_user_input=_validate_mode,
-        next_step=ConfigSteps.OBSERVATION_SELECTOR,
+        next_step=ConfigFlowSteps.OBSERVATION_SELECTOR,
     ),
-    str(ConfigSteps.OBSERVATION_SELECTOR): SchemaFlowMenuStep(Observation_types.list()),
-    Observation_types.STATE: SchemaFlowFormStep(
+    str(ConfigFlowSteps.OBSERVATION_SELECTOR): SchemaFlowMenuStep(
+        ObservationTypes.list()
+    ),
+    str(ObservationTypes.STATE): SchemaFlowFormStep(
         STATE_SUBSCHEMA, next_step=_choose_observation_step
     ),
-    str(Observation_types.NUMERIC_STATE): SchemaFlowFormStep(
+    str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
         NUMERIC_STATE_SUBSCHEMA, next_step=_choose_observation_step
     ),
-    str(Observation_types.TEMPLATE): SchemaFlowFormStep(
+    str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
         TEMPLATE_SUBSCHEMA,
         next_step=_choose_observation_step,
         preview="bayesian",
     ),
 }
 
-OPTIONS_FLOW = {
-    # TODO - echo elements and steps of the config flow, relying on scrape as inspiration
-    "init": SchemaFlowFormStep(
-        OPTIONS_SCHEMA, preview="bayesian", validate_user_input=_validate_mode
+
+async def _get_edit_observation_suggested_values(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, Any]:  # TODO untested, borrowed from scrape
+    """Return suggested values for observation editing."""
+    idx: int = handler.flow_state["_idx"]
+    return dict(handler.options[CONF_OBSERVATIONS][idx])
+
+
+async def _get_select_observation_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:  # TODO untested, borrowed from scrape
+    """Return schema for selecting a observation."""
+    return vol.Schema(
+        {
+            vol.Required("index"): vol.In(
+                {
+                    str(index): config[CONF_NAME]
+                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
+                },
+            )
+        }
     )
-}
+
+
+async def _get_remove_observation_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:  # TODO untested, borrowed from scrape
+    """Return schema for observation removal."""
+    return vol.Schema(
+        {
+            vol.Required("index"): cv.multi_select(
+                {
+                    str(index): config[CONF_NAME]
+                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
+                },
+            )
+        }
+    )
+
+
+async def _get_edit_observation_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:  # TODO
+    """Select which schema to return depending on which observation type it is."""
+
+    return  # TODO we will also need to drop the "add another" box here
+
+
+OPTIONS_FLOW = {
+    str(OptionsFlowSteps.INIT): SchemaFlowMenuStep(
+        OptionsFlowSteps.list_primary_steps()
+    ),
+    str(OptionsFlowSteps.BASE_OPTIONS): SchemaFlowFormStep(
+        OPTIONS_SCHEMA,
+    ),
+    str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION): SchemaFlowFormStep(
+        _get_select_observation_schema,
+        suggested_values=None,
+        next_step=str(OptionsFlowSteps.EDIT_OBSERVATION),
+    ),
+    str(OptionsFlowSteps.EDIT_OBSERVATION): SchemaFlowFormStep(
+        _get_edit_observation_schema,
+        suggested_values=_get_edit_observation_suggested_values,
+    ),
+    str(OptionsFlowSteps.REMOVE_OBSERVATION): SchemaFlowFormStep(
+        _get_remove_observation_schema,
+        suggested_values=None,
+    ),
+}.update(CONFIG_FLOW.pop(str(ConfigFlowSteps.USER)))
 
 
 class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
