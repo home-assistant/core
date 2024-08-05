@@ -9,4 +9,4 @@ DOMAIN: Final = "simplefin"
 
 LOGGER = logging.getLogger(__package__)
 
-CONF_ACCESS_URL: str = "access_url"
+CONF_ACCESS_URL = "access_url"
