@@ -1024,7 +1024,7 @@ async def test_esphome_device_with_project(
     )
     assert dev.manufacturer == "mfr"
     assert dev.model == "model"
-    assert dev.hw_version == "2.2.2"
+    assert dev.sw_version == "2.2.2 (ESPHome 1.0.0)"
 
 
 async def test_esphome_device_with_manufacturer(
