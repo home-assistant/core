@@ -35,7 +35,7 @@ from .const import (
     DOMAIN,
     PRESET_MODES,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 from .schema import ClimateSchema
 
 ATTR_COMMAND_VALUE = "command_value"
@@ -133,7 +133,7 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
     )
 
 
-class KNXClimate(KnxEntity, ClimateEntity):
+class KNXClimate(KnxYamlEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
     _device: XknxClimate
