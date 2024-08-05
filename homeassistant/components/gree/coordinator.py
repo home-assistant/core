@@ -29,7 +29,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages polling for state changes from the device."""
 
     def __init__(self, hass: HomeAssistant, device: Device) -> None:
@@ -50,7 +50,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._last_response_time: datetime = utcnow()
         self._last_error_time: datetime | None = None
 
-    def device_state_updated(self, *args) -> None:
+    def device_state_updated(self, *args: Any) -> None:
         """Handle device state updates."""
         _LOGGER.debug("Device state updated: %s", json_dumps(args))
         self._error_count = 0
