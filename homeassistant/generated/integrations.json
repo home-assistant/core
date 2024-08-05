@@ -6809,11 +6809,6 @@
         }
       }
     },
-    "webhook": {
-      "name": "Webhook",
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "webmin": {
       "name": "Webmin",
       "integration_type": "device",
