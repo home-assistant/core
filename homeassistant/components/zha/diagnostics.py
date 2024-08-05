@@ -7,6 +7,7 @@ from importlib.metadata import version
 from typing import Any
 
 from zha.application.const import (
+    ATTR_ATTRIBUTE,
     ATTR_ATTRIBUTE_NAME,
     ATTR_DEVICE_TYPE,
     ATTR_IEEE,
@@ -174,7 +175,7 @@ def get_cluster_attr_data(cluster: Cluster) -> dict:
     return {
         ATTRIBUTES: {
             f"0x{attr_id:04x}": {
-                ATTR_ATTRIBUTE_NAME: attr_def.name,
+                ATTR_ATTRIBUTE: repr(attr_def),
                 ATTR_VALUE: attr_value,
             }
             for attr_id, attr_def in cluster.attributes.items()
