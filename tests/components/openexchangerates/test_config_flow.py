@@ -1,6 +1,7 @@
 """Test the Open Exchange Rates config flow."""
 
 import asyncio
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -9,7 +10,6 @@ from aioopenexchangerates import (
     OpenExchangeRatesClientError,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.openexchangerates.const import DOMAIN

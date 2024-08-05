@@ -5,13 +5,12 @@ import asyncio
 # Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
 import base64
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import contextlib
 import logging
 import math
 from typing import Any, Final
 
-from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api
@@ -25,6 +24,9 @@ from .const import (
     DEFAULT_WAKE_WORD_TIMEOUT,
     DOMAIN,
     EVENT_RECORDING,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
 )
 from .error import PipelineNotFound
 from .pipeline import (
@@ -93,7 +95,6 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("volume_multiplier"): float,
                             # Advanced use cases/testing
                             vol.Optional("no_vad"): bool,
-                            vol.Optional("no_chunking"): bool,
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -171,9 +172,14 @@ async def websocket_run(
 
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
-                if incoming_sample_rate != 16000:
+                if incoming_sample_rate != SAMPLE_RATE:
                     chunk, state = audioop.ratecv(
-                        chunk, 2, 1, incoming_sample_rate, 16000, state
+                        chunk,
+                        SAMPLE_WIDTH,
+                        SAMPLE_CHANNELS,
+                        incoming_sample_rate,
+                        SAMPLE_RATE,
+                        state,
                     )
                 yield chunk
 
@@ -207,7 +213,6 @@ async def websocket_run(
             auto_gain_dbfs=msg_input.get("auto_gain_dbfs", 0),
             volume_multiplier=msg_input.get("volume_multiplier", 1.0),
             is_vad_enabled=not msg_input.get("no_vad", False),
-            is_chunking_enabled=not msg_input.get("no_chunking", False),
         )
     elif start_stage == PipelineStage.INTENT:
         # Input to conversation agent
@@ -379,8 +384,8 @@ def websocket_get_run(
         vol.Required("type"): "assist_pipeline/language/list",
     }
 )
-@websocket_api.async_response
-async def websocket_list_languages(
+@callback
+def websocket_list_languages(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
@@ -390,7 +395,7 @@ async def websocket_list_languages(
     This will return a list of languages which are supported by at least one stt, tts
     and conversation engine respectively.
     """
-    conv_language_tags = await conversation.async_get_conversation_languages(hass)
+    conv_language_tags = conversation.async_get_conversation_languages(hass)
     stt_language_tags = stt.async_get_speech_to_text_languages(hass)
     tts_language_tags = tts.async_get_text_to_speech_languages(hass)
     pipeline_languages: set[str] | None = None
@@ -425,9 +430,9 @@ async def websocket_list_languages(
     connection.send_result(
         msg["id"],
         {
-            "languages": sorted(pipeline_languages)
-            if pipeline_languages
-            else pipeline_languages
+            "languages": (
+                sorted(pipeline_languages) if pipeline_languages else pipeline_languages
+            )
         },
     )
 

@@ -36,7 +36,7 @@
     "currentFirmwareVersion": "2.27.0",
     "battery": {},
     "batteryLevel": "Low",
-    "batteryRaw": 170
+    "batteryRaw": 128
   },
   "OfflineKeys": {
     "created": [],

@@ -738,16 +738,18 @@ def _sorted_states_to_dict(
             or split_entity_id(entity_id)[0] in NEED_ATTRIBUTE_DOMAINS
         ):
             ent_results.extend(
-                state_class(
-                    db_state,
-                    attr_cache,
-                    start_time_ts,
-                    entity_id,
-                    db_state[state_idx],
-                    db_state[last_updated_ts_idx],
-                    False,
-                )
-                for db_state in group
+                [
+                    state_class(
+                        db_state,
+                        attr_cache,
+                        start_time_ts,
+                        entity_id,
+                        db_state[state_idx],
+                        db_state[last_updated_ts_idx],
+                        False,
+                    )
+                    for db_state in group
+                ]
             )
             continue
 

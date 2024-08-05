@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 import logging
 from typing import TYPE_CHECKING, Any
-
-from typing_extensions import Generator
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -29,6 +27,7 @@ from homeassistant.components import (
     lock,
     media_player,
     number,
+    remote,
     scene,
     script,
     sensor,
@@ -197,6 +196,10 @@ class DisplayCategory:
 
     # Indicates a device that prints.
     PRINTER = "PRINTER"
+
+    # Indicates a decive that support stateless events,
+    # such as remote switches and smart buttons.
+    REMOTE = "REMOTE"
 
     # Indicates a network router.
     ROUTER = "ROUTER"
@@ -643,6 +646,24 @@ class FanCapabilities(AlexaEntity):
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
             )
 
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(remote.DOMAIN)
+class RemoteCapabilities(AlexaEntity):
+    """Class to represent Remote capabilities."""
+
+    def default_display_categories(self) -> list[str]:
+        """Return the display categories for this entity."""
+        return [DisplayCategory.REMOTE]
+
+    def interfaces(self) -> Generator[AlexaCapability]:
+        """Yield the supported interfaces."""
+        yield AlexaPowerController(self.entity)
+        yield AlexaModeController(
+            self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
+        )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

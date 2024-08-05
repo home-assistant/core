@@ -1,10 +1,10 @@
 """Common fixtures for the ista EcoTrend tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

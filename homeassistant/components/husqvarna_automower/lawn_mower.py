@@ -1,13 +1,10 @@
 """Husqvarna Automower lawn mower entity."""
 
-from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
-import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
-from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerActivities, MowerStates
+from aioautomower.model import MowerActivities, MowerStates, WorkArea
 import voluptuous as vol
 
 from homeassistant.components.lawn_mower import (
@@ -16,14 +13,14 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerAvailableEntity
+from .entity import AutomowerAvailableEntity, handle_sending_exception
 
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
 MOWING_ACTIVITIES = (
@@ -49,25 +46,6 @@ OVERRIDE_MODES = [MOW, PARK]
 _LOGGER = logging.getLogger(__name__)
 
 
-def handle_sending_exception(
-    func: Callable[..., Awaitable[Any]],
-) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Handle exceptions while sending a command."""
-
-    @functools.wraps(func)
-    async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
-        try:
-            return await func(self, *args, **kwargs)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_send_failed",
-                translation_placeholders={"exception": str(exception)},
-            ) from exception
-
-    return wrapper
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
@@ -91,6 +69,18 @@ async def async_setup_entry(
             ),
         },
         "async_override_schedule",
+    )
+    platform.async_register_entity_service(
+        "override_schedule_work_area",
+        {
+            vol.Required("work_area_id"): vol.Coerce(int),
+            vol.Required("duration"): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+                vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
+            ),
+        },
+        "async_override_schedule_work_area",
     )
 
 
@@ -123,22 +113,27 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             return LawnMowerActivity.DOCKED
         return LawnMowerActivity.ERROR
 
-    @handle_sending_exception
+    @property
+    def work_areas(self) -> dict[int, WorkArea] | None:
+        """Return the work areas of the mower."""
+        return self.mower_attributes.work_areas
+
+    @handle_sending_exception()
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
-    @handle_sending_exception
+    @handle_sending_exception()
     async def async_pause(self) -> None:
         """Pauses the mower."""
         await self.coordinator.api.commands.pause_mowing(self.mower_id)
 
-    @handle_sending_exception
+    @handle_sending_exception()
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
 
-    @handle_sending_exception
+    @handle_sending_exception()
     async def async_override_schedule(
         self, override_mode: str, duration: timedelta
     ) -> None:
@@ -147,3 +142,22 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             await self.coordinator.api.commands.start_for(self.mower_id, duration)
         if override_mode == PARK:
             await self.coordinator.api.commands.park_for(self.mower_id, duration)
+
+    @handle_sending_exception()
+    async def async_override_schedule_work_area(
+        self, work_area_id: int, duration: timedelta
+    ) -> None:
+        """Override the schedule with a certain work area."""
+        if not self.mower_attributes.capabilities.work_areas:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="work_areas_not_supported"
+            )
+        if TYPE_CHECKING:
+            assert self.work_areas is not None
+        if work_area_id not in self.work_areas:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="work_area_not_existing"
+            )
+        await self.coordinator.api.commands.start_in_workarea(
+            self.mower_id, work_area_id, duration
+        )
