@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 from .schema import SelectSchema
 
 
@@ -59,7 +59,7 @@ def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
     )
 
 
-class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
+class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
     """Representation of a KNX select."""
 
     _device: RawValue
