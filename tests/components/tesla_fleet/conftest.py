@@ -76,6 +76,20 @@ def noscope_config_entry(expires_at: int) -> MockConfigEntry:
     return create_config_entry(expires_at, [Scope.OPENID, Scope.OFFLINE_ACCESS])
 
 
+@pytest.fixture
+def readonly_config_entry(expires_at: int) -> MockConfigEntry:
+    """Create Tesla Fleet entry in Home Assistant without scopes."""
+    return create_config_entry(
+        expires_at,
+        [
+            Scope.OPENID,
+            Scope.OFFLINE_ACCESS,
+            Scope.VEHICLE_DEVICE_DATA,
+            Scope.ENERGY_DEVICE_DATA,
+        ],
+    )
+
+
 @pytest.fixture(autouse=True)
 def mock_products() -> Generator[AsyncMock]:
     """Mock Tesla Fleet Api products method."""
