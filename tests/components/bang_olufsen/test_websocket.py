@@ -16,55 +16,63 @@ from homeassistant.core import HomeAssistant
 from .const import TEST_NAME
 
 
-@pytest.mark.parametrize(
-    ("websocket_connected", "method", "logger_level", "message"),
-    [
-        (
-            True,
-            "on_connection",
-            "debug",
-            ("Connected to the %s notification channel", TEST_NAME),
-        ),
-        (
-            False,
-            "on_connection_lost",
-            "error",
-            ("Lost connection to the %s", TEST_NAME),
-        ),
-    ],
-)
 async def test_connection(
-    websocket_connected,
-    method,
-    logger_level,
-    message,
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_mozart_client,
+    hass: HomeAssistant, mock_config_entry, mock_mozart_client
 ) -> None:
     """Test on_connection and on_connection_lost logs and calls correctly."""
-    mock_mozart_client.websocket_connected = websocket_connected
+    mock_mozart_client.websocket_connected = True
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
+
+    connection_callback = mock_mozart_client.get_on_connection.call_args[0][0]
 
     with (
         patch(
-            f"homeassistant.components.bang_olufsen.websocket._LOGGER.{logger_level}"
+            "homeassistant.components.bang_olufsen.websocket._LOGGER.debug"
         ) as mock_logger,
         patch(
             "homeassistant.components.bang_olufsen.websocket.async_dispatcher_send"
         ) as mock_dispatch,
     ):
         # Call the WebSocket connection status method
-        getattr(websocket, method)()
+        connection_callback()
 
-        mock_logger.assert_called_once_with(*message)
+        mock_logger.assert_called_once_with(
+            "Connected to the %s notification channel", TEST_NAME
+        )
         mock_dispatch.assert_called_once_with(
             hass,
             f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
-            websocket_connected,
+            True,
+        )
+
+
+async def test_connection_lost(
+    hass: HomeAssistant, mock_config_entry, mock_mozart_client
+) -> None:
+    """Test on_connection_lost logs and calls correctly."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    connection_lost_callback = mock_mozart_client.get_on_connection_lost.call_args[0][0]
+
+    with (
+        patch(
+            "homeassistant.components.bang_olufsen.websocket._LOGGER.error"
+        ) as mock_logger,
+        patch(
+            "homeassistant.components.bang_olufsen.websocket.async_dispatcher_send"
+        ) as mock_dispatch,
+    ):
+        # Call the WebSocket connection status method
+        connection_lost_callback()
+
+        mock_logger.assert_called_once_with("Lost connection to the %s", TEST_NAME)
+        mock_dispatch.assert_called_once_with(
+            hass,
+            f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
+            False,
         )
 
 
@@ -82,6 +90,11 @@ async def test_on_software_update_state(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    software_update_state_callback = (
+        mock_mozart_client.get_software_update_state_notifications.call_args[0][0]
+    )
+
     websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     # Check if the device can be retrieved
@@ -92,7 +105,7 @@ async def test_on_software_update_state(
         assert websocket._device.sw_version is None
 
     # Trigger the notification
-    await websocket.on_software_update_state(SoftwareUpdateState())
+    await software_update_state_callback(SoftwareUpdateState())
 
     device = get_device(hass, mock_config_entry.unique_id)
     assert device.sw_version == "1.0.0"
@@ -112,6 +125,11 @@ async def test_on_all_notifications_raw(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    all_notifications_raw_callback = (
+        mock_mozart_client.get_all_notifications_raw.call_args[0][0]
+    )
+
     websocket = hass.data[DOMAIN][mock_config_entry.entry_id].websocket
 
     # Check if the device can be retrieved
@@ -135,7 +153,7 @@ async def test_on_all_notifications_raw(
         ) as mock_logger,
         patch("homeassistant.core.EventBus.async_fire") as mock_fire,
     ):
-        websocket.on_all_notifications_raw(raw_notification)
+        all_notifications_raw_callback(raw_notification)
 
         # Add device_id and serial_number to notification
         raw_notification.update(
