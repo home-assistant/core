@@ -34,7 +34,7 @@ class TraceElement:
         """Container for trace data."""
         self._child_key: str | None = None
         self._child_run_id: str | None = None
-        self._error: Exception | None = None
+        self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
         self.reuse_by_child = False
@@ -52,7 +52,7 @@ class TraceElement:
         self._child_key = child_key
         self._child_run_id = child_run_id
 
-    def set_error(self, ex: Exception) -> None:
+    def set_error(self, ex: BaseException | None) -> None:
         """Set error."""
         self._error = ex
 
@@ -248,7 +248,7 @@ def script_execution_get() -> str | None:
 
 
 @contextmanager
-def trace_path(suffix: str | list[str]) -> Generator[None, None, None]:
+def trace_path(suffix: str | list[str]) -> Generator[None]:
     """Go deeper in the config tree.
 
     Can not be used as a decorator on couroutine functions.

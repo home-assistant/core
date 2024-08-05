@@ -1,8 +1,10 @@
 """Tests for Airly."""
 
 from homeassistant.components.airly.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 API_NEAREST_URL = "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000"
 API_POINT_URL = (
@@ -14,7 +16,9 @@ HEADERS = {
 }
 
 
-async def init_integration(hass, aioclient_mock) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> MockConfigEntry:
     """Set up the Airly integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,

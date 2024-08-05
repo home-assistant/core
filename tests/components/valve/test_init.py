@@ -123,7 +123,7 @@ class MockBinaryValveEntity(ValveEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -132,7 +132,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
+def mock_config_entry(hass: HomeAssistant) -> tuple[MockConfigEntry, list[ValveEntity]]:
     """Mock a config entry which sets up a couple of valve entities."""
     entities = [
         MockBinaryValveEntity(
@@ -152,8 +152,8 @@ def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, Platform.VALVE
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.VALVE]
         )
         return True
 

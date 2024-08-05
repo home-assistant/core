@@ -64,8 +64,8 @@ async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_method"
-    assert result["data_schema"].schema.get(CONF_TOKEN) == str
-    assert result["data_schema"].schema.get(CONF_USE_WEBHOOK) == bool
+    assert result["data_schema"].schema.get(CONF_TOKEN) is str
+    assert result["data_schema"].schema.get(CONF_USE_WEBHOOK) is bool
 
 
 async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
@@ -78,7 +78,7 @@ async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_method"
-    assert result["data_schema"].schema.get(CONF_TOKEN) == str
+    assert result["data_schema"].schema.get(CONF_TOKEN) is str
     assert result["data_schema"].schema.get(CONF_USE_WEBHOOK) is None
 
 

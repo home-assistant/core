@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Any, Final
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class FritzButtonDescription(ButtonEntityDescription):
     """Class to describe a Button entity."""
 
-    press_action: Callable
+    press_action: Callable[[AvmWrapper], Any]
 
 
 BUTTONS: Final = [

@@ -4,6 +4,8 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
+from typing import Any, Literal
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -101,7 +103,7 @@ async def async_turn_on(
     """Turn all or specified light on."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PROFILE, profile),
             (ATTR_TRANSITION, transition),
@@ -118,7 +120,7 @@ async def async_turn_on(
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
             (ATTR_WHITE, white),
-        ]
+        )
         if value is not None
     }
 
@@ -135,11 +137,11 @@ async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None, flas
     """Turn all or specified light off."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_TRANSITION, transition),
             (ATTR_FLASH, flash),
-        ]
+        )
         if value is not None
     }
 
@@ -202,7 +204,7 @@ async def async_toggle(
     """Turn all or specified light on."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PROFILE, profile),
             (ATTR_TRANSITION, transition),
@@ -216,7 +218,7 @@ async def async_toggle(
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
-        ]
+        )
         if value is not None
     }
 
@@ -250,13 +252,12 @@ class MockLight(MockToggleEntity, LightEntity):
 
     def __init__(
         self,
-        name,
-        state,
-        unique_id=None,
+        name: str | None,
+        state: Literal["on", "off"] | None,
         supported_color_modes: set[ColorMode] | None = None,
-    ):
+    ) -> None:
         """Initialize the mock light."""
-        super().__init__(name, state, unique_id)
+        super().__init__(name, state)
         if supported_color_modes is None:
             supported_color_modes = {ColorMode.ONOFF}
         self._attr_supported_color_modes = supported_color_modes
@@ -265,7 +266,7 @@ class MockLight(MockToggleEntity, LightEntity):
             color_mode = next(iter(supported_color_modes))
         self._attr_color_mode = color_mode
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         super().turn_on(**kwargs)
         for key, value in kwargs.items():

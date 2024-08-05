@@ -6,7 +6,7 @@
       tuple(
       ),
       dict({
-        'model_name': 'gemini-pro-vision',
+        'model_name': 'models/gemini-1.5-flash-latest',
       }),
     ),
     tuple(
@@ -32,7 +32,7 @@
       tuple(
       ),
       dict({
-        'model_name': 'gemini-pro',
+        'model_name': 'models/gemini-1.5-flash-latest',
       }),
     ),
     tuple(

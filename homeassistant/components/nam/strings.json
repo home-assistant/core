@@ -75,6 +75,9 @@
       "bmp280_temperature": {
         "name": "BMP280 temperature"
       },
+      "ds18b20_temperature": {
+        "name": "DS18B20 temperature"
+      },
       "heca_humidity": {
         "name": "HECA humidity"
       },

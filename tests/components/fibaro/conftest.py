@@ -21,7 +21,7 @@ TEST_MODEL = "HC3"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.fibaro.async_setup_entry", return_value=True
@@ -66,7 +66,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_fibaro_client() -> Generator[Mock, None, None]:
+def mock_fibaro_client() -> Generator[Mock]:
     """Return a mocked FibaroClient."""
     info_mock = Mock()
     info_mock.serial_number = TEST_SERIALNUMBER

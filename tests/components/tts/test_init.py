@@ -2,6 +2,7 @@
 
 import asyncio
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -46,15 +47,8 @@ ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 class DefaultEntity(tts.TextToSpeechEntity):
     """Test entity."""
 
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    @property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return DEFAULT_LANG
+    _attr_supported_languages = SUPPORT_LANGUAGES
+    _attr_default_language = DEFAULT_LANG
 
 
 async def test_default_entity_attributes() -> None:
@@ -187,7 +181,7 @@ async def test_setup_component_no_access_cache_folder(
 )
 async def test_service(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -248,7 +242,7 @@ async def test_service(
 )
 async def test_service_default_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -309,7 +303,7 @@ async def test_service_default_language(
 )
 async def test_service_default_special_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -366,7 +360,7 @@ async def test_service_default_special_language(
 )
 async def test_service_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -423,7 +417,7 @@ async def test_service_language(
 )
 async def test_service_wrong_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -477,7 +471,7 @@ async def test_service_wrong_language(
 )
 async def test_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -522,10 +516,7 @@ class MockProviderWithDefaults(MockProvider):
 class MockEntityWithDefaults(MockTTSEntity):
     """Mock entity with default options."""
 
-    @property
-    def default_options(self):
-        """Return a mapping with the default options."""
-        return {"voice": "alex"}
+    _attr_default_options = {"voice": "alex"}
 
 
 @pytest.mark.parametrize(
@@ -561,7 +552,7 @@ class MockEntityWithDefaults(MockTTSEntity):
 )
 async def test_service_default_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -629,7 +620,7 @@ async def test_service_default_options(
 )
 async def test_merge_default_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -696,7 +687,7 @@ async def test_merge_default_service_options(
 )
 async def test_service_wrong_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -752,7 +743,7 @@ async def test_service_wrong_options(
 )
 async def test_service_clear_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -814,7 +805,7 @@ async def test_service_clear_cache(
 async def test_service_receive_voice(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -886,7 +877,7 @@ async def test_service_receive_voice(
 async def test_service_receive_voice_german(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -994,7 +985,7 @@ async def test_web_view_wrong_filename(
 )
 async def test_service_without_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -1025,7 +1016,7 @@ class MockProviderBoom(MockProvider):
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         # This should not be called, data should be fetched from cache
-        raise Exception("Boom!")  # pylint: disable=broad-exception-raised
+        raise Exception("Boom!")  # noqa: TRY002
 
 
 class MockEntityBoom(MockTTSEntity):
@@ -1036,13 +1027,13 @@ class MockEntityBoom(MockTTSEntity):
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         # This should not be called, data should be fetched from cache
-        raise Exception("Boom!")  # pylint: disable=broad-exception-raised
+        raise Exception("Boom!")  # noqa: TRY002
 
 
 @pytest.mark.parametrize("mock_provider", [MockProviderBoom(DEFAULT_LANG)])
 async def test_setup_legacy_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_provider: MockProvider,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1053,9 +1044,7 @@ async def test_setup_legacy_cache_dir(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     await hass.services.async_call(
@@ -1078,7 +1067,7 @@ async def test_setup_legacy_cache_dir(
 @pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
 async def test_setup_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1089,9 +1078,7 @@ async def test_setup_cache_dir(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     await hass.services.async_call(
@@ -1185,7 +1172,7 @@ async def test_service_get_tts_error(
 async def test_load_cache_legacy_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_provider: MockProvider,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
@@ -1194,9 +1181,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     client = await hass_client()
@@ -1211,7 +1196,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
 async def test_load_cache_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
@@ -1220,9 +1205,7 @@ async def test_load_cache_retrieve_without_mem_cache(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     client = await hass_client()
@@ -1765,3 +1748,93 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
     with pytest.raises(RuntimeError):
         # Simulate a bad WAV file
         await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")
+
+
+async def test_ttsentity_subclass_properties(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
+
+    class TestClass1(tts.TextToSpeechEntity):
+        _attr_default_language = DEFAULT_LANG
+        _attr_supported_languages = SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass1())
+
+    class TestClass2(tts.TextToSpeechEntity):
+        @property
+        def default_language(self) -> str:
+            return DEFAULT_LANG
+
+        @property
+        def supported_languages(self) -> list[str]:
+            return SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass2())
+
+    assert all(record.exc_info is None for record in caplog.records)
+
+    caplog.clear()
+
+    class TestClass3(tts.TextToSpeechEntity):
+        _attr_default_language = DEFAULT_LANG
+
+    await mock_config_entry_setup(hass, TestClass3())
+
+    assert (
+        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass4(tts.TextToSpeechEntity):
+        _attr_supported_languages = SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass4())
+
+    assert (
+        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass5(tts.TextToSpeechEntity):
+        @property
+        def default_language(self) -> str:
+            return DEFAULT_LANG
+
+    await mock_config_entry_setup(hass, TestClass5())
+
+    assert (
+        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass6(tts.TextToSpeechEntity):
+        @property
+        def supported_languages(self) -> list[str]:
+            return SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass6())
+
+    assert (
+        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )

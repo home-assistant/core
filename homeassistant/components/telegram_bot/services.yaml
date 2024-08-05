@@ -54,6 +54,10 @@ send_message:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_photo:
   fields:
@@ -126,6 +130,10 @@ send_photo:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_sticker:
   fields:
@@ -187,6 +195,10 @@ send_sticker:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box
@@ -262,6 +274,10 @@ send_animation:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_video:
   fields:
@@ -334,6 +350,10 @@ send_video:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_voice:
   fields:
@@ -395,6 +415,10 @@ send_voice:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box
@@ -470,6 +494,10 @@ send_document:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_location:
   fields:
@@ -520,6 +548,10 @@ send_location:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_poll:
   fields:
@@ -561,6 +593,10 @@ send_poll:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box

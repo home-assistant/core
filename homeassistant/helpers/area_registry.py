@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
+from datetime import datetime
 from functools import cached_property
 from typing import Any, Literal, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
@@ -19,7 +22,7 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
-from .registry import BaseRegistry
+from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
@@ -30,7 +33,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 6
+STORAGE_VERSION_MINOR = 7
 
 
 class _AreaStoreData(TypedDict):
@@ -43,6 +46,8 @@ class _AreaStoreData(TypedDict):
     labels: list[str]
     name: str
     picture: str | None
+    created_at: str
+    modified_at: str
 
 
 class AreasRegistryStoreData(TypedDict):
@@ -82,6 +87,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
+                    "created_at": self.created_at.timestamp(),
+                    "modified_at": self.modified_at.timestamp(),
                 }
             )
         )
@@ -124,6 +131,12 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 for area in old_data["areas"]:
                     area["labels"] = []
 
+            if old_minor_version < 7:
+                # Version 1.7 adds created_at and modiefied_at
+                created_at = utc_from_timestamp(0).isoformat()
+                for area in old_data["areas"]:
+                    area["created_at"] = area["modified_at"] = created_at
+
         if old_major_version > 1:
             raise NotImplementedError
         return old_data  # type: ignore[return-value]
@@ -135,15 +148,15 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
     def __init__(self) -> None:
         """Initialize the area registry items."""
         super().__init__()
-        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
-        self._floors_index: dict[str, dict[str, Literal[True]]] = {}
+        self._labels_index: RegistryIndexType = defaultdict(dict)
+        self._floors_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
         if entry.floor_id is not None:
-            self._floors_index.setdefault(entry.floor_id, {})[key] = True
+            self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
-            self._labels_index.setdefault(label, {})[key] = True
+            self._labels_index[label][key] = True
         super()._index_entry(key, entry)
 
     def _unindex_entry(
@@ -314,17 +327,17 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         """Update name of area."""
         old = self.areas[area_id]
 
-        new_values = {}
-
-        for attr_name, value in (
-            ("aliases", aliases),
-            ("icon", icon),
-            ("labels", labels),
-            ("picture", picture),
-            ("floor_id", floor_id),
-        ):
-            if value is not UNDEFINED and value != getattr(old, attr_name):
-                new_values[attr_name] = value
+        new_values: dict[str, Any] = {
+            attr_name: value
+            for attr_name, value in (
+                ("aliases", aliases),
+                ("icon", icon),
+                ("labels", labels),
+                ("picture", picture),
+                ("floor_id", floor_id),
+            )
+            if value is not UNDEFINED and value != getattr(old, attr_name)
+        }
 
         if name is not UNDEFINED and name != old.name:
             new_values["name"] = name
@@ -333,8 +346,10 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         if not new_values:
             return old
 
+        new_values["modified_at"] = utcnow()
+
         self.hass.verify_event_loop_thread("area_registry.async_update")
-        new = self.areas[area_id] = dataclasses.replace(old, **new_values)  # type: ignore[arg-type]
+        new = self.areas[area_id] = dataclasses.replace(old, **new_values)
 
         self.async_schedule_save()
         return new
@@ -360,6 +375,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     name=area["name"],
                     normalized_name=normalized_name,
                     picture=area["picture"],
+                    created_at=datetime.fromisoformat(area["created_at"]),
+                    modified_at=datetime.fromisoformat(area["modified_at"]),
                 )
 
         self.areas = areas
@@ -378,6 +395,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     "labels": list(entry.labels),
                     "name": entry.name,
                     "picture": entry.picture,
+                    "created_at": entry.created_at.isoformat(),
+                    "modified_at": entry.modified_at.isoformat(),
                 }
                 for entry in self.areas.values()
             ]

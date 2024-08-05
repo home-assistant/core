@@ -83,7 +83,7 @@ def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
 
 def get_valid_responses_from_results[_T: ZwaveNode | Endpoint](
     zwave_objects: Sequence[_T], results: Sequence[Any]
-) -> Generator[tuple[_T, Any], None, None]:
+) -> Generator[tuple[_T, Any]]:
     """Return valid responses from a list of results."""
     for zwave_object, result in zip(zwave_objects, results, strict=False):
         if not isinstance(result, Exception):

@@ -12,7 +12,7 @@ from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import issue_registry as ir
 
 from .conftest import (
     EXPECTED_OPTIONS,
@@ -22,6 +22,8 @@ from .conftest import (
     TEST_REQUIRED,
     MockDevice,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -41,7 +43,7 @@ async def user_flow(hass: HomeAssistant) -> str:
 )
 async def test_form_user(
     hass: HomeAssistant, user_flow: str, test_config: dict[str, Any]
-):
+) -> None:
     """Test a successful user initiated flow."""
     with (
         patch(
@@ -97,7 +99,7 @@ async def test_form_import(
     test_config: dict[str, Any],
     expected_data: dict[str, Any],
     expected_options: dict[str, Any],
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we get the form with import source."""
     with (
@@ -143,7 +145,7 @@ async def test_form_import_errors(
     hass: HomeAssistant,
     exception: Exception,
     error_type: str,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we handle errors on import."""
     with patch(
@@ -164,3 +166,34 @@ async def test_form_import_errors(
     assert issue.issue_domain == DOMAIN
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error_type
+
+
+async def test_options_flow(hass: HomeAssistant, user_flow: str) -> None:
+    """Test the form options."""
+
+    with patch(
+        "openwebif.api.OpenWebIfDevice.__new__",
+        return_value=MockDevice(),
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_FULL, options={}, entry_id="1")
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"source_bouquet": "Favourites (TV)"}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert entry.options == {"source_bouquet": "Favourites (TV)"}
+
+        await hass.async_block_till_done()
+
+        assert entry.state is config_entries.ConfigEntryState.LOADED

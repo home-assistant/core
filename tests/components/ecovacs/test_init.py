@@ -3,7 +3,6 @@
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
 from syrupy import SnapshotAssertion
@@ -121,7 +120,7 @@ async def test_devices_in_dr(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test all devices are in the device registry."""
-    for device in controller.devices(Capabilities):
+    for device in controller.devices:
         assert (
             device_entry := device_registry.async_get_device(
                 identifiers={(DOMAIN, device.device_info["did"])}
@@ -130,12 +129,15 @@ async def test_devices_in_dr(
         assert device_entry == snapshot(name=device.device_info["did"])
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_vacbot", "init_integration"
+)
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
         ("yna5x1", 26),
-        ("5xu9h3", 24),
+        ("5xu9h3", 25),
+        ("123", 1),
     ],
 )
 async def test_all_entities_loaded(

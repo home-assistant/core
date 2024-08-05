@@ -23,11 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 
 from .bridge import (
@@ -49,12 +45,12 @@ from .const import (
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
+from .coordinator import SamsungTVDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-SamsungTVConfigEntry = ConfigEntry[SamsungTVBridge]
+SamsungTVConfigEntry = ConfigEntry[SamsungTVDataUpdateCoordinator]
 
 
 @callback
@@ -179,7 +175,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
-    entry.runtime_data = bridge
+    coordinator = SamsungTVDataUpdateCoordinator(hass, bridge)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -276,8 +274,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
+    minor_version = config_entry.minor_version
 
-    LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
@@ -290,6 +289,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         version = 2
         hass.config_entries.async_update_entry(config_entry, version=2)
 
-    LOGGER.debug("Migration to version %s successful", version)
+    if version == 2:
+        if minor_version < 2:
+            # Cleanup invalid MAC addresses - see #103512
+            # Reverted due to device registry collisions - see #119082 / #119249
+
+            minor_version = 2
+            hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
 
     return True

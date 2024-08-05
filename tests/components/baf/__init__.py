@@ -11,6 +11,7 @@ MOCK_NAME = "Living Room Fan"
 class MockBAFDevice(Device):
     """A simple mock for a BAF Device."""
 
+    # pylint: disable-next=super-init-not-called
     def __init__(self, async_wait_available_side_effect=None):
         """Init simple mock."""
         self._async_wait_available_side_effect = async_wait_available_side_effect

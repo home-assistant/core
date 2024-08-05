@@ -5,23 +5,22 @@ from typing import Any
 from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TedeeConfigEntry
 from .coordinator import TedeeApiCoordinator
 from .entity import TedeeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TedeeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tedee lock entity."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[TedeeLockEntity] = []
     for lock in coordinator.data.values():
@@ -56,14 +55,29 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         super().__init__(lock, coordinator, "lock")
 
     @property
-    def is_locked(self) -> bool:
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
+        if self._lock.state in (
+            TedeeLockState.HALF_OPEN,
+            TedeeLockState.UNKNOWN,
+        ):
+            return None
         return self._lock.state == TedeeLockState.LOCKED
 
     @property
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
         return self._lock.state == TedeeLockState.UNLOCKING
+
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._lock.state == TedeeLockState.PULLED
+
+    @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._lock.state == TedeeLockState.PULLING
 
     @property
     def is_locking(self) -> bool:
@@ -78,7 +92,11 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._lock.is_connected
+        return (
+            super().available
+            and self._lock.is_connected
+            and self._lock.state != TedeeLockState.UNCALIBRATED
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""

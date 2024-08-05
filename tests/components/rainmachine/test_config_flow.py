@@ -59,6 +59,7 @@ async def test_invalid_password(hass: HomeAssistant, config) -> None:
 )
 async def test_migrate_1_2(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client,
     config,
     config_entry,
@@ -69,10 +70,8 @@ async def test_migrate_1_2(
     platform,
 ) -> None:
     """Test migration from version 1 to 2 (consistent unique IDs)."""
-    ent_reg = er.async_get(hass)
-
     # Create entity RegistryEntry using old unique ID format:
-    entity_entry = ent_reg.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         platform,
         DOMAIN,
         old_unique_id,
@@ -96,9 +95,9 @@ async def test_migrate_1_2(
         await hass.async_block_till_done()
 
     # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
+    assert entity_registry.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
 
 
 async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:

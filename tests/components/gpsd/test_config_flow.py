@@ -43,10 +43,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
-    with patch("socket.socket") as mock_socket:
-        mock_connect = mock_socket.return_value.connect
-        mock_connect.side_effect = OSError
-
+    with patch("socket.socket", side_effect=OSError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},

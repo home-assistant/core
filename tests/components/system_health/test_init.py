@@ -110,7 +110,7 @@ async def test_info_endpoint_register_callback_exc(
     """Test that the info endpoint requires auth."""
 
     async def mock_info(hass):
-        raise Exception("TEST ERROR")
+        raise Exception("TEST ERROR")  # noqa: TRY002
 
     async_register_info(hass, "lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})

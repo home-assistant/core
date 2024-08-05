@@ -33,10 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    async_entries_for_config_entry,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -459,7 +456,7 @@ async def async_setup_entry(
         """Retrieve Netatmo public weather entities."""
         entities = {
             device.name: device.id
-            for device in async_entries_for_config_entry(
+            for device in dr.async_entries_for_config_entry(
                 device_registry, entry.entry_id
             )
             if device.model == "Public Weather station"
@@ -779,6 +776,8 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
                 self._attr_native_value = round(sum(values) / len(values), 1)
             elif self._mode == "max":
                 self._attr_native_value = max(values)
+            elif self._mode == "min":
+                self._attr_native_value = min(values)
 
         self._attr_available = self.native_value is not None
         self.async_write_ha_state()

@@ -65,7 +65,7 @@ async def setup_entry(hass, devices):
             EVENT_LIGHTING_1,
             [
                 {"type": "command", "subtype": subtype}
-                for subtype in [
+                for subtype in (
                     "Off",
                     "On",
                     "Dim",
@@ -74,7 +74,7 @@ async def setup_entry(hass, devices):
                     "All/group On",
                     "Chime",
                     "Illegal command",
-                ]
+                )
             ],
         )
     ],

@@ -45,7 +45,7 @@ TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS: tuple[
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda x: x["attributes"].get("batteryLevel", -1),
+        value_fn=lambda x: x["attributes"].get("batteryLevel"),
     ),
     TraccarServerSensorEntityDescription[PositionModel](
         key="speed",

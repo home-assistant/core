@@ -15,7 +15,7 @@ from homeassistant.components.script import (
     ATTR_MODE,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -24,13 +24,13 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_exclude_attributes(
-    recorder_mock: Recorder, hass: HomeAssistant, calls
+    recorder_mock: Recorder, hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test automation registered attributes to be excluded."""
     now = dt_util.utcnow()
@@ -52,7 +52,7 @@ async def test_exclude_attributes(
             "script": {
                 "test": {
                     "sequence": {
-                        "service": "test.script",
+                        "action": "test.script",
                         "data_template": {"hello": "{{ greeting }}"},
                     }
                 }

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import UserDict
+from collections import UserDict, defaultdict
 from collections.abc import Mapping, Sequence, ValuesView
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 SAVE_DELAY = 10
 SAVE_DELAY_LONG = 180
+
+type RegistryIndexType = defaultdict[str, dict[str, Literal[True]]]
 
 
 class BaseRegistryItems[_DataT](UserDict[str, _DataT], ABC):
@@ -42,7 +44,7 @@ class BaseRegistryItems[_DataT](UserDict[str, _DataT], ABC):
         self._index_entry(key, entry)
 
     def _unindex_entry_value(
-        self, key: str, value: str, index: dict[str, dict[str, Literal[True]]]
+        self, key: str, value: str, index: RegistryIndexType
     ) -> None:
         """Unindex an entry value.
 

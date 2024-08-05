@@ -305,4 +305,4 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     }
     assert result2["result"].unique_id == IDASEN_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
-    desk_connect.assert_called_with(ANY, auto_reconnect=False)
+    desk_connect.assert_called_with(ANY, retry=False)

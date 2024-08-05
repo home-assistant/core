@@ -66,14 +66,17 @@ class DemoMailbox(Mailbox):
         """Return if messages have attached media files."""
         return True
 
+    def _get_media(self) -> bytes:
+        """Return the media blob for the msgid."""
+        audio_path = os.path.join(os.path.dirname(__file__), "tts.mp3")
+        with open(audio_path, "rb") as file:
+            return file.read()
+
     async def async_get_media(self, msgid: str) -> bytes:
         """Return the media blob for the msgid."""
         if msgid not in self._messages:
             raise StreamError("Message not found")
-
-        audio_path = os.path.join(os.path.dirname(__file__), "tts.mp3")
-        with open(audio_path, "rb") as file:
-            return file.read()
+        return await self.hass.async_add_executor_job(self._get_media)
 
     async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""

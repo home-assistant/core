@@ -1,5 +1,6 @@
 """Read only dictionary."""
 
+from copy import deepcopy
 from typing import Any
 
 
@@ -18,3 +19,13 @@ class ReadOnlyDict[_KT, _VT](dict[_KT, _VT]):
     clear = _readonly
     update = _readonly
     setdefault = _readonly
+
+    def __copy__(self) -> dict[_KT, _VT]:
+        """Create a shallow copy."""
+        return ReadOnlyDict(self)
+
+    def __deepcopy__(self, memo: Any) -> dict[_KT, _VT]:
+        """Create a deep copy."""
+        return ReadOnlyDict(
+            {deepcopy(key, memo): deepcopy(value, memo) for key, value in self.items()}
+        )

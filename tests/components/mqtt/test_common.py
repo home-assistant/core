@@ -16,7 +16,7 @@ import yaml
 from homeassistant import config as module_hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
+from homeassistant.components.mqtt.const import MQTT_CONNECTION_STATE
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.config_entries import ConfigEntryState
@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -42,6 +42,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
+    "model_id": "XYZ001",
     "hw_version": "rev1",
     "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
@@ -54,6 +55,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
+    "model_id": "XYZ001",
     "hw_version": "rev1",
     "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
@@ -103,9 +105,7 @@ def help_custom_config(
 
 
 async def help_test_availability_when_connection_lost(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    domain: str,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, domain: str
 ) -> None:
     """Test availability after MQTT disconnection."""
     mqtt_mock = await mqtt_mock_entry()
@@ -115,7 +115,7 @@ async def help_test_availability_when_connection_lost(
     assert state and state.state != STATE_UNAVAILABLE
 
     mqtt_mock.connected = False
-    async_dispatcher_send(hass, MQTT_DISCONNECTED)
+    async_dispatcher_send(hass, MQTT_CONNECTION_STATE, False)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -251,8 +251,6 @@ async def help_test_default_availability_list_payload_all(
     domain: str,
     config: ConfigType,
     no_assumed_state: bool = False,
-    state_topic: str | None = None,
-    state_message: str | None = None,
 ) -> None:
     """Test availability by default payload with defined topic.
 
@@ -314,8 +312,6 @@ async def help_test_default_availability_list_payload_any(
     domain: str,
     config: ConfigType,
     no_assumed_state: bool = False,
-    state_topic: str | None = None,
-    state_message: str | None = None,
 ) -> None:
     """Test availability by default payload with defined topic.
 
@@ -657,7 +653,6 @@ async def help_test_update_with_json_attrs_bad_json(
 async def help_test_discovery_update_attr(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     config: ConfigType,
 ) -> None:
@@ -696,9 +691,7 @@ async def help_test_discovery_update_attr(
 
 
 async def help_test_unique_id(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    domain: str,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, domain: str
 ) -> None:
     """Test unique id option only creates one entity per unique_id."""
     await mqtt_mock_entry()
@@ -709,7 +702,6 @@ async def help_test_unique_id(
 async def help_test_discovery_removal(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     data: str,
 ) -> None:
@@ -735,8 +727,7 @@ async def help_test_discovery_removal(
 async def help_test_discovery_update(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog,
-    domain,
+    domain: str,
     discovery_config1: DiscoveryInfoType,
     discovery_config2: DiscoveryInfoType,
     state_data1: _StateDataType | None = None,
@@ -800,7 +791,6 @@ async def help_test_discovery_update(
 async def help_test_discovery_update_unchanged(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     data1: str,
     discovery_update: MagicMock,
@@ -826,7 +816,6 @@ async def help_test_discovery_update_unchanged(
 async def help_test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     data1: str,
     data2: str,
@@ -1012,6 +1001,7 @@ async def help_test_entity_device_info_with_identifier(
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
@@ -1048,6 +1038,7 @@ async def help_test_entity_device_info_with_connection(
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
@@ -1189,7 +1180,9 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     assert mqtt_mock.async_subscribe.call_count == len(topics) + 2 + DISCOVERY_COUNT
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(
+            topic, ANY, ANY, ANY, HassJobType.Callback
+        )
     mqtt_mock.async_subscribe.reset_mock()
 
     entity_registry.async_update_entity(
@@ -1203,7 +1196,9 @@ async def help_test_entity_id_update_subscriptions(
     state = hass.states.get(f"{domain}.milk")
     assert state is not None
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(
+            topic, ANY, ANY, ANY, HassJobType.Callback
+        )
 
 
 async def help_test_entity_id_update_discovery_update(

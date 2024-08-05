@@ -281,7 +281,7 @@ class RestoreStateData:
                 state, extra_data, dt_util.utcnow()
             )
 
-        self.entities.pop(entity_id)
+        del self.entities[entity_id]
 
 
 class RestoreEntity(Entity):

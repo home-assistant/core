@@ -18,7 +18,7 @@ DEFAULT_INFO: dict[str, str] = {
     "version": "1",
 }
 
-TEST_UNITS: dict[dict[str, Any]] = {
+TEST_UNITS: dict[str, dict[str, Any]] = {
     "L1.100": {
         "is_on": False,
         "thermostat": 20,

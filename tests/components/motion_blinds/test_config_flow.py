@@ -72,7 +72,7 @@ TEST_INTERFACES = [
 
 
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
-def motion_blinds_connect_fixture(mock_get_source_ip):
+def motion_blinds_connect_fixture():
     """Mock Motionblinds connection and entry setup."""
     with (
         patch(

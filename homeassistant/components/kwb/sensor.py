@@ -5,7 +5,10 @@ from __future__ import annotations
 from pykwb import kwb
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -27,7 +30,7 @@ MODE_TCP = 1
 
 CONF_RAW = "raw"
 
-SERIAL_SCHEMA = PLATFORM_SCHEMA.extend(
+SERIAL_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -36,7 +39,7 @@ SERIAL_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ETHERNET_SCHEMA = PLATFORM_SCHEMA.extend(
+ETHERNET_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

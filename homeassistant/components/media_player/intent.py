@@ -10,17 +10,19 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_VOLUME_SET,
 )
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import intent
 
-from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN
+from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN, MediaPlayerDeviceClass
 from .const import MediaPlayerEntityFeature, MediaPlayerState
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
+INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
 INTENT_SET_VOLUME = "HassSetVolume"
 
 
@@ -65,6 +67,23 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.NEXT_TRACK,
             required_states={MediaPlayerState.PLAYING},
+            description="Skips a media player to the next item",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        ),
+    )
+    intent.async_register(
+        hass,
+        intent.ServiceIntentHandler(
+            INTENT_MEDIA_PREVIOUS,
+            DOMAIN,
+            SERVICE_MEDIA_PREVIOUS_TRACK,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.PREVIOUS_TRACK,
+            required_states={MediaPlayerState.PLAYING},
+            description="Replays the previous item for a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
         ),
     )
     intent.async_register(
@@ -81,6 +100,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                     vol.Coerce(int), vol.Range(min=0, max=100), lambda val: val / 100
                 )
             },
+            description="Sets the volume of a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
         ),
     )
 
@@ -97,6 +119,9 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.PAUSE,
             required_states={MediaPlayerState.PLAYING},
+            description="Pauses a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
         )
         self.last_paused = last_paused
 
@@ -130,6 +155,9 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
             SERVICE_MEDIA_PLAY,
             required_domains={DOMAIN},
             required_states={MediaPlayerState.PAUSED},
+            description="Resumes a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
         )
         self.last_paused = last_paused
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from fyta_cli.fyta_connector import FytaConnector
 
@@ -17,8 +16,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import async_get_time_zone
 
-from .const import CONF_EXPIRATION, DOMAIN
+from .const import CONF_EXPIRATION
 from .coordinator import FytaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,9 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [
     Platform.SENSOR,
 ]
+type FytaConfigEntry = ConfigEntry[FytaCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
     """Set up the Fyta integration."""
     tz: str = hass.config.time_zone
 
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     access_token: str = entry.data[CONF_ACCESS_TOKEN]
     expiration: datetime = datetime.fromisoformat(
         entry.data[CONF_EXPIRATION]
-    ).astimezone(ZoneInfo(tz))
+    ).astimezone(await async_get_time_zone(tz))
 
     fyta = FytaConnector(username, password, access_token, expiration, tz)
 
@@ -45,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -55,11 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Fyta entity."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

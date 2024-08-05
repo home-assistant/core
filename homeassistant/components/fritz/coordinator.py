@@ -28,11 +28,11 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
-from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -46,9 +46,6 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
-    SERVICE_CLEANUP,
-    SERVICE_REBOOT,
-    SERVICE_RECONNECT,
     SERVICE_SET_GUEST_WIFI_PW,
     MeshRoles,
 )
@@ -78,13 +75,6 @@ def device_filter_out_from_trackers(
             "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
         )
     return bool(reason)
-
-
-def _cleanup_entity_filter(device: er.RegistryEntry) -> bool:
-    """Filter only relevant entities."""
-    return device.domain == DEVICE_TRACKER_DOMAIN or (
-        device.domain == DEVICE_SWITCH_DOMAIN and "_internet_access" in device.entity_id
-    )
 
 
 def _ha_is_stopping(activity: str) -> None:
@@ -171,6 +161,8 @@ class UpdateCoordinatorDataType(TypedDict):
 
 class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """FritzBoxTools class."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -576,8 +568,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.fritz_hosts.get_mesh_topology
                 )
             ):
-                # pylint: disable-next=broad-exception-raised
-                raise Exception("Mesh supported but empty topology reported")
+                raise Exception("Mesh supported but empty topology reported")  # noqa: TRY002
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
             # Avoid duplicating device trackers
@@ -652,71 +643,39 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self.fritz_guest_wifi.set_password, password, length
         )
 
-    async def async_trigger_cleanup(
-        self, config_entry: ConfigEntry | None = None
-    ) -> None:
+    async def async_trigger_cleanup(self) -> None:
         """Trigger device trackers cleanup."""
         device_hosts = await self._async_update_hosts_info()
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
+        config_entry = self.config_entry
 
-        if config_entry is None:
-            if self.config_entry is None:
-                return
-            config_entry = self.config_entry
-
-        ha_entity_reg_list: list[er.RegistryEntry] = er.async_entries_for_config_entry(
+        entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
         )
-        entities_removed: bool = False
 
-        device_hosts_macs = set()
-        device_hosts_names = set()
-        for mac, device in device_hosts.items():
-            device_hosts_macs.add(mac)
-            device_hosts_names.add(device.name)
-
-        for entry in ha_entity_reg_list:
-            if entry.original_name is None:
-                continue
-            entry_name = entry.name or entry.original_name
-            entry_host = entry_name.split(" ")[0]
-            entry_mac = entry.unique_id.split("_")[0]
-
-            if not _cleanup_entity_filter(entry) or (
-                entry_mac in device_hosts_macs and entry_host in device_hosts_names
-            ):
-                _LOGGER.debug(
-                    "Skipping entity %s [mac=%s, host=%s]",
-                    entry_name,
-                    entry_mac,
-                    entry_host,
-                )
-                continue
-            _LOGGER.info("Removing entity: %s", entry_name)
-            entity_reg.async_remove(entry.entity_id)
-            entities_removed = True
-
-        if entities_removed:
-            self._async_remove_empty_devices(entity_reg, config_entry)
-
-    @callback
-    def _async_remove_empty_devices(
-        self, entity_reg: er.EntityRegistry, config_entry: ConfigEntry
-    ) -> None:
-        """Remove devices with no entities."""
+        orphan_macs: set[str] = set()
+        for entity in entities:
+            entry_mac = entity.unique_id.split("_")[0]
+            if (
+                entity.domain == DEVICE_TRACKER_DOMAIN
+                or "_internet_access" in entity.unique_id
+            ) and entry_mac not in device_hosts:
+                _LOGGER.info("Removing orphan entity entry %s", entity.entity_id)
+                orphan_macs.add(entry_mac)
+                entity_reg.async_remove(entity.entity_id)
 
         device_reg = dr.async_get(self.hass)
-        device_list = dr.async_entries_for_config_entry(
+        orphan_connections = {
+            (CONNECTION_NETWORK_MAC, dr.format_mac(mac)) for mac in orphan_macs
+        }
+        for device in dr.async_entries_for_config_entry(
             device_reg, config_entry.entry_id
-        )
-        for device_entry in device_list:
-            if not er.async_entries_for_device(
-                entity_reg,
-                device_entry.id,
-                include_disabled_entities=True,
-            ):
-                _LOGGER.info("Removing device: %s", device_entry.name)
-                device_reg.async_remove_device(device_entry.id)
+        ):
+            if any(con in device.connections for con in orphan_connections):
+                _LOGGER.debug("Removing obsolete device entry %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=config_entry.entry_id
+                )
 
     async def service_fritzbox(
         self, service_call: ServiceCall, config_entry: ConfigEntry
@@ -730,30 +689,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             )
 
         try:
-            if service_call.service == SERVICE_REBOOT:
-                _LOGGER.warning(
-                    'Service "fritz.reboot" is deprecated, please use the corresponding'
-                    " button entity instead"
-                )
-                await self.async_trigger_reboot()
-                return
-
-            if service_call.service == SERVICE_RECONNECT:
-                _LOGGER.warning(
-                    'Service "fritz.reconnect" is deprecated, please use the'
-                    " corresponding button entity instead"
-                )
-                await self.async_trigger_reconnect()
-                return
-
-            if service_call.service == SERVICE_CLEANUP:
-                _LOGGER.warning(
-                    'Service "fritz.cleanup" is deprecated, please use the'
-                    " corresponding button entity instead"
-                )
-                await self.async_trigger_cleanup(config_entry)
-                return
-
             if service_call.service == SERVICE_SET_GUEST_WIFI_PW:
                 await self.async_trigger_set_guest_password(
                     service_call.data.get("password"),

@@ -2,6 +2,7 @@
 
 import asyncio
 import functools
+from unittest.mock import AsyncMock
 
 from aioraven.device import RAVEnConnectionError
 import pytest
@@ -10,23 +11,11 @@ from homeassistant.components.rainforest_raven.coordinator import RAVEnDataCoord
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from . import create_mock_device, create_mock_entry
-
-from tests.common import patch
+from . import create_mock_entry
 
 
-@pytest.fixture
-def mock_device():
-    """Mock a functioning RAVEn device."""
-    mock_device = create_mock_device()
-    with patch(
-        "homeassistant.components.rainforest_raven.coordinator.RAVEnSerialDevice",
-        return_value=mock_device,
-    ):
-        yield mock_device
-
-
-async def test_coordinator_device_info(hass: HomeAssistant, mock_device):
+@pytest.mark.usefixtures("mock_device")
+async def test_coordinator_device_info(hass: HomeAssistant) -> None:
     """Test reporting device information from the coordinator."""
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
@@ -50,7 +39,9 @@ async def test_coordinator_device_info(hass: HomeAssistant, mock_device):
     assert coordinator.device_name == "RAVEn Device"
 
 
-async def test_coordinator_cache_device(hass: HomeAssistant, mock_device):
+async def test_coordinator_cache_device(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
     """Test that the device isn't re-opened for subsequent refreshes."""
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
@@ -64,7 +55,9 @@ async def test_coordinator_cache_device(hass: HomeAssistant, mock_device):
     assert mock_device.open.call_count == 1
 
 
-async def test_coordinator_device_error_setup(hass: HomeAssistant, mock_device):
+async def test_coordinator_device_error_setup(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
     """Test handling of a device error during initialization."""
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
@@ -74,7 +67,9 @@ async def test_coordinator_device_error_setup(hass: HomeAssistant, mock_device):
         await coordinator.async_config_entry_first_refresh()
 
 
-async def test_coordinator_device_error_update(hass: HomeAssistant, mock_device):
+async def test_coordinator_device_error_update(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
     """Test handling of a device error during an update."""
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
@@ -87,7 +82,9 @@ async def test_coordinator_device_error_update(hass: HomeAssistant, mock_device)
     assert coordinator.last_update_success is False
 
 
-async def test_coordinator_device_timeout_update(hass: HomeAssistant, mock_device):
+async def test_coordinator_device_timeout_update(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
     """Test handling of a device timeout during an update."""
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
@@ -100,7 +97,9 @@ async def test_coordinator_device_timeout_update(hass: HomeAssistant, mock_devic
     assert coordinator.last_update_success is False
 
 
-async def test_coordinator_comm_error(hass: HomeAssistant, mock_device):
+async def test_coordinator_comm_error(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
     """Test handling of an error parsing or reading raw device data."""
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)

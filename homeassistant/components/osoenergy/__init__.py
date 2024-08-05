@@ -4,11 +4,6 @@ from typing import Any
 
 from aiohttp.web_exceptions import HTTPException
 from apyosoenergyapi import OSOEnergy
-from apyosoenergyapi.helper.const import (
-    OSOEnergyBinarySensorData,
-    OSOEnergySensorData,
-    OSOEnergyWaterHeaterData,
-)
 from apyosoenergyapi.helper.osoenergy_exceptions import OSOEnergyReauthRequired
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,17 +11,16 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
-MANUFACTURER = "OSO Energy"
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
+    Platform.BINARY_SENSOR: "binary_sensor",
     Platform.SENSOR: "sensor",
     Platform.WATER_HEATER: "water_heater",
 }
@@ -68,26 +62,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class OSOEnergyEntity[
-    _OSOEnergyT: (
-        OSOEnergyBinarySensorData,
-        OSOEnergySensorData,
-        OSOEnergyWaterHeaterData,
-    )
-](Entity):
-    """Initiate OSO Energy Base Class."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, osoenergy: OSOEnergy, entity_data: _OSOEnergyT) -> None:
-        """Initialize the instance."""
-        self.osoenergy = osoenergy
-        self.entity_data = entity_data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entity_data.device_id)},
-            manufacturer=MANUFACTURER,
-            model=entity_data.device_type,
-            name=entity_data.device_name,
-        )

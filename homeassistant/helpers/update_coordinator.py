@@ -6,6 +6,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import randint
 from time import monotonic
@@ -70,6 +71,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
+        setup_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         always_update: bool = True,
     ) -> None:
@@ -78,6 +80,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.logger = logger
         self.name = name
         self.update_method = update_method
+        self.setup_method = setup_method
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
@@ -177,7 +180,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
@@ -274,14 +277,53 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
-        if self.last_update_success:
-            return
+        if await self.__wrap_async_setup():
+            await self._async_refresh(
+                log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+            )
+            if self.last_update_success:
+                return
         ex = ConfigEntryNotReady()
         ex.__cause__ = self.last_exception
         raise ex
+
+    async def __wrap_async_setup(self) -> bool:
+        """Error handling for _async_setup."""
+        try:
+            await self._async_setup()
+        except (
+            TimeoutError,
+            requests.exceptions.Timeout,
+            aiohttp.ClientError,
+            requests.exceptions.RequestException,
+            urllib.error.URLError,
+            UpdateFailed,
+        ) as err:
+            self.last_exception = err
+
+        except (ConfigEntryError, ConfigEntryAuthFailed) as err:
+            self.last_exception = err
+            self.last_update_success = False
+            raise
+
+        except Exception as err:  # pylint: disable=broad-except
+            self.last_exception = err
+            self.logger.exception("Unexpected error fetching %s data", self.name)
+        else:
+            return True
+
+        self.last_update_success = False
+        return False
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Can be overwritten by integrations to load data or resources
+        only once during the first refresh.
+        """
+        if self.setup_method is None:
+            return None
+        return await self.setup_method()
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
@@ -392,7 +434,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.logger.debug(
                     "Finished fetching %s data in %.3f seconds (success: %s)",
                     self.name,
-                    monotonic() - start,
+                    monotonic() - start,  # pylint: disable=possibly-used-before-assignment
                     self.last_update_success,
                 )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
@@ -471,7 +513,7 @@ class BaseCoordinatorEntity[
         self.coordinator = coordinator
         self.coordinator_context = context
 
-    @property
+    @cached_property
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False

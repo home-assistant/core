@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from bleak.exc import BleakError
+import pytest
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
@@ -96,11 +97,8 @@ class MyCoordinator(ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]):
         super()._async_handle_bluetooth_event(service_info, change)
 
 
-async def test_basic_usage(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_basic_usage(hass: HomeAssistant) -> None:
     """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -136,11 +134,8 @@ async def test_basic_usage(
     unregister_listener()
 
 
-async def test_bleak_error_during_polling(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_bleak_error_during_polling(hass: HomeAssistant) -> None:
     """Test bleak error during polling ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -189,11 +184,8 @@ async def test_bleak_error_during_polling(
     unregister_listener()
 
 
-async def test_generic_exception_during_polling(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_generic_exception_during_polling(hass: HomeAssistant) -> None:
     """Test generic exception during polling ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -242,11 +234,8 @@ async def test_generic_exception_during_polling(
     unregister_listener()
 
 
-async def test_polling_debounce(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_polling_debounce(hass: HomeAssistant) -> None:
     """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -288,11 +277,8 @@ async def test_polling_debounce(
     unregister_listener()
 
 
-async def test_polling_debounce_with_custom_debouncer(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_polling_debounce_with_custom_debouncer(hass: HomeAssistant) -> None:
     """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -337,11 +323,8 @@ async def test_polling_debounce_with_custom_debouncer(
     unregister_listener()
 
 
-async def test_polling_rejecting_the_first_time(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_polling_rejecting_the_first_time(hass: HomeAssistant) -> None:
     """Test need_poll rejects the first time ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     attempt = 0
@@ -399,11 +382,8 @@ async def test_polling_rejecting_the_first_time(
     unregister_listener()
 
 
-async def test_no_polling_after_stop_event(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_no_polling_after_stop_event(hass: HomeAssistant) -> None:
     """Test we do not poll after the stop event."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     needs_poll_calls = 0

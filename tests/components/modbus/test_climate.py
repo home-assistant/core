@@ -2,14 +2,14 @@
 
 import pytest
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -766,7 +766,7 @@ async def test_service_climate_swing_update(
     ("temperature", "result", "do_config"),
     [
         (
-            35,
+            31,
             [0x00],
             {
                 CONF_CLIMATES: [
@@ -781,7 +781,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            36,
+            32,
             [0x00, 0x00],
             {
                 CONF_CLIMATES: [
@@ -796,7 +796,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            37.5,
+            33.5,
             [0x00, 0x00],
             {
                 CONF_CLIMATES: [
@@ -811,7 +811,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            "39",
+            "34",
             [0x00, 0x00, 0x00, 0x00],
             {
                 CONF_CLIMATES: [

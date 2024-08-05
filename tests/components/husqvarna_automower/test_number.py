@@ -1,13 +1,18 @@
 """Tests for number platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
 from aioautomower.utils import mower_list_to_dictionary_dataclass
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.const import (
+    DOMAIN,
+    EXECUTION_TIME_DELAY,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -16,7 +21,12 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, load_json_value_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -36,10 +46,13 @@ async def test_number_commands(
         blocking=True,
     )
     mocked_method = mock_automower_client.commands.set_cutting_height
-    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, 3)
 
     mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
         await hass.services.async_call(
             domain="number",
             service="set_value",
@@ -47,10 +60,6 @@ async def test_number_commands(
             service_data={"value": "3"},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2
 
 
@@ -58,6 +67,7 @@ async def test_number_workarea_commands(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test number commands."""
     entity_id = "number.test_mower_1_front_lawn_cutting_height"
@@ -76,15 +86,21 @@ async def test_number_workarea_commands(
         service="set_value",
         target={"entity_id": entity_id},
         service_data={"value": "75"},
-        blocking=True,
+        blocking=False,
     )
-    assert len(mocked_method.mock_calls) == 1
+    freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, 75, 123456)
     state = hass.states.get(entity_id)
     assert state.state is not None
     assert state.state == "75"
 
     mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
         await hass.services.async_call(
             domain="number",
             service="set_value",
@@ -92,10 +108,6 @@ async def test_number_workarea_commands(
             service_data={"value": "75"},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2
 
 
@@ -125,14 +137,14 @@ async def test_workarea_deleted(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_snapshot_number(
+async def test_number_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states of the number entity."""
+    """Snapshot tests of the number entities."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.NUMBER],

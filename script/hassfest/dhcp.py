@@ -20,7 +20,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 
     return format_python_namespace(
         {"DHCP": match_list},
-        annotations={"DHCP": "list[dict[str, str | bool]]"},
+        annotations={"DHCP": "Final[list[dict[str, str | bool]]]"},
     )
 
 
