@@ -31,7 +31,7 @@ async def test_snmp_integer_switch_off(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
         state = hass.states.get("switch.snmp")
-        assert state.state == "off"
+        assert state.state == STATE_OFF
 
 
 async def test_snmp_integer_switch_on(hass: HomeAssistant) -> None:
@@ -45,7 +45,7 @@ async def test_snmp_integer_switch_on(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
         state = hass.states.get("switch.snmp")
-        assert state.state == "on"
+        assert state.state == STATE_ON
 
 
 async def test_snmp_integer_switch_unknown(hass: HomeAssistant) -> None:
@@ -59,4 +59,4 @@ async def test_snmp_integer_switch_unknown(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
         state = hass.states.get("switch.snmp")
-        assert state.state == "unknown"
+        assert state.state == STATE_UNKNOWN
