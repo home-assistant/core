@@ -120,13 +120,8 @@ async def test_step_otp_valid(
     assert "refresh_token" in result["data"]
 
 
-async def test_step_otp_valid_device_no_name(
-    hass: HomeAssistant,
-    mock_setup_entry,
-    mock_request_otp,
-    mock_submit_otp,
-    mock__get_devices_metadata_no_name,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry", "mock_request_otp", "mock_submit_otp", "mock__get_devices_metadata_no_name")
+async def test_step_otp_valid_device_no_name(hass: HomeAssistant) -> None:
     """Test user step with valid phone number."""
 
     result = await hass.config_entries.flow.async_init(
