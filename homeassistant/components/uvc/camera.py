@@ -92,6 +92,7 @@ class UnifiVideoCamera(Camera):
 
     _attr_should_poll = True  # Cameras default to False
     _attr_brand = "Ubiquiti"
+    _attr_is_streaming = False
     _caminfo: dict[str, Any]
 
     def __init__(self, camera: UVCRemote, uuid: str, name: str, password: str) -> None:
@@ -101,10 +102,8 @@ class UnifiVideoCamera(Camera):
         self._uuid = self._attr_unique_id = uuid
         self._attr_name = name
         self._password = password
-        self._attr_is_streaming = False
         self._connect_addr: str | None = None
         self._camera: UVCCameraClient | None = None
-        self._motion_status = False
 
     @property
     def supported_features(self) -> CameraEntityFeature:
@@ -217,7 +216,6 @@ class UnifiVideoCamera(Camera):
 
         try:
             self._nvr.set_recordmode(self._uuid, set_mode)
-            self._motion_status = mode
         except nvr.NvrError as err:
             _LOGGER.error("Unable to set recordmode to %s", set_mode)
             _LOGGER.debug(err)
