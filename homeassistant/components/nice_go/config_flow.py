@@ -6,12 +6,11 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from nice_go import ApiError, AuthFailedError, NiceGOApi
+from nice_go import AuthFailedError, NiceGOApi
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -25,34 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-async def validate_input(
-    hass: HomeAssistant,
-    data: dict[str, str],
-) -> dict[str, str | float | None]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    hub = NiceGOApi()
-
-    try:
-        refresh_token = await hub.authenticate(
-            data[CONF_EMAIL],
-            data[CONF_PASSWORD],
-            async_get_clientsession(hass),
-        )
-    except AuthFailedError as err:
-        raise InvalidAuth from err
-
-    return {
-        CONF_EMAIL: data[CONF_EMAIL],
-        CONF_PASSWORD: data[CONF_PASSWORD],
-        CONF_REFRESH_TOKEN: refresh_token,
-        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
-    }
 
 
 class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -81,12 +52,6 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AuthFailedError:
                 errors["base"] = "invalid_auth"
-            except ApiError as e:
-                _LOGGER.exception("API error")
-                if "UserNotFoundException" in str(e.__context__):
-                    errors["base"] = "user_not_found"
-                else:
-                    errors["base"] = "unknown"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
