@@ -117,12 +117,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             connected=connected,
         )
 
-    async def _async_update_data(self) -> dict[str, NiceGODevice]:
-        """Fetch data from Nice G.O. API."""
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
         async with asyncio.timeout(10):
-            if self.api.id_token:
-                # Already authenticated, returning the same data to avoid overwriting data from the websocket
-                return self.data
             expiry_time = (
                 self.refresh_token_creation_time
                 + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
@@ -151,7 +148,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             except ApiError as e:
                 raise UpdateFailed from e
             else:
-                return devices
+                self.async_set_updated_data(devices)
 
     async def _update_refresh_token(self) -> None:
         """Update the refresh token with Nice G.O. API."""

@@ -10,7 +10,8 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_not_found": "The user was not found. If you're coming from Linear Garage Door, make sure you have migrated your account to Nice G.O. by signing in at least once in the Nice G.O. app."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
