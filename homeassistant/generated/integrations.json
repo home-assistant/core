@@ -2236,12 +2236,6 @@
     "google": {
       "name": "Google",
       "integrations": {
-        "google_assistant": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Google Assistant"
-        },
         "google_assistant_sdk": {
           "integration_type": "service",
           "config_flow": true,
