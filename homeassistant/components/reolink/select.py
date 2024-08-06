@@ -18,15 +18,18 @@ from reolink_aio.api import (
     TrackMethodEnum,
 )
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
+import voluptuous as vol
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.helpers import config_validation as cv
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback, async_get_current_platform
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -40,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_CHIME_PLAY = CameraEntityFeature.STREAM
 ATTR_RINGTONE = "ringtone"
+
 
 @dataclass(frozen=True, kw_only=True)
 class ReolinkSelectEntityDescription(
@@ -63,6 +67,7 @@ class ReolinkChimeSelectEntityDescription(
     get_options: list[str]
     method: Callable[[Chime, str], Any]
     value: Callable[[Chime], str]
+    supported_features: int = 0
 
 
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
@@ -181,6 +186,7 @@ CHIME_SELECT_ENTITIES = (
         get_options=[method.name for method in ChimeToneEnum],
         value=lambda chime: ChimeToneEnum(chime.tone("visitor")).name,
         method=lambda chime, name: chime.set_tone("visitor", ChimeToneEnum[name].value),
+        supported_features=SUPPORT_CHIME_PLAY,
     ),
 )
 
@@ -205,11 +211,15 @@ async def async_setup_entry(
         for chime in reolink_data.host.api.chime_list
     )
     async_add_entities(entities)
-    
+
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         "chime_play",
-        {vol.Required(ATTR_ringtone): vol.In([method.name for method in ChimeToneEnum][1:])},
+        {
+            vol.Required(ATTR_RINGTONE): vol.In(
+                [method.name for method in ChimeToneEnum][1:]
+            )
+        },
         "async_chime_play",
         [SUPPORT_CHIME_PLAY],
     )
@@ -280,7 +290,7 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         super().__init__(reolink_data, chime)
         self._log_error = True
         self._attr_options = entity_description.get_options
-        self._attr_supported_features = SUPPORT_CHIME_PLAY
+        self._attr_supported_features = entity_description.supported_features
 
     @property
     def current_option(self) -> str | None:

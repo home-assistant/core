@@ -19,12 +19,11 @@ ptz_move:
 
 chime_play:
   target:
-    device:
-      entity:
-        integration: reolink
-        domain: select
-        supported_features:
-          - camera.CameraEntityFeature.STREAM
+    entity:
+      integration: reolink
+      domain: select
+      supported_features:
+        - camera.CameraEntityFeature.STREAM
   fields:
     ringtone:
       required: true
@@ -42,4 +41,3 @@ chime_play:
             - operetta
             - moonlight
             - waybackhome
-              
