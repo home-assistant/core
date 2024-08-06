@@ -599,7 +599,7 @@ dbus-fast==2.22.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==8.2.0
+deebot-client==8.3.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -919,7 +919,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240806.0
+home-assistant-frontend==20240806.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.29
@@ -1096,7 +1096,7 @@ melnor-bluetooth==0.0.25
 meteofrance-api==1.3.0
 
 # homeassistant.components.mfi
-mficlient==0.3.0
+mficlient==0.5.0
 
 # homeassistant.components.xiaomi_miio
 micloud==0.5
@@ -2240,7 +2240,7 @@ upcloud-api==2.5.1
 url-normalize==1.4.3
 
 # homeassistant.components.uvc
-uvcclient==0.11.1
+uvcclient==0.12.1
 
 # homeassistant.components.roborock
 vacuum-map-parser-roborock==0.1.2
