@@ -7,6 +7,8 @@
   "iot_class": "local_push",
   "loggers": ["aioswitcher"],
   "quality_scale": "platinum",
-  "requirements": ["aioswitcher==3.4.3"],
+  "requirements": [
+    "git+https://github.com/TomerFi/aioswitcher.git@dev#aioswitcher==4.0.0"
+  ],
   "single_config_entry": true
 }

@@ -374,7 +374,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.4.3
+aioswitcher @ git+https://github.com/TomerFi/aioswitcher.git@dev#aioswitcher==4.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
