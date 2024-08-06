@@ -111,7 +111,7 @@ async def test_chime_select(
         dev_id=12345678,
         channel=0,
     )
-    TEST_CHIME.name="Test chime"
+    TEST_CHIME.name = "Test chime"
     TEST_CHIME.volume = 3
     TEST_CHIME.led_state = True
     TEST_CHIME.event_info = {
