@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from functools import partial
 from itertools import chain
 import logging
 import ssl
@@ -163,8 +164,14 @@ async def async_setup_entry(
     bridge = None
 
     try:
-        bridge = Smartbridge.create_tls(
-            hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
+        bridge = await hass.async_add_executor_job(
+            partial(
+                Smartbridge.create_tls,
+                hostname=host,
+                keyfile=keyfile,
+                certfile=certfile,
+                ca_certs=ca_certs,
+            )
         )
     except ssl.SSLError:
         _LOGGER.error("Invalid certificate used to connect to bridge at %s", host)
