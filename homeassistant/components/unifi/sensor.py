@@ -289,9 +289,8 @@ def async_device_temperatures_value_fn(
     temperature_name: str, hub: UnifiHub, device: Device
 ) -> float:
     """Retrieve the temperature of the device."""
-    temperature = _device_temperature(temperature_name=temperature_name, device=device)
-
-    return temperature.get("value", 0) if temperature is not None else 0
+    temperature = _device_temperature(temperature_name, device.temperatures)
+    return temperature if temperature is not None else 0
 
 
 @callback
@@ -299,20 +298,19 @@ def async_device_temperatures_supported_fn(
     temperature_name: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if an device have a temperatures."""
-    if device := hub.api.devices[obj_id]:
-        return _device_temperature(temperature_name, device) is not None
+    if (device := hub.api.devices[obj_id]) and device.temperatures:
+        return _device_temperature(temperature_name, device.temperatures) is not None
     return False
 
 
 @callback
 def _device_temperature(
-    temperature_name: str, device: Device
-) -> TypedDeviceTemperature | None:
+    temperature_name: str, temperatures: list[TypedDeviceTemperature]
+) -> float | None:
     """Return the temperature of the device."""
-    if device.temperatures:
-        for device_temperature in device.temperatures:
-            if temperature_name in device_temperature["name"]:
-                return device_temperature
+    for temperature in temperatures:
+        if temperature_name in temperature["name"]:
+            return temperature["value"]
     return None
 
 
